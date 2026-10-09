@@ -1,5 +1,52 @@
 # Codex handoff and session summary — 2026-10-09
 
+## Recovery addendum — read before the earlier session below
+
+RESULTS as of October 8: 11/71 strategy accounts ahead of same-window SPY,
+nine distinct bets out of 59 (236 controls excluded). Revision-flow leader
++6.97% vs SPY +0.73% = +6.24 pp over nine sessions, OBSERVED. Sixty accounts
+behind; worst mirror -28.34 pp over 79 sessions. No claim promoted; the leader
+is selected after the fact and has no random twin. Receipt:
+`backend/data/optimus/paper_accounts/results_voice_2026-10-09T045359Z.md`.
+
+The owner subsequently published the earlier session's files in `74f82326`.
+The lock-denial and uncommitted statements below describe that earlier attempt,
+not current authority or Git capability. The 3.27-million-added-line push was
+99.94% runtime data. The 190,070-added-line push was PR #12. Neither introduced
+the news digest engine; that was already on main since September 29.
+
+Continue through only these three current records:
+
+- [Repository reconciliation](RECONCILIATION_2026-10-09.md): exact boundaries,
+  classifications, branch disposition and preserved local data.
+- [Operating digest](AEGIS_OPERATING_DIGEST.md): architecture, Claude's method,
+  producer/consumer contracts and evidence limits.
+- [Verification](VERIFICATION_2026-10-09.md): fresh checks, repairs, CI/deployment
+  state and the completion gate. Do not infer global health from `/api/health`.
+
+Integration worktree: `../aegis-finance-recovery`, branch
+`recovery/2026-10-09-reconciliation`. The original WIP checkout remains the
+active runtime owner. Never reset or clean it. OpenClaw logs and regenerated
+scorecards are kept local through ignore rules and index-only removal; their
+bytes and old commits are preserved. The on-demand command
+`python -m scripts.local_runtime_digest` uses only local Qwen, validates memory,
+and keeps its receipts local. Actual inference was measured; no paid fallback.
+
+PR #14 merged (`866c84c8`). Four fully incorporated remote branches were safely
+deleted. PR #13 stays open because its asset allowlist and pin-write sequence
+have reproduced defects. Unique WIP, historical canon, abandoned lab evidence
+and the lab automation branch remain. Hosted delegated workers exhausted the
+account allowance; their partial inventories are not independent approval.
+
+The recovery completion gate is **NOT READY** until outstanding operational
+checks in the verification report are resolved or precisely externally blocked.
+The next session may coordinate agents, but must clear those gates before
+starting roadmap feature implementation. Authentic Bloomberg WLS MEMB remains
+an external prerequisite. Do not touch the IIF launcher or load the PC from
+16:45 to 17:05 local.
+
+## Earlier session — preserved historical record
+
 RESULTS as of the 2026-10-07 marks (run 2026-10-08T063232Z): 16 of 71 strategy accounts are ahead of SPY, each over its own window; they are 14 distinct bets ahead of 59 (holdings Jaccard >= 0.8; 236 controls/twins excluded).
 LEADER revision_flow_v0 (with hack2: same names): +6.18% vs SPY +1.15% = +5.03 pp, 2026-09-28 -> 2026-10-07, 8 sessions, OBSERVED(8). analyst revision flow: net target raises x distinct firms, 90 days.
 NEXT: lib_net_raises_2026-09-26 +4.60 pp (8 s, OBSERVED(8)); pers_revision_flow_leaders_2026-09-25 +4.28 pp (8 s, OBSERVED(8)); Cash/index by default; deviate only... [b109c886] +2.92 pp (18 s, OBSERVED(18))

@@ -2,7 +2,7 @@
   "schema": "codex-session-files-v1",
   "date": "2026-10-09",
   "purpose": "Review manifest, not an instruction to bulk-stage the dirty tree",
-  "publication": "UNCOMMITTED: .git/index.lock creation denied; no push attempted",
+  "publication": "Earlier session: .git/index.lock creation denied; no push attempted. Subsequently published by owner in 74f82326cbf5d33d584386c11764d35a9817f4c9; see docs/RECONCILIATION_2026-10-09.md.",
   "session_files": [
     "AGENTS.md",
     "docs/INDEX.md",

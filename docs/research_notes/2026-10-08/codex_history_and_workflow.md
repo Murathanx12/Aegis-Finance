@@ -1,6 +1,6 @@
 ﻿# Codex history and workflow notes
 
-**Date:** 2026-10-08  
+**Date:** 2026-10-08
 **Purpose:** Sanitize recent owner decisions to guide Codex integration with AEGIS, Optimus and OpenClaw. This is a research note, not a new roadmap or authority grant.
 
 ## Source manifest and scope
@@ -41,4 +41,3 @@ The Claude JSONL files and private memory remain untouched. No transcript, crede
 ## Uncertainty
 
 The Oct 8 automation direction is recorded here from the active task brief, not independently inferred from an Oct 8 Claude transcript. Oct 7 service, merge, registration and task-status statements are historical memory notes; re-check before execution. The private history sample is intentionally bounded and cannot establish that no other preference exists in older conversations.
-

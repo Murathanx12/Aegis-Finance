@@ -1,0 +1,2944 @@
+{
+  "schema": "local-runtime-preservation/1",
+  "source_commit": "866c84c82c5afa02cdeefb96bf05706a2777130d",
+  "operation": "git rm --cached only; local files preserved; historical commits retained",
+  "files": 587,
+  "bytes": 248407265,
+  "paths": [
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_2026-09-26.done/line006_74235e4d7d.done",
+      "bytes": 98,
+      "sha256": "3bfaa8464c75b377b96ca92e7f1b5f116f7b7d7ed34bbb6687be3009748d7d97"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_2026-09-26.done/line006_74235e4d7d.voided_J3_claims_over_nothing",
+      "bytes": 98,
+      "sha256": "204b8b60eb6eb8a0ee6f5ca9afd606f4cb49a02841125e30d56300b2a09882a6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_2026-09-26.txt",
+      "bytes": 679,
+      "sha256": "2711f0a086f890bb20bdb66cfe4f1dd15297a7748cde5add2c9542b7357c1ef7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_2026-09-27.done/line011_8f92e3fc31.done",
+      "bytes": 99,
+      "sha256": "f13b5a41fc496886f04c674fd458f188208bd27b09021c35e51bab9c61ab3905"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_2026-09-27.txt",
+      "bytes": 1879,
+      "sha256": "9f619862a5020c742a7374453e266e2bb036c51fd3ecaf43aba174a3c0a9162b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_2026-09-27_wide.done/line007_87e8de4d5a.done",
+      "bytes": 98,
+      "sha256": "b530172682bb3526c488b230d838c5f8b33c48ac4e7a6ed2b268d72921913dc2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_2026-09-27_wide.txt",
+      "bytes": 2438,
+      "sha256": "d0edcf504f77620c86dc7813e1e819ab9d9790f7546bad8d017279352f856fa5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/QUEUE_rolling_2026-09-28.txt",
+      "bytes": 1765,
+      "sha256": "a4f842ef61fb9579abb3d4c4249b85ebec14b2e3f1a9a28a4847e8ceeccc607e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/UNIVERSE_2026-09-27_wide.txt",
+      "bytes": 630,
+      "sha256": "e0b3748edec694a53c5f14ab1315a435cfb538773fb2a5468da7d764a6124ed6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/WHAT_THE_READER_OPENS.md",
+      "bytes": 7463,
+      "sha256": "8d38d9dbbbe831f1a044de00d103f98b5a5f5622e64492219c6088d0f5e2f912"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-26_164027.json",
+      "bytes": 2678,
+      "sha256": "429d4ed20cc81c863a7847f4271da2516f501e46f0b52bbab667fc7948c9d6cf"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-26_204857.json",
+      "bytes": 897,
+      "sha256": "2ce62c066d47f3d0eecda58023bb474bf6ecd8ced525e31b8dc273bf635c2a37"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_111245.json",
+      "bytes": 272,
+      "sha256": "7b6b5ff9b593fd25b288924d9e4c6a3e00dbcb30c1ebc74307f111693274c0b7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_113550.json",
+      "bytes": 272,
+      "sha256": "7b6b5ff9b593fd25b288924d9e4c6a3e00dbcb30c1ebc74307f111693274c0b7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_181857.json",
+      "bytes": 704,
+      "sha256": "dd62316281988fd399273f7caee7b5c8bac05e50a124c85059eaf3371fbbed01"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_181959.json",
+      "bytes": 704,
+      "sha256": "f7f7c236db6af4049cdd4307d69f2e86d948b23a8682241c0b6ff047e9577c3a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_182428.json",
+      "bytes": 704,
+      "sha256": "5d39ac46d3839388debe2c2d4a49e1fae59c6fdc931a9bb37c724a1fced88c31"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_182443.json",
+      "bytes": 704,
+      "sha256": "8267691a0bb4d3894a770dfdf107d443f24eface8e8fba6081d0a7aea496bc7f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_182928.json",
+      "bytes": 704,
+      "sha256": "cfc42938931a9f58ef89f8dd02531438f546afabc63d475fec0fa49d9dfa1c45"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_182943.json",
+      "bytes": 704,
+      "sha256": "b4456efb7271da01c009bf7f703f28458b26af5bee498727af2cf1c25c8c3253"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_183430.json",
+      "bytes": 704,
+      "sha256": "3745859b48c19bf2b535c429b3bdb6fdbeb4f37ac325bc2b5f97bdbc2aa43dd3"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_183445.json",
+      "bytes": 704,
+      "sha256": "db6e3a69fc07898d06754526d8461b142e6a7bed6f61650c7b4eddf6259d22a2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_183954.json",
+      "bytes": 704,
+      "sha256": "8e05fd381a699286dc9af40c632e6319304a59f16ece1d348b1d82540b7e6209"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_184009.json",
+      "bytes": 704,
+      "sha256": "f0fc6cad5c7f0c72ea95a989657b73b19e987f3a26aec7c2ae3298fd8d0c3c3c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_184455.json",
+      "bytes": 704,
+      "sha256": "71e367d0bcaa85050b8440a4d2ee4a6c835c7c49be09afcfdf50613704d87e7c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_184509.json",
+      "bytes": 704,
+      "sha256": "ed0381dbe94ca270e1635335d4055c9f955f41562499452e00dbeab880264d09"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_184955.json",
+      "bytes": 704,
+      "sha256": "97a122971ad3d69fdb337f7e110482476f4a8bec9346f86c62efd70891f7761a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_185010.json",
+      "bytes": 704,
+      "sha256": "c25964c403ee2924de29165f00a55a4a77c657d50155870f48f4466a6698929d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_185456.json",
+      "bytes": 704,
+      "sha256": "b3177da7eea7143469e4a0981579e13aac60f9c796ae539990ee5cf757931ac9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_185511.json",
+      "bytes": 704,
+      "sha256": "63d88ca956270d5bdbb5edbf3a33625a103539f07f1b6f7eaf1eda52eb0cbadb"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_185957.json",
+      "bytes": 704,
+      "sha256": "bdc40fdea2c451257b99bc4a2870ae8484fa6bf4ae3ace601781a24950b617c5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_190012.json",
+      "bytes": 704,
+      "sha256": "297819fcec0554e4152a602e3076c9b08c9711b11832d87423f18b415f9e8548"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_190458.json",
+      "bytes": 704,
+      "sha256": "8664e196ca24b582eeab0c41e4a036da0ee0207dda4d01839e4452dff7d7ca95"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_190513.json",
+      "bytes": 704,
+      "sha256": "9b100c16b88fb638adc05b20fd578e2db4c9f7df9734dd2aba092d0f6310941f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_190958.json",
+      "bytes": 704,
+      "sha256": "72eabf61843fd8ef2b09b56c40ab0b85ea366484da6f4aa5d40106d383997bdc"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_191012.json",
+      "bytes": 704,
+      "sha256": "b8b521ac5d8f41920663fcb356a81a9c42f140f8c0043e6a2f6d88f36fd587d8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_191458.json",
+      "bytes": 704,
+      "sha256": "020aa0d4318bd8f521a344e6aef8244e4e85199a92099f69c5b49bee70cbcca5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_191512.json",
+      "bytes": 704,
+      "sha256": "c149f14ba238a2077aeb1fa209ccc2246857413c797aac04d54e7bc0ea784f4f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_191958.json",
+      "bytes": 704,
+      "sha256": "16d021dca7154954c72f3f464c9bdc9c5aa0010dbb2feedf22970894c1754b45"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_192013.json",
+      "bytes": 704,
+      "sha256": "54ea76346c59376186c1f4089954f9ab8223b9ea78cdb190a220deabc9d4235e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_192459.json",
+      "bytes": 704,
+      "sha256": "025b5cd428a6e5f8d01dc8a56815878678b87c936440176cb3d82086b5c491a2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_192513.json",
+      "bytes": 704,
+      "sha256": "90d9940ad22f2c5b6a56fb5123db830543f4c0150362317ebb8ae651eb71a080"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_192959.json",
+      "bytes": 704,
+      "sha256": "4d2e5f0ce00393b49758ef0efd86f1048c040d9fae34765cbcfb9fbbb252fae0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_193014.json",
+      "bytes": 704,
+      "sha256": "602d18c9edcbe6de8ca4fbbf12c2204650c267e646b35eeb5821369cafce20ff"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_193501.json",
+      "bytes": 704,
+      "sha256": "3ac2ec71d03cbcf607b98b1bd2d1299a3aef55ee21d5e02cd20da443dfce02c9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_193516.json",
+      "bytes": 704,
+      "sha256": "7683126d62d504db9053580c32125574692b6f8c84b4787de8ac6dcc9fc9a226"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_194028.json",
+      "bytes": 704,
+      "sha256": "f313d7ddb8e7e043bbcb9c458ee453cb15022a5ac229216788d78716daf2be85"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_194042.json",
+      "bytes": 704,
+      "sha256": "e1d42b29b5691227c6fa58febc8771d87358769aa4497542f1dc3787d1a583dc"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_194528.json",
+      "bytes": 704,
+      "sha256": "cf23a1a20695a87f3badca3897032d4d4f1b69584f8d1a78faa0c384cacea3a8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_194542.json",
+      "bytes": 704,
+      "sha256": "4eb51c6557bd931ad083967785e07d4fac559b37fd89553abf903ec53e079a5e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_195028.json",
+      "bytes": 704,
+      "sha256": "c93ba4796309a978a10486b6070c354f938d273f1b4ff150926a541efb490dda"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_195043.json",
+      "bytes": 704,
+      "sha256": "c0c59e083552f4d96524bc2fc9b7c5da3c04ca4eaa2cff73660de46961c9e742"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_195528.json",
+      "bytes": 704,
+      "sha256": "9d784521d4ad99abdaade8c186f9757e71c67746cd17971489cc7b01d2d20d27"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_195543.json",
+      "bytes": 704,
+      "sha256": "72df80c303ba7bef8b371b1e9ddcc31e9f4d98df051bbc4c86b597ac6f4f560d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_200028.json",
+      "bytes": 704,
+      "sha256": "f44173146a623d1f0a485769fe77ae16f0eb45e17c3e88e784c55537ba81abb6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-27_200043.json",
+      "bytes": 704,
+      "sha256": "be92c231e17a994622addb5414aa9cc11231a5db98a43ae324406cd5f82bec20"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-28_080534.json",
+      "bytes": 3882,
+      "sha256": "203c082963ed32d3888f7f7aa69eb6a98a4b687f30d098b815477643a2800612"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-28_080635.json",
+      "bytes": 4538,
+      "sha256": "2bc68ecb6fd19d9b70d718eb6f9bd71b05c8fe24e78afa8053987b13ca2533a1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-28_081546.json",
+      "bytes": 3882,
+      "sha256": "8d0c2af6e75ae7f7c5aabd85c8cdbe94affa66c93691a7ccab86b0951ab12afd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/archive_2026-09-28_081638.json",
+      "bytes": 4538,
+      "sha256": "91aa617c847af06e6395b3faf49fb8dae4f8499a30fff39b0910101420e0cccd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/budget_lanes.jsonl",
+      "bytes": 1357096,
+      "sha256": "54e415dbae82fe061fb937b5db8677ba6333653fc2847d92a11cbe3853542553"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/chrome_recycle_state.json",
+      "bytes": 76104,
+      "sha256": "1b5b9be9cff8187e3b3332ada63c9f42a27e5cfd1360b03cc2a795cf6ced9f22"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-26_151706.json",
+      "bytes": 2922,
+      "sha256": "371325c38320a33c3efa016523faee5bbcfa3d541d1614ded53daed21386c6a8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-26_152008.json",
+      "bytes": 2976,
+      "sha256": "61bc9fb0ef9b9aee0297355fc31fcebafdafab8de6a90aa0f332f82a4ee9df1d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-26_152059.json",
+      "bytes": 3494,
+      "sha256": "28022ba9a27da4e061029594394853620f6b1537d0a348620337a66faf08cbb4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-26_153659.json",
+      "bytes": 447,
+      "sha256": "98a7d99d323b99960f6ab0740ae3c0e5e3608354ba831f7a30083b8a6518a412"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-26_161723.json",
+      "bytes": 1308,
+      "sha256": "1cb0a39a778a3b89545bdc8595c3b19ed9a526a21ee3503a2a5358356861092e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-26_164445.json",
+      "bytes": 790,
+      "sha256": "d9d4c397d1f719f7f503552364e4c5a7c803856c95113525ce950c16bd4c6ff5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-26_205050.json",
+      "bytes": 7726,
+      "sha256": "ba394b6bd31ce3d53d0a84fc8785817ecd1b3e44ac3e4e5a77d67cbce0912499"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_113618.json",
+      "bytes": 1335,
+      "sha256": "0a594e9357d7ad9c8a9637d698d3eedc255c19bd32696d4eb6afb1ed573d23ee"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_140210.json",
+      "bytes": 841,
+      "sha256": "6d95bb1d691b71ced97e4f5aa85899f86b5d4215c0b3a6aa0ad0ecb8166682cd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_181959.json",
+      "bytes": 15617,
+      "sha256": "bfaedb2b93caaf21848101cb0e69dfd5f1bacebf87352192297e83ca2318fe18"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_182013.json",
+      "bytes": 2169,
+      "sha256": "7b6f30a0ae3d3b4305a9ca33e1d49dbfbe48e6c9870d25bec3596137a7ee6d61"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_182501.json",
+      "bytes": 2169,
+      "sha256": "a232ee8b503606ef0f8d56edbb73c76a9f65d5d74c187cf7bdfbe3abcc491372"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_183001.json",
+      "bytes": 2169,
+      "sha256": "9c10a10f5dd6599d3d50aabced8720bb91fbc2f207532161f982543fc3809252"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_183418.json",
+      "bytes": 2169,
+      "sha256": "dc165f01b8bb23a418d8e9c1f33940b96514063af18250947596f46d1ddb446b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_183502.json",
+      "bytes": 2169,
+      "sha256": "45f550a493b1d8eb44bf78dc8a00798e0cbc6a56ab5f8a153b5d76cec128e0cd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_184027.json",
+      "bytes": 2169,
+      "sha256": "8a9c68bb10afba64ccf01342d50bf97d8dab9fc70b8722c661027dbc6d799f24"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_184527.json",
+      "bytes": 2169,
+      "sha256": "25d08136bcbea04c4ded63a36a4a475d532e8b5266e39e75235c7a5937dda29b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_185028.json",
+      "bytes": 2169,
+      "sha256": "9f2904baf7b656a0a36b5f50a02119a7bb1592686f1bc756ed61dfac4c886030"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_185529.json",
+      "bytes": 2169,
+      "sha256": "f870e2b52f9f34aba46a54595ad323d7369b858a8167c97cc29d4613b845276f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_190031.json",
+      "bytes": 2169,
+      "sha256": "c59ee7ca8f5ba548c5a5eaa4859455567349041b7debe244737d372ff7335bef"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_190531.json",
+      "bytes": 2169,
+      "sha256": "1dc5d5a20a00ede7fbb496bd3f5e84f98edcf44d00c9807af5e474a3a1716701"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_191030.json",
+      "bytes": 2169,
+      "sha256": "72d21ec30b9148c16eebb074648e26c25688ddc78dfd4a6e789f271ff7c493bc"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_191530.json",
+      "bytes": 2169,
+      "sha256": "9648c228a348c99f33cc7f0fb7c7eab34bc0ba0cd198199caa9b9c6d0809ee19"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_192031.json",
+      "bytes": 2169,
+      "sha256": "136b0edf87b3da0b17490c759dcfb695a03c1a369ae22decff7bec711dcbf157"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_192531.json",
+      "bytes": 2169,
+      "sha256": "31d75f67c37f432fabbc4c43b680e35a794a844801e20bb3c028a7c16fef90da"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_193032.json",
+      "bytes": 2169,
+      "sha256": "154103db1ecd5b1885b2a27c5548a737447040f69ed54c8f5abbd249ba2972bf"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_193449.json",
+      "bytes": 2169,
+      "sha256": "729901c885e516f2147ee6f522a266adc6b99c41f2c20acce5812df3c08c7ab1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_193534.json",
+      "bytes": 2169,
+      "sha256": "f0447dee8c91fc49d19cf56442139841f2f63c519f41655f7b225d72c686f882"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_194101.json",
+      "bytes": 2169,
+      "sha256": "13d46ca85bbc5b68cb3c5c1ef862b6304082fc24b05f9c64efb2a320f857e791"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_194601.json",
+      "bytes": 2169,
+      "sha256": "8859d6a33772e57a65a99e27b177e5d1e65f57310f63ff17bc0f9daecd3a61d1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_195101.json",
+      "bytes": 2169,
+      "sha256": "1c63a77df08e25b8a9a0d401d0f5b975cf393dbcac8cee29ea13c59dae400afa"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_195602.json",
+      "bytes": 2169,
+      "sha256": "b484a3a52356fe00df343fcf9110ec2251f5b771e69efa1109133de9a6cbd954"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_200101.json",
+      "bytes": 2169,
+      "sha256": "20ea407eb85f463af2761d41ce384c047840881d0fb417e2705bfeeb2e6c6623"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_203521.json",
+      "bytes": 2169,
+      "sha256": "5c3ccbfcf68def08ba15f079f27210f445c2d8878b55118a0b8edd374cf8fca6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_213553.json",
+      "bytes": 2169,
+      "sha256": "dd120bf282cdc9efa0b8e092ef8fc978781477a68fb528b6561b2481570f28b8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_223626.json",
+      "bytes": 2169,
+      "sha256": "fa6f21312a9446014fbabcf517efd53e54593a35d60b5cd1ef4addeaa324361c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-27_233658.json",
+      "bytes": 2169,
+      "sha256": "0db839d111470915a9da66e7f05682054b55b8d04f7fcffa6323a291efe89f36"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_000226.json",
+      "bytes": 2185,
+      "sha256": "a1fa309ab5a239c00b390ba599d3e5e62eb15c989bd10cd43677970051714f1b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_080732.json",
+      "bytes": 2185,
+      "sha256": "a74d37e142bb73ef99d6f20c234c477b05836b1505df97c50413970ec8957d7e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_081732.json",
+      "bytes": 2185,
+      "sha256": "b5c0909420a8c18b909394eccd43d86f6fdbcb8ffbf83c01678fcb9e21502af6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_082146.json",
+      "bytes": 2185,
+      "sha256": "e6642f80d75b7d7dc3b0ebfb2f493382c3be14e9828e411428e4d782ee82bfcc"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_085635.json",
+      "bytes": 3884,
+      "sha256": "99de9a19ded8a06c8128109a7748665d7928f4de1483653ae8a5cdd22b597d36"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_133354.json",
+      "bytes": 18986,
+      "sha256": "22e49980e06430fc1066f58c37e410fa1a4e846bdf2bdc1cd4f8f67d145e1806"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_143237.json",
+      "bytes": 27791,
+      "sha256": "e2ccbec32fe282dfe87c718c5d197a603b615fa30d6038f24467f12af9858a71"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_153603.json",
+      "bytes": 45848,
+      "sha256": "0c0487cc7edb429702830b82a81190f50600f98328e6fe90663d3cb65424f786"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_163622.json",
+      "bytes": 31198,
+      "sha256": "ec88d44367aa3159d64be5580b1936691d39e26dbfe0087c8caf79b911674a56"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_173510.json",
+      "bytes": 5242,
+      "sha256": "5008d920abf4897c480a3df7035327c7b370b4a1cabc9e3e3e434d1a9e0fddc2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_182456.json",
+      "bytes": 8955,
+      "sha256": "1004656cec88122e9d72531a073e535f4c3224edd31bf847bdf0ffe16acf4e62"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_185449.json",
+      "bytes": 30096,
+      "sha256": "0b36ce73fc63afb3619ebc4db6370d002bc607ce1e20b72f48a1bfeff3936c38"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_190453.json",
+      "bytes": 23670,
+      "sha256": "5ddee9d1aa2ddeae94216c596ca5a12fc91fcdd82f95261f92a01c2b59b13646"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_200824.json",
+      "bytes": 52516,
+      "sha256": "21953eca8ece4fd02437f9beff72b0e25725ee976c40a1ddd70ce087f18291e4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_210847.json",
+      "bytes": 46993,
+      "sha256": "3753d696bc2c8f414dfe0d4bde6131c78f68570e93ff0896d0154a6c2e461c4b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_220722.json",
+      "bytes": 2185,
+      "sha256": "9a607ca74a2948a5ee02a4d02327b1206237179603ee10e8e2fe2acf40f5356f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-28_230759.json",
+      "bytes": 12568,
+      "sha256": "2ba6e4c29377ad7a4cf2921694b975469fa7b4c7a1a9954650a75df93bfaa8c5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_000032.json",
+      "bytes": 2201,
+      "sha256": "dc4029f964dd695cba15ca8e6cdfab59a8bdcd397fb61bed35f660f2df5b5a28"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_015233.json",
+      "bytes": 6853,
+      "sha256": "7a51c74d200692f238951f49702d0d2c743adc2c298153a5fd68c5636f24f383"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_025300.json",
+      "bytes": 2201,
+      "sha256": "ad67706896fd266d5f84cdf6b7c2422abf5e6f6ccccb8f57ef297f5fda7eea51"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_030834.json",
+      "bytes": 5937,
+      "sha256": "e291c4f992a9958fa576b618b2fc84a4be01332fc8bce9646351d912cbcc687d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_032854.json",
+      "bytes": 3816,
+      "sha256": "2700756aa69d9e56896eb2cd41e01c3e9c431ea30dc7ba4933b20c5f5f8792cd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_034438.json",
+      "bytes": 5883,
+      "sha256": "9dcb0deac0aa62ccd707cc315762137022d1f2cb849934a78a8e5dc3e959bcb7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_035942.json",
+      "bytes": 9657,
+      "sha256": "2c2e4dbdae2b739b8aef365b402d5c1d5b7c7e7387ca872d4c71edd6aa630ffd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_041054.json",
+      "bytes": 20071,
+      "sha256": "69d5072f7fdcfea084ae0c90dc6614c04cfc5d8b5a5dd919de3cd86d8e7dd273"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_042634.json",
+      "bytes": 3465,
+      "sha256": "0133fae59b51018ccef3f23e520686dfd5d83e5a2e660f79f82738311c0be2d1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_072613.json",
+      "bytes": 52419,
+      "sha256": "5a2f74d87090e5ebc3e181d9c8c74d39a388ef91d0a9a0fd9e95552c23d78645"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_081408.json",
+      "bytes": 13999,
+      "sha256": "4bf217fb984101f13f1560d6854ae7fa7d2e54c4ca22b8cf75025f996f268b5f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_091651.json",
+      "bytes": 20970,
+      "sha256": "193a1923f0ebeb2e735e7ddf0f0f6890a02bf69d123de1834af9f183e22da266"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_104119.json",
+      "bytes": 42114,
+      "sha256": "91ca7a122a87005adb2bd12840e725bd65a740208208e1280159cc4c2ca6b798"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_165440.json",
+      "bytes": 27580,
+      "sha256": "7be076dc7f22f79745cba88260947724838335cba5d37c0b98611589943bd1c8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_175455.json",
+      "bytes": 18982,
+      "sha256": "0c87384cf6b6cef5b0a980275eec514a7e237341f1021d63426251b338966476"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_185428.json",
+      "bytes": 11454,
+      "sha256": "4bd8db46227dc216ad60de46b98b17c3557f5a052c259d5ec76c1f076b0a1005"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_195626.json",
+      "bytes": 21402,
+      "sha256": "76d9287227fb6ef22c58ed5ad9b6a068188e03bcf8d8d0a0b278b0c0737f6320"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_205536.json",
+      "bytes": 3732,
+      "sha256": "abed828a1b38753003b8702471feba8f680c49461f358c46a43099e8c9e9c439"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_215634.json",
+      "bytes": 5693,
+      "sha256": "94cfb36a23836e2779636bbf7e4c92b2397c279b72df566b359c0e2dab6a0c1b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_225716.json",
+      "bytes": 7597,
+      "sha256": "90f8e60d0e1213975b064248195fafb66682534555319451c6e67513b56099b8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-29_235741.json",
+      "bytes": 8907,
+      "sha256": "9351f7664c2a812c37a5faa55c77474ae9eebca6257b2a60b4c2a4e21aab1436"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-30_005910.json",
+      "bytes": 17519,
+      "sha256": "8dbc344efac499bfb377b905b983b43bffebcc4b45a727bc4a47935a70b34e8e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-09-30_015936.json",
+      "bytes": 11631,
+      "sha256": "a1d8677e2d4c4785585002b0a6af654062ee784447da33d3a88964720eecb646"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-02_131943.json",
+      "bytes": 35624,
+      "sha256": "b8b42c447e50f652ff29d398bb0644931f87fdf5aaaaf9cddfefb9538d17d5bd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-02_141930.json",
+      "bytes": 23210,
+      "sha256": "8449b6202665442c71875755e3cbcd51db73da325ef6cca17e0fd6c5a5a9fd82"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-02_151955.json",
+      "bytes": 13971,
+      "sha256": "46d450569f8cb1acb70ce427906c7100e68ea69d1c8bcf1ab74946f92dca7bed"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_035656.json",
+      "bytes": 20003,
+      "sha256": "7805a07aa0ed74247533e827681f4ee66eb89065f285272aac8f89cb6a2d5fb2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_040050.json",
+      "bytes": 4656,
+      "sha256": "97a4f9e3f70616764c998ab2ff5e78edd10e8733301ac5098375692b65c2533a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_050247.json",
+      "bytes": 19142,
+      "sha256": "8dd70707444bcfb2735b5039afa5bfc3f85ae3f3dc3f4bc2e70e7309b2f159dc"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_060227.json",
+      "bytes": 10539,
+      "sha256": "a6e9d704a51a3edbe240d7f35a8f6799aa8dfe96518d94be0227a4ac5d9e3a3e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_070420.json",
+      "bytes": 25446,
+      "sha256": "d7272f20074b410b6bba10c5c7e67bcfc60f4d9dcb46d2afec60258c36a335e4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_080339.json",
+      "bytes": 11497,
+      "sha256": "ce11a83e10f6a4e64c5fd1bd2593a165c7dc292f23b2bbfb35632fe1167f5f52"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_090347.json",
+      "bytes": 4767,
+      "sha256": "f28476eaa9e9c673f60c8d426f4117c4b42de28c9fbfe5781c80a9a545bf17a2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_100410.json",
+      "bytes": 6407,
+      "sha256": "8058249acf8643805ac4017a497889bb2419d5dee1c0ac7d4aba41f536035f9d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_110449.json",
+      "bytes": 6577,
+      "sha256": "a54c1256d1c498487ae9c634a3f63ecda1558523aaa3fce4cbabf3c9f35bab56"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_120550.json",
+      "bytes": 16632,
+      "sha256": "8c162cc7691892bf0cd5c53e6444bb81db04bef2f04444389da823dd9a8cc46a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_181943.json",
+      "bytes": 7813,
+      "sha256": "0bd358d6f9e7e0909ceba39828c86703b6aeebcd2e6f2dfe48ce61ca3edffe21"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_192127.json",
+      "bytes": 31874,
+      "sha256": "430d90f480f2e93bb5ccff228da1460e05c9e75a7c6a09cad099c614cb59ad9f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_220653.json",
+      "bytes": 10609,
+      "sha256": "b551739e0474adcc8b4b447bad75c857d486ed748fa9eac6f0c564899fbd27fa"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-03_230654.json",
+      "bytes": 15839,
+      "sha256": "7820a9af2f022dcb5de85af83ed2c59dac929c4a1193da7d60db0a5d32271805"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_000732.json",
+      "bytes": 10409,
+      "sha256": "bee24f2b85f2624f5e719ed8962eefa5f873040113274dd189259f69203365c8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_010814.json",
+      "bytes": 17210,
+      "sha256": "4a96553c08f7b277840a535d7eda8d488d78e996a7a95d38f7364092cb5b10d8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_020738.json",
+      "bytes": 7473,
+      "sha256": "9193220da9d163f34ad8232a3227ed87765d802a5c7cb6e25cfe3087018d1a3a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_030922.json",
+      "bytes": 12973,
+      "sha256": "cc31ac60493296979364caf73057e513a806bcc9621b1258f24d0e55d817e0e6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_040916.json",
+      "bytes": 6501,
+      "sha256": "7a0c9f612fc4e3b631e087439fd23c25a1fc09f0fe4c338f2e6adfc5584a26d4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_051017.json",
+      "bytes": 19330,
+      "sha256": "52218b66f584600c5f0e6718221774c1f80da4d10c0b20a5caef02fd6c3d11e2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_061043.json",
+      "bytes": 12377,
+      "sha256": "d4b30ada28f3546478e44ec4e70cbf3327ff484975add87e2f9be63e473f77ae"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_071049.json",
+      "bytes": 13872,
+      "sha256": "62fad2a03c42092d5e0ba0079702b65285e8cb031197c0b7bc42fb66d6b88ff1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_084608.json",
+      "bytes": 8036,
+      "sha256": "5c87e084e4748a6b85544f34a68f371125bb8be24366c7900b4477b525347009"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_115734.json",
+      "bytes": 2737,
+      "sha256": "52ab440bdb64cf679324791b61adf6c65d708816373768c16b48d42aa7f2aaf4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_125834.json",
+      "bytes": 4423,
+      "sha256": "8d71a9c131fc1aa000eebe6f8694a8042dcdbd62fc369a0ea007f809926a36f7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_135853.json",
+      "bytes": 14489,
+      "sha256": "942a5b557a9866417169553bcfeaa30c3de4ea4cbfd8f687a57c09755a4883db"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_145918.json",
+      "bytes": 6846,
+      "sha256": "0a62792b08ce9d02d1c2bbb1cd8c4762887b5edd4c5ee237dd57bf392fe349c1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-04_160033.json",
+      "bytes": 12560,
+      "sha256": "a4a8297764049478ef521ed25cfe6ed48c880a7d2b925faa79f835b2c83c72ac"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-05_015900.json",
+      "bytes": 12398,
+      "sha256": "ff2f18eff03430ceb64eaed12fcbe24d63cc05d2cb15709c15bc0746ffc6254f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-05_020210.json",
+      "bytes": 2297,
+      "sha256": "450fd668da560b6da1d6005dd3bf6ce693940beb7cc41f85e38ff44022a7ce17"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-05_120754.json",
+      "bytes": 6385,
+      "sha256": "528d33bb3afaa0e7e960a25f8d5409b4fc2b9d94cd74e70551257d8d16161ef6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-05_130846.json",
+      "bytes": 10962,
+      "sha256": "5a7efdf241418d31d32105733a49dff072000e2a607e49d7b9eaf0046016fc84"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-05_151403.json",
+      "bytes": 16162,
+      "sha256": "553edaeea2e8e07347c25c84d622d3e1615a203c0a2c3e2f84a983cb214b46eb"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-05_161335.json",
+      "bytes": 2297,
+      "sha256": "77212d688b3a9be0ddd3dc6ba2da3ad3cf96b698c25c7dc26cec0650f25e277c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_035254.json",
+      "bytes": 10594,
+      "sha256": "b979726f05b3243f0526b5f38299222adab79c2454fbcd4b22930fa3ebade642"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_051156.json",
+      "bytes": 4807,
+      "sha256": "aff7908e5dcd7873ed152b67b9dd0f48a1825ad20bad5f9758735af95dc4c57f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_061337.json",
+      "bytes": 8601,
+      "sha256": "679ec08cc29af4b20e6624dfbda1e0000c60660e1b264e9af6f623568a5dc4d5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_071324.json",
+      "bytes": 12249,
+      "sha256": "d6b4effce903dc541840b5a73d490067cf5f550ed843f50f431cca38bde700cf"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_081352.json",
+      "bytes": 3990,
+      "sha256": "b95faeb6d5a21995a088b0473f13eacf383e4d1d4994801cbc229af513cabc75"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_091335.json",
+      "bytes": 8682,
+      "sha256": "0d0bdd9a0051cd238c3384f75183d2e92fd3fd74f4eb886c4f6322e1c892a10e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_111658.json",
+      "bytes": 6726,
+      "sha256": "6dc2212523bed966aacc397e71c7d07ccafe7b8dea93a44d6a361a2c33cced2f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_121801.json",
+      "bytes": 16418,
+      "sha256": "6036a0905250768386439b07e6b1fb7b3521e6a6b80efcf37e57edb385184b55"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_132023.json",
+      "bytes": 14344,
+      "sha256": "af82b493927e2b0ca78e476b597a5862f6fe277d93d02608ce21ef5fae23e74b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_141926.json",
+      "bytes": 15070,
+      "sha256": "a50c3604c7e3592c466f10863124e620490c997f64f6d109714cf72cb9e62447"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_152107.json",
+      "bytes": 20331,
+      "sha256": "349de2222fceac3e44bfc3f0b828bb9abc5e6e291f5cc0bb28ee27a9cca2198d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_162104.json",
+      "bytes": 20127,
+      "sha256": "1ff525f4166aad852adc1603cb8ccc733ba1d674809649143c1d98fe413a16ac"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_172206.json",
+      "bytes": 26868,
+      "sha256": "915605de5deb236dc09bf3ee2d543e2d2e3630f615535b55a3403f446cd2b0ac"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_182145.json",
+      "bytes": 14690,
+      "sha256": "7f3ea044fb31256a76824fe5920c40b887e98f8412e44d807189512d69f2a8c0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_192228.json",
+      "bytes": 20868,
+      "sha256": "0b353b49a387c653a248491864723fa12e50410a615b697805cb2bed8a5a8efc"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_202225.json",
+      "bytes": 13867,
+      "sha256": "b933e4f13a8c6f12a53eabcf00435f445e94670c49416dcf7b8d9da407a16e6a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_212251.json",
+      "bytes": 6884,
+      "sha256": "069ae61f9d2e403b80ebd809728e4bbfe2db00ddd273ee5d8a631c2f2f78281a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_222328.json",
+      "bytes": 9350,
+      "sha256": "41cdbe8682acc86c323f84041f9feaf5f43acee4bf53a804db77771f2313f422"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-06_232423.json",
+      "bytes": 19892,
+      "sha256": "ac8d47a0f212de2626b8119bd0649a47d418f5b980d8ffdd031dacfabe1f91fd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-07_002543.json",
+      "bytes": 12799,
+      "sha256": "27fa19a2dafd644b81e44b28d158ea3721ddaab09ef2e263963cc44b554feed6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-07_012623.json",
+      "bytes": 17570,
+      "sha256": "9150e400e0290616597d4ffc29854dec6ed4670ecad4d4d334500614473986c0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-07_015035.json",
+      "bytes": 3985,
+      "sha256": "c1207fcd84dccd012bd1b92cae3c5d1b7e9d924f079ead42b8f19713ce646ca9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-07_040653.json",
+      "bytes": 7361,
+      "sha256": "59302529bb496275f7693d23f9eca0397f28bb0be0d3d1d7369f5fab6f2bc696"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/claims_2026-10-07_050921.json",
+      "bytes": 24532,
+      "sha256": "e5ee0dee1beedd9a4bf1bb69d2aaee6ace8aff9535b5286c37df546d78b4d014"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/digest_ingest_2026-09-26.json",
+      "bytes": 285,
+      "sha256": "bab0fea2f2ec1c44df00d6bece3f41be775f7afbd536fb5a55d5ad55e951c9ca"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/digest_ingest_2026-09-27.json",
+      "bytes": 285,
+      "sha256": "c8966a6b3b62cdd937520f271480a23d537abc81648c055deb1ace0d248100d7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/feeds_2026-09-26.json",
+      "bytes": 2770,
+      "sha256": "8e44558b95c0a6b1419f221680bc40a58c0c0eaffb4ea849f379290622e16d17"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/feeds_2026-09-27.json",
+      "bytes": 2654,
+      "sha256": "b8880659d5b04814c4e149b04eb55c77063035b4a7c63eb33ac40622d0495ee1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/feeds_2026-10-06.json",
+      "bytes": 2972,
+      "sha256": "b95768e35946b09691f3de772e4f49d47f320e791b616968693e598ce16c6627"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/free_surfaces_2026-09-26.json",
+      "bytes": 3265,
+      "sha256": "87287738d2a05b449e7f0e379eb117e991efd8d9da625e3e33b4962276f502d8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/front_schedule.json",
+      "bytes": 3425,
+      "sha256": "7e7b12b6e21bb64c7d4133209a26400e578cb626c647c26760c194e3ea1d1801"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/host_cooling.json",
+      "bytes": 565,
+      "sha256": "1df377fcfc28a54b33dab913bde264ba75839f0721f0abb9386f15e86ebacfa3"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/night_reader_supervisor.jsonl",
+      "bytes": 721137,
+      "sha256": "c74c1b060477e19ebc334dfeffaa3ded7e80bc33b642abe711c6b4d05595231b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/page_log.jsonl",
+      "bytes": 3725482,
+      "sha256": "831af376d8dc10b2650ce33f35e87383478ad2f3a80c32b5bc7148e743555fae"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-26_161818.json",
+      "bytes": 659,
+      "sha256": "5d5cc52f32de80f41d79d86ddbc93a25c906b5a6e9206981b2391c56d7501c5c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-26_162343.json",
+      "bytes": 534,
+      "sha256": "2164262663f0d667b41da4a9d197d59d856955a362211e80f4f76d59fba8f5ce"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-26_162641.json",
+      "bytes": 1031,
+      "sha256": "b5fec36073431bbbca4d72db1653c38b291be3db1829b1053b4a6742cdf92214"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-26_163305.json",
+      "bytes": 515,
+      "sha256": "3a962526022815448af728b31c3c1d566fe727738859347953ed290e48d5ec43"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-26_180254.json",
+      "bytes": 33739,
+      "sha256": "a102d44d4016fc9ec15c585cfce16665a8dfb1dba6742af05ac83ae594eab166"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-26_184616.json",
+      "bytes": 63181,
+      "sha256": "69e657c13d97ef1059dff318113ec305c537cf020614344f618e4777f2842d1b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_081542.json",
+      "bytes": 12989,
+      "sha256": "054ebe643179cbc8d4214b5bc3cd9bda71155de4a41eb220a75bf6ccdc1e1d88"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_083813.json",
+      "bytes": 12062,
+      "sha256": "fb2c22026b926e8c99dd71a98e0329ce677b5a00940e562b6859c5a88023f867"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_113512.json",
+      "bytes": 627,
+      "sha256": "2787868e73e7ec486a8a740958c3b7639f7d34a1b8619522d3eaea3b23e3af66"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_113531.json",
+      "bytes": 927,
+      "sha256": "625b9afea5d60bdeeed016dcc8866fea297b760caaa8d3cfdc4e6feed1329d9f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_114319.json",
+      "bytes": 657,
+      "sha256": "9caae7160c6db6743cd8952df9f406b95c38e7f843a6e808d08a9f6f62a0a895"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_114350.json",
+      "bytes": 949,
+      "sha256": "e214451c0538d6082f6e5289d655b3f6af0d908429540acd0d511a7dc3b61d23"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_142949.json",
+      "bytes": 4084,
+      "sha256": "7b94615413f8f2d0254070e3369377ab7c0a96cae45a83d07dd1bf23b78f1847"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_143041.json",
+      "bytes": 13018,
+      "sha256": "400a57c54256475b5f569dd0bb8441d239894a3a4ef0f140418df4c1f442b7d9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_143958.json",
+      "bytes": 15388,
+      "sha256": "da9aff82e4580f3dfa2ba118871f6fb0ac7ee507ca179def500e408e02f3d7ca"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_145440.json",
+      "bytes": 90936,
+      "sha256": "611b2554dd2f892c41aa406c3db8dd1478314a55e4b1be77c5603859f3972702"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_170343_barrons.json",
+      "bytes": 32644,
+      "sha256": "d163d5d83de0d1150d5718d39bdcbae9e4cb1ebded4a2f5009c99ddca39549f8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_170343_marketwatch.json",
+      "bytes": 22520,
+      "sha256": "3fd7a366d57c653840b4273e9691f8b3d70e341097f9209f4f48ae3d167ae1ae"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_170343_wsj.json",
+      "bytes": 25887,
+      "sha256": "2593ddac7aa4749cf241ab3aeb8bacbf0e8bf1f56a2b6fd9ec1051dd54068b68"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_173219_barrons.json",
+      "bytes": 52608,
+      "sha256": "b161033159ebb1652a80d0b7cf998e6a39f99db28ffc6a355f1b7ebfde168bc8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_173219_marketwatch.json",
+      "bytes": 43274,
+      "sha256": "38393d3af315e5ce239cc44cd893726e1cda62e5ee4aeab16a28acc450b04fcb"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-27_173219_wsj.json",
+      "bytes": 40202,
+      "sha256": "680576dd6aa486dccb19286042e2d6378a70238b83480e06cf8837932c546552"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_080139_barrons.json",
+      "bytes": 6547,
+      "sha256": "92432bf6def258f99ab2d429fd3e5433632d47aa1b0f49dd172e09e2bdc5cb4d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_080139_marketwatch.json",
+      "bytes": 5075,
+      "sha256": "c2bf33d2bfbfce851bf1df95988d942a05dfb4bd3c423a572197b6bbb03ab612"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_080139_wsj.json",
+      "bytes": 5810,
+      "sha256": "e5ac2c595a8c07c4a1b2daebbe43cc898d6c896a35d35168611d1f4d3d8b1447"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_081141_barrons.json",
+      "bytes": 6546,
+      "sha256": "15f0e0218c80e55b692871877b9c449c3cfaf038116ccaf76274a5f8e7dfd6bf"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_081141_marketwatch.json",
+      "bytes": 5077,
+      "sha256": "b1882253741ea2538d4a227f38c19d3186b46a798d9142dc6290106a81595716"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_081141_wsj.json",
+      "bytes": 5808,
+      "sha256": "46d553af5db32b8570cc9cf58335f35ce1b00458772fa786c6c2082ac4269027"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_083834.json",
+      "bytes": 8521,
+      "sha256": "ef662c7fb5c2d0c6790e75dd214170299c448028c1b465c171e4a1d8aec9e072"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_084028.json",
+      "bytes": 8468,
+      "sha256": "5fb00e1d6d351aee95e1000011b59e9bf20281385fdc3dac357ab0411f97b03e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_084503.json",
+      "bytes": 11710,
+      "sha256": "f3472f2540f85ffe24727b596a13961a1406a76ae8569d422d04db41a85df09d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_085118_barrons.json",
+      "bytes": 6040,
+      "sha256": "b9169e84223c37dc9b37ecd9dc553fbeee86123c9b39f6820e87556652c11f5d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_085118_marketwatch.json",
+      "bytes": 8436,
+      "sha256": "8eca67c2044d11c0db8dd61ded80c2e0dd14ef98d614ce33d62ce1c364ef5082"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_085118_wsj.json",
+      "bytes": 6107,
+      "sha256": "31b95cca4c7d4981b4524dee4e64126abe4b15e407f858067cfa21f88f37837b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_090621_barrons.json",
+      "bytes": 4742,
+      "sha256": "274995bf7316a7e91bd8b61ba8d922f6e1fc24d8fa7125a65eddf9fffcb254ca"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_090621_marketwatch.json",
+      "bytes": 5827,
+      "sha256": "193018d139964d9eb6e749dd44ffd68fc4bede65b0b73db326dbdfc515ed83d7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_090621_wsj.json",
+      "bytes": 4528,
+      "sha256": "b112d0b2cd7e5f7994fe5f25bf0a28700d0380bd32cc47cbabd8bbea87c64a99"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_090822_barrons.json",
+      "bytes": 5888,
+      "sha256": "6de25010f3ead17e93eccdbad99d2b72e15db107ee45ecd9311c35e4bbdc62d5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_090822_marketwatch.json",
+      "bytes": 8831,
+      "sha256": "373da321ac2de3269a03fc358145193de81789fb3b617479773bbdd798af13e0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_090822_wsj.json",
+      "bytes": 6212,
+      "sha256": "70d89d6cbb16b57f86f6787c87c46f6e0689866bd44115598f8d04a54845ea7d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_123154_barrons.json",
+      "bytes": 96527,
+      "sha256": "aa26130a6630b63c0937f0906397056afc3f866a81bc0a93ab90f7ab82321b9c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_123154_marketwatch.json",
+      "bytes": 65520,
+      "sha256": "2ca42b8b9c3972224e28cd75431e353691f86e23d74fc21fd063a9510722fb85"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_123154_wsj.json",
+      "bytes": 100732,
+      "sha256": "4d506853e4de0bf3343028415f357b146a4771b5db4d460eb22bf7448c85b721"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_140800_barrons.json",
+      "bytes": 8204,
+      "sha256": "9777649e96cc85aec383988b64932235b8f87d84f1832f989fa0734031544483"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_140800_marketwatch.json",
+      "bytes": 14005,
+      "sha256": "742f0409a48ea3fe7d160b67b19e7c33817f85fa41dd4227cdab41d792bb3c25"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/plan_2026-09-28_140800_wsj.json",
+      "bytes": 17919,
+      "sha256": "f43597753e41d4324369f9bb4fedad06eecf23a146f40da1d1f31f87ca13e374"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_141600_trial.json",
+      "bytes": 13279,
+      "sha256": "1e7c1082d842d65aeff08d63656220d3f498cb76c8311acee564d645fec42d55"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_143317.json",
+      "bytes": 15123,
+      "sha256": "aa753e197297f4f844f4a1afd130ddd93eaa6bbf0503b6cef62ec8760ec5530a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_144230.json",
+      "bytes": 19271,
+      "sha256": "81e6907f8aed713e7cd7e4865eece37deb52c54b57e02661a9a38e0a69dae3ed"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_145248.json",
+      "bytes": 30112,
+      "sha256": "2130646d1ca3f77e51090b20d1e0493eeecc96d5708dc10c8884b752c622a276"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_173739.json",
+      "bytes": 22330,
+      "sha256": "7c946e832f1aa5b6e491f1de0c8193597d97322410194c80f411e8ea3f50d620"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_182537.json",
+      "bytes": 13913,
+      "sha256": "4db46585e12057b2d1ea70d3643bc2ce452b8136f48099f7a73fedebfdead267"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_183125.json",
+      "bytes": 16017,
+      "sha256": "9a82bd3932b02646901b2ed462e4c90f11b4cb1616eccf4839c37c26da82d234"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_184804.json",
+      "bytes": 11877,
+      "sha256": "d34c1058a450c1cf00fddfcb3a0aa4873ac0b55e9c8c63c05923b7ed10edde0b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_185520.json",
+      "bytes": 17612,
+      "sha256": "52b0ae3df20f885cfad5f636bbfbf353706917d2b6fc682f77778bbb359aed67"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_190524.json",
+      "bytes": 15227,
+      "sha256": "36ab1a60f16c0536cf0d720421c7ce43b5a25e61cb5ee1c16ce9ca586f2dcd0d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_192329.json",
+      "bytes": 21598,
+      "sha256": "84f349b07a179ec41775e5b9c30aeccdc5882edb83aacb8a7a2ee36ac1b711cd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_212159.json",
+      "bytes": 1941,
+      "sha256": "bb7d8ae01022eaf49b10b99c19e389de93f90603d4db5f624e2719c6e888007f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_212320.json",
+      "bytes": 2033,
+      "sha256": "e6929c9a28a50bb993e2ab4089c2a41cdbac36d2790358282e90f708bcc0ddc4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_213906.json",
+      "bytes": 2033,
+      "sha256": "5a6beb007e8e694f905e32c94f285fce6f9715aa48e27f62ebdbb6f70c4bc8f8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_215450.json",
+      "bytes": 2033,
+      "sha256": "bf447a68d7665423f6e757b88802844e707a7cc16b03357932de7d49d3c50bee"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_221105.json",
+      "bytes": 9208,
+      "sha256": "2a3ae6d1385b1e1aa83b839bb33fd844dcde8b398bfda09a25b05a43802fe61e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_224736.json",
+      "bytes": 14283,
+      "sha256": "74bd71756d4c4362823313392be9e6ec5bf47c81d5cb50a7e30db5b3c3aaf650"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_231809.json",
+      "bytes": 2109,
+      "sha256": "17415f127afa00e25bff74f0b03f24378a1e7454d2abb8ee242fd25438f39ac3"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_232547.json",
+      "bytes": 2109,
+      "sha256": "b9b4d1258786ed1d327b5e93789ff3b097d8faf7d7ce6f3e6477d01309cc8ac0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_234134.json",
+      "bytes": 2104,
+      "sha256": "212e315f303503d5a5136690097f1cdf0af1f988e0c6710d3dc88f9cfad48a42"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-28_235722.json",
+      "bytes": 2085,
+      "sha256": "f58eec6ab3ef56609f7ef59ec548a136035a3ff4edd9d76c6c893ea658957bd3"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_005212.json",
+      "bytes": 17024,
+      "sha256": "3acfe5079b55607e80ca41a7729d1052381b6c4877da6d43560df07befe9341f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_011829.json",
+      "bytes": 2108,
+      "sha256": "174d2baf59e0dca445b46ea390f6e8ff62e2336b3c101fe1e41c1fafa7184836"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_013413.json",
+      "bytes": 2109,
+      "sha256": "54ca0e3c472595260b8ef2c4594fb308b5d08c2af87783c8859ddd596a560499"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_013947.json",
+      "bytes": 2108,
+      "sha256": "ac44cdf6882ed8774116a8066cd033bd1db33abe6e127f4ba9aca45696bb1564"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_015619.json",
+      "bytes": 2108,
+      "sha256": "8660951b12a1741aa06be9dc7958a017d4cd2e43f3a85bd3898d48b5cb7fb3ac"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_021202.json",
+      "bytes": 2108,
+      "sha256": "5d6f6fff43605a9aff90f83adf1620a5f80b696d22c63819f1a06a08444c39f7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_022746.json",
+      "bytes": 2109,
+      "sha256": "a504aeeb6266ea2d8f897a061d629d6ca9e6d3eacd09d96c492cfa8e30adfbc9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_024330.json",
+      "bytes": 17104,
+      "sha256": "b73cd72f922f0baaeec7edf2c10f695d471d227f0dfe8b8c8f5b3e67fb3b1c84"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_031247.json",
+      "bytes": 24168,
+      "sha256": "89b1caf11610a816e7d84162ceabf640f2e378f4055fa2cafe989fc76010b2e8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_031903.json",
+      "bytes": 24900,
+      "sha256": "afb122b538cecc551e465adbc445ad1691b6d31cc6708952b5c854e096149477"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_032942.json",
+      "bytes": 10153,
+      "sha256": "b2dccff989d92bf90a4e22d6db1d98d2ce848d3c591a4a6d2cda68b360035373"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_033547.json",
+      "bytes": 20513,
+      "sha256": "a633288b9c95e236fa96dafdfa8bb8ef3d08aa9dc5ba063f4eee7ec982276721"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_034528.json",
+      "bytes": 18788,
+      "sha256": "f2f9c7b0e6fa25662e56a1e94b477f6b1c905cbb66f1408ff245931ef560fc63"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_035141.json",
+      "bytes": 15913,
+      "sha256": "df50fa408a80bab5bf99809a3c575d4c16e2151860c68f9fe28e9ebb6151ee7c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_040034.json",
+      "bytes": 14172,
+      "sha256": "511c77a7a7afc7220cfc5581383c708aa9ebe4f31df383da99aaf8527f2b074d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_041143.json",
+      "bytes": 16487,
+      "sha256": "2ba864d07794969f9f13ffd5d798874bb046abbea4160198d2f756654466ab82"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_041917.json",
+      "bytes": 21913,
+      "sha256": "edef4f1d5276d77515bb685921263eb39ad8a9683032815156ab7d91ff8faeea"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_042717.json",
+      "bytes": 36236,
+      "sha256": "36b99ff039a9a19b3e1434b88a603296a86957faad764a4409722406910bd86e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_045847.json",
+      "bytes": 44556,
+      "sha256": "b7259b78ad500fb5bd3c15bbd57579e3e57baabf917417fe84b394273d3c80c1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_073136.json",
+      "bytes": 45141,
+      "sha256": "176d6247d0c704133ea5cf1c7b64b6175984d0a591e2adbc9af08b88098d6ba6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_080958.json",
+      "bytes": 8356,
+      "sha256": "bc5d5a847ff8ce5397f04d3948a1329ab274bf778f088c6c9a8c6797178a8df8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_081504.json",
+      "bytes": 16513,
+      "sha256": "0dcb24be6edeb490c5f8925db2c1e6c5dca2c428dd2eaf70e19ff06893e9cab2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_082351.json",
+      "bytes": 56809,
+      "sha256": "581bde210429da3ccebb127c141bd86e08e28c69b6df449f20de254e4733c4a3"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_102533.json",
+      "bytes": 37950,
+      "sha256": "cf6be6aff86997d30e75dfa03a07ab49f5f050a9f38187edd5a217216a6d0863"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_104409.json",
+      "bytes": 3569,
+      "sha256": "1f8ed5359d5d960e915e86535626c429f41455b1280930307dabc60f713dbaab"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_133524.json",
+      "bytes": 50828,
+      "sha256": "ca4f30cafd1b9cbe5e617a05eb4813952fb8590f0252744b51a025eae30aa025"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_143832.json",
+      "bytes": 5445,
+      "sha256": "ba88d72231748c9ba6752f186f7958828b8776ea0e2e693ac36008381271760c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_155240.json",
+      "bytes": 40000,
+      "sha256": "2243f62a1d2bcf3c91051a64f8f665d435810d3fca31e9b4e388f5ee0be1c66a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_160911.json",
+      "bytes": 23045,
+      "sha256": "484c8666c8e9a9bae77de00411bd11a3874d1ccfc6f3617a61f70cd270dae028"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_162645.json",
+      "bytes": 31516,
+      "sha256": "8d6f7f70cc80c25cc95583c7dca999b9e52415173ce6dbebe479dc4c737ac561"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_170126.json",
+      "bytes": 55271,
+      "sha256": "9bca60e3f5bdda35dab5fe06657247abd6da3dea66ba4829d7566e780b771a20"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_182843.json",
+      "bytes": 45491,
+      "sha256": "9b824f561d83aaefeb9d37251c1ca2d3f24cc75d55eb7a6cd42c0d3b2eeee2e1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_203349.json",
+      "bytes": 46270,
+      "sha256": "b77c9f1e541d915991dde201f468060c7aac45583e8bc5b4b7decd6bd76576c7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-29_223942.json",
+      "bytes": 52646,
+      "sha256": "addfe5e873c82166b4dddb5090c4f1c68f35535730a0f68a80e3c73cbad2d700"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-30_004105.json",
+      "bytes": 53106,
+      "sha256": "ddd435547da48839a01cc9fff82543aec8cdb064764919ac28fd721c6ad645b1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-09-30_024240.json",
+      "bytes": 8445,
+      "sha256": "3fe1ba369e9e7cb75b1bbf0abac1ec641125f1ffccee9f6a7822eb27d280f124"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-02_121822.json",
+      "bytes": 65407,
+      "sha256": "55f40452b248e777f6a4afc212530b51f805b23911874bf1d062449bafb23604"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-02_142156.json",
+      "bytes": 51963,
+      "sha256": "533483a49d5e0ba95839f0c3884c214ecfd9fa45e5092a06023b306ec4a95543"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-02_155547.json",
+      "bytes": 8258,
+      "sha256": "0450d299cc15767a25fe0492abf4387ee5f39a2ac9e542386e75c3a16b46f299"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_034220.json",
+      "bytes": 35417,
+      "sha256": "5f467bad55cbc2114d83543f8e354c9c3fa86219f5c11d39ca27dc1561226f28"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_040124.json",
+      "bytes": 45319,
+      "sha256": "f0620ddc02602cfbb1c60cca626f3df29bb99534f70e0e2679136b195423eb5c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_054730.json",
+      "bytes": 51466,
+      "sha256": "e822160a151f5543c2c4a3b4d80662d2f35c320362169aea0459b1abc921630d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_074935.json",
+      "bytes": 44501,
+      "sha256": "96dc3d91ffda895d0b415fecb5f67a8507ef7d2da0304f84f1ac61c3400312dd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_095128.json",
+      "bytes": 47546,
+      "sha256": "d6f872dadf8f4e7e45571427a4d3274f2987e9313bed6dd3faee60d9bcf53a33"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_111643.json",
+      "bytes": 47172,
+      "sha256": "4a79fae7f3a6875d04f72a44ce66a96d5d7adcae7a79c8d3adad09d60e451bcf"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_180535.json",
+      "bytes": 55165,
+      "sha256": "169f6196f708e59383a1fcd840d149c10db945641adb39cbd83363b055cbe308"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_210711.json",
+      "bytes": 47517,
+      "sha256": "20fea99c4bc2df88c8c39ccec75ab519205b49e69ee45b2f59f372ba66eb0f53"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-03_230614.json",
+      "bytes": 51801,
+      "sha256": "a93225ecbc6000afca403d8953988f2719807463264b4f80836d25f5ebbdc856"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_010702.json",
+      "bytes": 52776,
+      "sha256": "ea6e57c2a6e3813033a438f8af99327fd86a7718a750fba6cbafe34a28c5fe2d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_030821.json",
+      "bytes": 55737,
+      "sha256": "6a244c1bbe055d342f81d213e92de7c4d45e4421c939f8f2aed9728ce3da8abb"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_052132.json",
+      "bytes": 52720,
+      "sha256": "4b3f98677088fe126fe38aeaa4e87e1dd71f25e6777b862e13fb48bfdb26c0b9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_072330.json",
+      "bytes": 17155,
+      "sha256": "6fbda9e2f6e6c7afb90dab4928e3da5ea68216968f43a09ca2cd4899a6c4de0f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_084856.json",
+      "bytes": 40825,
+      "sha256": "d60bf1c9a04d52344429cf90804e99e941048a6db61180f684241cd1956d3235"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_120326.json",
+      "bytes": 54824,
+      "sha256": "445eed7422323b20bb1b428f63e50ea59ed7ed3c3915d65ca6541f3ff9392a7d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_140822.json",
+      "bytes": 55100,
+      "sha256": "bb3d67a6a2a22f412713981062eeddb1697c6bb6c2a9cfb6c70dbfc24f30bf3d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-04_161021.json",
+      "bytes": 42797,
+      "sha256": "b536da21bc9425dc0073304da966932718151da1a67a357591652c2d9ecbce93"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-05_030738.json",
+      "bytes": 25391,
+      "sha256": "6ca0a133b64e638a037d117f3a03884529ed862e26737bb91191a37c3f6ac3be"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-05_031327.json",
+      "bytes": 37063,
+      "sha256": "54cd652a047078c773aa2abff389845fffd8c63d38988cc4a30403964872843a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-05_121042.json",
+      "bytes": 59771,
+      "sha256": "42d73ac096296e076e883b02d3ae4e977f598a7fbc738a743aab10102cf626a9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_025441.json",
+      "bytes": 49473,
+      "sha256": "f78962105f22688015745c470ebc9bbbc6d3084072a12e2965cd973084de888e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_045831.json",
+      "bytes": 52475,
+      "sha256": "90d885565a2b4d33d76a498833c2f1e231e3614d24431cdbee9f271ba182d4ed"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_070245.json",
+      "bytes": 52077,
+      "sha256": "f9282ce5722647b3b408ae1e834917fe0d9434aaf3717d795e5e7aac42df90a4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_090554.json",
+      "bytes": 42884,
+      "sha256": "91df0061866eec12312a3d09cb463b32401838b7702163e1c4e360445acfb5f7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_112112.json",
+      "bytes": 56323,
+      "sha256": "f031b19dbba091109f4c4608e3c625f4b6046fdfa9102eb7f3c3ba02e618b508"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_132530.json",
+      "bytes": 56813,
+      "sha256": "aed3ccd1c86e44557729256302f56e71d16c08bede8ec7df10515da4fea7115c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_153011.json",
+      "bytes": 62236,
+      "sha256": "0b685da1c7fb3411052d0de37732049c45855098275415a5531884bca7471307"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_173334.json",
+      "bytes": 58780,
+      "sha256": "b77752f67a5b6c5547e4cadd650d97decb0e10fdccfef1dd77f9380d84aeb8ed"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_193706.json",
+      "bytes": 42089,
+      "sha256": "36dba20c3ebd5c7b52fabe15ee9374835b6a0d649f3fe6b59fb81a124b34a7a6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_213932.json",
+      "bytes": 49706,
+      "sha256": "1fe235cc3c8bc276fe7d17ab922dd87502ed7c3751e9a86630ab9349723d6e6a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-06_234253.json",
+      "bytes": 53430,
+      "sha256": "aa3675937322b51d32bdb484ba6a1f51821cf4b5af9bc043093da09e95b49e91"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-07_014756.json",
+      "bytes": 10003,
+      "sha256": "f14da82ec8c5e576af11cd7d9eb01ba2773dfaf0b4129c9345e73ebd95cd9b51"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-07_030505.json",
+      "bytes": 46730,
+      "sha256": "7b89496aa73c69ededc28b20a701532c2275a9cd43394f6a51ded0991726d540"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/pool_2026-10-07_035234.json",
+      "bytes": 44204,
+      "sha256": "5edd2ee70eadec03d321efac00ff19bd5d62fb57009eea4075a29ff931ac0333"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_20261006T162334Z-988931.json",
+      "bytes": 12928,
+      "sha256": "05d765f259d6cfa6cbe5fcd6c3e156782973b547410ed36c9eb2a88ae4133ea1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_20261006T162716Z-28f059.json",
+      "bytes": 5660,
+      "sha256": "9655b4a978fc5f4a86ed227dfe7a26aa22f8b3c0392eca627ecfdfb510fae064"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_20261007T030505Z-c6320f.json",
+      "bytes": 57527,
+      "sha256": "35a34ee35b87d56f7636aa0d560b52f7f30ec164a6baf3fa3ce08cd318d64c4b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_adopted.jsonl",
+      "bytes": 1315,
+      "sha256": "883d5501f57c6adfb8fb7f4f8b511907aa03430b4d9d0a4c113370d38d54bad1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_ledger.jsonl",
+      "bytes": 11157,
+      "sha256": "f84507a0c9a8521949512eb5e4ea0133797be428eb3d96bededce4af6bb00923"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_pred_cache.json",
+      "bytes": 78234,
+      "sha256": "cafec14b2ae56ec6903f4ae307daf9a2cbb10a4ab8b647e4f61420ec58cba8aa"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_quarantine.jsonl",
+      "bytes": 30210,
+      "sha256": "c241950c17ab6b814fad07e6f16ea303076ec3c3121921f192cae6835c0c1d73"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_queue.jsonl",
+      "bytes": 2765,
+      "sha256": "a5d4cc46c013e7f872acabdc52d3c5e81bf58b5d4cc7ab4c1e9fbe214ed0f62a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/query_planner_runs.jsonl",
+      "bytes": 574,
+      "sha256": "e638a66ae7ac27fbd8b6d95db0455792883b7146a7adc0619cfaba9c65328da0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-26_161843.json",
+      "bytes": 627,
+      "sha256": "caffef8a82c3f4ad3fe644079cd4789aa345a016058db2799520020432b88b35"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-26_162533.json",
+      "bytes": 628,
+      "sha256": "a952b38c7968b34a1cea67fe01c079fc8766f3dcc1a6c9784133ce1001ebd819"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-26_162716.json",
+      "bytes": 627,
+      "sha256": "4998cfbf7235562f2cb22562c2775bd975ae9383292b2aa60bd389e0c27793d2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-26_164445.json",
+      "bytes": 901,
+      "sha256": "0231f62396968c22f37103dd94c2300d6d76638a972fde525fbe73c07a1c92b5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-26_205050.json",
+      "bytes": 1671,
+      "sha256": "ce2564453911d892ea71d6fac6a61786ee9a0686338c8127e8660b45b80b3997"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_113618.json",
+      "bytes": 2528,
+      "sha256": "8dc6a9491ee26db2279fe7f6fcb0a66191ee825818d4bb9a4df6e8e44131532f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_182013.json",
+      "bytes": 3748,
+      "sha256": "b7b8e52751c79f01a9f026a415c7ec5a5b618820abcdf6c29a9ae57083b2485d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_182501.json",
+      "bytes": 3544,
+      "sha256": "f4919e8623e7ee738d01757697d4cc621c9eb811475d11b1f5a3749c88498416"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_183001.json",
+      "bytes": 3544,
+      "sha256": "67cadd5a5f262a5886254b5bd3d415cab887caaaf848735cb8550571befddcf8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_183503.json",
+      "bytes": 3544,
+      "sha256": "1e914ad13e94ba48a9f13e6b6d743897a4e21c6e88ea507b07fb7a2f50402df1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_184027.json",
+      "bytes": 3544,
+      "sha256": "976ccab681a3967f5b99bfc695c501d5162d6db8ed82c20bfd97af606a69d595"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_184527.json",
+      "bytes": 3544,
+      "sha256": "513fb4b88f01634c1c4d233e888c69c9aa1fca3fbcf685ee326c02ef194beb9a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_185028.json",
+      "bytes": 3544,
+      "sha256": "69fd1cdca847a9399201e7c58708b04b401eac4ed1abe98633b87b9b05f2c110"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_185529.json",
+      "bytes": 3544,
+      "sha256": "2bcb6916d887afe511af735e9d7030aca8f141a427b502a1ee17e75d3658903e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_190031.json",
+      "bytes": 3544,
+      "sha256": "f8232792acb6f89ab0916b0eef978584f63f96bbc725949eb258ccb315116328"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_190531.json",
+      "bytes": 3544,
+      "sha256": "100ad5442beeee884d41e535f96ef18e984d4d5a9408323d3d0eae7cdf17b93b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_191030.json",
+      "bytes": 3544,
+      "sha256": "4773d0ad6dc85f8caa49012482745cf7a83a7c8c21ebd9d7176bfb6e7ec8fc4b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_191530.json",
+      "bytes": 3544,
+      "sha256": "399081d12833a180f9a28bc30f98cc464b9bf61aad071b844d3a858904dc0b1b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_192031.json",
+      "bytes": 3544,
+      "sha256": "3e2ffc4beff76498de1c487b69b9e47bfe66fc7fb9186ac4dee993186e674768"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_192531.json",
+      "bytes": 3544,
+      "sha256": "c456662cbd770d9f165a842ae66185d334b736eea9d291d51cbfe6c26c5b9906"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_193032.json",
+      "bytes": 3544,
+      "sha256": "a97799bd279ce7b60fbf91c68a62dbbf0ac610c0f7692dddf79beba9cadf6619"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_193534.json",
+      "bytes": 3544,
+      "sha256": "b744f4a65f190e107c555d343923017f2617abd66bd499a8832c91af552313e6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_194101.json",
+      "bytes": 3544,
+      "sha256": "b8438de18ee7a3f21a598f9ca4c675ea38ba24e7815b5e40254780b17377fb3e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_194601.json",
+      "bytes": 3544,
+      "sha256": "5ed5c736e4c657d8b3466028ce07abdcca9969f77f401562e48b4ce531cbd3a8"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_195101.json",
+      "bytes": 3544,
+      "sha256": "a24b035837587c6659deb8e92141f0a3057a3e0742dcc236380825929df8b3c4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_195602.json",
+      "bytes": 3544,
+      "sha256": "25a34f4ffee6b1349b2287bc6dd43ed17a33fdf62484b937e1f2c85062f4b4fd"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-27_200101.json",
+      "bytes": 3544,
+      "sha256": "7c1c3c4af6b25c0c252fd241855f55917a11fbbbdfcc9bff69a65bd7ab1d49a7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-28_080732.json",
+      "bytes": 3646,
+      "sha256": "484a012d9138ef17be20457c36bc63ddaf75a57567a37888f2421989e9a7ac9d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-28_081732.json",
+      "bytes": 3646,
+      "sha256": "fb7e50afce4241be737652b662561c221346a9abcde9359d1da772a73c8942ee"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-28_140749.json",
+      "bytes": 2384,
+      "sha256": "926d0d6c404290a18dfa38e9961dc1536464170ab7cb98eb36bc9ce9c38e2330"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-28_141714.json",
+      "bytes": 2382,
+      "sha256": "6d24a9b7834f6b3b799f3b257d04db1a35ac34cb572199ab1e5add5d3b4c78a1"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-28_141827.json",
+      "bytes": 2295,
+      "sha256": "a3d69101158c3683d6a51b924bacd1a95a2a4742c7d6bd11fbc1e1fe1d5e4a65"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_2026-09-28_142246.json",
+      "bytes": 2295,
+      "sha256": "2b7aaaaa5f4cb35dc1737ab24d14f32ab7c2d592d1d31fd68ea400144adcc49e"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run.cmd",
+      "bytes": 395,
+      "sha256": "d12d9ae611887d03b87f02758cc4a97bacd28f919c9b79f229970199fd396425"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27.log.err",
+      "bytes": 95,
+      "sha256": "279a93b2289149bd96551156028e946591e75199de9d2c89cb5c8ffb2ca583ae"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27b.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27c.log.err",
+      "bytes": 1395,
+      "sha256": "e4f29944dd33d468f8df22ee00b433d7a559479c7c4a29ba4a46829838d57739"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27g.log.err",
+      "bytes": 568,
+      "sha256": "af9a666d3aaf0ed6e0e96918361be58f0f2ed7f187786c23b68c51af6fa38e20"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27h.log.err",
+      "bytes": 190,
+      "sha256": "dc26a63b2c3d27a9954e957670c3a753458ff66798b29f62f3e2dd201c6189b9"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27i.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27j.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27k.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-27l.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-28a.log.err",
+      "bytes": 5208,
+      "sha256": "e3020967de0a149d9f4e71286afdf44e1dba8cb9e757e736dcb51a67390626b2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_2026-09-28b.log.err",
+      "bytes": 186,
+      "sha256": "c8ab97fedf9e042443a39748b7eef4cc091ccdabb35ac8da9595744cddddac83"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/queue_run_rolling.cmd",
+      "bytes": 427,
+      "sha256": "950690e556fb467dd6eeb04efaa50cff2dfa50dca8b63e4e216c1e267071782f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/read_next_adopted.jsonl",
+      "bytes": 253444,
+      "sha256": "c9a34738f933dc7e0b11c1b334a9fb5a954c4f9c785b1030a7619b41ea4ec829"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/read_next_adopted_lost_before_carry_2026-09-29.jsonl",
+      "bytes": 17008,
+      "sha256": "ad757ea8ce0f5b520f503138d833bcb5bd69d24645d9c7d6456b1d2f582e99b5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-09-28.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-09-29.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-10-02.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-10-03.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-10-04.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-10-05.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-10-06.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_2026-10-07.log.err",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_run.cmd",
+      "bytes": 333,
+      "sha256": "090a51f57bab383956ac1adb8dc70fc11d8e51909c1e88ed3162311aa7a7af3a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_pool_status.json",
+      "bytes": 34468,
+      "sha256": "bb07fb61cdb1299671d485cc2a0511fd67d578af9eb33754047cb233ea6b9bf6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reader_status.json",
+      "bytes": 41594,
+      "sha256": "89828b002d255b55fe5eb0a2ee9fcb0ce93d119af1f0927f63fbe532d9e9c7f4"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-09-28.md",
+      "bytes": 5893,
+      "sha256": "d403bf36daba3ddb29da15fdfe338b522c47aa30c28c7c9ab9f7b983bb8c0e10"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-09-29.md",
+      "bytes": 20227,
+      "sha256": "ce618daf9482769c467a8ba0715f570c0740386c2e29d4399ca6c564576b7c2c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-09-30.md",
+      "bytes": 12267,
+      "sha256": "56236456232c171937730aba92b96e154b5ff7da9fea75f9264febd7e987b953"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-10-02.md",
+      "bytes": 15698,
+      "sha256": "91f5f1c9306707cd9cc4b1c0dba688f31ce15d8bad337d37fa1712a3fc05896f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-10-03.md",
+      "bytes": 14589,
+      "sha256": "f22dc8f81081351e29ca8bf70d2f71e697d8b1ab5e02a71d491d698890850a07"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-10-04.md",
+      "bytes": 14832,
+      "sha256": "8dbcc4fa8a54840c73b735ae3a39003722ae1c4c5be94d1bf5a9cebfd97fc4cb"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-10-05.md",
+      "bytes": 11190,
+      "sha256": "0f276b9c095f5b6cd390f81c444eab84e6ad09461e8c1776c22125874e964d1d"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-10-06.md",
+      "bytes": 15404,
+      "sha256": "f8ce7d44d644427ca6e388ff9e812392aadeb2ad165cf98ffe3b50610849afea"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reading_report_2026-10-07.md",
+      "bytes": 12119,
+      "sha256": "d61bce237be7b27ef90b944ed782aa36c9bb66e360221572dd9fe700b63ed25a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reads_2026-09-26_barrons_big_money_poll_155223.json",
+      "bytes": 3709,
+      "sha256": "339d597704d3defa9c371b4dcd2fd71bc628256094af0450a72eb88a5d1d1870"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reads_2026-09-26_barrons_stock_picks_151017.json",
+      "bytes": 1133,
+      "sha256": "9b903640a85cf81e183411ddcd57622ce94bc410aeb6f2faa46842b68e8848e6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reads_2026-09-26_barrons_stock_picks_153738.json",
+      "bytes": 3088,
+      "sha256": "974bc5a42bfb8716afd28f669542dfa55bacab7b912a90fa00fecfbd942f9eb2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reads_2026-09-26_marketwatch_analyst_estimates_160120.json",
+      "bytes": 442,
+      "sha256": "a76f9b78bdbb7bb8f08fe12c2882e8493244ea0719eeafc4d6f14ea1e464de67"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reads_2026-09-26_wsj_heard_on_the_street_143157.json",
+      "bytes": 812,
+      "sha256": "32c20e283d0263b086c755556f1b24fb19606cd40979a33b76908a043610bf0b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/reads_2026-09-26_wsj_heard_on_the_street_145059.json",
+      "bytes": 7082,
+      "sha256": "a5be9372268b0d91c88ade01bc7773bce9210a7eb0c192a8515fde5d604d4d31"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/apnews.com.json",
+      "bytes": 1458,
+      "sha256": "5b0089bf474b770ae7724412c945dec9becc50039df75e4f3019fdd9e6499e17"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/asia.nikkei.com.json",
+      "bytes": 2571,
+      "sha256": "ec40a412775e4e2727df733a60bde8cc090b7ba7bbe2481392c9a26f0e85b88c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/bbc.com.json",
+      "bytes": 6461,
+      "sha256": "d2582c942f37858172752eaae93ff6ca2ed8ad6ec61888647e28df7f1a3004f6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/bls.gov.json",
+      "bytes": 587,
+      "sha256": "be3c055108245edbdbdc93b1687463c366da5bf8e33bed30f17254474950e26a"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/cnbc.com.json",
+      "bytes": 2666,
+      "sha256": "169bc504d3aec675c3b5e573c41445a0c2fbe602a60047015255a4bca8c98855"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/federalreserve.gov.json",
+      "bytes": 114,
+      "sha256": "ff7d4630599b9ab0fa27853c711e76a45b5561d8781a607f2cafe5e3c324b8a6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/finance.yahoo.com.json",
+      "bytes": 2759,
+      "sha256": "2e4f216c94418f16f4a2db3beb52153f1acab915fd5608084f9b2ca4e22eae35"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/ft.com.json",
+      "bytes": 1739,
+      "sha256": "0ecdf42926d449e6d9e2f76acb82c155c74bf1849017f4d99e06ff3d2dcc5f5c"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/home.treasury.gov.json",
+      "bytes": 181,
+      "sha256": "c640bd3851bb8de9ddd14c2888a8cddcc0823645c84e1f7cbbf1b0186bc327fe"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/reuters.com.json",
+      "bytes": 4871,
+      "sha256": "54d4fc596401936144c8516d2fe4e24a6fc9c14a82bf4af2de835233fa80dc29"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/scmp.com.json",
+      "bytes": 4785,
+      "sha256": "2a657ad0b96c6c68eac9a18ed2659933a0dcc3ac2c723169f90031d41860c022"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/robots/sec.gov.json",
+      "bytes": 2932,
+      "sha256": "59548e99b511b89a83dad0188206f1e6bc5c8d83a4296dbc935bab4cda5b45e5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/sections_not_found.json",
+      "bytes": 1198,
+      "sha256": "9f926ff175822643d5e152fcdf0c9c222a85d6685d53062c195e523eaa3e5082"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/stall_ladder.json",
+      "bytes": 78,
+      "sha256": "54cd139c6f27a91c586b2ef7f57c1b428e76cc7f18ffd5ba8378257e2c2aee2f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/supervisor_run.cmd",
+      "bytes": 640,
+      "sha256": "8206df8353cb2733f24fe10017ad5a9679bbe7c89e31def3398b1039170bdf8b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_173219.json",
+      "bytes": 7002,
+      "sha256": "2f7ad5dc1c5da832b205231c901aeffdaea3c78b369c982d471ab3f0b7ea1937"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_182413.json",
+      "bytes": 2373,
+      "sha256": "edbe3a6f83b3c3e41388cdb98cc514e2e9bac36fa479a734ad4852a3f1844f72"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_182914.json",
+      "bytes": 2373,
+      "sha256": "e0d1b6dd72150fa3b13db9b505a56c115c0684f7156500e9dfeebc6235c155c0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_183414.json",
+      "bytes": 2373,
+      "sha256": "b21b6267c0594b69e80eeb910a57cb160fab10f14661868c1c4aac5073a5bd55"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_183939.json",
+      "bytes": 2373,
+      "sha256": "96089975f2029481ee36c7d89b12dbe866b16c215f414e04be190a54b411e061"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_184440.json",
+      "bytes": 2373,
+      "sha256": "35117e79e71786a2c57336de5970a459221188571affdcaa4ee36388698a4216"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_184941.json",
+      "bytes": 2373,
+      "sha256": "79c0239c0b0d68bad015c7b0744c8b79a7a8ead38993a2f68633e6320d62b187"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_185441.json",
+      "bytes": 2373,
+      "sha256": "d872e444a7840da378a7405c98417c5f49fc0ef919a0391c58167ff45fc43148"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_185942.json",
+      "bytes": 2373,
+      "sha256": "79fcea8dfb0a8b7c0127fdeac41e100ac33f8f36b578a56bf9d395484369390b"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_190442.json",
+      "bytes": 2373,
+      "sha256": "af14c5fbdd9bc404c38485ee2fd9687cabb97a086598b0a4744e88ed419b04d7"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_190943.json",
+      "bytes": 2373,
+      "sha256": "d261a34933d9d4a19b9ad58139abbe6e5380488f616743d50590d5a2c82a6039"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_191443.json",
+      "bytes": 2373,
+      "sha256": "70f10419107876cc4563356ff49e831be93d8b35f64bfcb29d49ae2d539245b0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_191944.json",
+      "bytes": 2373,
+      "sha256": "afcf7010d1bedf771748bc8bcfed6c26a68d09641ccd660c554c13b132ec8475"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_192444.json",
+      "bytes": 2373,
+      "sha256": "72f16a9336d805693a3344d530dcbab9ea8ecd8c1d1f5ab2e7179c5fabbe00b0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_192945.json",
+      "bytes": 2373,
+      "sha256": "b5d9ffa0f2e35aa442911dcac22eda84ee5398ac73f9365553226568db3f8ae6"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_193445.json",
+      "bytes": 2373,
+      "sha256": "fd2ce16acdbf8985512061c7837da34bd8e33433c4120520fb870affa76c9680"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_194011.json",
+      "bytes": 2373,
+      "sha256": "01391156f415ac02137c8557e788badd6818c9da0059e115a68e754ea2f3b359"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_194512.json",
+      "bytes": 2373,
+      "sha256": "950a8d08364630e40c8701e511552057496b80c42f6eb9583a7d1768401ecaeb"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_195012.json",
+      "bytes": 2373,
+      "sha256": "5246e77f36d4416723b4c1e34071125e828f6d3f862f9b253c17482612f0731f"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_195513.json",
+      "bytes": 2373,
+      "sha256": "7562a40bb64f079892b34f82c65f4da76c3a8c759f694ea6abe29130cc3feda5"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-27_200013.json",
+      "bytes": 2373,
+      "sha256": "fc6a3a4e41cb27064a47487244c3863ebe947a56668f78d98645791b2dbaa051"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-28_080139.json",
+      "bytes": 8121,
+      "sha256": "6bb0f3b09928908097a37b4a1058cd2a414675eee7dd6f230e94375a22373982"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-28_081141.json",
+      "bytes": 8122,
+      "sha256": "4a83af9c7837197d692604b51c764762b88bf6f74c1d2dcdebdf74753701e768"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-28_123154.json",
+      "bytes": 6791,
+      "sha256": "b8515a075e5b979b6b27be6f98d19c8cda5fe8a389b7f42fc5f3d75c3b7dd177"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-28_140800.json",
+      "bytes": 7022,
+      "sha256": "d26bc5a93ffb238a3145d94d3dcc3ce20103f19f6b4447231dd171103294c8b0"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-28_141816.json",
+      "bytes": 2689,
+      "sha256": "2e341e67ae5bf84e2245af8e391de66b70ec3785b9ff1ae8c1d7916165e870f2"
+    },
+    {
+      "path": "backend/data/optimus/dowjones/workers_2026-09-28_142235.json",
+      "bytes": 2689,
+      "sha256": "ce9a8fca0f90225fbb18e9d8ec0f4cb66ad055feefbd54e6ed716af7e9a7a290"
+    },
+    {
+      "path": "backend/data/optimus/llama_reaper.log.jsonl",
+      "bytes": 580844,
+      "sha256": "86a2ce993cb53375a901f091626fa4696bf61bc7bb624eaa59ed63a84e9cff3d"
+    },
+    {
+      "path": "backend/data/optimus/llama_server_stops.jsonl",
+      "bytes": 16393,
+      "sha256": "2732f8fb000c07ce70fd779cb96e4c2deb276b12e17e5ee12ff5e205375757d1"
+    },
+    {
+      "path": "backend/data/optimus/openclaw_api_bridge/heartbeat.json",
+      "bytes": 148,
+      "sha256": "2f8c916ba49393055b27f27e4eb3fdf9c46ac5cc0826c7134cb8bb6df53104e7"
+    },
+    {
+      "path": "backend/data/optimus/openclaw_temp_sweeps.jsonl",
+      "bytes": 240543,
+      "sha256": "8eecbd0b373ac2f8a686ff0d01d05891c61b5289af1963c8420ba890fb12d535"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-27_150809.json",
+      "bytes": 229204,
+      "sha256": "66d97bc6c31e18b01b6015e0b5735efc084cd44d7c1eaa07e3a0df73368cba2d"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-27_183420.json",
+      "bytes": 385477,
+      "sha256": "05973ad9f316b8373cec536e0ae9f7b906388fdf6670053128c5c0c61b984a4b"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-27_193451.json",
+      "bytes": 385447,
+      "sha256": "461ed8f16537c78e7b19c87dcf4da98378913c07dd29b00659d69e9f877a3150"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-27_203523.json",
+      "bytes": 385447,
+      "sha256": "f2dbe578a8eaf6c000c5b72a9e6abf66dd57a1879f40432add1f018c4ac98ff3"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-27_213555.json",
+      "bytes": 385447,
+      "sha256": "990aa59473c025dda16cc80104b95a9b615d1c8d6cd32684ad6c9b84fa57b9ec"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-27_223628.json",
+      "bytes": 385447,
+      "sha256": "1db87508baa818dfb342c440279809dd2b55e0982daf9df6d2947764d21a902f"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-27_233700.json",
+      "bytes": 385447,
+      "sha256": "28047f2f834934ba6b1ccb9672b8ae99ba75b02e42bc0dd3588f429df5d40efc"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_000228.json",
+      "bytes": 385447,
+      "sha256": "92fc4562d9b557a34e44a4c484eb2f962b71de2406c2b377df71e1761eb8b3b9"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_082148.json",
+      "bytes": 385447,
+      "sha256": "1fa88393053012ca7f4bf7084b008b2142fd62f65a9319017535c26726598bdc"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_085637.json",
+      "bytes": 406608,
+      "sha256": "4406f245790b66bd36f6ba4f5c187f9bce1a313fe33d31e2efc5d4d8429fcf04"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_133357.json",
+      "bytes": 578337,
+      "sha256": "82ef8889db362705a4992ab49265571c37c4bff7a6c99b572f4543097ad1a687"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_143240.json",
+      "bytes": 664107,
+      "sha256": "0b198a961f7bd8babef7332a78e511d816a4bc17fe4412368ec1e43492052a57"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_153606.json",
+      "bytes": 839617,
+      "sha256": "7bde7d45f277627d02542b0a86d7cab267dcde2b3aeb6941618e2ec2eb60a3fe"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_163624.json",
+      "bytes": 997255,
+      "sha256": "cb8b0d9aa5f88a61f47651742355183043bc2971504b569ae19c0287a903988b"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_173513.json",
+      "bytes": 1014914,
+      "sha256": "eb745291547db3d738e6222084cb30bd84a3325205a07256cbd483203b320b15"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_182458.json",
+      "bytes": 1026360,
+      "sha256": "52b42d02b23ffe32a5604f32265dc733adc5468bfbc8c1c636fa179cffa4840d"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_185452.json",
+      "bytes": 1159232,
+      "sha256": "d090b5fa5feb6dbe262b6c6912c27a4b9c91dc063ab421c3f520a0b5311f9f55"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_190455.json",
+      "bytes": 1183943,
+      "sha256": "edbbac5839cdb0ecc8eeba88800e339cb2efeaa4f17e13f00a0155e890f64d74"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_200827.json",
+      "bytes": 1402230,
+      "sha256": "f1d549a5345511db609c2235ddf5f9d803ec7a0629085b9b175b1878a557ad65"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_210849.json",
+      "bytes": 1499407,
+      "sha256": "31df58527f6941ff3def258b810cb79adf6d77ba22729a9d7d06f66ff723f169"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_220724.json",
+      "bytes": 1499390,
+      "sha256": "cc40d664e83a1894b0fcc5550bfbfef60b91b3a5858cc6866e2c6380822e8e65"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-28_230801.json",
+      "bytes": 1517767,
+      "sha256": "438497930f52c02af29e3beec0e3858fb18f139a42f2fb0aadc492c9b54180e7"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_000034.json",
+      "bytes": 1517752,
+      "sha256": "3abcce476e9e979a03b244ea7058113b2f7cc099f87dad628de5b4bf33fbc505"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_015236.json",
+      "bytes": 1519606,
+      "sha256": "a19b40d6d961b5ff6daaffaed539bb6b461927c12b27741ac8ecff080e1b4dbc"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_025302.json",
+      "bytes": 1519591,
+      "sha256": "46f2e012d98a284588e3ed4765b9a060d0f5c95498dcd86f1fb177310c2dd80e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_030836.json",
+      "bytes": 1519591,
+      "sha256": "4c9efaa6a246fbfcf55544c1981de082c2630c2e989460c1a8e9393526f63d2a"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_032856.json",
+      "bytes": 1519591,
+      "sha256": "650fcf41c08ad55dc99fff5902ad2390cf8608f599c9b0d442bf6e8bf1e0d390"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_034440.json",
+      "bytes": 1519628,
+      "sha256": "2e9a99af19b06ee89ccab8b6c9a3020c1a00350addc4c3d1df5826d80c558797"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_035944.json",
+      "bytes": 1527267,
+      "sha256": "db61eb3f4cda293ae9a97ebdb29908db2b22163f54cb151d7183e01bff2f1f3e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_041057.json",
+      "bytes": 1527543,
+      "sha256": "31125b855d0b89cee2f5dedd4f9b350fc72610b147f049f49fec1cc785569317"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_042637.json",
+      "bytes": 1527544,
+      "sha256": "aa10b650363d422105207bdb099e8a49d850f62a565a229d95aef0a4a3187ccb"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_072616.json",
+      "bytes": 1591364,
+      "sha256": "14a8506f9ea6a8e9b3a899088ac662d790d16594cc0e3cb0b73df5b9b90cebab"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_081410.json",
+      "bytes": 1593292,
+      "sha256": "087e9457963b56dd4ae3b0c1f902a8dd35def7155f2a8854b029cebac35765f1"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_091653.json",
+      "bytes": 1628848,
+      "sha256": "31a9c70ded00b1e5ee1a116dba29790ea97b159829013490a7271133cc1607e4"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_104122.json",
+      "bytes": 1663594,
+      "sha256": "9e04d173b62637829a5535586f7569d7d1500d95e8ebd2433b77dd2148543a4c"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_144014.json",
+      "bytes": 1694762,
+      "sha256": "21ef344af46eaf4d2dfcb4ff033050a297e0a2e29cc20fecd0ab98573a9e13c3"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_165444.json",
+      "bytes": 1761981,
+      "sha256": "28537114dc48984e2ce9d765c3ff75217ae2915f8308d33b7a93742dbbe71203"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_175458.json",
+      "bytes": 1800982,
+      "sha256": "d97530a08c4cf1b7797230569742a1f7693a973042c55a0aca25a8b071408cee"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_185430.json",
+      "bytes": 1832194,
+      "sha256": "8338d9349330f66df338f1666d05276fada0562670e731ec98c1579358c92342"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_195629.json",
+      "bytes": 1891870,
+      "sha256": "c5141569cf9de301cbbea0b9635eba1830c1492f51759b184c3978e1eaccffad"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_205538.json",
+      "bytes": 1907034,
+      "sha256": "93268ae7ee4eed4d9ab243af248bf7cc5b4f93fe0fe3dc7e76719cb7c494e262"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_215637.json",
+      "bytes": 1934528,
+      "sha256": "aeeec9eaba5a01f4fafd4682ffc62fbe1324b52c1a9e938de6882ff11020cf12"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_225718.json",
+      "bytes": 1950905,
+      "sha256": "b234032984f841a3ca0937a5b418d424b897e4dee754fb17f5814af99b34124c"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-29_235743.json",
+      "bytes": 1967469,
+      "sha256": "e9029f4569e09ad371d1137e4ac91379eff88be496df9a409331221a581a3448"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-30_005912.json",
+      "bytes": 2006429,
+      "sha256": "315fe1b1f4e5a2da08887471753de7f9d574d83d70ad808ba21fb0f59e6b5562"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-09-30_015938.json",
+      "bytes": 2022834,
+      "sha256": "7b418b4dcc6fe134421b16d6a278fd90e1d37d6229f880e8a2fc61c2566fddf2"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-02_131946.json",
+      "bytes": 2139714,
+      "sha256": "93047c17f75f4a4c8e3b592703dd55fe2b8681509265ee526684d48a5c9b0449"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-02_141933.json",
+      "bytes": 2200464,
+      "sha256": "fdf3849c066663e5506518b251e4a38612623ed3e33ca22257d6a3cfd2efed81"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-02_151958.json",
+      "bytes": 2227869,
+      "sha256": "d31782f760e8f6359454dce77184320299aedb52451a8fa44011b8802c3a5621"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_035700.json",
+      "bytes": 2268798,
+      "sha256": "f164a8c3b56445dc1524ac5acf024fface6bec62668eb950b4ab1b4178ba8a3c"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_040053.json",
+      "bytes": 2268607,
+      "sha256": "5024c03f7a9ad7ef09b65b7c355cfab21a75dbbbfcea2efed0c20b7e3189c183"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_050250.json",
+      "bytes": 2303740,
+      "sha256": "d3df7386f39b8df16cd97727061272e7e20c6285887a785e30d955dd2f3331de"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_060230.json",
+      "bytes": 2327353,
+      "sha256": "5830efbc7821cb023ac0787b503a44a866167ad82538fcd9bcecbfac650f260c"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_070423.json",
+      "bytes": 2381279,
+      "sha256": "6e7e07e736feaa1072018b87458d211c5b252412af0e46b3ad9d03ba9093617c"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_080341.json",
+      "bytes": 2412397,
+      "sha256": "088a84facf070e3034c4ccf56ed0deaf6510490b3eac1c1ac7a7f81fc8f573a5"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_090351.json",
+      "bytes": 2432373,
+      "sha256": "c87354ee583031039c0bb4b693313fd2d85e72280664a5e673d757b6182deab0"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_100413.json",
+      "bytes": 2445177,
+      "sha256": "97366b28e81155e1f9cc27dba9a3bff1e8e9c06d71d982e563c6fe82600f30c4"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_110453.json",
+      "bytes": 2462551,
+      "sha256": "cda986ff7552ed111a2a07387a8b400509da3be02492fd54c940bde23aa9f4f6"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_120553.json",
+      "bytes": 2504892,
+      "sha256": "0898f525f5457ae22948412285d130bf9e620e950c3d7d41729ecc1643650c3e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_181946.json",
+      "bytes": 2514070,
+      "sha256": "601079b275fd54b8361a532942f88060b2ef37b078b0434be089ab03da137e1d"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_192131.json",
+      "bytes": 2547450,
+      "sha256": "a1f9e677ffd597fc0e330e189b3dba8c7b153aa4c47031adfd30734a15ff54ff"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_220655.json",
+      "bytes": 2579850,
+      "sha256": "20e03144ca46265595c380c7208d63451ca2701f8ec661ed6fd0c30cdb3ce046"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-03_230657.json",
+      "bytes": 2596655,
+      "sha256": "20608446fa9a979ef3b856743953fccacc568172a8760c53cf1135ba36926638"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_000735.json",
+      "bytes": 2613325,
+      "sha256": "b8e73e82b45421244a20df1df0268e0463afac7a64c20c5ab4c122ecd8e3c507"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_010816.json",
+      "bytes": 2652084,
+      "sha256": "d10c96fead2b3b6b0e8139cfacf93e2ee2dd306b2bc3d1f97f22dfae99d521ab"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_020740.json",
+      "bytes": 2676330,
+      "sha256": "8b8c1e5fea407148f70a0f345ccc5edc2f92e9a4e91f3c5c94ada1b5da4dabc8"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_030925.json",
+      "bytes": 2703740,
+      "sha256": "ff653b0497b505406b792e19132dd7ed793dca6d1825db19c7d5744cd9da5b88"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_040919.json",
+      "bytes": 2727442,
+      "sha256": "4baad6176ee18ea4fd763684ca440cc7e94cc5f0ac34d1b26b4600264128c1bc"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_051020.json",
+      "bytes": 2751316,
+      "sha256": "841d4ba3e2d64ca7ea1bd789c05f7ebb9df46920e25933c545163b8e73e0720e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_061046.json",
+      "bytes": 2793898,
+      "sha256": "46e17e6a38da5f87e2bf7b904ff854b525e2b99f1ff479719fae02e1e6e91291"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_071052.json",
+      "bytes": 2829444,
+      "sha256": "6aa13b7e35c893bb90f4ffa68fc756b55a59db1c9ffb4948408fde139d3de0b2"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_084611.json",
+      "bytes": 2844195,
+      "sha256": "ec73ea160507afde20a4ce3369df6801deffe43b0c69476bd0afc1ba77735df5"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_115737.json",
+      "bytes": 2856838,
+      "sha256": "5c0413022d56397f43fcb2af03bcf86e3f0caeecdda80186294d991428a34fcd"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_125837.json",
+      "bytes": 2874966,
+      "sha256": "026465df52609f6e4b6a9f8fd31e323cff57a0a9701b71b8b69d14276a800d0c"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_135855.json",
+      "bytes": 2892771,
+      "sha256": "0fcf95922152423983ae3111b1a74e3df8e9f2a2663011139bd9c1dafd2ebf00"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_145921.json",
+      "bytes": 2907522,
+      "sha256": "afb62887dc640211317e68dd58fa344fa8beed87360c3adf4ad14aa19039aa20"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-04_160037.json",
+      "bytes": 2919608,
+      "sha256": "6f55067bb784ce116a7d93b0e8a54205d0e6b7684fed54fc8b8e645717ba52fc"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-05_015908.json",
+      "bytes": 2919581,
+      "sha256": "fa953fb5f04f72af69f2e8c16be7f93c63932717facfa5a118b70b0878247fe2"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-05_020217.json",
+      "bytes": 2919572,
+      "sha256": "ea5a8502471ac70953b43daeac6ee7ccd8b9fddfc70a5a6bc11eeda63052f5c5"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-05_120759.json",
+      "bytes": 2928892,
+      "sha256": "a9cf780127b5367655abe39958e580303683cafc9e0fcc801168663d8541999e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-05_130849.json",
+      "bytes": 2954243,
+      "sha256": "2388953c5816a29aa86d11a322a61ae61bafa3cc2196835cc5dcce05afbf1355"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-05_151406.json",
+      "bytes": 2992518,
+      "sha256": "97cf42bd5564c2428a73ad030d82a01ecd5aedf03454a7621c9eb7c2bf0f678f"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-05_161337.json",
+      "bytes": 2992489,
+      "sha256": "527d938704fd6b9b99740f1e32f1344055ccbc8ad47272fcc2a652d67477f4a0"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_035257.json",
+      "bytes": 3044076,
+      "sha256": "5f09e157e882a8b2f876264b591423b9a51f305d1daae871ccb5017b7561f31a"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_051201.json",
+      "bytes": 3044060,
+      "sha256": "234276a08c6f8192ebcb349ad4e00194d25c9091581e42e528cd5005f23e1116"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_061344.json",
+      "bytes": 3076885,
+      "sha256": "cdbb272572e5315793bf15579e0266ebdd0c47579b1c195f0c565b782727c9ac"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_071327.json",
+      "bytes": 3095324,
+      "sha256": "4d0f6491ecc83baff48f3cb197029a43ff6c1bd752f157130ed96a7e436956d7"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_081354.json",
+      "bytes": 3109836,
+      "sha256": "1a59dff9717b7306ae72e802e2c6817fa1e80332b182aceeb079b5b58cac00ef"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_091338.json",
+      "bytes": 3128097,
+      "sha256": "fa5e5eaecf7a384504bfaed7c5e720f51dcfeccaf0bddfdc5b5baa292563a030"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_111702.json",
+      "bytes": 3143076,
+      "sha256": "956f98a9345970a2c68e81e3b115fd7ea0c39689e05fb4dfc9a442411abe429b"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_121805.json",
+      "bytes": 3192637,
+      "sha256": "d7cf75c61e2293af12719f7c5c51d9a6b125123144bc40e100ef4c0f6d8143f7"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_132027.json",
+      "bytes": 3234642,
+      "sha256": "226a2eb121360da8fd12807c146321e92eff8c190cc9305cc27f4b95f6b91378"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_141930.json",
+      "bytes": 3271027,
+      "sha256": "cc925721e5e52946a19b480281ed7d79d55ef4bd54508691caf78a6463f6754e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_152110.json",
+      "bytes": 3298827,
+      "sha256": "87bd7ba9268b51d5a3f591f08437c9c48b26971d811610915565661f58c7c51e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_162107.json",
+      "bytes": 3327658,
+      "sha256": "9088667905215ea202cf33f71f94867b69f0f89a2e74634edef1f3789e0b4fa2"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_172209.json",
+      "bytes": 3350144,
+      "sha256": "16e929152cccc0842a95330aec3eb77b7622a4fead85e8ccffbf3e315c648b23"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_182148.json",
+      "bytes": 3398273,
+      "sha256": "686528d2f8230cffe9f49162b40012afae291e6cbbb04b5396cc8dd03bbc1617"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_192231.json",
+      "bytes": 3460641,
+      "sha256": "1a1c88ff45019f98fdb3b6b7df2992edc8169161265dfbf11eee09075de6d642"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_202228.json",
+      "bytes": 3486516,
+      "sha256": "1728e5ec93d4a12f770a3a55aa0c7e6db0c4d5cb2ccb7ae249d1b3cf89a07f93"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_212254.json",
+      "bytes": 3498208,
+      "sha256": "a95a744a373728bec500bda70821567bd15942f70871e2dab9387eee714ea319"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_222331.json",
+      "bytes": 3498181,
+      "sha256": "836b44513b074d992ae9573aa724de809ff54ec3227da16d6a972ad70a2c9afd"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-06_232426.json",
+      "bytes": 3524489,
+      "sha256": "27d50fa2cee1655aee8431d15a02aca43d4c545ff47080fbf2c427ea0ceba972"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-07_002546.json",
+      "bytes": 3535233,
+      "sha256": "6f3a18e2579e59d9fa1b3d9f3897fcf07ce06a698e70b0374d61c48f61d2a62e"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-07_012626.json",
+      "bytes": 3550040,
+      "sha256": "892ea1ce04f32f0b0f500640130ff003e306c1bde143edd1209875deb929c74f"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-07_015038.json",
+      "bytes": 3564621,
+      "sha256": "3585bcd2723b81eaad466e08b8d77aa391cd4b4d53aca2ecd4fa4df6b708ce0b"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-07_040656.json",
+      "bytes": 3585028,
+      "sha256": "b4c273c6d2782fd907b8e28c6bceb2e58c5e5191627930ea4dd3701ba977f931"
+    },
+    {
+      "path": "backend/data/optimus/source_scorecard/source_scorecard_2026-10-07_050933.json",
+      "bytes": 3612792,
+      "sha256": "74c6068ab8275667e1111513f9cbd7784b5a4176579c904f96d082329c6544af"
+    },
+    {
+      "path": "backend/data/optimus/telegram_agent_lock.json",
+      "bytes": 241,
+      "sha256": "2d8bd5f7caa6b7d065edd09a4f07eb6316b8b7c29d29ea1b10b763be4e02bfc3"
+    }
+  ]
+}
