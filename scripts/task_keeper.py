@@ -847,6 +847,16 @@ def _assets_preflight(paths: tuple[str, ...], *, pending: bool) -> str | None:
     return None
 
 
+def _assets_unpushed_history_scoped(run_id: str) -> bool:
+    """A net tree diff can hide an unrelated commit followed by its revert."""
+    head = _assets_git("log", "-1", "--format=%s")
+    history = _assets_git("log", "--name-only", "--format=", "origin/main..HEAD")
+    return (head.returncode == 0 and
+            head.stdout.strip().startswith(f"public assets refresh {run_id} ") and
+            history.returncode == 0 and bool(history.stdout.strip()) and
+            all(path in _asset_paths(run_id) for path in history.stdout.splitlines()))
+
+
 def run_assets(*, bump: Callable[..., int] | None = None,
                pytest_runner: Callable[..., Any] | None = None,
                commit: Callable[..., dict] | None = None, log_path: Path | None = None) -> dict:
@@ -893,8 +903,8 @@ def run_assets(*, bump: Callable[..., int] | None = None,
     if actual_caller and not pending and rc == 0:
         try:
             ASSETS_PENDING.parent.mkdir(parents=True, exist_ok=True)
-            ASSETS_PENDING.write_text(json.dumps({"run_id": new_id, "old_run_id": old_id,
-                                                 "hashes": _asset_hashes(new_id)}), encoding="utf-8")
+            pending = {"run_id": new_id, "old_run_id": old_id, "hashes": _asset_hashes(new_id)}
+            ASSETS_PENDING.write_text(json.dumps(pending), encoding="utf-8")
         except OSError as exc:
             row.update(action="skip", why=f"bump created uncommitted outputs but pending record failed: {exc}")
             return log(row, log_path or ASSETS_LOG)
@@ -922,6 +932,16 @@ def run_assets(*, bump: Callable[..., int] | None = None,
     except Exception as exc:                                           # noqa: BLE001
         row.update(action="skip", why=f"pytest raised {type(exc).__name__}: {str(exc)[:300]}")
         return log(row, log_path or ASSETS_LOG)
+    if actual_caller:
+        try:
+            if pending is None or pending["hashes"] != _asset_hashes(new_id):
+                raise ValueError("verified publication bytes changed during the test gate")
+            staged_now = _assets_git("diff", "--cached", "--name-only")
+            if staged_now.returncode != 0 or staged_now.stdout.strip():
+                raise ValueError("publication index changed during the test gate")
+        except (OSError, KeyError, ValueError) as exc:
+            row.update(action="skip", why=f"publication changed after verification: {exc}")
+            return log(row, log_path or ASSETS_LOG)
     receipt_rel = f"backend/data/optimus/paper_accounts/public_assets_refresh_{new_id}.json"
     try:
         commit = commit or (lambda **kw: __import__(
@@ -929,10 +949,7 @@ def run_assets(*, bump: Callable[..., int] | None = None,
         already_committed = (actual_caller and pending and
                              not _assets_git("status", "--porcelain", "--", *_asset_paths(new_id)).stdout.strip())
         if already_committed:
-            head = _assets_git("log", "-1", "--format=%s").stdout.strip()
-            ahead = _assets_git("diff", "--name-only", "origin/main..HEAD")
-            if (not head.startswith(f"public assets refresh {new_id} ") or ahead.returncode != 0 or
-                    any(p not in _asset_paths(new_id) for p in ahead.stdout.splitlines())):
+            if not _assets_unpushed_history_scoped(new_id):
                 raise RuntimeError("pending commit is not the scoped assets refresh")
             pushed = _assets_git("push", "origin", "main")
             out = {"status": "COMMITTED", "pushed": pushed.returncode == 0,

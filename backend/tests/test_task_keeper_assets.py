@@ -171,6 +171,35 @@ def test_asset_allowlist_does_not_stage_an_unrelated_local_file(tmp_path):
     assert "docs/assets/local_notes.txt" not in staged
 
 
+def test_push_retry_rejects_foreign_commit_hidden_by_its_revert(tmp_path, monkeypatch):
+    repo = tmp_path / "aegis-finance-publication"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    for key, val in (("user.name", "Asset Test"), ("user.email", "asset-test@example.invalid")):
+        subprocess.run(["git", "config", key, val], cwd=repo, check=True)
+    baseline = repo / "baseline.txt"
+    baseline.write_text("baseline\n", encoding="utf-8")
+    subprocess.run(["git", "add", "baseline.txt"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "baseline"], cwd=repo, check=True)
+    base = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True,
+                          capture_output=True, text=True).stdout.strip()
+    subprocess.run(["git", "update-ref", "refs/remotes/origin/main", base], cwd=repo, check=True)
+    foreign = repo / "foreign.txt"
+    foreign.write_text("foreign\n", encoding="utf-8")
+    subprocess.run(["git", "add", "foreign.txt"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "foreign"], cwd=repo, check=True)
+    foreign.unlink()
+    subprocess.run(["git", "add", "foreign.txt"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "revert foreign"], cwd=repo, check=True)
+    asset = repo / "README.md"
+    asset.write_text("assets\n", encoding="utf-8")
+    subprocess.run(["git", "add", "README.md"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-qm", "public assets refresh 2026-01-02T000000Z"],
+                   cwd=repo, check=True)
+    monkeypatch.setattr(TK, "REPO", repo)
+    assert not TK._assets_unpushed_history_scoped("2026-01-02T000000Z")
+
+
 def test_real_asset_caller_refuses_dirty_readme_then_retries_failed_test(
         tmp_path, monkeypatch):
     """Exercise the actual bump and Git commit on an isolated main checkout."""
@@ -248,6 +277,17 @@ def test_real_asset_caller_refuses_dirty_readme_then_retries_failed_test(
                           log_path=tmp_path / "assets.jsonl")
     assert first["action"] == "skip" and TK.ASSETS_PENDING.exists()
     assert RPA.RESULTS_RUN_ID == "2026-01-02T000000Z"
+    generated_readme = readme.read_bytes()
+
+    def passing_gate_with_owner_edit(*a, **kw):
+        readme.write_bytes(readme.read_bytes() + b"\nUNRELATED EDIT DURING PYTEST\n")
+        return _Rc(0, "passed")
+
+    changed = TK.run_assets(pytest_runner=passing_gate_with_owner_edit,
+                            log_path=tmp_path / "assets.jsonl")
+    assert changed["action"] == "skip" and "changed after verification" in changed["why"]
+    assert b"UNRELATED EDIT DURING PYTEST" in readme.read_bytes()
+    readme.write_bytes(generated_readme)
     second = TK.run_assets(pytest_runner=lambda *a, **kw: _Rc(0, "passed"),
                            log_path=tmp_path / "assets.jsonl")
     assert second["action"] == "ok" and not TK.ASSETS_PENDING.exists()

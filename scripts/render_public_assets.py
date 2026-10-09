@@ -796,7 +796,7 @@ def render_results() -> str:
     o.append(f'<circle cx="{x + 5}" cy="40" r="4" class="live"/>')
     o.append(f'<text x="{x + 18}" y="44" class="sec">BEST PAPER ACCOUNTS · LIVE</text>')
     o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">AS OF {d["as_of"]} CLOSE · RECEIPT '
-             f'roi_{d["run_id"]}</text>')
+             f'{Path(d["receipt"]).stem}</text>')
     o.append(f'<line x1="{x}" y1="58" x2="{x + w}" y2="58" class="rule"/>')
     top, lw, scale, bx = 88, 600, 200 / 8.0, x + 400
     for i, f in enumerate(d["featured"]):

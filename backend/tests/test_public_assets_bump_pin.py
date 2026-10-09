@@ -376,6 +376,14 @@ def test_snapshot_renders_without_raw_paper_receipts(
         paper_dir, three_families, pin_copy, readme_copy, rendered_dirs, monkeypatch, tmp_path):
     three_families("2026-01-01T000000Z", "2026-01-01T00:00:00+00:00")
     three_families("2026-01-02T000000Z", "2026-01-02T00:00:00+00:00")
+    for day in ("01", "02"):
+        roi_path = paper_dir / f"roi_2026-01-{day}T000000Z.json"
+        roi = json.loads(roi_path.read_text(encoding="utf-8"))
+        for row in roi["rows"]:
+            row["last_mark"] = f"2026-01-{day}"
+        roi["rows"].append({**roi["rows"][0], "account": "acct_0_random_twin",
+                            "roi_pct": 1.0, "vs_spy_pp": 0.0})
+        roi_path.write_text(json.dumps(roi), encoding="utf-8")
     _set_pin(pin_copy, "2026-01-01T000000Z")
     monkeypatch.setattr(RPA, "RESULTS_RUN_ID", "2026-01-01T000000Z")
     assert RPA.bump_pin("2026-01-02T000000Z", pin_path=pin_copy, readme_path=readme_copy) == 0
@@ -383,6 +391,10 @@ def test_snapshot_renders_without_raw_paper_receipts(
     monkeypatch.setattr(RPA, "PAPER_DIR", tmp_path / "empty_raw_inputs")
     assert RPA.results_data()["receipt"] == "docs/assets/public_results_2026-01-02T000000Z.json"
     assert RPA.outputs() == expected
+    from backend.tests import test_public_assets as public_gate
+    public_gate.test_every_number_on_the_results_panel_is_the_receipts_number()
+    public_gate.test_the_featured_accounts_are_what_the_declared_rule_picks()
+    public_gate.test_the_chart_is_the_lead_account_against_its_matched_twin_on_shared_dates()
 
 
 # ──────────────────────────────────────────────────────── the README block generator
