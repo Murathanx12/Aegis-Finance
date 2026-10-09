@@ -96,12 +96,20 @@ refresh public evidence. Its eight output kinds occupy 4,767,640 bytes, below
 the existing 5 MB limit. Raw logs, browser state, account records, full news
 text and local model outputs are not part of that publication.
 
-A bounded content scan inspected heads/tails (up to 2 MB) of eligible changed
+A bounded initial content scan inspected heads/tails (up to 2 MB) of eligible changed
 blobs up to 15 MB. Apparent secret-pattern matches were article URL slugs,
 not matched configured keys. This is **not a full secret or licensing audit**.
 The data contains browser/account metadata and news provenance; no new blanket
 public redistribution is justified. Licensed article text was not found in
 the sampled Dow Jones JSON, but absence in a sample proves no general absence.
+
+A subsequent complete-blob signature scan covered all 429 added/modified blobs
+in the October 9 range (196,191,714 bytes), and all 152 extant added/modified
+blobs in the October 7 range (74,365,158 bytes; the remaining four paths were
+deletions). No private-key, GitHub-token, AWS-access-ID, project-key or JWT
+signature matched. Dow Jones JSON parsed without errors and had no nonempty
+common full-article/body fields. These finite signatures do not prove absence
+of every credential format or establish redistribution rights.
 
 ## Branch disposition and actions
 
