@@ -76,6 +76,13 @@ def protected(now: datetime) -> bool:
     return (16, 45) <= (now.hour, now.minute) < (17, 5)
 
 
+def free_gib() -> float | None:
+    # Reuse the PC's native Windows probe: the scheduled-task venv has no psutil.
+    from scripts.task_keeper import _free_gb
+    gb = _free_gb()
+    return None if gb is None else gb * 1e9 / 2**30
+
+
 def run(ledger: Path, *, metadata_only: bool = False) -> dict:
     receipt = {"schema": "local-runtime-digest/1", "generated_utc":
                datetime.now(timezone.utc).isoformat(), "inputs": snapshot(ledger),
@@ -85,8 +92,9 @@ def run(ledger: Path, *, metadata_only: bool = False) -> dict:
         return {**receipt, "status": "METADATA_ONLY"}
     if protected(datetime.now()):
         return {**receipt, "status": "REFUSED", "reason": "IIF_PROTECTED_WINDOW"}
-    import psutil
-    free = psutil.virtual_memory().available / 2**30
+    free = free_gib()
+    if free is None:
+        return {**receipt, "status": "REFUSED", "reason": "MEMORY_PROBE_UNAVAILABLE"}
     receipt["free_before_gib"] = round(free, 2)
     if free < 3.0:
         return {**receipt, "status": "REFUSED", "reason": "LOW_MEMORY_BEFORE_START"}
@@ -107,8 +115,9 @@ def run(ledger: Path, *, metadata_only: bool = False) -> dict:
         if not state.get("ok"):
             receipt.update(status="REFUSED", reason="LOCAL_MODEL_NOT_READY")
             return receipt
-        receipt["free_loaded_gib"] = round(psutil.virtual_memory().available / 2**30, 2)
-        if receipt["free_loaded_gib"] < 1.0:
+        loaded = free_gib()
+        receipt["free_loaded_gib"] = None if loaded is None else round(loaded, 2)
+        if loaded is None or loaded < 1.0:
             receipt.update(status="REFUSED", reason="LOW_MEMORY_AFTER_START")
             return receipt
         with urlopen(base + "/models", timeout=5) as r:

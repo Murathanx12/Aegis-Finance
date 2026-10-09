@@ -2,7 +2,6 @@
 import json
 import os
 from datetime import datetime
-from types import SimpleNamespace
 
 from scripts import local_runtime_digest as D
 
@@ -47,12 +46,18 @@ def test_protected_window_boundaries():
 
 
 def _runtime(monkeypatch):
-    import psutil
     from backend.services import free_inference as fi, llama_server as ls
     monkeypatch.setattr(D, "protected", lambda now: False)
-    monkeypatch.setattr(psutil, "virtual_memory", lambda: SimpleNamespace(available=5 * 2**30))
+    monkeypatch.setattr(D, "free_gib", lambda: 5.0)
     monkeypatch.setattr(ls, "touch", lambda reason: None)
     return fi, ls
+
+
+def test_missing_memory_probe_refuses_without_model_start(tmp_path, monkeypatch):
+    _, ls = _runtime(monkeypatch)
+    monkeypatch.setattr(D, "free_gib", lambda: None)
+    monkeypatch.setattr(ls, "ensure", lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not start")))
+    assert D.run(tmp_path)["reason"] == "MEMORY_PROBE_UNAVAILABLE"
 
 
 def test_unavailable_local_model_makes_no_inference_call(tmp_path, monkeypatch):
