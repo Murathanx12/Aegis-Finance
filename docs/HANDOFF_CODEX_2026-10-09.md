@@ -2,11 +2,14 @@
 
 ## Recovery addendum — read before the earlier session below
 
-RESULTS as of October 8: 11/71 strategy accounts ahead of same-window SPY,
-nine distinct bets out of 59 (236 controls excluded). Revision-flow leader
-+6.97% vs SPY +0.73% = +6.24 pp over nine sessions, OBSERVED. Sixty accounts
-behind; worst mirror -28.34 pp over 79 sessions. No claim promoted; the leader
-is selected after the fact and has no random twin. Receipt:
+RESULTS as of the 2026-10-08 marks (run 2026-10-09T045359Z): 11 of 71 strategy accounts are ahead of SPY, each over its own window; they are 9 distinct bets ahead of 59 (holdings Jaccard >= 0.8; 236 controls/twins excluded).
+LEADER revision_flow_v0 (with hack2: same names): +6.97% vs SPY +0.73% = +6.24 pp, 2026-09-28 -> 2026-10-08, 9 sessions, OBSERVED(9). analyst revision flow: net target raises x distinct firms, 90 days.
+NEXT: lib_net_raises_2026-09-26 +5.55 pp (9 s, OBSERVED(9)); pers_revision_flow_leaders_2026-09-25 +5.42 pp (9 s, OBSERVED(9)); Cash/index by default; deviate only... [b109c886] +2.52 pp (19 s, OBSERVED(19))
+WHAT RAISES IT: revision_flow_v0 -> EARLY_EVIDENCE: 12 more session(s) (9 of 21), if excess stays > 0 (now +6.24 pp) and >= 2 of 3 sub-windows stay positive (now 3 of 3). No random twin seeded for this bet: the twin gap is NOT_COMPUTABLE.
+BEHIND: 60 of 71; worst mirror -28.34 pp (website_lane, 2026-06-16 -> 2026-10-08, 79 s).
+CLAIMS PROMOTED: none -- the highest label any strategy account holds is OBSERVED; leaders are chosen after the fact from 71 accounts, so the top of the table is biased upward.
+
+Verbatim generated voice, PRODUCT_EXPERIMENT paper books. Receipt:
 `backend/data/optimus/paper_accounts/results_voice_2026-10-09T045359Z.md`.
 
 The owner subsequently published the earlier session's files in `74f82326`.
@@ -31,12 +34,89 @@ scorecards are kept local through ignore rules and index-only removal; their
 bytes and old commits are preserved. The on-demand command
 `python -m scripts.local_runtime_digest` uses only local Qwen, validates memory,
 and keeps its receipts local. Actual inference was measured; no paid fallback.
+Two static scheduler templates, `supervisor_run.cmd` and `queue_run.cmd`, stay
+versioned; generated launchers, queues and logs remain local.
 
-PR #14 merged (`866c84c8`). Four fully incorporated remote branches were safely
-deleted. PR #13 stays open because its asset allowlist and pin-write sequence
+PR #14 merged (`866c84c8`). Five fully incorporated remote branches were safely
+deleted, including Astra after its merge and green CI. PR #13 stays open because its asset allowlist and pin-write sequence
 have reproduced defects. Unique WIP, historical canon, abandoned lab evidence
-and the lab automation branch remain. Hosted delegated workers exhausted the
-account allowance; their partial inventories are not independent approval.
+and the lab automation branch remain. The first hosted workers exhausted the
+account allowance. After it reset, an independent reviewer challenged the local
+digest helper, reproduced an unbound-start cleanup defect, and approved the
+repair after regression checks. This review covers that helper and its health
+reader; it is not a capital-sensitive strategy audit.
+
+### Installed operation and next-session workflow
+
+The runtime checkout remains `C:/Users/mrthn/aegis-finance`. The publication
+checkout is `../aegis-finance-publication`, on main. `AegisDataCatalog` now uses
+that checkout while reading the original runtime via `AEGIS_REPO_ROOT`; the
+existing sanitizer alone selects the public files. Its trigger, principal and
+settings were preserved. Never point a blanket Git add at either runtime tree.
+
+`AegisLocalRuntimeDigest` runs daily at **13:00 PC-local** using the existing
+`.venv/Scripts/pythonw.exe`. It samples four operational log tails, sends only
+enum counts and timestamps to local Qwen, and writes to ignored
+`backend/data/optimus/local_runtime_digest/`. It refuses low RAM and any start from
+16:40 through 17:04, reserving a margin around the protected IIF window. The
+installed task passed; the final helper also passed on actual logs at 09:13 UTC:
+650 tokens, 2.28 s, $0, owned process stopped. No paid fallback is configured.
+Raw news interpretation remains the separate existing, budgeted world digest.
+
+Qwen **failed code-review calibration**: it missed an explicit paid fallback.
+Use it for bounded operational summaries only, labelled unverified narration.
+Use a capable independent reviewer for code, and stronger independent reasoning
+for strategy/evidence/sizing. If cleanup reports `CLEANUP_UNCONFIRMED`, inspect
+the recorded owner and exact PID before intervention; never kill by executable
+name. Windows lifetime binding can fail, so an unconfirmed stop is not health.
+
+Next session, use the existing Claude pattern with **at most three workers**:
+
+1. Coordinator: refresh Optimus and Git, read this addendum and verification,
+   compare deployed SHA and current receipts, and set a bounded recovery queue.
+2. Bounded investigator: one concrete failure or historical question, exact
+   source paths, read-only, deterministic counts first. Return a short finding
+   with receipt paths and uncertainty; do not reread whole directories.
+3. Builder: one isolated repair, one writer per file, a reproduction and focused
+   tests. Use a separate worktree; preserve the active scheduler/browser owner.
+4. Independent reviewer: inspect the final diff and challenge failure cases,
+   privacy, controls and actual caller behavior. Builder tests are input, not
+   independent approval. Coordinator resolves findings, integrates, checks full
+   CI, and exercises the deployed surface before saying it works.
+
+Each assignment must state objective, files, known findings, allowed writes,
+acceptance/test, maximum scope and the concise output expected. Use deterministic
+tools for Git/JSON/status; use narrow context instead of full chat history. Do
+not silently substitute paid inference when a local job refuses. Track tokens
+and receipts when available; total hosted-session billing was not exposed.
+
+The first queue is recovery, not a new roadmap: verify the next authorized sim
+start and its advancing ledger; reconcile the existing fleet stop/cooldown
+findings under their contracts; investigate IIF's delayed firing without a
+retry or launcher change; repair PR #13's reproduced publication defects with
+an independent reviewer. Recheck remaining stale collectors against their real
+schedule and input availability. Only then reassess the completion gate and
+select work from INDEX's existing current roadmap.
+
+### What Murat should do
+
+- Keep the PC awake and available for its existing scheduled work, including
+  the observed **16:00 local IIF trigger** and the 16:45–17:05 load exclusion.
+  Windows standby/hibernate interrupted October 9; its refused night cannot be
+  retried. Leave OpenClaw's dedicated browser/profile with its
+  current reader owner. Free at least 3 GiB before an optional manual local
+  digest; a low-memory refusal is intentional.
+- Supply the authentic Bloomberg WLS MEMB export through the existing Terminal
+  pickup workflow. Registration, rules and verified fills remain separate
+  inputs. No proxy universe or fabricated export can clear that gate.
+- Start the next session with: "Continue from the recovery addendum in
+  docs/HANDOFF_CODEX_2026-10-09.md. Refresh live state, use bounded investigator,
+  builder and independent reviewer roles, and clear the documented recovery
+  gates before implementing updates from the existing roadmap. Keep runtime
+  logs local and preserve scheduled ownership."
+
+No new authorization is needed for ordinary investigation, tests, reviewed
+repairs, normal pushes or PR work within the scope already granted.
 
 The recovery completion gate is **NOT READY** until outstanding operational
 checks in the verification report are resolved or precisely externally blocked.

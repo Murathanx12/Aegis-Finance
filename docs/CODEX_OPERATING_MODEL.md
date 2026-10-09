@@ -40,6 +40,11 @@ work. Claude is already integrated; do not repeat its setup.
 | Bulk extraction/classification | Local Qwen if measured fit and resources permit; existing provisioned provider when separately justified | Small representative quality/cost sample first |
 
 These are capability choices, not promises about model price or availability.
+October 9 validation limits local Qwen to bounded operational metadata summaries:
+real inference and cleanup passed, but code-review calibration missed an
+explicit paid fallback. It must not be the independent code/security reviewer.
+The installed `AegisLocalRuntimeDigest` task runs at 13:00 PC-local and retains
+inputs/outputs locally; refusal never triggers a paid provider.
 Do not inherit the full conversation into routine workers. Supply the objective,
 relevant files, baseline, allowed writes, constraints, and expected output.
 Keep results short, retain detailed evidence in files, and reuse workers with

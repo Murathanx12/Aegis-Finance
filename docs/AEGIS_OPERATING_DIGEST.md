@@ -83,9 +83,14 @@ their own capital-sensitive behavior. A paid fallback must never silently turn
 a local task into API spending. Three workers maximum plus coordinator remains
 the default; token use is justified by verified output, not agent count.
 
-This recovery used that split, but all three delegated workers hit the account
-usage limit. Their saved inventories were used; this does **not** count as a
-completed independent audit. Root continued deterministic investigation.
+The first three delegated workers hit the account usage limit; root continued
+deterministic investigation. After reset, an independent reviewer audited the
+local digest and its health adapter, reproduced a timeout cleanup gap, and
+approved the repaired helper after synthetic regression checks. This does not
+certify unrelated strategy or capital-sensitive behavior. Qwen passed real log
+summarization but failed code-review calibration, so its role is operational
+narration only. The concrete next-session agent workflow is in the existing
+[handoff recovery addendum](HANDOFF_CODEX_2026-10-09.md).
 
 The negative-results ledger now has 64 numbered entries, rather than the old
 34-entry description in AGENTS. Load-bearing lessons include survivor-biased

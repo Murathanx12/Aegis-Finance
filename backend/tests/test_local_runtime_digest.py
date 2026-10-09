@@ -90,3 +90,19 @@ def test_reused_server_is_never_stopped_when_request_fails(tmp_path, monkeypatch
     monkeypatch.setattr(ls, "stop", lambda **k: (_ for _ in ()).throw(AssertionError("not ours")))
     row = D.run(tmp_path)
     assert row["status"] == "FAILED" and row["reason"] == "TimeoutError"
+
+
+def test_unbound_timed_out_child_reports_unconfirmed_cleanup(tmp_path, monkeypatch):
+    _, ls = _runtime(monkeypatch)
+    calls = []
+    monkeypatch.setattr(ls, "ensure", lambda *a, **k: calls.append(k) or
+                        {"ok": False, "action": "timeout", "pid": 123})
+    monkeypatch.setattr(ls, "owning_instance", lambda: {"owner_pid": os.getpid()})
+    monkeypatch.setattr(ls, "status", lambda: {"pid": None, "listening": False})
+    monkeypatch.setattr(ls, "pid_alive", lambda pid: True)
+    monkeypatch.setattr(ls, "stop", lambda **k: (_ for _ in ()).throw(AssertionError("unbound stop clears ownership")))
+    row = D.run(tmp_path)
+    assert row["status"] == "REFUSED"
+    assert row["owned_server_stopped"] is False
+    assert row["cleanup_reason"] == "CLEANUP_UNCONFIRMED"
+    assert calls == [{"wait_s": 45, "bind": True, "reaper": False, "watchdog": False}]

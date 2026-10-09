@@ -110,7 +110,11 @@ def run(ledger: Path, *, metadata_only: bool = False) -> dict:
         return {**receipt, "status": "REFUSED", "reason": "NONLOCAL_PROVIDER"}
     started_pid = None
     try:
-        state = ls.ensure("local-runtime-digest", wait_s=45)
+        # This short task must not leave a loading child behind at process exit.
+        # The existing Windows Job Object binds only a server we start here;
+        # a reused server keeps its existing owner and lifetime.
+        state = ls.ensure("local-runtime-digest", wait_s=45, bind=True,
+                          reaper=False, watchdog=False)
         if state.get("action") in {"started", "starting", "timeout"}:
             started_pid = state.get("pid")
         if not state.get("ok"):
@@ -145,10 +149,20 @@ def run(ledger: Path, *, metadata_only: bool = False) -> dict:
         receipt.update(status="FAILED", reason=type(exc).__name__)
     finally:
         if started_pid:
+            receipt["owned_server_stopped"] = False
             owner = ls.owning_instance()
             if owner.get("owner_pid") == os.getpid() and ls.status().get("pid") == started_pid:
                 stopped = ls.stop(allow_foreign=False, stop_reason="idle", stopped_by="local-runtime-digest")
                 receipt["owned_server_stopped"] = bool(stopped.get("ok"))
+            elif not ls.pid_alive(started_pid):
+                receipt["owned_server_stopped"] = True
+            if not receipt["owned_server_stopped"]:
+                # Never call socket-based stop for an unbound PID: that clears
+                # ownership without terminating it. The lifetime binding owns
+                # exit cleanup, but that future event is not a verified stop.
+                receipt["cleanup_reason"] = "CLEANUP_UNCONFIRMED"
+                if receipt.get("status") == "OK":
+                    receipt.update(status="FAILED", reason="CLEANUP_UNCONFIRMED")
     return receipt
 
 
