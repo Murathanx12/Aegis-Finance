@@ -59,11 +59,16 @@ pushed (`661db356`, then `ed9a24c4` restoring the two static templates in that
 branch's index). Owner BRIDGE/PAPER_ACCOUNTS documents and ROI image were
 hash-verified unchanged; active data was never bulk-staged.
 
-Final main CI and served-content verification follow the documentation push.
-Their exact observed SHA, NAV status and public source stamps are saved locally
-in `../aegis-recovery-evidence/coordinator/final_deploy_summary.json`; use that
-receipt and current GitHub Actions/Optimus live state instead of inferring a
-deploy from a merge. The verification report links the commands and gates.
+Main CI run `37915441250` passed (14,029 tests plus frontend). At **10:25:59 UTC**,
+Railway served `343a3af1`, NAV was fresh, and all six deployed-content comparisons
+passed. Brain, system-health and arena pages are FRESH. Forecast Lab still
+reports STALE for older underlying inputs; publication does not clear those
+gaps. The retained opportunity receipt is October 9 03:31 UTC; October 7 was
+the old deployed copy. Sanitized durable evidence:
+[deployment_verification.json](research_notes/2026-10-09/deployment_verification.json).
+This documentation-only closeout preserves that exact observation rather than
+claiming its later commit was already deployed. The latest post-push check is
+also saved locally in `../aegis-recovery-evidence/coordinator/final_deploy_summary.json`.
 
 ### Installed operation and next-session workflow
 
