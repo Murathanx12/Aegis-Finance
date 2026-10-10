@@ -118,7 +118,7 @@
     },
     "source_hash_basis": "SHA-256 of source text with CRLF normalized to LF",
     "source_sha256": {
-      "backend/config.py": "df2d3b2ce6a5e41581b00314701e79560650b15fe52a2c2d3abcd402601bbfb4",
+      "backend/config.py": "fdc0aef149c9c48e17133a56838e6053188a4b899fb73396aebabc90b636a5ae",
       "backend/data/optimus/paper_accounts/fleet_manager/contracts/hack2_v2.json": "98db41cebdd78c26c57a7b177f795f88b33555bf0763e62096792a8e83148aa5",
       "backend/services/decision_contract.py": "8e5acc06ad7aee0108f2d9dc2b4188866295908dab3a3e40d5a303ff37178f1b",
       "backend/services/decision_ledger.py": "8436f1e0ecf329be6888304c1b021dccd58645030fc495e6e4fb840bb6b41912",
@@ -150,5 +150,5 @@
       ]
     }
   },
-  "content_sha256": "2d0018badaac849f1065aca17faa63df663d45f935e1e8faa4dbab73757055ed"
+  "content_sha256": "6a93d267b8a8d0e5b485c4f20488d6d90ca060082869085e21ab3e408ddbf587"
 }
