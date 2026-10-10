@@ -289,15 +289,15 @@ def test_reader_decision_is_idempotent_and_honours_the_pause():
     assert K.reader_decision(rows=None, stop_exists=False)["action"] == "cannot_determine"
 
 
-def test_ensure_reader_launches_once_with_a_rolling_until(tmp_path):
+def test_ensure_reader_launches_once_with_continuous_supervision(tmp_path):
     from scripts import task_keeper as K
     launched = []
     now_local = datetime(NOW.year, NOW.month, NOW.day, 21, 0)
     out = K.ensure_reader(scan=lambda: [], launch=lambda u, p: launched.append((u, p)) or 777,
                           stop_path=tmp_path / "STOP", now_local=now_local,
                           log_path=tmp_path / "k.jsonl")
-    assert out["launched_pid"] == 777 and out["until"] == K.rolling_until(now_local)
-    assert len(launched) == 1
+    assert out["launched_pid"] == 777 and out["until"] == "continuous"
+    assert len(launched) == 1 and launched[0][0] == "continuous"
     again = K.ensure_reader(scan=lambda: [{"pid": 777, "cmdline": "scripts.night_reader_supervisor"}],
                             launch=lambda u, p: pytest.fail("second supervisor launched"),
                             stop_path=tmp_path / "STOP", log_path=tmp_path / "k.jsonl")

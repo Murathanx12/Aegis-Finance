@@ -131,9 +131,10 @@ def pool_cmd_text(*, until: str, profile: str = "muratclaw", py: str | None = No
     queue launcher, so `queue_logs` and `classify_exit` read it the same way."""
     day = day or datetime.now().strftime("%Y-%m-%d")
     log = f"backend\\data\\optimus\\dowjones\\reader_pool_{day}.log"
+    deadline = "" if until == "continuous" else f"--until {until} "
     return ("@echo off\n"
             f"cd /d {REPO}\n"
-            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} --until {until} "
+            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} {deadline}"
             f"< backend\\data\\optimus\\empty_stdin.txt >> {log} 2>> {log}.err\n")
 
 
@@ -590,7 +591,10 @@ def digest(claims_since: str) -> None:
     step("reading_report", ["backend.services.reader_report"], 300)
 
 
-def end_time(hhmm: str) -> datetime:
+def end_time(hhmm: str) -> datetime | None:
+    """Manual runs end at the next HH:MM; keeper runs have no time deadline."""
+    if hhmm == "continuous":
+        return None
     h, m = (int(x) for x in hhmm.split(":"))
     now = datetime.now()
     end = now.replace(hour=h, minute=m, second=0, microsecond=0)
@@ -1138,7 +1142,7 @@ def chrome_port_open() -> bool:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--until", default="08:00", help="local HH:MM")
+    ap.add_argument("--until", default="08:00", help="local HH:MM, or continuous for keeper runs")
     ap.add_argument("--queue-cmd", default=str(DJ / "queue_run.cmd"))
     ap.add_argument("--claims-since", default="2026-07-01")
     ap.add_argument("--no-rolling", dest="rolling", action="store_false",
@@ -1159,7 +1163,8 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(out, indent=1, default=str))
         return 0 if (out["probe"]["healthy"] or (out["repair"] or {}).get("healthy")) else 2
     end = end_time(a.until)
-    log(event="start", pid=os.getpid(), until=end.isoformat(timespec="minutes"))
+    log(event="start", pid=os.getpid(),
+        until=end.isoformat(timespec="minutes") if end is not None else "continuous")
     budget = GR.RepairBudget()
     open_budget = open_fault_budget()
     restarts, finished, last_launch, last_hourly, last_loads = 0, False, 0.0, time.time(), loads()
@@ -1251,7 +1256,7 @@ def main(argv: list[str] | None = None) -> int:
         if gap is not None:
             pending_resume = gap
 
-    while datetime.now() < end:
+    while end is None or datetime.now() < end:
         if STOP.exists():
             why = "STOP file"
             break
