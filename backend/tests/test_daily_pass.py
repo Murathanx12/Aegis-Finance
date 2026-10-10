@@ -119,6 +119,12 @@ def calls(monkeypatch) -> list[str]:
         return {"action": "skip", "reason": "before the start date (fixture)"}
 
     monkeypatch.setattr(DP, "run_bars_refresh", _bars)
+    # Native cache ownership/probes/subprocess are a separate producer seam.
+    # This fixture represents an already current cache; failure behavior is
+    # exercised with the real guarded producer in its focused tests.
+    from scripts import survivorship_cache_producer as SCP
+    monkeypatch.setattr(SCP, "produce", lambda **kw: {
+        "status": "nothing_to_do", "reason": "fixture: full cache identity current"})
     monkeypatch.setattr(DP, "run_grade_promises", _promises)
 
     # 2026-09-27. The three book-grading seams each run a CHILD that pulls from

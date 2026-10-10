@@ -899,7 +899,7 @@ def step_bars_refresh(ctx: dict) -> dict:
     """
     t0 = time.time()
     res = run_bars_refresh(
-        timeout_s=max(60.0, float(_STEP_BOXES["bars_refresh"]) - 60.0))
+        timeout_s=max(60.0, float(_STEP_BOXES["bars_refresh"]) - 180.0 - 60.0))
     st = str(res.get("status") or "refused")
     panels = res.get("panels") or {}
     added = sum(int((v or {}).get("rows_added") or 0) for v in panels.values()
@@ -910,6 +910,14 @@ def step_bars_refresh(ctx: dict) -> dict:
     if str(res.get("line") or "").startswith("BARS_STALE"):
         refusals.append(str(res["line"]))
     ctx["bars_line"] = res.get("line")
+    audit = {"status": "refused", "reason": "bars refresh did not establish current inputs"}
+    if st in ("ok", "unchanged", "nothing_to_do") and res.get("rc") == 0 and not refusals:
+        from scripts.survivorship_cache_producer import produce
+        remaining = min(180.0, float(_STEP_BOXES["bars_refresh"]) - (time.time() - t0) - 60.0)
+        audit = produce(budget_seconds=remaining)
+    if audit["status"] == "refused":
+        refusals.append("survivorship_audit: " + str(audit.get("reason")))
+        status = "refused"
     return _row("bars_refresh", status, rows=added,
                 seconds=round(time.time() - t0, 2), refusals=refusals,
                 bars_line=res.get("line"), receipt=res.get("path"),
@@ -917,7 +925,8 @@ def step_bars_refresh(ctx: dict) -> dict:
                             ("status", "rows_added", "newest_before",
                              "newest_after", "symbols_after", "readjusted")}
                         for k, v in panels.items() if isinstance(v, dict)},
-                rc=res.get("rc"), headline=res.get("headline"))
+                rc=res.get("rc"), headline=res.get("headline"),
+                bars_refresh_status=st, survivorship_audit=audit)
 
 
 def step_grade_promises(ctx: dict) -> dict:
