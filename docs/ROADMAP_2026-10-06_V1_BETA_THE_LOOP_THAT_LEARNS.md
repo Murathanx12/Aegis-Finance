@@ -369,6 +369,36 @@ forward reads 10-26/27, contest 10-12. WAITING ON OWNER: D1, D2, D5, D7, D13, D1
 
 ### 5c. ACTIVE EXECUTION QUEUE — 2026-10-09 (supersedes prior queues)
 
+**Owner continuation amendment, October 10 evening → Monday October 12 morning:**
+continue ready work after each chunk; the earlier two-chunk stop is superseded.
+[Persistent dependency queue](BETA_DEPENDENCY_QUEUE_2026-10-10.json) binds each
+chunk to this roadmap, an owner, dependencies, acceptance, status, artifact and
+next step. At most two workers run; builders use Sol/medium, bounded inventory
+Luna/medium, independent consequential review Sol/high. Actual route receipts
+verify those workers; the already running coordinator is Sol/high. Astra is
+reserved for the owner's final review. Retain block spending limits and two
+repair cycles, then park failures and continue independent tasks.
+
+PR #20's exact reviewed head `db307b5b` is merged as `86fc8b0e`; its main CI
+and deployment follow-through remain pending. A separate reviewed fix restores
+the decision-story no-E[r] fallback cap to the actual planner's cap. All three
+frozen consumer replays match; forecasts and books are unchanged, zero orders
+sent. Sixty-seven focused tests and 24 independent adversarial cases pass;
+release checks still bind. Historical mismatch receipts remain preserved.
+
+Read-only fleet checks find 85/85 long-share positions protected across five
+accessible roles, with one reconciliation discrepancy per role; the sixth role's
+credentials are invalid. These are separate safety and reconciliation facts,
+not permission to activate. Qwen is stopped with 1.26 GiB free at the probe;
+the 3 GiB memory floor remains intact. The client checkpoint/resume test and
+coordinator STOP/duplicate-owner checks pass. Existing runtime writers remain
+owners; no second operating coordinator or browser is launched.
+
+Monday morning can deliver an implementation/review packet. The preserved
+Monday 13:30 UTC PC epoch not-before is 21:30 SGT, and §9's full US-session
+observation follows that gate. Neither can be labelled operationally complete
+before its clock and evidence exist.
+
 **Budgeted execution delta, 2026-10-10:** The natural 10:30 SGT publication
 receipt is clean (`action=ok`, task result 0, main `97f1c629`); the publication
 follow-through is closed. The bounded real-source and measured replay work is
@@ -406,6 +436,39 @@ artifact, one PC runtime operator and one OpenClaw browser operator.
 | W5 Original-decision audit + labeled replay | Strong research worker with an independent skeptical review; no paper-writer overlap. | **PARTIAL.** Read-only audit construction passed independent review for exact 51/51 matching; this does not establish causal attribution, complete fills/actions, or skill. Reconcile original forecasts, actions, abstentions, winners and losers against dated inputs. Keep any new retrospective replay separately named, with coverage, timing/leakage controls, baseline and costs; never call replay forward performance. |
 | W6 Local cutover + backup/restore | Local infrastructure owner; coordinator reviews restore evidence. Depends on dependency/billing inventory and recoverable snapshots. | **PARTIAL.** The two-store SQLite/forecast-ledger restore passed independent checks. A separate 32 KB APScheduler DB with 12 jobs was backed up using SQLite online backup at 17:55 UTC (run 20261009T175541Z); source/snapshot/pre-post key, timestamp and blob hashes matched, the local isolated verifier passed, and production census was 12/12 healthy. This is not a whole-volume snapshot or cutover. Several other code-declared paths were absent at exact locations, while two listings remain unresolved. No local cutover, service retirement or savings claim; billing remains unknown. Preserve the original source and one-writer boundary. |
 | W7 Monday evidence pack | Coordinator integrates; owner supplies authentic Terminal inputs where needed. | **IN PROGRESS / NOT READY.** Include consumer and scheduled-task evidence, audit limits, scoped restore, and release receipts. AnalystPull Sunday and IIF Monday remain pending; authentic Bloomberg inputs remain **EXTERNAL_INPUT**. Continue independent work while those inputs are pending. |
+
+**Current execution receipt, October 11 at approximately 02:20 SGT:** the
+earlier states above are dated evidence. PRs #20–25 are now merged; publication
+recovery is closed. Latest production `f6e37899` passed exact main CI and live
+health, fresh NAV, registry and every paper-lane history canary. The frozen
+analyst replay cap is repaired without changing original forecasts or books.
+The canonical catch-up graded 22 original records once, its rerun added zero,
+and a later native expected-return fit consumed the learning update. Five fleet
+outcomes were graded and the subsequent five-account reconciliation found no
+discrepancies. The sixth credential remains inaccessible.
+
+The current reader is advancing with the existing browser owner: 32 successful
+pages in ten minutes and 202 in an hour at 02:10 SGT. Continuous-supervision
+sources are installed, but the final manual reload operator refused its live
+read-only process inventory before handles or mutations and is parked under
+the repair cap. It did not pause or restart anything. The scheduled local digest
+is fresh; the native shadow consumer reads zero news trust and leaves the plan
+unchanged. Strict opt-in news guards are released with legacy defaults intact.
+Their local source installation and one separately bounded extraction operator
+remain under review; no new strict semantic admission or trial accrual exists.
+The current-day learning-cache invocation refused its fresh memory preflight
+before an audit or cache write. Three mature forecasts still lack complete
+price windows after one free-provider request. Protected and inaccessible
+families retain explicit reasons rather than empty-dataset labels.
+
+The [current checkpoint](BETA_CONTINUATION_CHECKPOINT_2026-10-11.md),
+[52-row acceptance matrix](BETA_ACCEPTANCE_MATRIX_2026-10-10.md) and
+[dependency queue](BETA_DEPENDENCY_QUEUE_2026-10-10.json) carry the receipt-linked
+current statuses and next steps. Six unmapped report rows now retain explicit
+parked, deferred or inactive-preview evidence. ATLAS v3 remains an inactive
+proposal with its original v1/v2 comparisons, separate SPY comparator and
+unverified instrument and Bloomberg fields. Continue independent ready work;
+keep the Monday 21:30 SGT earliest PC epoch and full-session observation gates.
 
 #### Current owner-review map for handoff asks R01–R52
 
