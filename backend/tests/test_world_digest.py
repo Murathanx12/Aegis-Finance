@@ -12,6 +12,7 @@ import pandas as pd
 import pytest
 
 from backend.services import world_digest as WD
+from backend.services import news_source_validation as NV
 
 
 def _item(**kw) -> WD.Item:
@@ -35,6 +36,171 @@ GOOD = {"topic": "Micron beats", "summary": "Micron beat estimates on memory pri
         "mgmt_confidence": None, "uncertainty": 0.4, "novelty": "new_fact",
         "forward_claims": [{"subject": "MU", "direction": "up", "horizon": "weeks", "who": "analyst"},
                            {"subject": "x", "direction": "sideways"}]}
+
+
+@pytest.mark.parametrize("change", ["missing_horizon", "ministry", "intention", "missing_witness",
+                                   "bad_enum", "nan", "too_many"])
+def test_opt_in_refuses_whole_result_without_repairing_claims(change):
+    from copy import deepcopy
+    it = _item(text="Micron management predicts MU revenue will rise in coming weeks.")
+    raw = deepcopy(GOOD)
+    raw.update(sentiment=0.1, forward_claims=[{"subject": "MU", "direction": "up",
+        "horizon": "weeks", "who": "management", "speaker": "Micron management",
+        "modality": "prediction", "witness": it.text}])
+    claim = raw["forward_claims"][0]
+    if change == "missing_horizon":
+        claim.pop("horizon")
+    elif change == "ministry":
+        claim["who"] = "ministry"
+    elif change == "intention":
+        claim["modality"] = "policy_target"
+    elif change == "missing_witness":
+        claim.pop("witness")
+    elif change == "bad_enum":
+        raw["event_type"] = "fiscal_policy_invented"
+    elif change == "nan":
+        raw["sentiment"] = float("nan")
+    else:
+        raw["forward_claims"] *= 4
+    original = deepcopy(raw)
+    with pytest.raises(NV.SourceValidationError):
+        WD.type_current_row(raw, it)
+    assert repr(raw) == repr(original)  # failed whole reply remains intact
+
+
+def test_exact_fiscal_failure_shape_is_not_promoted_by_new_typing():
+    raw = {"event_type": "other", "novelty": "new_fact", "forward_claims": [
+        {"subject": "China", "direction": "up", "horizon": "months", "who": "author"},
+        {"subject": "infrastructure", "direction": "up", "horizon": "months", "who": "author"}]}
+    it = _item(title="China fiscal push", text="The ministry aims to meet its growth target.")
+    assert len(WD.type_row(raw, it)["forward_claims"]) == 2  # legacy compatibility
+    with pytest.raises(NV.SourceValidationError, match="unsupported_claim_contract"):
+        WD.type_current_row(raw, it)
+
+
+def test_opt_in_cache_identity_binds_actual_system_bytes(monkeypatch):
+    it = _item()
+    legacy = WD.cache_key(it)
+    first = WD.current_cache_key(it)
+    monkeypatch.setattr(WD, "CURRENT_EXTRACT_SYSTEM", WD.CURRENT_EXTRACT_SYSTEM + " changed")
+    assert WD.current_cache_key(it) != first
+    assert WD.cache_key(it) == legacy
+
+
+def test_current_cache_reuse_requires_case_admission_and_does_not_call_model(tmp_path):
+    from backend.tests.test_news_source_validation import current_control
+    it, capture, review, cutoff = current_control()
+    def forbidden(*args, **kwargs):
+        pytest.fail("cache reuse must never call model")
+    meter = WD.Meter(0, llm=forbidden)
+    legacy_cache = {WD.cache_key(it): capture}
+    # A new identity cannot hit the old row; a budget-zero fresh attempt is refused by Meter.
+    with pytest.raises(WD.BudgetExceeded):
+        WD.extract_current_item(it, meter, cache=legacy_cache, cutoff_utc=cutoff, stage_cap=0)
+    cache = {WD.current_cache_key(it): capture}
+    refused = WD.extract_current_item(it, meter, cache=cache, cutoff_utc=cutoff, stage_cap=0)
+    assert refused["status"] == "REFUSED" and refused["rows"] == []
+    accepted = WD.extract_current_item(it, meter, cache=cache, cutoff_utc=cutoff,
+                                        stage_cap=0, semantic_review=review)
+    assert accepted["cache_hit"] and accepted["rows"] == [capture["row"]]
+    assert "PREREGISTRATION_REQUIRED" in accepted["experimental_contract"]
+    assert not list(tmp_path.iterdir()) and meter.calls == 0
+
+
+def test_fresh_capture_retains_raw_failure_and_never_writes_cache(monkeypatch):
+    raw = {"event_type": "other", "novelty": "new_fact", "forward_claims": [
+        {"subject": "China", "direction": "up", "who": "author", "horizon": "months"}]}
+    reply = json.dumps(raw)
+    meter = WD.Meter(0.01, llm=lambda *a, **kw: _ok(reply))
+    monkeypatch.setattr(WD, "append_cache", lambda *a, **kw: pytest.fail("automatic write"))
+    result = WD.extract_current_item(_item(), meter, cache={}, stage_cap=0.01,
+        cutoff_utc=(datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat())
+    assert result["status"] == "REFUSED" and result["rows"] == []
+    assert result["capture"]["raw_reply"] == reply
+    assert result["capture"]["typing_refusal"] and meter.calls == 1
+
+
+def test_current_factual_data_page_stays_excluded_and_json_is_whole():
+    raw = {"event_type": "earnings", "novelty": "data_page", "forward_claims": [],
+           "summary": "Reported historical revenue", "topic": "Revenue"}
+    row = WD.type_current_row(raw, _item())
+    assert not WD._useful(row)
+    for bad in ['{"forward_claims": [], "forward_claims": []}', '{"sentiment": NaN}',
+                'prefix {"forward_claims": []}', '{"forward_claims": []} trailing']:
+        with pytest.raises(NV.SourceValidationError):
+            WD.parse_current_reply(bad)
+
+
+def test_fresh_valid_control_requires_review_then_reuses_actual_capture(monkeypatch):
+    raw = {"event_type": "other", "novelty": "new_fact", "forward_claims": [],
+           "summary": "A policy target was announced; it is an intention, not a prediction.",
+           "topic": "Policy intention"}
+    prompts = []
+    def fake(system, user, **kwargs):
+        prompts.append((system, user))
+        return _ok(json.dumps(raw))
+    meter = WD.Meter(0.01, llm=fake)
+    cutoff = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
+    item = _item(text="A ministry announced a policy target.")
+    pending = WD.extract_current_item(item, meter, cache={}, cutoff_utc=cutoff, stage_cap=0.01)
+    assert pending["status"] == "REFUSED" and pending["rows"] == []
+    capture = pending["capture"]
+    review = {"schema": "current_news_semantic_review/1", "decision": "FULL_ROW_ACCEPTED",
+              "independent": True, "reviewer": "synthetic-control-only",
+              "capture_sha256": NV.current_binding(capture), "claim_indices": [],
+              "reviewed_utc": datetime.now(timezone.utc).isoformat(),
+              "checks": ["full_row", "speaker_modality_horizon", "quantities_units_baselines",
+                         "reporting_date_only_no_inferred_operative_date"]}
+    accepted = WD.extract_current_item(item, meter, cache={WD.current_cache_key(item): capture},
+        cutoff_utc=cutoff, stage_cap=0.01, semantic_review=review)
+    assert accepted["rows"][0]["forward_claims"] == []
+    assert WD._useful(accepted["rows"][0]) and meter.calls == 1
+    assert prompts[0][0] == WD.CURRENT_EXTRACT_SYSTEM
+    item.text += " altered baseline"
+    with pytest.raises(NV.SourceValidationError, match="source_or_prompt_drift"):
+        NV.admit_current(item, capture, semantic_review=review, cutoff_utc=cutoff)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("tickers", 123), ("sectors", 123), ("countries", 123), ("macro", 123),
+    ("tickers", {"MU": True}), ("sectors", [123]), ("countries", [None]),
+    ("macro", [[]]), ("summary", {}), ("topic", False),
+    ("event_type", []), ("novelty", {})])
+def test_current_malformed_json_shapes_return_complete_capture(field, value):
+    raw = {"event_type": "other", "novelty": "new_fact", "forward_claims": [],
+           "topic": "Policy", "summary": "A policy target was announced.", field: value}
+    reply = json.dumps(raw)
+    meter = WD.Meter(0.01, llm=lambda *a, **kw: _ok(reply))
+    result = WD.extract_current_item(_item(), meter, cache={}, stage_cap=0.01,
+        cutoff_utc=(datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat())
+    assert result["status"] == "REFUSED" and result["rows"] == []
+    assert result["capture"]["raw_reply"] == reply and result["capture"]["typing_refusal"]
+    assert meter.calls == 1
+
+
+@pytest.mark.parametrize("field", ["direction", "who", "horizon", "modality", "speaker", "witness"])
+def test_current_malformed_claim_object_fields_refuse_without_type_error(field):
+    it = _item(text="Micron management predicts MU revenue will rise in coming weeks.")
+    raw = {"event_type": "guidance", "novelty": "new_fact", "forward_claims": [
+        {"subject": "MU", "direction": "up", "horizon": "weeks", "who": "management",
+         "speaker": "Micron management", "modality": "prediction", "witness": it.text, field: []}]}
+    with pytest.raises(NV.SourceValidationError):
+        WD.type_current_row(raw, it)
+
+
+@pytest.mark.parametrize("field", ["sentiment", "fear_greed", "mgmt_confidence", "uncertainty"])
+@pytest.mark.parametrize("value", [10**400, -10**400])
+def test_current_oversized_valid_json_number_refuses_and_retains_raw(field, value):
+    raw = {"event_type": "other", "novelty": "new_fact", "forward_claims": [],
+           "topic": "Policy", "summary": "Reported policy intention", field: value}
+    reply = json.dumps(raw)
+    meter = WD.Meter(0.01, llm=lambda *a, **kw: _ok(reply))
+    result = WD.extract_current_item(_item(), meter, cache={}, stage_cap=0.01,
+        cutoff_utc=(datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat())
+    assert result["status"] == "REFUSED" and result["rows"] == []
+    assert result["capture"]["raw_reply"] == reply
+    assert result["capture"]["typing_refusal"] == "current_invalid_numeric_field"
+    assert meter.calls == 1
 
 
 # ── injection guard ─────────────────────────────────────────────────────────

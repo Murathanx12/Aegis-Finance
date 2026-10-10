@@ -7,11 +7,92 @@ inspected as context, but never acquire an operative event date or authority.
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import datetime
 
 
 class SourceValidationError(ValueError):
     pass
+
+
+def content_sha256(value) -> str:
+    """Canonical content pin; strings retain their exact bytes, not a repr."""
+    text = value if isinstance(value, str) else json.dumps(
+        value, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def check_current_times(item, *, cutoff_utc: str) -> None:
+    cutoff = _time(cutoff_utc)
+    if _time(item.first_seen_utc) > cutoff:
+        raise SourceValidationError("source_not_known_at_cutoff")
+    if item.published_utc and _time(item.published_utc) > cutoff:
+        raise SourceValidationError("future_publication")
+
+
+def current_binding(capture: dict) -> str:
+    """Review binds the entire capture, including raw/typed/model/prompt/time."""
+    return content_sha256(capture)
+
+
+def admit_current(item, capture: dict, *, semantic_review: dict | None,
+                  cutoff_utc: str) -> dict:
+    """CURRENT independent case admission, never a corpus quality certificate.
+
+    Caller supplies an actual independent review receipt, not model testimony.
+    Checks bind that decision to every retained field. Exact-span membership is
+    a necessary syntax check only; the review must adjudicate full semantics,
+    speaker/modality/horizon and quantities/units/comparison baselines.
+    """
+    from backend.services import world_digest as WD
+    check_current_times(item, cutoff_utc=cutoff_utc)
+    if not isinstance(capture, dict):
+        raise SourceValidationError("current_capture_missing")
+    cutoff = _time(cutoff_utc)
+    started, completed = _time(capture.get("started_utc")), _time(capture.get("cached_utc"))
+    if not _time(item.first_seen_utc) <= started <= completed <= cutoff:
+        raise SourceValidationError("current_interpretation_time_invalid")
+    if item.published_utc and _time(item.published_utc) > started:
+        raise SourceValidationError("current_publication_after_extraction")
+    prompt, flagged = WD._item_prompt(item)
+    if (capture.get("cache_key") != WD.current_cache_key(item)
+            or capture.get("extraction_identity") != WD.current_extraction_identity()
+            or capture.get("source_sha256") != content_sha256(item.title + "\n" + item.text)
+            or capture.get("source_item_sha256") != content_sha256(vars(item))
+            or capture.get("user_prompt") != prompt
+            or capture.get("injection_lines_removed") != flagged):
+        raise SourceValidationError("current_source_or_prompt_drift")
+    if not isinstance(capture.get("extract_model"), str) or not capture["extract_model"].strip():
+        raise SourceValidationError("current_served_model_missing")
+    if not isinstance(capture.get("raw_reply"), str):
+        raise SourceValidationError("current_raw_reply_missing")
+    typed = WD.type_current_row(WD.parse_current_reply(capture["raw_reply"]), item)
+    if capture.get("typing_refusal") or typed != capture.get("row"):
+        raise SourceValidationError("current_raw_or_typed_drift")
+    review = semantic_review
+    if (not isinstance(review, dict) or review.get("schema") != "current_news_semantic_review/1"
+            or review.get("decision") != "FULL_ROW_ACCEPTED"
+            or review.get("independent") is not True
+            or not isinstance(review.get("reviewer"), str) or not review["reviewer"].strip()
+            or review.get("capture_sha256") != current_binding(capture)):
+        raise SourceValidationError("current_independent_full_row_review_missing_or_drift")
+    reviewed = _time(review.get("reviewed_utc"))
+    if not completed <= reviewed <= cutoff:
+        raise SourceValidationError("current_review_time_invalid")
+    required = {"full_row", "speaker_modality_horizon", "quantities_units_baselines",
+                "reporting_date_only_no_inferred_operative_date"}
+    checks = review.get("checks")
+    if (not isinstance(checks, list) or len(checks) != len(required)
+            or any(not isinstance(name, str) for name in checks) or set(checks) != required):
+        raise SourceValidationError("current_semantic_review_incomplete")
+    indices = review.get("claim_indices")
+    if (not isinstance(indices, list) or any(type(index) is not int for index in indices)
+            or indices != list(range(len(typed["forward_claims"])))):
+        raise SourceValidationError("current_claim_review_incomplete")
+    return {"status": "CURRENT_CASE_SEMANTICALLY_ADMITTED_EXPERIMENTAL_ONLY",
+            "capture_sha256": current_binding(capture),
+            "review_sha256": content_sha256(review), "semantic_grounding_validated": True,
+            "operative_event_date": None, "eligible_for_existing_shadow_v0": False}
 
 
 def _time(value: str) -> datetime:
