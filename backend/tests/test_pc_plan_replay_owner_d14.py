@@ -538,7 +538,19 @@ def test_a_refused_or_disabled_sleeve_holds_its_names_never_exits(tmp_path, monk
 # ─────────────────────────────── review fix 6: sleeve rows, graded ───────────
 
 def test_sleeve_and_core_write_labelled_decided_rows(tmp_path, monkeypatch):
+    from datetime import date, timedelta
+
     from backend.services import decision_ledger as DL
+    from backend.tests import test_u_plan_probe as probe
+
+    # The synthetic close series below contains business days only.  A replay
+    # started on Saturday/Sunday has no entry close and must be unpriceable;
+    # exercise the graded path from the latest actual session instead.
+    session = date.fromisoformat(ASOF)
+    while session.weekday() >= 5:
+        session -= timedelta(days=1)
+    monkeypatch.setattr(probe, "ASOF", session.isoformat())
+    monkeypatch.setitem(globals(), "ASOF", session.isoformat())
     _rf_stub(monkeypatch)
     rec, _ = _replay(tmp_path, monkeypatch, on=True)
     led = DL.read(tmp_path / "ledger.jsonl")
@@ -566,6 +578,7 @@ def test_sleeve_and_core_write_labelled_decided_rows(tmp_path, monkeypatch):
 
     def _fetch(tickers, start, end):
         idx = pd.bdate_range(start, periods=60)
+        assert pd.Timestamp(start) in idx and pd.Timestamp(end) in idx
         return pd.DataFrame({t: [100.0 * (1.01 if t != "SPY" else 1.0) ** i
                                  for i in range(60)] for t in tickers}, index=idx)
     res = DL.score_due(today=TODAY_PLUS(40), contracts=mine, price_fetch=_fetch,
