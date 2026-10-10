@@ -1,6 +1,7 @@
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 import hashlib
+import json
 
 import pytest
 
@@ -84,3 +85,95 @@ def test_evidence_contract_cannot_relabel_an_unbound_date_as_reporting():
                                   "dates": [{"role": "reporting", "status": "source_reported", "date": cutoff[:10]}]}
     with pytest.raises(NV.SourceValidationError, match="normalization_contract_missing"):
         NV.validate_cached(item, cache, cutoff_utc=cutoff)
+
+
+def current_control():
+    """Synthetic exact-bound control; no real source qualification claim."""
+    now = datetime.now(timezone.utc)
+    item = WD.Item("control", "article", "sec", "https://sec.gov/control", "MU guidance",
+                   "Micron management predicts MU revenue will rise in the coming weeks.",
+                   (now - timedelta(hours=2)).isoformat(),
+                   published_utc=(now - timedelta(hours=3)).isoformat(), tickers_named=["MU"])
+    raw = {"topic": "MU guidance", "summary": "Management predicts a revenue increase.",
+           "event_type": "guidance", "novelty": "new_fact", "forward_claims": [
+               {"subject": "MU", "direction": "up", "horizon": "weeks", "who": "management",
+                "speaker": "Micron management", "modality": "prediction", "witness": item.text}]}
+    prompt, flagged = WD._item_prompt(item)
+    capture = {"cache_key": WD.current_cache_key(item),
+               "extraction_identity": WD.current_extraction_identity(),
+               "source_sha256": NV.content_sha256(item.title + "\n" + item.text),
+               "source_item_sha256": NV.content_sha256(vars(item)),
+               "user_prompt": prompt, "raw_reply": json.dumps(raw),
+               "extract_model": "offline-control", "injection_lines_removed": flagged,
+               "started_utc": (now - timedelta(hours=1)).isoformat(),
+               "cached_utc": (now - timedelta(minutes=30)).isoformat(),
+               "row": WD.type_current_row(raw, item)}
+    review = {"schema": "current_news_semantic_review/1", "decision": "FULL_ROW_ACCEPTED",
+              "independent": True, "reviewer": "offline control reviewer",
+              "capture_sha256": NV.current_binding(capture), "reviewed_utc": now.isoformat(),
+              "claim_indices": [0], "checks": ["full_row", "speaker_modality_horizon",
+                  "quantities_units_baselines", "reporting_date_only_no_inferred_operative_date"]}
+    return item, capture, review, (now + timedelta(seconds=1)).isoformat()
+
+
+def test_current_requires_independent_full_row_review_not_exact_spans():
+    item, capture, review, cutoff = current_control()
+    with pytest.raises(NV.SourceValidationError, match="independent_full_row"):
+        NV.admit_current(item, capture, semantic_review=None, cutoff_utc=cutoff)
+    result = NV.admit_current(item, capture, semantic_review=review, cutoff_utc=cutoff)
+    assert result["semantic_grounding_validated"] and not result["eligible_for_existing_shadow_v0"]
+    review["claim_indices"] = []
+    with pytest.raises(NV.SourceValidationError, match="claim_review_incomplete"):
+        NV.admit_current(item, capture, semantic_review=review, cutoff_utc=cutoff)
+
+
+@pytest.mark.parametrize("field", ["raw_reply", "row", "extract_model", "user_prompt",
+                                  "source_sha256", "extraction_identity", "cached_utc"])
+def test_current_review_binds_every_capture_field(field):
+    item, capture, review, cutoff = current_control()
+    capture[field] = deepcopy(capture[field])
+    if field == "row":
+        capture[field]["summary"] = "A different assertion"
+    elif field == "extraction_identity":
+        capture[field]["version"] = "legacy"
+    elif field == "cached_utc":
+        capture[field] = datetime.fromisoformat(cutoff).isoformat()
+    else:
+        capture[field] += "changed"
+    with pytest.raises(NV.SourceValidationError):
+        NV.admit_current(item, capture, semantic_review=review, cutoff_utc=cutoff)
+
+
+@pytest.mark.parametrize("field", ["first_seen_utc", "published_utc"])
+@pytest.mark.parametrize("bad_time", ["future", "naive"])
+def test_current_source_chronology_refuses_future_and_naive(field, bad_time):
+    item, capture, review, cutoff = current_control()
+    setattr(item, field, ((datetime.fromisoformat(cutoff) + timedelta(days=1)).isoformat()
+                          if bad_time == "future" else cutoff[:19]))
+    with pytest.raises(NV.SourceValidationError):
+        NV.admit_current(item, capture, semantic_review=review, cutoff_utc=cutoff)
+
+
+def test_detached_semantics_cannot_be_admitted_by_span_only_receipt():
+    item, capture, review, cutoff = current_control()
+    review["checks"] = ["exact_spans"]
+    with pytest.raises(NV.SourceValidationError, match="semantic_review_incomplete"):
+        NV.admit_current(item, capture, semantic_review=review, cutoff_utc=cutoff)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("checks", {"full_row": False, "speaker_modality_horizon": False,
+                "quantities_units_baselines": False,
+                "reporting_date_only_no_inferred_operative_date": False}),
+    ("checks", [{"full_row": False}]), ("checks", False),
+    ("checks", ["full_row"] * 4), ("claim_indices", [False]),
+    ("claim_indices", [0.0]), ("claim_indices", {0: True}), ("claim_indices", [[0]])])
+def test_current_malformed_receipt_refuses_with_original_capture(field, value):
+    item, capture, review, cutoff = current_control()
+    original = deepcopy(capture)
+    review[field] = value
+    meter = WD.Meter(0, llm=lambda *a, **kw: pytest.fail("cache hit must not call"))
+    result = WD.extract_current_item(item, meter, cache={WD.current_cache_key(item): capture},
+        cutoff_utc=cutoff, stage_cap=0, semantic_review=review)
+    assert result["status"] == "REFUSED" and result["rows"] == []
+    assert result["capture"] == original and meter.calls == 0

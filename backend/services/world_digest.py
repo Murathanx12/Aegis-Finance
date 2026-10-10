@@ -629,6 +629,146 @@ def cache_key(item: Item) -> str:
                 _cfg.WORLD_DIGEST_PROMPT_VERSION)
 
 
+# Deliberately opt-in: these bytes do not alter the frozen v0 extractor/contract.
+CURRENT_EXTRACT_VERSION = "source_current_v1"
+CURRENT_EXTRACT_SYSTEM = EXTRACT_SYSTEM + (
+    "\nSTRICT SOURCE CONTRACT: forward_claims must be explicit predictions, not policy "
+    "targets, goals, intentions, actuals or your interpretation. Do not infer a horizon "
+    "or call a ministry the author/management. If the speaker or horizon cannot be "
+    "represented faithfully by the stated enums, return forward_claims: []. Each "
+    "claim additionally requires speaker (actual source name), modality: prediction, "
+    "and witness: the contiguous exact source passage linking subject, speaker, "
+    "direction and explicitly stated horizon. Never use unrelated exact spans as "
+    "support. Policy targets belong in the factual summary with their modality, "
+    "units and distinct comparison baselines preserved. No operative event dates."
+)
+
+
+def current_extraction_identity() -> dict:
+    import hashlib
+    return {"version": CURRENT_EXTRACT_VERSION,
+            "system_sha256": hashlib.sha256(CURRENT_EXTRACT_SYSTEM.encode()).hexdigest()}
+
+
+def current_cache_key(item: Item) -> str:
+    from backend.services import news_source_validation as NV
+    return NV.content_sha256({"identity": current_extraction_identity(),
+                              "item": vars(item)})
+
+
+def type_current_row(raw: Any, item: Item) -> dict:
+    """Strict experimental boundary; never repair or drop an unsupported claim."""
+    from backend.services import news_source_validation as NV
+    if not isinstance(raw, dict):
+        raise NV.SourceValidationError("current_reply_requires_object")
+    if (not isinstance(raw.get("event_type"), str) or raw["event_type"] not in EVENT_TYPES
+            or not isinstance(raw.get("novelty"), str) or raw["novelty"] not in NOVELTY):
+        raise NV.SourceValidationError("current_invalid_enum")
+    # Validate model-controlled shapes before the deliberately permissive legacy
+    # typer. Malformed JSON values are a whole-result refusal, never coercions.
+    for field in ("topic", "summary"):
+        if field in raw and not isinstance(raw[field], str):
+            raise NV.SourceValidationError("current_invalid_scalar_schema")
+    for field in ("tickers", "sectors", "countries", "macro"):
+        if field in raw and (not isinstance(raw[field], list)
+                             or any(not isinstance(value, str) for value in raw[field])):
+            raise NV.SourceValidationError("current_invalid_collection_schema")
+    if raw.get("event_date") is not None or raw.get("estimated_dates"):
+        raise NV.SourceValidationError("unsupported_operative_event_day")
+    for name, low, high in (("sentiment", -1, 1), ("fear_greed", -1, 1),
+                            ("mgmt_confidence", -1, 1), ("uncertainty", 0, 1)):
+        value = raw.get(name)
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                                  or not low <= value <= high or not math.isfinite(value)):
+            raise NV.SourceValidationError("current_invalid_numeric_field")
+    claims = raw.get("forward_claims")
+    if not isinstance(claims, list) or len(claims) > 3:
+        raise NV.SourceValidationError("current_invalid_claims")
+    source = item.title + "\n" + item.text
+    for claim in claims:
+        if (not isinstance(claim, dict)
+                or any(not isinstance(claim.get(field), str) for field in
+                       ("direction", "who", "horizon", "modality"))
+                or claim.get("direction") not in DIRECTIONS
+                or claim.get("who") not in {"author", "analyst", "management", "market"}
+                or claim.get("horizon") not in {"days", "weeks", "months"}
+                or claim.get("modality") != "prediction"):
+            raise NV.SourceValidationError("current_unsupported_claim_contract")
+        for field in ("subject", "speaker", "witness"):
+            if not isinstance(claim.get(field), str) or not claim[field].strip():
+                raise NV.SourceValidationError("current_missing_claim_witness")
+        if (claim["witness"] not in source or claim["speaker"] not in claim["witness"]
+                or claim["subject"] not in claim["witness"]):
+            raise NV.SourceValidationError("current_detached_claim_witness")
+    row = type_row(raw, item)
+    if row is None or len(row["forward_claims"]) != len(claims):
+        raise NV.SourceValidationError("current_lossy_claim_typing")
+    for typed, original in zip(row["forward_claims"], claims):
+        if any(typed[k] != original[k] for k in ("subject", "direction", "who", "horizon")):
+            raise NV.SourceValidationError("current_lossy_claim_typing")
+        typed.update({k: original[k] for k in ("speaker", "modality", "witness")})
+    return row
+
+
+def parse_current_reply(reply: str) -> dict:
+    from backend.services import news_source_validation as NV
+    def unique(pairs):
+        out = {}
+        for key, value in pairs:
+            if key in out:
+                raise ValueError("duplicate key")
+            out[key] = value
+        return out
+    try:
+        return json.loads(reply, object_pairs_hook=unique,
+                          parse_constant=lambda value: (_ for _ in ()).throw(ValueError(value)))
+    except (ValueError, TypeError) as exc:
+        raise NV.SourceValidationError("current_invalid_complete_json_reply") from exc
+
+
+def extract_current_item(item: Item, meter: "Meter", *, cache: dict,
+                         cutoff_utc: str, stage_cap: float,
+                         semantic_review: Optional[dict] = None) -> dict:
+    """Opt-in CURRENT capture/admission only, with no automatic cache writes.
+
+    Returned captures are evidence, including refusals. Persist them privately;
+    this seam never feeds native themes/forecasts or changes SHADOW_NEWS_v0.
+    A cache hit undergoes the same full case admission; legacy keys cannot hit.
+    """
+    from backend.services import news_source_validation as NV
+    NV.check_current_times(item, cutoff_utc=cutoff_utc)
+    key = current_cache_key(item)
+    capture = cache.get(key)
+    hit = capture is not None
+    if not hit:
+        prompt, flagged = _item_prompt(item)
+        started = datetime.now(timezone.utc).isoformat()
+        reply = meter.call(CURRENT_EXTRACT_SYSTEM, prompt, purpose="world_digest_extract_current",
+                           max_tokens=900, stage="extract", reserve_usd=0.003,
+                           stage_cap=stage_cap)
+        capture = {"cache_key": key, "extraction_identity": current_extraction_identity(),
+                   "source_sha256": NV.content_sha256(item.title + "\n" + item.text),
+                   "source_item_sha256": NV.content_sha256(vars(item)),
+                   "user_prompt": prompt, "raw_reply": reply,
+                   "extract_model": meter.last_model(), "started_utc": started,
+                   "cached_utc": datetime.now(timezone.utc).isoformat(),
+                   "injection_lines_removed": flagged}
+        try:
+            capture["row"] = type_current_row(parse_current_reply(reply), item)
+        except NV.SourceValidationError as exc:
+            capture["typing_refusal"] = str(exc)
+    declaration = "NEW_EXPERIMENTAL_CONTRACT_DECISION_AND_PREREGISTRATION_REQUIRED_BEFORE_FORECAST_OR_ACCRUAL"
+    try:
+        admission = NV.admit_current(item, capture, semantic_review=semantic_review,
+                                     cutoff_utc=cutoff_utc)
+    except NV.SourceValidationError as exc:
+        return {"status": "REFUSED", "reason": str(exc), "rows": [], "capture": capture,
+                "cache_hit": hit, "experimental_contract": declaration}
+    return {"status": "CURRENT_CASE_ADMITTED_EXPERIMENTAL_ONLY", "rows": [capture["row"]],
+            "capture": capture, "admission": admission, "cache_hit": hit,
+            "experimental_contract": declaration}
+
+
 def read_cache(path: Optional[Path] = None) -> dict[str, dict]:
     return {r["cache_key"]: r for r in _jsonl(path or cache_path()) if r.get("cache_key")}
 
