@@ -33,3 +33,24 @@ The matrix now preserves the catalyst candidate's failed review and the reasons 
 ATLAS v3 remains an inactive 23-stock proposal with 4% cash and a separate SPY comparator. Its exact v1/v2/v3 allocation comparison is included. Bloomberg approval, eligible membership, current rules and actual fills await Monday lab evidence. PC epoch flags remain off, with the existing Monday 13:30 UTC / 21:30 SGT earliest activation. Full-session observation necessarily follows that gate.
 
 Budget checkpoint 7: 32% to 36.0%, using 4.0 of 5 allowed percentage points. Next checkpoint: 2026-10-10T19:23:00Z, starting at 36%. No credits, hosting or unauthorised fallback were purchased. Checkpoints are continuity records, not completion.
+
+
+## Continuation evidence — Sunday 11 October, 05:10 SGT
+
+The earlier evidence cut remains a historical snapshot. This supplement records subsequent results and does not grant final beta acceptance.
+
+| Work | New result | Remaining limit |
+|---|---|---|
+| Original forecast scope | 211 unprotected family/identity pairs, exact known-22 overlap of22, 189 original pairs outside that subset; all22 original non-resolution objects matched | Historical sets; current eligibility/residual unknown |
+| Source metadata | Two complete byte prefixes independently qualified without JSON value decoding | 189-pair crosswalk refused at whole time/RSS fence after120.125s; no result, two source repairs spent, parked |
+| Learning unit | One Oct11 native survivorship audit/cache; native sim consumed it; unit health ALIVE; rerun zero-write; independent actual review approved | One descriptive unit; other learning, full dashboard and scheduled-run freshness not established |
+| Reader | Same browser,17 successful pages/10min and73/hour at04:40SGT | Continuous source not loaded in old process; manual restart parked |
+| Strict news | Two complete cases safely refused; alternative witness authentic but detached from ticker claims | No semantic admission/forecast;443 completion tokens below600 cap; no retry |
+| Release | PR26 merged500be24; main CI passed;19:43UTC deployed-commit health/NAV/lane checks passed | No final beta acceptance; this supplement still a review draft |
+| Local prices | Native adjusted-price route source review passed; original date baseline preserved | Three contracts, actual asset/basis/windows unqualified; no provider retry or grading |
+
+Budget checkpoint9 measured39% to43%,4 of5 allowed percentage points. Four separately scoped coordinator extraction calls total $0.00108834 at listed rates; the scheduled digest meter is separate. These are not an invoice. No purchases or automatic Astra switch. Next budget boundary:21:23UTC, baseline43%, cap5 points.
+
+Next ready work: qualify the exact-three contract metadata, finish the bounded cached-news pair inventory, and observe natural06:30SGT DailyPass/WorldDigest and08:30SGT NN metadata receipts. All services retain their existing owners and schedules. ATLAS remains inactive, SPY a separate comparator, Monday epoch flags off until21:30SGT, and IIF16:45–17:05SGT protected.
+
+[Learning coverage](BETA_OUTPUT_CONSUMER_SUBSETS_2026-10-10.md), [Monday Terminal guide](MONDAY_TERMINAL_PREPARATION_2026-10-12.md), [inactive ATLAS draft](ATLAS_LLM_PORTFOLIO_V3_2026-10-10_REVIEW.md).
