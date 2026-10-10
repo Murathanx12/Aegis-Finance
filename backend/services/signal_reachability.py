@@ -154,6 +154,13 @@ CLASSIFIED: dict[str, str] = {
         "OK — the suite. It reaches the system, not the other way round."),
     "backend.services.copy_lab": (
         "OK — offline lane research; invoked by the attended lane tooling."),
+    "backend.services.news_source_validation": (
+        "OK -- offline source-binding guard called by ft_lab.beta_news_pipeline; "
+        "the scripts-only tooling scan does not include ft_lab. Its actual "
+        "cache/date rejection consumer is a bounded PRODUCT_EXPERIMENT, not a "
+        "request, timer or live forecast integration. Legacy cache bindings "
+        "remain BOUND_ONLY and news-to-E[r] remains BLOCKED_NOT_READ_BY_DESIGN. "
+        "Reclassify if a reviewed live consumer is added."),
     "backend.services.model_provider": (
         "OK -- attended CLI (`python -m backend.services.model_provider --probe`). "
         "One OpenAI-compatible contract for DeepSeek/NVIDIA/HF so adding a model is a "

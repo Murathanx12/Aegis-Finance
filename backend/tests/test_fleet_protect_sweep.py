@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 from datetime import datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
@@ -14,7 +15,7 @@ from backend.tests.test_fleet_protect_only import FakeVenue, setup_owned
 from scripts import fleet_protect_sweep as CLI
 
 
-def _ready(tmp_path, monkeypatch, *, held=10, stop=0, other_sell=0):
+def _ready(tmp_path, monkeypatch, *, held=10, stop=0, other_sell=0, owned_stop=True):
     modes = setup_owned(tmp_path)
     modes.update({r: {"skip": "offline inactive fixture"} for r in FM._cfg.FLEET_MANAGER_ROLES
                   if r != "hack6"})
@@ -25,6 +26,26 @@ def _ready(tmp_path, monkeypatch, *, held=10, stop=0, other_sell=0):
                     "finished_utc": datetime.now(timezone.utc).isoformat()})
     FM.atomic_write_json(receipt_path, receipt)
     venue = FakeVenue(tmp_path, held=held, stop=stop, other_sell=other_sell)
+    if stop and owned_stop:
+        FM.append_jsonl(FM.decisions_path(tmp_path), {
+            "row": "decision", "run_id": "prior-stop", "role": "hack6",
+            "coid": "owned-stop-coid", "mode": "LIVE", "kind": "stop_new",
+            "symbol": "CCI", "side": "sell", "qty": stop, "type": "stop",
+            "tif": "gtc", "stop_price": 90})
+        FM.append_jsonl(FM.decisions_path(tmp_path), {
+            "row": "outcome", "run_id": "prior-stop", "role": "hack6",
+            "coid": "owned-stop-coid", "outcome": "submitted accepted id old-stop",
+            "order_id": "old-stop"})
+        original_open_orders = venue.open_orders
+
+        def owned_open_orders():
+            orders = original_open_orders()
+            for order in orders:
+                if order["id"] == "old-stop":
+                    order["client_order_id"] = "owned-stop-coid"
+            return orders
+
+        venue.open_orders = owned_open_orders
     root = FM.root
     monkeypatch.setattr(FM, "root", lambda base=None: root(base or tmp_path))
     monkeypatch.setattr(CLI.RUN, "read_env_file", lambda _: {
@@ -63,15 +84,149 @@ def _ready(tmp_path, monkeypatch, *, held=10, stop=0, other_sell=0):
     return modes, venue, transport, methods
 
 
-@pytest.mark.parametrize("stop,other_sell", [(10, 0), (4, 6)])
-def test_actual_cli_fully_reserved_is_zero_action(tmp_path, monkeypatch, capsys, stop, other_sell):
-    _, venue, transport, methods = _ready(tmp_path, monkeypatch,
-                                          stop=stop, other_sell=other_sell)
+def test_actual_cli_fully_reserved_is_zero_action(tmp_path, monkeypatch, capsys):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=10)
     assert CLI.main(["--live"], transport=transport) == 0
     row = json.loads(capsys.readouterr().out)
     assert row["status"] == "ALREADY_COVERED" and row["requests_upper_bound"] <= 180
     assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
     assert len(list((FM.root() / "sweeps").glob("sweep_*.json"))) == 1
+
+
+def _old_rejected_intent(tmp_path, *, outcome="REJECTED http 403: wash trade"):
+    FM.append_jsonl(FM.decisions_path(tmp_path), {
+        "row": "decision", "run_id": "old-open", "role": "hack6",
+        "coid": "old-rejected-coid", "mode": "LIVE", "kind": "stop_new",
+        "symbol": "CCI", "side": "sell", "qty": 5, "type": "stop", "tif": "gtc"})
+    FM.append_jsonl(FM.decisions_path(tmp_path), {
+        "row": "outcome", "run_id": "old-open", "role": "hack6",
+        "coid": "old-rejected-coid", "outcome": outcome, "order_id": None})
+
+
+@pytest.mark.parametrize("outcome", ["REJECTED http 403: wash trade", "SUBMIT_UNKNOWN: lost acknowledgement"])
+def test_actual_cli_covered_old_unknown_is_visible_noop(tmp_path, monkeypatch, capsys, outcome):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=10)
+    _old_rejected_intent(tmp_path, outcome=outcome)
+    assert CLI.main(["--live"], transport=transport) == 0
+    row = json.loads(capsys.readouterr().out)
+    assert row["status"] == "ALREADY_COVERED"
+    assert len(row["history_warnings"]) == 1
+    warning = row["history_warnings"][0]
+    assert warning["code"] == "UNRESOLVED_PRIOR_STOP_INTENT"
+    assert len(warning["identity_sha256"]) == 64
+    assert "old-rejected-coid" not in json.dumps(row)
+    assert json.loads(next((FM.root() / "sweeps").glob("sweep_*.json")).read_text()) == row
+    assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
+
+
+def test_actual_cli_expired_during_final_covered_proof_refuses(tmp_path, monkeypatch, capsys):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=10)
+    _old_rejected_intent(tmp_path)
+    ledger = FM.decisions_path(tmp_path)
+    before = ledger.read_bytes()
+    budgets = []
+    budget_type = FP.SweepBudget
+    def budget_factory():
+        budget = budget_type()
+        budgets.append(budget)
+        return budget
+    monkeypatch.setattr(CLI.FP, "SweepBudget", budget_factory)
+    original = FP._verified_covered_noop
+    def proof_then_expire(*args, **kwargs):
+        result = original(*args, **kwargs)
+        budgets[0].until = time.monotonic() - 1
+        return result
+    monkeypatch.setattr(FP, "_verified_covered_noop", proof_then_expire)
+    assert CLI.main(["--live"], transport=transport) == 2
+    row = json.loads(capsys.readouterr().out)
+    assert row["status"] == "REFUSED" and "budget exhausted" in row["why"]
+    assert row["history_warnings"][0]["code"] == "UNRESOLVED_PRIOR_STOP_INTENT"
+    assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
+    assert ledger.read_bytes() == before
+
+
+def test_actual_cli_session_closes_at_whole_receipt_boundary(tmp_path, monkeypatch, capsys):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=10)
+    calls = 0
+    day = datetime.now(timezone.utc).astimezone(ZoneInfo("America/New_York")).date().isoformat()
+    def clock_boundary(clock, _now):
+        nonlocal calls
+        calls += 1
+        if calls == 3 or clock.get("is_open") is not True:
+            raise FM.FleetRefusal("sweep venue closed before whole receipt")
+        return day
+    monkeypatch.setattr(FP, "_sweep_clock", clock_boundary)
+    assert CLI.main(["--live"], transport=transport) == 2
+    row = json.loads(capsys.readouterr().out)
+    assert calls == 3 and row["status"] == "REFUSED"
+    assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
+
+
+def test_cli_retains_history_warning_if_later_role_refuses(tmp_path, monkeypatch, capsys):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=10)
+    warning = {"role": "hack6", "symbol": "CCI", "code": "UNRESOLVED_PRIOR_STOP_INTENT",
+               "identity_sha256": "a" * 64}
+    def later_refusal(_venues, _modes, _sigma_for, *, budget, **_kwargs):
+        budget.history_warnings.append(warning)
+        raise FM.FleetRefusal("later role incomplete")
+    monkeypatch.setattr(CLI.FP, "sweep_once", later_refusal)
+    assert CLI.main(["--live"], transport=transport) == 2
+    row = json.loads(capsys.readouterr().out)
+    assert row["status"] == "REFUSED" and row["history_warnings"] == [warning]
+    assert json.loads(next((FM.root() / "sweeps").glob("sweep_*.json")).read_text()) == row
+    assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
+
+
+def test_actual_cli_uncovered_share_keeps_old_intent_block(tmp_path, monkeypatch, capsys):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=10)
+    _old_rejected_intent(tmp_path)
+    venue.stop = 9
+    assert CLI.main(["--live"], transport=transport) == 2
+    row = json.loads(capsys.readouterr().out)
+    assert row["status"] == "REFUSED" and "unresolved prior stop intent" in row["why"]
+    assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
+
+
+@pytest.mark.parametrize("stop,other_sell,owned_stop", [(4, 6, True), (10, 0, False)])
+def test_actual_cli_nonstop_or_unowned_reservation_is_not_protection(
+        tmp_path, monkeypatch, capsys, stop, other_sell, owned_stop):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=stop,
+                                          other_sell=other_sell, owned_stop=owned_stop)
+    _old_rejected_intent(tmp_path)
+    assert CLI.main(["--live"], transport=transport) == 2
+    row = json.loads(capsys.readouterr().out)
+    assert row["status"] == "REFUSED"
+    assert [w["code"] for w in row["history_warnings"]] == ["UNRESOLVED_PRIOR_STOP_INTENT"]
+    assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
+
+
+@pytest.mark.parametrize("mutation", ["pending_buy", "oversubscribed", "nan_stop", "fractional", "held_child"])
+def test_actual_cli_ambiguous_full_reservation_never_bypasses_old_intent(
+        tmp_path, monkeypatch, capsys, mutation):
+    _, venue, transport, methods = _ready(tmp_path, monkeypatch, stop=10)
+    _old_rejected_intent(tmp_path)
+    if mutation == "pending_buy":
+        old_open_orders = venue.open_orders
+        venue.open_orders = lambda: old_open_orders() + [{
+            "id": "pending-buy", "symbol": "CCI", "side": "buy", "type": "limit",
+            "qty": "1", "filled_qty": "0", "status": "new"}]
+    elif mutation == "oversubscribed":
+        venue.stop = 11
+    elif mutation == "nan_stop":
+        old_open_orders = venue.open_orders
+        def invalid_stop():
+            orders = old_open_orders()
+            orders[0]["stop_price"] = "NaN"
+            return orders
+        venue.open_orders = invalid_stop
+    elif mutation == "held_child":
+        venue.stop_status = "held"
+    else:
+        venue.held = venue.stop = 10.5
+    assert CLI.main(["--live"], transport=transport) == 2
+    row = json.loads(capsys.readouterr().out)
+    assert row["status"] == "REFUSED"
+    assert venue.posts == 0 and all(method == "GET" for method, _ in methods)
 
 
 def test_actual_cli_late_fill_one_stop_then_noop(tmp_path, monkeypatch, capsys):

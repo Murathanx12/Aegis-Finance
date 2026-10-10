@@ -51,7 +51,7 @@ function Row({ r }: { r: HealthProbeRow }) {
 export default function HealthPage() {
   const q = useQuery({ queryKey: ["system-health"], queryFn: getSystemHealth, retry: 1, refetchInterval: 5 * 60_000 });
   const d = q.data;
-  const [showAlive, setShowAlive] = useState(false);
+  const [showAlive, setShowAlive] = useState(true);
   return (
     <div className="space-y-5 animate-slide-up">
       <div className="flex flex-wrap items-start justify-between gap-3">

@@ -1,6 +1,7 @@
 """One-shot protection of a late fleet fill; no entry, exit, cancel or rebaseline."""
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -72,7 +73,8 @@ def _accepted_orders(role: str, base: Path) -> dict[str, dict]:
         if oid in by_id:
             raise FM.FleetRefusal("broker order id has conflicting accepted outcomes")
         by_id[oid] = {"coid": key[1], "symbol": decision["symbol"],
-                      "side": decision["side"], "type": decision["type"], "qty": qty}
+                      "side": decision["side"], "type": decision["type"], "qty": qty,
+                      "tif": decision.get("tif"), "stop_price": decision.get("stop_price")}
     return by_id
 
 
@@ -98,7 +100,9 @@ def _snapshot(venue, symbol: str) -> tuple[dict, list[dict], list[dict]]:
         raise FM.FleetRefusal("account cash plus marked long holdings disagrees with equity")
     ids: set[str] = set()
     for o in orders:
-        if not isinstance(o, dict) or not o.get("id") or o["id"] in ids:
+        if (not isinstance(o, dict) or not isinstance(o.get("id"), str)
+                or not o["id"] or o["id"] in ids
+                or not isinstance(o.get("symbol"), str) or not o["symbol"]):
             raise FM.FleetRefusal("open order identity absent or duplicated")
         ids.add(o["id"])
         if o.get("symbol") == symbol and o.get("legs"):
@@ -220,9 +224,10 @@ def _reconciled(venue, role: str, state: dict, positions: list[dict], base: Path
     return rec
 
 
-def _prior_intent(role: str, symbol: str, coid: str, base: Path) -> bool:
+def _unresolved_stop_intents(role: str, symbol: str, coid: str, base: Path) -> list[str]:
     rows = _ledger_rows(base)
     outcomes: dict[str, list[dict]] = {}
+    unresolved: list[str] = []
     for row in rows:
         if row.get("row") == "outcome" and row.get("role") == role:
             outcomes.setdefault(str(row.get("coid") or ""), []).append(row)
@@ -238,8 +243,39 @@ def _prior_intent(role: str, symbol: str, coid: str, base: Path) -> bool:
                 or not prior_outcomes[0].get("order_id")
                 or (row.get("pass") == "protect_only"
                     and prior_outcomes[0].get("verification") != "PROTECTED")):
-            return True
-    return False
+            unresolved.append(hashlib.sha256(json.dumps(
+                row, sort_keys=True, separators=(",", ":")).encode()).hexdigest())
+    return unresolved
+
+
+def _prior_intent(role: str, symbol: str, coid: str, base: Path) -> bool:
+    return bool(_unresolved_stop_intents(role, symbol, coid, base))
+
+
+def _verified_covered_noop(role: str, symbol: str, orders: list[dict], base: Path,
+                           held: float, stops: float, other: float) -> None:
+    """Prove a no-action sweep result; never resolves an earlier POST intent."""
+    if (held <= 0 or abs(held - round(held)) > 1e-6
+            or abs(stops - held) > 1e-6 or other != 0):
+        raise FM.FleetRefusal("target is not wholly covered by resting GTC stops")
+    accepted = _accepted_orders(role, base)
+    target_orders = [o for o in orders if o.get("symbol") == symbol]
+    if not target_orders:
+        raise FM.FleetRefusal("covered target has no resting stop evidence")
+    for order in target_orders:
+        owned = accepted.get(order.get("id"))
+        if (order.get("side") != "sell" or order.get("type") != "stop"
+                or order.get("time_in_force") != "gtc"
+                or order.get("status") not in {"new", "accepted", "partially_filled"}
+                or not owned or owned["symbol"] != symbol or owned["side"] != "sell"
+                or owned["type"] != "stop" or owned["tif"] != "gtc"
+                or order.get("client_order_id") != owned["coid"]
+                or _number(order.get("qty"), "covered stop quantity") != owned["qty"]
+                or _number(order.get("qty"), "covered stop quantity")
+                <= _number(order.get("filled_qty"), "covered stop filled quantity")
+                or _number(order.get("stop_price"), "covered stop price", minimum=0.0001)
+                != _number(owned["stop_price"], "accepted stop price", minimum=0.0001)):
+            raise FM.FleetRefusal("resting stop lacks exact accepted owned identity")
 
 
 def _append_durable(path: Path, row: dict) -> None:
@@ -469,6 +505,7 @@ class SweepBudget:
         self.used = 0
         self.http_times: list[float] = []
         self.http_total = 0
+        self.history_warnings: list[dict] = []
 
     def charge(self, units: int = 1) -> None:
         if time.monotonic() >= self.until or self.used + units > self.limit:
@@ -515,6 +552,15 @@ def _sweep_clock(clock: dict, now: datetime) -> str:
             or (utc.hour, utc.minute) >= (19, 15)):
         raise FM.FleetRefusal("sweep outside weekday preclose safety window")
     return eastern.date().isoformat()
+
+
+def _fresh_sweep_boundary(venue, budget: SweepBudget, day: str) -> None:
+    """A successful no-action/pass receipt needs a valid clock after its proof."""
+    budget.charge(0)
+    observed = _sweep_clock(venue.clock(), datetime.now(timezone.utc))
+    budget.charge(0)
+    if observed != day:
+        raise FM.FleetRefusal("sweep session changed before completed receipt")
 
 
 def _completed_open_owner(role: str, account: dict, base: Path, day: str,
@@ -625,56 +671,73 @@ def sweep_once(venues: dict, modes: dict, sigma_for, *, live: bool = False,
     day = _sweep_clock(counted[active[0]].clock(), now)
     candidates: list[tuple[str, str, dict]] = []
     report: list[dict] = []
+    history_warnings = budget.history_warnings
     for role in active:
         budget.charge(0)
         mode = modes.get(role) or {}
         if mode.get("maintenance") != "LIVE" or mode.get("contract") not in {"v1", "v2"}:
             raise FM.FleetRefusal(f"{role}: maintenance authority absent")
         venue = counted[role]
-        account, positions, orders = _snapshot(venue, "")
-        if len(positions) > 64:
-            raise FM.FleetRefusal(f"{role}: holdings bound exceeded")
-        state, contract = _completed_open_owner(role, account, base, day, now)
-        if contract["policy_hash"] != FM.load_contract(role, mode["contract"], base)["policy_hash"]:
-            raise FM.FleetRefusal(f"{role}: active frozen contract changed")
-        if not isinstance(state.get("positions"), dict):
-            raise FM.FleetRefusal(f"{role}: owner position basis missing")
-        if any(o.get("legs") for o in orders if o.get("symbol") in {p["symbol"] for p in positions}):
-            raise FM.FleetRefusal(f"{role}: nested order on held symbol")
-        uncovered: list[str] = []
-        for p in positions:
-            symbol = p["symbol"]
-            if _prior_intent(role, symbol, "", base):
-                raise FM.FleetRefusal(f"{role}: unresolved prior stop intent requires attended recovery")
-            held, stops, other = _capacity(symbol, positions, orders)
-            free = held - stops - other
-            if free <= 1e-6:
-                continue
-            if free < 1 - 1e-6 or abs(free - round(free)) > 1e-6:
-                raise FM.FleetRefusal(f"{role}: fractional uncovered shares require attended repair")
-            if _number(state["positions"].get(symbol, 0), "prior held") != 0:
-                raise FM.FleetRefusal(f"{role}: pre-existing holding/top-up is not automatic late-fill evidence")
-            uncovered.append(symbol)
-        if uncovered:
-            # The entire role history must reconcile, including other symbols.
-            _reconciled(venue, role, state, positions, base)
-            for symbol in uncovered:
+        with FM.role_writer_lock(role, base):
+            account, positions, orders = _snapshot(venue, "")
+            if len(positions) > 64:
+                raise FM.FleetRefusal(f"{role}: holdings bound exceeded")
+            state, contract = _completed_open_owner(role, account, base, day, now)
+            if contract["policy_hash"] != FM.load_contract(role, mode["contract"], base)["policy_hash"]:
+                raise FM.FleetRefusal(f"{role}: active frozen contract changed")
+            if not isinstance(state.get("positions"), dict):
+                raise FM.FleetRefusal(f"{role}: owner position basis missing")
+            if any(o.get("legs") for o in orders if o.get("symbol") in {p["symbol"] for p in positions}):
+                raise FM.FleetRefusal(f"{role}: nested order on held symbol")
+            uncovered: list[str] = []
+            reconciled = False
+            for p in positions:
+                symbol = p["symbol"]
+                unresolved = _unresolved_stop_intents(role, symbol, "", base)
+                for digest in unresolved:
+                    history_warnings.append({
+                        "role": role, "symbol": symbol,
+                        "code": "UNRESOLVED_PRIOR_STOP_INTENT",
+                        "identity_sha256": digest})
                 held, stops, other = _capacity(symbol, positions, orders)
-                evidence = _new_owned_evidence(role, symbol, venue, state, base)
-                if abs(evidence["net"] - held) > 1e-6:
-                    raise FM.FleetRefusal(f"{role}: fresh held shares not fully explained by accepted fills")
-                candidates.append((role, symbol, {
-                    "run_id": state["run_id"], "state_t": state["t"],
-                    "account_number": account["account_number"],
-                    "policy_hash": contract["policy_hash"],
-                    "contract_version": contract["version"], "session": day,
-                    "capacity": (held, stops, other), "fills": evidence}))
-                if len(candidates) > 3:
-                    raise FM.FleetRefusal("three-candidate sweep bound exceeded")
-        report.append({"role": role, "status": "CANDIDATE" if uncovered else "ALREADY_COVERED",
-                       "held_symbols": len(positions), "candidates": len(uncovered)})
+                free = held - stops - other
+                if free <= 1e-6:
+                    if not reconciled:
+                        _reconciled(venue, role, state, positions, base)
+                        reconciled = True
+                    _verified_covered_noop(role, symbol, orders, base, held, stops, other)
+                    continue
+                if unresolved:
+                    raise FM.FleetRefusal(f"{role}: unresolved prior stop intent requires attended recovery")
+                if free < 1 - 1e-6 or abs(free - round(free)) > 1e-6:
+                    raise FM.FleetRefusal(f"{role}: fractional uncovered shares require attended repair")
+                if _number(state["positions"].get(symbol, 0), "prior held") != 0:
+                    raise FM.FleetRefusal(f"{role}: pre-existing holding/top-up is not automatic late-fill evidence")
+                uncovered.append(symbol)
+            if uncovered:
+                # The entire role history must reconcile, including other symbols.
+                if not reconciled:
+                    _reconciled(venue, role, state, positions, base)
+                for symbol in uncovered:
+                    held, stops, other = _capacity(symbol, positions, orders)
+                    evidence = _new_owned_evidence(role, symbol, venue, state, base)
+                    if abs(evidence["net"] - held) > 1e-6:
+                        raise FM.FleetRefusal(f"{role}: fresh held shares not fully explained by accepted fills")
+                    candidates.append((role, symbol, {
+                        "run_id": state["run_id"], "state_t": state["t"],
+                        "account_number": account["account_number"],
+                        "policy_hash": contract["policy_hash"],
+                        "contract_version": contract["version"], "session": day,
+                        "capacity": (held, stops, other), "fills": evidence}))
+                    if len(candidates) > 3:
+                        raise FM.FleetRefusal("three-candidate sweep bound exceeded")
+            report.append({"role": role, "status": "CANDIDATE" if uncovered else "ALREADY_COVERED",
+                           "held_symbols": len(positions), "candidates": len(uncovered)})
+            _fresh_sweep_boundary(venue, budget, day)
     if not candidates:
-        return {"status": "ALREADY_COVERED", "roles": report, "requests_upper_bound": budget.used}
+        _fresh_sweep_boundary(counted[active[0]], budget, day)
+        return {"status": "ALREADY_COVERED", "roles": report,
+                "history_warnings": history_warnings, "requests_upper_bound": budget.used}
     results = []
     acted: set[str] = set()
     for role, symbol, expected in candidates:
@@ -693,5 +756,8 @@ def sweep_once(venues: dict, modes: dict, sigma_for, *, live: bool = False,
     status = ("INCOMPLETE" if statuses & {"REFUSED", "DEFERRED_ROLE_POST_CAP", "SUBMIT_UNKNOWN", "NO_STOP_PLAN"}
               else "PROTECTED" if live and statuses == {"PROTECTED"}
               else "ALREADY_COVERED" if statuses == {"ALREADY_COVERED"} else "DRY_PLAN")
+    if status in {"PROTECTED", "ALREADY_COVERED", "DRY_PLAN"}:
+        _fresh_sweep_boundary(counted[active[0]], budget, day)
     return {"status": status, "roles": report, "candidates": results,
+            "history_warnings": history_warnings,
             "requests_upper_bound": budget.used}

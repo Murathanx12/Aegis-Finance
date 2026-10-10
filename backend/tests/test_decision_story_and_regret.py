@@ -580,6 +580,53 @@ def test_a_drifted_replay_is_a_red_line_not_a_silent_mismatch(tmp_path, monkeypa
     assert "replay MISMATCH" in rec["decision_story_line"]
 
 
+@pytest.mark.parametrize("n_pool", [5, 18])
+@pytest.mark.parametrize("forecast_present", [False, True])
+@pytest.mark.parametrize("probe_present", [False, True])
+def test_no_er_inventory_replay_obeys_exploit_cap(n_pool, forecast_present, probe_present):
+    symbols = [f"RK{i:02d}" for i in range(n_pool)]
+    probe_weight = 0.02 if probe_present else 0.0
+    expected = min((1.0 - probe_weight) / n_pool, 0.10)
+    actual = {s: expected for s in symbols}
+    if probe_present:
+        actual["AAA"] = probe_weight
+    inp = _inp(pool=[{"symbol": s} for s in symbols],
+               shortlist=_inp()["shortlist"] if probe_present else [],
+               actual_weights=actual)
+    names = ({s: {"h21": {"er": None, "x": {}, "weights": {}},
+                  "size_scale": 0.5} for s in symbols} if forecast_present else None)
+    chk = DS.replay_check(inp, names)
+    assert chk["matches"] is True, chk["diff"]
+    assert all(w <= inp["exploit_max_weight"] for s, w in chk["replay"]["weights"].items()
+               if s in symbols)
+
+
+def test_u_plan_null_analyst_forecast_replays_five_name_inventory(tmp_path, monkeypatch):
+    from backend.tests import test_u_plan_probe as T
+    from backend.services import expected_return as ER
+    broker = T.FakeBroker(is_open=False).install(monkeypatch)
+    T._funnel(tmp_path, n=0)
+    symbols = [f"RK{i:02d}" for i in range(5)]
+    T._ranking(tmp_path / "out", net=None, symbols=symbols)
+    src = ER.Sources(label="without_analyst_regression", predictions=[], decision_rows=[],
+                     unavailable={"revisions": "analyst ablated", "ranking": "unmeasured"})
+    res = S.u_plan(tmp_path / "out", "research", asof=T.ASOF,
+                   funnel_path=tmp_path / "funnel.json", ledger_path=tmp_path / "ledger.jsonl",
+                   contracts_dir=tmp_path / "contracts", er_sources=src,
+                   er_dir=tmp_path / "forecast")
+    rec = T._receipt(tmp_path)
+    ds = rec["decision_story"]
+    assert res["n_sent"] == 0 and not broker.submitted
+    assert ds["replay_matches_actual"] is True, ds["replay_diff"]
+    assert "replay MATCHES" in res["decision_story_line"]
+    stories = DS.read_jsonl(Path(ds["stories_path"]))
+    inventory = [s for s in stories if s["ticker"] in symbols]
+    assert len(inventory) == 5
+    assert all(s["target_weight"] == pytest.approx(config.ER_EXPLOIT_MAX_WEIGHT)
+               and s["plan_full_weight"] == pytest.approx(s["target_weight"]) for s in inventory)
+    assert ds["loo_status"]["news"]["status"] == "IDENTICAL_NOT_READ"
+
+
 def test_task_keeper_regret_daily_pass_step_and_policy_state_read(tmp_path, monkeypatch):
     out = TK.run_regret(grade=lambda: {"status": "OK", "run_id": "r1", "line": "x"},
                         log_path=tmp_path / "k.jsonl")
