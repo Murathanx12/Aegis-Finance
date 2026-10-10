@@ -1,1 +1,340 @@
-{"schema": "aegis-beta-dependency-queue-v1", "roadmap": "docs/ROADMAP_2026-10-06_V1_BETA_THE_LOOP_THAT_LEARNS.md#5c", "session_id": "01a123fa-5176-7d41-87a6-35291db143f3", "coordinator_owner": "/root", "stop_control": "private-evidence/STOP", "deadline_sgt": "2026-10-12 morning", "max_workers": 2, "max_repair_cycles": 2, "block_budget": "Checkpoint7 32->36 (+4/5pp); next19:23UTC baseline36/cap5. No purchases/newhosting/Astra.", "tasks": [{"id": "B00", "roadmap_stream": "W1", "owner": "coordinator", "dependencies": [], "status": "TESTED", "acceptance": "installed client help, checkpoint/resume, owner and STOP control", "artifact": "continuity-receipt.json", "next_step": "same-thread client resume passed; STOP/duplicate-owner/reload checks pass; root retains owner", "evidence_axes": {"implementation": "Existing continuation/owner/STOP machinery reused", "test": "Nonce checkpoint/resume and duplicate-owner/STOP checks passed", "integration": "Same coordinator thread", "operational_observation": "Checkpoint reload observed", "external_block": "None", "failed": "None", "unknown": "Uninterrupted client availability is not guaranteed"}}, {"id": "B01", "roadmap_stream": "W1", "owner": "coordinator", "dependencies": [], "status": "DEPLOY_OPERATIONALLY_OBSERVED", "acceptance": "PR20 exact head/source pins, independent review and current CI qualify", "artifact": "pr20-production-verification.json", "next_step": "closed; do not repeat publication recovery", "evidence_axes": {"implementation": "Publication and PR20 recovery closed", "test": "Exact CI and production checks passed", "integration": "Merged and deployed", "operational_observation": "Clean scheduled receipt previously verified", "external_block": "None", "failed": "Earlier publication failure preserved", "unknown": "Do not reopen without material defect"}}, {"id": "B02", "roadmap_stream": "W5", "owner": "beta_ablation_builder", "dependencies": ["B01"], "status": "MERGED_DEPLOYED_LOCAL_SOURCE_INSTALLED_NATIVE_CAP_OBSERVED", "acceptance": "frozen without-analyst replay matches or precise nonseparable reason; regression; independent review", "artifact": "ablation-reviewer-packet.json", "next_step": "B02 repaired: actualfreshnative10%fallbackcap verified, historicalmismatchpreserved; no existinglongprocessreloadclaim.", "evidence_axes": {"implementation": "Analyst-ablation cap repair", "test": "67+24 focused/review checks; actual native cap proof", "integration": "PR21 merged/deployed; guarded local hunk installed", "operational_observation": "Fresh-process cap10%; original replay mismatch retained", "external_block": "None", "failed": "Historical mismatch preserved; repaired", "unknown": "Existing long-running process loading not claimed"}}, {"id": "B03", "roadmap_stream": "W3/W5/W6", "owner": "beta_inventory", "dependencies": [], "status": "INVENTORIED", "acceptance": "all known producer/store/consumer manifests incl archives/siblings; unavailable != empty", "artifact": "output-family-inventory.json", "next_step": "coverage census now reviewed; unknown/protected populations retained", "evidence_axes": {"implementation": "All-known output inventory plus explicit inaccessible/protected entries", "test": "Bounded metadata reconciliation", "integration": "Local reports", "operational_observation": "519 family buckets /791 unit-horizon cells inventoried", "external_block": "Cloud and Terminal access gaps", "failed": "Malformed/torn/inaccessible records retained", "unknown": "Complete unknown populations not established"}}, {"id": "B04", "roadmap_stream": "W5", "owner": "beta_coverage_builder", "dependencies": ["B03"], "status": "REVIEW_APPROVED_PARTIAL", "acceptance": "raw/unique/duplicates/status dates for each family, original frozen records retained", "artifact": "coverage-reviewed.json", "next_step": "Currentmetadata43,021/protectedfirst8,422 exclusion done; three mature rows stillmissingfullwindows afteronefreeproviderprobe. Original216 celloccurrences/exact22joinunknown; no subtraction/443MiB index orprotected outcomesread.", "evidence_axes": {"implementation": "Reviewed partial census and family route manifest", "test": "28 focused/review checks after bounded repairs", "integration": "Code in merged PR21; local helpers installed", "operational_observation": "Actual subset attachment, no whole-family promotion", "external_block": "Protected trials and inaccessible stores", "failed": "Unclassified archive headers retained", "unknown": "507 routes await evidence or candidate consumer proof"}}, {"id": "B05", "roadmap_stream": "W5", "owner": "beta_coverage_builder", "dependencies": ["B04"], "status": "CANONICAL_EXACT22_OPERATIONALLY_OBSERVED_ISOLATED_FORECAST_CONSUMED", "acceptance": "eligible matured outputs catch up idempotently; trial gates respected; learning read in later consumer", "artifact": "docs/BETA_LEARNING_CATCHUP_2026-10-10.md; catchup-root-operations/root-runtime-exact22-20261010/operation-result.json; catchup-learning-forecast-native/trace.json", "next_step": "22actualcanonicalgrades and0rerun; actualnativefit/build22/2 vs0/0 independentlyaccepted; allfamilygrading stillpartial", "evidence_axes": {"implementation": "Idempotent eligible exact22 catch-up", "test": "46 focused checks and independent actual-operation review", "integration": "PR21 merged; actual canonical grades written", "operational_observation": "22 write/0 rerun; actual subsequent ER.fit/build reads22/2 vs0/0; equal weights", "external_block": "Other eligible cohorts need their own evidence", "failed": "Original failures and unresolved rows preserved", "unknown": "All-family catch-up remains partial; writer/horizon metrics separate"}, "chunks": [{"id": "B05-current-residual-metadata", "owner": "root", "acceptance": "Currentboundedoriginalcohorteligibility +samebasispricewindow withprotectedmetadata gated beforevalueanalysis; no old216minus22 claim", "status": "METADATA_AND_ONE_FREE_PROVIDER_PROBE_DONE_3_FULL_WINDOWS_UNAVAILABLE", "artifact": "current-catchup-metadata-20261010T161956Z/new-two-symbol-provider/provider-receipt.json", "next_step": "Three exactunprotectedrows stillnotpricequalified afteronefreshsamebasisproviderfetch; awaitcompleteevidence/no grading/zero fill/repeat"}]}, {"id": "B06", "roadmap_stream": "W4", "owner": "coordinator", "dependencies": [], "status": "READER_SOURCE_INTEGRATED_MANUAL_RELOAD_PARKED_LIVE_ENTRY_REFUSED", "acceptance": "guarded memory/quality sample and bounded approved route; validated cached extraction", "artifact": "reader-owned-restart-operation/repair2/root-readonly-entry-refusal.json", "next_step": "Manualreload parked aftercycle2; preserve activeoldreader/nativekeeper/browser. Observe existing lifecycle and downstreamsourcevalidation; no thirdrepair/bypass.", "evidence_axes": {"implementation": "Continuousauto-launchsourcefix preservesmanualHH:MM/MAX_RESTARTS20/HOLD/profilepolicy", "test": "PR24requiredrelease/87review; privateownedreload83PASS but live readonlyhelperentry UNKNOWNcensus refused beforehandles/actions", "integration": "PR24e17 head/mainCI+actualdeploy qualified; ROOT2sourcehunks installed", "operational_observation": "Freshrootread-only status {\"t\": \"2026-10-11T02:10:34+08:00\", \"state\": \"READING\", \"restarts\": 1, \"stall_restarts\": 0, \"last_error\": null, \"pages_ok_10m\": 32, \"pages_ok_60m\": 202, \"next_action\": \"keep reading\"}; actualcontinuous source-load/restart NOTobserved", "external_block": "Qwen memory/quality; controlled restart proof under independent adjudication", "failed": "Manualreload live readonlyhelperentry UNKNOWNcensus; parked afterfinalrepair2 despite83privatetests", "unknown": "Continuouscode notloaded bycurrentprocess; no futurealways-up orqualifiedcurrentnewsclaim"}, "chunks": [{"id": "B06-reader-continuity", "owner": "reader_continuity_builder", "acceptance": "Keeper-owned continuous supervision removes23h/PT2H end gap while manualend,STOP,caps,unknownscan,activeowner,tasks/browser ownership remain", "status": "MERGED_SOURCE_INSTALLED_RUNTIME_RESTART_PROOF_PENDING", "artifact": "reader-runtime-selective/source-transfer-receipt.json", "next_step": "OwnedWindowshandleSTOPproof/review; oldreaderstillactive/samebrowser, no terminalrefusal reset"}]}, {"id": "B07", "roadmap_stream": "W4/W5", "owner": "root + beta_coverage_builder; beta_independent_review", "dependencies": ["B02", "B06"], "status": "OPT_IN_SOURCE_INSTALLED_ACTUAL_EXTRACTION_REFUSED", "acceptance": "actual source->interpretation->features->forecast->isolated plan->outcome->learning ablations", "artifact": "news-runtime-selective/execution-receipt.json; news-runtime-selective/root-native-import-proof.json; pr25-live-20261010T180001Z/receipt.json; news-current-strict-engineering/call-attempt.json", "next_step": "One actual strict call refused invalid event enum; raw/cost/model preserved, allowance consumed. Whole-source review next, no retry or coercion. Continue independent collector/freshness/coverage tasks; no news contract activation or forecast accrual.", "evidence_axes": {"implementation": "Strictopt-in extractionidentity/schema/currentfull-caseadmission; defaultv0/frozencontract unchanged", "test": "105focused+105independent;14593backend+freshFT98PASS1existingattendedskip;94WD/4NVlegacyAST+15epochexact/NN86qualifiedreuse; final private engineering operator58PASS+10capture controls, source0drift", "integration": "Exact PR25 head/main CI PASS and actual f6 production healthy, all lane histories/registry exact. ROOT2 additive source blocks installed18:32UTC; fresh imports no calls; rerun0.", "operational_observation": "ROOT2source blocks installed/rerun0/nativeimports0calls. Actual strict Flash request1 returned18:38:27Z listedcost.00024597, whole row refusedcurrent_invalid_enum; raw retained, semanticadmission/forecast0.", "external_block": "Qualified current source chain pending", "failed": "Historic3 examples and unsupported fiscal author/horizon remain blocked. Strict source code repairs closed; separate engineering operator repair1 residual namespace refusal requires finalrepair2.; authenticstrictFlash reply used unsupportedevent_type=fiscal, whole-row refused, no retry/repair/coercion", "unknown": "Genuinecurrentnews\u2192theme\u2192implication/forecast chain unqualified; mainER doesnotreadnews bydesign"}, "chunks": [{"id": "B07-validated-extraction-provenance", "owner": "beta_coverage_builder", "acceptance": "Strict currentsource attribution/horizon/admission +actualprompt cacheidentity, defaults/frozenv0/history unchanged; newcontract preregdisposition beforeaccrual", "status": "PR25_RELEASED_LOCAL_OPT_IN_SOURCE_INSTALLED", "artifact": "news-runtime-selective/execution-receipt.json; news-provenance-candidate/repair2/release-worker-receipt.json", "next_step": "Closed source release/install; qualify engineering call separately. Legacy defaults unchanged, no automatic admission/activation/accrual."}]}, {"id": "B08", "roadmap_stream": "W1/W2", "owner": "coordinator", "dependencies": [], "status": "FIVE_FLEET_GRADES_OPERATIONALLY_OBSERVED_EPOCH_INACTIVE", "acceptance": "GET-only safety/fleet reconciliation; approved inactive epoch transition packet", "artifact": "fleet-exact5-runtime-commit-receipt.json; fleet-after-exact5/fleet-reconciliation-diagnostic.json", "next_step": "actual reviewed5grades appended zero rerun; EOD fiveOK/zero mismatch; sixth credential blocked; Monday epoch flagsOFF", "evidence_axes": {"implementation": "Reviewed fleet protection code and exact5 reconciliation", "test": "324 focused source checks;27 appender review checks", "integration": "PR21 merged; five grade appends actual; epoch inactive", "operational_observation": "Five native EOD accounts OK/zero mismatches; rerun0;85/85 stop coverage", "external_block": "Sixth credential invalid; Monday approval/gates", "failed": "Initial appender defects repaired; credential failure remains", "unknown": "Authentic fills and competition eligibility unverified"}}, {"id": "B09", "roadmap_stream": "W1/W6", "owner": "beta_coverage_builder", "dependencies": [], "status": "PR23_DEPLOY_VERIFIED_ROOT3SOURCE_INSTALLED_NEW_CACHE_MEMORY_BLOCKED", "acceptance": "progress-aware service/dashboard actual consumers; restart ownership and advancing outputs", "artifact": "producer-runtime-selective/installed/receipt.json; pr23-live-20261010T163828Z/receipt.json", "next_step": "Currentday native producer remains blocked at checkpoint7 free2.462GiB below3.4; no audit/cache writes. Check next independent quiet resource checkpoint or scheduled guarded producer. Separately qualify dashboard PC-health snapshot/publisher chain from dated receipts; no duplicate persisted writer.", "chunks": [{"id": "B09-audit-release", "owner": "beta_coverage_builder", "acceptance": "review24/full14495/exact2headCI beforemerge; guardedactualnativecacheconsumer", "status": "MERGED607_CI_PASS_ACTUAL_DEPLOY_VERIFIED", "artifact": "pr22-live-20261010T152534Z/receipt.json", "next_step": "Closed; no freshcache claim"}, {"id": "B09-future-producer", "owner": "beta_coverage_builder", "acceptance": "existingpost-bars-refresh caller, boundednativeaudit/fullidentity/ownerlock/atomicbackup/failurevisible; focused+indepreview+releasechecks", "status": "MERGED_DEPLOY_VERIFIED_ROOT_SOURCE_INSTALLED", "artifact": "producer-runtime-selective/installed/receipt.json", "next_step": "Currentdaynativeoperatorquietmemoryguardbeforeactualcacheproof"}], "evidence_axes": {"implementation": "Boundednativeaudit/currentdayjournal producer inexistingdailybarsrefreshstep", "test": "Producerfull14526/113indep/head+mainCI PASS; runtimeinstaller9/currentdayoperator14privatePASS", "integration": "PR22+23merged/deployedactual54ee; ROOT3sourcefilesinstalled/fresh3moduleimports", "operational_observation": "Production54eehealthy/NAVfresh/registry+everylaneexact; no actualnewdaycache/consumer yet", "external_block": "Freshactualproducerentry RAM<3.4 refusedbeforeaudit/cachewrite; 0audits/newcache0; no floorwaiver", "failed": "Oldinprocessaudit2memoryrefusals0writes retained; producer/installer/operator repairs closed", "unknown": "Next native guarded newday cache/consumer and dashboard PC-health source refresh not observed. Connection inventory traces dailyPass health producer, public receipt publisher and /health consumer; older publisher size refusal is not yet reproduced currently."}}, {"id": "B10", "roadmap_stream": "W7", "owner": "coordinator", "dependencies": [], "status": "DRAFTED_EXTERNAL_PENDING", "acceptance": "Monday Terminal packet retains authentic WLS/rules/fills and gates; offline preview", "artifact": "docs/MONDAY_TERMINAL_PREPARATION_2026-10-12.md", "next_step": "application submitted approval pending; Monday authentic universe/rules/fills needed", "evidence_axes": {"implementation": "Monday attended Terminal guide", "test": "Offline preparation only", "integration": "No activation", "operational_observation": "Owner says application submitted; approval pendingMonday", "external_block": "Sponsor response; authentic WLS universe/TMSG rules/fills", "failed": "None claimed", "unknown": "Passing drill is not eligibility or verified fill"}}, {"id": "B11", "roadmap_stream": "W7", "owner": "coordinator", "dependencies": ["B04", "B07"], "status": "INACTIVE_DRAFT_REVIEWED", "acceptance": "ATLAS v3 dated inactive draft with engine weights, news/revision evidence, prices/ranges/risks/exits/deltas", "artifact": "docs/ATLAS_LLM_PORTFOLIO_V3_2026-10-10_REVIEW.md; atlas-prior-version-comparison.json", "next_step": "Inactive revieweddateddraft nowhas exactv1/v2/v3comparison/alltotals100%; ownerfinalreview, authenticeligibility andfreeze/cost/benchmark terms pending.", "evidence_axes": {"implementation": "ATLAS v3 inactive dated discussion draft", "test": "23 weights and45 selected input records reviewed", "integration": "No freeze/order/activation", "operational_observation": "96%stocks4%cash; VRT12\u219210 only change; SPY comparator only", "external_block": "All Bloomberg eligibility unverified", "failed": "No performance claim", "unknown": "Exit/freeze/cost/benchmark/concentration terms require owner review"}}, {"id": "B12", "roadmap_stream": "ALL", "owner": "beta_inventory", "dependencies": ["B02", "B04", "B05", "B07", "B08", "B09", "B10", "B11"], "status": "MATRIX_REVIEW_PACKET_DRAFTED_PARTIAL", "acceptance": "acceptance matrix separates implementation/tests/integration/observations/blocked/failed; compact Astra packet", "artifact": "docs/BETA_ACCEPTANCE_MATRIX_2026-10-10.json; docs/ASTRA_BETA_REVIEW_PACKET_2026-10-10.md", "next_step": "Currentreceipt-linked52R/13B draft; finalrefresh/review beforeMondaymorning, no autoAstra invocation", "evidence_axes": {"implementation": "Current acceptance matrix and compact Astra packet", "test": "Receipt-linked summary review draft", "integration": "Local dated documents", "operational_observation": "Current completed/failed/blocked dimensions separated", "external_block": "Monday actual inputs and final review", "failed": "Historical failure receipts preserved", "unknown": "No Astra invocation or final beta acceptance claimed"}}], "updated_utc": "2026-10-10T18:23:40.042322+00:00", "as_of_utc": "2026-10-10T18:42:25.963551+00:00"}
+{
+  "schema": "aegis-beta-dependency-queue-v1",
+  "roadmap": "docs/ROADMAP_2026-10-06_V1_BETA_THE_LOOP_THAT_LEARNS.md#5c",
+  "session_id": "01a123fa-5176-7d41-87a6-35291db143f3",
+  "coordinator_owner": "/root",
+  "stop_control": "private-evidence/STOP",
+  "deadline_sgt": "2026-10-12 morning",
+  "max_workers": 2,
+  "max_repair_cycles": 2,
+  "block_budget": "Checkpoint9:39->43 (+4 of5 percentage points); next21:23UTC baseline43 cap5. Four coordinator extraction calls total LISTED0.00108834USD separately scoped; no invoice/purchases/Astra.",
+  "tasks": [
+    {
+      "id": "B00",
+      "roadmap_stream": "W1",
+      "owner": "coordinator",
+      "dependencies": [],
+      "status": "TESTED",
+      "acceptance": "installed client help, checkpoint/resume, owner and STOP control",
+      "artifact": "continuity-receipt.json",
+      "next_step": "same-thread client resume passed; STOP/duplicate-owner/reload checks pass; root retains owner",
+      "evidence_axes": {
+        "implementation": "Existing continuation/owner/STOP machinery reused",
+        "test": "Nonce checkpoint/resume and duplicate-owner/STOP checks passed",
+        "integration": "Same coordinator thread",
+        "operational_observation": "Checkpoint reload observed",
+        "external_block": "None",
+        "failed": "None",
+        "unknown": "Uninterrupted client availability is not guaranteed"
+      }
+    },
+    {
+      "id": "B01",
+      "roadmap_stream": "W1",
+      "owner": "coordinator",
+      "dependencies": [],
+      "status": "DEPLOY_OPERATIONALLY_OBSERVED",
+      "acceptance": "PR20 exact head/source pins, independent review and current CI qualify",
+      "artifact": "pr20-production-verification.json",
+      "next_step": "closed; do not repeat publication recovery",
+      "evidence_axes": {
+        "implementation": "Publication and PR20 recovery closed",
+        "test": "Exact CI and production checks passed",
+        "integration": "Merged and deployed",
+        "operational_observation": "Clean scheduled receipt previously verified",
+        "external_block": "None",
+        "failed": "Earlier publication failure preserved",
+        "unknown": "Do not reopen without material defect"
+      }
+    },
+    {
+      "id": "B02",
+      "roadmap_stream": "W5",
+      "owner": "beta_ablation_builder",
+      "dependencies": [
+        "B01"
+      ],
+      "status": "MERGED_DEPLOYED_LOCAL_SOURCE_INSTALLED_NATIVE_CAP_OBSERVED",
+      "acceptance": "frozen without-analyst replay matches or precise nonseparable reason; regression; independent review",
+      "artifact": "ablation-reviewer-packet.json",
+      "next_step": "B02 repaired: actualfreshnative10%fallbackcap verified, historicalmismatchpreserved; no existinglongprocessreloadclaim.",
+      "evidence_axes": {
+        "implementation": "Analyst-ablation cap repair",
+        "test": "67+24 focused/review checks; actual native cap proof",
+        "integration": "PR21 merged/deployed; guarded local hunk installed",
+        "operational_observation": "Fresh-process cap10%; original replay mismatch retained",
+        "external_block": "None",
+        "failed": "Historical mismatch preserved; repaired",
+        "unknown": "Existing long-running process loading not claimed"
+      }
+    },
+    {
+      "id": "B03",
+      "roadmap_stream": "W3/W5/W6",
+      "owner": "beta_inventory",
+      "dependencies": [],
+      "status": "INVENTORIED",
+      "acceptance": "all known producer/store/consumer manifests incl archives/siblings; unavailable != empty",
+      "artifact": "output-family-inventory.json",
+      "next_step": "coverage census now reviewed; unknown/protected populations retained",
+      "evidence_axes": {
+        "implementation": "All-known output inventory plus explicit inaccessible/protected entries",
+        "test": "Bounded metadata reconciliation",
+        "integration": "Local reports",
+        "operational_observation": "519 family buckets /791 unit-horizon cells inventoried",
+        "external_block": "Cloud and Terminal access gaps",
+        "failed": "Malformed/torn/inaccessible records retained",
+        "unknown": "Complete unknown populations not established"
+      }
+    },
+    {
+      "id": "B04",
+      "roadmap_stream": "W5",
+      "owner": "beta_coverage_builder",
+      "dependencies": [
+        "B03"
+      ],
+      "status": "PARTIAL_ORIGINAL_SETS_MEASURED_SOURCE_CROSSWALK_REFUSED_PARKED",
+      "acceptance": "raw/unique/duplicates/status dates for each family, original frozen records retained",
+      "artifact": "coverage-reviewed.json",
+      "next_step": "Original211/22/189exacthistoricalsets53a and22immutablematches4e1 retained. W14actualprefixAPPROVED78ac; W13actualwhole120secresourceREFUSEDparked2cyclesSPENT/no result/currenteligibilityUNKNOWN. Independentexact3 localpriceprerequisites continue.",
+      "evidence_axes": {
+        "implementation": "Reviewed partial census and family route manifest",
+        "test": "28 focused/review checks after bounded repairs",
+        "integration": "Code in merged PR21; local helpers installed",
+        "operational_observation": "Original scope: 211 unprotected family/identity pairs across 15 cells; exact overlap with known 22 is 22, leaving 189 original pairs outside that subset. These are historical set measurements, not current due/eligible forecasts. All 22 complete non-resolution objects matched their original index hashes. Two source byte prefixes were captured and independently qualified. The 189-pair source crosswalk refused at the whole time/RSS fence (120.125 seconds); no result was emitted. Both source-operator repairs are spent; parked without retry or wider limits. Current eligibility, source membership and residual remain unknown.",
+        "external_block": "Protected trials and inaccessible stores",
+        "failed": "Whole source-crosswalk resource refusal; two source repair cycles spent. Earlier failures preserved.",
+        "unknown": "Current eligibility/residual, exact source candidates and all-family consumer coverage remain unresolved."
+      },
+      "continuation_evidence": "Original scope: 211 unprotected family/identity pairs across 15 cells; exact overlap with known 22 is 22, leaving 189 original pairs outside that subset. These are historical set measurements, not current due/eligible forecasts. All 22 complete non-resolution objects matched their original index hashes. Two source byte prefixes were captured and independently qualified. The 189-pair source crosswalk refused at the whole time/RSS fence (120.125 seconds); no result was emitted. Both source-operator repairs are spent; parked without retry or wider limits. Current eligibility, source membership and residual remain unknown."
+    },
+    {
+      "id": "B05",
+      "roadmap_stream": "W5",
+      "owner": "beta_coverage_builder",
+      "dependencies": [
+        "B04"
+      ],
+      "status": "CANONICAL_EXACT22_OPERATIONALLY_OBSERVED_ISOLATED_FORECAST_CONSUMED",
+      "acceptance": "eligible matured outputs catch up idempotently; trial gates respected; learning read in later consumer",
+      "artifact": "docs/BETA_LEARNING_CATCHUP_2026-10-10.md; catchup-root-operations/root-runtime-exact22-20261010/operation-result.json; catchup-learning-forecast-native/trace.json",
+      "next_step": "22actualcanonicalgrades and0rerun; actualnativefit/build22/2 vs0/0 independentlyaccepted; allfamilygrading stillpartial",
+      "evidence_axes": {
+        "implementation": "Idempotent eligible exact22 catch-up",
+        "test": "46 focused checks and independent actual-operation review",
+        "integration": "PR21 merged; actual canonical grades written",
+        "operational_observation": "22 write/0 rerun; actual subsequent ER.fit/build reads22/2 vs0/0; equal weights",
+        "external_block": "Other eligible cohorts need their own evidence",
+        "failed": "Original failures and unresolved rows preserved",
+        "unknown": "All-family catch-up remains partial; writer/horizon metrics separate"
+      },
+      "chunks": [
+        {
+          "id": "B05-current-residual-metadata",
+          "owner": "root",
+          "acceptance": "Currentboundedoriginalcohorteligibility +samebasispricewindow withprotectedmetadata gated beforevalueanalysis; no old216minus22 claim",
+          "status": "METADATA_AND_ONE_FREE_PROVIDER_PROBE_DONE_3_FULL_WINDOWS_UNAVAILABLE",
+          "artifact": "current-catchup-metadata-20261010T161956Z/new-two-symbol-provider/provider-receipt.json",
+          "next_step": "Three exactunprotectedrows stillnotpricequalified afteronefreshsamebasisproviderfetch; awaitcompleteevidence/no grading/zero fill/repeat"
+        }
+      ]
+    },
+    {
+      "id": "B06",
+      "roadmap_stream": "W4",
+      "owner": "coordinator",
+      "dependencies": [],
+      "status": "READER_SOURCE_INTEGRATED_MANUAL_RELOAD_PARKED_LIVE_ENTRY_REFUSED",
+      "acceptance": "guarded memory/quality sample and bounded approved route; validated cached extraction",
+      "artifact": "reader-owned-restart-operation/repair2/root-readonly-entry-refusal.json",
+      "next_step": "Manualreload parked aftercycle2; preserve activeoldreader/nativekeeper/browser. Observe existing lifecycle and downstreamsourcevalidation; no thirdrepair/bypass.",
+      "evidence_axes": {
+        "implementation": "Continuousauto-launchsourcefix preservesmanualHH:MM/MAX_RESTARTS20/HOLD/profilepolicy",
+        "test": "PR24requiredrelease/87review; privateownedreload83PASS but live readonlyhelperentry UNKNOWNcensus refused beforehandles/actions",
+        "integration": "PR24e17 head/mainCI+actualdeploy qualified; ROOT2sourcehunks installed",
+        "operational_observation": "Freshrootread-only status {\"t\": \"2026-10-11T02:10:34+08:00\", \"state\": \"READING\", \"restarts\": 1, \"stall_restarts\": 0, \"last_error\": null, \"pages_ok_10m\": 32, \"pages_ok_60m\": 202, \"next_action\": \"keep reading\"}; actualcontinuous source-load/restart NOTobserved",
+        "external_block": "Qwen memory/quality; controlled restart proof under independent adjudication",
+        "failed": "Manualreload live readonlyhelperentry UNKNOWNcensus; parked afterfinalrepair2 despite83privatetests",
+        "unknown": "Continuouscode notloaded bycurrentprocess; no futurealways-up orqualifiedcurrentnewsclaim"
+      },
+      "chunks": [
+        {
+          "id": "B06-reader-continuity",
+          "owner": "reader_continuity_builder",
+          "acceptance": "Keeper-owned continuous supervision removes23h/PT2H end gap while manualend,STOP,caps,unknownscan,activeowner,tasks/browser ownership remain",
+          "status": "MERGED_SOURCE_INSTALLED_RUNTIME_RESTART_PROOF_PENDING",
+          "artifact": "reader-runtime-selective/source-transfer-receipt.json",
+          "next_step": "OwnedWindowshandleSTOPproof/review; oldreaderstillactive/samebrowser, no terminalrefusal reset"
+        }
+      ]
+    },
+    {
+      "id": "B07",
+      "roadmap_stream": "W4/W5",
+      "owner": "root + beta_coverage_builder; beta_independent_review",
+      "dependencies": [
+        "B02",
+        "B06"
+      ],
+      "status": "OPT_IN_SOURCE_INSTALLED_ACTUAL_EXTRACTION_REFUSED",
+      "acceptance": "actual source->interpretation->features->forecast->isolated plan->outcome->learning ablations",
+      "artifact": "news-runtime-selective/execution-receipt.json; news-runtime-selective/root-native-import-proof.json; pr25-live-20261010T180001Z/receipt.json; news-current-strict-engineering/call-attempt.json",
+      "next_step": "One actual strict call refused invalid event enum; raw/cost/model preserved, allowance consumed. Whole-source review next, no retry or coercion. Continue independent collector/freshness/coverage tasks; no news contract activation or forecast accrual.",
+      "evidence_axes": {
+        "implementation": "Strictopt-in extractionidentity/schema/currentfull-caseadmission; defaultv0/frozencontract unchanged",
+        "test": "105focused+105independent;14593backend+freshFT98PASS1existingattendedskip;94WD/4NVlegacyAST+15epochexact/NN86qualifiedreuse; final private engineering operator58PASS+10capture controls, source0drift",
+        "integration": "Exact PR25 head/main CI PASS and actual f6 production healthy, all lane histories/registry exact. ROOT2 additive source blocks installed18:32UTC; fresh imports no calls; rerun0.",
+        "operational_observation": "ROOT2source blocks installed/rerun0/nativeimports0calls. Actual strict Flash request1 returned18:38:27Z listedcost.00024597, whole row refusedcurrent_invalid_enum; raw retained, semanticadmission/forecast0.",
+        "external_block": "Qualified current source chain pending",
+        "failed": "Historic3 examples and unsupported fiscal author/horizon remain blocked. Strict source code repairs closed; separate engineering operator repair1 residual namespace refusal requires finalrepair2.; authenticstrictFlash reply used unsupportedevent_type=fiscal, whole-row refused, no retry/repair/coercion",
+        "unknown": "Genuinecurrentnews→theme→implication/forecast chain unqualified; mainER doesnotreadnews bydesign"
+      },
+      "chunks": [
+        {
+          "id": "B07-validated-extraction-provenance",
+          "owner": "beta_coverage_builder",
+          "acceptance": "Strict currentsource attribution/horizon/admission +actualprompt cacheidentity, defaults/frozenv0/history unchanged; newcontract preregdisposition beforeaccrual",
+          "status": "PR25_RELEASED_LOCAL_OPT_IN_SOURCE_INSTALLED",
+          "artifact": "news-runtime-selective/execution-receipt.json; news-provenance-candidate/repair2/release-worker-receipt.json",
+          "next_step": "Closed source release/install; qualify engineering call separately. Legacy defaults unchanged, no automatic admission/activation/accrual."
+        }
+      ]
+    },
+    {
+      "id": "B08",
+      "roadmap_stream": "W1/W2",
+      "owner": "coordinator",
+      "dependencies": [],
+      "status": "FIVE_FLEET_GRADES_OPERATIONALLY_OBSERVED_EPOCH_INACTIVE",
+      "acceptance": "GET-only safety/fleet reconciliation; approved inactive epoch transition packet",
+      "artifact": "fleet-exact5-runtime-commit-receipt.json; fleet-after-exact5/fleet-reconciliation-diagnostic.json",
+      "next_step": "actual reviewed5grades appended zero rerun; EOD fiveOK/zero mismatch; sixth credential blocked; Monday epoch flagsOFF",
+      "evidence_axes": {
+        "implementation": "Reviewed fleet protection code and exact5 reconciliation",
+        "test": "324 focused source checks;27 appender review checks",
+        "integration": "PR21 merged; five grade appends actual; epoch inactive",
+        "operational_observation": "Five native EOD accounts OK/zero mismatches; rerun0;85/85 stop coverage",
+        "external_block": "Sixth credential invalid; Monday approval/gates",
+        "failed": "Initial appender defects repaired; credential failure remains",
+        "unknown": "Authentic fills and competition eligibility unverified"
+      }
+    },
+    {
+      "id": "B09",
+      "roadmap_stream": "W1/W6",
+      "owner": "beta_coverage_builder",
+      "dependencies": [],
+      "status": "CURRENTDAY_NATIVE_CACHE_AND_CONSUMER_INDEPENDENTLY_APPROVED",
+      "acceptance": "progress-aware service/dashboard actual consumers; restart ownership and advancing outputs",
+      "artifact": "producer-runtime-selective/installed/receipt.json; pr23-live-20261010T163828Z/receipt.json",
+      "next_step": "Closed currentday nativeproducer; do not rerun. Otherlearning/collector/fullhealth/dashboard evidence remainsseparate, observe natural06:30SGT.",
+      "chunks": [
+        {
+          "id": "B09-audit-release",
+          "owner": "beta_coverage_builder",
+          "acceptance": "review24/full14495/exact2headCI beforemerge; guardedactualnativecacheconsumer",
+          "status": "MERGED607_CI_PASS_ACTUAL_DEPLOY_VERIFIED",
+          "artifact": "pr22-live-20261010T152534Z/receipt.json",
+          "next_step": "Closed; no freshcache claim"
+        },
+        {
+          "id": "B09-future-producer",
+          "owner": "beta_coverage_builder",
+          "acceptance": "existingpost-bars-refresh caller, boundednativeaudit/fullidentity/ownerlock/atomicbackup/failurevisible; focused+indepreview+releasechecks",
+          "status": "MERGED_DEPLOY_VERIFIED_ROOT_SOURCE_INSTALLED",
+          "artifact": "producer-runtime-selective/installed/receipt.json",
+          "next_step": "Currentdaynativeoperatorquietmemoryguardbeforeactualcacheproof"
+        }
+      ],
+      "evidence_axes": {
+        "implementation": "Boundednativeaudit/currentdayjournal producer inexistingdailybarsrefreshstep",
+        "test": "Producerfull14526/113indep/head+mainCI PASS; runtimeinstaller9/currentdayoperator14privatePASS",
+        "integration": "PR22+23merged/deployedactual54ee; ROOT3sourcefilesinstalled/fresh3moduleimports",
+        "operational_observation": "One native Oct11 survivorship audit produced one new cache; second producer call returned nothing_to_do with zero new write. Actual sim consumer loaded it and the specific learning-unit health probe reported ALIVE. Independent actual review approved; old cache unchanged. This is one descriptive unit, not all-learning freshness, full health/dashboard freshness, a scheduled-run receipt or improved forecasts. Earlier memory refusals remain historical evidence.",
+        "external_block": "Other learning units, full health/dashboard and natural scheduled-run evidence remain separate.",
+        "failed": "Oldinprocessaudit2memoryrefusals0writes retained; producer/installer/operator repairs closed",
+        "unknown": "Otherlearning units/fullsnapshot/dashboard freshness and downstreamforecast effects ofthisdescriptiveunit notclaimed"
+      },
+      "continuation_evidence": "One native Oct11 survivorship audit produced one new cache; second producer call returned nothing_to_do with zero new write. Actual sim consumer loaded it and the specific learning-unit health probe reported ALIVE. Independent actual review approved; old cache unchanged. This is one descriptive unit, not all-learning freshness, full health/dashboard freshness, a scheduled-run receipt or improved forecasts. Earlier memory refusals remain historical evidence."
+    },
+    {
+      "id": "B10",
+      "roadmap_stream": "W7",
+      "owner": "coordinator",
+      "dependencies": [],
+      "status": "DRAFTED_EXTERNAL_PENDING",
+      "acceptance": "Monday Terminal packet retains authentic WLS/rules/fills and gates; offline preview",
+      "artifact": "docs/MONDAY_TERMINAL_PREPARATION_2026-10-12.md",
+      "next_step": "application submitted approval pending; Monday authentic universe/rules/fills needed",
+      "evidence_axes": {
+        "implementation": "Monday attended Terminal guide",
+        "test": "Offline preparation only",
+        "integration": "No activation",
+        "operational_observation": "Owner says application submitted; approval pendingMonday",
+        "external_block": "Sponsor response; authentic WLS universe/TMSG rules/fills",
+        "failed": "None claimed",
+        "unknown": "Passing drill is not eligibility or verified fill"
+      }
+    },
+    {
+      "id": "B11",
+      "roadmap_stream": "W7",
+      "owner": "coordinator",
+      "dependencies": [
+        "B04",
+        "B07"
+      ],
+      "status": "INACTIVE_DRAFT_REVIEWED",
+      "acceptance": "ATLAS v3 dated inactive draft with engine weights, news/revision evidence, prices/ranges/risks/exits/deltas",
+      "artifact": "docs/ATLAS_LLM_PORTFOLIO_V3_2026-10-10_REVIEW.md; atlas-prior-version-comparison.json",
+      "next_step": "Inactive revieweddateddraft nowhas exactv1/v2/v3comparison/alltotals100%; ownerfinalreview, authenticeligibility andfreeze/cost/benchmark terms pending.",
+      "evidence_axes": {
+        "implementation": "ATLAS v3 inactive dated discussion draft",
+        "test": "23 weights and45 selected input records reviewed",
+        "integration": "No freeze/order/activation",
+        "operational_observation": "96%stocks4%cash; VRT12→10 only change; SPY comparator only",
+        "external_block": "All Bloomberg eligibility unverified",
+        "failed": "No performance claim",
+        "unknown": "Exit/freeze/cost/benchmark/concentration terms require owner review"
+      }
+    },
+    {
+      "id": "B12",
+      "roadmap_stream": "ALL",
+      "owner": "beta_inventory",
+      "dependencies": [
+        "B02",
+        "B04",
+        "B05",
+        "B07",
+        "B08",
+        "B09",
+        "B10",
+        "B11"
+      ],
+      "status": "EXACT16_DOCUMENTS_PR26_DEPLOY_OPERATIONALLY_OBSERVED",
+      "acceptance": "acceptance matrix separates implementation/tests/integration/observations/blocked/failed; compact Astra packet",
+      "artifact": "docs/BETA_ACCEPTANCE_MATRIX_2026-10-10.json; docs/ASTRA_BETA_REVIEW_PACKET_2026-10-10.md",
+      "next_step": "Reviewed16docs nowmain500be24/mainCI38079126378SUCCESS/actualcommitcanarieshealthy19:43 everylane+registryexact. Laterdatedcheckpoints needed ongoingoperations; noautomaticAstra/betaacceptance.",
+      "evidence_axes": {
+        "implementation": "Current acceptance matrix and compact Astra packet",
+        "test": "Receipt-linked summary review draft",
+        "integration": "Local dated documents",
+        "operational_observation": "PR26 documentation merged as 500be24; exact main CI passed and deployed-commit checks at 19:43 UTC found healthy service, fresh NAVs and unchanged registry/every lane history. This continuation supplement is a review draft, not final beta acceptance or an Astra invocation.",
+        "external_block": "Monday actual inputs and final review",
+        "failed": "Historical failure receipts preserved",
+        "unknown": "No Astra invocation or final beta acceptance claimed"
+      },
+      "continuation_evidence": "PR26 documentation merged as 500be24; exact main CI passed and deployed-commit checks at 19:43 UTC found healthy service, fresh NAVs and unchanged registry/every lane history. This continuation supplement is a review draft, not final beta acceptance or an Astra invocation."
+    }
+  ],
+  "updated_utc": "2026-10-10T18:23:40.042322+00:00",
+  "as_of_utc": "2026-10-10T18:42:25.963551+00:00",
+  "continuation_as_of_utc": "2026-10-10T21:10:08.138108+00:00",
+  "continuation_notes": {
+    "source_crosswalk": "Parked after safe resource refusal, not an empty dataset",
+    "next_ready": "Exact-three saved contract metadata qualification; independent cached-news same-event inventory; natural06:30SGT DailyPass/WorldDigest and08:30NN metadata observations",
+    "controls": "Private queue/owner/STOP controls remain authoritative; this public file does not operate services."
+  }
+}
