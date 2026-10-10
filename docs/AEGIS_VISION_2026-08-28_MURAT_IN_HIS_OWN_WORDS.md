@@ -361,3 +361,21 @@ and evidence limits are recorded in roadmap §5c and the overnight verification
 note.
 
 **Evidence update (2026-10-10 02:06:49 SGT):** PR13/16 are merged and the first release is healthy; NAV, registry and lane YAML are unchanged. The initial follow-through full run had four host-environment failures and one guard-enrollment failure; the guard fix is now independently approved and integrated, while final exact-commit CI remains pending. Hack5 GET-only status is known, and the separate 12-job scheduler database backup passed isolated verification. PC policy activation remains false; publication success and named consumer acceptance remain open. The recovery remains **NOT READY**. See roadmap section 5c and the consolidated verification snapshot.
+
+**Owner instruction (2026-10-10 evening; supersedes the two-chunk stop):**
+“work till u finish the whole beta roadmap” and “Continue AEGIS through Monday
+morning, 12 October 2026, Singapore time.” Complete the remaining authorised V1
+Beta roadmap by reusing existing implementations, with at most two workers,
+bounded spending and repairs, independent review and preserved correctness
+checks. External blockers stop only dependent work. Preserve NAV/history,
+browser ownership, scheduled jobs and Monday activation gates. Prepare ATLAS —
+LLM Portfolio v3 as an inactive review draft and a compact Astra review packet;
+do not switch to Astra automatically or grant real-money authority. The current
+roadmap §5c and persistent dependency queue record acceptance and resume state.
+
+**Owner clarification (same evening):** “we applied to the competition and its
+pending on monday they will disclose but still on monday we will go to the lab
+to connect to terminal there you can guide me”. Application submission,
+sponsor approval, authentic WLS membership, current TMSG rules, policy choice
+and verified fills remain separate facts. Prepare attended lab guidance;
+approval and current Terminal evidence are not inferred from registration.

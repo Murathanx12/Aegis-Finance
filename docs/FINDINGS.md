@@ -135,3 +135,102 @@ Follow-up: finite positive endpoint prices can still overflow a close ratio, and
 infinite returns can yield a NaN excess. The grader now refuses nonfinite computed
 returns before appending; direct learning gates and E[r] reject malformed numeric
 grades even if a row carries the new rule marker. Existing rows remain untouched.
+
+## 2026-10-10 — beta continuation examinations
+
+PR #20's exact head was independently reviewed and merged as `86fc8b0e`.
+Its main CI passed and the deployed API reports that exact commit, healthy
+jobs and fresh NAVs. The registry and recorded lane histories match the
+pre-merge receipt; refreshed comparator quotes are a separate changing field.
+Publication recovery remains closed.
+
+The frozen analyst-ablation mismatch came from decision-story replay omitting
+the planner's 10% fallback cap. The reviewed replay repair restores that cap
+without changing the planner, original forecasts or books. Three actual
+isolated replays match and send zero orders. Old mismatch evidence is retained.
+
+The independently reviewed census separates runtime forecasts (66,546 unique)
+from the isolated cloud snapshot (736), including 112 exact immutable overlaps.
+Outcome-present counts include replay and are not certified forward results.
+Protected, malformed, conflicting, bounded and inaccessible sources remain
+explicit; the census is incomplete and does not itself authorize grading.
+
+The repaired news inspection admits only eligible, nonvoid, nonquarantined
+outcomes with valid chronology. Legacy day-only resolutions must precede the
+cutoff's UTC day. Cached interpretations remain `BOUND_ONLY`, not semantic
+certification. A stored unsupported CACC settlement-date claim is rejected.
+The actual retrospective learning consumer retains zero trust; the news-to-
+expected-return bridge remains unverified and no live flag was enabled.
+
+A private catch-up reproduces 22 newly graded campaign records, then zero on
+rerun, preserving all original immutable inputs. Its exact price windows and
+outcomes were independently reproduced. General catch-up guards still require
+repair; canonical runtime commits remain inactive until exact identity and
+file pins are checked inside the existing writer lock. Missing DBRG and WBD
+windows remain unknown rather than zero.
+
+The release suite recorded 14,460 passed, 74 skipped, 126 deselected and two
+failures: missing news-validator guard enrollment and missing offline-consumer
+classification. Their focused repair is under independent review; a failed
+release receipt is not replaced by focused success. NN tests passed 86; FT
+tests passed 99. Required release checks still bind.
+
+Read-only fleet diagnostics distinguish five matching position states from
+grades ending October 8, and an inaccessible credential-invalid sixth role.
+The existing browser owner remains unchanged and its reader is advancing.
+Monday competition approval, authentic WLS membership, current Terminal rules
+and actual fills remain separate facts. The owner reports the application
+submitted, with approval/details pending Monday.
+
+Follow-through at approximately20:45SGT: the two release enrollment repairs
+passed independent mutation/actual-consumer review. A frozen CI-simulated full
+backend rerun is in progress; the earlier failed receipt is retained. The
+one-line health-page presentation fix exposes ALIVE service details by default,
+including due-unresolved grading debt. Independent static component rendering
+approved the exact change; deployment and per-service restart proof are not
+yet observed.
+
+Catch-up writer cycle1 passed the original33 checks but failed seven new
+checks in four material boundary groups: voided markers, non-session price
+rows, examination output aliases and an expiring owner lease. Its accepted
+full private-ledger artifact still proves22 grades/zero rerun and unchanged
+immutable/skipped rows. Runtime ledger appends invalidate the old complete-file
+authority pin; no runtime write occurred. Final cycle2 is isolated and under
+independent review, with46 focused passes claimed by the builder.
+
+The parked R15 catalyst candidate reproduces its existing two P2 findings
+despite84 focused passes and remains inactive. Backup archive headers3232
+are unclassified; an unsupported fallback context-only label is corrected in
+a separate receipt without altering the original or reading new member values.
+ATLAS's inactive discussion draft passed independent weight/input review;
+supplemental book/engine/member pins match and10 primary-source captures are
+portable. Thirteen archiver access failures remain explicit, not empty or
+semantically certified. The measured-results index retains original horizon-
+specific scores and the actual zero-trust/unchanged-news-plan observations.
+
+Follow-through, October 11 at approximately 02:15 SGT: the canonical catch-up
+has now graded the exact 22 original records once, with zero on rerun. A later
+native expected-return fit consumed the updates; fitted inputs changed without
+forcing changed weights or orders. Five fleet outcomes were graded once and
+the subsequent five-account reconciliation found no discrepancies. Original
+fields, NAVs, histories and activation gates remain intact.
+
+PRs #21–25 passed their required release checks and exact CI. The latest
+production commit `f6e37899` passed live health, fresh NAV, registry and every
+paper-lane history canary. The opt-in source guards leave the frozen legacy
+news contract unchanged; real strict semantic admission remains unobserved.
+The scheduled digest and actual zero-trust shadow consumer are separate facts.
+
+The final manual reader-reload repair passed 83 private checks, but the first
+live read-only helper invocation refused `UNKNOWN census` before opening
+process handles, producing a context or changing runtime state. The operator
+is parked under the repair cap. A fresh status still reports reading, with
+32 successful pages in ten minutes and 202 in an hour. This does not certify
+future continuous uptime. The new-day learning-cache invocation likewise
+refused its fresh memory preflight before an audit or cache write.
+
+The acceptance report's generic queue join erased six unmapped rows' evidence
+fields. The corrected matrix retains explicit parked/deferred/preview evidence
+for every row, and preserves the prior bytes privately. ATLAS now compares
+the original v1/v2 records with its inactive v3 proposal; the v1 field named
+`frozen_utc` does not override its recorded `DRAFT_NOT_FROZEN` state.

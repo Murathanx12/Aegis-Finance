@@ -23,11 +23,23 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 
 ## TIER 0 — CANON (changes a few times a year; read every session)
 
-Current bounded execution pickup (2026-10-10):
-[HANDOFF_CODEX_2026-10-10_BUDGETED.md](HANDOFF_CODEX_2026-10-10_BUDGETED.md).
-It records the clean natural publisher receipt, actual isolated consumer trace,
-original-forecast scoring and paired replay. Earlier October 9 recovery status
-below is historical; the active roadmap remains the same §5c file.
+Current sustained beta pickup (2026-10-10 → Monday October 12):
+[BETA_CONTINUATION_CHECKPOINT_2026-10-11.md](BETA_CONTINUATION_CHECKPOINT_2026-10-11.md)
+and its compact private state/queue. The local rolling handoff remains private.
+The earlier
+[budgeted handoff](HANDOFF_CODEX_2026-10-10_BUDGETED.md) remains historical evidence
+for the clean publication receipt and original paired replay. Current measured
+comparisons are indexed in [BETA_MEASURED_RESULTS_2026-10-10.md](BETA_MEASURED_RESULTS_2026-10-10.md).
+The dated [canonical catch-up and actual learning consumer](BETA_LEARNING_CATCHUP_2026-10-10.md)
+separates the new22 grading delta from that original paired report.
+The [partial all-family route manifest](BETA_OUTPUT_ROUTE_MANIFEST_2026-10-10.md)
+keeps unknown, protected and inaccessible populations explicit. Its
+[actual consumer subsets](BETA_OUTPUT_CONSUMER_SUBSETS_2026-10-10.md) distinguish
+runtime grading and subsequent reads from private proofs. Current review
+drafts are [the acceptance matrix](BETA_ACCEPTANCE_MATRIX_2026-10-10.md),
+[ATLAS v3](ATLAS_LLM_PORTFOLIO_V3_2026-10-10_REVIEW.md), and
+[the Astra packet](ASTRA_BETA_REVIEW_PACKET_2026-10-10.md); none activates a book.
+The active roadmap remains the same §5c file; checkpoints are not completion.
 
 - **`AEGIS_STRATEGY_2026-09-26_ONE_PIPELINE.md` — the strategy in one page (2026-09-26):** the sentence, the pipeline with every box's live module and grade, the three claims we can make and the one we cannot (beating SPY forward), what the nightly sim is FOR (the strategy library), the process census, experiments vs accidental clashes. Read it before any roadmap.
 - `AEGIS_STRATEGIC_INVARIANTS.md` — the sixteen points.
@@ -41,6 +53,12 @@ below is historical; the active roadmap remains the same §5c file.
 **PUBLIC-FACING:** `FUNDING_EVIDENCE_PACK_2026-10-07.md` — the funding evidence pack (every number checked against its receipt; NOT MEASURED where none exists; programme table and HKU Demo Day 2026-10-14).
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
+
+- **October 10 → Monday October 12 continuation:** the owner's expanded scope
+  supersedes the prior two-chunk stop. The persistent execution queue is
+  [BETA_DEPENDENCY_QUEUE_2026-10-10.json](BETA_DEPENDENCY_QUEUE_2026-10-10.json),
+  linked to the current roadmap §5c. Checkpoints are resumable work state,
+  not beta completion; activation and authentic Terminal inputs retain their gates.
 
 - **`ROADMAP_2026-10-06_V1_BETA_THE_LOOP_THAT_LEARNS.md` — ACTIVE (adopted 2026-10-06, Fable 5.1). THE ONE TIER 1 FILE.**
   Built from the verified machine state (code unchanged since `46d6efa4`; the live decision loop DEAD 6.7 days;
