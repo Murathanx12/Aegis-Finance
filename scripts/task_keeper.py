@@ -25,8 +25,9 @@ WHY (automation audit, 2026-10-02)
    `reader` is idempotent: it exits when a supervisor is alive (matched on the
    COMMAND LINE, never the image name), honours the owner's pause file
    `dowjones/SUPERVISOR_STOP`, and otherwise launches
-   `dowjones/supervisor_run.cmd <HH:MM> <dated log>` with a ROLLING end time
-   (`READER_ROLL_H` ahead), detached, and records the PID it started.
+   `dowjones/supervisor_run.cmd continuous <dated log>`, detached, and records
+   the PID it started. Automatic runs stay supervised between keeper checks;
+   manual supervisor runs retain their bounded `--until HH:MM` deadline.
 2. FOUR DAILY TASKS SKIPPED 10-02 because the PC slept over their trigger and
    battery conditions blocked the catch-up. The tasks now carry
    StartWhenAvailable + WakeToRun; `catchup` is the belt to those braces: for
@@ -76,8 +77,8 @@ SUPERVISOR_STOP = DJ / "SUPERVISOR_STOP"
 KEEPER_DIR = OPT / "task_keeper"
 KEEPER_LOG = KEEPER_DIR / "keeper.jsonl"
 
-#: The supervisor's end time is this far ahead of each launch: the keeper fires
-#: at least every two hours, so a supervisor never outlives its relaunch path.
+#: Retained for callers requesting a bounded rolling deadline. Automatic keeper
+#: launches use continuous supervision to avoid an expiry gap between checks.
 READER_ROLL_H = 23.0
 
 #: Daily jobs the catch-up may start late. NOT the fleet-manager passes (live
@@ -197,7 +198,7 @@ def ensure_reader(*, scan: Callable[[], Optional[list[dict]]] = scan_python,
     d = reader_decision(rows=scan(), stop_exists=stop.exists())
     d["job"] = "reader"
     if d["action"] == "launch" and not dry_run:
-        until = rolling_until(now_local)
+        until = "continuous"
         sup_log = DJ / f"supervisor_{now_local:%Y-%m-%d_%H%M}.log"
         try:
             d["launched_pid"] = launch(until, sup_log)
