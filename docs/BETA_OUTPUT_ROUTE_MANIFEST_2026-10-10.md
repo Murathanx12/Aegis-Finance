@@ -18,7 +18,16 @@ As-of 2026-10-10, the accepted receipt covers 72,657 files in 519 file-family bu
 | protected_metadata_only_awaiting_evidence | 262 |
 | static_code_or_manifest_declaration_only | 11 |
 
-The 504 `awaiting_evidence` annotations plus 3 candidate-unverified routes equal 507 family routes without verified actual-consumer evidence; none is evidence of zero data. The one row-only evidence_memory cell is retained separately from file-family buckets. Per-family reason, file dispositions, declared consumer, dated horizon/task cells, raw/unique/duplicate/conflict counts, state labels, date span, daily delta, and next bounded task are in the [machine-readable family map](BETA_OUTPUT_ROUTE_MANIFEST_2026-10-10.json). Every family stays ungraded/unverified unless a dated consumer receipt proves otherwise. Static code paths and consumer names are routing hints only.
+The 504 `awaiting_evidence` annotations plus 3 candidate-unverified routes equal 507 family routes without verified actual-consumer evidence; none is evidence of zero data. The one row-only evidence_memory cell is retained separately from file-family buckets. Per-family reason, file dispositions, declared consumer, dated horizon/task cells, raw/unique/duplicate/conflict counts, state labels, date span, daily delta, and next bounded task are in the [machine-readable family map](BETA_OUTPUT_ROUTE_MANIFEST_2026-10-10.json). Preserve the recorded outcome-present `graded` counts; actual-consumer coverage remains unverified without a dated receipt and a proven family join. Static code paths and consumer names are routing hints only.
+
+The October 11 field review checked the existing reports without another census
+or grading run. `pending` is not a verified not-yet-due count. Persisted void
+counts remain recorded; official quarantine eligibility is only partly covered.
+Inaccessible file/family counts cannot establish inaccessible record counts,
+which remain unknown. Five observed consumer entries have candidate family
+associations; exact family joins and complete coverage remain unproved. Private
+review: `family-report-field-coverage/independent/independent-review.json`,
+SHA256 `1f381d9a9689f3bf7dba0d501795149981eb32562b90b109d0eac301427c0eab`.
 
 ## Separate existing populations and manifests
 
