@@ -1,5 +1,26 @@
 # FINDINGS — Adversarial self-review of V3 Chunks 1–6
 
+## 2026-10-10 — bounded news trace and original-record replay
+
+The isolated PRODUCT_EXPERIMENT examination is recorded in
+[DECISION_TRACE_2026-10-10.md](DECISION_TRACE_2026-10-10.md) and
+[PAIRED_RESULTS_2026-10-10.md](PAIRED_RESULTS_2026-10-10.md).
+Fifty-one original source forecasts reproduce exactly; 34 resolved outcomes
+score Brier 0.27176 versus the same-row p50 loss 0.25. Twenty-session rows remain
+pending. Analyst inputs affect actual isolated forecast/plan consumers; source
+news remains excluded from expected return by design, and historical earned
+news trusts of zero cause no paired portfolio effect. No alpha claim follows.
+
+Independent review rejected the first regrade check because the resolver passes
+already-resolved rows through. Copies now clear resolution fields first, with a
+wrong-recorded-outcome regression and 34 genuinely recomputed matches. Trace
+review required correct executed horizon labels and explicit retention of the
+existing without-analyst decision-story replay mismatch. Release verification
+caught the lab firewall violation: the offline extractor belongs under ft_lab,
+and the live-path import guard stays unchanged. Original private receipts and
+failures are retained, not rewritten as successes. The fleet grade-chain gap,
+Qwen resource/quality gates and activation boundaries remain component-specific.
+
 **Date:** 2026-06-20 (AFK verify/harden session) · **Scope:** code committed in Chunks 1–6.
 **Method:** red-team for *silent fragility* — swallowed exceptions, NaN propagation,
 degenerate input producing plausible-but-wrong output, and bypasses of the safety claims.

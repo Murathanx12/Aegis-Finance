@@ -369,6 +369,26 @@ forward reads 10-26/27, contest 10-12. WAITING ON OWNER: D1, D2, D5, D7, D13, D1
 
 ### 5c. ACTIVE EXECUTION QUEUE — 2026-10-09 (supersedes prior queues)
 
+**Budgeted execution delta, 2026-10-10:** The natural 10:30 SGT publication
+receipt is clean (`action=ok`, task result 0, main `97f1c629`); the publication
+follow-through is closed. The bounded real-source and measured replay work is
+in [DECISION_TRACE_2026-10-10.md](DECISION_TRACE_2026-10-10.md) and
+[PAIRED_RESULTS_2026-10-10.md](PAIRED_RESULTS_2026-10-10.md). Five stored SEC
+sources and 97 analyst events reached the actual isolated forecast/planner
+consumers. Analyst removal changes virtual decisions; news remains excluded
+from expected return by design. The actual failed local settlement-date reply
+is deterministically rejected, without promoting the local model. All 51
+original September source forecasts reproduce; 34 resolved rows score Brier
+0.27176 versus the paired p50 value 0.25. The existing recorded news trusts are
+zero, so the same-window news challenger has zero economic effect. Broker
+grade-chain refusal and the planner's existing without-analyst decision-story
+replay mismatch remain explicit. These measurements are descriptive, not
+strategy promotion or new forward evidence. OpenClaw reading advances; a local
+Qwen probe refused below its RAM floor. Fleet protection, authentic Bloomberg
+inputs, local news quality and Monday activation retain their separate gates.
+Detailed checks, private receipt pins and next action are in
+[HANDOFF_CODEX_2026-10-10_BUDGETED.md](HANDOFF_CODEX_2026-10-10_BUDGETED.md).
+
 This dated amendment replaces the active execution order above; earlier queues and their receipts
 remain historical. Recovery comes first, then the shortest evidence-producing work proceeds in
 parallel. A blocked external input pauses only its own lane. No new roadmap is created. The
