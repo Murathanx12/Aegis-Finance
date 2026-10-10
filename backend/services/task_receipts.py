@@ -47,6 +47,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time as dtime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
+from zoneinfo import ZoneInfo
 
 from backend import config as _config
 
@@ -144,6 +145,7 @@ class Reading:
     unknown_reason: Optional[str] = None
     delegated: Optional[str] = None  # a coarse verdict another probe already judged
     never_by_task: bool = False      # a receipt exists but this task has never run
+    run_start: Optional[datetime] = None  # producer start, for window/tick provenance
 
 
 @dataclass(frozen=True)
@@ -160,6 +162,8 @@ class TaskSpec:
     unregistered_ok: str = ""
     #: a daily ET window the producer only writes inside: (config start, config end)
     window_cfg: Optional[tuple[str, str]] = None
+    #: fixed UTC repeat window; unlike an ET window this matches a fixed SGT trigger
+    window_utc: Optional[tuple[str, str]] = None
 
 
 def parse_stamp(v: Any) -> Optional[datetime]:
@@ -653,6 +657,126 @@ def _fleet_pass(which: str):
     return reader
 
 
+def _sweep_success_shape(d: dict) -> bool:
+    """Check the producer's complete role/result census before crediting coverage."""
+    roles = d.get("roles")
+    if not isinstance(roles, list) or not roles or len(roles) > 5:
+        return False
+    counts: dict[str, int] = {}
+    for role in roles:
+        if not isinstance(role, dict):
+            return False
+        name, count, held = role.get("role"), role.get("candidates"), role.get("held_symbols")
+        if (not isinstance(name, str) or name not in _config.FLEET_MANAGER_ROLES or name in counts
+                or type(count) is not int or count < 0 or type(held) is not int or held < count
+                or role.get("status") != ("CANDIDATE" if count else "ALREADY_COVERED")):
+            return False
+        counts[name] = count
+    candidates = d.get("candidates", [])
+    if not isinstance(candidates, list) or len(candidates) != sum(counts.values()):
+        return False
+    seen: set[tuple[str, str]] = set()
+    for row in candidates:
+        if not isinstance(row, dict):
+            return False
+        role, symbol = row.get("role"), row.get("symbol")
+        if (not isinstance(role, str) or role not in counts or not isinstance(symbol, str) or not symbol
+                or (role, symbol) in seen or row.get("status") !=
+                ("PROTECTED" if d.get("status") == "PROTECTED" else "ALREADY_COVERED")):
+            return False
+        seen.add((role, symbol))
+    return (all(sum(1 for role, _ in seen if role == name) == n for name, n in counts.items())
+            and (bool(candidates) if d.get("status") == "PROTECTED" else True))
+
+
+def _sweep_stamp(value: Any) -> Optional[datetime]:
+    if not isinstance(value, str):
+        return None
+    try:
+        stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return stamp.astimezone(timezone.utc) if stamp.tzinfo is not None else None
+
+
+def _sweep_reading(ctx, p: Path) -> Reading:
+    d = _read(p)
+    proof = f"paper_accounts/fleet_manager/sweeps/{p.name}"
+    if not isinstance(d, dict) or d.get("schema") != "fleet_protect_sweep/1":
+        return Reading(status="DEGRADED", reason="newest sweep receipt unreadable or wrong schema",
+                       proof=proof, detail="sweep receipt invalid")
+    started, stamp = _sweep_stamp(d.get("started_utc")), _sweep_stamp(d.get("finished_utc"))
+    try:
+        named_start = datetime.strptime(p.stem, "sweep_%Y%m%dT%H%M%S%fZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        named_start = None
+    if (started is None or stamp is None or named_start != started
+            or not started <= stamp <= ctx.now or (stamp - started) > timedelta(minutes=3)):
+        return Reading(stamp=stamp, run_start=started, status="DEGRADED",
+                       reason="sweep start/finish/filename chronology invalid or unfinished",
+                       proof=proof, detail=f"sweep {d.get('status')}")
+    status = d.get("status")
+    if status == "REFUSED":
+        st = "REFUSED"
+    elif d.get("live_flag") is not True or status in {"INCOMPLETE", "DRY_PLAN"}:
+        st = "DEGRADED"
+    elif status in {"ALREADY_COVERED", "PROTECTED"}:
+        st = "OK" if _sweep_success_shape(d) else "DEGRADED"
+    else:
+        st = "DEGRADED"
+    warnings = d.get("history_warnings", [])
+    if not isinstance(warnings, list):
+        st = worst(st, "DEGRADED")
+        warning_note = "invalid historical-intent warning field"
+    elif warnings:
+        st = worst(st, "DEGRADED")
+        warning_note = f"{len(warnings)} unresolved historical stop intent warning(s); manual review required"
+    else:
+        warning_note = ""
+    reason = ("DRY receipt is not live coverage" if d.get("live_flag") is not True and st != "REFUSED"
+              else str(d.get("why") or status)[:180])
+    reason = "; ".join(part for part in (reason, warning_note) if part)
+    return Reading(stamp=stamp, run_start=started, status=st, reason=reason,
+                   proof=proof, detail=f"sweep {status} ({p.name})")
+
+
+def r_fleet_sweep(ctx, task) -> Reading:
+    """Newest sweep attempt, with a calendar-proven post-close idle exception."""
+    folder = ctx.optimus_dir / "paper_accounts" / "fleet_manager" / "sweeps"
+    try:
+        files = sorted(folder.glob("sweep_*.json"))
+    except OSError:
+        files = []
+    if not files:
+        return _none("paper_accounts/fleet_manager/sweeps/sweep_*.json")
+    latest = _sweep_reading(ctx, files[-1])
+    # The producer's refusal text is ambiguous (closed OR stale clock). Only a
+    # verified calendar close and a complete final eligible LIVE pass make it idle.
+    if latest.status == "REFUSED" and latest.run_start is not None:
+        raw = _read(files[-1])
+        window = _sweep_window(latest.run_start.date())
+        if (window and latest.run_start >= window[2]
+                and isinstance(raw, dict) and raw.get("live_flag") is True
+                and raw.get("history_warnings", []) == []
+                and "sweep venue closed, clock stale, or inside frozen close buffer" in str(raw.get("why"))):
+            # Only the immediately preceding attempt can prove the final window.
+            # A newer warning, failure or corrupt receipt supersedes older success,
+            # even when the later post-close refusal itself carries no warning.
+            if len(files) > 1:
+                previous = _sweep_reading(ctx, files[-2])
+                chain = f"{previous.proof} + {latest.proof}"
+                if (previous.status == "OK" and previous.run_start is not None
+                        and window[1] <= previous.run_start <= window[1] + timedelta(minutes=3)
+                        and previous.stamp is not None and previous.stamp <= window[2]):
+                    return Reading(stamp=previous.stamp, run_start=previous.run_start, status="IDLE",
+                                   idle_reason="calendar-verified post-close; final eligible live sweep completed",
+                                   proof=chain, detail="sweep closed-session idle")
+                latest.proof = chain
+                latest.reason = (f"latest preceding attempt {previous.status.lower()}: "
+                                 f"{previous.reason[:120]}; {latest.reason}")
+    return latest
+
+
 def r_fleet_daily(ctx, task) -> Reading:
     p, d = _newest(ctx.optimus_dir / "paper_accounts" / "fleet_daily", "fleet_*.json")
     if not isinstance(d, dict):
@@ -890,6 +1014,11 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisFleetManagerPreclose": TaskSpec(_fleet_pass("preclose"),
                                           "paper_accounts/fleet_manager/runs/run_* (pass preclose)",
                                           session_only=True),
+    "AegisFleetProtectSweep": TaskSpec(
+        r_fleet_sweep, "paper_accounts/fleet_manager/sweeps/sweep_*.json",
+        session_only=True,
+        hash_off="each eligible repeat is a new broker coverage observation",
+        window_utc=("15:05", "19:05")),
     "AegisFleetDailyCheck": TaskSpec(r_fleet_daily, "paper_accounts/fleet_daily/fleet_*.json"),
     "AegisReaderSupervisor": TaskSpec(r_reader, "dowjones/night_reader_supervisor.jsonl (tick)"),
     "AegisCatchUp": TaskSpec(r_catchup, "task_keeper/keeper.jsonl (job catchup)",
@@ -959,7 +1088,7 @@ def allowed_age_s(name: str, spec: TaskSpec, stamp: Optional[datetime], now: dat
     from backend.services import system_health as SH                # noqa: PLC0415
     cad_h = float(_config.HEALTH_TASK_CADENCE_H.get(name, 24.0))
     allowed = cad_h * 3600 * (1 + SH.GRACE)
-    if spec.session_only and stamp is not None:
+    if spec.session_only and not spec.window_utc and stamp is not None:
         allowed += 86400 * _non_session_days(SH._et(stamp).date(), SH._et(now).date())
     return allowed
 
@@ -969,12 +1098,61 @@ def _hhmm(s: str) -> dtime:
     return dtime(int(h), int(m))
 
 
+def _sweep_window(day: date) -> Optional[tuple[datetime, datetime, datetime]]:
+    """First/final eligible scheduled UTC tick and authoritative XNYS close."""
+    try:
+        import exchange_calendars as xc                            # noqa: PLC0415
+        cal = xc.get_calendar("XNYS", start="2015-01-01", end="2035-12-31")
+        if not cal.is_session(day.isoformat()):
+            return None
+        close = cal.session_close(day.isoformat()).to_pydatetime().astimezone(timezone.utc)
+    except Exception:                                               # noqa: BLE001
+        return None  # no weekday approximation can certify a session/half-day close
+    first = datetime.combine(day, dtime(15, 5), timezone.utc)
+    ny_cutoff = datetime.combine(day, dtime(15, 15), ZoneInfo("America/New_York")).astimezone(timezone.utc)
+    bound = min(datetime.combine(day, dtime(19, 5), timezone.utc),
+                datetime.combine(day, dtime(19, 15), timezone.utc), ny_cutoff,
+                close - timedelta(minutes=_config.FLEET_MANAGER_MIN_MINUTES_TO_CLOSE + 3))
+    if first > bound:
+        return None
+    last = first + timedelta(minutes=15 * int((bound - first).total_seconds() // 900))
+    return first, last, close
+
+
 def window_status(spec: TaskSpec, stamp: Optional[datetime], now: datetime,
-                  allowed: float) -> Optional[tuple[str, str]]:
+                  allowed: float, run_start: Optional[datetime] = None) -> Optional[tuple[str, str]]:
     """For a windowed producer (review F4): None when `now` is inside today's
     window and past its first cadence (judge normally); else (state, text):
     idle-expected when the newest receipt comes from the last window, STALE when
     the last window produced nothing."""
+    if spec.window_utc:
+        utc = now.astimezone(timezone.utc)
+        try:
+            import exchange_calendars as xc                        # noqa: PLC0415
+            cal = xc.get_calendar("XNYS", start="2015-01-01", end="2035-12-31")
+            days = [s.date() for s in cal.sessions_in_range(
+                (utc.date() - timedelta(days=14)).isoformat(), utc.date().isoformat())]
+        except Exception:                                           # noqa: BLE001
+            return ("STALE", "XNYS session/close calendar unavailable for sweep cadence")
+        today = _sweep_window(utc.date())
+        if today and today[0] <= utc <= today[1] + timedelta(seconds=allowed) and (
+                run_start is not None and run_start >= today[0] or utc > today[0] + timedelta(seconds=allowed)):
+            return None
+        completed = [d for d in days if d < utc.date() or
+                     (d == utc.date() and today is not None and utc > today[1] + timedelta(seconds=allowed))]
+        if not completed:
+            return ("STALE", "no completed XNYS sweep window in 14 days")
+        last_day = completed[-1]
+        window = _sweep_window(last_day)
+        if window is None:
+            return ("STALE", "last XNYS sweep window cannot be established")
+        _, last, close = window
+        if (run_start is not None and last <= run_start <= last + timedelta(minutes=3)
+                and stamp is not None and run_start <= stamp <= min(close - timedelta(
+                    minutes=_config.FLEET_MANAGER_MIN_MINUTES_TO_CLOSE), run_start + timedelta(minutes=3))):
+            return ("ALIVE_IDLE_EXPECTED", f"outside eligible sweep window; final tick {last:%H:%M} UTC "
+                                            f"on {last_day} produced")
+        return ("STALE", f"last eligible sweep tick ({last_day} {last:%H:%M} UTC) produced no receipt")
     if not spec.window_cfg:
         return None
     from backend.services import system_health as SH                # noqa: PLC0415
@@ -1115,7 +1293,7 @@ def _judge(ctx, name: str, task: Optional[dict], spec: Optional[TaskSpec]) -> Ju
                                   f"(Last Run {task.get('Last Run Time')})", None, proof)
     if rd.status == "DEAD":
         return Judgement("DEAD", f"{rd.reason[:220]}; {rd.detail} ({SH._fmt_age(age)} ago)" + owner, t, proof)
-    ws = window_status(spec, t, now, allowed)
+    ws = window_status(spec, t, now, allowed, rd.run_start)
     too_old = age is not None and age > allowed
     if ws is not None and rd.status in ("OK", "IDLE"):
         if ws[0] == "STALE" and unreg:

@@ -318,7 +318,9 @@ def replan(inp: dict, names: dict | None, *, pool_override: list | None = None) 
         w_ex = {s: min(float(inp["exploit_max_weight"]), room * ex_er[s] / tot) * _scale(s)
                 for s in ex_syms}
     else:
-        w_eq = (room / len(ex_syms)) if ex_syms else 0.0
+        # Match u_plan's capped inventory fallback when no E[r] is awake.
+        w_eq = (min(room / len(ex_syms), float(inp["exploit_max_weight"]))
+                if ex_syms else 0.0)
         w_ex = {s: w_eq for s in ex_syms}
     return {"weights": {**w_ex, **w_probe}, "probe_syms": probe_syms, "ex_syms": ex_syms,
             "exploit_acting": exploit_acting,

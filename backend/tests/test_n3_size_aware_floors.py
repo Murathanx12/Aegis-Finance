@@ -241,38 +241,57 @@ def test_run_populate_observe_tier_refuses_and_names_why():
     assert "aegis-alpha-terminal/alpha/universe.py" in out["files_touched_in_the_sibling_repo"]
 
 
-def test_run_s28_band_regrade_skips_without_the_long_panel():
-    if N3.LONG_TABLE.exists():
-        pytest.skip(f"{N3.LONG_TABLE} is present on this box; run-with-data is exercised manually")
+@pytest.fixture
+def missing_inputs_with_adequate_memory(monkeypatch, tmp_path):
+    """Exercise missing-data handling independently of this box's RAM/data."""
+    monkeypatch.setattr(N3, "_free_gb", lambda: N3.MIN_FREE_GB_TO_LOAD_PANEL + 1.0)
+    monkeypatch.setattr(N3, "LONG_TABLE", tmp_path / "absent_long_panel.parquet")
+    monkeypatch.setattr(N3, "CRSP_DSF_DIR", tmp_path / "absent_crsp")
+
+
+def test_run_s28_band_regrade_skips_without_the_long_panel(missing_inputs_with_adequate_memory):
     out = N3.run_s28_band_regrade()
     assert out["status"] == "SKIPPED"
 
 
-def test_run_reversal_cell_regrade_skips_without_crsp_dsf():
-    has_any = any((N3.CRSP_DSF_DIR / f"crsp_dsf_{y}.parquet").exists() for y in range(2013, 2025))
-    if has_any:
-        pytest.skip("crsp_dsf_*.parquet is present on this box; run-with-data is exercised manually")
+def test_run_reversal_cell_regrade_skips_without_crsp_dsf(missing_inputs_with_adequate_memory):
     out = N3.run_reversal_cell_regrade()
     assert out["status"] == "SKIPPED"
 
 
-def test_run_edge_vs_floor_curve_skips_without_the_long_panel():
-    if N3.LONG_TABLE.exists():
-        pytest.skip(f"{N3.LONG_TABLE} is present on this box; run-with-data is exercised manually")
+def test_run_edge_vs_floor_curve_skips_without_the_long_panel(missing_inputs_with_adequate_memory):
     out = N3.run_edge_vs_floor_curve()
     assert out["status"] == "SKIPPED"
 
 
-def test_all_three_data_jobs_refuse_under_the_memory_backoff_line(monkeypatch):
+def test_all_three_data_jobs_refuse_under_the_memory_backoff_line(monkeypatch, tmp_path):
     """A backoff is only real if it actually stops the job. Force `_free_gb`
     to read below the 2 GB line and confirm every panel-loading job refuses
     before touching disk, regardless of what data happens to be present."""
     monkeypatch.setattr(N3, "_free_gb", lambda: 1.0)
+    # Present-but-unreadable synthetic paths ensure removing the memory gate
+    # reaches a payload-read tripwire rather than an incidental missing file.
+    panel = tmp_path / "long_panel.parquet"
+    panel.touch()
+    (tmp_path / "crsp_dsf_2013.parquet").touch()
+    monkeypatch.setattr(N3, "LONG_TABLE", panel)
+    monkeypatch.setattr(N3, "CRSP_DSF_DIR", tmp_path)
+    reads = []
+
+    def payload_read_forbidden(*args, **kwargs):
+        reads.append(args)
+        pytest.fail("low-memory job attempted to read a panel payload")
+
+    monkeypatch.setattr(pd, "read_parquet", payload_read_forbidden)
+    monkeypatch.setattr(N3, "_load_lean_panel", payload_read_forbidden)
+    monkeypatch.setattr(N3, "_load_crsp_dsf", payload_read_forbidden)
+    monkeypatch.setattr(N3, "load_taq_bands", payload_read_forbidden)
     for fn in (N3.run_edge_vs_floor_curve, N3.run_s28_band_regrade,
               N3.run_reversal_cell_regrade):
         out = fn()
         assert out["status"] == "REFUSED"
         assert "GB free" in out["headline"]
+    assert reads == []
 
 
 # --------------------------------------------------------------- receipts on disk

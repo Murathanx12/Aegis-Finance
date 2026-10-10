@@ -1737,6 +1737,50 @@ def _case_world_digest():
             BudgetExceeded, "a paid-call meter with no finite budget declared")
 
 
+def _news_source_validation_fixture(first_seen_utc):
+    from backend.services import world_digest as WD
+
+    # All other inputs are valid: removing the source-clock guard must make
+    # this fixture pass, rather than refuse for a second missing input.
+    item = WD.Item(item_id="undated", kind="article", source="fixture",
+                url="https://example.com/undated", title="Undated source", text="Source body",
+                first_seen_utc=first_seen_utc)
+    row = WD.type_row({"tickers": [], "event_type": "other", "summary": "Source body"}, item)
+    cached = {"cache_key": WD.cache_key(item),
+              "cached_utc": "2026-10-10T11:00:00+00:00", "row": row}
+    return item, cached, "2026-10-10T12:00:00+00:00"
+
+
+def _case_news_source_validation():
+    from backend.services.news_source_validation import SourceValidationError, validate_cached
+
+    item, cached, cutoff = _news_source_validation_fixture(None)
+    return (lambda: validate_cached(item, cached, cutoff_utc=cutoff),
+            SourceValidationError, "a cached interpretation with no source first-seen clock")
+
+
+def test_news_source_validation_clock_fixture_positive_control():
+    from backend.services.news_source_validation import validate_cached
+
+    item, cached, cutoff = _news_source_validation_fixture("2026-10-10T10:00:00+00:00")
+    result = validate_cached(item, cached, cutoff_utc=cutoff)
+    assert result["status"] == "BOUND_ONLY"
+    assert result["source_identity_validated"]
+    assert not result["semantic_grounding_validated"]
+
+
+def test_news_source_validation_missing_source_refuses():
+    import hashlib
+
+    from backend.services.news_source_validation import SourceValidationError, validate_article_facts
+    # A matching hash of EMPTY bytes is not evidence for a non-abstaining fact.
+    facts = {"entity": None, "event_date": None, "date_precision": "unknown",
+             "evidence_spans": [], "numbers": [], "abstain": False}
+    assert_refuses_missing_input(
+        lambda: validate_article_facts(facts, "", source_sha256=hashlib.sha256(b"").hexdigest()),
+        exc=SourceValidationError, what="news fact without source text or evidence spans")
+
+
 def _case_world_state():
     # C17: the missing input is the evidence set's NAME. A belief update with no
     # digest id cannot be made idempotent (a re-run would double-count), so it
@@ -1826,6 +1870,7 @@ CASES = {
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
+    "news_source_validation": _case_news_source_validation,
     "world_state": _case_world_state,
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,

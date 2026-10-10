@@ -57,6 +57,9 @@ NAMES_THE_FILE: dict[str, str] = {
     "scripts/night_specialist_scoreboard.py": "via the layer (load -> read_rows)",
     "scripts/original_evidence_audit.py": ("dated historical physical-prefix audit; refuses "
                                            "any migration marker before and after the census"),
+    "scripts/beta_output_coverage.py": ("bounded read-only physical-source inventory; split logical rows "
+                                      "use forecast_ledger only after every active stream is completely "
+                                      "hashed, eligible and untorn; refuses backend/marker changes"),
     "scripts/budgeted_paired_results.py": ("dated paired replay; reuses guarded forecast_census, "
                                            "then rereads only the same complete hashed historical prefix"),
     "scripts/stock_lists_v3_build.py": ("a dated 2026-09-27 one-off document builder that reads rows "

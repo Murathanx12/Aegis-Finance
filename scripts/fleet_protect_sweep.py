@@ -83,6 +83,7 @@ def main(argv: list[str] | None = None, *, transport=None) -> int:
     receipt["finished_utc"] = datetime.now(timezone.utc).isoformat()
     receipt["requests_upper_bound"] = budget.used
     receipt["http_requests"] = budget.http_total
+    receipt["history_warnings"] = budget.history_warnings
     path = FM.root() / "sweeps" / f"sweep_{started:%Y%m%dT%H%M%S%fZ}.json"
     FM.atomic_write_json(path, receipt)
     print(json.dumps(receipt, indent=2))
