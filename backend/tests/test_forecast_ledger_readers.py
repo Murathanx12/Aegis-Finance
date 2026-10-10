@@ -57,6 +57,8 @@ NAMES_THE_FILE: dict[str, str] = {
     "scripts/night_specialist_scoreboard.py": "via the layer (load -> read_rows)",
     "scripts/original_evidence_audit.py": ("dated historical physical-prefix audit; refuses "
                                            "any migration marker before and after the census"),
+    "scripts/budgeted_paired_results.py": ("dated paired replay; reuses guarded forecast_census, "
+                                           "then rereads only the same complete hashed historical prefix"),
     "scripts/stock_lists_v3_build.py": ("a dated 2026-09-27 one-off document builder that reads rows "
                                         "made 2026-09-26; the frozen legacy file still holds them"),
     "scripts/verify_live_forward_disarm.py": "writes a scratch ledger in a temp dir for its own check",
