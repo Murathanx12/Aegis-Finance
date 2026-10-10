@@ -425,7 +425,7 @@ def render_hero() -> str:
 
 # ================================================================== the live results
 #: The receipt every number on the results panel comes from. Refresh = bump, re-render, commit.
-RESULTS_RUN_ID = "2026-10-09T045359Z"
+RESULTS_RUN_ID = "2026-10-09T235325Z"
 _RESULTS_OVERRIDE: dict | None = None
 
 

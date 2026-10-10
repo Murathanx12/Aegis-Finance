@@ -1,92 +1,98 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="470" viewBox="0 0 1200 470" role="img" aria-labelledby="title desc">
 <title id="title">Aegis: best paper accounts, live</title>
-<desc id="desc">Best paper accounts as of 2026-10-09 (receipt docs/assets/public_results_2026-10-09T045359Z.json): revision_flow_v0 +6.97% vs SPY +0.73% over its own window, +6.24 pp, OBSERVED(9); night book b109c886 +4.03% vs SPY +1.51% over its own window, +2.52 pp, OBSERVED(19); hack2 +2.48% vs SPY +0.62% over its own window, +1.86 pp, OBSERVED(29). Best strategy account in each of 3 families (control twins excluded), picked after the fact from 307 priced paper accounts. Paper only; each return is over the account's own window, SPY compounded over the same days.</desc>
+<desc id="desc">Best paper accounts as of 2026-10-09 (receipt docs/assets/public_results_2026-10-09T235325Z.json): revision_flow_v0 +10.60% vs SPY +1.33% over its own window, +9.27 pp, OBSERVED(10); night book b109c886 +4.74% vs SPY +2.12% over its own window, +2.62 pp, OBSERVED(20); hack2 +5.57% vs SPY +1.22% over its own window, +4.35 pp, OBSERVED(30). Best strategy account in each of 3 families (control twins excluded), picked after the fact from 307 priced paper accounts. Paper only; each return is over the account's own window, SPY compounded over the same days.</desc>
 <style>.bg{fill:#000000}.sec{font:700 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:3px;fill:#fff}.secr{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:rgba(255,255,255,.45)}.rule{stroke:rgba(255,255,255,.14)}.live{fill:#4a8dff;animation:live 1.8s ease-out infinite}@keyframes live{0%{opacity:1}100%{opacity:.15}}.excess{font:300 34px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:#6fb0ff}.exlab{font:500 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:#4a8dff}.acct{font:600 15px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.meta{font:400 12px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.58)}.badge{font:500 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:rgba(255,255,255,.45)}.track{fill:rgba(255,255,255,.06)}.bar-acct{fill:#4a8dff}.bar-spy{fill:rgba(255,255,255,.55)}.val{font:600 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.valspy{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:rgba(255,255,255,.58)}.grid{stroke:rgba(255,255,255,.08)}.zero{stroke:rgba(255,255,255,.45);stroke-dasharray:2 3}.tick{font:400 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:rgba(255,255,255,.45)}.ln-acct{fill:none;stroke:#4a8dff;stroke-width:2.4;stroke-linejoin:round}.ln-spy{fill:none;stroke:#fff;stroke-width:1.4;stroke-dasharray:5 4}.ln-twin{fill:none;stroke:rgba(255,255,255,.45);stroke-width:1.4}.pt{fill:#000000;stroke:#4a8dff;stroke-width:1.6}.pulse{fill:none;stroke:#6fb0ff;stroke-width:1.5}.pulse-core{fill:#6fb0ff}.lab-acct{font:600 13px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#6fb0ff}.lab-spy{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.lab-twin{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:rgba(255,255,255,.45)}.ctitle{font:600 14px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.fine{font:400 11px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.45)}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
 <defs></defs>
 <rect width="1200" height="470" class="bg"/>
 <circle cx="45" cy="40" r="4" class="live"/>
 <text x="58" y="44" class="sec">BEST PAPER ACCOUNTS · LIVE</text>
-<text x="1160" y="44" class="secr" text-anchor="end">AS OF 2026-10-09 CLOSE · RECEIPT public_results_2026-10-09T045359Z</text>
+<text x="1160" y="44" class="secr" text-anchor="end">AS OF 2026-10-09 CLOSE · RECEIPT public_results_2026-10-09T235325Z</text>
 <line x1="40" y1="58" x2="1160" y2="58" class="rule"/>
-<text x="40" y="118" class="excess">+6.24</text>
+<text x="40" y="118" class="excess">+9.27</text>
 <text x="42" y="138" class="exlab">PP VS SPY</text>
 <text x="160" y="104" class="acct">revision_flow_v0</text>
 <text x="160" y="124" class="meta">frozen LLM book · $1M paper</text>
-<text x="160" y="142" class="meta">since 09-28 · 9 sessions</text>
-<text x="160" y="160" class="badge">OBSERVED(9)</text>
+<text x="160" y="142" class="meta">since 09-28 · 10 sessions</text>
+<text x="160" y="160" class="badge">OBSERVED(10)</text>
 <rect x="440" y="96" width="200" height="8" class="track" rx="4"/>
-<rect x="440" y="96" width="174" height="8" class="bar-acct" rx="4"><animate attributeName="width" from="0" to="174" dur="1.4s" begin="0.20s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
+<rect x="440" y="96" width="265" height="8" class="bar-acct" rx="4"><animate attributeName="width" from="0" to="265" dur="1.4s" begin="0.20s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
 <rect x="440" y="122" width="200" height="8" class="track" rx="4"/>
-<rect x="440" y="122" width="18" height="8" class="bar-spy" rx="4"><animate attributeName="width" from="0" to="18" dur="1.4s" begin="0.20s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
-<text x="622" y="104" class="val">+6.97%</text>
-<text x="466" y="130" class="valspy">SPY +0.73%</text>
-<text x="40" y="226" class="excess">+2.52</text>
+<rect x="440" y="122" width="33" height="8" class="bar-spy" rx="4"><animate attributeName="width" from="0" to="33" dur="1.4s" begin="0.20s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
+<text x="713" y="104" class="val">+10.60%</text>
+<text x="481" y="130" class="valspy">SPY +1.33%</text>
+<text x="40" y="226" class="excess">+2.62</text>
 <text x="42" y="246" class="exlab">PP VS SPY</text>
 <text x="160" y="212" class="acct">night book b109c886</text>
 <text x="160" y="232" class="meta">night book · $100k paper</text>
-<text x="160" y="250" class="meta">since 09-11 · 19 sessions</text>
-<text x="160" y="268" class="badge">OBSERVED(19)</text>
+<text x="160" y="250" class="meta">since 09-11 · 20 sessions</text>
+<text x="160" y="268" class="badge">OBSERVED(20)</text>
 <rect x="440" y="204" width="200" height="8" class="track" rx="4"/>
-<rect x="440" y="204" width="101" height="8" class="bar-acct" rx="4"><animate attributeName="width" from="0" to="101" dur="1.4s" begin="0.45s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
+<rect x="440" y="204" width="118" height="8" class="bar-acct" rx="4"><animate attributeName="width" from="0" to="118" dur="1.4s" begin="0.45s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
 <rect x="440" y="230" width="200" height="8" class="track" rx="4"/>
-<rect x="440" y="230" width="38" height="8" class="bar-spy" rx="4"><animate attributeName="width" from="0" to="38" dur="1.4s" begin="0.45s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
-<text x="549" y="212" class="val">+4.03%</text>
-<text x="486" y="238" class="valspy">SPY +1.51%</text>
-<text x="40" y="334" class="excess">+1.86</text>
+<rect x="440" y="230" width="53" height="8" class="bar-spy" rx="4"><animate attributeName="width" from="0" to="53" dur="1.4s" begin="0.45s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
+<text x="566" y="212" class="val">+4.74%</text>
+<text x="501" y="238" class="valspy">SPY +2.12%</text>
+<text x="40" y="334" class="excess">+4.35</text>
 <text x="42" y="354" class="exlab">PP VS SPY</text>
 <text x="160" y="320" class="acct">hack2</text>
 <text x="160" y="340" class="meta">Alpaca paper broker · $100k paper</text>
-<text x="160" y="358" class="meta">since 08-28 · 29 sessions</text>
-<text x="160" y="376" class="badge">OBSERVED(29)</text>
+<text x="160" y="358" class="meta">since 08-28 · 30 sessions</text>
+<text x="160" y="376" class="badge">OBSERVED(30)</text>
 <text x="160" y="394" class="meta">holds the same 20 names as revision_flow_v0</text>
 <rect x="440" y="312" width="200" height="8" class="track" rx="4"/>
-<rect x="440" y="312" width="62" height="8" class="bar-acct" rx="4"><animate attributeName="width" from="0" to="62" dur="1.4s" begin="0.70s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
+<rect x="440" y="312" width="139" height="8" class="bar-acct" rx="4"><animate attributeName="width" from="0" to="139" dur="1.4s" begin="0.70s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
 <rect x="440" y="338" width="200" height="8" class="track" rx="4"/>
-<rect x="440" y="338" width="15" height="8" class="bar-spy" rx="4"><animate attributeName="width" from="0" to="15" dur="1.4s" begin="0.70s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
-<text x="510" y="320" class="val">+2.48%</text>
-<text x="463" y="346" class="valspy">SPY +0.62%</text>
+<rect x="440" y="338" width="30" height="8" class="bar-spy" rx="4"><animate attributeName="width" from="0" to="30" dur="1.4s" begin="0.70s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
+<text x="587" y="320" class="val">+5.57%</text>
+<text x="478" y="346" class="valspy">SPY +1.22%</text>
 <text x="690" y="90" class="ctitle">revision_flow_v0 vs its matched random twin</text>
 <line x1="690" y1="310.0" x2="1064" y2="310.0" class="grid"/>
 <text x="682" y="314.0" class="tick" text-anchor="end">−2%</text>
-<line x1="690" y1="273.2" x2="1064" y2="273.2" class="zero"/>
-<text x="682" y="277.2" class="tick" text-anchor="end">0%</text>
-<line x1="690" y1="236.4" x2="1064" y2="236.4" class="grid"/>
-<text x="682" y="240.4" class="tick" text-anchor="end">+2%</text>
-<line x1="690" y1="199.6" x2="1064" y2="199.6" class="grid"/>
-<text x="682" y="203.6" class="tick" text-anchor="end">+4%</text>
-<line x1="690" y1="162.8" x2="1064" y2="162.8" class="grid"/>
-<text x="682" y="166.8" class="tick" text-anchor="end">+6%</text>
+<line x1="690" y1="283.7" x2="1064" y2="283.7" class="zero"/>
+<text x="682" y="287.7" class="tick" text-anchor="end">0%</text>
+<line x1="690" y1="257.4" x2="1064" y2="257.4" class="grid"/>
+<text x="682" y="261.4" class="tick" text-anchor="end">+2%</text>
+<line x1="690" y1="231.1" x2="1064" y2="231.1" class="grid"/>
+<text x="682" y="235.1" class="tick" text-anchor="end">+4%</text>
+<line x1="690" y1="204.9" x2="1064" y2="204.9" class="grid"/>
+<text x="682" y="208.9" class="tick" text-anchor="end">+6%</text>
+<line x1="690" y1="178.6" x2="1064" y2="178.6" class="grid"/>
+<text x="682" y="182.6" class="tick" text-anchor="end">+8%</text>
+<line x1="690" y1="152.3" x2="1064" y2="152.3" class="grid"/>
+<text x="682" y="156.3" class="tick" text-anchor="end">+10%</text>
 <line x1="690" y1="126.0" x2="1064" y2="126.0" class="grid"/>
-<text x="682" y="130.0" class="tick" text-anchor="end">+8%</text>
+<text x="682" y="130.0" class="tick" text-anchor="end">+12%</text>
 <text x="698.0" y="330" class="tick" text-anchor="middle">09-28</text>
-<text x="743.0" y="330" class="tick" text-anchor="middle">09-29</text>
-<text x="788.0" y="330" class="tick" text-anchor="middle">09-30</text>
-<text x="833.0" y="330" class="tick" text-anchor="middle">10-01</text>
-<text x="878.0" y="330" class="tick" text-anchor="middle">10-02</text>
-<text x="923.0" y="330" class="tick" text-anchor="middle">10-05</text>
-<text x="968.0" y="330" class="tick" text-anchor="middle">10-06</text>
-<text x="1013.0" y="330" class="tick" text-anchor="middle">10-07</text>
-<text x="1058.0" y="330" class="tick" text-anchor="middle">10-08</text>
+<text x="738.0" y="330" class="tick" text-anchor="middle">09-29</text>
+<text x="778.0" y="330" class="tick" text-anchor="middle">09-30</text>
+<text x="818.0" y="330" class="tick" text-anchor="middle">10-01</text>
+<text x="858.0" y="330" class="tick" text-anchor="middle">10-02</text>
+<text x="898.0" y="330" class="tick" text-anchor="middle">10-05</text>
+<text x="938.0" y="330" class="tick" text-anchor="middle">10-06</text>
+<text x="978.0" y="330" class="tick" text-anchor="middle">10-07</text>
+<text x="1018.0" y="330" class="tick" text-anchor="middle">10-08</text>
+<text x="1058.0" y="330" class="tick" text-anchor="middle">10-09</text>
 <clipPath id="reveal"><rect x="686" y="100" width="470" height="230"><animate attributeName="width" from="0" to="470" dur="2.6s" begin="0s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.25 0.6 0.2 1"/></rect></clipPath>
 <g clip-path="url(#reveal)">
-<polyline points="698.0,279.8 743.0,283.1 788.0,286.9 833.0,283.6 878.0,270.1 923.0,257.7 968.0,247.5 1013.0,252.0 1058.0,259.8" class="ln-spy"/>
-<polyline points="698.0,274.3 743.0,287.3 788.0,295.9 833.0,278.4 878.0,276.8 923.0,260.9 968.0,273.3 1013.0,295.9 1058.0,294.9" class="ln-twin"/>
-<polyline points="698.0,234.7 743.0,224.3 788.0,202.2 833.0,187.0 878.0,175.4 923.0,155.3 968.0,141.8 1013.0,159.5 1058.0,145.0" class="ln-acct"/>
-<circle cx="698.0" cy="234.7" r="3" class="pt"/>
-<circle cx="743.0" cy="224.3" r="3" class="pt"/>
-<circle cx="788.0" cy="202.2" r="3" class="pt"/>
-<circle cx="833.0" cy="187.0" r="3" class="pt"/>
-<circle cx="878.0" cy="175.4" r="3" class="pt"/>
-<circle cx="923.0" cy="155.3" r="3" class="pt"/>
-<circle cx="968.0" cy="141.8" r="3" class="pt"/>
-<circle cx="1013.0" cy="159.5" r="3" class="pt"/>
-<circle cx="1058.0" cy="145.0" r="3" class="pt"/>
+<polyline points="698.0,288.4 738.0,290.8 778.0,293.5 818.0,291.2 858.0,281.5 898.0,272.6 938.0,265.3 978.0,268.5 1018.0,274.2 1058.0,266.2" class="ln-spy"/>
+<polyline points="698.0,284.5 738.0,293.8 778.0,300.0 818.0,287.4 858.0,286.3 898.0,274.9 938.0,283.8 978.0,299.9 1018.0,299.2 1058.0,292.7" class="ln-twin"/>
+<polyline points="698.0,256.2 738.0,248.8 778.0,233.0 818.0,222.1 858.0,213.9 898.0,199.5 938.0,189.9 978.0,202.5 1018.0,192.1 1058.0,144.4" class="ln-acct"/>
+<circle cx="698.0" cy="256.2" r="3" class="pt"/>
+<circle cx="738.0" cy="248.8" r="3" class="pt"/>
+<circle cx="778.0" cy="233.0" r="3" class="pt"/>
+<circle cx="818.0" cy="222.1" r="3" class="pt"/>
+<circle cx="858.0" cy="213.9" r="3" class="pt"/>
+<circle cx="898.0" cy="199.5" r="3" class="pt"/>
+<circle cx="938.0" cy="189.9" r="3" class="pt"/>
+<circle cx="978.0" cy="202.5" r="3" class="pt"/>
+<circle cx="1018.0" cy="192.1" r="3" class="pt"/>
+<circle cx="1058.0" cy="144.4" r="3" class="pt"/>
 </g>
-<circle cx="1058.0" cy="145.0" r="4" class="pulse"><animate attributeName="r" values="4;16" dur="2s" begin="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0" dur="2s" begin="2.6s" repeatCount="indefinite"/></circle>
-<circle cx="1058.0" cy="145.0" r="4" class="pulse-core"/>
-<text x="1070.0" y="150.0" class="lab-acct">+6.97%</text>
-<text x="1070.0" y="264.8" class="lab-spy">SPY +0.73%</text>
-<text x="1070.0" y="303.9" class="lab-twin">twin −1.18%</text>
+<circle cx="1058.0" cy="144.4" r="4" class="pulse"><animate attributeName="r" values="4;16" dur="2s" begin="2.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0" dur="2s" begin="2.6s" repeatCount="indefinite"/></circle>
+<circle cx="1058.0" cy="144.4" r="4" class="pulse-core"/>
+<text x="1070.0" y="149.4" class="lab-acct">+10.60%</text>
+<text x="1070.0" y="271.2" class="lab-spy">SPY +1.33%</text>
+<text x="1070.0" y="301.7" class="lab-twin">twin −0.68%</text>
 <line x1="690" y1="350" x2="712" y2="350" class="ln-acct"/>
 <text x="720" y="354" class="meta">account</text>
 <line x1="783" y1="350" x2="805" y2="350" class="ln-twin"/>
