@@ -234,3 +234,20 @@ fields. The corrected matrix retains explicit parked/deferred/preview evidence
 for every row, and preserves the prior bytes privately. ATLAS now compares
 the original v1/v2 records with its inactive v3 proposal; the v1 field named
 `frozen_utc` does not override its recorded `DRAFT_NOT_FROZEN` state.
+
+## 2026-10-11 — read boundary incident during NN receipt preparation
+
+A source-only worker search lost its intended file scope through PowerShell
+quoting and searched runtime files. The tool reported a truncated result; the
+exposed populations and any sealed/holdout exposure remain **UNKNOWN**. The
+command was not rerun, and returned data was not copied into evidence artifacts
+or used for forecasts. The affected preparation task was stopped and marked
+incomplete/unqualified. Its worker was retired from further analytical work;
+a fresh worker received an explicit source-file allowlist.
+
+The private incident metadata is retained with SHA-256
+`3280cd7a838c13cc7064e30647313552b77b42259e0ea9f003cfa182745fab22`.
+This record does not certify zero runtime reads, declare the exposure harmless,
+or void/quarantine an unknown population. Original records, NAV/history,
+scheduled jobs and trial gates are unchanged. No new forecast or research claim
+may use the inadvertently returned material.
