@@ -5,6 +5,7 @@ real `render_public_assets` module's live globals."""
 from __future__ import annotations
 
 import subprocess
+import json
 from pathlib import Path
 
 from scripts import task_keeper as TK
@@ -335,6 +336,71 @@ def test_no_results_voice_key_when_the_file_is_absent(tmp_path):
     finally:
         RPA.RESULTS_RUN_ID = old_id
     assert "results_voice" not in out
+
+
+def test_cross_checkout_voice_cannot_erase_successful_asset_receipt(tmp_path, monkeypatch):
+    from backend.services import publish_receipts as PR
+    from scripts import render_public_assets as RPA
+
+    publication = tmp_path / "aegis-finance-publication"
+    runtime = tmp_path / "aegis-finance"
+    paper = runtime / "backend/data/optimus/paper_accounts"
+    paper.mkdir(parents=True)
+    publication.mkdir()
+    run_id = "2026-02-02T000000Z"
+    voice = paper / f"results_voice_{run_id}.md"
+    voice.write_text("voice fixture\n", encoding="utf-8")
+    pending = tmp_path / "assets_pending.json"
+    pending.write_text(json.dumps({"run_id": run_id, "old_run_id": "2026-02-01T000000Z",
+                                   "hashes": {"fixture": "sha"}}), encoding="utf-8")
+    log_path = tmp_path / "assets.jsonl"
+    calls = []
+    monkeypatch.setenv("AEGIS_REPO_ROOT", str(runtime))
+    monkeypatch.setattr(TK, "REPO", publication)
+    monkeypatch.setattr(TK, "ASSETS_PENDING", pending)
+    monkeypatch.setattr(TK, "_assets_preflight", lambda *a, **kw: None)
+    monkeypatch.setattr(TK, "_asset_hashes", lambda *a: {"fixture": "sha"})
+    monkeypatch.setattr(TK, "_assets_git", lambda *a: _Rc(0, " M README.md" if a[0] == "status" else ""))
+    monkeypatch.setattr(RPA, "REPO", publication)
+    monkeypatch.setattr(RPA, "PAPER_DIR", paper)
+    monkeypatch.setattr(RPA, "RESULTS_RUN_ID", run_id)
+
+    def commit(**kwargs):
+        calls.append(kwargs)
+        return {"status": "COMMITTED", "commit": "fixture-sha", "pushed": True, "n_files": 1}
+
+    monkeypatch.setattr(PR, "commit_paths", commit)
+    out = TK.run_assets(pytest_runner=lambda *a, **kw: _Rc(0, "passed"), log_path=log_path)
+
+    assert len(calls) == 1
+    assert out["action"] == "ok" and out["commit"]["pushed"] is True
+    assert out["results_voice"] == f"backend/data/optimus/paper_accounts/{voice.name}"
+    assert out["results_voice_root"] == "runtime"
+    assert not pending.exists()
+    assert json.loads(log_path.read_text(encoding="utf-8").splitlines()[-1]) == out
+
+
+def test_outside_voice_only_warns_after_success(tmp_path, monkeypatch):
+    from scripts import render_public_assets as RPA
+
+    runtime = tmp_path / "aegis-finance"
+    runtime.mkdir()
+    outside = tmp_path / "other"
+    outside.mkdir()
+    run_id = RPA.RESULTS_RUN_ID
+    (outside / f"results_voice_{run_id}.md").write_text("fixture\n", encoding="utf-8")
+    log_path = tmp_path / "assets.jsonl"
+    monkeypatch.setenv("AEGIS_REPO_ROOT", str(runtime))
+    monkeypatch.setattr(RPA, "PAPER_DIR", outside)
+
+    out = TK.run_assets(bump=lambda: 0, pytest_runner=lambda *a, **kw: _Rc(0),
+                        commit=lambda **kw: {"status": "COMMITTED", "pushed": True},
+                        log_path=log_path)
+
+    assert out["action"] == "ok"
+    assert "results_voice" not in out
+    assert out["results_voice_warning"] == "voice attachment is outside configured runtime root"
+    assert json.loads(log_path.read_text(encoding="utf-8").splitlines()[-1]) == out
 
 
 def test_assets_is_a_valid_job_and_wired_into_main(tmp_path, monkeypatch):
