@@ -292,14 +292,21 @@ THEORY = {**BASE, **keys("states", "powered_rule", "n_negative", "n_uninformativ
                    "counts_from_board": MapOf(LEAF)},
           "links": MapOf(LEAF)}
 
-HEALTH_ROW = keys("name", "probe", "where", "verdict", "state", "cadence_s", "evidence", "evidence_utc",
-                  "age_s_at_probe", "age_s_now", "detail", "proof", "same_output", "missing_because")
+SERVICE_ALARM = keys("light", "status", "reason", "healthy", "attention_required",
+                     "evidence_mode", "valid_until_utc", "evidence_calendar")
+HEALTH_ROW = {**keys("name", "probe", "where", "verdict", "state", "cadence_s", "evidence", "evidence_utc",
+                  "age_s_at_probe", "age_s_now", "detail", "proof", "same_output", "missing_because",
+                  "evidence_mode", "valid_until_utc", "public_view", "progressing"),
+              "alarm": SERVICE_ALARM}
 HEALTH = {**BASE, **keys("generated_utc", "health_line", "exit_code", "read_me_first", "source", "same_output_rule"),
           "counts": MapOf(LEAF), "state_counts": MapOf(LEAF),
+          "observation_current": LEAF, "observation_clock_source": LEAF,
+          "alarm": {**SERVICE_ALARM, "schema": LEAF, "light_counts": keys("RED", "AMBER", "BLUE", "GREEN")},
           "groups": ListOf({**keys("verdict", "n"), "states": MapOf(LEAF), "rows": ListOf(HEALTH_ROW)}),
           "process_census": ListOf(HEALTH_ROW), "same_output_rows": ListOf(HEALTH_ROW),
-          "task_owners": ListOf(keys("task", "receipt", "cadence_h", "session_only", "retired", "registered_only",
-                                     "hash_rule_off", "state", "verdict", "detail", "missing_because"))}
+          "task_owners": ListOf({**keys("task", "receipt", "cadence_h", "session_only", "retired", "registered_only",
+                                     "hash_rule_off", "state", "verdict", "detail", "missing_because"),
+                                 "alarm": SERVICE_ALARM})}
 
 # C15 (2026-10-07): the Opportunity Explorer receipt, for its PUBLISHED copy
 # (`publish_receipts`). Its router serves the live receipt as before; the tracked copy in

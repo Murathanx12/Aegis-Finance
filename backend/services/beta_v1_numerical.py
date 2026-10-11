@@ -13,6 +13,7 @@ import json
 import os
 import time
 from pathlib import Path
+from typing import Callable, Optional
 
 import exchange_calendars as xcals
 import numpy as np
@@ -26,6 +27,9 @@ from backend.services import bar_defects
 VERSION = "beta_v1_numerical/1"
 OBJECTIVE = "XS_EQUAL_WEIGHT:NATIVE_PRICE_CLOSE_UNKNOWN_ADJUSTMENT:NEXT_SESSION_CLOSE_H21:v1"
 TARGET = "NEXT_SESSION_CLOSE_TO_21_FURTHER_ACTUAL_XNYS_CLOSE"
+PROGRESS_STAGES = frozenset({"registrants", "price_read", "price_concat", "prepare_prices", "dataset_hash", "features", "feature_hash",
+    "eligibility", "close_target", "fold_split", "fold_fit", "fold_predict", "calibration",
+    "production_fit", "current_ranking", "source_verification", "metrics"})
 PRICE_COLUMNS = ("symbol", "date", "open", "high", "low", "close", "volume", "vwap", "trades")
 START = "2024-01-01"
 CUTOFF = "2026-10-09"
@@ -40,7 +44,7 @@ FROZEN_SOURCE_PINS = {
     "xs_ranker.py": "5c6557f3bb390f0fdfd085425466472b1ebf2f003194119c4dc12b77deb50b77",
     "stitched_tickers.py": "006b33abcbaaf93ff89b871ca0f314a7f4fea55091753f103fd940e485236983",
     "bar_defects.py": "6b9d1ff4be2a2b39db0cbafd9e585c73eb48f165870ae1906660b5cf897a6d92",
-    "beta_v1_policy.py": "a4684a98b6126b2b0414b370a56b00cd107dd43127b9f242979b557212af5832"}
+    "beta_v1_policy.py": "cfd0ee34cacc7629b221c131ee8127cf8892618cf527e0f5b8e9c62718b2ebf3"}
 
 
 class NumericalRefused(RuntimeError):
@@ -132,16 +136,41 @@ class Budget:
     max_output: int = 32*1024**2
     started: float = field(default_factory=time.monotonic)
     peak_rss: int = 0
+    progress_callback: Optional[Callable[[dict], None]] = None
+    progress_events: int = field(default=0, init=False)
+    progress_bytes: int = field(default=0, init=False)
 
-    def check(self, stage, *, rows=0):
-        self.peak_rss = max(self.peak_rss, rss_bytes())
+    def check(self, stage, *, rows=0, phase=None):
+        current_rss = rss_bytes()
+        self.peak_rss = max(self.peak_rss, current_rss)
         if rows > self.max_rows or self.peak_rss > self.max_rss or time.monotonic()-self.started > self.max_seconds:
             raise NumericalRefused("resource cap exceeded at "+stage)
+        if self.progress_callback is not None and phase is not None:
+            if stage not in PROGRESS_STAGES or phase not in {"enter", "complete"}:
+                raise NumericalRefused("unsupported scalar progress stage/phase")
+            event = {"schema": "beta_numerical_progress/1", "stage": stage, "phase": phase,
+                "utc": datetime.now(timezone.utc).isoformat(), "pid": os.getpid(),
+                "elapsed_seconds": time.monotonic()-self.started, "rows": rows,
+                "rss_bytes": current_rss, "peak_rss_bytes": rss_bytes(peak=True)}
+            encoded = (json.dumps(event, indent=2, allow_nan=False)+"\n").encode("utf-8")
+            if self.progress_events >= 64 or self.progress_bytes+len(encoded) > 64*1024:
+                raise NumericalRefused("scalar progress metadata cap exceeded")
+            try:
+                self.progress_callback(dict(event))
+            except Exception as exc:
+                raise NumericalRefused("scalar progress callback failed: "+type(exc).__name__) from None
+            self.progress_events += 1
+            self.progress_bytes += len(encoded)
+            # Callback I/O belongs to this job's unchanged resource budget.
+            self.peak_rss = max(self.peak_rss, rss_bytes())
+            if self.peak_rss > self.max_rss or time.monotonic()-self.started > self.max_seconds:
+                raise NumericalRefused("resource cap exceeded during scalar progress callback")
 
     def accounting(self):
         return {"elapsed_seconds": time.monotonic()-self.started, "peak_rss_bytes": self.peak_rss,
             "rows_cap": self.max_rows, "rss_cap_bytes": self.max_rss, "outer_wall_seconds": 480,
-            "inner_wall_seconds": self.max_seconds, "output_cap_bytes": self.max_output, "cpu_threads": 2}
+            "inner_wall_seconds": self.max_seconds, "output_cap_bytes": self.max_output, "cpu_threads": 2,
+            "progress_events": self.progress_events, "progress_metadata_bytes": self.progress_bytes}
 
 
 def read_prices(budget):
@@ -175,7 +204,12 @@ def read_prices(budget):
         if after != before:
             raise NumericalRefused("price changed during streamed read")
         pins[name] = {"sha256": before, "after_sha256": after, "columns": [c for c in PRICE_COLUMNS if c in names]}
+    budget.check("price_concat", rows=total, phase="enter")
     result = pd.concat(frames, ignore_index=True)
+    frames.clear()
+    # Drop the final batch and scanner references as well; concat math is unchanged.
+    frame = batch = scanner = dataset = None
+    budget.check("price_concat", rows=len(result), phase="complete")
     budget.check("price concat", rows=len(result))
     return result, pins
 
@@ -340,21 +374,31 @@ def fit_oos(panel, budget):
     specification()
     rows = panel.loc[panel["eligible"] & panel["y"].notna()]
     predictions, ledger = [], []
-    for train_end, start, end in xr.make_folds(rows["date"].values, n_folds=4, min_train_frac=.45):
+    folds = xr.make_folds(rows["date"].values, n_folds=4, min_train_frac=.45)
+    del rows
+    for train_end, start, end in folds:
         budget.check("before fold")
+        budget.check("fold_split", phase="enter")
         train, test, receipt = fold_rows(panel, train_end, start, end)
+        budget.check("fold_split", rows=len(train)+len(test), phase="complete")
         if len(train) < xr.MIN_TRAIN_ROWS or test.empty:
             ledger.append({**receipt, "status": "REFUSED", "reason": "unchanged minimum train rows or empty test"})
+            del train, test
             continue
         model = lgb.LGBMRegressor(**xr.LGB_PARAMS, n_jobs=2)
+        budget.check("fold_fit", rows=len(train), phase="enter")
         model.fit(train[list(xr.FEATURES)], train["y"])
+        budget.check("fold_fit", rows=len(train), phase="complete")
         budget.check("after fold fit")
         prediction = test[["symbol", "date", "y", "fwd_rel", "fwd_ret", "bench_fwd_ret", "median_dollar_vol",
             "close", "formation_at", "label_start_at", "label_end_at"]].copy()
+        budget.check("fold_predict", rows=len(test), phase="enter")
         prediction["score"] = model.predict(test[list(xr.FEATURES)])
+        budget.check("fold_predict", rows=len(test), phase="complete")
         prediction["fold_train_end"] = train_end
         predictions.append(prediction)
         ledger.append({**receipt, "status": "FITTED", "model_serialized_sha256": model_hash(model)})
+        del train, test, model
     if not predictions:
         raise NumericalRefused("all four chronological folds refused", evidence={"folds": ledger})
     oos = pd.concat(predictions, ignore_index=True)
@@ -462,33 +506,59 @@ def run(*, facts_sha256, tickers_sha256, budget=None, model_sink=None):
     if any(before[name] != expected for name, expected in FROZEN_SOURCE_PINS.items()):
         raise NumericalRefused("frozen original model/stitch/policy source drift")
     spec = specification()
+    budget.check("registrants", phase="enter")
     registrants, metadata_audit = registrant_metadata(facts_sha256=facts_sha256, tickers_sha256=tickers_sha256, budget=budget)
+    budget.check("registrants", phase="complete")
+    budget.check("price_read", phase="enter")
     bars, input_pins = read_prices(budget)
+    budget.check("price_read", rows=len(bars), phase="complete")
+    budget.check("prepare_prices", rows=len(bars), phase="enter")
     bars, audit = prepare_prices(bars, registrants=registrants)
+    del registrants
+    budget.check("prepare_prices", rows=len(bars), phase="complete")
     budget.check("stitch/duplicates", rows=len(bars))
+    budget.check("dataset_hash", rows=len(bars), phase="enter")
     dataset_hash = hashlib.sha256(pd.util.hash_pandas_object(bars, index=False).values.tobytes()).hexdigest()
-    panel = xr.mark_eligible(xr.build_features(bars))
+    budget.check("dataset_hash", rows=len(bars), phase="complete")
+    budget.check("features", rows=len(bars), phase="enter")
+    features = xr.build_features(bars)
+    del bars
+    budget.check("features", rows=len(features), phase="complete")
+    budget.check("eligibility", rows=len(features), phase="enter")
+    panel = xr.mark_eligible(features)
+    del features
+    budget.check("eligibility", rows=len(panel), phase="complete")
     budget.check("trailing features")
+    budget.check("feature_hash", rows=len(panel), phase="enter")
     feature_values_hash = hashlib.sha256(pd.util.hash_pandas_object(
         panel[["symbol", "date", *xr.FEATURES]], index=False).values.tobytes()).hexdigest()
+    budget.check("feature_hash", rows=len(panel), phase="complete")
+    budget.check("close_target", rows=len(panel), phase="enter")
     panel, target_audit = close_target(panel)
+    budget.check("close_target", rows=len(panel), phase="complete")
     budget.check("exact close target")
     oos, folds = fit_oos(panel, budget)
     closed = xcals.get_calendar("XNYS").session_close(CUTOFF)
     training = mature_rows(panel, closed.isoformat())
     # Calibrate only OOS outcomes completed by the closed data cutoff.
     calibration_rows = mature_rows(oos.assign(eligible=True), closed.isoformat())
+    budget.check("calibration", rows=len(calibration_rows), phase="enter")
     calibration = xr.calibrate(calibration_rows)
+    budget.check("calibration", rows=len(calibration_rows), phase="complete")
     import lightgbm as lgb
     if len(training) < xr.MIN_TRAIN_ROWS:
         raise NumericalRefused("production training minimum rows failed")
     model = lgb.LGBMRegressor(**xr.LGB_PARAMS, n_jobs=2)
+    budget.check("production_fit", rows=len(training), phase="enter")
     model.fit(training[list(xr.FEATURES)], training["y"])
+    budget.check("production_fit", rows=len(training), phase="complete")
     budget.check("production fit")
     serialized = model.booster_.model_to_string()
     model_sha = hashlib.sha256(serialized.encode()).hexdigest()
     model_ref = model_sink(serialized, model_sha) if model_sink else None
+    budget.check("current_ranking", rows=len(panel), phase="enter")
     ranking = xr.rank_asof(panel, model, calibration, asof=CUTOFF, train_end=training["date"].max())
+    budget.check("current_ranking", rows=len(ranking), phase="complete")
     provenance = {"schema": VERSION, "target": TARGET, "objective_version": OBJECTIVE,
         "dataset_hash": dataset_hash, "input_pins": input_pins, "feature_hash": policy.digest(spec["features"]),
         "feature_values_hash": feature_values_hash,
@@ -500,12 +570,17 @@ def run(*, facts_sha256, tickers_sha256, budget=None, model_sink=None):
         "stitch_metadata_pins": metadata_audit["source_pins"],
         "historical_availability": "Posthoc native session endpoints; provider ingestion clocks UNKNOWN; not authentic original/PIT forecasts"}
     current = normalize_current(ranking, receipt_at=datetime.now(timezone.utc).isoformat(), feature_asof=CUTOFF, provenance=provenance)
+    budget.check("source_verification", phase="enter")
     if (code_pins() != before or any(sha256(p) != pin["sha256"] for p, pin in input_pins.items())
             or any(sha256(p) != expected for p, expected in metadata_audit["source_pins"].items())):
         raise NumericalRefused("source/code drift during numerical execution")
+    budget.check("source_verification", phase="complete")
+    budget.check("metrics", rows=len(oos), phase="enter")
+    metrics = oos_metrics(oos, panel)
+    budget.check("metrics", rows=len(oos), phase="complete")
     result = {"schema": VERSION, "status": "MEASURED_RETROSPECTIVE_DIRECTION_CHECK", "specification": spec,
         "provenance": provenance, "source_pins": before, "audits": {"prices": audit, "target": target_audit},
-        "folds": folds, "calibration": calibration, "oos": oos_metrics(oos, panel), "current": current,
+        "folds": folds, "calibration": calibration, "oos": metrics, "current": current,
         "stitch_metadata": metadata_audit,
         "serialized_model_reference": model_ref, "resources": budget.accounting(),
         "original_forward_forecasts": "SEPARATE; never rewritten or reproduced by this posthoc fit",

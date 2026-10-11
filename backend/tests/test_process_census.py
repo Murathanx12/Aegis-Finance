@@ -288,3 +288,22 @@ def test_the_tool_scope_audit_reads_released_sessions_back(tmp_path):
     assert r["verdict"] == "UNSAFE" and [v["tool"] for v in r["violations"]] == ["exec"]
     clean = OTS.audit(home, now=NOW, hours=24, released_path=tmp_path / "absent.jsonl")
     assert clean["verdict"] == "OK" and clean["n_calls"] == 0
+
+
+
+@pytest.mark.parametrize('role',['optimus_mcp','api_bridge','sim_run','reader','telegram'])
+def test_failed_census_preserves_only_fixed_source_owned_roles(role):
+    original={'name':'process_census:'+role,'probe':'process_census','verdict':'DEAD','state':'DEAD',
+        'detail':'private command/owner payload','proof':'private PID','delta':7}
+    before=dict(original);safe=SH.public_row(original,now=NOW)
+    assert safe['name']=='process_census:'+role and safe['alarm']['light']=='RED'
+    assert safe['proof']=='' and safe['delta'] is None and original==before
+
+
+@pytest.mark.parametrize('role',['configured_extra','reader:private-payload','api_bridge/private-payload','SECRET'])
+def test_unknown_config_or_malicious_census_role_falls_back(role,monkeypatch):
+    from backend import config as C
+    monkeypatch.setattr(C,'PROCESS_CENSUS_FAMILIES',{role:('.*',1)})
+    safe=SH.public_row({'name':'process_census:'+role,'probe':'process_census','verdict':'DEAD','state':'DEAD',
+        'detail':role,'proof':role},now=NOW)
+    assert safe['name']=='process_census' and role not in json.dumps(safe)

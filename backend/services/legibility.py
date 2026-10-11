@@ -1334,18 +1334,33 @@ def system_health_payload(now: Optional[datetime] = None) -> Optional[dict]:
     hp = hit[0]
     rec = read_json(hp)
     gen = parse_utc(rec.get("generated_utc")) or parse_utc(hit[1].group(1))
+    from backend.services import system_health as SH               # noqa: PLC0415
+    # The filename remains a display/reference fallback, not observation proof.
+    observation_clock = parse_utc(rec.get("generated_utc"))
+    observation_age = (now - observation_clock).total_seconds() if observation_clock else None
+    observation_current = observation_age is not None and 0 <= observation_age <= SH.RECEIPT_MAX_AGE_S
+    service_alarm = SH.alarm(list(rec.get("rows") or []), now=now,
+        unavailable_reason=None if observation_current else "HEALTH_RECEIPT_UNAVAILABLE_OR_STALE")
     receipts = [receipt_ref("system_health", hp, rec.get("generated_utc") or hit[1].group(1), now, role="every row")]
     rows = []
     for r in rec.get("rows") or []:
+        r = SH.public_row(r, now=now)
         ev = parse_utc(r.get("evidence_utc"))
         detail = r.get("detail")
+        row_alarm = SH.row_alarm(r, now=now)
+        if not observation_current and row_alarm["light"] != "RED":
+            row_alarm = SH.row_alarm({"verdict": "UNKNOWN"}, now=now)
         rows.append({"name": r.get("name"), "probe": r.get("probe"), "where": r.get("where"),
                      "verdict": r.get("verdict"), "state": r.get("state") or r.get("verdict"),
                      "cadence_s": r.get("cadence_s"), "evidence": r.get("evidence"),
+                     "evidence_mode": r.get("evidence_mode"), "valid_until_utc": r.get("valid_until_utc"),
+                     "public_view": r.get("public_view"),
                      "evidence_utc": r.get("evidence_utc"), "age_s_at_probe": r.get("age_s"),
                      "age_s_now": (round((now - ev).total_seconds(), 1) if ev else None),
                      "detail": detail, "proof": r.get("proof"),
-                     "same_output": bool(detail and "same output for" in str(detail)),
+                     "alarm": row_alarm,
+                     "same_output": r.get("same_output") is True,
+                     "progressing": r.get("progressing") if type(r.get("progressing")) is bool else None,
                      "missing_because": (None if ev else "the probe found no stamp in the producer's evidence")})
     order = {"DEAD": 0, "STALE": 1, "REFUSED": 2, "UNKNOWN": 3, "STOPPED_BY_OPERATOR": 4, "ALIVE": 5}
     rows.sort(key=lambda x: (order.get(str(x["verdict"]), 9), str(x["name"])))
@@ -1369,12 +1384,15 @@ def system_health_payload(now: Optional[datetime] = None) -> Optional[dict]:
                        "registered_only": spec.registered_only, "hash_rule_off": spec.hash_off or None,
                        "state": (r or {}).get("state"), "verdict": (r or {}).get("verdict"),
                        "detail": (r or {}).get("detail"),
+                       "alarm": (r or {}).get("alarm"),
                        "missing_because": None if r else "no task:<name> row in this health receipt"})
     return {
         "schema": SCHEMA, "page": "system_health", "served_utc": now.isoformat(timespec="seconds"),
         "receipts": receipts, "status": receipts[0]["status"],
         "generated_utc": gen.isoformat(timespec="seconds") if gen else None,
         "health_line": health_line(rec), "exit_code": rec.get("exit_code"),
+        "alarm": service_alarm, "observation_current": observation_current,
+        "observation_clock_source": "receipt_body" if observation_clock else "UNAVAILABLE",
         "counts": rec.get("counts"), "state_counts": rec.get("state_counts"),
         "read_me_first": rec.get("read_me_first"), "source": rec.get("source"),
         "groups": groups, "process_census": census,

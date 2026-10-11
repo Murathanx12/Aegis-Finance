@@ -66,12 +66,14 @@ def test_every_probe_with_its_evidence_absent_is_not_alive(tmp_path, probe):
         assert r.detail, "UNKNOWN must say why"
 
 
-def test_a_probe_that_raises_is_unknown_with_the_exception_class(tmp_path, monkeypatch):
+def test_a_probe_that_raises_is_unknown_with_fixed_public_diagnostic(tmp_path, monkeypatch):
     def boom(ctx):
         raise ZeroDivisionError("x")
     monkeypatch.setattr(SH, "PROBES", (SH.Probe("boom", "pc", timedelta(days=1), "-", boom),))
     rows = SH.run_probes(_ctx(tmp_path))
-    assert rows[0]["verdict"] == "UNKNOWN" and "ZeroDivisionError" in rows[0]["detail"]
+    assert rows[0]["verdict"] == "UNKNOWN"
+    assert rows[0]["detail"] == "service evidence unavailable; consult private receipt"
+    assert "error_type" not in rows[0]
 
 
 # ─────────────────────────────────────────────── 2. the lab: pid must answer
@@ -487,7 +489,8 @@ def test_api_block_shape_and_request_mode_never_shells_out(tmp_path, monkeypatch
     assert not calls, f"an API request shelled out: {calls}"
     names = {r["name"]: r for r in b["rows"]}
     assert names["always_on_lab"]["verdict"] == "UNKNOWN"
-    assert "not computed on a request" in names["always_on_lab"]["detail"]
+    assert names["always_on_lab"]["detail"] == "service evidence unavailable; consult private receipt"
+    assert names["always_on_lab"]["alarm"]["light"] == "AMBER"
 
 
 def test_health_full_carries_the_subsystems_block(monkeypatch):
@@ -500,16 +503,20 @@ def test_health_full_carries_the_subsystems_block(monkeypatch):
 
 
 def test_non_alive_lines_put_dead_and_stale_first(tmp_path, monkeypatch):
+    monkeypatch.setattr(SH, "PROBES", (*SH.PROBES, *[
+        SH.Probe(name, "pc", timedelta(days=1), "synthetic source-owned ID", lambda ctx: None)
+        for name in ("b", "c")]))
     rec = {"generated_utc": _iso(_now()), "rows": [
-        {"name": "a", "verdict": "ALIVE", "detail": "fine"},
+        {"name": "a", "verdict": "ALIVE", "detail": "fine", "proof": "verified static fixture"},
         {"name": "b", "verdict": "DEAD", "detail": "gone", "proof": "pid 1"},
         {"name": "c", "verdict": "UNKNOWN", "detail": "?"}]}
     monkeypatch.setattr(SH, "newest_receipt", lambda hd=None: rec)
     monkeypatch.setattr(SH.shutil, "disk_usage", _fake_du(40.0))
     lines = SH.non_alive_lines()
     assert "1 DEAD/STALE, 1 UNKNOWN of 3" in lines[0]
-    assert lines[1].startswith("- DEAD b -- gone") and len(lines) == 3
-    assert lines[2].startswith("- disk free: 40.0 GB")      # ALIVE disk: printed last
+    assert lines[1].startswith("- DEAD b -- service evidence failed; consult private receipt") and len(lines) == 4
+    assert lines[2].startswith("- UNKNOWN c -- service evidence unavailable; consult private receipt")
+    assert lines[3].startswith("- disk free: 40.0 GB")      # ALIVE disk: printed last
 
 
 # ─────────────────────────── book_grader sees the llm_portfolio books (09-27)

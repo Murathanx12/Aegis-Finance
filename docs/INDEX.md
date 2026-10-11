@@ -24,8 +24,13 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 ## TIER 0 — CANON (changes a few times a year; read every session)
 
 Current sustained beta pickup (2026-10-10 → Monday October 12):
+The [October 11 overnight owner order](BETA_OVERNIGHT_OWNER_ORDER_2026-10-11.md)
+continues implementation, adds explicit service alarms and authorizes final Astra review and subsequent owned-stack restoration. EXE changes remain deferred.
+The [October 12 delivery evidence](BETA_V1_DELIVERY_2026-10-12.md)
+separates the later successful numerical fit, failed current consumer, new release checks and remaining live gates; read its timestamp and actual receipts.
 The owner-adopted October 11 build sprint now has a [current acceptance record](BETA_BUILD_ACCEPTANCE_2026-10-11.md),
 [money-first measured results](BETA_SPRINT_MEASURED_RESULTS_2026-10-11.md),
+[coordinator comparison and feedback](BETA_ENGINE_COMPARATIVE_FEEDBACK_2026-10-11.md),
 [fresh inactive Beta V1 Portfolio](BETA_V1_PORTFOLIO_2026-10-11_REVIEW.md),
 [separate contest preparation view](BETA_V1_CONTEST_VIEW_2026-10-11.md),
 [Monday Terminal packet](BLOOMBERG_MONDAY_TERMINAL_PACKET_2026-10-12.md) and

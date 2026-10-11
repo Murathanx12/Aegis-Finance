@@ -322,9 +322,17 @@ def test_published_health_rows_carry_age_now_from_their_own_evidence(world):
 
 def test_owner_identity_is_scrubbed_on_every_kind_and_is_in_the_leak_scan(world, monkeypatch):
     tmp, live = world
-    hp = next((live / "health").glob("health_*.json"))
+    _health(live, NOW)  # current synthetic observation; static proof is independently qualified
+    hp = max((live / "health").glob("health_*.json"), key=lambda p: p.name)
     rec = json.loads(hp.read_text(encoding="utf-8"))
     rec["rows"][0]["detail"] = "MURAT asked; see github.com/murathanx12 and Murathan's notes"
+    # Failed legacy row is correctly redacted; it cannot exercise owner scrub.
+    failed_original = dict(rec["rows"][0])
+    rec["rows"].append({"name":"openclaw_tool_scope","probe":"openclaw_tool_scope","where":"pc",
+        "verdict":"ALIVE","state":"ALIVE","evidence_utc":None,"evidence_mode":"STATIC_PROOF",
+        "detail":"MURAT asked; see github.com/murathanx12 and Murathan's notes",
+        "proof":"synthetic configuration independently verified"})
+    rec["counts"]["ALIVE"] += 1
     hp.write_text(json.dumps(rec), encoding="utf-8")
     L._CACHE.clear()
     assert PR.leak_scan({"x": "by Murathanx12"}) == ["$.x: owner identity"]
@@ -333,6 +341,12 @@ def test_owner_identity_is_scrubbed_on_every_kind_and_is_in_the_leak_scan(world,
     assert out["kinds"]["system_health"]["status"] == "OK"
     raw = (PR.public_dir() / "system_health" / "latest.json").read_text(encoding="utf-8")
     assert "the owner asked" in raw and not PR.owner_pattern().search(raw)
+    health_rows=[r for group in json.loads(raw)["groups"] for r in group["rows"]]
+    failed=next(r for r in health_rows if r["name"]=="sim_session")
+    healthy=next(r for r in health_rows if r["name"]=="openclaw_tool_scope")
+    assert failed["proof"]=="" and failed["alarm"]["light"]=="AMBER"
+    assert healthy["alarm"]["light"]=="GREEN" and "the owner asked" in healthy["detail"]
+    assert rec["rows"][0]==failed_original
     monkeypatch.setattr(PR, "_owner_scrub", lambda v: v)                    # a scrub regression
     again = PR.publish()
     assert again["kinds"]["system_health"]["status"] == "REFUSED"
