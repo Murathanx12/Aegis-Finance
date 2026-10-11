@@ -54,6 +54,15 @@ The active roadmap remains the same §5c file; checkpoints are not completion.
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
 
+**Current execution order (owner adopted October 11):**
+[AEGIS_BETA_V1_BUILD_SPRINT_2026-10-11.md](AEGIS_BETA_V1_BUILD_SPRINT_2026-10-11.md).
+This 8–12 hour implementation sprint orders the existing Beta roadmap: intentional
+OpenClaw/local-inference pause, admissible weight consumers, measured replay, and a
+fresh inactive Beta V1 Portfolio. Earlier books, frozen contracts and Monday
+activation gates remain. The persistent queue retains earlier receipts and adds
+sprint dependencies; reader soak is suspended during the owner pause.
+
+
 - **October 10 → Monday October 12 continuation:** the owner's expanded scope
   supersedes the prior two-chunk stop. The persistent execution queue is
   [BETA_DEPENDENCY_QUEUE_2026-10-10.json](BETA_DEPENDENCY_QUEUE_2026-10-10.json),
