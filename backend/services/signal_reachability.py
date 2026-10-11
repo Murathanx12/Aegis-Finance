@@ -123,6 +123,13 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           gap rather than quietly excused, because the whole point of this
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
+    "backend.services.beta_v1_news_outcomes": (
+        "DEVELOPMENT/INACTIVE -- pure exact-endpoint Beta outcome adapter, "
+        "currently called by synthetic fixtures only. The opt-in capture CLI "
+        "declares its private grader route but has no grading invocation. "
+        "Default providers are OFF; no production catalog, scheduled grader, "
+        "runtime outcome accrual or learning activation is claimed. Actual "
+        "quote integration needs separate external review and owner grant."),
     "backend.services.beta_v1_context": (
         "OFFLINE EXPERIMENT -- source-pinned private run_actual_context_cycle1.py "
         "calls this descriptive Beta adapter. Reviewed context receipts are "

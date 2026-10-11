@@ -870,13 +870,17 @@ def test_the_health_step_is_last_prints_the_non_alive_rows_and_never_fails(
         out, calls, rth_open, monkeypatch) -> None:
     """docs/HEALTH_PROBES_2026-09-26.md owed caller: a `health` step at the END,
     status `ok` even with DEAD rows (the verdicts are the output), every
-    non-ALIVE row copied into `refusals`, `health_probe`'s exit code carried."""
+    fault row copied into `refusals`, `health_probe`'s exit code carried.
+    The old bare ALIVE fixture has no evidence, so the additive alarm is AMBER."""
     rec = DP.run_daily_pass(day=_today())
     assert DP.STEPS[-1][0] == "health" and calls[-1] == "health"
     row = next(r for r in rec["steps"] if r["step"] == "health")
     assert row["status"] == "ok" and row["exit_code"] == 1 and row["rows"] == 3
-    assert row["refusals"] == ["DEAD telegram_agent -- pid gone",
-                               "STALE ranking -- 4 sessions behind"]
+    assert row["refusals"] == ["RED DEAD telegram_agent -- service evidence failed; consult private receipt",
+                               "RED STALE ranking -- service evidence failed; consult private receipt",
+                               "AMBER ALIVE bars_panel -- service evidence unavailable; consult private receipt"]
+    assert row["alarm"]["light"] == "RED"
+    assert row["alarm"]["light_counts"]["AMBER"] == 1
     assert "health" not in rec["steps_that_did_not_run"]
 
     def _boom(**kw):
@@ -885,7 +889,9 @@ def test_the_health_step_is_last_prints_the_non_alive_rows_and_never_fails(
     rec2 = DP.run_daily_pass(day=_today(), force=True)
     row2 = next(r for r in rec2["steps"] if r["step"] == "health")
     assert row2["status"] == "refused"
-    assert "probe table unreadable" in row2["refusals"][0]
+    assert "RuntimeError" in row2["refusals"][0]
+    assert "probe table unreadable" not in row2["refusals"][0]
+    assert row2["alarm"]["light"] == "AMBER"
     assert Path(rec2["path"]).exists()          # the day's receipt is never lost
 
 

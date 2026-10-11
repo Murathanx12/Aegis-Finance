@@ -52,13 +52,14 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 import os
 import re
 import shutil
 import subprocess
 import time
 import urllib.request
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import date, datetime, time as dtime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal, Optional, Union
@@ -99,6 +100,11 @@ class ProbeResult:
     #: the fine state beside the coarse verdict (C8, 2026-10-07): ALIVE_PROGRESSING /
     #: ALIVE_IDLE_EXPECTED / DEGRADED / ... (task_receipts.STATES). None = same as verdict.
     state: Optional[str] = None
+    evidence_mode: Optional[str] = None
+    valid_until_utc: Optional[str] = None
+    error_type: Optional[str] = None
+    same_output: Optional[bool] = None
+    progressing: Optional[bool] = None
 
 
 @dataclass
@@ -285,6 +291,17 @@ def in_session_hours(now: datetime) -> bool:
     return bool(days) and dtime(9, 30) <= et.time() <= dtime(16, 0)
 
 
+def _next_session_open(now: datetime) -> tuple[Optional[datetime], str]:
+    """Existing XNYS/weekday fallback, with its approximation disclosed."""
+    et = _et(now)
+    days, source = _sessions(et.date(), et.date() + timedelta(days=14))
+    for day in days:
+        opening = datetime.combine(day, dtime(9, 30), tzinfo=et.tzinfo)
+        if opening > et:
+            return opening.astimezone(timezone.utc), source
+    return None, source
+
+
 def _bars_limit() -> int:
     try:
         from backend import config as C                             # noqa: PLC0415
@@ -311,7 +328,7 @@ def _default_run(argv: list, timeout: float) -> tuple:
                            shell=shell)
         return r.returncode, (r.stdout or "") + (r.stderr or "")
     except (OSError, subprocess.SubprocessError) as exc:
-        return None, f"{type(exc).__name__}: {exc}"
+        return None, type(exc).__name__
 
 
 def _default_http_json(url: str, timeout: float) -> tuple:
@@ -321,7 +338,7 @@ def _default_http_json(url: str, timeout: float) -> tuple:
         with urllib.request.urlopen(url, timeout=timeout) as r:     # noqa: S310
             return json.loads(r.read().decode("utf-8")), round(time.time() - t0, 2), None
     except Exception as exc:                                        # noqa: BLE001
-        return None, round(time.time() - t0, 2), f"{type(exc).__name__}: {exc}"[:200]
+        return None, round(time.time() - t0, 2), type(exc).__name__
 
 
 def _default_pid_cmdline(pid: int) -> Optional[str]:
@@ -394,7 +411,7 @@ def p_bars_panel(ctx: ProbeCtx) -> ProbeResult:
             import pyarrow.compute as pc                            # noqa: PLC0415
             best = pc.max(pq.read_table(p, columns=["date"])["date"]).as_py()
     except Exception as exc:                                        # noqa: BLE001
-        return _unknown(f"bars panel unreadable ({type(exc).__name__}: {str(exc)[:100]})")
+        return _unknown(f"bars panel unreadable ({type(exc).__name__})", error_type=type(exc).__name__)
     if best is None:
         return _unknown("bars panel carries no readable `date`")
     newest = best.date() if hasattr(best, "date") else date.fromisoformat(str(best)[:10])
@@ -498,7 +515,8 @@ def _process_verdict(ctx: ProbeCtx, *, pid: Any, module: str, stamp: Optional[da
         return _unknown(f"{what}: pid {pid} answers but no dated heartbeat exists")
     if _by_age(stamp, cadence, ctx.now) == "ALIVE":
         return ProbeResult("ALIVE", stamp_s, age, f"{what}: heartbeat {_fmt_age(age)} old",
-                           proof=f"pid {pid} cmdline contains {module}")
+                           proof=f"pid {pid} cmdline contains {module}", evidence_mode="DYNAMIC",
+                           valid_until_utc=_iso(stamp+cadence*(1+GRACE)))
     return ProbeResult("STALE", stamp_s, age,
                        f"{what}: pid {pid} answers but its heartbeat is {_fmt_age(age)} old "
                        f"(cadence {_fmt_age(cadence.total_seconds())})",
@@ -710,7 +728,8 @@ def p_sim_session(ctx: ProbeCtx) -> ProbeResult:
            if owner is not None else "the sim owner has never fired (register AegisSimOwner)")
     return ProbeResult("ALIVE", _iso(ended), _age(ended, ctx.now),
                        f"idle outside US hours: {last} ({s.get('end_reason') or '-'}); {nxt}",
-                       proof=f"sim/session.json state={state}")
+                       proof=f"sim/session.json state={state}", state="ALIVE_IDLE_EXPECTED",
+                       evidence_mode="DECLARED_IDLE", valid_until_utc=_iso(_next_session_open(ctx.now)[0]))
 
 
 def p_live_market_loop(ctx: ProbeCtx) -> ProbeResult:
@@ -1810,9 +1829,30 @@ def p_scheduled_tasks(ctx: ProbeCtx) -> ProbeOut:
         spec = TR.TASK_RECEIPT.get(name)
         if row is None and spec is not None and (spec.retired or spec.registered_only):
             continue                                  # retired/deleted, or never registered by design
+        errors = []
+        if spec is not None:
+            reader = spec.reader
+            def safe_reader(ctx, task, reader=reader, receipt=spec.receipt):
+                try:
+                    return reader(ctx, task)
+                except Exception as exc:
+                    errors.append(type(exc).__name__)
+                    return TR.Reading(unknown_reason=f"receipt reader unavailable ({type(exc).__name__})", proof=receipt)
+            # Local spec only; never mutate the task registry or retry behaviour.
+            spec = replace(spec, reader=safe_reader)
         j = TR.judge(ctx, name, row, spec)
+        # Only the existing judge's stalled-substance branch supplies this key.
+        # Missing hash evidence or matching prose must remain unclassified.
+        n_same = j.extra.get('same_hash_probes') if isinstance(j.extra, dict) else None
+        stalled_hash = j.state == 'STALE' and type(n_same) is int and n_same > 0
         out[name] = ProbeResult(j.verdict, _iso(j.stamp), _age(j.stamp, ctx.now), j.detail,
-                                proof=j.proof or (spec.receipt if spec else ""), state=j.state)
+                                proof=j.proof or (spec.receipt if spec else ""), state=j.state,
+                                evidence_mode="DECLARED_IDLE" if j.state == "ALIVE_IDLE_EXPECTED" else "DYNAMIC",
+                                valid_until_utc=_iso(j.stamp+timedelta(seconds=TR.allowed_age_s(name, spec, j.stamp, ctx.now)))
+                                if j.stamp and spec and j.state in {"ALIVE_PROGRESSING", "ALIVE_IDLE_EXPECTED"} else None,
+                                error_type=errors[0] if errors else None,
+                                same_output=True if stalled_hash else None,
+                                progressing=False if stalled_hash else None)
     return out or _unknown("no Aegis* scheduled tasks found and none declared")
 
 
@@ -2142,6 +2182,12 @@ def _row(p: Probe, name: str, r: ProbeResult) -> dict:
     d = {"name": name, "probe": p.name, "where": p.where,
          "cadence_s": p.cadence.total_seconds(), "evidence": p.evidence, **asdict(r)}
     d["state"] = r.state or r.verdict
+    d["evidence_mode"] = r.evidence_mode or (
+        "DECLARED_IDLE" if d["state"] == "ALIVE_IDLE_EXPECTED" else
+        "SESSION_DATA" if p.name in {"bars_panel", "ranking", "live_market_loop"} else
+        "STATIC_PROOF" if r.evidence_utc is None and r.proof else "DYNAMIC")
+    if r.error_type:
+        d["detail"], d["proof"], d["delta"] = f"probe unavailable ({r.error_type})", "", None
     return d
 
 
@@ -2157,10 +2203,12 @@ def run_probes(ctx: ProbeCtx, *, only: Optional[set] = None,
             continue
         if (railway and p.where == "pc") or (p.needs_proc and not ctx.allow_proc):
             copied = [r for n, r in rec_rows.items() if r.get("probe") == p.name]
-            if copied and rec_age is not None and rec_age <= RECEIPT_MAX_AGE_S:
+            if copied and rec_age is not None and 0 <= rec_age <= RECEIPT_MAX_AGE_S:
                 for r in copied:
-                    rows.append({**r, "detail": f"(from the PC probe receipt, {_fmt_age(rec_age)} old) "
-                                               + str(r.get("detail"))})
+                    safe = public_row(r, now=ctx.now)
+                    rows.append({**safe, "age_s": _age(_ts(safe.get("evidence_utc")), ctx.now),
+                                 "detail": f"(from the PC probe receipt, {_fmt_age(rec_age)} old) "
+                                               + str(safe.get("detail"))})
                 continue
             why = ("runs on the PC" if railway and p.where == "pc"
                    else "not computed on a request (it shells out or opens a socket)")
@@ -2171,12 +2219,16 @@ def run_probes(ctx: ProbeCtx, *, only: Optional[set] = None,
         try:
             out = p.fn(ctx)
         except Exception as exc:                                    # noqa: BLE001
-            out = _unknown(f"probe raised {type(exc).__name__}: {str(exc)[:160]}")
+            out = _unknown(f"probe unavailable ({type(exc).__name__})", error_type=type(exc).__name__)
         if isinstance(out, dict):
             for sub, r in out.items():
                 rows.append(_row(p, f"{p.name}:{sub}", r))
         else:
             rows.append(_row(p, p.name, out))
+    rows = [public_row(r, now=ctx.now) for r in rows]
+    for r in rows:
+        r["age_s_now"] = _age(_ts(r.get("evidence_utc")), ctx.now)
+        r["alarm"] = row_alarm(r, now=ctx.now)
     rows.sort(key=lambda r: (VERDICT_ORDER.get(r["verdict"], 9), r["name"]))
     return rows
 
@@ -2208,6 +2260,262 @@ def exit_code(rows: list[dict]) -> int:
     if rows and c["UNKNOWN"] == len(rows):
         return 3
     return 0
+
+
+PUBLIC_FAILURE_VIEW = "STRICT_FAILURE_VIEW/1"
+PUBLIC_PROCESS_ROLES = frozenset({"optimus_mcp", "api_bridge", "sim_run", "reader", "telegram"})
+PUBLIC_STATES = frozenset({"ALIVE", "ALIVE_PROGRESSING", "ALIVE_IDLE_EXPECTED", "ALIVE_OBSERVE_ONLY",
+    "DEAD", "STALE", "REFUSED", "DEGRADED", "UNKNOWN", "STOPPED_BY_OPERATOR", "UNREGISTERED"})
+PUBLIC_REASONS = frozenset({"PROBE_FAILURE", "EVIDENCE_UNKNOWN", "OBSERVATION_CLOCK_UNAVAILABLE",
+    "EVIDENCE_CLOCK_UNAVAILABLE", "EVIDENCE_FROM_FUTURE", "EVIDENCE_DEADLINE_UNAVAILABLE",
+    "STATIC_PROOF_UNAVAILABLE", "IDLE_WINDOW_UNAVAILABLE", "SESSION_CONTRACT_UNAVAILABLE",
+    "EVIDENCE_EXPIRY_UNAVAILABLE", "EVIDENCE_MODE_UNSUPPORTED", "EVIDENCE_EXPIRED",
+    "EVIDENCE_UNAVAILABLE", "STATE_UNSUPPORTED"})
+
+
+def _failure_alarm(value):
+    if not isinstance(value, dict):
+        return None
+    if (not isinstance(value.get("light"), str) or value["light"] not in {"RED", "AMBER"}
+            or not isinstance(value.get("reason"), str) or value["reason"] not in PUBLIC_REASONS):
+        return None
+    return {"light": value["light"], "status": "BROKEN" if value["light"] == "RED" else "ATTENTION",
+            "reason": value["reason"], "healthy": False, "attention_required": True}
+
+
+def _public_identity(row):
+    """Registry roots, registered tasks, and five fixed process-census roles."""
+    roots = {p.name: p for p in PROBES}
+    name, probe = row.get("name"), row.get("probe")
+    root = probe if isinstance(probe, str) and probe in roots else None
+    if root is None and isinstance(name, str):
+        candidate = name.split(":", 1)[0]
+        if candidate in roots:
+            root = candidate
+    if root is None:
+        return "unidentified_service", None, None
+    public_name = root
+    if root == "task" and isinstance(name, str) and name.startswith("task:"):
+        from backend.services import task_receipts as TR             # noqa: PLC0415
+        if name[5:] in TR.TASK_RECEIPT:
+            public_name = name
+    elif root == "process_census" and isinstance(name, str) and name.startswith("process_census:"):
+        if name.split(":", 1)[1] in PUBLIC_PROCESS_ROLES:
+            public_name = name
+    return public_name, root, roots[root].where
+
+
+def _public_clock(value):
+    if isinstance(value, datetime):
+        return _iso(value) if value.tzinfo and value.utcoffset() is not None else None
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return _iso(parsed.astimezone(timezone.utc)) if parsed.tzinfo and parsed.utcoffset() is not None else None
+    except ValueError:
+        return None
+
+
+def _public_number(value):
+    return value if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value >= 0 else None
+
+
+def public_row(row: dict, *, now: Optional[datetime] = None) -> dict:
+    """Qualify original evidence first; expose no failed-row freeform channels.
+
+    Successful/verified-paused diagnostics are outside this narrow historical
+    failure-lineage privacy scope. Originals are never mutated or rewritten.
+    """
+    original = dict(row) if isinstance(row, dict) else {}
+    indicator = row_alarm(original, now=now)
+    if indicator["light"] not in {"RED", "AMBER"}:
+        return original
+    name, probe, where = _public_identity(original)
+    verdict = original.get("verdict")
+    state = original.get("state") or verdict
+    safe = {"name": name, "probe": probe, "where": where,
+        "verdict": verdict if isinstance(verdict, str) and verdict in VERDICT_ORDER else "UNKNOWN",
+        "state": state if isinstance(state, str) and state in PUBLIC_STATES else "UNKNOWN",
+        "detail": "service evidence failed; consult private receipt" if indicator["light"] == "RED" else
+                  "service evidence unavailable; consult private receipt",
+        "proof": "", "delta": None, "public_view": PUBLIC_FAILURE_VIEW,
+        "evidence_utc": _public_clock(original.get("evidence_utc")),
+        "age_s": _public_number(original.get("age_s")),
+        "age_s_now": _public_number(original.get("age_s_now")),
+        "cadence_s": (_public_number(original.get("cadence_s"))
+                      if _public_number(original.get("cadence_s")) not in {None, 0} else None),
+        "evidence_mode": indicator["evidence_mode"], "valid_until_utc": indicator["valid_until_utc"],
+        "alarm": indicator}
+    for flag in ("progressing", "same_output"):
+        if type(original.get(flag)) is bool:
+            safe[flag] = original[flag]
+    return safe
+
+
+def row_alarm(row: dict, *, now: Optional[datetime] = None) -> dict:
+    """Additive control-panel light; probes still own evidence qualification.
+
+    No marker reads or detail parsing: a pause must already be a verified probe
+    verdict. Timestamp-free static checks and declared idle windows can carry
+    their existing proof instead of inventing a heartbeat.
+    """
+    row = row if isinstance(row, dict) else {}
+    prior_failure = _failure_alarm(row.get("alarm")) if row.get("public_view") == PUBLIC_FAILURE_VIEW else None
+    verdict, state = row.get("verdict"), row.get("state")
+    if state is None or state == "":
+        state = verdict
+    verdict = verdict if isinstance(verdict, str) else None
+    state = state if isinstance(state, str) else None
+    probe = row.get("probe") if isinstance(row.get("probe"), str) else None
+    bad = {"DEAD", "STALE", "REFUSED", "DEGRADED"}
+    healthy_states = {"ALIVE", "ALIVE_PROGRESSING", "ALIVE_IDLE_EXPECTED", "ALIVE_OBSERVE_ONLY"}
+    proof = row.get("proof")
+    stamp = _ts(row.get("evidence_utc"))
+    age = row.get("age_s")
+    evidence = (isinstance(proof, str) and bool(proof.strip())) or stamp is not None
+    invalid_age = age is not None and (isinstance(age, bool) or not isinstance(age, (int, float))
+                                      or not math.isfinite(age) or age < 0)
+    now = _utcnow() if now is None else now
+    mode = row.get("evidence_mode") or (
+        "DECLARED_IDLE" if state == "ALIVE_IDLE_EXPECTED" else
+        "SESSION_DATA" if probe in {"bars_panel", "ranking", "live_market_loop"} else
+        "STATIC_PROOF" if stamp is None and isinstance(proof, str) and proof.strip() else "DYNAMIC")
+    if prior_failure is not None:
+        # The original qualifier already resolved the mode, including None.
+        # Never infer a new proof-dependent contract from the redacted fragment.
+        mode = (row.get("alarm") or {}).get("evidence_mode")
+    deadline = _ts(row.get("valid_until_utc"))
+    if prior_failure is not None:
+        deadline = _ts((row.get("alarm") or {}).get("valid_until_utc"))
+    calendar_source = None
+    clock_reason, expired = None, False
+    if not isinstance(now, datetime) or now.tzinfo is None or now.utcoffset() is None:
+        clock_reason = "OBSERVATION_CLOCK_UNAVAILABLE"
+    elif row.get("evidence_utc") is not None and stamp is None:
+        clock_reason = "EVIDENCE_CLOCK_UNAVAILABLE"
+    elif stamp is not None and stamp > now:
+        clock_reason = "EVIDENCE_FROM_FUTURE"
+    else:
+        if row.get("valid_until_utc") is not None and (deadline is None or (stamp is not None and deadline < stamp)):
+            clock_reason = "EVIDENCE_DEADLINE_UNAVAILABLE"
+        elif mode == "STATIC_PROOF":
+            if prior_failure is None and (not isinstance(proof, str) or not proof.strip()):
+                clock_reason = "STATIC_PROOF_UNAVAILABLE"
+        elif mode == "DECLARED_IDLE":
+            if probe == "sim_session":
+                # The producer's idle proof is tied to the existing closed
+                # session window, never an indefinite heartbeat substitute.
+                expired = in_session_hours(now)
+                next_open, calendar_source = _next_session_open(now)
+                if deadline is None:
+                    deadline = next_open
+                    if deadline is None:
+                        clock_reason = "IDLE_WINDOW_UNAVAILABLE"
+                expired = expired or (deadline is not None and now >= deadline)
+            else:
+                expired = deadline is not None and now > deadline
+        elif mode == "SESSION_DATA":
+            if stamp is None or probe not in {"bars_panel", "ranking", "live_market_loop"}:
+                clock_reason = "SESSION_CONTRACT_UNAVAILABLE"
+            else:
+                last = last_closed_session(now)
+                expired = (stamp.date() < last if probe == "live_market_loop" else
+                           sessions_behind(stamp.date(), last) > _bars_limit())
+        elif mode == "DYNAMIC":
+            cadence = row.get("cadence_s")
+            if prior_failure is None and deadline is None and stamp is not None and isinstance(cadence, (int, float)) and not isinstance(cadence, bool) and math.isfinite(cadence) and cadence > 0:
+                try:
+                    deadline = stamp+timedelta(seconds=cadence*(1+GRACE))
+                except (OverflowError, ValueError):
+                    clock_reason = "EVIDENCE_EXPIRY_UNAVAILABLE"
+            if stamp is None or deadline is None:
+                clock_reason = "EVIDENCE_EXPIRY_UNAVAILABLE"
+            else:
+                expired = now > deadline
+        else:
+            clock_reason = "EVIDENCE_MODE_UNSUPPORTED"
+    if verdict in bad or state in bad:
+        light, status, reason = "RED", "BROKEN", "PROBE_FAILURE"
+    elif prior_failure is not None:
+        # Failed fragments have no proof text: preserve original admission;
+        # recheck only current structured clocks/windows, never promote GREEN.
+        if prior_failure["light"] == "RED":
+            light, status, reason = "RED", "BROKEN", prior_failure["reason"]
+        elif prior_failure["reason"] == "EVIDENCE_UNKNOWN":
+            light, status, reason = "AMBER", "ATTENTION", "EVIDENCE_UNKNOWN"
+        elif expired:
+            light, status, reason = "RED", "BROKEN", "EVIDENCE_EXPIRED"
+        elif clock_reason and clock_reason not in {"EVIDENCE_MODE_UNSUPPORTED", "EVIDENCE_EXPIRY_UNAVAILABLE"}:
+            light, status, reason = "AMBER", "ATTENTION", clock_reason
+        else:
+            light, status, reason = "AMBER", "ATTENTION", prior_failure["reason"]
+    elif verdict == "UNKNOWN" or state == "UNKNOWN":
+        light, status, reason = "AMBER", "ATTENTION", "EVIDENCE_UNKNOWN"
+    elif row.get("error_type") is not None:
+        # A contradictory explicit error flag cannot certify a successful or
+        # paused observation. Its value is never parsed, trusted or published.
+        light, status, reason = "AMBER", "ATTENTION", "EVIDENCE_UNKNOWN"
+    elif verdict == "STOPPED_BY_OPERATOR" and state in {"STOPPED_BY_OPERATOR", "UNREGISTERED"} and evidence and not invalid_age and clock_reason not in {
+            "OBSERVATION_CLOCK_UNAVAILABLE", "EVIDENCE_CLOCK_UNAVAILABLE", "EVIDENCE_FROM_FUTURE", "EVIDENCE_DEADLINE_UNAVAILABLE"}:
+        light, status, reason = "BLUE", "PAUSED", (
+            "DECLARED_UNREGISTERED" if state == "UNREGISTERED" else "VERIFIED_OPERATOR_STOP")
+    elif clock_reason:
+        light, status, reason = "AMBER", "ATTENTION", clock_reason
+    elif expired:
+        light, status, reason = "RED", "BROKEN", "EVIDENCE_EXPIRED"
+    elif invalid_age or not evidence:
+        light, status, reason = "AMBER", "ATTENTION", "EVIDENCE_UNAVAILABLE"
+    elif verdict in {"ALIVE", "ALIVE_OBSERVE_ONLY"} and state in healthy_states:
+        light, status = "GREEN", "HEALTHY"
+        reason = ("DECLARED_IDLE" if state == "ALIVE_IDLE_EXPECTED" else
+                  "VERIFIED_OBSERVE_ONLY" if "ALIVE_OBSERVE_ONLY" in {verdict, state} else "VERIFIED_ALIVE")
+    else:
+        light, status, reason = "AMBER", "ATTENTION", "STATE_UNSUPPORTED"
+    return {"light": light, "status": status, "reason": reason,
+            "healthy": light == "GREEN", "attention_required": light in {"RED", "AMBER"},
+            "evidence_mode": mode if isinstance(mode, str) and mode in {"STATIC_PROOF", "DYNAMIC", "DECLARED_IDLE", "SESSION_DATA"} else None,
+            "valid_until_utc": _iso(deadline), "evidence_calendar": calendar_source}
+
+
+def alarm(rows: list[dict], *, now: Optional[datetime] = None, unavailable_reason: Optional[str] = None) -> dict:
+    """Fail-closed light separate from the backwards-compatible CLI exit code."""
+    lights = {light: 0 for light in ("RED", "AMBER", "BLUE", "GREEN")}
+    now = _utcnow() if now is None else now
+    for row in rows:
+        lights[row_alarm(row, now=now)["light"]] += 1
+    if lights["RED"]:
+        light, status, reason = "RED", "BROKEN", unavailable_reason or "SUBSYSTEM_FAILURE"
+    elif unavailable_reason or not rows:
+        light, status, reason = "AMBER", "ATTENTION", unavailable_reason or "EMPTY_SURFACE"
+    elif lights["AMBER"]:
+        light, status, reason = "AMBER", "ATTENTION", "SUBSYSTEM_EVIDENCE_UNKNOWN"
+    elif lights["BLUE"]:
+        light, status, reason = "BLUE", "PAUSED", "SUBSYSTEM_INTENTIONALLY_INACTIVE"
+    else:
+        light, status, reason = "GREEN", "HEALTHY", "ALL_SUBSYSTEMS_VERIFIED"
+    return {"schema": "health_alarm/1", "light": light, "status": status, "reason": reason,
+            "healthy": light == "GREEN", "attention_required": light in {"RED", "AMBER"},
+            "light_counts": lights}
+
+
+def fault_rows(rows: list[dict], *, now: Optional[datetime] = None, limit: int = 12) -> list[dict]:
+    """Bounded named red/amber evidence, including fine-state/clock failures."""
+    now = _utcnow() if now is None else now
+    faults = []
+    for row in rows:
+        row = public_row(row, now=now)
+        indicator = row_alarm(row, now=now)
+        if indicator["light"] not in {"RED", "AMBER"}:
+            continue
+        detail = str(row.get("detail") or "service evidence unavailable; consult private receipt")
+        faults.append({k: row.get(k) for k in ("verdict", "state", "probe", "evidence_utc",
+            "evidence_mode", "valid_until_utc", "cadence_s", "public_view") } | {
+            "age_s_now": _age(_ts(row.get("evidence_utc")), now) if isinstance(now, datetime) and now.tzinfo else None,
+            "name": str(row.get("name") or "unnamed")[:80], "detail": detail.replace("\n", " ")[:240], "alarm": indicator})
+    faults.sort(key=lambda r: (0 if r["alarm"]["light"] == "RED" else 1,
+        VERDICT_ORDER.get(r.get("verdict") if isinstance(r.get("verdict"), str) else None, 9), r["name"]))
+    return faults[:max(0, min(limit, 64))]
 
 
 def _load_state(hd: Path) -> dict:
@@ -2250,6 +2558,7 @@ def run(*, ctx: Optional[ProbeCtx] = None, only: Optional[set] = None,
            "allow_proc": ctx.allow_proc, "counts": counts(rows),
            "state_counts": state_counts(rows),
            "exit_code": exit_code(rows), "rows": rows,
+           "alarm": alarm(rows, now=ctx.now),
            "read_me_first": ("Every verdict is derived from evidence the producer wrote (a stamp "
                              "inside a receipt, a pid answering with its module, an HTTP body "
                              "field, a row-count delta) -- never an mtime or a lock file alone. "
@@ -2286,24 +2595,30 @@ def row_line(r: dict) -> str:
 
 
 def render_table(out: dict, width: int = 150) -> str:
+    indicator = alarm(out["rows"])
     L = [f"system health {out['generated_utc']}  counts {out['counts']}  rc {out['exit_code']}",
          f"states {out.get('state_counts') or '-'}",
-         f"{'verdict':<8} {'state':<19} {'subsystem':<34} {'age':>7}  detail", "-" * width]
+         f"alarm {indicator['light']} ({indicator['status']})",
+         f"{'light':<6} {'verdict':<8} {'state':<19} {'subsystem':<34} {'age':>7}  detail", "-" * width]
     for r in out["rows"]:
+        r = public_row(r)
         st = r.get("state") or r["verdict"]
-        L.append(f"{r['verdict']:<8} {(st if st != r['verdict'] else ''):<19} {r['name'][:34]:<34} "
-                 f"{_fmt_age(r.get('age_s')):>7}  {str(r['detail'])[:width - 74]}")
+        L.append(f"{row_alarm(r)['light']:<6} {r['verdict']:<8} {(st if st != r['verdict'] else ''):<19} {r['name'][:34]:<34} "
+                 f"{_fmt_age(r.get('age_s')):>7}  {str(r['detail'])[:width - 81]}")
     return "\n".join(L)
 
 
 def render_md(out: dict) -> str:
+    indicator = alarm(out["rows"])
     L = [f"# HEALTH — {out['generated_utc']}", "",
          f"counts {out['counts']} · exit code {out['exit_code']} · source {out['source']}",
          f"states {out.get('state_counts') or '-'}", "",
-         "| verdict | state | subsystem | evidence (UTC) | age | detail | proof |",
-         "|---|---|---|---|---|---|---|"]
+         f"alarm {indicator['light']} ({indicator['status']})", "",
+         "| light | verdict | state | subsystem | evidence (UTC) | age | detail | proof |",
+         "|---|---|---|---|---|---|---|---|"]
     for r in out["rows"]:
-        L.append(f"| {r['verdict']} | {r.get('state') or r['verdict']} | {r['name']} | "
+        r = public_row(r)
+        L.append(f"| {row_alarm(r)['light']} | {r['verdict']} | {r.get('state') or r['verdict']} | {r['name']} | "
                  f"{r.get('evidence_utc') or '-'} | "
                  f"{_fmt_age(r.get('age_s'))} | {str(r['detail']).replace('|', '/')} | "
                  f"{str(r.get('proof') or '').replace('|', '/')} |")
@@ -2321,20 +2636,38 @@ def api_block(*, ttl_s: float = 60.0) -> dict:
     now = time.time()
     hit = _API_CACHE.get("v")
     if hit and now - hit[0] < ttl_s:
-        return hit[1]
+        # Cache observations, not their remaining validity. A heartbeat may
+        # expire during this cache's TTL; keep its original generation clock.
+        cached = hit[1]
+        observed = _utcnow()
+        rows = [{**r, "age_s_now": _age(_ts(r.get("evidence_utc")), observed),
+                 "alarm": row_alarm(r, now=observed)} for r in cached.get("rows", [])]
+        rows = [{**public_row(r, now=observed), "alarm": row_alarm(public_row(r, now=observed), now=observed)} for r in rows]
+        return {**cached, "rows": rows,
+                "alarm": alarm(rows, now=observed,
+                               unavailable_reason="HEALTH_COMPUTATION_UNAVAILABLE"
+                               if cached.get("source") == "error" else None)}
     try:
         out = run(ctx=make_ctx(allow_proc=False))
+        observed = _utcnow()
+        projected_rows = [{**r, "age_s_now": _age(_ts(r.get("evidence_utc")), observed),
+                           "alarm": row_alarm(r, now=observed)} for r in out["rows"]]
+        projected_rows = [{**public_row(r, now=observed), "alarm": row_alarm(public_row(r, now=observed), now=observed)} for r in projected_rows]
         block = {"generated_utc": out["generated_utc"],
                  "source": "railway_local" if on_railway() else "pc_request",
                  "counts": out["counts"], "state_counts": out.get("state_counts"),
                  "exit_code": out["exit_code"],
-                 "rows": [{k: r.get(k) for k in ("name", "verdict", "state", "where", "evidence_utc",
-                                                 "age_s", "detail", "delta", "proof")}
-                          for r in out["rows"]]}
+                 "alarm": alarm(projected_rows, now=observed),
+                 "rows": [{k: r.get(k) for k in ("name", "probe", "verdict", "state", "where", "evidence_utc",
+                                                 "age_s", "age_s_now", "cadence_s", "evidence_mode", "valid_until_utc",
+                                                 "public_view", "progressing", "same_output",
+                                                 "detail", "delta", "proof", "alarm")}
+                          for r in projected_rows]}
     except Exception as exc:                                        # noqa: BLE001
         block = {"generated_utc": _iso(_utcnow()), "source": "error", "counts": {},
                  "exit_code": None, "rows": [],
-                 "error": f"{type(exc).__name__}: {str(exc)[:200]}"}
+                 "alarm": alarm([], unavailable_reason="HEALTH_COMPUTATION_UNAVAILABLE"),
+                 "error": type(exc).__name__}
     _API_CACHE["v"] = (now, block)
     return block
 
@@ -2347,14 +2680,19 @@ def disk_status(*, optimus_dir: Optional[Path] = None,
         ctx = make_ctx(optimus_dir=optimus_dir, allow_proc=False,
                        disk_usage=disk_usage or shutil.disk_usage)
         r = p_disk_free(ctx)
+        safe = public_row(_row(Probe("disk_free", "pc", timedelta(minutes=5),
+                                   "disk metadata", p_disk_free), "disk_free", r), now=ctx.now)
+        detail = safe["detail"]
         free = r.delta / (1024 ** 3) if r.delta is not None else None
         return {"verdict": r.verdict, "free_gb": None if free is None else round(free, 2),
-                "line": (r.detail if free is not None else f"disk free: UNKNOWN ({r.detail})")
-                        if r.verdict == "ALIVE" else f"{r.verdict} {r.detail}",
-                "detail": r.detail}
+                "line": (detail if free is not None else f"disk free: UNKNOWN ({detail})")
+                        if r.verdict == "ALIVE" else (
+                            f"{r.verdict} disk free: {free:.1f} GB; {detail}" if free is not None
+                            else f"{r.verdict} {detail}"),
+                "detail": detail}
     except Exception as exc:                                        # noqa: BLE001
         return {"verdict": "UNKNOWN", "free_gb": None, "detail": type(exc).__name__,
-                "line": f"disk free: CANNOT DETERMINE ({type(exc).__name__}: {str(exc)[:100]})"}
+                "line": f"disk free: CANNOT DETERMINE ({type(exc).__name__})"}
 
 
 def non_alive_lines(*, limit: int = 12) -> list[str]:
@@ -2364,7 +2702,7 @@ def non_alive_lines(*, limit: int = 12) -> list[str]:
     try:
         rec = newest_receipt()
         age = _age(_ts((rec or {}).get("generated_utc")), _utcnow())
-        if rec and age is not None and age <= RECEIPT_MAX_AGE_S:
+        if rec and age is not None and 0 <= age <= RECEIPT_MAX_AGE_S:
             rows, src = rec["rows"], f"probe receipt {_fmt_age(age)} old"
         else:
             rows = run(ctx=make_ctx(allow_proc=False))["rows"]
@@ -2373,16 +2711,29 @@ def non_alive_lines(*, limit: int = 12) -> list[str]:
         # C8 review F7: a REFUSED row (nn_lab, the contest live gate) is named,
         # after DEAD/STALE, not only counted
         refused = [r for r in rows if r["verdict"] == "REFUSED"]
-        unk = sum(1 for r in rows if r["verdict"] == "UNKNOWN")
+        unknown = [r for r in rows if r["verdict"] == "UNKNOWN"]
+        unk = len(unknown)
         head = (f"_subsystems: {len(bad)} DEAD/STALE, {unk} UNKNOWN of {len(rows)} ({src})_"
                 if not refused else
                 f"_subsystems: {len(bad)} DEAD/STALE, {len(refused)} REFUSED, {unk} UNKNOWN of "
                 f"{len(rows)} ({src})_")
-        bad = bad + refused
-        body = [f"- {row_line(r)}" for r in bad[:limit]
+        observed = _utcnow()
+        faults = fault_rows(rows, now=observed, limit=64)
+        total_faults = sum(row_alarm(r, now=observed)["light"] in {"RED", "AMBER"} for r in rows)
+        # Named faults already contain only the fixed strict-view description.
+        def brief_row(r):
+            indicator = r["alarm"]
+            if r.get("verdict") != "UNKNOWN":
+                label = r.get("state") if r.get("state") in {"DEAD", "STALE", "REFUSED", "DEGRADED"} else r.get("verdict")
+                if label not in {"DEAD", "STALE", "REFUSED", "DEGRADED"}:
+                    label = indicator["light"]
+                return f"{label} {r['name']} -- {r['detail']} [{indicator['reason']}]"
+            detail = str(r.get("detail") or "evidence unavailable").replace("\n", " ")[:240]
+            return f"UNKNOWN {str(r.get('name') or 'unnamed')[:80]} -- {detail}"
+        body = [f"- {brief_row(r)}" for r in faults[:limit]
                 if r.get("probe") != "disk_free" and r.get("name") != "disk_free"] + (
-            [f"- ... {len(bad) - limit} more in backend/data/optimus/health/HEALTH.md"]
-            if len(bad) > limit else [])
+            [f"- ... {total_faults - limit} more in backend/data/optimus/health/HEALTH.md"]
+            if total_faults > limit else [])
         # The disk is measured NOW, not read from the receipt, and LEADS the
         # block when it is STALE/DEAD (2026-09-27: C: at 0 bytes read healthy).
         d = disk_status()
@@ -2390,4 +2741,4 @@ def non_alive_lines(*, limit: int = 12) -> list[str]:
             return [f"- {d['line']}", head] + body
         return [head] + body + [f"- {d['line']}"]
     except Exception as exc:                                        # noqa: BLE001
-        return [f"_subsystems: CANNOT DETERMINE ({type(exc).__name__}: {str(exc)[:120]})_"]
+        return [f"_subsystems: CANNOT DETERMINE ({type(exc).__name__})_"]

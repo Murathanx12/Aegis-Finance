@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 /**
  * /brain — the Optimus brain, as a page (chunk C4, 2026-10-06).
  *
@@ -38,21 +40,33 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   getBrainState, getDecisionContract, getHealthFullWithSubsystems, getOptimusDigest,
-  type SubsystemRow,
+  type SubsystemRow, type ServiceAlarm,
 } from "@/lib/api";
 import StateBoard from "./StateBoard";
 import { RegimeStrip, ScenarioStrip, WhatChanged } from "./BrainStrips";
+import { currentPanelLight, currentServiceLight } from "@/lib/service-alarm";
 
 const BRAIN_MAP_URL = "https://optimus-brain-alpha.vercel.app";
 
 const VERDICT: Record<string, { tone: string; dot: string; icon: typeof CheckCircle2; label: string }> = {
   ALIVE: { tone: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500", icon: CheckCircle2, label: "alive" },
-  STALE: { tone: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500", icon: AlertTriangle, label: "stale" },
+  STALE: { tone: "text-red-700 dark:text-red-400", dot: "bg-red-500", icon: AlertTriangle, label: "stale" },
   DEAD: { tone: "text-red-700 dark:text-red-400", dot: "bg-red-500", icon: XCircle, label: "dead" },
   REFUSED: { tone: "text-red-700 dark:text-red-400", dot: "bg-red-500", icon: CircleSlash, label: "refused" },
   STOPPED_BY_OPERATOR: { tone: "text-sky-700 dark:text-sky-400", dot: "bg-sky-500", icon: PauseCircle, label: "stopped by operator" },
-  UNKNOWN: { tone: "text-zinc-600 dark:text-zinc-400", dot: "bg-zinc-400", icon: CircleDashed, label: "unknown" },
+  UNKNOWN: { tone: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500", icon: CircleDashed, label: "unverified" },
 };
+
+const LIGHT = {
+  GREEN: { ...VERDICT.ALIVE, label: "verified" },
+  RED: { ...VERDICT.DEAD, label: "alarm" },
+  AMBER: { ...VERDICT.UNKNOWN, label: "needs evidence" },
+  BLUE: { ...VERDICT.STOPPED_BY_OPERATOR, label: "paused / not active" },
+};
+
+function serviceLight(r: SubsystemRow, current: boolean, now: number) {
+  return LIGHT[currentServiceLight(r, current, now)];
+}
 
 /** Which probes belong to which part of the brain. A probe not listed lands in "Plumbing". */
 const GROUPS: { title: string; icon: typeof Brain; blurb: string; match: (n: string) => boolean }[] = [
@@ -92,8 +106,8 @@ function age(s: number | null): string {
   return `${(s / 86400).toFixed(1)} d ago`;
 }
 
-function ProbeRow({ r }: { r: SubsystemRow }) {
-  const v = VERDICT[r.verdict] ?? VERDICT.UNKNOWN;
+function ProbeRow({ r, current, now }: { r: SubsystemRow; current: boolean; now: number }) {
+  const v = serviceLight(r, current, now);
   const Icon = v.icon;
   return (
     <li className="flex items-start gap-2.5 py-2 border-b border-border/40 last:border-0">
@@ -101,7 +115,7 @@ function ProbeRow({ r }: { r: SubsystemRow }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <span className="font-mono text-xs font-semibold truncate">{r.name}</span>
-          <span className={`text-[11px] whitespace-nowrap ${v.tone}`}>{v.label} · {age(r.age_s)}</span>
+          <span className={`text-[11px] whitespace-nowrap ${v.tone}`}>{v.label} · {r.state ?? r.verdict} · {age(r.age_s_now === undefined ? r.age_s : r.age_s_now)}</span>
         </div>
         {r.detail && <p className="text-xs text-muted-foreground line-clamp-2" title={r.detail}>{r.detail}</p>}
       </div>
@@ -121,17 +135,33 @@ function StatusError({ what, err }: { what: string; err: unknown }) {
 }
 
 export default function BrainPage() {
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const brain = useQuery({ queryKey: ["brain", "state"], queryFn: getBrainState, refetchInterval: 5 * 60_000, retry: false });
-  const health = useQuery({ queryKey: ["brain", "health"], queryFn: getHealthFullWithSubsystems, refetchInterval: 5 * 60_000, retry: 1 });
+  const health = useQuery({ queryKey: ["brain", "health"], queryFn: getHealthFullWithSubsystems, refetchInterval: 60_000, retry: 1 });
   const decisions = useQuery({ queryKey: ["brain", "decisions"], queryFn: () => getDecisionContract(), retry: false });
   const digest = useQuery({ queryKey: ["brain", "digest"], queryFn: getOptimusDigest, retry: false });
 
   const sub = health.data?.subsystems;
+  const generated = sub?.generated_utc ? Date.parse(sub.generated_utc) : NaN;
+  const current = !health.error && !sub?.error && sub?.alarm?.schema === "health_alarm/1" && Number.isFinite(generated)
+    && clock - generated >= -30_000 && clock - generated <= 2 * 60_000;
+  const overallBroken = !!health.data && health.data.status !== "ok";
   const rows = sub?.rows ?? [];
+  const panelLight: ServiceAlarm["light"] = health.error || sub?.error || overallBroken || sub?.alarm?.light === "RED" ? "RED"
+    : currentPanelLight(rows, sub?.alarm, current, clock);
+  const panel = LIGHT[panelLight];
   const grouped = GROUPS.map((g) => ({ ...g, rows: rows.filter((r) => g.match(r.name)) }));
   const claimed = new Set(grouped.flatMap((g) => g.rows.map((r) => r.name)));
   const plumbing = rows.filter((r) => !claimed.has(r.name));
-  const counts = sub?.counts ?? {};
+  const counts: Record<string, number> = rows.reduce<Record<string, number>>((out, row) => {
+    const light = currentServiceLight(row, current, clock);
+    out[light] += 1;
+    return out;
+  }, { RED: 0, AMBER: 0, BLUE: 0, GREEN: 0 });
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   const d = decisions.data;
@@ -170,20 +200,38 @@ export default function BrainPage() {
         </div>
         {/* verdict strip */}
         <div className="mt-5">
+          <div role={panelLight === "RED" || panelLight === "AMBER" ? "alert" : "status"}
+            aria-live="polite" className={`mb-3 rounded-lg border border-current/25 p-3 ${panel.tone}`}>
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <i aria-hidden="true" className={`inline-block h-3 w-3 rounded-full ${panel.dot}`} />
+              Service control panel · {panel.label}
+            </p>
+            <p className="mt-1 text-xs">
+              {health.error || sub?.error ? "Health could not be read. Cached service lights are unverified."
+                : overallBroken ? "The system reports a fault. Review the affected services and reasons below."
+                : !current ? "No current health observation. Service activity is unverified."
+                : !sub?.alarm ? "This response has no verified service alarm contract."
+                : panelLight === "BLUE" ? "One or more services are intentionally paused; they are not running."
+                : panelLight === "RED" ? "A service is failed, refused or stalled."
+                : panelLight === "AMBER" ? "Some service evidence is missing or cannot be verified."
+                : "The reported services have verified activity or a declared idle period."}
+            </p>
+            {(health.data?.degraded_reasons ?? []).map((reason, i) => <p key={i} className="mt-1 text-xs">{reason}</p>)}
+          </div>
           {health.isLoading && <Skeleton className="h-3 w-full" />}
           {total > 0 && (
             <>
               <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
                 {Object.entries(counts).filter(([, n]) => n > 0).map(([k, n]) => (
-                  <div key={k} className={(VERDICT[k] ?? VERDICT.UNKNOWN).dot} style={{ width: `${(100 * n) / total}%` }}
+                  <div key={k} className={current || k === "RED" ? (LIGHT[k as ServiceAlarm["light"]] ?? LIGHT.AMBER).dot : LIGHT.AMBER.dot} style={{ width: `${(100 * n) / total}%` }}
                     title={`${k}: ${n}`} />
                 ))}
               </div>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
                 {Object.entries(counts).filter(([, n]) => n > 0).map(([k, n]) => (
                   <span key={k} className="inline-flex items-center gap-1.5">
-                    <i className={`inline-block h-2 w-2 rounded-full ${(VERDICT[k] ?? VERDICT.UNKNOWN).dot}`} />
-                    <span className="tabular-nums font-semibold">{n}</span> {(VERDICT[k] ?? VERDICT.UNKNOWN).label}
+                    <i className={`inline-block h-2 w-2 rounded-full ${current || k === "RED" ? (LIGHT[k as ServiceAlarm["light"]] ?? LIGHT.AMBER).dot : LIGHT.AMBER.dot}`} />
+                    <span className="tabular-nums font-semibold">{n}</span> {current || k === "RED" ? (LIGHT[k as ServiceAlarm["light"]] ?? LIGHT.AMBER).label : "unverified"}
                   </span>
                 ))}
                 <span className="text-muted-foreground">
@@ -245,7 +293,7 @@ export default function BrainPage() {
               </CardHeader>
               <CardContent>
                 {health.isLoading ? <Skeleton className="h-16" /> : grp.rows.length ? (
-                  <ul>{grp.rows.map((r) => <ProbeRow key={r.name} r={r} />)}</ul>
+                  <ul>{grp.rows.map((r) => <ProbeRow key={r.name} r={r} current={current} now={clock} />)}</ul>
                 ) : (
                   <p className="text-xs text-muted-foreground">
                     No probe for this part answered on this server{sub?.source === "railway_local" ? " (the website backend does not run the PC loops)" : ""}.
@@ -355,7 +403,7 @@ export default function BrainPage() {
       {plumbing.length > 0 && (
         <details className="rounded-xl border border-border p-4">
           <summary className="cursor-pointer text-sm font-semibold">Plumbing and scheduled tasks ({plumbing.length})</summary>
-          <ul className="mt-2 grid gap-x-6 md:grid-cols-2">{plumbing.map((r) => <ProbeRow key={r.name} r={r} />)}</ul>
+          <ul className="mt-2 grid gap-x-6 md:grid-cols-2">{plumbing.map((r) => <ProbeRow key={r.name} r={r} current={current} now={clock} />)}</ul>
         </details>
       )}
     </div>

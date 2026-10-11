@@ -58,10 +58,19 @@ def _beta_replay_missing():
             ValueError, "no qualified protected-first source hash")
 
 
+def _beta_news_runtime_missing():
+    from backend.services import beta_v1_news_runtime as r
+    # Missing installed-code/route qualification refuses before client creation,
+    # SDK source lookup, filesystem or provider access.
+    return (lambda: r.deepseek_transport(authorized=True), r.RuntimeRefused,
+            'no reviewed SDK/transport code pins')
+
+
 BETA_INPUT_GUARD_CASES = {
     "beta_v1_decision_projection": _beta_projection_missing,
     "beta_v1_numerical": _beta_numerical_missing,
     "beta_v1_replay": _beta_replay_missing,
+    "beta_v1_news_runtime": _beta_news_runtime_missing,
 }
 
 #: WHY THE NAME SUFFIX WAS NOT ENOUGH, AND THE RULE IS NOW THE BASE CLASS.

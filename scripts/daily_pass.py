@@ -1214,20 +1214,27 @@ def step_health(ctx: dict) -> dict:
     Caveat stated: the `daily_pass` probe reads TODAY's receipt, which this
     pass writes after this step, so it judges the previous pass."""
     t0 = time.time()
+    from backend.services import system_health as SH               # noqa: PLC0415
     try:
         out = run_health_probes(daily_pass_rows=list(ctx.get("rows") or []))
     except Exception as exc:                                       # noqa: BLE001
         return _row("health", "refused", rows=0, seconds=round(time.time() - t0, 2),
-                    refusals=[f"health probes raised: {_trunc(exc)}"])
+                    refusals=[f"health probes raised: {type(exc).__name__}"],
+                    alarm=SH.alarm([], unavailable_reason="HEALTH_ACQUISITION_FAILED"))
     rows = list(out.get("rows") or [])
-    bad = [r for r in rows if r.get("verdict") != "ALIVE"]
-    lines = [f"{r.get('verdict')} {r.get('name')} -- {str(r.get('detail'))[:160]}" for r in bad]
+    observed_now = SH._utcnow()
+    service_alarm = SH.alarm(rows, now=observed_now)
+    rows = [SH.public_row(r, now=observed_now) for r in rows]
+    bad = [r for r in rows if SH.row_alarm(r, now=observed_now)["attention_required"]]
+    lines = [f"{SH.row_alarm(r, now=observed_now)['light']} {r.get('state') or r.get('verdict')} "
+             f"{r.get('name')} -- {str(r.get('detail'))[:160]}" for r in bad]
     return _row("health", ("ok" if rows else "nothing_to_do"), rows=len(rows),
                 seconds=round(time.time() - t0, 2), refusals=lines,
                 counts=out.get("counts"), exit_code=out.get("exit_code"),
+                alarm=service_alarm,
                 receipt_path=out.get("path"),
                 headline=(f"health rc {out.get('exit_code')}: {out.get('counts')}; "
-                          f"{len(bad)} of {len(rows)} subsystems not ALIVE"))
+                          f"{sum(r.get('verdict') != 'ALIVE' for r in rows)} of {len(rows)} subsystems not ALIVE"))
 
 
 _HANDLERS: dict[str, Callable[[dict], dict]] = {

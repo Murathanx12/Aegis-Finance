@@ -4384,11 +4384,30 @@ export function getOpportunitiesList(listId: string) {
 /** `/api/health/full` -> `subsystems` (services/system_health.api_block). */
 export interface SubsystemRow {
   name: string;
+  probe?: string | null;
+  public_view?: "STRICT_FAILURE_VIEW/1";
+  progressing?: boolean | null;
+  same_output?: boolean | null;
   verdict: "ALIVE" | "STALE" | "DEAD" | "UNKNOWN" | "REFUSED" | "STOPPED_BY_OPERATOR" | string;
   where: string | null;
   evidence_utc: string | null;
   age_s: number | null;
   detail: string | null;
+  state?: string | null;
+  alarm?: ServiceAlarm;
+  evidence_mode?: string | null;
+  valid_until_utc?: string | null;
+  age_s_now?: number | null;
+}
+export interface ServiceAlarm {
+  light: "RED" | "AMBER" | "BLUE" | "GREEN";
+  status: "BROKEN" | "ATTENTION" | "PAUSED" | "HEALTHY";
+  reason: string;
+  healthy: boolean;
+  attention_required: boolean;
+  evidence_mode?: string | null;
+  valid_until_utc?: string | null;
+  evidence_calendar?: string | null;
 }
 export interface SubsystemsBlock {
   generated_utc: string;
@@ -4396,6 +4415,10 @@ export interface SubsystemsBlock {
   counts: Record<string, number>;
   rows: SubsystemRow[];
   error?: string;
+  alarm?: ServiceAlarm & {
+    schema: "health_alarm/1";
+    light_counts: Record<ServiceAlarm["light"], number>;
+  };
 }
 export type HealthFullWithSubsystems = HealthFullResponse & {
   subsystems?: SubsystemsBlock;
@@ -4633,15 +4656,21 @@ export function getTheoryLab(board: BoardKind = "sticky") {
 }
 
 export interface HealthProbeRow {
-  name: string; probe: string; where: string | null; verdict: string; state: string;
+  name: string; probe: string | null; where: string | null; verdict: string; state: string;
+  public_view?: "STRICT_FAILURE_VIEW/1";
+  progressing?: boolean | null;
   cadence_s: number | null; evidence: string | null; evidence_utc: string | null; age_s_at_probe: number | null;
   age_s_now: number | null; detail: string | null; proof: string | null; same_output: boolean;
   missing_because: string | null;
+  alarm?: ServiceAlarm;
+  evidence_mode?: string | null;
+  valid_until_utc?: string | null;
 }
 export interface TaskOwnerRow {
   task: string; receipt: string; cadence_h: number; session_only: boolean; retired: boolean;
   registered_only: boolean; hash_rule_off: string | null; state: string | null; verdict: string | null;
   detail: string | null; missing_because: string | null;
+  alarm?: ServiceAlarm;
 }
 export interface SystemHealthResponse extends LegBase {
   generated_utc: string | null; health_line: string; exit_code: number | null;
@@ -4651,6 +4680,9 @@ export interface SystemHealthResponse extends LegBase {
   process_census: HealthProbeRow[]; same_output_rows: HealthProbeRow[];
   task_owners: TaskOwnerRow[];
   same_output_rule: string;
+  alarm?: SubsystemsBlock["alarm"];
+  observation_current?: boolean;
+  observation_clock_source?: string;
 }
 export function getSystemHealth() {
   return fetchAPI<SystemHealthResponse>("/api/legibility/v1/system-health");

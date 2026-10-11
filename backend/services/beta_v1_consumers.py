@@ -220,7 +220,106 @@ def _current_decision_status(forecast, instruments, plan, *, horizon, input_coun
         "plan_cash_weight_interpretation": "Unallocated inactive-preview arithmetic; no investment cash decision when inputs are unavailable."}
 
 
-def current_draft(current: dict, protocol: dict, *, source_hash: str, horizon: int = 21) -> dict:
+def _qualified_current_vintage(artifact, qualification, *, definitions, objective, horizon, asof):
+    """Admit an explicitly supplied, independently reviewed weight vintage.
+
+    This is an offline caller contract, not a claim that a hash authenticates a
+    reviewer. The caller supplies the independent qualification; this function
+    binds it to the exact vintage and refuses incompatible or future evidence.
+    It never discovers files, fits on current outcomes, or converts units.
+    """
+    if not isinstance(artifact, dict) or not isinstance(qualification, dict):
+        raise ValueError("explicit weight artifact and independent qualification required")
+    policy.verify_artifact(artifact)
+    if qualification.get("schema") != "beta_v1_weight_qualification/1" or qualification.get("verdict") != "PASS_INDEPENDENT_WEIGHT_VINTAGE":
+        raise ValueError("unsupported weight qualification")
+    if (qualification.get("source_hash_kind") != "CANONICAL_ARTIFACT_WITH_SEAL"
+            or qualification.get("review_hash_kind") != "CANONICAL_REVIEW_JSON"):
+        raise ValueError("explicit canonical hash domains required; no file-byte claim")
+    if (qualification.get("artifact_hash") != artifact["artifact_hash"]
+            or qualification.get("source_hash") != policy.digest(artifact)):
+        raise ValueError("weight qualification does not bind exact artifact")
+    for key in ("source_ref", "review_ref", "qualification_reason"):
+        if not isinstance(qualification.get(key), str) or not qualification[key].strip():
+            raise ValueError("weight source/review provenance unavailable")
+    review_hash = qualification.get("review_sha256")
+    if not isinstance(review_hash, str) or len(review_hash) != 64 or any(c not in "0123456789abcdef" for c in review_hash):
+        raise ValueError("independent weight review hash unavailable")
+    review = qualification.get("reviewed_vintage")
+    if (not isinstance(review, dict) or review.get("schema") != "beta_v1_independent_weight_review/1"
+            or review.get("verdict") != "PASS_SCOPED_WEIGHT_VINTAGE" or policy.digest(review) != review_hash):
+        raise ValueError("exact independent reviewed-vintage receipt required")
+    approved = {"artifact_hash": artifact["artifact_hash"], "source_hash": policy.digest(artifact),
+        "definitions_hash": policy.digest(definitions), "weights_hash": policy.digest(artifact.get("weights")),
+        "components_hash": policy.digest(artifact.get("components")), "parameters": artifact.get("parameters"),
+        "code_hashes": artifact.get("code_hashes")}
+    if any(review.get(k) != v for k, v in approved.items()):
+        raise ValueError("weight vintage differs from independently reviewed fit")
+    provenance = ("source_ref", "review_ref", "qualification_reason", "available_at",
+                  "source_observed_at", "qualified_at", "valid_until_at", "freshness_rule")
+    if any(qualification.get(k) != review.get(k) for k in provenance):
+        raise ValueError("weight provenance differs from independent review")
+    if qualification.get("freshness_rule") != "REVIEWED_VALID_UNTIL":
+        raise ValueError("explicit reviewed weight freshness rule required")
+    cutoff = policy._clock(artifact.get("cutoff"))
+    available, observed, reviewed, decision = (policy._clock(value) for value in (
+        qualification.get("available_at"), qualification.get("source_observed_at"),
+        qualification.get("qualified_at"), asof))
+    if not cutoff <= available <= observed <= reviewed <= decision:
+        raise ValueError("weight vintage or independent qualification unavailable at decision")
+    expires = policy._clock(qualification.get("valid_until_at"))
+    if expires < reviewed or decision > expires:
+        raise ValueError("independently reviewed weight vintage expired")
+    if (artifact.get("mode") != "SHADOW_ONLY" or artifact.get("task") != "expected_excess_return"
+            or artifact.get("horizon") != horizon or artifact.get("objective_version") != objective
+            or artifact.get("definitions") != definitions):
+        raise ValueError("exact current weight task/horizon/objective/definitions mismatch")
+    expected_parameters = {"min_blocks": 30, "k_prior": 30.0, "gamma": 1.0,
+                           "prior_share": 0.5, "embargo_sessions": horizon}
+    parameters, components = artifact.get("parameters"), artifact.get("components")
+    if not isinstance(parameters, dict) or not isinstance(components, dict) or not isinstance(artifact.get("weights"), dict):
+        raise ValueError("weight parameters/components/mass must be objects")
+    # Existing unknown-root replay vintages deliberately prohibit graduation.
+    # Accept that stricter frozen branch without relaxing the normal k/minimum.
+    if (parameters.get("min_blocks") == replay.PRIOR_ONLY_MIN_BLOCKS
+            and all(isinstance(a, dict) and a.get("status") in {"SHRUNK_PRIOR", "UNAVAILABLE"}
+                    for a in components.values())):
+        expected_parameters["min_blocks"] = replay.PRIOR_ONLY_MIN_BLOCKS
+    if (artifact.get("parameters") != expected_parameters
+            or any(isinstance(v, bool) for v in artifact["parameters"].values())):
+        raise ValueError("weight parameters differ from frozen Beta policy")
+    current_code = {Path(p).name: hashlib.sha256(Path(p).read_bytes()).hexdigest()
+        for p in (policy.__file__, policy.er.__file__, policy.fr.__file__, policy.kernels.__file__)}
+    if artifact.get("code_hashes") != current_code:
+        raise ValueError("weight constructor code differs from current reviewed fit")
+    if set(artifact.get("weights", {})) != set(definitions) or set(artifact.get("components", {})) != set(definitions):
+        raise ValueError("weight component support differs from definitions")
+    mass = []
+    for name, definition in definitions.items():
+        value = artifact["weights"][name]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not np.isfinite(value) or value < 0:
+            raise ValueError("invalid effective weight")
+        mass.append(value)
+        audit = artifact["components"][name]
+        if not isinstance(audit, dict) or any(audit.get(k) != v for k, v in definition.items()):
+            raise ValueError("weight audit definition mismatch")
+        if (audit.get("task") != "expected_excess_return" or audit.get("horizon") != horizon
+                or audit.get("objective_version") != objective or policy._clock(audit.get("training_cutoff")) != cutoff
+                or audit.get("effective_weight") != value):
+            raise ValueError("weight audit cell/cutoff/mass mismatch")
+        for clock in (audit.get("latest_outcome_at"), *(audit.get("feature_availability_range") or [])):
+            if clock is not None and policy._clock(clock) > cutoff:
+                raise ValueError("future evidence inside weight vintage")
+    total = sum(mass)
+    if not (total == 0.0 or np.isclose(total, 1.0, rtol=0, atol=1e-12)):
+        raise ValueError("effective weight mass is not normalized")
+    # The returned preview must not alias a mutable caller vintage.
+    return json.loads(json.dumps(artifact, allow_nan=False))
+
+
+def current_draft(current: dict, protocol: dict, *, source_hash: str, horizon: int = 21,
+                  weight_artifact: dict | None = None, weight_qualification: dict | None = None,
+                  variant: str = "adaptive") -> dict:
     """An inactive preview; unavailable inputs are not a cash decision.
 
     Descriptive revision scores/analyst target upside are not return forecasts.
@@ -253,10 +352,17 @@ def current_draft(current: dict, protocol: dict, *, source_hash: str, horizon: i
         objective = next(iter(objectives))
     asof = current["asof_utc"]
     # No historical return evidence is fabricated from a descriptive score.
-    vintage = policy.fit([], qualifications={}, definitions=defs, cutoff=asof,
-        task="expected_excess_return", horizon=horizon, objective_version=objective)
+    if weight_artifact is None:
+        if weight_qualification is not None:
+            raise ValueError("weight qualification supplied without a weight artifact")
+        vintage = policy.fit([], qualifications={}, definitions=defs, cutoff=asof,
+            task="expected_excess_return", horizon=horizon, objective_version=objective)
+    else:
+        vintage = _qualified_current_vintage(weight_artifact, weight_qualification,
+            definitions=defs, objective=objective, horizon=horizon, asof=asof)
+        weight_qualification = json.loads(json.dumps(weight_qualification, allow_nan=False))
     forecast = policy.forecast(vintage, records, qualifications=qualifications, asof=asof,
-        scheduled_entry_at=current.get("qualified_scheduled_entry_at"))
+        scheduled_entry_at=current.get("qualified_scheduled_entry_at"), variant=variant)
     instruments, rejected = {}, []
     mandate = protocol["portfolio_preview_mandate"]
     for row in current.get("records", []):
@@ -320,4 +426,7 @@ def current_draft(current: dict, protocol: dict, *, source_hash: str, horizon: i
         "refusal_counts": dict(Counter(reason for r in rejected for reason in r["reasons"])),
         **_current_decision_status(forecast, instruments, plan, horizon=horizon,
             input_count=len(current.get("qualified_return_records") or []), candidate_count=len(current.get("records", []))),
+        **({"weight_input": {"artifact_hash": vintage["artifact_hash"],
+            "qualification_hash": policy.digest(weight_qualification),
+            "qualification": weight_qualification}} if weight_artifact is not None else {}),
         "claim": "new inactive preview; unavailable inputs are not an investment cash decision; no activation, fills, or fabricated returns"})

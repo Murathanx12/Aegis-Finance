@@ -726,13 +726,21 @@ def health_answer(root: Path | None = None, *, limit: int = 8) -> Answer:
         return Answer(f"Health -- {CANNOT}: no health/health_*.json receipt on disk.", None,
                       "health", "health/health_*.json")
     c = d.get("counts") or {}
-    out = ["Health", " · ".join(f"{k} {v}" for k, v in c.items()) or f"counts {CANNOT}"]
-    for v in ("DEAD", "STALE"):
-        for r in [x for x in d.get("rows") or [] if x.get("verdict") == v][:limit]:
-            out.append(f"{v} {r.get('name')}: {str(r.get('detail') or '')[:110]}")
-            limit -= 1
-        if limit <= 0:
-            break
+    from backend.services import system_health as SH               # noqa: PLC0415
+    stamp = SH._ts(d.get("generated_utc"))
+    observed_now = _now()
+    observation_age = (observed_now - stamp).total_seconds() if stamp else None
+    current = observation_age is not None and 0 <= observation_age <= SH.RECEIPT_MAX_AGE_S
+    alarm = SH.alarm(list(d.get("rows") or []), now=observed_now,
+                     unavailable_reason=None if current else "HEALTH_RECEIPT_UNAVAILABLE_OR_STALE")
+    out = [f"Health · {alarm['light']} {alarm['status']}",
+           " · ".join(f"{k} {v}" for k, v in c.items()) or f"counts {CANNOT}"]
+    if not current:
+        out.append("Health observation is missing, future-dated or stale; activity is unverified.")
+    for r in SH.fault_rows(list(d.get("rows") or []), now=observed_now, limit=limit):
+        detail = str(r.get("detail") or "")
+        out.append(f"{r['alarm']['light']} {r.get('state') or r.get('verdict')} {r.get('name')}: "
+                   f"{r['alarm']['reason']}; {detail[:110]}")
     return Answer("\n".join(out), d.get("generated_utc"), "health", p.name)
 
 

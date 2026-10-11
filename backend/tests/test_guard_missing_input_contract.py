@@ -2045,3 +2045,12 @@ def test_a_guard_that_returns_instead_of_refusing_fails_the_contract():
         assert_refuses_missing_input(
             lambda: (_ for _ in ()).throw(ValueError("boom")),
             exc=Nope, what="probe")
+
+
+
+def test_beta_news_runtime_missing_qualification_refuses_before_lookup(monkeypatch):
+    from backend.services import beta_v1_news_runtime as r
+    monkeypatch.setattr(r,'sdk_source_pins',lambda **kw:pytest.fail('missing qualification must not access installed sources'))
+    call,exc,what=CASES['beta_v1_news_runtime']()
+    assert exc is r.RuntimeRefused
+    assert_refuses_missing_input(call,exc=exc,what=what)

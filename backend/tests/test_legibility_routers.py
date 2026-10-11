@@ -159,7 +159,8 @@ def _health(base: Path, gen: datetime) -> dict:
          "proof": "pid 185016 cmdline contains sim_run"},
         {"name": "task:AegisDailyPass", "probe": "task", "where": "pc", "verdict": "STALE", "state": "STALE",
          "evidence_utc": (gen - timedelta(hours=30)).isoformat(), "age_s": 108000.0,
-         "detail": f"same output for 30.0 h across 3 probes ({HOME})", "proof": "daily_pass.json"},
+         "detail": f"same output for 30.0 h across 3 probes ({HOME})", "proof": "daily_pass.json",
+         "same_output": True, "progressing": False},
         {"name": "process_census:sim_run", "probe": "process_census", "verdict": "ALIVE", "state": "ALIVE",
          "evidence_utc": gen.isoformat(), "age_s": 0.0,
          "detail": "sim_run: 1 live instance(s); parents: 1 x parent pid 4242 [python]"},
@@ -330,7 +331,9 @@ def test_whole_payloads_carry_no_secret_and_urls_keep_their_path(client):
     assert a["numbers"]["n_owner_personal_dropped"] == 2
     h = c.get("/api/legibility/v1/system-health").json()
     proofs = {x["name"]: x for x in h["groups"][-1]["rows"]}
-    assert proofs["sim_session"]["proof"] == "a live process answers as sim_run"
+    assert proofs["sim_session"]["proof"] == ""
+    assert proofs["sim_session"]["alarm"]["light"] == "AMBER"
+    assert proofs["sim_session"]["detail"] == "service evidence unavailable; consult private receipt"
     owners = {o["task"]: o for o in h["task_owners"]}
     assert "someone" not in json.dumps(owners["AegisDailyPass"])
 
@@ -611,3 +614,20 @@ def test_brain_missing_scenarios_and_updates_are_named_not_zeroed(client):
     assert d["missing_because"]["scenarios"] and d["missing_because"]["belief_updates"]
     assert d["missing_because"]["regime"] and d["missing_because"]["belief_stability"]
     assert d["belief_stability"] is None and d["regime"] is None
+
+
+
+def test_qualified_static_health_proof_survives_without_promoting_legacy_sim(client):
+    c,base=client
+    rec=_health(base,NOW-timedelta(hours=1));before=json.loads(json.dumps(rec))
+    rec['rows'].append({'name':'openclaw_tool_scope','probe':'openclaw_tool_scope','where':'pc','verdict':'ALIVE',
+        'state':'ALIVE','evidence_utc':None,'evidence_mode':'STATIC_PROOF',
+        'detail':'synthetic tool configuration verified','proof':'synthetic source-owned configuration proof'})
+    rec['counts']['ALIVE']+=1
+    _w(base/'health'/f"health_{_stamp(NOW-timedelta(hours=1))}.json",rec)
+    L._CACHE.clear();out=c.get('/api/legibility/v1/system-health').json()
+    rows={r['name']:r for g in out['groups'] for r in g['rows']}
+    assert rows['openclaw_tool_scope']['alarm']['light']=='GREEN'
+    assert rows['openclaw_tool_scope']['proof']=='synthetic source-owned configuration proof'
+    assert rows['sim_session']['alarm']['light']=='AMBER' and rows['sim_session']['proof']==''
+    assert rec['rows'][0]==before['rows'][0]

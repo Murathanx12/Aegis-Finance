@@ -12,33 +12,52 @@
  * Read-only: GET /api/legibility/v1/system-health.
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, AlertTriangle, Brain, Cpu, Repeat } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getSystemHealth, type HealthProbeRow } from "@/lib/api";
+import { getSystemHealth, getHealthFullWithSubsystems, type HealthProbeRow, type ServiceAlarm } from "@/lib/api";
+import { currentPanelLight, currentServiceLight } from "@/lib/service-alarm";
 import {
   LoadError, Missing, MissingList, ReceiptStrip, SourceNote, StaleBanner, fmtAgeSeconds,
 } from "@/components/legibility/receipts";
 
 const VERDICT_TONE: Record<string, string> = {
   DEAD: "text-red-700 dark:text-red-400",
-  STALE: "text-amber-700 dark:text-amber-400",
+  STALE: "text-red-700 dark:text-red-400",
   REFUSED: "text-red-700 dark:text-red-400",
-  UNKNOWN: "text-zinc-600 dark:text-zinc-400",
+  UNKNOWN: "text-amber-700 dark:text-amber-400",
   STOPPED_BY_OPERATOR: "text-sky-700 dark:text-sky-400",
   ALIVE: "text-emerald-700 dark:text-emerald-400",
 };
 
-function Row({ r }: { r: HealthProbeRow }) {
+const LIGHT_TONE: Record<string, string> = {
+  RED: VERDICT_TONE.DEAD, AMBER: VERDICT_TONE.UNKNOWN,
+  BLUE: VERDICT_TONE.STOPPED_BY_OPERATOR, GREEN: VERDICT_TONE.ALIVE,
+};
+
+function alarmTone(alarm: ServiceAlarm | undefined, current: boolean, now: number) {
+  return LIGHT_TONE[currentServiceLight({ alarm }, current, now)];
+}
+
+function groupTone(rows: HealthProbeRow[], current: boolean, now: number) {
+  const lights = rows.map((r) => currentServiceLight(r, current, now));
+  if (lights.includes("RED")) return LIGHT_TONE.RED;
+  if (!current || lights.includes("AMBER")) return LIGHT_TONE.AMBER;
+  if (lights.includes("BLUE")) return LIGHT_TONE.BLUE;
+  return rows.length ? LIGHT_TONE.GREEN : LIGHT_TONE.AMBER;
+}
+
+function Row({ r, current, now }: { r: HealthProbeRow; current: boolean; now: number }) {
+  const light = currentServiceLight(r, current, now);
   return (
-    <li className={`py-2 ${r.same_output ? "rounded bg-amber-500/10 px-2" : ""}`}>
+    <li className={`py-2 ${r.same_output ? "rounded bg-red-500/10 px-2" : ""}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="font-mono text-xs font-semibold break-all">{r.name}</span>
-        <span className={`whitespace-nowrap text-[11px] ${VERDICT_TONE[r.verdict] ?? ""}`}>
-          {r.state}{r.same_output ? " · SAME OUTPUT" : ""} · evidence {r.age_s_now == null ? <Missing why={r.missing_because} /> : `${fmtAgeSeconds(r.age_s_now)} old now`}
+        <span className={`whitespace-nowrap text-[11px] ${LIGHT_TONE[light] ?? LIGHT_TONE.AMBER}`}>
+          {light} · {r.state}{r.same_output ? " · SAME OUTPUT" : ""} · evidence {r.age_s_now == null ? <Missing why={r.missing_because} /> : `${fmtAgeSeconds(r.age_s_now)} old now`}
           {r.age_s_at_probe != null ? ` (${fmtAgeSeconds(r.age_s_at_probe)} at probe)` : ""}
         </span>
       </div>
@@ -49,9 +68,26 @@ function Row({ r }: { r: HealthProbeRow }) {
 }
 
 export default function HealthPage() {
-  const q = useQuery({ queryKey: ["system-health"], queryFn: getSystemHealth, retry: 1, refetchInterval: 5 * 60_000 });
+  const q = useQuery({ queryKey: ["system-health"], queryFn: getSystemHealth, retry: 1, refetchInterval: 60_000 });
+  const overall = useQuery({ queryKey: ["brain", "health"], queryFn: getHealthFullWithSubsystems, retry: 1, refetchInterval: 60_000 });
   const d = q.data;
   const [showAlive, setShowAlive] = useState(true);
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const generated = d?.generated_utc ? Date.parse(d.generated_utc) : NaN;
+  const current = !q.error && d?.observation_current === true && d.alarm?.schema === "health_alarm/1"
+    && Number.isFinite(generated) && clock - generated >= -30_000 && clock - generated <= 2 * 3600_000
+    && clock - q.dataUpdatedAt >= -30_000 && clock - q.dataUpdatedAt <= 2 * 60_000;
+  const overallCurrent = !overall.error && !!overall.data
+    && (overall.data.status === "ok" || overall.data.status === "DEGRADED")
+    && clock - overall.dataUpdatedAt >= -30_000 && clock - overall.dataUpdatedAt <= 2 * 60_000;
+  const overallBroken = overall.data?.status === "DEGRADED";
+  const allRows = (d?.groups ?? []).flatMap((g) => g.rows);
+  const light = q.error || overall.error || overallBroken || d?.alarm?.light === "RED" ? "RED"
+    : currentPanelLight(allRows, d?.alarm, current && overallCurrent, clock);
   return (
     <div className="space-y-5 animate-slide-up">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -65,6 +101,20 @@ export default function HealthPage() {
       </div>
       {q.isLoading && <Skeleton className="h-40 w-full" />}
       {q.error && <LoadError what="System Health" err={q.error} />}
+      {overall.error && <LoadError what="Backend health" err={overall.error} />}
+      <div role={light === "RED" || light === "AMBER" ? "alert" : "status"} aria-live="polite"
+        className={`rounded-lg border border-current/25 p-3 ${LIGHT_TONE[light] ?? LIGHT_TONE.AMBER}`}>
+        <p className="font-semibold">Service control panel · {light}</p>
+        <p className="mt-1 text-xs">{q.error || overall.error ? "Health could not be read. Cached activity is unverified."
+          : overallBroken ? "The backend reports a fault. Its recorded reasons are below."
+          : !overallCurrent ? "No current overall backend observation. Service health is unverified."
+          : !current ? "No current verified health observation. Existing fault records remain visible."
+          : light === "RED" ? "A service is failed, refused or stalled. Review the named evidence below."
+          : light === "AMBER" ? "Service evidence is missing or unavailable."
+          : light === "BLUE" ? "One or more services are intentionally paused; they are not active."
+          : "Reported services have verified activity or a declared idle period."}</p>
+        {(overall.data?.degraded_reasons ?? []).map((reason,i) => <p key={i} className="mt-1 text-xs">{reason}</p>)}
+      </div>
       {d && (
         <>
           <StaleBanner receipts={d.receipts} />
@@ -80,9 +130,9 @@ export default function HealthPage() {
           </div>
 
           {d.same_output_rows.length > 0 && (
-            <Card className="border-amber-600/40">
+            <Card className="border-red-600/40">
               <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Repeat className="h-4 w-4" /> Same output, no progress ({d.same_output_rows.length})</CardTitle></CardHeader>
-              <CardContent><ul>{d.same_output_rows.map((r) => <Row key={r.name} r={r} />)}</ul></CardContent>
+              <CardContent><ul>{d.same_output_rows.map((r) => <Row key={r.name} r={r} current={current} now={clock} />)}</ul></CardContent>
             </Card>
           )}
           <p className="text-xs text-muted-foreground">{d.same_output_rule}.</p>
@@ -90,7 +140,7 @@ export default function HealthPage() {
           <Card>
             <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Cpu className="h-4 w-4" /> Process census (C14)</CardTitle></CardHeader>
             <CardContent>
-              {d.process_census.length ? <ul>{d.process_census.map((r) => <Row key={r.name} r={r} />)}</ul>
+              {d.process_census.length ? <ul>{d.process_census.map((r) => <Row key={r.name} r={r} current={current} now={clock} />)}</ul>
                 : <p className="text-sm"><Missing why={d.missing_because.process_census} /></p>}
             </CardContent>
           </Card>
@@ -100,13 +150,13 @@ export default function HealthPage() {
             return (
               <Card key={g.verdict}>
                 <CardHeader className="pb-2">
-                  <CardTitle className={`flex flex-wrap items-center gap-2 text-base ${VERDICT_TONE[g.verdict] ?? ""}`}>
+                  <CardTitle className={`flex flex-wrap items-center gap-2 text-base ${groupTone(g.rows,current,clock)}`}>
                     {g.verdict !== "ALIVE" && <AlertTriangle className="h-4 w-4" />}{g.verdict} ({g.n})
                     <span className="text-xs font-normal text-muted-foreground">{Object.entries(g.states).map(([k, v]) => `${k} ${v}`).join(" · ")}</span>
                     {g.verdict === "ALIVE" && <button className="ml-auto text-xs font-normal underline" onClick={() => setShowAlive((v) => !v)}>{showAlive ? "hide" : "show"}</button>}
                   </CardTitle>
                 </CardHeader>
-                {!hidden && <CardContent><ul className="divide-y divide-border/40">{g.rows.map((r) => <Row key={r.name} r={r} />)}</ul></CardContent>}
+                {!hidden && <CardContent><ul className="divide-y divide-border/40">{g.rows.map((r) => <Row key={r.name} r={r} current={current} now={clock} />)}</ul></CardContent>}
               </Card>
             );
           })}
@@ -121,7 +171,7 @@ export default function HealthPage() {
                     {d.task_owners.map((t) => (
                       <tr key={t.task} className="border-t border-border/40 align-top">
                         <td className="py-1 pr-3 font-mono">{t.task}</td>
-                        <td className={`pr-3 ${VERDICT_TONE[t.verdict ?? ""] ?? ""}`}>{t.state ?? <Missing why={t.missing_because} />}</td>
+                        <td className={`pr-3 ${alarmTone(t.alarm,current,clock)}`}>{t.state ?? <Missing why={t.missing_because} />}</td>
                         <td className="pr-3 font-mono text-[11px] break-all">{t.receipt}</td>
                         <td className="whitespace-nowrap pr-3">{t.cadence_h} h{t.session_only ? " (sessions)" : ""}</td>
                         <td className="text-muted-foreground">{[t.retired ? "retired" : null, t.registered_only ? "judged only when registered" : null, t.hash_rule_off ? `hash rule off: ${t.hash_rule_off}` : null].filter(Boolean).join("; ")}</td>
