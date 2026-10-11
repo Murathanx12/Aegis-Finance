@@ -24,6 +24,14 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 ## TIER 0 — CANON (changes a few times a year; read every session)
 
 Current sustained beta pickup (2026-10-10 → Monday October 12):
+The owner-adopted October 11 build sprint now has a [current acceptance record](BETA_BUILD_ACCEPTANCE_2026-10-11.md),
+[money-first measured results](BETA_SPRINT_MEASURED_RESULTS_2026-10-11.md),
+[fresh inactive Beta V1 Portfolio](BETA_V1_PORTFOLIO_2026-10-11_REVIEW.md),
+[separate contest preparation view](BETA_V1_CONTEST_VIEW_2026-10-11.md),
+[Monday Terminal packet](BLOOMBERG_MONDAY_TERMINAL_PACKET_2026-10-12.md) and
+[intentional-pause restoration instructions](BETA_RESTORATION_2026-10-12.md).
+The [independent-investment reasoning note](DEFERRED_INDEPENDENT_INVESTMENT_REASONING_2026-10-11.md)
+is deferred to owner prioritisation after beta/Bloomberg setup; it does not expand current acceptance.
 [BETA_CONTINUATION_CHECKPOINT_2026-10-11.md](BETA_CONTINUATION_CHECKPOINT_2026-10-11.md)
 and its compact private state/queue. The local rolling handoff remains private.
 The earlier

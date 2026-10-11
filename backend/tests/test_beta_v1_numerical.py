@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 import exchange_calendars as xcals
 import numpy as np
@@ -207,8 +208,9 @@ class OwnedWorker:
         return self.returncode
 
 
-def test_redirector_identity_refused_and_real_4gib_worker_is_measured_killed_reaped():
-    base, site, _ = runner.direct_environment()
+def test_redirector_identity_refused_and_real_4gib_worker_is_measured_killed_reaped(tmp_path):
+    # Symbolic expected identity paths only: no interpreter or venv is created.
+    base, site = tmp_path/"direct-python.exe", tmp_path/"site-packages"
     identity = {"pid": 303, "nonce": "fixture", "sys_executable": str(base), "user_site_disabled": True,
         "package_origins": {name: str(site/name/"__init__.py") for name in runner.DEPENDENCIES}}
     with pytest.raises(ValueError, match="ownership"):
@@ -325,6 +327,15 @@ def test_no_final_query_cannot_qualify_completed_worker():
     assert not result["final_owned_handle_peak_proved"]
 
 
+def test_direct_environment_refuses_global_interpreter(monkeypatch):
+    # Global CI must not become an authorized original-venv worker environment.
+    monkeypatch.setattr(runner.sys, "prefix", runner.sys.base_prefix)
+    with pytest.raises(ValueError, match="verified original venv and direct base CPython required"):
+        runner.direct_environment()
+
+
+@pytest.mark.skipif(sys.prefix == sys.base_prefix,
+    reason="Real direct-CPython dependency-origin probe requires a genuine isolated original venv; global CI has none")
 def test_direct_cpython_light_identity_probe_uses_exact_venv_dependencies(tmp_path):
     """Stdlib find_spec only; no numerical imports/data/models; child<64MiB."""
     base, site, env = runner.direct_environment()
