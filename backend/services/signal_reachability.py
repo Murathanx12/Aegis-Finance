@@ -123,6 +123,10 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           gap rather than quietly excused, because the whole point of this
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
+    "backend.services.beta_v1_context": (
+        "OFFLINE EXPERIMENT -- source-pinned private run_actual_context_cycle1.py "
+        "calls this descriptive Beta adapter. Reviewed context receipts are "
+        "development evidence; no production integration or activation is claimed."),
     "backend.services.ledger_retrieval": (
         "OK -- M3's hindsight-safe retrieval gate, shipped BEFORE the store it "
         "guards (roadmap 2026-09-11). M2's `learned_rules.jsonl` does not exist "

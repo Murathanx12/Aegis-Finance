@@ -24,6 +24,14 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 ## TIER 0 — CANON (changes a few times a year; read every session)
 
 Current sustained beta pickup (2026-10-10 → Monday October 12):
+The owner-adopted October 11 build sprint now has a [current acceptance record](BETA_BUILD_ACCEPTANCE_2026-10-11.md),
+[money-first measured results](BETA_SPRINT_MEASURED_RESULTS_2026-10-11.md),
+[fresh inactive Beta V1 Portfolio](BETA_V1_PORTFOLIO_2026-10-11_REVIEW.md),
+[separate contest preparation view](BETA_V1_CONTEST_VIEW_2026-10-11.md),
+[Monday Terminal packet](BLOOMBERG_MONDAY_TERMINAL_PACKET_2026-10-12.md) and
+[intentional-pause restoration instructions](BETA_RESTORATION_2026-10-12.md).
+The [independent-investment reasoning note](DEFERRED_INDEPENDENT_INVESTMENT_REASONING_2026-10-11.md)
+is deferred to owner prioritisation after beta/Bloomberg setup; it does not expand current acceptance.
 [BETA_CONTINUATION_CHECKPOINT_2026-10-11.md](BETA_CONTINUATION_CHECKPOINT_2026-10-11.md)
 and its compact private state/queue. The local rolling handoff remains private.
 The earlier
@@ -53,6 +61,15 @@ The active roadmap remains the same §5c file; checkpoints are not completion.
 **PUBLIC-FACING:** `FUNDING_EVIDENCE_PACK_2026-10-07.md` — the funding evidence pack (every number checked against its receipt; NOT MEASURED where none exists; programme table and HKU Demo Day 2026-10-14).
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
+
+**Current execution order (owner adopted October 11):**
+[AEGIS_BETA_V1_BUILD_SPRINT_2026-10-11.md](AEGIS_BETA_V1_BUILD_SPRINT_2026-10-11.md).
+This 8–12 hour implementation sprint orders the existing Beta roadmap: intentional
+OpenClaw/local-inference pause, admissible weight consumers, measured replay, and a
+fresh inactive Beta V1 Portfolio. Earlier books, frozen contracts and Monday
+activation gates remain. The persistent queue retains earlier receipts and adds
+sprint dependencies; reader soak is suspended during the owner pause.
+
 
 - **October 10 → Monday October 12 continuation:** the owner's expanded scope
   supersedes the prior two-chunk stop. The persistent execution queue is
