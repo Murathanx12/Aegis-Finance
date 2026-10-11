@@ -153,3 +153,10 @@ A **PDUFA date** is a regulatory review goal date, not guaranteed approval. A **
 **HALEU** is uranium fuel enriched above 5% and below 20% uranium-235. Fuel classification does not establish a company's contract value or eligibility. [US Department of Energy](https://www.energy.gov/ne/articles/what-high-assay-low-enriched-uranium-haleu)
 
 These definitions were checked against primary sources October 11 SGT. The dated private `atlas-instrument-identity-inventory.json` has SHA-256 `b7ccf2ab55983c62d64e233c82cb6ab90f7e0b0699fa6c4ae075e800d459de02`. No weights, prices, prior books or activation gates changed.
+
+
+## Review context — 11 October2026,08:46SGT /00:46UTC
+
+This is the existing inactive v3 proposal:96% stocks,4% cash,23 names; VRT12% to10% remains the only change from v2. SPY remains a separate comparator with zero strategy influence. Quotes remain the Oct9 last closed session; no fresh news was admitted. This review context changes no weights, prices, quote timestamps, ranges, horizons, catalysts, exits or prior portfolios and creates no new portfolio. All Bloomberg eligibility remains unverified.
+
+Owner applied, approval pending Monday, and will attend Terminal lab. Existing WLS/MEMB/TMSG definitions remain in the [Monday guide](MONDAY_TERMINAL_PREPARATION_2026-10-12.md); authentic membership, rules, policy and verified fills require separate evidence. No freeze/order/activation follows. The [current checkpoint](BETA_CONTINUATION_CHECKPOINT_2026-10-11.md#current-continuation-supplement--11-october-0846-sgt--0046-utc) records degraded arena health and native NN refusal without changing this book. Authorised continuation runs through Monday morning; epoch flags stay OFF until the existing Monday21:30SGT earliest gate and attended conditions.
