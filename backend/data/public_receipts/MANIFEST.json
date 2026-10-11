@@ -1,9 +1,9 @@
 {
  "schema": "public_receipts/1",
- "published_utc": "2026-10-09T10:03:41+00:00",
+ "published_utc": "2026-10-11T22:10:04+00:00",
  "status": "OK",
  "why": null,
- "total_bytes": 4768221,
+ "total_bytes": 4791572,
  "max_bytes": 5000000,
  "how_public": "this folder is TRACKED; a commit of backend/data/public_receipts/ to main and its push make the pages public (publish_receipts.commit_public_receipts, the last step of the AegisDataCatalog firing; it refuses off main). Routers serve whichever of the live receipts and this copy is newer by the receipts' own stamps.",
  "sanitiser": "backend/services/legibility_sanitise.py (deny-by-default, per-page allow-list) + publish_receipts.leak_scan; each copy is a fixed point of the sanitiser",
@@ -340,17 +340,17 @@
    "sources": [
     {
      "kind": "system_health",
-     "file": "optimus/health/health_20261009T100141Z.json",
-     "sha256": "c75e75f79ca16f1306faff67a17104ee24eeee20f26809ccf613e06c012a834a",
-     "stamp_utc": "2026-10-09T10:01:41+00:00",
+     "file": "optimus/health/health_20261011T215619Z.json",
+     "sha256": "a6d8ca99d57d690dc063cc8b14c1c8ff647e9dc2963fe03a07f0ab09f72790f7",
+     "stamp_utc": "2026-10-11T21:56:19+00:00",
      "role": "every row",
      "status": "FRESH"
     }
    ],
-   "sha256": "700b6b8e1a04aca7b3ece23ab74bc7353f6002840e8fa903aacf9aee16541650",
-   "bytes": 61038,
+   "sha256": "c845f053942dabd6431d8741f2d7da82a1882b19cd5e8a44d58746ac22b94e69",
+   "bytes": 84389,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-09T10:03:41+00:00"
+   "published_utc": "2026-10-11T22:10:04+00:00"
   },
   "opportunities": {
    "page": "/opportunities",
