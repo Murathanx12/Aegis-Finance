@@ -34,6 +34,36 @@ from pathlib import Path
 
 SERVICES = Path(__file__).resolve().parents[1] / "services"
 
+
+def _beta_projection_missing():
+    from backend.services import beta_v1_decision_projection as p
+    return (lambda: p.project_line(b"", cutoff="2026-10-11T00:00:00Z"),
+            p.ProjectionRefusal, "no original decision metadata")
+
+
+def _beta_numerical_missing():
+    import pandas as pd
+    from backend.services import beta_v1_numerical as n
+    bars = pd.DataFrame([dict(symbol="FIXTURE", date="2025-01-02", open=10.,
+        high=10., low=10., close=10., volume=100., _src="synthetic")])
+    return (lambda: n.prepare_prices(bars, registrants=None), n.NumericalRefused,
+            "no explicit source-bound stitch registrant metadata")
+
+
+def _beta_replay_missing():
+    from backend.services import beta_v1_replay as r
+    # A missing pin refuses before filesystem access. ReplayLimitExceeded is
+    # its separate operational cap, exercised by the dedicated budget tests.
+    return (lambda: r.load_projection("NOT_READ_MISSING_PIN", expected_sha256=""),
+            ValueError, "no qualified protected-first source hash")
+
+
+BETA_INPUT_GUARD_CASES = {
+    "beta_v1_decision_projection": _beta_projection_missing,
+    "beta_v1_numerical": _beta_numerical_missing,
+    "beta_v1_replay": _beta_replay_missing,
+}
+
 #: WHY THE NAME SUFFIX WAS NOT ENOUGH, AND THE RULE IS NOW THE BASE CLASS.
 #:
 #: The first version of this file looked for `*Refusal` / `*Refused` /

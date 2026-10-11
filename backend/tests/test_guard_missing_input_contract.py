@@ -1993,6 +1993,10 @@ CASES = {
 }
 
 
+from backend.tests.guard_contract import BETA_INPUT_GUARD_CASES
+CASES.update(BETA_INPUT_GUARD_CASES)
+
+
 @pytest.mark.parametrize("module", sorted(CASES))
 def test_guard_refuses_a_missing_input(module):
     call, exc, what = CASES[module]()
