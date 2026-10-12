@@ -1,6 +1,8 @@
 # Beta V1 build acceptance — 11 October 2026
 
-This is the current engineering review record for the owner's build sprint. Existing revision-flow, net-raises and Hack2 books worked over their separately dated paper windows; see [money results and matched comparisons](BETA_SPRINT_MEASURED_RESULTS_2026-10-11.md). The new Beta portfolio has no forward P&L history. No result here grants activation, trading authority or a claim of repeatable skill.
+Historical October 11 checkpoint. The [October 12 operational acceptance matrix](BETA_OPERATIONAL_REVIEW_2026-10-12.md) is the current pickup: the numerical fit and release subsequently completed, the owned stack was restored, and the current numerical consumer and interpretation quality remain separately unqualified. Preserve the older receipts below as dated evidence; pending-CI/off-tonight statements are superseded, not instructions to repeat recovery.
+
+This is the historical October 11 engineering review record for the owner's build sprint. Status wording and pending conditions in the table below belong to that checkpoint. Existing revision-flow, net-raises and Hack2 books worked over their separately dated paper windows; see [money results and matched comparisons](BETA_SPRINT_MEASURED_RESULTS_2026-10-11.md). The new Beta portfolio has no forward P&L history. No result here grants activation, trading authority or a claim of repeatable skill.
 
 ## Acceptance by evidence stage
 

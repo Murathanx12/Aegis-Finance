@@ -1,5 +1,7 @@
 # Restore the intentionally paused stack tomorrow
 
+**Current update, 12 October:** the latest owner authorized restoration and the owned stack was actually restored. Read the [current operational review](BETA_OPERATIONAL_REVIEW_2026-10-12.md) before running commands. The off-tonight and attended-only statements below are historical pause instructions, preserved with their original evidence; they are no longer the current operating instruction.
+
 Recorded 11 October 2026. **OpenClaw readers, their supervisor, gateway, dedicated browser and local inference stay OFF tonight.** This is an owner-authorized acquisition gap, not a successful collection soak or a fault that should trigger restart attempts.
 
 The scoped shutdown recovered approximately **2.9155 GiB of free RAM** (1.2812 to 4.1967 GiB). Disk free was 138.664 GiB. The initial committed-memory figure was unavailable; no committed-memory recovery is inferred. Existing model files, browser profile/cookies, extraction cache, cursors and raw data were preserved. Broker protection/reconciliation, required Optimus tools and the protected IIF task were retained.

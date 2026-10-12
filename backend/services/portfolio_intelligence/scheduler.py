@@ -1594,16 +1594,25 @@ async def _arena_daily_pass() -> bool:
         summary = await asyncio.to_thread(arena_engine.run_daily)
         receipts = summary.get("receipts", [])
         errors = [r for r in receipts if r.get("status") == "error"]
+        grading_report = summary.get("perception_grading")
+        grading_status = arena_engine._grading_status(grading_report)
+        grading_report = grading_report if isinstance(grading_report, dict) else {}
+        source_status = grading_report.get("status")
+        source_status = source_status if source_status in ("ok", "no_records", "no_price_frame", "error") else "UNAVAILABLE"
+        note(arena_grading_status=grading_status,
+             arena_grading_source_status=source_status,
+             arena_session=summary.get("session"), arena_decision_completed=True)
         msg = ("ARENA daily pass: status=%s session=%s books=%d error(s)=%d "
                "scored_names=%s coverage=%s matured=%s graded_forecasts=%s "
-               "reliability=%s")
+               "reliability=%s grading_status=%s")
         args = (summary.get("status"), summary.get("session"), len(receipts),
                 len(errors), summary.get("scored_n"),
                 summary.get("coverage_histogram"),
                 (summary.get("maturation") or {}).get("resolved"),
-                (summary.get("perception_grading") or {}).get("newly_resolved"),
-                (summary.get("reliability") or {}).get("status"))
-        degraded = (errors or summary.get("status") != "ok")
+                grading_report.get("newly_resolved"),
+                (summary.get("reliability") or {}).get("status"), grading_status)
+        degraded = (errors or summary.get("status") != "ok"
+                    or grading_status in ("FAILED", "UNAVAILABLE"))
         (logger.warning if degraded else logger.info)(msg, *args)
         # DEGRADED IS STILL A DECISION. A pass that completed with per-book
         # errors produced fresh intent for the books that worked, so it still

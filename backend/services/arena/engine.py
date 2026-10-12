@@ -418,6 +418,50 @@ def run_book(spec, panel, day: date, day_state: dict, is_hash: str, *,
     return receipt
 
 
+def _grading_status(report) -> str:
+    """Completion of the grading step, separate from book/execution success."""
+    if not isinstance(report, dict):
+        return "UNAVAILABLE"
+    status = report.get("status")
+    if status in ("error", "FAILED", "failed"):
+        return "FAILED"
+    if status == "no_records":
+        # Native empty producer shape is exactly total=0/newly_resolved=0.
+        # Optional diagnostic fields cannot contradict that claim.
+        counters = ("total", "newly_resolved", "resolved", "void",
+                    "skipped_quarantined", "skipped_already_terminal",
+                    "refused_by_ledger", "pending_not_yet_due",
+                    "OVERDUE_AND_UNRESOLVED", "tickers_wanted", "tickers_priced")
+        if any(type(report.get(key)) is not int or report[key] != 0
+               for key in ("total", "newly_resolved")):
+            return "UNAVAILABLE"
+        if any(type(report[key]) is not int or report[key] != 0
+               for key in counters if key in report):
+            return "UNAVAILABLE"
+        if "health" in report and report["health"] != "ok":
+            return "UNAVAILABLE"
+        if any(key in report and report[key] is not None
+               for key in ("error", "exception")):
+            return "UNAVAILABLE"
+        if any(key in report and (type(report[key]) is not list or report[key])
+               for key in ("errors", "refused_sample", "overdue_ids")):
+            return "UNAVAILABLE"
+        return "IDLE_NO_RECORDS"
+    if status != "ok":
+        return "UNAVAILABLE"
+    total = report.get("total")
+    newly = report.get("newly_resolved")
+    overdue = report.get("OVERDUE_AND_UNRESOLVED")
+    refused = report.get("refused_by_ledger")
+    if any(type(v) is not int or v < 0 for v in (total, newly, overdue, refused)):
+        return "UNAVAILABLE"
+    if refused:
+        return "FAILED"
+    if newly > total or overdue > total or overdue or report.get("health") != "ok":
+        return "UNAVAILABLE"
+    return "OK"
+
+
 def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
     """The scheduled entry point: one pass over every seeded arena book."""
     specs = spec_mod.active_specs()
@@ -536,7 +580,9 @@ def run_daily(as_of=None, *, panel=None, root=None, db_path=None) -> dict:
         logger.exception("ARENA: reliability snapshot failed")
         summary["reliability"] = {"status": "error",
                                   "error": f"{type(exc).__name__}: {exc}"}
-    summary["status"] = "ok"
+    summary["grading_status"] = _grading_status(summary.get("perception_grading"))
+    summary["status"] = ("DEGRADED" if summary["grading_status"] in ("FAILED", "UNAVAILABLE")
+                         else "ok")
     return summary
 
 

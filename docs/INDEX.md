@@ -24,6 +24,9 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 ## TIER 0 — CANON (changes a few times a year; read every session)
 
 Current sustained beta pickup (2026-10-10 → Monday October 12):
+The [final Astra review](BETA_ASTRA_OPERATIONAL_REVIEW_2026-10-12.md) rates research 7.0/10 and autonomous readiness 5.5/10 without certification.
+The [October 12 operational review](BETA_OPERATIONAL_REVIEW_2026-10-12.md)
+supersedes older pending-CI/off-tonight statements with exact deployed and restored evidence, while retaining failed canaries and unqualified investment paths.
 The [October 11 overnight owner order](BETA_OVERNIGHT_OWNER_ORDER_2026-10-11.md)
 continues implementation, adds explicit service alarms and authorizes final Astra review and subsequent owned-stack restoration. EXE changes remain deferred.
 The [October 12 delivery evidence](BETA_V1_DELIVERY_2026-10-12.md)
@@ -73,17 +76,16 @@ This 8–12 hour implementation sprint orders the existing Beta roadmap: intenti
 OpenClaw/local-inference pause, admissible weight consumers, measured replay, and a
 fresh inactive Beta V1 Portfolio. Earlier books, frozen contracts and Monday
 activation gates remain. The persistent queue retains earlier receipts and adds
-sprint dependencies; reader soak is suspended during the owner pause.
+sprint dependencies. The later overnight order authorized restoration; the owned stack was restored and current evidence is in the operational review. Reader soak was suspended during the intentional pause.
 
 
 - **October 10 → Monday October 12 continuation:** the owner's expanded scope
-  supersedes the prior two-chunk stop. The persistent execution queue is
-  [BETA_DEPENDENCY_QUEUE_2026-10-10.json](BETA_DEPENDENCY_QUEUE_2026-10-10.json),
-  linked to the current roadmap §5c. Checkpoints are resumable work state,
+  supersedes the prior two-chunk stop. The preserved October 10 repository queue snapshot is [BETA_DEPENDENCY_QUEUE_2026-10-10.json](BETA_DEPENDENCY_QUEUE_2026-10-10.json).
+  The current local queue is `C:/Users/mrthn/aegis-recovery-evidence/beta-through-monday/dependency-queue.json`, with `CURRENT_STATE.json` beside it; the [checkpoint guide](BETA_CONTINUATION_CHECKPOINT_2026-10-11.md) describes pickup. Both retain the program acceptance map and the newer sprint order. Checkpoints are resumable work state,
   not beta completion; activation and authentic Terminal inputs retain their gates.
 
-- **`ROADMAP_2026-10-06_V1_BETA_THE_LOOP_THAT_LEARNS.md` — ACTIVE (adopted 2026-10-06, Fable 5.1). THE ONE TIER 1 FILE.**
-  Built from the verified machine state (code unchanged since `46d6efa4`; the live decision loop DEAD 6.7 days;
+- **`ROADMAP_2026-10-06_V1_BETA_THE_LOOP_THAT_LEARNS.md` — program acceptance foundation (adopted 2026-10-06, Fable 5.1); use the October 11 owner execution order above.**
+  Built from the then-verified October 6 machine state (historical, not current: code unchanged since `46d6efa4`; the live decision loop DEAD 6.7 days;
   funnel 13 days stale again; PC-PAPER 80% cash with an UNRECONCILED $40k contract on ~$1M equity; nn_lab
   refusing on `TableShrink`; the fair-twin fix still not in shared code), the owner's 10-06 review (59 asks, every
   one answered in its §3 matrix), and the outside ChatGPT guide (vocabulary adopted, ten-phase order not).

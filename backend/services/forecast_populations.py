@@ -47,7 +47,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from backend import config as _config
@@ -227,8 +227,133 @@ def _quarantine_set():
         return None, False
 
 
+def _arena_grading_context(row: dict, *, now: datetime | None) -> dict:
+    """Calendar context only: a scheduled slot is never proof of a grader run.
+
+    Original overdue counts and health verdicts are untouched. Named examples
+    are a capped sample and cannot reclassify the entire overdue population.
+    """
+    count = row.get("n_overdue")
+    count = count if type(count) is int and count >= 0 else None
+    context = {"status": "UNKNOWN", "date_overdue_count": count,
+               "execution_proof_available": False, "calendar_source": "UNAVAILABLE",
+               "sample_covers_all_overdue": False, "sample": [],
+               "reason": "CALENDAR_OR_GRADING_EXECUTION_EVIDENCE_UNAVAILABLE",
+               "schedule": "pi_arena_daily 17:45/18:45/19:45 America/New_York weekdays",
+               "slot_semantics": "FIRST_XNYS_ADMISSIBLE_CONFIGURED_SLOT_ONLY",
+               "cron_attendance": "UNKNOWN",
+               "holiday_disclosure": "Weekday cron also has exchange-holiday slots; XNYS context omits them."}
+    if not isinstance(now, datetime) or now.tzinfo is None or now.utcoffset() is None:
+        context["reason"] = "OBSERVATION_CLOCK_UNAVAILABLE"
+        return context
+    from zoneinfo import ZoneInfo
+    from backend.services import system_health as SH
+    try:
+        et = ZoneInfo("America/New_York")
+        sample = row.get("overdue_actionable")
+        sample = sample[:20] if isinstance(sample, list) else []
+        context["sample_covers_all_overdue"] = count is not None and count == len(sample)
+        cache = {}
+        for record in sample:
+            value = record.get("resolves_after") if isinstance(record, dict) else None
+            entry = {"resolves_after": value, "first_xnys_admissible_configured_slot_at": None,
+                     "opportunity_state": "UNKNOWN_CALENDAR"}
+            context["sample"].append(entry)
+            if not isinstance(value, str) or len(value) != 10:
+                continue
+            try:
+                due = date.fromisoformat(value)
+            except ValueError:
+                continue
+            if due not in cache:
+                cache[due] = SH._sessions(due, due + timedelta(days=14))
+            sessions, source = cache[due]
+            entry["calendar_source"] = source
+            previous = context["calendar_source"]
+            context["calendar_source"] = source if previous in ("UNAVAILABLE", source) else "MIXED"
+            if source != "XNYS" or not sessions:
+                continue
+            first = datetime.combine(sessions[0], time(17, 45), tzinfo=et).astimezone(timezone.utc)
+            entry["first_xnys_admissible_configured_slot_at"] = first.isoformat()
+            entry["opportunity_state"] = (
+                "BEFORE_FIRST_XNYS_ADMISSIBLE_CONFIGURED_SLOT" if now < first
+                else "AFTER_FIRST_XNYS_ADMISSIBLE_CONFIGURED_SLOT_EXECUTION_UNKNOWN")
+        context["reason"] = "SCHEDULE_CONTEXT_ONLY_GRADING_EXECUTION_UNVERIFIED"
+    except Exception:
+        context["reason"] = "CALENDAR_UNAVAILABLE"
+    return context
+
+
+def _arena_grading_receipt(*, root: Path | None, now: datetime | None) -> dict:
+    """One bounded latest snapshot; never fall back past a malformed receipt.
+
+    The event clock is not an observation TTL. Successful old receipts remain
+    LAST_RECORDED; calendar context does not prove a subsequent job ran.
+    """
+    import hashlib
+    import json
+    from backend.services import job_receipts as JR
+    result = {"status": "UNKNOWN", "reason": "GRADING_RECEIPT_UNAVAILABLE",
+              "finished_at": None, "age_seconds": None, "sha256": None,
+              "observation_kind": "LAST_RECORDED", "freshness": "UNKNOWN"}
+    if not isinstance(now, datetime) or now.tzinfo is None or now.utcoffset() is None:
+        result["reason"] = "OBSERVATION_CLOCK_UNAVAILABLE"
+        return result
+    try:
+        base = (Path(root) / "job_receipts") if root is not None else JR._root()
+        directory = base / "arena_daily"
+        if directory.is_symlink() or getattr(directory, "is_junction", lambda: False)():
+            return result
+        latest = None
+        count = 0
+        for path in directory.iterdir():
+            count += 1
+            if count > JR.MAX_RECEIPTS_PER_JOB:
+                result["reason"] = "GRADING_RECEIPT_DIRECTORY_BOUND"
+                return result
+            if path.suffix == ".json" and (latest is None or path.name > latest.name):
+                latest = path
+        if latest is None or latest.is_symlink() or not latest.is_file():
+            return result
+        with latest.open("rb") as handle:
+            raw = handle.read(65537)
+        if len(raw) > 65536:
+            result["reason"] = "GRADING_RECEIPT_BYTE_BOUND"
+            return result
+        result["sha256"] = hashlib.sha256(raw).hexdigest()
+        def unique(pairs):
+            obj = {}
+            for key, value in pairs:
+                if key in obj:
+                    raise ValueError("duplicate")
+                obj[key] = value
+            return obj
+        receipt = json.loads(raw.decode("utf-8"), object_pairs_hook=unique,
+                             parse_constant=lambda _: (_ for _ in ()).throw(ValueError("nonfinite")))
+        if not isinstance(receipt, dict) or receipt.get("job") != "arena_daily":
+            return result
+        finished = datetime.fromisoformat(receipt["finished_at"].replace("Z", "+00:00"))
+        started = datetime.fromisoformat(receipt["started_at"].replace("Z", "+00:00"))
+        if any(t.tzinfo is None or t.utcoffset() is None for t in (finished, started)):
+            return result
+        age = (now - finished).total_seconds()
+        result.update(finished_at=finished.isoformat(), age_seconds=age)
+        if not started <= finished <= now:
+            result["reason"] = "GRADING_RECEIPT_CLOCK_UNAVAILABLE"
+            return result
+        extra = receipt.get("extra")
+        status = extra.get("arena_grading_status") if isinstance(extra, dict) else None
+        if receipt.get("status") != "ran" or status not in ("OK", "IDLE_NO_RECORDS", "FAILED", "UNAVAILABLE"):
+            return result
+        result.update(status=status, reason="DATED_GRADING_OBSERVATION")
+    except Exception:
+        pass  # Fixed unavailable metadata; private receipt diagnostics are not exposed.
+    return result
+
+
 def health(population_id: str, *, root: Path | None = None,
-           today: date | None = None, _quarantine=_SENTINEL) -> dict:
+           today: date | None = None, _quarantine=_SENTINEL,
+           now: datetime | None = None) -> dict:
     """Health of ONE named population. Never "the ledger"."""
     pop = get(population_id)
     from backend.services.belief_state import ledger_health
@@ -281,6 +406,16 @@ def health(population_id: str, *, root: Path | None = None,
     row.update(h)
     row["exists"] = True
     row["quarantine_split_available"] = quarantined is not None
+    if pop.population_id == "arena_forward":
+        observed = now if now is not None else (datetime.now(timezone.utc) if today is None else None)
+        row["grading_calendar_context"] = _arena_grading_context(row, now=observed)
+        row["ledger_status"] = row.get("status")
+        row["grading_receipt"] = _arena_grading_receipt(root=root, now=observed)
+        grading = row["grading_receipt"]["status"]
+        if grading in ("FAILED", "UNAVAILABLE", "UNKNOWN"):
+            row["problems"] = list(row.get("problems") or []) + [
+                "arena grading observation " + grading]
+            row["status"] = "DEGRADED"
 
     # A DECLARED-dormant population is not a fault for the things it is
     # declared dormant ABOUT. It still reports every count -- it just does not
@@ -322,7 +457,7 @@ def _excused(problem: str, pop: Population) -> bool:
 
 def registry_health(*, root: Path | None = None,
                     today: date | None = None,
-                    quarantine=_SENTINEL) -> dict:
+                    quarantine=_SENTINEL, now: datetime | None = None) -> dict:
     """Every population, each with its own row, and a status that says WHICH.
 
     The top-level status is deliberately NOT a pooled judgement. It names the
@@ -336,7 +471,7 @@ def registry_health(*, root: Path | None = None,
     if quarantine is _SENTINEL:
         quarantine, _avail = _quarantine_set()
     rows = [health(p.population_id, root=root, today=today,
-                   _quarantine=quarantine)
+                   _quarantine=quarantine, now=now)
             for p in _POPULATIONS]
     bad = [r["population_id"] for r in rows
            if r.get("status") not in ("ok", "OK", "DORMANT_BY_DESIGN")]

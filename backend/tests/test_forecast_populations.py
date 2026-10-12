@@ -20,6 +20,98 @@ import pytest
 from backend.services import forecast_populations as FP
 
 
+def test_arena_saturday_due_is_context_before_first_monday_slot(monkeypatch):
+    from backend.services import system_health as SH
+    monkeypatch.setattr(SH, '_sessions', lambda lo, hi: (
+        [date(2026,10,12)], 'XNYS'))
+    row={'status':'DEGRADED','n_overdue':50,'n_overdue_actionable':50,
+         'overdue_actionable':[{'prediction_id':'synthetic','resolves_after':'2026-10-10'}]}
+    before=json.dumps(row,sort_keys=True)
+    context=FP._arena_grading_context(row,now=datetime(2026,10,12,0,14,tzinfo=timezone.utc))
+    assert context['status']=='UNKNOWN' and context['execution_proof_available'] is False
+    assert context['sample'][0]['first_xnys_admissible_configured_slot_at']=='2026-10-12T21:45:00+00:00'
+    assert context['sample'][0]['opportunity_state']=='BEFORE_FIRST_XNYS_ADMISSIBLE_CONFIGURED_SLOT'
+    assert context['date_overdue_count']==50 and context['sample_covers_all_overdue'] is False
+    assert json.dumps(row,sort_keys=True)==before
+
+
+def test_arena_calendar_fallback_or_missing_clock_stays_unknown(monkeypatch):
+    from backend.services import system_health as SH
+    monkeypatch.setattr(SH,'_sessions',lambda lo,hi:([date(2026,10,12)],'WEEKDAY_APPROX'))
+    row={'n_overdue':50,'overdue_actionable':[{'resolves_after':'2026-10-10'}]}
+    context=FP._arena_grading_context(row,now=datetime(2026,10,12,0,14,tzinfo=timezone.utc))
+    assert context['status']=='UNKNOWN' and context['calendar_source']=='WEEKDAY_APPROX'
+    assert context['sample'][0]['opportunity_state']=='UNKNOWN_CALENDAR'
+    assert FP._arena_grading_context(row,now=None)['status']=='UNKNOWN'
+
+
+def _grading_receipt(root, now, status="OK", *, filename="2026-08-23T120000_000000Z_abcdef.json", **overrides):
+    path = root / "job_receipts" / "arena_daily" / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    row = {"job": "arena_daily", "status": "ran",
+           "started_at": (now-timedelta(minutes=1)).isoformat(),
+           "finished_at": now.isoformat(), "extra": {"arena_grading_status": status}}
+    row.update(overrides)
+    path.write_text(json.dumps(row), encoding="utf-8")
+    return path
+
+
+@pytest.mark.parametrize("grading", ["FAILED", "UNAVAILABLE", "UNKNOWN"])
+def test_grading_health_reaches_registry_without_overdue(tmp_path, grading):
+    now=datetime(2026,8,23,12,tzinfo=timezone.utc)
+    _write(tmp_path / "arena" / "predictions.jsonl", [_rec("a", "2026-08-21T22:45:00+00:00")])
+    if grading != "UNKNOWN":
+        _grading_receipt(tmp_path, now, grading)
+    reg=FP.registry_health(root=tmp_path, today=now.date(), now=now, quarantine=set())
+    row=reg["populations"]["arena_forward"]
+    assert row["n_overdue"]==0 and row["ledger_status"]=="ok"
+    assert row["grading_receipt"]["status"]==grading and row["status"]=="DEGRADED"
+    assert "arena_forward" in reg["degraded_populations"]
+    assert "arena grading observation "+grading in row["problems"]
+
+
+@pytest.mark.parametrize("status", ["OK", "IDLE_NO_RECORDS"])
+def test_fresh_grading_receipt_accepts_healthy_or_declared_empty(tmp_path,status):
+    now=datetime(2026,8,23,12,tzinfo=timezone.utc)
+    _grading_receipt(tmp_path,now,status)
+    result=FP._arena_grading_receipt(root=tmp_path,now=now)
+    assert result["status"]==status and result["age_seconds"]==0
+    assert len(result["sha256"])==64
+
+
+def test_friday_success_remains_last_recorded_before_monday_slot(tmp_path):
+    friday=datetime(2026,10,9,23,tzinfo=timezone.utc)
+    monday=datetime(2026,10,12,0,14,tzinfo=timezone.utc)
+    _grading_receipt(tmp_path,friday)
+    result=FP._arena_grading_receipt(root=tmp_path,now=monday)
+    assert result["status"]=="OK" and result["observation_kind"]=="LAST_RECORDED"
+    assert result["freshness"]=="UNKNOWN" and result["age_seconds"]>48*3600
+    # Also no fabricated execution/failure after the next scheduled opportunity.
+    later=FP._arena_grading_receipt(root=tmp_path,now=monday+timedelta(days=1))
+    assert later["status"]=="OK" and later["freshness"]=="UNKNOWN"
+
+
+
+@pytest.mark.parametrize("defect", ["future","naive","wrong_job","malformed","duplicate","oversize","too_many"])
+def test_latest_grading_receipt_refuses_invalid_snapshot_without_old_green_fallback(tmp_path,defect):
+    now=datetime(2026,8,23,12,tzinfo=timezone.utc)
+    _grading_receipt(tmp_path,now,filename="000-old.json")
+    path=_grading_receipt(tmp_path,now,filename="zzz-new.json")
+    row=json.loads(path.read_text())
+    if defect=="stale": row["finished_at"]=(now-timedelta(hours=3)).isoformat();row["started_at"]=row["finished_at"]
+    if defect=="future": row["finished_at"]=(now+timedelta(seconds=1)).isoformat()
+    if defect=="naive": row["finished_at"]="2026-08-23T12:00:00"
+    if defect=="wrong_job": row["job"]="pi_arena_daily"
+    path.write_text(json.dumps(row),encoding="utf-8")
+    if defect=="malformed":path.write_text("{",encoding="utf-8")
+    if defect=="duplicate":path.write_text('{"job":"arena_daily","job":"arena_daily"}',encoding="utf-8")
+    if defect=="oversize":path.write_bytes(b" "*65537)
+    if defect=="too_many":
+        for i in range(201): (path.parent / (str(i)+".json")).write_text("{}")
+    assert FP._arena_grading_receipt(root=tmp_path,now=now)["status"]=="UNKNOWN"
+
+
+
 def _rec(pid: str, made_at: str, horizon: int = 20,
          outcome=None) -> dict:
     """Built through the REAL factory so the fixture cannot drift.
@@ -140,7 +232,9 @@ def test_fresh_arena_ledger_is_ok(tmp_path):
     today = date(2026, 8, 23)
     _write(tmp_path / "arena" / "predictions.jsonl",
            [_rec("a1", "2026-08-21T22:45:00+00:00")])
-    row = FP.health("arena_forward", root=tmp_path, today=today)
+    now=datetime(2026,8,23,12,tzinfo=timezone.utc)
+    _grading_receipt(tmp_path,now)
+    row = FP.health("arena_forward", root=tmp_path, today=today, now=now)
     assert row["status"] == "ok", row
     assert row["population_id"] == "arena_forward"
 
@@ -150,7 +244,8 @@ def test_arena_quiet_clock_tolerates_a_weekend_but_not_an_outage(tmp_path):
     p = tmp_path / "arena" / "predictions.jsonl"
     _write(p, [_rec("a1", "2026-08-21T22:45:00+00:00")])       # Friday
     sunday = FP.health("arena_forward", root=tmp_path, today=date(2026, 8, 23))
-    assert sunday["status"] == "ok", "a Sunday read of Friday's write alarmed"
+    assert sunday["ledger_status"] == "ok", "a Sunday read of Friday's write alarmed"
+    assert sunday["grading_receipt"]["status"] == "UNKNOWN"
 
     later = FP.health("arena_forward", root=tmp_path, today=date(2026, 8, 30))
     assert later["status"] != "ok", "a 9-day arena outage did not alarm"
@@ -166,7 +261,7 @@ def test_campaign_quiet_is_dormant_by_design_not_degraded(tmp_path):
     """
     _write(tmp_path / "predictions.jsonl",
            [_rec("c1", "2026-01-01T00:00:00+00:00", outcome=1)])
-    row = FP.health("campaign_forward", root=tmp_path, today=date(2026, 8, 23))
+    row = FP.health("campaign_forward", root=tmp_path, today=date(2026, 8, 23), _quarantine=set())
     assert row["status"] == "DORMANT_BY_DESIGN", row.get("problems")
     assert row["downgraded_from"] == "DEGRADED"
     assert row["dormant_reason"]
@@ -178,7 +273,7 @@ def test_campaign_overdue_is_excused_but_still_COUNTED(tmp_path):
     the alarm, never the number."""
     _write(tmp_path / "predictions.jsonl",
            [_rec("c1", "2026-01-01T00:00:00+00:00", outcome=None)])
-    row = FP.health("campaign_forward", root=tmp_path, today=date(2026, 8, 23))
+    row = FP.health("campaign_forward", root=tmp_path, today=date(2026, 8, 23), _quarantine=set())
     assert row["status"] == "DORMANT_BY_DESIGN", row
     assert row["n_overdue"] == 1, "the overdue count was hidden, not excused"
     assert row["problems"], "the problem text was dropped"
@@ -189,7 +284,7 @@ def test_the_SAME_data_still_alarms_on_live_forward(tmp_path):
     identical record is a genuine fault there."""
     _write(tmp_path / "predictions.jsonl",
            [_rec("l1", "2026-01-01T00:00:00+00:00", outcome=None)])
-    row = FP.health("live_forward", root=tmp_path, today=date(2026, 8, 23))
+    row = FP.health("live_forward", root=tmp_path, today=date(2026, 8, 23), _quarantine=set())
     assert row["status"] == "DEGRADED", row
     assert row["overdue_is_a_fault"] is True
 
@@ -227,7 +322,7 @@ def test_live_forward_quiet_IS_a_fault(tmp_path):
     """The live product's own accrual going quiet is a real problem."""
     _write(tmp_path / "predictions.jsonl",
            [_rec("l1", "2026-08-12T00:00:00+00:00")])
-    row = FP.health("live_forward", root=tmp_path, today=date(2026, 8, 23))
+    row = FP.health("live_forward", root=tmp_path, today=date(2026, 8, 23), _quarantine=set())
     assert row["status"] != "ok"
     assert row["quiet_is_a_fault"] is True
 
@@ -240,7 +335,9 @@ def test_registry_health_names_which_population_is_bad(tmp_path):
            [_rec("l1", "2026-08-12T00:00:00+00:00")])
     _write(tmp_path / "arena" / "predictions.jsonl",
            [_rec("a1", "2026-08-21T22:45:00+00:00")])
-    reg = FP.registry_health(root=tmp_path, today=date(2026, 8, 23))
+    now=datetime(2026,8,23,12,tzinfo=timezone.utc)
+    _grading_receipt(tmp_path,now)
+    reg = FP.registry_health(root=tmp_path, today=now.date(), now=now, quarantine=set())
 
     assert reg["status"] == "DEGRADED"
     # The exact misreading this module exists to stop: the arena must NOT be
@@ -258,7 +355,7 @@ def test_registry_health_refuses_to_pool():
 
 
 def test_registry_reports_every_population_even_when_absent(tmp_path):
-    reg = FP.registry_health(root=tmp_path, today=date(2026, 8, 23))
+    reg = FP.registry_health(root=tmp_path, today=date(2026, 8, 23), quarantine=set())
     assert reg["n_populations"] == len(FP.all_populations())
     assert set(reg["populations"]) == set(FP.known_ids())
 
@@ -305,3 +402,24 @@ def test_real_ledger_root_has_no_unregistered_population():
         f"unregistered forecast population(s) on disk: {unclaimed}. "
         f"Every ledger must be declared in forecast_populations._POPULATIONS "
         f"or it will be invisible to health exactly as the arena's was.")
+
+
+
+def test_exchange_holiday_context_is_not_weekday_cron_attendance(monkeypatch):
+    from backend.services import system_health as SH
+    # Synthetic Monday exchange closure: configured weekday cron still exists.
+    monday=date(2026,10,12); tuesday=date(2026,10,13)
+    monkeypatch.setattr(SH,"_sessions",lambda lo,hi:([tuesday],"XNYS"))
+    row={"status":"DEGRADED","n_overdue":50,"n_overdue_actionable":50,
+         "overdue_actionable":[{"resolves_after":monday.isoformat()}]}
+    original=json.dumps(row,sort_keys=True)
+    ctx=FP._arena_grading_context(row,now=datetime(2026,10,12,23,tzinfo=timezone.utc))
+    sample=ctx["sample"][0]
+    assert sample["first_xnys_admissible_configured_slot_at"]=="2026-10-13T21:45:00+00:00"
+    assert sample["opportunity_state"]=="BEFORE_FIRST_XNYS_ADMISSIBLE_CONFIGURED_SLOT"
+    assert "weekdays" in ctx["schedule"] and "exchange-holiday" in ctx["holiday_disclosure"]
+    assert ctx["cron_attendance"]=="UNKNOWN" and ctx["execution_proof_available"] is False
+    after=FP._arena_grading_context(row,now=datetime(2026,10,13,23,tzinfo=timezone.utc))
+    assert after["sample"][0]["opportunity_state"]=="AFTER_FIRST_XNYS_ADMISSIBLE_CONFIGURED_SLOT_EXECUTION_UNKNOWN"
+    assert after["status"]=="UNKNOWN" and after["date_overdue_count"]==50
+    assert json.dumps(row,sort_keys=True)==original
