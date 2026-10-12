@@ -1,5 +1,9 @@
 # Beta V1 Portfolio — 11 October 2026 review draft
 
+The allocation and source table below remain the frozen October 11 draft. Its unfinished-fit wording describes that original timestamp. The later H21 fit completed, but the current preparation/consumer path remains unqualified; see the [current operational review](BETA_OPERATIONAL_REVIEW_2026-10-12.md). No later result changes these original holdings, prices or weights.
+
+An October 12 private display addendum now records dated low/median/high analyst ranges for all ten selected names from existing snapshots. Their horizons, currency basis and underlying publication dates are unavailable; no target level enters ranking or becomes an H21 return. Owner review file: `C:/Users/mrthn/aegis-recovery-evidence/beta-build-sprint-20261011/beta-draft-analyst-display-addendum-r1.md`; JSON SHA `0685c20d5812386f5eab3ef1eba7a9f65ad6b07c4537b9cfb3c6844218ea5f30`, independent display review SHA `7289b06988c8a654f0833a308e24eee406eb54e8d9481a08eefd8b16006aa688`. This does not alter the original draft's admitted feature contract or historical availability.
+
 **New, inactive conditional draft.** Decision timestamp: `2026-10-11T11:53:25.981049Z` (19:53:25 Singapore). This book has no fills or forward P&L. Existing RF, net-raises and Hack2 results are reported [separately](BETA_SPRINT_MEASURED_RESULTS_2026-10-11.md); they are not assigned to this portfolio.
 
 The primary H21 expected-return fit is unfinished. This draft therefore shows a separately labelled **ordinal priority view over 21 sessions**, not calibrated expected returns or a completed adaptive allocation. It is a useful current candidate artifact for owner review, not approval to take exposure. SPY has zero strategic weight and remains a separate comparator.

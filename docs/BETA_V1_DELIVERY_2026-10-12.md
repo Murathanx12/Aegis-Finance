@@ -1,6 +1,8 @@
 # Beta V1 — October 12 delivery evidence
 
-Current candidate status, October 12 Singapore time: **required local backend and frontend checks passed; new exact CI, integration, deployment and live observations remain pending.** This supplements the dated October 11 snapshots. It preserves their original decisions and receipts; it does not activate a portfolio or certify the whole beta.
+**Later operational evidence:** [current deployed/restored status](BETA_OPERATIONAL_REVIEW_2026-10-12.md). The pending-CI/deployment and still-paused statements in this earlier snapshot are historical. The later record preserves the failed canary and unqualified investment paths.
+
+Earlier candidate checkpoint, October 12 Singapore time: **required local backend and frontend checks had passed; new exact CI, integration, deployment and live observations were still pending.** The operational review above records their later results. This preserves the original decisions and receipts; it does not activate a portfolio or certify the whole beta.
 
 ## Money results
 
