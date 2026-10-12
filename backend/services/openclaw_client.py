@@ -593,7 +593,10 @@ def _node_route_for_shim(shim: str) -> tuple[str, str] | None:
     if script is None or not script.is_file():
         return None
     node = d / "node.exe"          # the shim prefers a node.exe beside itself
-    node_s = str(node) if node.is_file() else shutil.which("node")
+    configured = os.environ.get("OPENCLAW_NODE_BIN")
+    if configured and (not Path(configured).is_absolute() or not Path(configured).is_file()):
+        raise OpenClawRefused("RESEARCH_CLI_NODE_PATH_REQUIRED")
+    node_s = configured or (str(node) if node.is_file() else shutil.which("node"))
     if not node_s:
         return None
     return node_s, str(script)
@@ -613,7 +616,7 @@ def _resolve_cli() -> dict[str, Any]:
         out["shim"] = exe
         nr = _node_route_for_shim(exe)
         if nr:
-            out.update(prefix=list(nr), route="node")
+            out.update(prefix=([nr[0], "--stack-size=8192", nr[1]] if os.name == "nt" else list(nr)), route="node")
         else:
             out.update(prefix=[exe], route="cmd")
     else:
@@ -762,7 +765,59 @@ def _run_http(args: list[str], key: str, *, timeout: float) -> subprocess.Comple
     return cp
 
 
+_PAPER_SHARED_GUARD_REVISION = "paper_read_scope_v1"
+
+# Broker aliases are an execution concern. Drop their entire namespaces so a
+# newly introduced key suffix cannot cross into a research CLI by accident.
+_BROKER_CLI_NAME = re.compile(r"^(?:PC[-_]PAPER(?:[-_]|$)|ALPACA|APCA|AAT_HACK)", re.I)
+
+def _broker_free_cli_environment(environment=None):
+    source = os.environ if environment is None else environment
+    env = {k: v for k, v in source.items() if not _BROKER_CLI_NAME.search(k)}
+    env["AEGIS_IGNORE_DOTENV"] = "1"
+    env["PYTHONNOUSERSITE"] = "1"
+    return env
+
+def _broker_free_cli_cwd(env):
+    # Installed OpenClaw reloads cwd/.env: an env filter alone is insufficient.
+    # Existing provider/OpenClaw env is preserved; neutral cwd prevents ROOT
+    # broker dotenv re-entry. Global dotenv broker names refuse, never print.
+    import tempfile
+    from dotenv import dotenv_values
+    cwd = Path(tempfile.gettempdir()) / "aegis_openclaw_research_cli"
+    cwd.mkdir(exist_ok=True)
+    if (cwd / ".env").exists():
+        raise OpenClawRefused("RESEARCH_CLI_NEUTRAL_DOTENV_PRESENT")
+    home = Path(env.get("OPENCLAW_HOME") or env.get("USERPROFILE") or Path.home()).expanduser()
+    state = Path(env.get("OPENCLAW_STATE_DIR") or home / ".openclaw").expanduser()
+    if not home.is_absolute() or not state.is_absolute():
+        raise OpenClawRefused("RESEARCH_CLI_HOME_SCOPE_REQUIRED")
+    files = [state / ".env"]
+    if state.resolve() == (home / ".openclaw").resolve():
+        files.append(home / ".config" / "openclaw" / "gateway.env")
+    for path in files:
+        if path.exists() and any(_BROKER_CLI_NAME.search(k) for k in dotenv_values(path, interpolate=False)):
+            raise OpenClawRefused("RESEARCH_CLI_GLOBAL_BROKER_DOTENV")
+    return str(cwd)
+
+def _paper_scope_lock():
+    import tempfile
+    from backend.services import disk_guard
+    return disk_guard.file_lock(Path(tempfile.gettempdir()) /
+        "aegis_openclaw_exclusive_paper_scope.lock", timeout_s=0)
+
 def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProcess:
+    if args[:1] == ["browser"]:
+        with _paper_scope_lock():
+            return _run_unleased(args, timeout=timeout)
+    return _run_unleased(args, timeout=timeout)
+
+def _run_unleased(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProcess:
+    args = [str(a) for a in args]
+    if "--message-file" in args:
+        at = args.index("--message-file") + 1
+        if at < len(args) and not Path(args[at]).is_absolute():
+            args[at] = str(Path(args[at]).resolve())
     # UTF-8, not the console code page: on Windows `text=True` alone decodes
     # with cp1252, and a page's curly quote (UTF-8 E2 80 9D -> byte 0x9D, which
     # cp1252 does not map) killed the reader thread and returned stdout=None --
@@ -784,9 +839,13 @@ def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProc
         cmdline = [*cli["prefix"], *[str(a) for a in args]]
     t0 = time.monotonic()
     try:
+        cli_env = _broker_free_cli_environment()
+        cli_cwd = _broker_free_cli_cwd(cli_env)
+        # Message files are source-produced paths; preserve relative caller
+        # semantics while moving CLI off ROOT's broker-containing .env.
         r = _QS.run(cmdline, capture_output=True, text=True,
                     encoding="utf-8", errors="replace",
-                    timeout=timeout, shell=False)
+                    timeout=timeout, shell=False, env=cli_env, cwd=cli_cwd)
     except subprocess.TimeoutExpired:
         # A gateway timeout says nothing trustworthy about ANY profile.
         invalidate_profile_cache()

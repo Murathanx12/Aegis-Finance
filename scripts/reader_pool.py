@@ -1845,8 +1845,10 @@ def money_frame_host(frame_url: str) -> str | None:
 def _cdp_targets() -> list[dict]:
     """Every target (pages AND out-of-process frames) of the dedicated Chrome's
     loopback DevTools endpoint (read-only listing)."""
-    from backend.services import muratclaw_instance as MI
-    return [t for t in MI._http_json(f"{MI.cdp_base()}/json/list") or [] if isinstance(t, dict)]
+    from backend.services import openclaw_client as scope_client
+    with scope_client._paper_scope_lock():
+        from backend.services import muratclaw_instance as MI
+        return [t for t in MI._http_json(f"{MI.cdp_base()}/json/list") or [] if isinstance(t, dict)]
 
 
 def _close_money_target(target_id: str) -> bool:

@@ -521,11 +521,13 @@ def _page_responsive(target: dict, timeout: float) -> bool:
 def _close_target(target_id: str) -> bool:
     """`Target.closeTarget` on the dedicated Chrome's BROWSER websocket (the
     browser process closes the tab even when its renderer is hung)."""
-    from backend.services import muratclaw_instance as MI
-    ver = MI._http_json(f"{MI.cdp_base()}/json/version")
-    r = _cdp_call(str(ver.get("webSocketDebuggerUrl") or ""), "Target.closeTarget",
-                  {"targetId": str(target_id)}, timeout=10.0)
-    return bool((r.get("result") or {}).get("success", "error" not in r))
+    from backend.services import openclaw_client as scope_client
+    with scope_client._paper_scope_lock():
+        from backend.services import muratclaw_instance as MI
+        ver = MI._http_json(f"{MI.cdp_base()}/json/version")
+        r = _cdp_call(str(ver.get("webSocketDebuggerUrl") or ""), "Target.closeTarget",
+                      {"targetId": str(target_id)}, timeout=10.0)
+        return bool((r.get("result") or {}).get("success", "error" not in r))
 
 
 def _prove_dedicated() -> dict:
