@@ -676,8 +676,59 @@ def test_the_npm_shim_resolves_to_node_plus_its_entry_script(fresh_route, tmp_pa
     fresh_route.setenv("OPENCLAW_BIN", str(shim))
     cli = OC._resolve_cli()
     assert cli["route"] == "node" and OC.cli_route() == "node"
-    assert cli["prefix"] == [str(tmp_path / "node.exe"),
-                             str(tmp_path / "node_modules" / "openclaw" / "openclaw.mjs")]
+    expected = [str(tmp_path / "node.exe")]
+    if os.name == "nt":
+        expected.append("--stack-size=8192")
+    expected.append(str(tmp_path / "node_modules" / "openclaw" / "openclaw.mjs"))
+    assert cli["prefix"] == expected
+
+
+def test_research_cli_removes_broker_credentials_and_preserves_provider_env():
+    broker_names = ("PC-PAPER_key", "PC-PAPER_secret", "PC_PAPER_KEY", "pc_paper_secret",
+                    "ALPACA_API_KEY", "APCA_API_KEY_ID", "APCA_API_SECRET_KEY",
+                    "AAT_HACK6_KEY_ID", "aat_hack6_secret_key", "PC_PAPER_KEY_ID",
+                    "PC-PAPER_API_SECRET_KEY", "pc_paper_token")
+    source = {name: "broker-fixture" for name in broker_names}
+    source.update(DEEPSEEK_API_KEY="provider-fixture", OPENCLAW_HOME="home-fixture")
+    clean = OC._broker_free_cli_environment(source)
+    assert all(name not in clean for name in broker_names)
+    assert clean["DEEPSEEK_API_KEY"] == "provider-fixture"
+    assert clean["OPENCLAW_HOME"] == "home-fixture"
+    assert clean["AEGIS_IGNORE_DOTENV"] == "1"
+    assert source["PC-PAPER_key"] == "broker-fixture"
+
+
+def test_global_broker_dotenv_refuses_research_cli(tmp_path, monkeypatch):
+    neutral = tmp_path / "neutral"
+    neutral.mkdir()
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(neutral))
+    home = tmp_path / "home"
+    state = home / ".openclaw"
+    state.mkdir(parents=True)
+    (state / ".env").write_text("PC-PAPER_secret=broker-fixture\n", encoding="utf-8")
+    with pytest.raises(OC.OpenClawRefused, match="RESEARCH_CLI_GLOBAL_BROKER_DOTENV"):
+        OC._broker_free_cli_cwd({"OPENCLAW_HOME": str(home)})
+
+
+def test_research_cli_cwd_is_clean_and_message_path_retains_original_resolution(tmp_path, monkeypatch):
+    neutral = tmp_path / "neutral"
+    neutral.mkdir()
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(neutral))
+    monkeypatch.setenv("OPENCLAW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("PC-PAPER_secret", "broker-fixture")
+    monkeypatch.chdir(tmp_path)
+    seen = {}
+    monkeypatch.setattr(OC, "_resolve_cli", lambda: {
+        "prefix": ["fixed-cli"], "route": "exec", "bin": "fixed-cli"})
+    def fake_run(cmd, **kwargs):
+        seen.update(cmd=cmd, kwargs=kwargs)
+        return subprocess.CompletedProcess(cmd, 0, "ok", "")
+    monkeypatch.setattr(OC._QS, "run", fake_run)
+    OC._run(["agent", "--message-file", "facts.json"])
+    assert seen["cmd"][-1] == str(tmp_path / "facts.json")
+    assert "PC-PAPER_secret" not in seen["kwargs"]["env"]
+    assert Path(seen["kwargs"]["cwd"]) != tmp_path
+    assert not (Path(seen["kwargs"]["cwd"]) / ".env").exists()
 
 
 def test_an_unresolvable_shim_falls_back_to_cmd_and_says_so(fresh_route, tmp_path):
