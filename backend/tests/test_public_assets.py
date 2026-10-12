@@ -269,3 +269,130 @@ def test_every_asset_the_readme_shows_exists():
                  "docs/assets/architecture_pipeline.svg", "docs/assets/gauntlet.svg"):
         assert must in shown
     assert [p for p in shown if not (REPO / p).is_file()] == []
+
+
+@pytest.mark.parametrize("roi,spy", [(10.60, 2.12), (10.60, 18.20), (123.45, 125.0)])
+def test_return_bars_share_data_domain_and_reserve_label_bounds(monkeypatch, roi, spy):
+    import copy
+    d = copy.deepcopy(RPA.results_data())
+    d["featured"][0].update(roi=roi, spy=spy)
+    monkeypatch.setattr(RPA, "results_data", lambda: d)
+    domain = max(1.0, *(f[k] for f in d["featured"] for k in ("roi", "spy")))
+    root = ET.fromstring(RPA.render_results())
+    tracks = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") == "track"]
+    bars = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") in {"bar-acct", "bar-spy"}]
+    labels = [el for el in root.iter(f"{SVG_NS}text") if el.get("class") in {"val", "valspy"}]
+    assert len(bars) == len(labels) == len(tracks) == 2 * len(d["featured"])
+    values = [f[k] for f in d["featured"] for k in ("roi", "spy")]
+    label_reserve = max(len("".join(el.itertext())) for el in labels) * 8
+    for track, bar, label, value in zip(tracks, bars, labels, values):
+        start, width = float(track.get("x")), float(track.get("width"))
+        assert 0 < float(bar.get("width")) <= width
+        assert float(bar.get("width")) == pytest.approx(value / domain * width, abs=.001)
+        assert start + width + 12 + label_reserve <= float(label.get("x")) <= 640
+        assert label.get("text-anchor") == "end"
+        animation = next(a for a in bar.iter(f"{SVG_NS}animate") if a.get("attributeName") == "width")
+        assert float(animation.get("from")) == 0
+        assert float(animation.get("to")) == float(bar.get("width")) <= width
+    html = RPA.render_front_html()
+    widths = [float(x) for x in re.findall(r'style="--w:([0-9.]+)%;', html)]
+    expected = [round(value / domain * 100, 3) for value in values]
+    assert widths == expected and all(0 < x <= 100 for x in widths)
+    assert 'grid-template-columns:minmax(0,1fr)' in html
+    assert 'width:var(--w)' in html and 'width:calc(var(--w) * .6)' not in html
+    assert html.count('class="fp-track"') == len(values)
+
+
+@pytest.mark.parametrize("value", [0, -12.5, None, float("nan"), float("inf"), -float("inf"), "missing"])
+@pytest.mark.parametrize("key", ["roi", "spy"])
+def test_return_bars_show_zero_losses_and_unavailable_without_inventing_gains(monkeypatch, value, key):
+    import copy
+    d = copy.deepcopy(RPA.results_data())
+    d["featured"][0][key] = value
+    monkeypatch.setattr(RPA, "results_data", lambda: d)
+    low, high = RPA._return_bar_bounds(d["featured"])
+    root = ET.fromstring(RPA.render_results())
+    tracks = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") == "track"]
+    bars = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") in {"bar-acct", "bar-spy"}]
+    labels = [el for el in root.iter(f"{SVG_NS}text") if el.get("class") in {"val", "valspy"}]
+    values = [f.get(k) for f in d["featured"] for k in ("roi", "spy")]
+    for track, bar, label, observed in zip(tracks, bars, labels, values):
+        width, origin = float(track.get("width")), float(track.get("x"))
+        zero = origin - low / (high - low) * width
+        start, length = float(bar.get("x")), float(bar.get("width"))
+        finite = RPA._finite_return(observed)
+        assert origin - .001 <= start <= start + length <= origin + width + .001
+        assert length == pytest.approx(0 if finite is None else abs(finite) / (high - low) * width, abs=.001)
+        assert RPA._return_label(observed) in "".join(label.itertext())
+        if finite is None or finite == 0:
+            assert length == 0 and start == pytest.approx(zero, abs=.001)
+        elif finite < 0:
+            assert start < zero and start + length == pytest.approx(zero, abs=.002)
+            assert bar.get("style") == "fill:#fff"
+        else:
+            assert start == pytest.approx(zero, abs=.001) and length > 0
+        animations = {a.get("attributeName"): a for a in bar.iter(f"{SVG_NS}animate")}
+        assert float(animations["x"].get("from")) == pytest.approx(zero, abs=.001)
+        assert float(animations["x"].get("to")) == start
+        assert float(animations["width"].get("from")) == 0
+        assert float(animations["width"].get("to")) == length
+        assert "Shared return scale" in track.get("aria-label")
+    html = RPA.render_front_html()
+    geometries = [(float(w), float(s)) for w, s in re.findall(r'--w:([0-9.]+)%;--start:([0-9.]+)%', html)]
+    for (length, start), observed in zip(geometries, values):
+        expected_start, expected_length = RPA._return_bar_geometry(observed, low, high, 100)
+        assert start == pytest.approx(expected_start, abs=.001)
+        assert length == pytest.approx(expected_length, abs=.001)
+        assert 0 <= start <= start + length <= 100.001
+    assert 'left:var(--zero)' in html and 'left:var(--start)' in html
+    assert 'prefers-reduced-motion' in html
+    assert "nan%" not in html.lower() and "inf%" not in html.lower()
+
+
+def test_missing_return_keys_and_entirely_unavailable_bar_domain(monkeypatch):
+    import copy
+    d = copy.deepcopy(RPA.results_data())
+    for f in d["featured"]:
+        f.pop("roi")
+        f.pop("spy")
+    monkeypatch.setattr(RPA, "results_data", lambda: d)
+    assert RPA._return_bar_bounds(d["featured"]) == (0.0, 1.0)
+    svg, html = RPA.render_results(), RPA.render_front_html()
+    assert _text_content(svg).count("unavailable") == 2 * len(d["featured"])
+    assert html.count("<b>unavailable</b>") == len(d["featured"])
+    assert 'width="0.000" height="8" class="bar-acct"' in svg
+
+
+@pytest.mark.parametrize("roi,spy,account_fraction,benchmark_fraction", [
+    (-1e308, 1e308, .5, .5), (1e20, 1, 1, 1e-20)])
+def test_extreme_finite_returns_keep_labels_bounded_and_geometry_finite(
+        monkeypatch, roi, spy, account_fraction, benchmark_fraction):
+    import copy
+    import math
+    d = copy.deepcopy(RPA.results_data())
+    d["featured"][0].update(roi=roi, spy=spy)
+    monkeypatch.setattr(RPA, "results_data", lambda: d)
+    root = ET.fromstring(RPA.render_results())
+    tracks = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") == "track"]
+    bars = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") in {"bar-acct", "bar-spy"}]
+    labels = [el for el in root.iter(f"{SVG_NS}text") if el.get("class") in {"val", "valspy"}]
+    for track, bar, label in zip(tracks, bars, labels):
+        origin, width = float(track.get("x")), float(track.get("width"))
+        start, length = float(bar.get("x")), float(bar.get("width"))
+        assert width > 0 and all(math.isfinite(v) for v in (origin, width, start, length))
+        assert origin - .001 <= start <= start + length <= origin + width + .001
+        text = "".join(label.itertext())
+        assert len(text) <= 15
+        assert origin + width + 12 + len(text) * 8 <= float(label.get("x")) <= 640
+        for animation in bar.iter(f"{SVG_NS}animate"):
+            assert all(math.isfinite(float(animation.get(attr))) for attr in ("from", "to"))
+    assert float(bars[0].get("width")) == pytest.approx(float(tracks[0].get("width")) * account_fraction, abs=.001)
+    assert float(bars[1].get("width")) == pytest.approx(float(tracks[1].get("width")) * benchmark_fraction, abs=.001)
+    assert RPA._return_label(roi) == ("−1.00e+308%" if roi < 0 else "+1.00e+20%")
+    html = RPA.render_front_html()
+    geometries = [(float(w), float(s)) for w, s in re.findall(r'--w:([0-9.]+)%;--start:([0-9.]+)%', html)]
+    assert len(geometries) == 2 * len(d["featured"])
+    assert all(math.isfinite(w) and math.isfinite(s) and 0 <= s <= s + w <= 100.001 for w, s in geometries)
+    assert geometries[0][0] == pytest.approx(100 * account_fraction, abs=.001)
+    assert geometries[1][0] == pytest.approx(100 * benchmark_fraction, abs=.001)
+    assert 'nan%' not in html.lower() and 'inf%' not in html.lower()

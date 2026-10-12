@@ -169,9 +169,30 @@ def _t(s: str) -> str:
     return escape(s)
 
 
-def _num(v: float) -> str:
+def _finite_return(v: object) -> float | None:
+    if v is None:
+        return None
+    try:
+        value = float(v)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return value if math.isfinite(value) else None
+
+
+def _num(v: float | None) -> str:
     """Signed, two decimals, with a true minus sign."""
-    return f"{v:+.2f}".replace("-", "−")
+    value = _finite_return(v)
+    return "unavailable" if value is None else f"{value:+.2f}".replace("-", "−")
+
+
+def _return_label(v: object) -> str:
+    value = _finite_return(v)
+    if value is None:
+        return "unavailable"
+    # Bound the label gutter even for valid but extreme finite observations.
+    if abs(value) >= 1e6:
+        return f"{value:+.2e}%".replace("-", "−", 1) if value < 0 else f"{value:+.2e}%"
+    return _num(value) + "%"
 
 
 def _head(w: int, h: int, title: str, desc: str, css: str, defs: str = "") -> list[str]:
@@ -425,7 +446,7 @@ def render_hero() -> str:
 
 # ================================================================== the live results
 #: The receipt every number on the results panel comes from. Refresh = bump, re-render, commit.
-RESULTS_RUN_ID = "2026-10-09T235325Z"
+RESULTS_RUN_ID = "2026-10-11T235329Z"
 _RESULTS_OVERRIDE: dict | None = None
 
 
@@ -646,6 +667,10 @@ def results_data() -> dict:
             "label": str((b.get("evidence") or {}).get("label") or "NOT LABELLED"),
             "tickers": sorted(b.get("tickers") or []),
         })
+        if fam == "alpaca_fleet":
+            observations = b.get("n_series_periods")
+            if isinstance(observations, int) and not isinstance(observations, bool):
+                featured[-1]["label"] += f" · {observations}/{featured[-1]['sessions']} daily marks"
     # the same names held twice is one bet, not two: say so on the second one
     for i, f in enumerate(featured):
         f["shares_names_with"] = next((g["name"] for g in featured[:i]
@@ -786,10 +811,33 @@ def _chart(d: dict, cx0: float, top: float, cw: float) -> list[str]:
     return o
 
 
+def _return_bar_bounds(featured: list[dict]) -> tuple[float, float]:
+    values = [v for f in featured for key in ("roi", "spy")
+              if (v := _finite_return(f.get(key))) is not None]
+    return min([0.0, *values]), max([1.0, *values])
+
+
+def _return_bar_geometry(value: object, low: float, high: float, width: float) -> tuple[float, float]:
+    """Start and width relative to the track; missing observations draw nothing."""
+    # Divide before subtracting: high-low can overflow for opposite finite extremes.
+    normalizer = max(abs(low), abs(high))
+    scaled_low, scaled_high = low / normalizer, high / normalizer
+    span = scaled_high - scaled_low
+    zero = max(0.0, -scaled_low / span * width)
+    v = _finite_return(value)
+    end = zero if v is None else (v / normalizer - scaled_low) / span * width
+    return min(zero, end), abs(end - zero)
+
+
+def _return_label_chars(featured: list[dict]) -> int:
+    return max(
+        len(label) for f in featured for label in (_return_label(f.get("roi")), "SPY " + _return_label(f.get("spy"))))
+
+
 def render_results() -> str:
     d = results_data()
-    desc = (f"Best paper accounts as of {d['as_of']} (receipt {d['receipt']}): "
-            + "; ".join(f"{f['name']} {_num(f['roi'])}% vs SPY {_num(f['spy'])}% over its own window, "
+    desc = (f"Best paper accounts, snapshot observed {d['as_of']} (receipt {d['receipt']}): "
+            + "; ".join(f"{f['name']} {_return_label(f.get('roi'))} vs SPY {_return_label(f.get('spy'))} over its own window, "
                         f"{_num(f['excess'])} pp, {f['label']}" for f in d["featured"])
             + f". {selection_line(d)}")
     o = _head(RES_W, RES_H, "Aegis: best paper accounts, live", desc, _results_css())
@@ -797,10 +845,16 @@ def render_results() -> str:
     x, w = 40, 1120
     o.append(f'<circle cx="{x + 5}" cy="40" r="4" class="live"/>')
     o.append(f'<text x="{x + 18}" y="44" class="sec">BEST PAPER ACCOUNTS · LIVE</text>')
-    o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">AS OF {d["as_of"]} CLOSE · RECEIPT '
+    o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">SNAPSHOT {d["as_of"]} · RECEIPT '
              f'{Path(d["receipt"]).stem}</text>')
     o.append(f'<line x1="{x}" y1="58" x2="{x + w}" y2="58" class="rule"/>')
-    top, lw, scale, bx = 88, 600, 200 / 8.0, x + 400
+    top, lw, bx = 88, 600, x + 400
+    chart_x = x + lw + 50
+    label_right = chart_x - 50
+    # Reserve the widest mono label, including fallback fonts, beside the track.
+    track_width = label_right - bx - 12 - _return_label_chars(d["featured"]) * 8
+    low, high = _return_bar_bounds(d["featured"])
+    zero, _ = _return_bar_geometry(0, low, high, track_width)
     for i, f in enumerate(d["featured"]):
         ry = top + i * 108
         o.append(f'<text x="{x}" y="{ry + 30}" class="excess">{_num(f["excess"])}</text>')
@@ -811,16 +865,23 @@ def render_results() -> str:
         o.append(f'<text x="{x + 120}" y="{ry + 72}" class="badge">{_t(f["label"])}</text>')
         if _shared(f):
             o.append(f'<text x="{x + 120}" y="{ry + 90}" class="meta">{_t(_shared(f))}</text>')
-        wa, ws = max(2, round(f["roi"] * scale)), max(2, round(f["spy"] * scale))
-        for yy, ww, cls in ((ry + 8, wa, "bar-acct"), (ry + 34, ws, "bar-spy")):
-            o.append(f'<rect x="{bx}" y="{yy}" width="{round(8 * scale)}" height="8" class="track" rx="4"/>')
-            o.append(f'<rect x="{bx}" y="{yy}" width="{ww}" height="8" class="{cls}" rx="4">'
-                     f'<animate attributeName="width" from="0" to="{ww}" dur="1.4s" '
+        for yy, value, cls in ((ry + 8, f.get("roi"), "bar-acct"), (ry + 34, f.get("spy"), "bar-spy")):
+            start, ww = _return_bar_geometry(value, low, high, track_width)
+            o.append(f'<rect x="{bx}" y="{yy}" width="{track_width}" height="8" class="track" rx="4" '
+                     f'aria-label="Shared return scale {_return_label(low)} to {_return_label(high)}; zero baseline"/>')
+            if low < 0:
+                o.append(f'<line x1="{bx + zero:.3f}" x2="{bx + zero:.3f}" y1="{yy - 2}" y2="{yy + 10}" class="zero"/>')
+            loss_style = ' style="fill:#fff"' if (_finite_return(value) or 0) < 0 else ""
+            o.append(f'<rect x="{bx + start:.3f}" y="{yy}" width="{ww:.3f}" height="8" class="{cls}" rx="4"{loss_style}>'
+                     f'<animate attributeName="x" from="{bx + zero:.3f}" to="{bx + start:.3f}" dur="1.4s" '
+                     f'begin="{0.2 + i * 0.25:.2f}s" fill="freeze" calcMode="spline" keyTimes="0;1" '
+                     f'keySplines="0.2 0.8 0.2 1"/>'
+                     f'<animate attributeName="width" from="0" to="{ww:.3f}" dur="1.4s" '
                      f'begin="{0.2 + i * 0.25:.2f}s" fill="freeze" calcMode="spline" keyTimes="0;1" '
                      f'keySplines="0.2 0.8 0.2 1"/></rect>')
-        o.append(f'<text x="{bx + wa + 8}" y="{ry + 16}" class="val">{_num(f["roi"])}%</text>')
-        o.append(f'<text x="{bx + ws + 8}" y="{ry + 42}" class="valspy">SPY {_num(f["spy"])}%</text>')
-    o += _chart(d, x + lw + 50, top, w - lw - 50)
+        o.append(f'<text x="{label_right}" y="{ry + 16}" class="val" text-anchor="end">{_return_label(f.get("roi"))}</text>')
+        o.append(f'<text x="{label_right}" y="{ry + 42}" class="valspy" text-anchor="end">SPY {_return_label(f.get("spy"))}</text>')
+    o += _chart(d, chart_x, top, w - lw - 50)
     l1, l2 = _selection_lines(d)
     o.append(f'<text x="{x}" y="{RES_H - 44}" class="fine">{_t(l1)}</text>')
     o.append(f'<text x="{x}" y="{RES_H - 26}" class="fine">{_t(l2)}</text>')
@@ -1210,17 +1271,23 @@ def render_front_html() -> str:
     d = results_data()
     hero = _inline(render_hero(), "h-")
     cards = []
+    low, high = _return_bar_bounds(d["featured"])
+    zero, _ = _return_bar_geometry(0, low, high, 100)
+    label_chars = _return_label_chars(d["featured"])
     for f in d["featured"]:
-        width_a = min(100.0, max(1.0, f["roi"] / 8.0 * 100))
-        width_s = min(100.0, max(1.0, f["spy"] / 8.0 * 100))
+        start_a, width_a = _return_bar_geometry(f.get("roi"), low, high, 100)
+        start_s, width_s = _return_bar_geometry(f.get("spy"), low, high, 100)
+        track = (f'<i class="fp-track" style="--zero:{zero:.3f}%;--axis:{1 if low < 0 else 0}" '
+                 f'aria-label="Shared return scale {_return_label(low)} to {_return_label(high)}; zero baseline">')
+        color_a = ';background:#fff' if (_finite_return(f.get("roi")) or 0) < 0 else ''
         cards.append(
             f'<article class="fp-card"><div class="fp-ex" data-to="{f["excess"]:.2f}">{_num(f["excess"])}</div>'
             f'<div class="fp-exl">pp vs SPY</div><h3>{_t(f["name"])}</h3>'
             f'<p class="fp-meta">{_t(_meta(f))}<br>{_t(_meta2(f))}'
             + (f'<br>{_t(_shared(f))}' if _shared(f) else "") + '</p>'
-            f'<div class="fp-bars"><div class="fp-bar"><span class="a" style="--w:{width_a:.1f}%"></span>'
-            f'<b>{_num(f["roi"])}%</b></div><div class="fp-bar"><span class="s" style="--w:{width_s:.1f}%">'
-            f'</span><b>SPY {_num(f["spy"])}%</b></div></div><p class="fp-badge">{_t(f["label"])}</p></article>')
+            f'<div class="fp-bars"><div class="fp-bar">{track}<span class="a" style="--w:{width_a:.3f}%;--start:{start_a:.3f}%{color_a}"></span>'
+            f'</i><b>{_return_label(f.get("roi"))}</b></div><div class="fp-bar">{track}<span class="s" style="--w:{width_s:.3f}%;--start:{start_s:.3f}%">'
+            f'</span></i><b>SPY {_return_label(f.get("spy"))}</b></div></div><p class="fp-badge">{_t(f["label"])}</p></article>')
     chart_svg = _inline(render_chart(), "c-")
     css = f"""
 :root{{--bg:#000;--ink:#fff;--ink2:rgba(255,255,255,.7);--ink3:rgba(255,255,255,.45);
@@ -1249,10 +1316,13 @@ border-color:rgba(255,255,255,.75);border-style:solid}}
 .fp-card h3{{font:600 15px {MONO};margin-bottom:4px}}
 .fp-meta{{font-size:13px;color:var(--ink2)}}
 .fp-bars{{margin:14px 0 10px;display:grid;gap:8px}}
-.fp-bar{{display:flex;align-items:center;gap:10px;font:12px {MONO};color:var(--ink2)}}
-.fp-bar span{{height:8px;border-radius:4px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}}
+.fp-bar{{display:grid;grid-template-columns:minmax(0,1fr) {label_chars}ch;align-items:center;gap:10px;font:12px {MONO};color:var(--ink2)}}
+.fp-track{{display:block;position:relative;min-width:0;height:8px;background:rgba(255,255,255,.06)}}
+.fp-track::after{{content:"";position:absolute;left:var(--zero);top:-2px;height:12px;border-left:1px dashed var(--ink3);opacity:var(--axis)}}
+.fp-bar b{{white-space:nowrap;text-align:right}}
+.fp-bar span{{display:block;position:absolute;left:var(--zero);height:8px;border-radius:4px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1),left 1.4s cubic-bezier(.2,.8,.2,1)}}
 .fp-bar span.a{{background:var(--blue)}}.fp-bar span.s{{background:rgba(255,255,255,.55)}}
-.fp-on .fp-bar span{{width:calc(var(--w) * .6)}}
+.fp-on .fp-bar span{{width:var(--w);left:var(--start)}}
 .fp-badge{{font:500 10px {MONO};letter-spacing:1.5px;color:var(--ink3)}}
 .fp-fine{{font-size:12px;color:var(--ink3);margin-top:14px}}
 .fp-chart{{margin-top:22px;max-width:760px}}
@@ -1288,7 +1358,7 @@ border-color:rgba(255,255,255,.75);border-style:solid}}
         f"<section class=\"fp-hero\" aria-label=\"How it works\">\n{hero}</section>\n"
         f"<section aria-label=\"Best paper accounts, live\">\n"
         f"<h2 class=\"fp-k\"><i></i>Best paper accounts · live<span></span>"
-        f"<em>as of {d['as_of']} close · receipt roi_{d['run_id']}</em></h2>\n"
+        f"<em>snapshot observed {d['as_of']} · receipt roi_{d['run_id']}</em></h2>\n"
         f"<div class=\"fp-grid\">{''.join(cards)}</div>\n"
         f"<p class=\"fp-fine\">{_t(selection_line(d))}</p>\n"
         f"<div class=\"fp-chart\">{chart_svg}</div>\n</section>\n"
@@ -1403,7 +1473,8 @@ def readme_alt_text(d: dict) -> str:
     the alt text can never go stale independently of the picture."""
     entries = "; ".join(_readme_entry(f, d) for f in d["featured"])
     labels = ", ".join(f["label"] for f in d["featured"])
-    return f"Best paper accounts, live, as of the {d['as_of']} close: {entries}. Labels {labels}."
+    marks = f" Leading account last marked {max(d['chart']['dates'])}." if d.get("chart") and d['chart']['dates'] else ""
+    return f"Best paper accounts, snapshot observed {d['as_of']}: {entries}. Labels {labels}.{marks}"
 
 
 def readme_sub_caption(d: dict) -> str:

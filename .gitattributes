@@ -17,3 +17,8 @@ backend/tests/fixtures/**/*.json text eol=lf
 backend/tests/fixtures/**/*.jsonl text eol=lf
 backend/tests/fixtures/**/*.csv text eol=lf
 *.sh text eol=lf
+
+# Beta's audited legacy kernels pin these exact source bytes. Preserve the
+# committed LF bytes on Windows too; never relax the runtime source hashes.
+backend/services/expected_return.py text eol=lf
+backend/services/forecast_reputation.py text eol=lf

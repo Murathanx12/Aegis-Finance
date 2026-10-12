@@ -630,7 +630,7 @@ def cache_key(item: Item) -> str:
 
 
 # Deliberately opt-in: these bytes do not alter the frozen v0 extractor/contract.
-CURRENT_EXTRACT_VERSION = "source_current_v1"
+CURRENT_EXTRACT_VERSION = "source_current_v6_summary_country_priority"
 CURRENT_EXTRACT_SYSTEM = EXTRACT_SYSTEM + (
     "\nSTRICT SOURCE CONTRACT: forward_claims must be explicit predictions, not policy "
     "targets, goals, intentions, actuals or your interpretation. Do not infer a horizon "
@@ -641,6 +641,45 @@ CURRENT_EXTRACT_SYSTEM = EXTRACT_SYSTEM + (
     "direction and explicitly stated horizon. Never use unrelated exact spans as "
     "support. Policy targets belong in the factual summary with their modality, "
     "units and distinct comparison baselines preserved. No operative event dates."
+    "\nFIELD NAMESPACES: event_type is exactly ONE label from EVENT_TYPES above; "
+    "macro is a LIST containing only MACRO labels above. These are separate "
+    "fields with separate enums. A macro subject must never be copied into "
+    "event_type. In particular fiscal, rates, inflation, growth and tariffs are "
+    "macro labels, not valid event_type labels. Fiscal spending or budget policy "
+    "may have macro: [fiscal], but its event_type must describe the reported act "
+    "using an allowed EVENT_TYPES label; use other when no allowed event label "
+    "fits. Do not invent a fiscal event_type or automatically convert every "
+    "fiscal policy item into macro_data. Conversely central_bank is an event "
+    "label, not a macro label; rates may be a macro subject when supported by "
+    "the source. Before answering, check event_type membership and each macro "
+    "member independently. Namespace validation never licenses a forward claim; "
+    "retain the strict speaker, prediction, horizon and witness rules above."
+    "\nCURRENT CLAIM SCHEMA OVERRIDES the earlier forward_claims template. "
+    "forward_claims is an array of objects. Every object must contain all seven "
+    "fields: subject, direction, horizon, who, speaker, modality, witness. "
+    "subject, speaker and witness are nonempty strings; direction is exactly "
+    "up, down or none; horizon is exactly days, weeks or months; who is exactly "
+    "author, analyst, management or market; modality is exactly prediction. "
+    "who is the role enum; speaker is a separate actual named source, not the "
+    "role enum. The exact named speaker and subject must occur in the same "
+    "contiguous witness passage. If any required field cannot be supported "
+    "faithfully, omit the whole claim and return forward_claims: [] when none "
+    "remain. Never supply a speaker, direction or horizon by inference. "
+    "Calendar years, calendar dates, year-end and annual run-rate targets "
+    "cannot be converted into days, weeks or months. A claim stated only for "
+    "a future calendar year is unrepresentable here and must be omitted. "
+    "Business savings, revenue, operating results or cash-flow targets do not "
+    "state a company's share-price direction. Never convert a planned positive "
+    "business cash-flow impact into ticker direction up. Explicit supported "
+    "sector or macro predictions remain allowed under the same full schema; "
+    "do not impose a stock-only rule. Policy and company goals or intentions "
+    "remain attributed summary context, not predictions. Preserve aims, plans, "
+    "targets or expects in both topic and summary when the source describes an intended "
+    "action or benefit; do not paraphrase an intention as an accomplished act."
+    '\nCURRENT INSTRUMENT AND WHOLE-ROW CONTRACT: tickers contains only verified US-listed instruments. A literal symbol mention, issuer name, nationality, currency or foreign exchange listing is not evidence of US listing. Require an explicit US-listing witness in this source or an approved point-in-time instrument context actually supplied with it; otherwise return tickers: []. Do not infer a US ADR, OTC symbol, alias or substitute listing. Keep the company name and source-supported country in the factual summary even when tickers is empty. countries contains only source-supported ISO-3166 alpha-2 geographies; do not infer a country from an issuer or sector. sectors and macro must be source-supported members of their own enums; the reported event act is distinct from the industry or macro subject. sentiment, fear_greed and mgmt_confidence must be numbers in -1..1; uncertainty must be a number in 0..1. These scalars are bounded model interpretations of the coverage, not observed measurements, calibrated probabilities or investment authority; FACT provenance never certifies them as empirical facts. In topic and summary preserve attribution, plans/aims/targets/expectations, quantities and currencies, gross versus net amounts, distinct cost/savings comparison baselines and calendar horizons. Concise omissions must not imply the opposite or falsely make one proposal the sole cause of a benefit. Do not add source, publication, first-seen or extraction timestamps to your answer; the capture supplies their exact provenance separately. Check every field before returning one complete JSON object, without commentary.'
+    '\nCURRENT COMPLETE-SUMMARY AND EVENT-ACT CONTRACT: summary must be one or more complete sentences, at most 25 words AND at most 200 characters including spaces. This is a safety margin within the unchanged acceptance limits of 45 words and 320 characters. Retain at most two whole central facts. Omit optional counts, ratios and subsidiary financial details entirely when they compete with clear complete assertions. Count both limits before answering. Select fewer whole facts to fit; omit an entire less-important assertion rather than truncating a word, sentence, object, unit or critical calendar qualification. Preserve the modality and calendar qualification of every assertion you retain. A future full-run-rate cash-flow benefit must retain its future timing if mentioned; otherwise omit the entire benefit assertion. Never imply that planned charges or savings have already happened. event_type management_change requires an actual leadership or management appointment, exit or replacement in the source, not merely a decision made by management. Planned workforce layoffs are a labor event when labor is an allowed EVENT_TYPES label; otherwise choose an allowed label describing the act or other when none fits. Organizational localization alone does not establish an executive change. These are generic rules, not a required answer for any particular company.'
+    '\nSUMMARY PRIORITY CONTRACT: In the factual summary explicitly state the source-supported country or nationality, issuer/company name, and central reported or planned act, preserving its modality. A structured countries field alone does not satisfy the required country in the summary. Give these three elements priority over optional counts, ratios, savings, charges and subsidiary details. Select fewer other whole facts so the complete country/company/act statement fits the summary safety margin; never drop a required element to preserve optional detail. Use only source-supported geography, never infer it. No article-specific wording or answer is prescribed.'
+    '\nCURRENT forward_claims item JSON schema, not an example answer: {"type":"object","required":["subject","direction","horizon","who","speaker","modality","witness"],"properties":{"subject":{"type":"string","minLength":1},"direction":{"enum":["up","down","none"]},"horizon":{"enum":["days","weeks","months"]},"who":{"enum":["author","analyst","management","market"]},"speaker":{"type":"string","minLength":1},"modality":{"const":"prediction"},"witness":{"type":"string","minLength":1}}}'
 )
 
 
