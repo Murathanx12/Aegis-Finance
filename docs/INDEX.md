@@ -23,6 +23,8 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 
 ## TIER 0 — CANON (changes a few times a year; read every session)
 
+The [October 12 Monday continuation](BETA_MONDAY_CONTINUATION_2026-10-12.md) records current portfolio delivery, bounded preparation/news results and remaining beta gates.
+
 Current sustained beta pickup (2026-10-10 → Monday October 12):
 The [final Astra review](BETA_ASTRA_OPERATIONAL_REVIEW_2026-10-12.md) rates research 7.0/10 and autonomous readiness 5.5/10 without certification.
 The [October 12 operational review](BETA_OPERATIONAL_REVIEW_2026-10-12.md)

@@ -425,7 +425,7 @@ def render_hero() -> str:
 
 # ================================================================== the live results
 #: The receipt every number on the results panel comes from. Refresh = bump, re-render, commit.
-RESULTS_RUN_ID = "2026-10-09T235325Z"
+RESULTS_RUN_ID = "2026-10-11T235329Z"
 _RESULTS_OVERRIDE: dict | None = None
 
 
@@ -646,6 +646,10 @@ def results_data() -> dict:
             "label": str((b.get("evidence") or {}).get("label") or "NOT LABELLED"),
             "tickers": sorted(b.get("tickers") or []),
         })
+        if fam == "alpaca_fleet":
+            observations = b.get("n_series_periods")
+            if isinstance(observations, int) and not isinstance(observations, bool):
+                featured[-1]["label"] += f" · {observations}/{featured[-1]['sessions']} daily marks"
     # the same names held twice is one bet, not two: say so on the second one
     for i, f in enumerate(featured):
         f["shares_names_with"] = next((g["name"] for g in featured[:i]
@@ -788,7 +792,7 @@ def _chart(d: dict, cx0: float, top: float, cw: float) -> list[str]:
 
 def render_results() -> str:
     d = results_data()
-    desc = (f"Best paper accounts as of {d['as_of']} (receipt {d['receipt']}): "
+    desc = (f"Best paper accounts, snapshot observed {d['as_of']} (receipt {d['receipt']}): "
             + "; ".join(f"{f['name']} {_num(f['roi'])}% vs SPY {_num(f['spy'])}% over its own window, "
                         f"{_num(f['excess'])} pp, {f['label']}" for f in d["featured"])
             + f". {selection_line(d)}")
@@ -797,7 +801,7 @@ def render_results() -> str:
     x, w = 40, 1120
     o.append(f'<circle cx="{x + 5}" cy="40" r="4" class="live"/>')
     o.append(f'<text x="{x + 18}" y="44" class="sec">BEST PAPER ACCOUNTS · LIVE</text>')
-    o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">AS OF {d["as_of"]} CLOSE · RECEIPT '
+    o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">SNAPSHOT {d["as_of"]} · RECEIPT '
              f'{Path(d["receipt"]).stem}</text>')
     o.append(f'<line x1="{x}" y1="58" x2="{x + w}" y2="58" class="rule"/>')
     top, lw, scale, bx = 88, 600, 200 / 8.0, x + 400
@@ -1288,7 +1292,7 @@ border-color:rgba(255,255,255,.75);border-style:solid}}
         f"<section class=\"fp-hero\" aria-label=\"How it works\">\n{hero}</section>\n"
         f"<section aria-label=\"Best paper accounts, live\">\n"
         f"<h2 class=\"fp-k\"><i></i>Best paper accounts · live<span></span>"
-        f"<em>as of {d['as_of']} close · receipt roi_{d['run_id']}</em></h2>\n"
+        f"<em>snapshot observed {d['as_of']} · receipt roi_{d['run_id']}</em></h2>\n"
         f"<div class=\"fp-grid\">{''.join(cards)}</div>\n"
         f"<p class=\"fp-fine\">{_t(selection_line(d))}</p>\n"
         f"<div class=\"fp-chart\">{chart_svg}</div>\n</section>\n"
@@ -1403,7 +1407,8 @@ def readme_alt_text(d: dict) -> str:
     the alt text can never go stale independently of the picture."""
     entries = "; ".join(_readme_entry(f, d) for f in d["featured"])
     labels = ", ".join(f["label"] for f in d["featured"])
-    return f"Best paper accounts, live, as of the {d['as_of']} close: {entries}. Labels {labels}."
+    marks = f" Leading account last marked {max(d['chart']['dates'])}." if d.get("chart") and d['chart']['dates'] else ""
+    return f"Best paper accounts, snapshot observed {d['as_of']}: {entries}. Labels {labels}.{marks}"
 
 
 def readme_sub_caption(d: dict) -> str:

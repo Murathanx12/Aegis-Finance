@@ -1,5 +1,25 @@
 # FINDINGS — Adversarial self-review of V3 Chunks 1–6
 
+
+## 2026-10-12 - current extraction prompt and public receipt dates
+
+A bounded current-source news capture exposed a prompt/contract mismatch: the
+legacy claim example omitted the current required speaker field, and the model
+turned a future business cash-flow benefit into an unsupported stock-direction
+claim. The original response was refused and preserved. The opt-in current
+prompt now states its complete schema, keeps event and macro namespaces separate,
+and preserves intended-action modality. A distinct extraction identity prevents
+reuse of the older response. Frozen v0 extraction and validation remain unchanged.
+Actual interpretation and consumer qualification are reported separately in the
+[Monday continuation](BETA_MONDAY_CONTINUATION_2026-10-12.md).
+
+The current schema6 development case now passes whole-row semantic review and native offline admission; five prior refused captures remain preserved. This single revised case is not held-out quality or portfolio benefit. Bounded canonical batching also completed current preparation and the inactive four-variant consumer without changing the original fit, math or resource caps. A separate Windows checkout failure was repaired by preserving the exact two pinned legacy files as LF, not by relaxing source hashes.
+
+The public graphic now uses the October 11 receipt, labels its snapshot date
+separately from October 9 market marks, and exposes broker daily-mark coverage.
+No strategy, NAV, execution policy, account key or activation flag changed.
+
+
 ## 2026-10-10 — bounded news trace and original-record replay
 
 The isolated PRODUCT_EXPERIMENT examination is recorded in

@@ -601,3 +601,8 @@ grades at 1/5/21 sessions; prints regret by type and marginal contribution with 
 labels every book's standing honestly on one web page; and has no subsystem that is alive but not
 progressing. It does **not** require beating SPY; it requires that when something does, we can
 prove which input did it and when we first knew.
+
+
+## Monday continuation - 12 October 2026
+
+The current implementation order and uncompleted acceptance gates are recorded in [Monday continuation](BETA_MONDAY_CONTINUATION_2026-10-12.md). Current runtime portfolio exports, the H21-fit reuse and scoped preparation repair, semantic-news repair, eligible grading disposition, Bloomberg preflight and six reserved paper mandates advance this roadmap. The full-session beta acceptance in section 9 remains unmet. Original strategies and their records remain unchanged. The new mandate drafts are inactive and do not waive the existing seed/activation gates.
