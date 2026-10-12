@@ -529,11 +529,12 @@ not current evidence. Every completion needs its named consumer and dated receip
 | R48 | Telegram conversation/buttons | W1 | PARTIAL - offline query/auth/TTL fixtures pass; no actual tap-delivery proof or verified Telegram state-path consumer acceptance. |
 | R49 | LEAN/Qlib/TradingAgents/OpenBB/MCP reuse | W6 | DEFERRED_WITH_REASON — targeted pattern or finalist check only; no framework migration. |
 | R50 | Research/patents/funding pack | W7 | DEFERRED_WITH_REASON — long-cycle research follows critical integration; preserve auditable sources. |
-| R51 | Token/worker efficiency | W1 | PARTIAL — bounded smoke task passed; actual model/effort metadata unavailable, so cheaper routing and savings remain unverified. |
+| R51 | Token/worker efficiency | W1 | PARTIAL — October 12 routing metadata verifies Sol/medium builders and Astra/high independent review; measured token savings remain unverified. At most two workers and one heavy compute job; preserve integration/review/handoff allowance. |
 | R52 | Finish roadmap and preserve intent | W7 | IN_PROGRESS - section 5c is the active acceptance map; the initial full run's guard-enrollment failure is closed by integrated b86cf1e8, but exact-commit CI and named consumer receipts remain pending. |
 
-A bounded cheaper-worker smoke task passed, but actual model/effort metadata was unavailable;
-the requested route and any savings are therefore unverified. The nonsecret capability receipt,
+In the earlier bounded cheaper-worker smoke check, actual model/effort metadata was unavailable;
+that check's requested route and savings were unverified. The October 12 continuation verifies
+routing metadata, while measured savings remain unverified. The nonsecret capability receipt,
 with local environment details, is retained outside the public repository. Two full sim cycles
 are verified; the stale mandate and any profitability claim remain open. Scheduled, browser-owned
 and external checks are not complete until their respective consumers or receipts verify them.
@@ -543,7 +544,7 @@ and external checks are not complete until their respective consumers or receipt
 | # | decision | default applied tonight | what Murat does |
 |---|---|---|---|
 | D1 | **Bloomberg registration**: did it happen before 10-04 23:59 NY? | contest LIVE desk stays scheduled from Oct 9 but will REFUSE without `contest/wls/MEMB` export; rehearsal continues | say yes/no; if yes, export `MEMB` from WLS to `contest/wls/` and answer the 17-item checklist (R2 fills what public rules settle) |
-| D2 | **Six fleet roles / Alpaca reset** | nothing reset; hack3 marked retired; proposal: (1) human+AI thematic (hack1), (2) analyst revision flow + snowball (hack2), (3) world/news causal (hack6), (4) quant ensemble = fair-twin library winners (hack4 re-purposed), (5) high-risk innovation lane (new or hack3's slot), (6) SPY control (hack5); PC-PAPER = the combined $1M policy | reset accounts in the broker UI if wanted (history is archived first by the fleet manager's snapshot); regenerate or close hack3 |
+| D2 | **Six reserved $100K paper mandates** | Supersedes the earlier proposed role list: ATLAS V3, Beta V1, RF, net raises, Hack2 v2 replica and human plus AI, all inactive. Preserve legacy accounts and histories; prefer fresh accounts. Complete archives, unique identities, reviewed policies and activation gates are required; a snapshot/activity tail is insufficient. SPY remains a comparison outside flagship stock selection. | Only provider-required authentication/MFA or identity attestation, if the scoped automation reaches it. Do not delete/reset an old account to clear capacity; preparation, archival and mapping remain automation work. |
 | D3 | PC-PAPER mandate $1M + $40k view | APPLIED (C2), per the review | nothing |
 | D4 | nn_lab membership freeze | APPLIED (C5), per the review | nothing |
 | D5 | EVLV / RZLV tight stops (~0.9σ) | unchanged (the manager never loosens) | say "let them run" or "close" |
@@ -605,4 +606,4 @@ prove which input did it and when we first knew.
 
 ## Monday continuation - 12 October 2026
 
-The current implementation order and uncompleted acceptance gates are recorded in [Monday continuation](BETA_MONDAY_CONTINUATION_2026-10-12.md). Current runtime portfolio exports, the H21-fit reuse and scoped preparation repair, semantic-news repair, eligible grading disposition, Bloomberg preflight and six reserved paper mandates advance this roadmap. The full-session beta acceptance in section 9 remains unmet. Original strategies and their records remain unchanged. The new mandate drafts are inactive and do not waive the existing seed/activation gates.
+The current implementation order and uncompleted acceptance gates are recorded in [Monday continuation](BETA_MONDAY_CONTINUATION_2026-10-12.md). PR #33 is merged at main `23b02d3a`, and authenticated main README asset bytes match independent review; exact deployment remains pending at the 14:29 UTC observation. Native manual grading added 75 eligible original arena grades (50 overdue plus 25 due today), retained all prior grades/forecast fields, and added zero on rerun. Production calibration reads now consume all 230 resolved rows; unchanged live registry/NAV histories are verified. Manual grading does not certify its scheduled path. The four campaign coverage blockers remain separate. The completed H21 fit is reused; qualified scheduled consumption, invested policies, prospective news decision effects, complete archives/identities and full-session execution remain open. The October reporting protocol is frozen in the continuation; all six drafts remain inactive. Section 9 acceptance remains unmet. Next, close the native operating path before the night-session observation, as requested; Terminal attendance is a separate dependency.

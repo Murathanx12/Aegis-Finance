@@ -90,6 +90,9 @@ def test_leaders_are_distinct_bets_with_windows_labels_and_mechanisms(voice):
     assert top["evidence_label"] == "OBSERVED(7)"
     assert top["mechanism"].startswith("analyst revision flow")
     assert top["random_twin"] is None and "NOT_COMPUTABLE" in top["twin_line"]
+    assert top["random_twin_relationship_status"] == "RELATIONSHIP_UNKNOWN"
+    assert "relationship UNKNOWN" in top["twin_line"]
+    assert "no random twin seeded" not in top["twin_line"]
     assert top["receipts"][0].endswith(f"roi_{RID}.json") or top["receipts"][0] == f"roi_{RID}.json"
     abst = next(x for x in L5 if "[b109c886]" in x["account"])
     assert abst["mechanism"].startswith("SPY by default")
@@ -98,6 +101,7 @@ def test_leaders_are_distinct_bets_with_windows_labels_and_mechanisms(voice):
 def test_random_twin_gap_is_parent_minus_twin(voice):
     x = next(y for y in voice["leaders"] if y["account"] == "pers_revision_flow_leaders_2026-09-25")
     tw = x["random_twin"]
+    assert x["random_twin_relationship_status"] == "RECORDED_LINK"
     assert tw["kind"] == "random_same_band"
     assert tw["gap_pp"] == pytest.approx(6.705 - 0.608, abs=1e-3)
 
