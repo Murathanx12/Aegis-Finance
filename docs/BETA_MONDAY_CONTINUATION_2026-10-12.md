@@ -65,3 +65,123 @@ The completed preparation and consumer are reviewed private inactive runs, not a
 Six fresh broker accounts have not been created, funded or keyed. Activity-tail completion is narrower than a complete archival proof. Archive the remaining broker-history surfaces before any migration, establish safe account-creation capacity, and verify six distinct identity-to-strategy mappings without overwriting old keys or removing existing protection. Bloomberg remains gated by the authentic Terminal exports and rules/policy/fill requirements. The owner-selected final Astra review and existing final activation action remain outstanding.
 
 Publication validation is recorded separately after exact-commit CI and live verification; this document does not turn publication into beta acceptance.
+
+## Operational update - 12 October 2026, 14:29 UTC
+
+This dated update supersedes earlier release and arena-backlog status above;
+original results receipts and campaign records remain preserved. The six
+reserved experiments are still inactive, with no new inception or return.
+
+PR #33 merged at reviewed head `887a121f` into main
+`23b02d3ac68417d2e804a611eee5fd15c92b7ebc`. Both PR-head CI jobs passed.
+Authenticated GitHub main reads verify the actual README asset and HTML bytes
+equal their independent review. The signed shared scale handles zero, losses,
+missing/nonfinite values, large gains and benchmark-led ranges; 51 focused
+tests and static/animated/font/mobile checks passed. Main CI and exact deployed
+versions remain pending at this observation; production still reports
+`09913243`. Snapshot October 11 and completed market marks October 9 remain
+explicitly dated, rather than continuously live performance.
+
+The separate production arena backlog was repaired through one independently
+reviewed native manual operation, using canonical completed-session prices.
+Both actual Linux timeout/memory probes refused and reaped only their owned
+child, preserving the ledger. Under the native ledger lock, the operation
+verified the original ledger hash, wrote and read back a complete backup,
+preserved all 680 identities and original forecast fields, retained all 155
+prior grades, and added exactly 75 grades: 50 overdue and 25 due today. The
+second native pass added zero and retained identical bytes. Resolved count is
+230, not-yet-due count 450 and eligible due-unresolved count zero. Parent guard
+observed 1.411 seconds and 160,808,960 bytes aggregate peak within the original
+60-second/512-MiB limits. Original, backup, postflight ledger and receipts are
+hash-verified in the private evidence packet. No NAV, account, order, key or
+prediction probability changed; the four DBRG/WBD campaign candidates remain
+a distinct coverage blocker.
+
+The actual production calibration reader subsequently consumed 230 resolved
+forecasts and reported three cells. This proves downstream grade consumption,
+not an improved portfolio decision or return. Live registry and track-record
+bytes match their pre-operation receipts, and all three lane configuration
+hashes remain unchanged. The arena observation remains `UNKNOWN` until its
+qualified scheduled path supplies evidence; manual completion is explicitly
+`MANUAL_NOT_SCHEDULED`. The separate three-day forecast-accrual warning remains
+visible. No health or activation status was edited to simulate success.
+
+The results-voice correction now reports `RELATIONSHIP_UNKNOWN` when structured
+twin lineage is absent. The original generated receipt and named comparison
+are retained. Their matched +11.281-point return gap remains descriptive and
+does not grant fair-twin qualification or raise an evidence label.
+
+The next operating tasks are the fresh-observation/grant producer and qualified
+native scheduled consumer, complete invested policy admission, substantive
+prospective news with matched decision ablations, complete account archives
+and six unique paper identities, then actual session execution/reconciliation.
+The existing 20:00 UTC plan expiry remains binding. Night-session work is
+deferred by the owner's latest instruction; no missed open is claimed. The
+existing roadmap section 9 acceptance remains unmet. Actual routing metadata
+verifies Sol builders at medium effort and the independent Astra reviewer at
+high effort; names alone were not used as evidence of model identity.
+
+## October paper reporting protocol - frozen before new entries
+
+This amendment fixes reporting and evaluation conventions for the six reserved
+$100,000 paper mandates. It does not complete a broker manifest or activate a
+policy. The latest reserved identities remain NEW01 ATLAS V3, NEW02 Beta V1,
+NEW03 revision flow, NEW04 net raises, NEW05 Hack2 v2 replica and NEW06 human
+plus AI. NEW03 and NEW05 share selector ancestry. Legacy ATLAS, Hack accounts,
+PC-PAPER and their September results retain their original identities and
+histories. No loser is reset again during this experiment.
+
+The scheduled October 12-30 window contains 15 US regular sessions; October 31
+is Saturday. Each new account starts its record at its own verified genesis
+and first permitted entry. A later start has fewer observed sessions. Reports
+show scheduled, actually observed and missing sessions separately and never
+assign legacy returns to a new account. A complete experiment manifest still
+requires six unique paper broker IDs, reviewed policy/version hashes, writer
+ownership, universe, entry clock, horizons, rebalancing and exit rules, risk
+limits, costs and benchmarks. Missing fields remain unknown and block that
+mandate's activation.
+
+For every daily completed-session mark, report all six slots, including failed
+and inactive ones: record type (simulator, broker-paper or inactive proposal),
+genesis/entry/mark clocks, equity, cash and gross stock exposure, return since
+that account's genesis, matched-date SPY and appropriate sector/exposure
+controls, completed-close drawdown, concentration, holdings overlap and shared
+ancestry. No entry or price coverage means return is unavailable, never zero.
+Record deposits/withdrawals explicitly and separate them from performance;
+an unexpected flow invalidates a simple equity-ratio comparison until its
+flow-adjusted convention is independently reconciled. Retain proposals,
+submissions, acknowledgments, fills, fees and broker positions as distinct
+records. Show actual available costs and turnover; unavailable costs and
+execution-price slippage remain unknown. Matched shadow comparisons retain
+the existing 20/50/100 basis-point round-trip sensitivity grid and the same
+timestamps, universe, price convention and exposure constraints for both arms.
+Do not compare a fully invested stock book to a cash-heavy preview as evidence
+of stock-selection skill.
+
+Freeze each eligible decision and its exact inputs before outcomes. Preserve
+matched no-agent, no-news, equal-weight and abstention counterfactuals where
+the existing consumer can support them. Identical targets are reported as
+identical. Useful-source admission, mapping accuracy, decision changes,
+latency and cost per useful event are measured separately from after-cost
+returns, risk and forecast calibration. Agent rewards require attributable
+prospective contribution; they cannot be assigned from pages, tokens, trade
+counts or retrospective winner selection. A safety refusal is distinct from
+an infrastructure failure. Grade the original declared horizons unchanged;
+tonight's H21 outcomes are unavailable until their actual maturity.
+
+The owner's 95-100% gross long-stock intent applies only inside a complete
+reviewed stock mandate's existing concentration and risk limits. An operational
+residual or explicit safety exception must have a dated reason. Incomplete
+30% previews are not blindly rescaled. SPY/index controls stay outside the
+flagship stock-selection mandate. These reporting rules grant no leverage,
+derivatives, live endpoint access or real-money authority, and do not choose
+an unapproved allocation for the human-plus-AI reservation.
+
+The owner authorized preparing and, only after independent review, archival,
+identity and deterministic activation gates pass, activating six paper-only
+experiments. Existing prepared-contract and seed controls remain intact;
+authorization is not represented by changing their status. Native scheduling,
+substantive admitted-news consumption, qualified invested policies, complete
+archives, unique identities and the full-session acceptance in roadmap section
+9 must each be evidenced. October results remain local review evidence until
+separate publication permission and the existing publication gates apply.

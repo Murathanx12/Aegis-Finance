@@ -334,10 +334,13 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
                         "same_names_as": [m for m in exact if m != a],
                         "mechanism": mech, "mechanism_source": msrc,
                         "random_twin": tw,
+                        "random_twin_relationship_status": "RECORDED_LINK" if tw else "RELATIONSHIP_UNKNOWN",
                         "twin_line": (f"random twin {tw['account']} ({tw['kind']}) {tw['return_pct']:+.2f}%: "
                                       f"leader ahead of it by {tw['gap_pp']:+.2f} pp"
                                       if tw and tw.get("gap_pp") is not None and tw.get("return_pct") is not None
-                                      else "no random twin seeded for this bet: the twin gap is NOT_COMPUTABLE"),
+                                      else ("random twin relationship recorded; the twin gap is NOT_COMPUTABLE"
+                                            if tw else "random twin relationship UNKNOWN: no matching structured "
+                                            "relationship in book_dna; the twin gap is NOT_COMPUTABLE")),
                         "raise": raise_path(b, by_acc[a].get("vs_spy_pp"), p_dna),
                         "receipts": receipts})
         if len(leaders) >= P["n_leaders"]:
