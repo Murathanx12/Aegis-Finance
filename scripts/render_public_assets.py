@@ -790,6 +790,16 @@ def _chart(d: dict, cx0: float, top: float, cw: float) -> list[str]:
     return o
 
 
+def _return_bar_domain(featured: list[dict]) -> float:
+    """One positive-return domain shared by account and benchmark bars."""
+    return max(1.0, *(float(f[key]) for f in featured for key in ("roi", "spy")))
+
+
+def _return_label_chars(featured: list[dict]) -> int:
+    return max(
+        len(label) for f in featured for label in (_num(f["roi"]) + "%", "SPY " + _num(f["spy"]) + "%"))
+
+
 def render_results() -> str:
     d = results_data()
     desc = (f"Best paper accounts, snapshot observed {d['as_of']} (receipt {d['receipt']}): "
@@ -804,7 +814,12 @@ def render_results() -> str:
     o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">SNAPSHOT {d["as_of"]} · RECEIPT '
              f'{Path(d["receipt"]).stem}</text>')
     o.append(f'<line x1="{x}" y1="58" x2="{x + w}" y2="58" class="rule"/>')
-    top, lw, scale, bx = 88, 600, 200 / 8.0, x + 400
+    top, lw, bx = 88, 600, x + 400
+    chart_x = x + lw + 50
+    label_right = chart_x - 50
+    # Reserve the widest mono label, including fallback fonts, beside the track.
+    track_width = label_right - bx - 12 - _return_label_chars(d["featured"]) * 8
+    scale = track_width / _return_bar_domain(d["featured"])
     for i, f in enumerate(d["featured"]):
         ry = top + i * 108
         o.append(f'<text x="{x}" y="{ry + 30}" class="excess">{_num(f["excess"])}</text>')
@@ -817,14 +832,14 @@ def render_results() -> str:
             o.append(f'<text x="{x + 120}" y="{ry + 90}" class="meta">{_t(_shared(f))}</text>')
         wa, ws = max(2, round(f["roi"] * scale)), max(2, round(f["spy"] * scale))
         for yy, ww, cls in ((ry + 8, wa, "bar-acct"), (ry + 34, ws, "bar-spy")):
-            o.append(f'<rect x="{bx}" y="{yy}" width="{round(8 * scale)}" height="8" class="track" rx="4"/>')
+            o.append(f'<rect x="{bx}" y="{yy}" width="{track_width}" height="8" class="track" rx="4"/>')
             o.append(f'<rect x="{bx}" y="{yy}" width="{ww}" height="8" class="{cls}" rx="4">'
                      f'<animate attributeName="width" from="0" to="{ww}" dur="1.4s" '
                      f'begin="{0.2 + i * 0.25:.2f}s" fill="freeze" calcMode="spline" keyTimes="0;1" '
                      f'keySplines="0.2 0.8 0.2 1"/></rect>')
-        o.append(f'<text x="{bx + wa + 8}" y="{ry + 16}" class="val">{_num(f["roi"])}%</text>')
-        o.append(f'<text x="{bx + ws + 8}" y="{ry + 42}" class="valspy">SPY {_num(f["spy"])}%</text>')
-    o += _chart(d, x + lw + 50, top, w - lw - 50)
+        o.append(f'<text x="{label_right}" y="{ry + 16}" class="val" text-anchor="end">{_num(f["roi"])}%</text>')
+        o.append(f'<text x="{label_right}" y="{ry + 42}" class="valspy" text-anchor="end">SPY {_num(f["spy"])}%</text>')
+    o += _chart(d, chart_x, top, w - lw - 50)
     l1, l2 = _selection_lines(d)
     o.append(f'<text x="{x}" y="{RES_H - 44}" class="fine">{_t(l1)}</text>')
     o.append(f'<text x="{x}" y="{RES_H - 26}" class="fine">{_t(l2)}</text>')
@@ -1214,17 +1229,19 @@ def render_front_html() -> str:
     d = results_data()
     hero = _inline(render_hero(), "h-")
     cards = []
+    bar_domain = _return_bar_domain(d["featured"])
+    label_chars = _return_label_chars(d["featured"])
     for f in d["featured"]:
-        width_a = min(100.0, max(1.0, f["roi"] / 8.0 * 100))
-        width_s = min(100.0, max(1.0, f["spy"] / 8.0 * 100))
+        width_a = min(100.0, max(1.0, f["roi"] / bar_domain * 100))
+        width_s = min(100.0, max(1.0, f["spy"] / bar_domain * 100))
         cards.append(
             f'<article class="fp-card"><div class="fp-ex" data-to="{f["excess"]:.2f}">{_num(f["excess"])}</div>'
             f'<div class="fp-exl">pp vs SPY</div><h3>{_t(f["name"])}</h3>'
             f'<p class="fp-meta">{_t(_meta(f))}<br>{_t(_meta2(f))}'
             + (f'<br>{_t(_shared(f))}' if _shared(f) else "") + '</p>'
-            f'<div class="fp-bars"><div class="fp-bar"><span class="a" style="--w:{width_a:.1f}%"></span>'
-            f'<b>{_num(f["roi"])}%</b></div><div class="fp-bar"><span class="s" style="--w:{width_s:.1f}%">'
-            f'</span><b>SPY {_num(f["spy"])}%</b></div></div><p class="fp-badge">{_t(f["label"])}</p></article>')
+            f'<div class="fp-bars"><div class="fp-bar"><i class="fp-track"><span class="a" style="--w:{width_a:.1f}%"></span>'
+            f'</i><b>{_num(f["roi"])}%</b></div><div class="fp-bar"><i class="fp-track"><span class="s" style="--w:{width_s:.1f}%">'
+            f'</span></i><b>SPY {_num(f["spy"])}%</b></div></div><p class="fp-badge">{_t(f["label"])}</p></article>')
     chart_svg = _inline(render_chart(), "c-")
     css = f"""
 :root{{--bg:#000;--ink:#fff;--ink2:rgba(255,255,255,.7);--ink3:rgba(255,255,255,.45);
@@ -1253,10 +1270,12 @@ border-color:rgba(255,255,255,.75);border-style:solid}}
 .fp-card h3{{font:600 15px {MONO};margin-bottom:4px}}
 .fp-meta{{font-size:13px;color:var(--ink2)}}
 .fp-bars{{margin:14px 0 10px;display:grid;gap:8px}}
-.fp-bar{{display:flex;align-items:center;gap:10px;font:12px {MONO};color:var(--ink2)}}
-.fp-bar span{{height:8px;border-radius:4px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}}
+.fp-bar{{display:grid;grid-template-columns:minmax(0,1fr) {label_chars}ch;align-items:center;gap:10px;font:12px {MONO};color:var(--ink2)}}
+.fp-track{{display:block;min-width:0;height:8px}}
+.fp-bar b{{white-space:nowrap;text-align:right}}
+.fp-bar span{{display:block;height:8px;border-radius:4px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}}
 .fp-bar span.a{{background:var(--blue)}}.fp-bar span.s{{background:rgba(255,255,255,.55)}}
-.fp-on .fp-bar span{{width:calc(var(--w) * .6)}}
+.fp-on .fp-bar span{{width:var(--w)}}
 .fp-badge{{font:500 10px {MONO};letter-spacing:1.5px;color:var(--ink3)}}
 .fp-fine{{font-size:12px;color:var(--ink3);margin-top:14px}}
 .fp-chart{{margin-top:22px;max-width:760px}}

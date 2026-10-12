@@ -269,3 +269,35 @@ def test_every_asset_the_readme_shows_exists():
                  "docs/assets/architecture_pipeline.svg", "docs/assets/gauntlet.svg"):
         assert must in shown
     assert [p for p in shown if not (REPO / p).is_file()] == []
+
+
+@pytest.mark.parametrize("roi,spy", [(10.60, 2.12), (10.60, 18.20), (123.45, 125.0)])
+def test_return_bars_share_data_domain_and_reserve_label_bounds(monkeypatch, roi, spy):
+    import copy
+    d = copy.deepcopy(RPA.results_data())
+    d["featured"][0].update(roi=roi, spy=spy)
+    monkeypatch.setattr(RPA, "results_data", lambda: d)
+    domain = max(1.0, *(f[k] for f in d["featured"] for k in ("roi", "spy")))
+    root = ET.fromstring(RPA.render_results())
+    tracks = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") == "track"]
+    bars = [el for el in root.iter(f"{SVG_NS}rect") if el.get("class") in {"bar-acct", "bar-spy"}]
+    labels = [el for el in root.iter(f"{SVG_NS}text") if el.get("class") in {"val", "valspy"}]
+    assert len(bars) == len(labels) == len(tracks) == 2 * len(d["featured"])
+    values = [f[k] for f in d["featured"] for k in ("roi", "spy")]
+    label_reserve = max(len("".join(el.itertext())) for el in labels) * 8
+    for track, bar, label, value in zip(tracks, bars, labels, values):
+        start, width = float(track.get("x")), float(track.get("width"))
+        assert 0 < float(bar.get("width")) <= width
+        assert float(bar.get("width")) == max(2, round(value / domain * width))
+        assert start + width + 12 + label_reserve <= float(label.get("x")) <= 640
+        assert label.get("text-anchor") == "end"
+        animation = bar.find(f"{SVG_NS}animate")
+        assert float(animation.get("from")) == 0
+        assert float(animation.get("to")) == float(bar.get("width")) <= width
+    html = RPA.render_front_html()
+    widths = [float(x) for x in re.findall(r'style="--w:([0-9.]+)%"', html)]
+    expected = [round(min(100.0, max(1.0, value / domain * 100)), 1) for value in values]
+    assert widths == expected and all(0 < x <= 100 for x in widths)
+    assert 'grid-template-columns:minmax(0,1fr)' in html
+    assert 'width:var(--w)' in html and 'width:calc(var(--w) * .6)' not in html
+    assert html.count('class="fp-track"') == len(values)
