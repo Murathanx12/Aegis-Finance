@@ -45,6 +45,7 @@ because that is indistinguishable from a job that never fired at all.
 """
 from __future__ import annotations
 
+import asyncio
 import contextvars
 import functools
 import json
@@ -199,6 +200,13 @@ def receipted(job: str | None = None):
                 # recorded as `ran` with nothing written, which is a claim a
                 # reader can challenge — unlike silence.
                 return out
+            except asyncio.CancelledError:
+                # Cancellation bypasses Exception. Keep completed annotations,
+                # but never label an interrupted run successful or retain its
+                # cancellation message (which may contain private details).
+                r["status"] = "raised"
+                r["exception"] = "CancelledError"
+                raise
             except Exception as exc:                           # noqa: BLE001
                 r["status"] = "raised"
                 r["exception"] = f"{type(exc).__name__}: {exc}"
