@@ -24,6 +24,9 @@ Usage:
 """
 
 import logging
+import hashlib
+import json
+import math
 import os
 import threading
 import time
@@ -383,7 +386,8 @@ def _get_openai_client():
 
 def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
             resp=None, text: Optional[str] = None, t0: float,
-            validate=None, error: Optional[Exception] = None) -> None:
+            validate=None, error: Optional[Exception] = None,
+            evidence_meta: dict | None = None) -> dict | None:
     """Write one telemetry row. Never raises — see llm_telemetry.record_call.
 
     `schema_valid` is answered by the CALLER's contract, not by "the HTTP call
@@ -394,7 +398,8 @@ def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
     """
     from backend.services import llm_telemetry as _tel
 
-    usage = _tel.extract_usage(resp, provider) if resp is not None else {}
+    usage = ((_tel.extract_usage_evidence(resp) or {}) if evidence_meta is not None
+             else _tel.extract_usage(resp, provider) if resp is not None else {})
     if error is not None:
         ok = False
     elif validate is not None and text is not None:
@@ -404,7 +409,7 @@ def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
             ok = False
     else:
         ok = bool((text or "").strip())
-    _tel.record_call(
+    kwargs = dict(
         provider=provider, model=model, purpose=purpose,
         prompt=system + "\n" + user, context=user,
         latency_ms=(time.perf_counter() - t0) * 1000.0,
@@ -412,6 +417,10 @@ def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
                                 if error else None),
         **usage,
     )
+    if evidence_meta is not None:
+        return _tel.record_call_evidence(**kwargs, meta=evidence_meta)
+    _tel.record_call(**kwargs)
+    return None
 
 
 def _refuse_non_english(provider: str, purpose: str, text: str) -> bool:
@@ -652,13 +661,20 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                production_budget: bool = True,
                model_override: str | None = None,
                no_retry: bool = False,
-               non_thinking: bool = False) -> dict:
+               non_thinking: bool = False,
+               evidence_mode: bool = False,
+               request_timeout_s: float | None = None) -> dict:
     """One chat turn from the NAMED provider. Never raises for a provider error.
 
     Returns `{provider, model, served_model, text, ok, status, latency_s,
     cost_usd, cost_status, tokens_in, tokens_out, cached_tokens, n_429, error}`.
     `text` is None whenever `ok` is False. `provider` is one of `deepseek`,
     `nvidia`, `local`. `served_model` is what the PROVIDER says answered.
+
+    Evidence is an attended single-attempt DeepSeek Flash opt-in, requiring a
+    finite 1..60s SDK timeout and 1..900 output-token cap. Existing process-local
+    production budgets remain binding. Missing vendor ID/model or durable
+    telemetry refuses evidence; this is not a fallback or credential isolation.
 
     G-fix (adjudication row 7): `text` is `content` only -- an empty content is
     `REFUSED_EMPTY_CONTENT`, counted in `EMPTY_CONTENT_REFUSALS`, never the
@@ -667,6 +683,21 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
     """
     from backend.services import llm_telemetry as _tel
 
+    if evidence_mode:
+        valid_timeout = (isinstance(request_timeout_s, (int, float))
+                         and not isinstance(request_timeout_s, bool)
+                         and math.isfinite(request_timeout_s)
+                         and 1 <= request_timeout_s <= 60)
+        valid_tokens = type(max_tokens) is int and 1 <= max_tokens <= 900
+        if (provider != SOLE_PROVISIONED_PROVIDER or provider != "deepseek"
+                or model_override != "deepseek-flash" or not no_retry
+                or not non_thinking or not production_budget
+                or not valid_timeout or not valid_tokens):
+            return {"provider": provider, "model": None, "text": None, "ok": False,
+                    "status": "INVALID_EVIDENCE_SCOPE", "error": "reviewed single-attempt scope required"}
+    elif request_timeout_s is not None:
+        return {"provider": provider, "model": None, "text": None, "ok": False,
+                "status": "INVALID_TIMEOUT_SCOPE", "error": "explicit timeout requires evidence mode"}
     routes = getattr(_config_mod, "MODEL_ROUTING_PROVIDERS", {}) or {}
     mt = int(max_tokens or getattr(_config_mod, "MODEL_ROUTING_MAX_TOKENS", 700))
     out = {"provider": provider, "model": None, "text": None, "ok": False,
@@ -691,7 +722,10 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
         if no_retry:
             # The OpenAI SDK defaults to two HTTP retries. This pilot budgets
             # physical requests, so use a per-call clone with retries disabled.
-            client = client.with_options(max_retries=0)
+            options = {"max_retries": 0}
+            if evidence_mode:
+                options["timeout"] = float(request_timeout_s)
+            client = client.with_options(**options)
         # `production_budget=False` is for an attended BATCH that enforces its
         # own dollar cap (the E-G1 bake-off, $0.15): the 150-call production
         # counter is sized for a user-facing endpoint, not a 240-item batch. The
@@ -727,6 +761,7 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
     out["served_model"] = None
     out["n_429"] = 0
     t0 = time.perf_counter()
+    started_utc = datetime.now(timezone.utc).isoformat() if evidence_mode else None
     kw = dict(model=model,
               messages=[{"role": "system", "content": system_prompt + _LANGUAGE_PIN},
                         {"role": "user", "content": user_prompt}],
@@ -742,25 +777,101 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
             response = client.chat.completions.create(**kw)
         text = _reply_text(response)
     except Exception as e:                                     # noqa: BLE001
-        _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
-                t0=t0, error=e)
+        if evidence_mode:
+            try:
+                _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
+                        t0=t0, error=RuntimeError(type(e).__name__),
+                        evidence_meta={"status": "ERROR", "usage_status": "UNKNOWN", "cost_status": "UNKNOWN"})
+            except Exception:
+                pass  # no evidence is admitted; actual attempted cost stays unknown
+        else:
+            _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt, t0=t0, error=e)
         if provider == "deepseek" and _is_billing_error(e):
-            _trip_breaker(e)
-        return {**out, "status": "RATE_LIMITED" if _is_rate_limited(e) else "ERROR",
+            _trip_breaker(RuntimeError("evidence provider billing refusal") if evidence_mode else e)
+        return {**out, **({"cost_status": "UNKNOWN"} if evidence_mode else {}),
+                "status": "RATE_LIMITED" if _is_rate_limited(e) else "ERROR",
                 "n_429": int(getattr(e, "n_429", 0) or 0),
                 "latency_s": round(time.perf_counter() - t0, 3),
-                "error": f"{type(e).__name__}: {str(e)[:300]}"}
+                "error": (f"{type(e).__name__}: provider request failed" if evidence_mode
+                          else f"{type(e).__name__}: {str(e)[:300]}")}
     latency = round(time.perf_counter() - t0, 3)
-    _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
-            resp=response, text=text, t0=t0, validate=validate)
-    usage = _tel.extract_usage(response, tel_provider)
+    completed_utc = datetime.now(timezone.utc).isoformat() if evidence_mode else None
+    evidence_receipt = None
+    if evidence_mode:
+        vendor_id, served_model = getattr(response, "id", None), getattr(response, "model", None)
+        wire_reply = getattr(response.choices[0].message, "content", None)
+        if (not isinstance(vendor_id, str) or not vendor_id.strip()
+                or not isinstance(served_model, str) or not served_model.strip()
+                or not isinstance(wire_reply, str)):
+            identity_usage = _tel.extract_usage_evidence(response)
+            try:
+                _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
+                        resp=response, text=text, t0=t0, validate=validate,
+                        evidence_meta={"status": "REFUSED_IDENTITY",
+                                       "usage_status": "UNKNOWN" if identity_usage is None else "MEASURED",
+                                       "cost_status": "UNKNOWN"})
+            except Exception:
+                pass
+            return {**out, "cost_status": "UNKNOWN", "status": "REFUSED_EVIDENCE_IDENTITY",
+                    "error": "actual vendor response ID/model missing"}
+        schema_ok = bool(text)
+        if schema_ok and validate is not None:
+            try:
+                schema_ok = bool(validate(text))
+            except Exception:
+                schema_ok = False
+        language_ok = bool(text) and not _refuse_non_english(tel_provider, purpose, text)
+        reply_ok = schema_ok and language_ok
+        evidence_usage = _tel.extract_usage_evidence(response)
+        def sha(value):
+            return hashlib.sha256(value.encode("utf-8")).hexdigest()
+        evidence_receipt = {
+            "schema": "hosted_returned_call_evidence/1", "provider": provider,
+            "provider_response_id": vendor_id, "served_model": served_model,
+            "requested_model": model, "started_utc": started_utc, "completed_utc": completed_utc,
+            "system_sha256": sha(system_prompt),
+            "wire_system_sha256": sha(system_prompt + _LANGUAGE_PIN),
+            "user_prompt_sha256": sha(user_prompt), "response_sha256": sha(text or ""),
+            "wire_response_sha256": sha(wire_reply), "response_normalization": "strip",
+            "sdk_arguments_sha256": sha(json.dumps(kw, sort_keys=True, ensure_ascii=False,
+                                                  separators=(",", ":"), allow_nan=False)),
+            "prepared_http_body_bound": False,
+            "request_timeout_s": float(request_timeout_s), "sdk_max_retries": 0,
+            "usage_status": "MEASURED" if evidence_usage is not None else "UNKNOWN",
+            "cost_status": cost_status(served_model) if evidence_usage is not None else "UNKNOWN",
+            "status": ("REFUSED_USAGE" if evidence_usage is None
+                       else "OK" if reply_ok else "REFUSED_REPLY"), "budget_scope": "process_local",
+        }
+        try:
+            row = _record(tel_provider, served_model, purpose, system=system_prompt, user=user_prompt,
+                          resp=response, text=text, t0=t0, validate=lambda _: reply_ok,
+                          evidence_meta=evidence_receipt)
+            if not isinstance(row, dict) or not row.get("call_id") or row.get("meta") != evidence_receipt:
+                raise ValueError("missing persisted telemetry binding")
+            evidence_receipt = {**evidence_receipt, "telemetry_call_id": row["call_id"],
+                                "telemetry": row, "durably_persisted": True}
+        except Exception:
+            return {**out, "status": "REFUSED_EVIDENCE_WRITE", "cost_status": "UNKNOWN",
+                    "error": "durable telemetry write/readback unavailable"}
+        if evidence_usage is None:
+            return {**out, "status": "REFUSED_EVIDENCE_USAGE", "cost_usd": None,
+                    "cost_status": "UNKNOWN", "tokens_in": None, "tokens_out": None,
+                    "cached_tokens": None, "served_model": served_model,
+                    "error": "actual token usage absent or malformed"}
+        if not reply_ok:
+            return {**out, "status": "REFUSED_EVIDENCE_REPLY",
+                    "error": "reply failed content/schema/language admission"}
+    else:
+        _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
+                resp=response, text=text, t0=t0, validate=validate)
+    usage = evidence_usage if evidence_mode else _tel.extract_usage(response, tel_provider)
     out.update(usage)
     out["latency_s"] = latency
     # the model the PROVIDER says answered (DeepSeek has said `deepseek-flash`
     # for `deepseek-chat` since 09-14); priced by it when the table knows it.
     served = getattr(response, "model", None)
     out["served_model"] = str(served) if isinstance(served, str) and served else None
-    price_model = (out["served_model"] if out["served_model"]
+    price_model = (out["served_model"] if evidence_mode else out["served_model"] if out["served_model"]
                    and cost_status(out["served_model"]) == "LISTED" else model)
     out["cost_status"] = cost_status(price_model)
     out["cost_usd"] = _tel.price_call(price_model, usage["tokens_in"], usage["tokens_out"],
@@ -773,10 +884,13 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
         why = ("content empty, reasoning_content present: a thought is not an answer"
                if _has_reasoning_only(response) else "the model returned an empty message")
         return {**out, "status": "REFUSED_EMPTY_CONTENT", "error": why}
-    if _refuse_non_english(tel_provider, purpose, text):
+    if not evidence_mode and _refuse_non_english(tel_provider, purpose, text):
         return {**out, "status": "LANGUAGE_REFUSED",
                 "error": "reply was mostly non-Latin script; discarded, not repaired"}
-    return {**out, "text": text, "ok": True, "status": "OK"}
+    result = {**out, "text": text, "ok": True, "status": "OK"}
+    if evidence_mode:
+        result["evidence"] = evidence_receipt
+    return result
 
 
 # ── Public API ──────────────────────────────────────────────────────────────
