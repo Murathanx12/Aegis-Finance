@@ -1849,6 +1849,17 @@ def _case_results_voice():
             "a results statement with no ROI or book_dna receipt")
 
 
+def _case_public_paper_accounts():
+    # An absent approved receipt must refuse, rather than manufacture a
+    # fresh public return or silently substitute an older account artifact.
+    from datetime import datetime, timezone
+
+    from backend.services.public_paper_accounts import PublicROIUnavailable, project
+    return (lambda: project(None, now=datetime(2026, 10, 13, tzinfo=timezone.utc),
+                            stale_hours=1),
+            PublicROIUnavailable, "no approved public ROI receipt")
+
+
 def _case_public_flow_common():
     """Public-flow sensors (C16, 2026-10-07): no crosswalk refuses.
 
@@ -1867,6 +1878,7 @@ CASES = {
     "pc_sleeves": _case_pc_sleeves,
     "pc_policy_epoch": _case_pc_policy_epoch,
     "results_voice": _case_results_voice,
+    "public_paper_accounts": _case_public_paper_accounts,
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
