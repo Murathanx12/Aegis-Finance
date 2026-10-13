@@ -216,6 +216,38 @@ def price_call(model: str, tokens_in: int, tokens_out: int,
                   + int(tokens_out) * price["out"]) / 1_000_000.0, 8)
 
 
+def extract_usage_evidence(resp: Any) -> dict | None:
+    """Strict DeepSeek evidence counters; missing/malformed is UNKNOWN, not free.
+
+    Default extract_usage compatibility remains untouched. The cache subset is
+    required because guessing it changes measured cost.
+    """
+    usage = getattr(resp, "usage", None)
+    if usage is None:
+        return None
+    values = []
+    for name in ("prompt_tokens", "completion_tokens", "prompt_cache_hit_tokens"):
+        value = usage.get(name) if isinstance(usage, dict) else getattr(usage, name, None)
+        if type(value) is not int or value < 0:
+            return None
+        values.append(value)
+    total, output, cached = values
+    if cached > total:
+        return None
+    # Evidence calls always send a nonempty system language pin. Nonempty
+    # returned content also requires generated tokens; contradictory zeros do
+    # not establish measured free usage. Fully cached positive input is valid.
+    if total == 0:
+        return None
+    try:
+        content = getattr(resp.choices[0].message, "content", None)
+    except (AttributeError, IndexError, TypeError):
+        return None
+    if isinstance(content, str) and content.strip() and output == 0:
+        return None
+    return {"tokens_in": total - cached, "tokens_out": output, "cached_tokens": cached}
+
+
 def extract_usage(resp: Any, provider: str) -> dict:
     """Normalise a provider's usage object into (tokens_in, cached, tokens_out).
 
@@ -373,7 +405,7 @@ def _resolve_path(path: Path | None) -> Path | None:
 _APPEND_LOCK = threading.Lock()
 
 
-def append(records: list[LLMCall], path: Path | None = None) -> None:
+def append(records: list[LLMCall], path: Path | None = None, *, durable: bool = False) -> None:
     """Append rows. Returns None: nothing may branch on a write.
 
     LOCKED, and the reason is a measurement rather than a precaution. LLM-SWARM-1
@@ -393,6 +425,8 @@ def append(records: list[LLMCall], path: Path | None = None) -> None:
     """
     p = _resolve_path(path)
     if p is None:
+        if durable:
+            raise OSError("evidence telemetry destination unavailable")
         logger.debug("llm_telemetry: write suppressed under pytest (%d row(s))",
                      len(records))
         return
@@ -420,6 +454,22 @@ def append(records: list[LLMCall], path: Path | None = None) -> None:
             json.dumps(row, ensure_ascii=False) + "\n")
     with _APPEND_LOCK:
         for month, lines in by_month.items():
+            if durable:
+                # Opt-in evidence needs an actual durable row, not the default
+                # best-effort instrumentation promise. Read back our exact bytes;
+                # concurrent-process interference refuses instead of attesting.
+                payload = "".join(lines).encode("utf-8")
+                with month_path(p, month).open("a+b") as fh:
+                    fh.seek(0, os.SEEK_END)
+                    offset = fh.tell()
+                    if fh.write(payload) != len(payload):
+                        raise OSError("short evidence telemetry write")
+                    fh.flush()
+                    os.fsync(fh.fileno())
+                    fh.seek(offset)
+                    if fh.read(len(payload)) != payload:
+                        raise OSError("evidence telemetry readback mismatch")
+                continue
             # `newline` is EXPLICIT. Text mode on Windows translates to CRLF,
             # which is why the 62 MB monolith carries one extra byte a line --
             # written on this laptop, read on Linux CI. A ledger whose bytes
@@ -454,6 +504,25 @@ def record_call(**kwargs: Any) -> None:
                        "the call itself is unaffected, but this spend is now "
                        "MISSING from the ledger",
                        kwargs.get("purpose", "?"), type(exc).__name__, exc)
+
+
+def record_call_evidence(**kwargs: Any) -> dict:
+    """Optional strict evidence write; default instrumentation stays unchanged.
+
+    The call ID is our telemetry ID, never the vendor's returned response ID.
+    A suppressed/failed write raises so an opted-in consumer cannot claim proof.
+    The existing row schema is retained; returned-call pins live in `meta`.
+    """
+    path = kwargs.pop("path", None)
+    row = build_call(**kwargs)
+    if row.meta.get("usage_status") == "UNKNOWN" or row.meta.get("cost_status") == "UNKNOWN":
+        # Legacy integer counters remain placeholders in the unchanged schema;
+        # explicit unknown usage/cost metadata prevents treating them as measured.
+        row.cost_usd = None
+    if month_of(asdict(row))[0] != _now()[:7]:
+        raise ValueError("evidence telemetry requires current-month call")
+    append([row], path=path, durable=True)
+    return asdict(row)
 
 
 def attach_outputs(call_id: str, *, prediction_ids: Iterable[str] = (),
