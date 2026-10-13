@@ -262,6 +262,84 @@ def test_ask_labels_a_transport_failure_and_a_cli_that_cannot_start(monkeypatch)
     assert N.ask(pk)["transport_failed"] is False
 
 
+UNKNOWN_MODEL_DIAGNOSTIC = (
+    "[openclaw] The CLI command failed.\n"
+    "[openclaw] Reason: Unknown model: deepseek/deepseek-flash. "
+    "Run `openclaw models list --refresh --provider deepseek` to inspect choices.\n"
+    "Private path C:/private/account-1234 and token SECRET_TEST_TOKEN\n"
+    "[openclaw] Help: openclaw --help\n")
+
+
+def test_unknown_model_crosses_agent_and_ask_without_raw_identifiers(monkeypatch):
+    import subprocess
+    from backend.services import openclaw_client as OC
+
+    monkeypatch.setattr(OC, "_run", lambda *a, **k:
+        subprocess.CompletedProcess([], 1, "", UNKNOWN_MODEL_DIAGNOSTIC))
+    written = []
+    monkeypatch.setattr(OC, "_record_telemetry", lambda **k:
+        written.append(k) or "fixture-call")
+    original_agent = OC.agent
+    monkeypatch.setattr(OC, "agent", lambda *a, **k:
+        original_agent(*a, **k, session_id="fixture-owned"))
+    ans = N.ask({"ticker": "AAA"})
+    assert ans["_call"]["error_code"] == "UNKNOWN_MODEL"
+    assert ans["_call"]["status"] == "RC_NONZERO"
+    assert ans["stderr"].startswith("Unknown model:")
+    safe = json.dumps({"answer": ans, "telemetry_error": written[0]["error"]})
+    assert "SECRET_TEST_TOKEN" not in safe and "account-1234" not in safe
+    assert "C:/private" not in safe
+
+
+def test_unknown_model_ends_after_one_attempt_without_rows_or_backoff(env):
+    clock = FakeClock()
+    calls = []
+
+    def unknown(pk):
+        calls.append(pk["ticker"])
+        return {"refused": "openclaw RC_NONZERO (rc 1)",
+                "stderr": "Unknown model: requested model unavailable in OpenClaw catalogue",
+                "transport_failed": True,
+                "_call": {"status": "RC_NONZERO", "error_code": "UNKNOWN_MODEL"}}
+
+    result = _run(env, clock, unknown)
+    assert result["state"] == N.REFUSED_MODEL_UNAVAILABLE
+    assert calls == ["AAA"] and clock.slept == [] and _rows(env) == []
+    receipt = _receipt(env, clock)
+    assert receipt["dependency"]["n_calls"] == 1
+    assert receipt["dependency"]["n_failed_calls"] == 1
+    assert receipt["dependency"]["n_retries"] == 0
+    assert receipt["dependency"]["failures"][0]["error_code"] == "UNKNOWN_MODEL"
+    assert "Unknown model:" in receipt["dependency"]["failures"][0]["stderr"]
+    assert N.resume_gate(receipt, now=clock.now())["skipped"]
+
+
+def test_timeout_keeps_the_existing_transient_retry_budget(env):
+    clock = FakeClock()
+    calls = []
+
+    def timeout(pk):
+        calls.append(pk["ticker"])
+        return {"refused": "openclaw TIMEOUT", "transport_failed": True,
+                "_call": {"status": "TIMEOUT", "error_code": None}}
+
+    result = _run(env, clock, timeout)
+    assert result["state"] == N.REFUSED_DEPENDENCY_DOWN
+    assert len(calls) == int(C.FORECAST_DEP_RETRY_MAX_ATTEMPTS)
+    assert clock.slept == list(C.FORECAST_DEP_RETRY_BACKOFF_S[
+        :int(C.FORECAST_DEP_RETRY_MAX_ATTEMPTS) - 1])
+
+
+@pytest.mark.parametrize("status,diagnostic", [
+    ("OK", UNKNOWN_MODEL_DIAGNOSTIC),
+    ("RC_NONZERO", "Model answer mentions Unknown model: in ordinary prose"),
+    ("TIMEOUT", UNKNOWN_MODEL_DIAGNOSTIC),
+])
+def test_unknown_model_classifier_requires_nonzero_cli_reason(status, diagnostic):
+    from backend.services import openclaw_client as OC
+    assert OC.agent_error_code(status, diagnostic) is None
+
+
 # ───────────────────────────── the sim unit ──────────────────────────────────
 
 def test_u_forecast_resumes_a_dependency_refusal_after_the_gap(monkeypatch, tmp_path):

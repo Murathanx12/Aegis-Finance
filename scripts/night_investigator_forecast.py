@@ -185,12 +185,16 @@ REFUSED_CAP_READER_DISAGREES = "REFUSED_CAP_READER_DISAGREES"
 #: CLI could not be run) on every retry. NOT terminal for the day: a later sim
 #: cycle resumes it (`resume_gate`). 2026-09-27 was this, filed as REFUSED_CAP.
 REFUSED_DEPENDENCY_DOWN = "REFUSED_DEPENDENCY_DOWN"
+# A deterministic CLI catalogue refusal cannot recover through transport retry.
+# End this UTC day; a configuration repair never rewrites its historical receipt.
+REFUSED_MODEL_UNAVAILABLE = "REFUSED_MODEL_UNAVAILABLE"
 #: `openclaw_client.agent` statuses that are the transport's failure, not the
 #: model's answer. EMPTY_LOG / UNPARSEABLE_ENVELOPE stay per-name refusals.
 TRANSPORT_FAILURE_STATUSES = ("TIMEOUT", "RC_NONZERO")
 #: Receipt states that end the UTC day. REFUSED_DEPENDENCY_DOWN is not one of
 #: them until `FORECAST_DEP_MAX_RUNS_PER_DAY` runs have ended in it.
-TERMINAL_STATES = ("DONE", REFUSED_CAP, REFUSED_CAP_READER_DISAGREES, "DEGRADED")
+TERMINAL_STATES = ("DONE", REFUSED_CAP, REFUSED_CAP_READER_DISAGREES,
+                   REFUSED_MODEL_UNAVAILABLE, "DEGRADED")
 #: What the unit does without the gateway. The evidence packet is ALREADY built
 #: from disk only (no browsing: CONTRACT says so); the LLM call through OpenClaw
 #: IS the forecast. There is no forecast to degrade to, so the run refuses by
@@ -490,10 +494,14 @@ def ask(packet: dict, *, model: str = MODEL, timeout: float = 420.0,
             pass
     call = {k: res.get(k) for k in ("status", "call_id", "usage",
                                     "openclaw_cost_usd", "latency_s",
-                                    "session_id")}
+                                    "session_id", "error_code")}
     if res.get("status") != "OK":
+        code = res.get("error_code") or OC.agent_error_code(
+            res.get("status"), res.get("stderr") or "")
+        call["error_code"] = code
         return {"refused": f"openclaw {res.get('status')} (rc {res.get('rc')})",
-                "stderr": (res.get("stderr") or "")[-200:], "_call": call,
+                "stderr": OC.agent_error_summary(res.get("status"),
+                    res.get("stderr") or "", code), "_call": call,
                 "transport_failed": res.get("status") in TRANSPORT_FAILURE_STATUSES}
     out = parse_reply(res.get("reply") or "", keys=keys)
     out["_call"] = call
@@ -766,8 +774,15 @@ def daily_forecast(*, today: str | None = None,
             dep["failures"] = (dep["failures"] + [{
                 "ticker": t, "attempt": attempt, "utc": dep["last_failed_utc"],
                 "status": call.get("status"), "call_id": call.get("call_id"),
+                "error_code": call.get("error_code"),
                 "why": str(ans.get("refused"))[:120],
-                "stderr": str(ans.get("stderr") or "")[-160:]}])[-20:]
+                "stderr": str(ans.get("stderr") or "")[:160]}])[-20:]
+            if call.get("error_code") == "UNKNOWN_MODEL":
+                rec.update(state=REFUSED_MODEL_UNAVAILABLE,
+                    why="Unknown model: requested model unavailable in OpenClaw catalogue; "
+                        "no transport retry or provider fallback")
+                down = True
+                break
             flush()
             if attempt >= max_attempts:
                 down = True
@@ -779,6 +794,8 @@ def daily_forecast(*, today: str | None = None,
             dep["n_retries"] += 1
             sleep_fn(wait)
         if down:
+            if rec.get("state") == REFUSED_MODEL_UNAVAILABLE:
+                break
             dep["runs_ended_down"] = int(dep.get("runs_ended_down") or 0) + 1
             last = dep["failures"][-1]
             rec.update(state=REFUSED_DEPENDENCY_DOWN,
