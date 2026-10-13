@@ -156,20 +156,24 @@ def test_spy_unavailable_is_reported_not_substituted(monkeypatch):
     assert bm is None and "network" in err
 
 
-def test_route_serves_newest_receipt_and_404s_when_absent(tmp_path, monkeypatch):
+def test_route_uses_approved_public_view_and_refuses_unavailable(monkeypatch):
     from fastapi.testclient import TestClient
-
     from backend.main import app
-    from backend.routers import portfolio_intelligence as R
-    monkeypatch.setattr(R, "_paper_accounts_dir", lambda: tmp_path)
-    c = TestClient(app)
-    r = c.get("/api/pi/paper-accounts")
-    assert r.status_code == 404 and "paper_accounts_roi" in r.json()["detail"]
-    (tmp_path / "roi_2026-09-25.json").write_text(json.dumps({"rows": [], "v": 1}), encoding="utf-8")
-    (tmp_path / "roi_2026-09-26.json").write_text(json.dumps({"rows": [], "v": 2}), encoding="utf-8")
-    r = c.get("/api/pi/paper-accounts")
-    assert r.status_code == 200
-    assert r.json()["v"] == 2 and r.json()["receipt_file"] == "roi_2026-09-26.json"
+    from backend.services import public_paper_accounts as PPA
+    client = TestClient(app)
+    def unavailable():
+        raise PPA.PublicROIUnavailable("PRIMARY_ROI_SOURCE_STALE_OR_FUTURE")
+    monkeypatch.setattr(PPA, "read_public_paper_accounts", unavailable)
+    response = client.get("/api/pi/paper-accounts")
+    assert response.status_code == 503
+    assert response.json()["detail"]["status"] == "UNAVAILABLE"
+    body = {"schema": "paper_accounts_roi/1", "public_view": "arena_allowlist_compatibility/1",
+            "rows": [{"account": "public-reference", "roi_pct": 0, "equity": None,
+                      "missing_because": {"equity": "NOT_IN_APPROVED_PUBLIC_ARENA_VIEW"}}],
+            "receipt_file": "roi_2026-10-12T235436Z.json"}
+    monkeypatch.setattr(PPA, "read_public_paper_accounts", lambda: body)
+    response = client.get("/api/pi/paper-accounts")
+    assert response.status_code == 200 and response.json() == body
 
 
 def test_a_voided_book_is_listed_not_graded(tmp_path):

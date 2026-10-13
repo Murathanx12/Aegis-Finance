@@ -76,7 +76,7 @@ OPP_CAPS = {"news": 3, "catalysts": 5, "why_picked": 5}
 OPP_RECENT_CAP = 3
 #: rows per list in the public copy, in the receipt's own order (the list's rank order).
 #: Only `analyst_upside_v3` (700 names) is longer today; the page says how many were cut.
-OPP_MAX_ROWS_PER_LIST = 250
+OPP_MAX_ROWS_PER_LIST = 100
 
 
 def public_dir() -> Path:

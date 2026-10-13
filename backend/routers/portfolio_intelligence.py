@@ -1207,20 +1207,21 @@ def _paper_accounts_dir():
 
 @router.get("/paper-accounts")
 async def get_paper_accounts():
-    """ROI of every paper account vs SPY over its own window (newest receipt)."""
-    d = _paper_accounts_dir()
-    files = sorted(d.glob("roi_*.json")) if d.exists() else []
-    if not files:
-        raise HTTPException(
-            status_code=404,
-            detail=(f"no paper-accounts receipt under {d.name}/ -- run "
-                    "`python -m scripts.paper_accounts_roi` and commit the receipt"))
-    newest = files[-1]
+    """Public rows-shaped ROI view through the existing sanitized Arena channel.
+
+    Dollar fields unavailable in that approved view stay null with reasons.
+    Primary ROI source age is enforced; wrapper/DNA age never certifies it.
+    """
+    from backend.services.public_paper_accounts import (
+        PublicROIUnavailable, read_public_paper_accounts,
+    )
     try:
-        body = json.loads(newest.read_text(encoding="utf-8"))
-    except Exception as e:
-        logger.error("paper-accounts receipt unreadable: %s", e)
-        raise HTTPException(status_code=500, detail=f"{newest.name} unreadable: {e}")
-    body["receipt_file"] = newest.name
-    body["source_dir"] = str(d)
-    return body
+        return read_public_paper_accounts()
+    except PublicROIUnavailable as exc:
+        raise HTTPException(status_code=503, detail={
+            "status": "UNAVAILABLE", "reason": str(exc),
+            "remedy": "Wait for the existing native ROI/public-receipt publication chain; no automatic rerun.",
+        }) from None
+    except Exception:
+        logger.error("public paper-accounts approved read failed")
+        raise HTTPException(status_code=500, detail="public paper-accounts read failed") from None
