@@ -212,10 +212,11 @@ def test_the_featured_accounts_are_what_the_declared_rule_picks():
         assert d["priced"] == sum(1 for r in rows if r.get("vs_spy_pp") is not None)
 
 
-def test_the_chart_is_the_lead_account_against_its_matched_twin_on_shared_dates():
+def test_the_chart_uses_spy_without_inventing_an_unrecorded_twin():
     d = RPA.results_data()
     c = d["chart"]
-    assert c["twin"] == f"{d['featured'][0]['account']}_random_twin"
+    assert c["relationship_status"] == "RELATIONSHIP_UNKNOWN"
+    assert c["twin"] is None and c["twin_vals"] == []
     assert c["dates"] == sorted(c["dates"]) and len(c["dates"]) >= 2
     assert c["acct"][-1] == d["featured"][0]["roi"]          # the last mark IS the pinned receipt
 

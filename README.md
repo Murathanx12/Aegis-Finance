@@ -23,7 +23,7 @@
 
 <!-- results-panel:start -->
 <p align="center">
-  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, snapshot observed 2026-10-11: revision_flow_v0 (frozen LLM book, $1M paper) +10.60% vs SPY +1.33% since 2026-09-28, +9.27 pp, its matched random twin -0.68%; night book b109c886 (night book, $100k paper) +4.74% vs SPY +2.12% since 2026-09-11, +2.62 pp; hack2 (Alpaca paper broker, $100k paper) +5.52% vs SPY +1.22% since 2026-08-28, +4.30 pp, holds the same 20 names as revision_flow_v0. Labels OBSERVED(10), OBSERVED(20), OBSERVED(30) · 10/30 daily marks. Leading account last marked 2026-10-09.">
+  <img src="docs/assets/paper_results_live.svg" width="100%" alt="Best paper accounts, snapshot observed 2026-10-11: revision_flow_v0 (frozen LLM book, $1M paper) +10.60% vs SPY +1.33% since 2026-09-28, +9.27 pp, twin relationship UNKNOWN; gap NOT_COMPUTABLE; night book b109c886 (night book, $100k paper) +4.74% vs SPY +2.12% since 2026-09-11, +2.62 pp; hack2 (Alpaca paper broker, $100k paper) +5.52% vs SPY +1.22% since 2026-08-28, +4.30 pp, holds the same 20 names as revision_flow_v0. Labels OBSERVED(10), OBSERVED(20), OBSERVED(30) · 10/30 daily marks. Leading account last marked 2026-10-09.">
 </p>
 <p align="center"><sub>Every number on both pictures is read from a committed receipt (<code>docs/assets/public_results_2026-10-11T235329Z.json</code>) and every stage names the code that runs it; <code>backend/tests/test_public_assets.py</code> fails if either stops being true. The motion version is <a href="docs/design/aegis_front_page.html"><code>docs/design/aegis_front_page.html</code></a>; the design record is <a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md"><code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.</sub></p>
 <!-- results-panel:end -->
@@ -93,8 +93,8 @@ receipt holds says `NOT MEASURED`.
 
 ## V1 Beta scoreboard (2026-10-07)
 
-**The live result first.** The best strategy account in each of three families is ahead of SPY over its
-own window: `revision_flow_v0` +5.74 pp over 7 sessions (its matched random twin: −1.41 pp), night book
+**The dated 2026-10-07 result first.** The best strategy account in each of three families is ahead of SPY over its
+own window: `revision_flow_v0` +5.74 pp over 7 sessions (twin relationship UNKNOWN; twin gap NOT_COMPUTABLE), night book
 `b109c886` +3.90 pp over 17, and `hack2`, a real Alpaca paper account holding the same 20 names, +1.02 pp
 over 27, the one book with 21 or more sessions that is ahead. That is a few weeks of paper, picked after
 the fact from 307 priced accounts, so each number carries its label. On the survivorship-free historical

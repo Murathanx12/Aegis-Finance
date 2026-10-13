@@ -491,17 +491,18 @@ def _public_snapshot(d: dict, run_id: str) -> dict:
         featured.append(f)
     chart = None
     if d["chart"] is not None:
-        raw = d["chart"]
+        raw = _relationship_chart(d["chart"])
         dates = raw["dates"]
         if not isinstance(dates, list) or len(dates) > 370:
             raise SystemExit("REFUSED: public chart exceeds 370 marks")
-        chart = {"account": string(raw["account"]), "twin": string(raw["twin"]),
+        chart = {"account": string(raw["account"]), "twin": string(raw["twin"]) if raw["twin"] is not None else None,
                  "dates": [string(x, 32) for x in dates]}
         for key in ("acct", "spy", "twin_vals"):
             values = raw[key]
-            if not isinstance(values, list) or len(values) != len(dates):
+            if not isinstance(values, list) or len(values) != (0 if key == "twin_vals" and raw["twin"] is None else len(dates)):
                 raise SystemExit("REFUSED: public chart series length mismatch")
             chart[key] = [number(x) for x in values]
+        chart.update(relationship_status=raw["relationship_status"], twin_of=string(raw["twin_of"]) if raw["twin_of"] is not None else None, twin_kind=string(raw["twin_kind"], 32) if raw["twin_kind"] is not None else None)
     source_paths = [PAPER_DIR / f"roi_{run_id}.json", PAPER_DIR / f"book_dna_{run_id}.json"]
     source_paths += sorted(PAPER_DIR.glob("roi_2026-*.json"))
     sources = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in dict.fromkeys(source_paths)}
@@ -510,7 +511,7 @@ def _public_snapshot(d: dict, run_id: str) -> dict:
     display = {"run_id": run_id, "as_of": string(d["as_of"], 32),
                "receipt": f"docs/assets/public_results_{run_id}.json",
                "featured": featured, "chart": chart, "priced": d["priced"]}
-    return {"schema": "public_results_render/1", "display": display, "source_sha256": sources}
+    return {"schema": "public_results_render/2", "display": display, "source_sha256": sources}
 
 
 def _snapshot_display(run_id: str) -> dict | None:
@@ -519,7 +520,7 @@ def _snapshot_display(run_id: str) -> dict | None:
         return None
     payload = json.loads(path.read_text(encoding="utf-8"))
     if (not isinstance(payload, dict) or set(payload) != {"schema", "display", "source_sha256"} or
-            payload.get("schema") != "public_results_render/1" or
+            payload.get("schema") not in ("public_results_render/1", "public_results_render/2") or
             not isinstance(payload.get("display"), dict) or payload["display"].get("run_id") != run_id):
         raise SystemExit("REFUSED: invalid public results snapshot")
     # Apply the same strict public field validation on a clean checkout.
@@ -567,15 +568,15 @@ def _public_display_only(d: dict, run_id: str) -> dict:
                        not isinstance(f["tickers"], list) or len(f["tickers"]) > 100
                        for f in d["featured"])
     chart = d["chart"]
-    bad_chart = chart is not None and (not isinstance(chart, dict) or set(chart) != chart_keys or
+    bad_chart = chart is not None and (not isinstance(chart, dict) or set(chart) not in (chart_keys, chart_keys | {"relationship_status", "twin_of", "twin_kind"}) or
                                        any(len(chart[k]) != len(chart["dates"])
-                                           for k in ("acct", "spy", "twin_vals")))
+                                           for k in (("acct", "spy") if chart.get("twin") is None else ("acct", "spy", "twin_vals"))))
     if (not safe(d) or bad_featured or bad_chart or
             not isinstance(d["priced"], int) or d["priced"] < 0 or
             any(not isinstance(f["sessions"], int) or f["sessions"] < 0 for f in d["featured"]) or
             {f["family"] for f in d["featured"]} != {fam for fam, _ in FEATURED_FAMILIES}):
         raise SystemExit("REFUSED: invalid public snapshot display fields")
-    return d
+    return {**d, "chart": _relationship_chart(d["chart"])}
 #: (family in the receipt, what the panel calls it). The panel shows the BEST STRATEGY account of
 #: each, by excess over SPY over its own window; the denominator is printed under it.
 FEATURED_FAMILIES: tuple[tuple[str, str], ...] = (
@@ -633,9 +634,29 @@ def _series(account: str, upto_utc: str) -> dict[str, tuple[float, float]]:
     return {d: (v[1], v[2]) for d, v in sorted(best.items())}
 
 
+def _relationship_chart(chart: dict | None) -> dict | None:
+    """Structured recorded linkage only; legacy name inference never qualifies."""
+    if chart is None:
+        return None
+    c = dict(chart)
+    status = c.get("relationship_status", "RELATIONSHIP_UNKNOWN")
+    if status == "RECORDED_LINK":
+        if (c.get("twin_of") != c.get("account") or not isinstance(c.get("twin"), str)
+                or not c["twin"] or not isinstance(c.get("twin_kind"), str) or not c["twin_kind"]):
+            raise SystemExit("REFUSED: invalid structured chart relationship")
+        if len(c.get("twin_vals", [])) != len(c["dates"]):
+            raise SystemExit("REFUSED: recorded comparison marks unavailable")
+    elif status == "RELATIONSHIP_UNKNOWN":
+        c.update(twin=None, twin_vals=[], twin_of=None, twin_kind=None)
+    else:
+        raise SystemExit("REFUSED: unknown relationship status")
+    c["relationship_status"] = status
+    return c
+
+
 def results_data() -> dict:
     if _RESULTS_OVERRIDE is not None:
-        return _RESULTS_OVERRIDE
+        return {**_RESULTS_OVERRIDE, "chart": _relationship_chart(_RESULTS_OVERRIDE["chart"])}
     snapshot = _snapshot_display(RESULTS_RUN_ID)
     if snapshot is not None:
         return snapshot
@@ -676,16 +697,19 @@ def results_data() -> dict:
         f["shares_names_with"] = next((g["name"] for g in featured[:i]
                                        if f["tickers"] and g["tickers"] == f["tickers"]), None)
     lead = featured[0]
-    twin_name = f"{lead['account']}_random_twin"
-    twin_row = next((r for r in rows if r["account"] == twin_name), None)
-    chart = None
-    if twin_row is not None:
-        a = _series(lead["account"], roi["generated_utc"])
-        t = _series(twin_name, roi["generated_utc"])
-        dates = [d for d in a if d in t]
-        chart = {"account": lead["account"], "twin": twin_name, "dates": dates,
-                 "acct": [a[d][0] for d in dates], "spy": [a[d][1] for d in dates],
-                 "twin_vals": [t[d][0] for d in dates]}
+    # A name/strategy prose is not structured lineage or a fair-control proof.
+    links = [b for b in dna_by.values() if b.get("twin_of") == lead["account"]
+             and isinstance(b.get("twin_kind"), str) and b["twin_kind"]]
+    linked = links[0] if len(links) == 1 else None
+    a = _series(lead["account"], roi["generated_utc"])
+    t = _series(linked["account"], roi["generated_utc"]) if linked else {}
+    dates = [d for d in a if not linked or d in t]
+    chart = {"account": lead["account"], "twin": linked["account"] if linked else None,
+             "dates": dates, "acct": [a[d][0] for d in dates], "spy": [a[d][1] for d in dates],
+             "twin_vals": [t[d][0] for d in dates] if linked else [],
+             "relationship_status": "RECORDED_LINK" if linked else "RELATIONSHIP_UNKNOWN",
+             "twin_of": linked["twin_of"] if linked else None,
+             "twin_kind": linked["twin_kind"] if linked else None}
     priced = sum(1 for r in rows if r.get("vs_spy_pp") is not None)
     return {"run_id": RESULTS_RUN_ID, "as_of": str(roi["generated_utc"])[:10],
             "receipt": f"backend/data/optimus/paper_accounts/roi_{RESULTS_RUN_ID}.json",
@@ -754,18 +778,19 @@ def _results_css() -> str:
 
 
 def _chart(d: dict, cx0: float, top: float, cw: float) -> list[str]:
-    """The lead account against its matched random twin and SPY, revealed left to right."""
+    """Same-window SPY; any recorded comparator is explicitly not fair-qualified."""
     o: list[str] = []
     c = d["chart"]
     if not c or len(c["dates"]) < 2:
         return o
     lead = d["featured"][0]
     ch, cy0 = 200, top + 22
-    o.append(f'<text x="{cx0}" y="{top + 2}" class="ctitle">{_t(lead["name"])} vs its matched random '
-             f'twin</text>')
+    o.append(f'<text x="{cx0}" y="{top + 2}" class="ctitle">{_t(lead["name"])} vs SPY</text>')
+    relation = "recorded comparator; fair-control qualification not established" if c["twin"] else "twin relationship UNKNOWN; gap NOT_COMPUTABLE"
+    o.append(f'<text x="{cx0}" y="{top + 18}" class="fine">{relation}</text>')
     vals = c["acct"] + c["spy"] + c["twin_vals"]
     ymin = math.floor(min(vals) / 2) * 2
-    ymax = math.ceil(max(vals) / 2) * 2
+    ymax = max(ymin + 2, math.ceil(max(vals) / 2) * 2)
     n = len(c["dates"])
 
     def X(i: int) -> float:
@@ -787,13 +812,15 @@ def _chart(d: dict, cx0: float, top: float, cw: float) -> list[str]:
              f'calcMode="spline" keyTimes="0;1" keySplines="0.25 0.6 0.2 1"/></rect></clipPath>')
     o.append('<g clip-path="url(#reveal)">')
     for cls, vs in (("ln-spy", c["spy"]), ("ln-twin", c["twin_vals"]), ("ln-acct", c["acct"])):
+        if not vs:
+            continue
         pts = " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(vs))
         o.append(f'<polyline points="{pts}" class="{cls}"/>')
     for i, v in enumerate(c["acct"]):
         o.append(f'<circle cx="{X(i):.1f}" cy="{Y(v):.1f}" r="3" class="pt"/>')
     o.append("</g>")
     lx = X(n - 1)
-    a_last, s_last, t_last = c["acct"][-1], c["spy"][-1], c["twin_vals"][-1]
+    a_last, s_last = c["acct"][-1], c["spy"][-1]
     o.append(f'<circle cx="{lx:.1f}" cy="{Y(a_last):.1f}" r="4" class="pulse">'
              f'<animate attributeName="r" values="4;16" dur="2s" begin="2.6s" repeatCount="indefinite"/>'
              f'<animate attributeName="opacity" values="0.9;0" dur="2s" begin="2.6s" '
@@ -801,10 +828,14 @@ def _chart(d: dict, cx0: float, top: float, cw: float) -> list[str]:
     o.append(f'<circle cx="{lx:.1f}" cy="{Y(a_last):.1f}" r="4" class="pulse-core"/>')
     o.append(f'<text x="{lx + 12:.1f}" y="{Y(a_last) + 5:.1f}" class="lab-acct">{_num(a_last)}%</text>')
     o.append(f'<text x="{lx + 12:.1f}" y="{Y(s_last) + 5:.1f}" class="lab-spy">SPY {_num(s_last)}%</text>')
-    o.append(f'<text x="{lx + 12:.1f}" y="{Y(t_last) + 9:.1f}" class="lab-twin">twin {_num(t_last)}%</text>')
+    if c["twin"]:
+        t_last = c["twin_vals"][-1]
+        o.append(f'<text x="{lx + 12:.1f}" y="{Y(t_last) + 9:.1f}" class="lab-twin">recorded {_num(t_last)}%</text>')
     ly, lxx = cy0 + ch + 44, cx0
-    for cls, lab in (("ln-acct", "account"), ("ln-twin", "matched random twin"),
-                     ("ln-spy", "SPY, same window")):
+    legend = [("ln-acct", "account"), ("ln-spy", "SPY, same window")]
+    if c["twin"]:
+        legend.append(("ln-twin", "recorded comparator"))
+    for cls, lab in legend:
         o.append(f'<line x1="{lxx}" y1="{ly - 4}" x2="{lxx + 22}" y2="{ly - 4}" class="{cls}"/>')
         o.append(f'<text x="{lxx + 30}" y="{ly}" class="meta">{_t(lab)}</text>')
         lxx += 44 + len(lab) * 7
@@ -840,11 +871,11 @@ def render_results() -> str:
             + "; ".join(f"{f['name']} {_return_label(f.get('roi'))} vs SPY {_return_label(f.get('spy'))} over its own window, "
                         f"{_num(f['excess'])} pp, {f['label']}" for f in d["featured"])
             + f". {selection_line(d)}")
-    o = _head(RES_W, RES_H, "Aegis: best paper accounts, live", desc, _results_css())
+    o = _head(RES_W, RES_H, "Aegis: paper account snapshot", desc, _results_css())
     o.append(f'<rect width="{RES_W}" height="{RES_H}" class="bg"/>')
     x, w = 40, 1120
     o.append(f'<circle cx="{x + 5}" cy="40" r="4" class="live"/>')
-    o.append(f'<text x="{x + 18}" y="44" class="sec">BEST PAPER ACCOUNTS · LIVE</text>')
+    o.append(f'<text x="{x + 18}" y="44" class="sec">PAPER ACCOUNT SNAPSHOT</text>')
     o.append(f'<text x="{x + w}" y="44" class="secr" text-anchor="end">SNAPSHOT {d["as_of"]} · RECEIPT '
              f'{Path(d["receipt"]).stem}</text>')
     o.append(f'<line x1="{x}" y1="58" x2="{x + w}" y2="58" class="rule"/>')
@@ -1247,7 +1278,7 @@ CHART_W, CHART_H = 640, 300
 def render_chart() -> str:
     """The results chart alone (the HTML page draws its cards natively)."""
     d = results_data()
-    o = _head(CHART_W, CHART_H, f"{d['featured'][0]['name']} vs its matched random twin",
+    o = _head(CHART_W, CHART_H, f"{d['featured'][0]['name']} vs SPY; twin relationship status",
               f"Daily marks from the dated receipts up to roi_{d['run_id']}.", _results_css())
     o.append(f'<rect width="{CHART_W}" height="{CHART_H}" class="bg"/>')
     o += _chart(d, 48, 24, CHART_W - 48)
@@ -1461,7 +1492,10 @@ def _readme_entry(f: dict, d: dict) -> str:
     out = (f"{f['name']} ({', '.join(bits)}) {f['roi']:+.2f}% vs SPY {f['spy']:+.2f}% "
           f"since {f['since']}, {f['excess']:+.2f} pp")
     if f is d["featured"][0] and d["chart"]:
-        out += f", its matched random twin {d['chart']['twin_vals'][-1]:+.2f}%"
+        if d["chart"]["twin"]:
+            out += f", recorded comparator {d['chart']['twin_vals'][-1]:+.2f}% (fair-control qualification not established)"
+        else:
+            out += ", twin relationship UNKNOWN; gap NOT_COMPUTABLE"
     if f["shares_names_with"]:
         out += f", holds the same {len(f['tickers'])} names as {f['shares_names_with']}"
     return out

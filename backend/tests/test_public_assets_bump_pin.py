@@ -405,7 +405,7 @@ def test_snapshot_renders_without_raw_paper_receipts(
     from backend.tests import test_public_assets as public_gate
     public_gate.test_every_number_on_the_results_panel_is_the_receipts_number()
     public_gate.test_the_featured_accounts_are_what_the_declared_rule_picks()
-    public_gate.test_the_chart_is_the_lead_account_against_its_matched_twin_on_shared_dates()
+    public_gate.test_the_chart_uses_spy_without_inventing_an_unrecorded_twin()
 
     for bad_name in ("../roi_2026-01-01.nobroker.json", "private_account_2026-01-01.json",
                      "book_dna_2026-01-01.nobroker.json", "roi_2026-01-01.other.json"):

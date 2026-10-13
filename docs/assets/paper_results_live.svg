@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="470" viewBox="0 0 1200 470" role="img" aria-labelledby="title desc">
-<title id="title">Aegis: best paper accounts, live</title>
+<title id="title">Aegis: paper account snapshot</title>
 <desc id="desc">Best paper accounts, snapshot observed 2026-10-11 (receipt docs/assets/public_results_2026-10-11T235329Z.json): revision_flow_v0 +10.60% vs SPY +1.33% over its own window, +9.27 pp, OBSERVED(10); night book b109c886 +4.74% vs SPY +2.12% over its own window, +2.62 pp, OBSERVED(20); hack2 +5.52% vs SPY +1.22% over its own window, +4.30 pp, OBSERVED(30) · 10/30 daily marks. Best strategy account in each of 3 families (control twins excluded), picked after the fact from 307 priced paper accounts. Paper only; each return is over the account's own window, SPY compounded over the same days.</desc>
 <style>.bg{fill:#000000}.sec{font:700 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:3px;fill:#fff}.secr{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:rgba(255,255,255,.45)}.rule{stroke:rgba(255,255,255,.14)}.live{fill:#4a8dff;animation:live 1.8s ease-out infinite}@keyframes live{0%{opacity:1}100%{opacity:.15}}.excess{font:300 34px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:#6fb0ff}.exlab{font:500 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:#4a8dff}.acct{font:600 15px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.meta{font:400 12px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.58)}.badge{font:500 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;letter-spacing:1.5px;fill:rgba(255,255,255,.45)}.track{fill:rgba(255,255,255,.06)}.bar-acct{fill:#4a8dff}.bar-spy{fill:rgba(255,255,255,.55)}.val{font:600 12px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.valspy{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:rgba(255,255,255,.58)}.grid{stroke:rgba(255,255,255,.08)}.zero{stroke:rgba(255,255,255,.45);stroke-dasharray:2 3}.tick{font:400 10px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:rgba(255,255,255,.45)}.ln-acct{fill:none;stroke:#4a8dff;stroke-width:2.4;stroke-linejoin:round}.ln-spy{fill:none;stroke:#fff;stroke-width:1.4;stroke-dasharray:5 4}.ln-twin{fill:none;stroke:rgba(255,255,255,.45);stroke-width:1.4}.pt{fill:#000000;stroke:#4a8dff;stroke-width:1.6}.pulse{fill:none;stroke:#6fb0ff;stroke-width:1.5}.pulse-core{fill:#6fb0ff}.lab-acct{font:600 13px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#6fb0ff}.lab-spy{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.lab-twin{font:400 11px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:rgba(255,255,255,.45)}.ctitle{font:600 14px ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;fill:#fff}.fine{font:400 11px Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;fill:rgba(255,255,255,.45)}@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>
 <defs></defs>
 <rect width="1200" height="470" class="bg"/>
 <circle cx="45" cy="40" r="4" class="live"/>
-<text x="58" y="44" class="sec">BEST PAPER ACCOUNTS · LIVE</text>
+<text x="58" y="44" class="sec">PAPER ACCOUNT SNAPSHOT</text>
 <text x="1160" y="44" class="secr" text-anchor="end">SNAPSHOT 2026-10-11 · RECEIPT public_results_2026-10-11T235329Z</text>
 <line x1="40" y1="58" x2="1160" y2="58" class="rule"/>
 <text x="40" y="118" class="excess">+9.27</text>
@@ -45,7 +45,8 @@
 <rect x="440.000" y="338" width="12.421" height="8" class="bar-spy" rx="4"><animate attributeName="x" from="440.000" to="440.000" dur="1.4s" begin="0.70s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/><animate attributeName="width" from="0" to="12.421" dur="1.4s" begin="0.70s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.2 0.8 0.2 1"/></rect>
 <text x="640" y="320" class="val" text-anchor="end">+5.52%</text>
 <text x="640" y="346" class="valspy" text-anchor="end">SPY +1.22%</text>
-<text x="690" y="90" class="ctitle">revision_flow_v0 vs its matched random twin</text>
+<text x="690" y="90" class="ctitle">revision_flow_v0 vs SPY</text>
+<text x="690" y="106" class="fine">twin relationship UNKNOWN; gap NOT_COMPUTABLE</text>
 <line x1="690" y1="310.0" x2="1064" y2="310.0" class="grid"/>
 <text x="682" y="314.0" class="tick" text-anchor="end">−2%</text>
 <line x1="690" y1="283.7" x2="1064" y2="283.7" class="zero"/>
@@ -75,7 +76,6 @@
 <clipPath id="reveal"><rect x="686" y="100" width="470" height="230"><animate attributeName="width" from="0" to="470" dur="2.6s" begin="0s" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.25 0.6 0.2 1"/></rect></clipPath>
 <g clip-path="url(#reveal)">
 <polyline points="698.0,288.4 738.0,290.8 778.0,293.5 818.0,291.2 858.0,281.5 898.0,272.6 938.0,265.3 978.0,268.5 1018.0,274.2 1058.0,266.2" class="ln-spy"/>
-<polyline points="698.0,284.5 738.0,293.8 778.0,300.0 818.0,287.4 858.0,286.3 898.0,274.9 938.0,283.8 978.0,299.9 1018.0,299.2 1058.0,292.7" class="ln-twin"/>
 <polyline points="698.0,256.2 738.0,248.8 778.0,233.0 818.0,222.1 858.0,213.9 898.0,199.5 938.0,189.9 978.0,202.5 1018.0,192.1 1058.0,144.4" class="ln-acct"/>
 <circle cx="698.0" cy="256.2" r="3" class="pt"/>
 <circle cx="738.0" cy="248.8" r="3" class="pt"/>
@@ -92,13 +92,10 @@
 <circle cx="1058.0" cy="144.4" r="4" class="pulse-core"/>
 <text x="1070.0" y="149.4" class="lab-acct">+10.60%</text>
 <text x="1070.0" y="271.2" class="lab-spy">SPY +1.33%</text>
-<text x="1070.0" y="301.7" class="lab-twin">twin −0.68%</text>
 <line x1="690" y1="350" x2="712" y2="350" class="ln-acct"/>
 <text x="720" y="354" class="meta">account</text>
-<line x1="783" y1="350" x2="805" y2="350" class="ln-twin"/>
-<text x="813" y="354" class="meta">matched random twin</text>
-<line x1="960" y1="350" x2="982" y2="350" class="ln-spy"/>
-<text x="990" y="354" class="meta">SPY, same window</text>
+<line x1="783" y1="350" x2="805" y2="350" class="ln-spy"/>
+<text x="813" y="354" class="meta">SPY, same window</text>
 <text x="40" y="426" class="fine">Best strategy account in each of 3 families (control twins excluded), picked after the fact from 307 priced paper accounts.</text>
 <text x="40" y="444" class="fine">Paper only; each return is over the account's own window, SPY compounded over the same days.</text>
 </svg>
