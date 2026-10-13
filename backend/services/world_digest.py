@@ -767,7 +767,10 @@ def parse_current_reply(reply: str) -> dict:
 
 def extract_current_item(item: Item, meter: "Meter", *, cache: dict,
                          cutoff_utc: str, stage_cap: float,
-                         semantic_review: Optional[dict] = None) -> dict:
+                         semantic_review: Optional[dict] = None,
+                         contract_version: Optional[str] = None,
+                         context_capture: Optional[dict] = None,
+                         native_evidence: Optional[dict] = None) -> dict:
     """Opt-in CURRENT capture/admission only, with no automatic cache writes.
 
     Returned captures are evidence, including refusals. Persist them privately;
@@ -775,6 +778,12 @@ def extract_current_item(item: Item, meter: "Meter", *, cache: dict,
     A cache hit undergoes the same full case admission; legacy keys cannot hit.
     """
     from backend.services import news_source_validation as NV
+    if contract_version == CURRENT_CONTEXT_VERSION:
+        return extract_context_item(item, cache=cache, cutoff_utc=cutoff_utc,
+                                    capture=context_capture, semantic_review=semantic_review,
+                                    native_evidence=native_evidence)
+    if contract_version not in (None, CURRENT_EXTRACT_VERSION):
+        raise NV.SourceValidationError("unknown_current_contract_version")
     NV.check_current_times(item, cutoff_utc=cutoff_utc)
     key = current_cache_key(item)
     capture = cache.get(key)
@@ -806,6 +815,53 @@ def extract_current_item(item: Item, meter: "Meter", *, cache: dict,
     return {"status": "CURRENT_CASE_ADMITTED_EXPERIMENTAL_ONLY", "rows": [capture["row"]],
             "capture": capture, "admission": admission, "cache_hit": hit,
             "experimental_contract": declaration}
+
+
+# Separate opt-in context contract: no native calls, automatic cache writes or
+# promotion into the immutable v0 numerical consumer. The v1 bytes stay frozen.
+CURRENT_CONTEXT_VERSION = "source_context_v2"
+CURRENT_CONTEXT_SYSTEM = (
+    "Return source facts with exact witnesses and publication, reporting_period or "
+    "scheduled_event date roles. Preserve source predictions separately from AEGIS "
+    "research questions. No operative dates, listing inference or forecast authority."
+)
+
+
+def context_extraction_identity() -> dict:
+    from backend.services import news_source_validation as NV
+    return {"version": CURRENT_CONTEXT_VERSION,
+            "system_sha256": NV.content_sha256(CURRENT_CONTEXT_SYSTEM)}
+
+
+def context_cache_key(item: Item) -> str:
+    from backend.services import news_source_validation as NV
+    return NV.content_sha256({"identity": context_extraction_identity(), "item": vars(item)})
+
+
+def extract_context_item(item: Item, *, cache: dict, cutoff_utc: str,
+                         capture: Optional[dict] = None,
+                         semantic_review: Optional[dict] = None,
+                         native_evidence: Optional[dict] = None) -> dict:
+    """Admit supplied context only; absence never initiates a paid/native call.
+
+    Deterministic annotations are not model replies. A native annotation needs
+    separately retained returned-call evidence, reviewed for producer origin;
+    template hashes alone never attest that a call happened.
+    """
+    from backend.services import news_source_validation as NV
+    key = context_cache_key(item)
+    hit = capture is None and key in cache
+    if capture is None:
+        capture = cache.get(key)
+    try:
+        admission = NV.admit_context(item, capture, semantic_review=semantic_review,
+                                     cutoff_utc=cutoff_utc, native_evidence=native_evidence)
+    except NV.SourceValidationError as exc:
+        return {"status": "REFUSED", "reason": str(exc), "rows": [], "context_rows": [],
+                "capture": capture, "cache_hit": hit}
+    return {"status": "CURRENT_CONTEXT_ADMITTED_ONLY", "rows": [],
+            "context_rows": [capture["annotation"]], "capture": capture,
+            "admission": admission, "cache_hit": hit}
 
 
 def read_cache(path: Optional[Path] = None) -> dict[str, dict]:

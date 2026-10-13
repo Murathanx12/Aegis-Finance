@@ -176,3 +176,161 @@ reporting/publication stamp is metadata, and cannot fill the operative field.
             "source_sha256": source_sha256, "event_date": None,
             "semantic_grounding_validated": False,
             "reason": "exact spans only; no full held-out semantic quality pass"}
+
+
+def _context_dates(dates, source: str, *, cutoff_utc: str) -> None:
+    """Witnessed date roles are context, never inferred operative authority."""
+    if not isinstance(dates, list):
+        raise SourceValidationError("context_invalid_dates")
+    for fact in dates:
+        if (not isinstance(fact, dict)
+                or set(fact) != {"role", "value", "precision", "timezone", "witness"}
+                or not isinstance(fact["role"], str) or not isinstance(fact["precision"], str)
+                or fact["role"] not in {"publication", "reporting_period", "scheduled_event"}
+                or fact["precision"] not in {"day", "month", "quarter", "year", "minute", "second",
+                                             "minute_timezone_unresolved"}):
+            raise SourceValidationError("context_unsupported_date_role_or_precision")
+        value, witness, zone = fact["value"], fact["witness"], fact["timezone"]
+        if (not isinstance(value, str) or not value or not isinstance(witness, str)
+                or witness not in source or value not in witness
+                or (zone is not None and (not isinstance(zone, str) or not zone or zone not in witness))):
+            raise SourceValidationError("context_detached_date_witness")
+        if fact["precision"] == "minute_timezone_unresolved" and zone is not None:
+            raise SourceValidationError("context_invented_date_timezone")
+        if fact["role"] == "scheduled_event" and fact["precision"] in {"minute", "second"} and not zone:
+            raise SourceValidationError("context_scheduled_timezone_missing")
+        if fact["role"] == "scheduled_event" and zone is not None:
+            from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+            try:
+                ZoneInfo(zone)
+                if fact["precision"] in {"minute", "second"}:
+                    fmt = "%Y-%m-%d %H:%M" + (":%S" if fact["precision"] == "second" else "")
+                    datetime.strptime(value, fmt)
+            except (ValueError, ZoneInfoNotFoundError):
+                raise SourceValidationError("context_invalid_scheduled_date_or_timezone")
+        if fact["role"] == "publication":
+            # Never use acquisition time to invent a publication hour/zone.
+            formats = ("%Y/%m/%d", "%Y-%m-%d", "%B %d, %Y",
+                       "%A, %B %d, %Y - %I:%M%p")
+            day = None
+            for fmt in formats:
+                try:
+                    day = datetime.strptime(value, fmt).date()
+                    break
+                except ValueError:
+                    continue
+            if day is None or day > _time(cutoff_utc).date():
+                raise SourceValidationError("context_invalid_or_future_publication_date")
+
+
+def _context_native_evidence(item, capture: dict, evidence: dict | None) -> None:
+    """Bind retained returned-call metadata; no receipt is manufactured here.
+
+    This is not authentication of arbitrary caller-provided dictionaries. The
+    independent producer-origin review must inspect actual transport/telemetry
+    provenance. Missing call IDs in today's producer remain a refusal.
+    """
+    from backend.services import world_digest as WD
+    producer = capture["producer"]
+    if not isinstance(evidence, dict) or producer.get("receipt_sha256") != content_sha256(evidence):
+        raise SourceValidationError("context_native_returned_evidence_missing_or_drift")
+    for field in ("call_id", "provider", "served_model"):
+        if (not isinstance(evidence.get(field), str) or not evidence[field].strip()
+                or producer.get(field) != evidence[field]):
+            raise SourceValidationError("context_native_call_identity_missing_or_drift")
+    prompt, _ = WD._item_prompt(item)
+    if (evidence.get("system_sha256") != content_sha256(WD.CURRENT_CONTEXT_SYSTEM)
+            or evidence.get("user_prompt_sha256") != content_sha256(prompt)):
+        raise SourceValidationError("context_native_actual_prompt_drift")
+    if (evidence.get("started_utc") != capture["started_utc"]
+            or evidence.get("completed_utc") != capture["completed_utc"]):
+        raise SourceValidationError("context_native_call_clock_drift")
+    reply = evidence.get("raw_reply")
+    if not isinstance(reply, str) or WD.parse_current_reply(reply) != capture["annotation"]:
+        raise SourceValidationError("context_native_returned_reply_drift")
+    telemetry = evidence.get("telemetry")
+    if (not isinstance(telemetry, dict) or telemetry.get("status") != "OK"
+            or any(telemetry.get(k) != evidence[k] for k in ("call_id", "provider", "served_model"))
+            or telemetry.get("response_sha256") != content_sha256(reply)):
+        raise SourceValidationError("context_native_telemetry_missing_or_drift")
+
+
+def admit_context(item, capture: dict | None, *, semantic_review: dict | None,
+                  cutoff_utc: str, native_evidence: dict | None = None) -> dict:
+    """Versioned source-grounded context admission, with no economic authority."""
+    from backend.services import world_digest as WD
+    check_current_times(item, cutoff_utc=cutoff_utc)
+    fields = {"schema", "cache_key", "extraction_identity", "source_sha256",
+              "source_item_sha256", "started_utc", "completed_utc", "producer", "annotation"}
+    if (not isinstance(capture, dict) or set(capture) != fields
+            or capture.get("schema") != "current_news_context_capture/2"):
+        raise SourceValidationError("context_capture_shape_or_version")
+    if (capture["cache_key"] != WD.context_cache_key(item)
+            or capture["extraction_identity"] != WD.context_extraction_identity()
+            or capture["source_sha256"] != content_sha256(item.title + "\n" + item.text)
+            or capture["source_item_sha256"] != content_sha256(vars(item))):
+        raise SourceValidationError("context_source_or_identity_drift")
+    started, completed, cutoff = map(_time, (capture["started_utc"], capture["completed_utc"], cutoff_utc))
+    if not _time(item.first_seen_utc) <= started <= completed <= cutoff:
+        raise SourceValidationError("context_capture_clock_invalid")
+    if item.published_utc and _time(item.published_utc) > started:
+        raise SourceValidationError("context_publication_after_extraction")
+    annotation = capture["annotation"]
+    if (not isinstance(annotation, dict)
+            or set(annotation) != {"facts", "dates", "source_predictions", "aegis_hypotheses"}
+            or not isinstance(annotation["facts"], dict)
+            or not isinstance(annotation["source_predictions"], list)
+            or not isinstance(annotation["aegis_hypotheses"], list)
+            or any(not isinstance(q, str) or not q.strip() for q in annotation["aegis_hypotheses"])):
+        raise SourceValidationError("context_annotation_shape")
+    source = item.title + "\n" + item.text
+    facts = annotation["facts"]
+    if (set(facts) != {"entity", "event_date", "date_precision", "evidence_spans", "numbers", "abstain"}
+            or type(facts["abstain"]) is not bool
+            or not isinstance(facts.get("evidence_spans"), list)
+            or not isinstance(facts.get("numbers", []), list)):
+        raise SourceValidationError("context_invalid_factual_collections")
+    if facts["entity"] is not None and not isinstance(facts["entity"], str):
+        raise SourceValidationError("context_invalid_factual_entity")
+    validate_article_facts(annotation["facts"], source, source_sha256=capture["source_sha256"])
+    if any(not any(number in span for span in annotation["facts"]["evidence_spans"])
+           for number in annotation["facts"].get("numbers", [])):
+        raise SourceValidationError("context_quantity_without_fact_witness")
+    _context_dates(annotation["dates"], source, cutoff_utc=cutoff_utc)
+    WD.type_current_row({"event_type": "other", "novelty": "new_fact",
+                         "forward_claims": annotation["source_predictions"]}, item)
+    producer = capture["producer"]
+    if not isinstance(producer, dict) or not isinstance(producer.get("actor"), str) or not producer["actor"].strip():
+        raise SourceValidationError("context_producer_missing")
+    kind = producer.get("kind")
+    if kind == "DETERMINISTIC_ANNOTATION":
+        if set(producer) != {"kind", "actor"} or native_evidence is not None:
+            raise SourceValidationError("context_deterministic_native_misattribution")
+    elif kind == "NATIVE_INFERENCE":
+        if set(producer) != {"kind", "actor", "call_id", "provider", "served_model", "receipt_sha256"}:
+            raise SourceValidationError("context_native_producer_shape")
+        _context_native_evidence(item, capture, native_evidence)
+    else:
+        raise SourceValidationError("context_unknown_producer_kind")
+    review = semantic_review
+    required = {"full_row", "producer_origin", "date_roles", "quantities_units_baselines",
+                "source_predictions_separate_from_aegis_hypotheses"}
+    if (not isinstance(review, dict) or review.get("schema") != "current_news_context_review/2"
+            or review.get("decision") != "CONTEXT_ACCEPTED" or review.get("independent") is not True
+            or not isinstance(review.get("reviewer"), str) or not review["reviewer"].strip()
+            or review["reviewer"] == producer["actor"]
+            or review.get("capture_sha256") != current_binding(capture)
+            or review.get("producer_kind") != kind):
+        raise SourceValidationError("context_independent_review_missing_or_drift")
+    checks = review.get("checks")
+    if (not isinstance(checks, list) or len(checks) != len(required)
+            or any(not isinstance(check, str) for check in checks) or set(checks) != required):
+        raise SourceValidationError("context_review_incomplete")
+    if not completed <= _time(review.get("reviewed_utc")) <= cutoff:
+        raise SourceValidationError("context_review_clock_invalid")
+    return {"status": "SOURCE_GROUNDED_CONTEXT_ONLY", "capture_sha256": current_binding(capture),
+            "review_sha256": content_sha256(review), "producer_kind": kind,
+            "native_call_evidence_bound": kind == "NATIVE_INFERENCE",
+            "semantic_grounding_validated": True, "operative_event_date": None,
+            "eligible_for_existing_shadow_v0": False, "forecast_authority": False,
+            "ranking_authority": False, "sizing_authority": False}
