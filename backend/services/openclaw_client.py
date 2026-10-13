@@ -1737,6 +1737,25 @@ def _evaluate_constant(fn: str, target_id: str, *, profile_name: str | None = No
     return out
 
 
+def agent_error_code(status: str, stderr: str) -> str | None:
+    """Classify the CLI's own diagnostic, never text from a model reply."""
+    if status == "RC_NONZERO" and re.search(
+            r"(?m)^\[openclaw\] Reason: Unknown model: ", stderr or ""):
+        return "UNKNOWN_MODEL"
+    return None
+
+
+def agent_error_summary(status: str, stderr: str, error_code: str | None = None) -> str:
+    """Allowlisted cause prefixes for receipts; raw CLI identifiers stay private."""
+    if error_code == "UNKNOWN_MODEL":
+        return "Unknown model: requested model unavailable in OpenClaw catalogue"
+    if status == "TIMEOUT":
+        return "Timeout: OpenClaw call did not complete"
+    if status == "RC_NONZERO" and "1006" in (stderr or ""):
+        return "Gateway connection closed (1006 abnormal closure)"
+    return "OpenClaw call failed; raw diagnostic withheld"
+
+
 def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
           timeout: float = 600.0, purpose: str = "openclaw:agent",
           session_id: str | None = None,
@@ -1790,6 +1809,7 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
         status = "UNPARSEABLE_ENVELOPE"
     else:
         status = "OK"
+    error_code = agent_error_code(status, err)
     # The release runs on EVERY path, a telemetry failure included: a session
     # left open keeps its gateway-side MCP children alive (C14, 2026-10-07).
     released = None
@@ -1799,7 +1819,9 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
             message_file=message_file, usage=env.get("usage") or {},
             latency_ms=latency_ms, status=status, rc=rc, session_id=sid,
             openclaw_cost_usd=env.get("openclaw_cost_usd"),
-            run_id=env.get("run_id"), error=(err[:300] if status != "OK" else None),
+            run_id=env.get("run_id"), error=(
+                agent_error_summary(status, err, error_code) if error_code else
+                err[:300] if status != "OK" else None),
             path=telemetry_path)
     finally:
         if session_id is None:
@@ -1807,6 +1829,7 @@ def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
                 sid, since=datetime.fromtimestamp(t0, timezone.utc) - timedelta(seconds=5))
     served = env.get("response_model") or model
     return {"rc": rc, "reply": reply, "stderr": err.strip()[:600],
+            "error_code": error_code,
             "model": model, "status": status, "session_id": sid,
             "session_released": released,
             "usage": env.get("usage") or {}, "call_id": call_id,
