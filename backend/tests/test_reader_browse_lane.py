@@ -454,7 +454,7 @@ def test_the_digest_asks_are_adopted_once_as_searches_and_urls(ledger):
 
 
 def test_old_links_are_not_queued_and_archive_pages_are_flagged_not_followed(ledger):
-    old = (NOW - timedelta(days=40)).strftime("%b. %d, %Y").replace("May.", "May")
+    old = (NOW - timedelta(days=40)).strftime("%b. %d, %Y, 1:00 p.m. ET").replace("May.", "May")
     assert RS.is_archive((NOW - timedelta(days=40)).isoformat(), NOW)
     assert not RS.is_archive((NOW - timedelta(days=1)).isoformat(), NOW)
     assert not RS.is_archive(None, NOW)

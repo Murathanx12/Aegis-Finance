@@ -1717,7 +1717,9 @@ def _quote_page(title: str, now: datetime) -> str:
     """A WSJ quote page snapshot: nav, a sign-in link, a sponsored unit, an old
     story, dated / relative / undated stories, and a market-data link."""
     def day(n: int) -> str:
-        return (now - timedelta(days=n)).strftime("%B %d, %Y")
+        # A visible publication instant is needed to age a link; a date alone
+        # does not identify when the story became available.
+        return (now - timedelta(days=n)).strftime("%B %d, %Y, 1:00 p.m. ET")
     rows = [
         ("link", "Markets", "https://www.wsj.com/finance"),
         ("link", "Sign In", "https://accounts.wsj.com/login"),
