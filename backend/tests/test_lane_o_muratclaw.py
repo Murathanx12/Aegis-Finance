@@ -335,7 +335,11 @@ class FakeSession:
         self.posts.append(dict(a))
         act, tid = a["action"], a.get("targetId")
         det: dict
-        if act == "tabs":
+        if act == "profiles":
+            det = {"profiles": [{"name": "muratclaw", "running": True,
+                                 "isDefault": True, "cdpPort": 18802},
+                                {"name": "user", "running": False}]}
+        elif act == "tabs":
             det = {"tabs": self.fb.listing(), "running": True}
         elif act == "status":
             det = {"running": True, "cdpUrl": "http://127.0.0.1:18802"}
@@ -413,10 +417,10 @@ def test_every_guard_binds_on_the_http_path_exactly_as_on_the_cli(both):
         led = OC.cli_ledger()
         counts[tr] = dict(led["guards"])
         routed = led.get("by_transport") or {}
-        # the actions went where the transport says (profiles is CLI on both)
-        assert set(routed) == ({"cli"} if tr == "cli" else {"cli", "http"})
+        # Profile proof and guarded actions use the selected transport.
+        assert set(routed) == ({"cli"} if tr == "cli" else {"http"})
         if tr == "http":
-            assert set(routed["cli"]) == {"browser profiles"}
+            assert "browser profiles" in routed["http"]
             assert fb.session.posts, "the HTTP route was not used"
         assert fb.actions == ["open", "snapshot", "click", "press", "evaluate", "close"]
     missing = REQUIRED_GUARDS - set(counts["http"])
@@ -550,9 +554,9 @@ def test_argv_maps_to_tool_args(argv, expect):
     assert OH.tool_args(OH.parse_argv(argv)) == expect
 
 
-def test_profiles_start_stop_and_gateway_stay_on_the_cli():
+def test_start_stop_and_gateway_stay_on_the_cli():
     t = OH.HttpTransport(session=object(), token_fn=lambda: "tok")
-    for argv in (["browser", "profiles"], ["browser", "--browser-profile", "m", "start"],
+    for argv in (["browser", "--browser-profile", "m", "start"],
                  ["gateway", "restart"], ["agent", "--message-file", "x"]):
         assert not t.serves(argv) and t.run(argv) is None
 
