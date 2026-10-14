@@ -74,7 +74,7 @@ REQUIRED_FIELDS = (
 )
 
 VALID_TIERS = ("1", "2", "3", "social_hypothesis")
-VALID_METHODS = ("api", "rss", "lib")
+VALID_METHODS = ("api", "rss", "lib", "html")
 
 #: WHICH NETWORK DOOR a source's pages come through. OPTIONAL on a row, and
 #: `plain` when absent — which is what every row written before 2026-09-19
@@ -141,6 +141,8 @@ class NewsSource:
     #: Which network door this source's pages come through. Optional in the
     #: file, `plain` when absent — see `VALID_FETCHERS`.
     fetcher: str = DEFAULT_FETCHER
+    #: A pinned one-off document is pullable explicitly, never by `--source all`.
+    manual_only: bool = False
     #: GDELT's per-region/per-theme query list; empty for everyone else.
     queries: tuple[str, ...] = ()
     raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
@@ -265,6 +267,7 @@ def _validate_row(row: Any, seen: set[str]) -> NewsSource:
             f"REFUSED: source {sid!r} fetcher {fetcher!r} not in {VALID_FETCHERS}. "
             f"Omit the field for the plain HTTP door."
         )
+    manual_only = _as_bool(row, "manual_only", sid) if "manual_only" in row else False
 
     return NewsSource(
         id=sid,
@@ -289,6 +292,7 @@ def _validate_row(row: Any, seen: set[str]) -> NewsSource:
         implemented_note=str(row["implemented_note"]).strip(),
         notes=str(row["notes"]).strip(),
         fetcher=fetcher,
+        manual_only=manual_only,
         queries=tuple(queries),
         raw=dict(row),
     )
@@ -356,7 +360,7 @@ def get(source_id: str, path: Path | str | None = None) -> NewsSource:
 
 def pullable(path: Path | str | None = None) -> list[NewsSource]:
     """Sources `scripts/news_pull.py` can actually fetch today."""
-    return [s for s in load(path) if s.implemented and s.parser != "none"]
+    return [s for s in load(path) if s.implemented and s.parser != "none" and not s.manual_only]
 
 
 def label_sources(path: Path | str | None = None) -> list[str]:

@@ -247,6 +247,31 @@ sources:
       `raw_id` is `<accession>:<exhibit filename>`, not the accession, so this
       source's body rows never dedupe against the feed source's headline rows.
 
+  # One pinned issuer document, not an issuer-wide feed. Review before activation.
+  - id: asml_ir_q3_2026
+    provider: ASML Investor Relations
+    region: GLOBAL
+    language: en
+    tier: 1
+    licence: "Public issuer press release; retain provenance for internal research, no republication licence asserted"
+    method: html
+    parser: asml_issuer_html
+    fetcher: plain
+    manual_only: true
+    endpoint_or_feed: "https://investor.asml.com/news-releases/news-release-details/asml-reports-eu11.7-billion-total-net-sales-and-eu5.0-billion-net-income-q3-2026"
+    auth: none
+    rate_limit: "one pinned release, manual event pull only; no recurring scan"
+    min_interval_s: 2.0
+    pit_grade: first_seen_only
+    stamp_field: "sc:publication_date (source metadata; first_seen_utc controls PIT)"
+    stamp_tz: UTC
+    ticker_tags: true
+    body_available: true
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "Issuer HTML, not SEC or operator paste. Canonical URL and page type must match; ASML US symbol only. Existing private first-held capture predates any news_pull run."
+
   - id: yfinance_ticker_news
     provider: Yahoo Finance (via yfinance, unofficial)
     region: GLOBAL

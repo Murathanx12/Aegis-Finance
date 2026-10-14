@@ -63,6 +63,7 @@ import argparse
 import json
 import os
 import re
+import ssl
 import sys
 import threading
 import time
@@ -85,6 +86,7 @@ from backend.services import disk_guard as DG  # noqa: E402
 from backend.services import fetch_scrapling  # noqa: E402
 from backend.services import news_entities as entities  # noqa: E402
 from backend.services import news_registry as registry  # noqa: E402
+from backend.services.issuer_ir_html import IssuerPageRefused, parse_asml_release  # noqa: E402
 
 #: A contactable User-Agent. The SEC REQUIRES one; Reddit 429s without one.
 USER_AGENT = os.getenv(
@@ -279,6 +281,40 @@ def _http_get(url: str, *, headers: dict | None = None, timeout: float = 45.0) -
         raise FetchError(f"HTTP {e.code} {url.split('?')[0]}") from e
     except Exception as e:  # noqa: BLE001 — the receipt wants the string, not a traceback
         raise FetchError(f"{type(e).__name__}: {e}") from e
+
+
+class _IssuerNoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise IssuerPageRefused("issuer_redirect_refused")
+
+
+def _issuer_http_get_exact(url: str) -> bytes:
+    """The pinned issuer-only door: exact HTTPS origin/final URL and 1 MiB cap."""
+    parsed = urllib.parse.urlsplit(url)
+    if (parsed.scheme, parsed.netloc) != ("https", "investor.asml.com") or not parsed.path.startswith(
+            "/news-releases/news-release-details/") or parsed.query or parsed.fragment:
+        raise IssuerPageRefused("issuer_request_origin_refused")
+    request = urllib.request.Request(url, headers={
+        "User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"})
+    opener = urllib.request.build_opener(
+        urllib.request.ProxyHandler({}),
+        urllib.request.HTTPSHandler(context=ssl.create_default_context()),
+        _IssuerNoRedirect())
+    try:
+        with opener.open(request, timeout=10) as response:
+            if response.geturl() != url:
+                raise IssuerPageRefused("issuer_final_url_drift")
+            if response.status != 200:
+                raise IssuerPageRefused(f"issuer_http_status_{response.status}")
+            content_type = response.headers.get("Content-Type", "").lower()
+            if not content_type.startswith(("text/html", "application/xhtml+xml")):
+                raise IssuerPageRefused("issuer_non_html_response")
+            raw = response.read(1024 * 1024 + 1)
+            if len(raw) > 1024 * 1024:
+                raise IssuerPageRefused("issuer_page_over_one_mib")
+            return raw
+    except urllib.error.HTTPError as exc:
+        raise IssuerPageRefused(f"issuer_http_status_{exc.code}") from exc
 
 
 # -------------------------------------------------------------------- parsers
@@ -511,6 +547,18 @@ def fetch_feed(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
         res.items = parser(raw)
     except (FetchError, ET.ParseError) as e:
         res.failures.append(str(e))
+    return res
+
+
+def fetch_asml_issuer_html(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
+    """One registry-pinned issuer page; malformed/replaced content is a refusal."""
+    res = FetchResult()
+    try:
+        res.calls = 1
+        raw = ctx.http_get_issuer_exact(src.endpoint_or_feed)
+        res.items = [parse_asml_release(raw, src.endpoint_or_feed)]
+    except (FetchError, IssuerPageRefused) as exc:
+        res.refused = f"ASML_ISSUER_PAGE_REFUSED: {exc}"
     return res
 
 
@@ -846,6 +894,7 @@ FETCHERS: dict[str, Callable[[registry.NewsSource, "RunContext"], FetchResult]] 
     "gdelt_doc": fetch_gdelt,
     "alpaca_news": fetch_alpaca,
     "yfinance_news": fetch_yfinance_news,
+    "asml_issuer_html": fetch_asml_issuer_html,
 }
 
 
@@ -881,6 +930,11 @@ class RunContext:
         host = urllib.parse.urlsplit(url).netloc
         return call_with_timeout(lambda: _http_get(url, headers=headers),
                                  HTTP_CALL_TIMEOUT_S, f"http {host}")
+
+    def http_get_issuer_exact(self, url: str) -> bytes:
+        """Separate bounded door for one public issuer page; tests stub this method."""
+        return call_with_timeout(lambda: _issuer_http_get_exact(url),
+                                 15.0, "asml issuer html")
 
     def http_get_via(self, src: registry.NewsSource, url: str,
                      headers: dict | None = None) -> bytes:
@@ -1052,7 +1106,7 @@ def _row(src: registry.NewsSource, item: dict, first_seen: datetime, tbl) -> dic
         res = entities.resolve(text, tbl=tbl)
         tickers = list(res.tickers)
         tags.extend(f"resolved:{sym}={rule}" for sym, rule in res.how.items())
-    return {
+    row = {
         "source": src.id,
         "first_seen_utc": _iso(first_seen),
         "published_utc": _iso(item.get("published")),
@@ -1067,6 +1121,9 @@ def _row(src: registry.NewsSource, item: dict, first_seen: datetime, tbl) -> dic
         "pit_grade": src.pit_grade,
         "fetcher": src.fetcher,
     }
+    if item.get("raw_sha256"):
+        row["raw_sha256"] = item["raw_sha256"]
+    return row
 
 
 # ---------------------------------------------------------------------- pull
@@ -1284,7 +1341,8 @@ def main(argv=None) -> int:
 
     if a.list:
         for s in registry.load():
-            mark = "pull" if (s.implemented and s.parser != "none") else "----"
+            mark = ("manual" if s.manual_only else "pull") if (
+                s.implemented and s.parser != "none") else "----"
             print(f"{mark}  {s.id:34s} {s.region:7s} {s.pit_grade:16s} "
                   f"label={str(s.label_source):5s} {s.provider}")
         return 0
