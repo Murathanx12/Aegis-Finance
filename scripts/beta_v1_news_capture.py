@@ -28,6 +28,10 @@ SOURCES = ("scripts/beta_v1_news_capture.py", "backend/services/beta_v1_news_run
     "backend/services/forecast_reputation.py", "backend/services/llm_analyzer.py",
     "backend/services/llm_telemetry.py", "backend/services/llama_server.py", "backend/services/llm_language.py",
     "backend/config.py", "scripts/night_l4_qwen3_measure.py", "scripts/beta_v1_numerical_receipt.py")
+ASML_SOURCES = ("backend/services/asml_current_adapter.py", "backend/services/issuer_ir_current_case.py",
+    "backend/services/issuer_ir_html.py", "backend/services/news_registry.py",
+    "backend/data/news_sources.yaml", "backend/data/news_entities/issuers.csv",
+    "docs/TRIALS/MEASUREMENT_ASML_IR_CURRENT_1.md")
 
 
 def stamp():
@@ -79,11 +83,29 @@ def server_identity(pid):
         api.CloseHandle(handle)
 
 
-def source_pins(check, *, provider=None, expected_site=None):
+def source_pins(check, *, provider=None, expected_site=None, stage=None):
     from backend.services import beta_v1_news_runtime as R
     pins={name:hashlib.sha256(R.read_bound(ROOT/name,check=check)).hexdigest() for name in SOURCES}
+    if stage=="asml-current":
+        pins.update({name:hashlib.sha256(R.read_bound(ROOT/name,check=check)).hexdigest()
+                     for name in ASML_SOURCES})
     if provider=='deepseek':pins.update(R.sdk_source_pins(check=check,expected_site=expected_site))
     return pins
+
+
+def returned_refusal_evidence(directory):
+    """Read only the immutable post-return file, even after STOP/deadline."""
+    from backend.services import beta_v1_news_runtime as R
+    native_file=Path(directory)/"native_return.json"
+    if not native_file.is_file() or native_file.is_symlink():return {}
+    native_raw=R.read_bound(native_file,maximum=R.MAX_OUTPUT)
+    native=R.strict_json(native_raw,maximum=R.MAX_OUTPUT).get("result",{})
+    return {"native_return_file_sha256":hashlib.sha256(native_raw).hexdigest(),
+        "served_model":native.get("served_model"),
+        "tokens_in":native.get("tokens_in"),"tokens_out":native.get("tokens_out"),
+        "cost_usd":native.get("cost_usd"),"cost_status":native.get("cost_status"),
+        "usage_status":(native.get("evidence") or {}).get("usage_status"),
+        "provider_spend_status":"RETURNED_NATIVE_EVIDENCE_RETAINED"}
 
 
 def worker(args):
@@ -113,14 +135,35 @@ def worker(args):
     check()
     grant=R.strict_json(R.read_bound(args.grant,check=check,maximum=65536))
     review=R.strict_json(R.read_bound(args.review,check=check,maximum=65536))
-    pins=source_pins(check,provider=grant.get('provider'),expected_site=ack['verified_site'])
-    R.authorize(grant,now=stamp(),bundle_sha256=grant["bundle_sha256"],review=review,actual_sources=pins)
+    pins=source_pins(check,provider=grant.get('provider'),expected_site=ack['verified_site'],stage=args.stage)
+    if args.stage=="asml-current":
+        from backend.services import asml_current_adapter as A
+        A.authorize(grant,now=stamp(),review=review,actual_sources=pins)
+    else:
+        R.authorize(grant,now=stamp(),bundle_sha256=grant["bundle_sha256"],review=review,actual_sources=pins)
     if grant["nonce"]!=args.nonce or Path(grant["output_directory"]).resolve()!=directory:raise R.RuntimeRefused("EXACT_ONE_JOB_DIRECTORY_UNAVAILABLE")
     if grant.get("stage")!=args.stage or Path(grant["bundle_path"]).resolve()!=Path(args.bundle).resolve():
         raise R.RuntimeRefused("EXACT_INPUT_STAGE_UNAVAILABLE")
     raw=R.read_bound(args.bundle,expected_sha256=grant["bundle_sha256"],check=check)
     bundle=R.strict_json(raw)
-    if args.stage=="capture":
+    if args.stage=="asml-current":
+        if grant.get("provider")!="deepseek":raise R.RuntimeRefused("PROVIDERS_OFF")
+        from backend.services import asml_current_adapter as A
+        acquisition=A.validate_bundle(bundle,grant)
+        returned=[]
+        def preserve(value):
+            if not returned:
+                # This path intentionally omits the STOP/deadline check: an
+                # already-returned billed response must survive that refusal.
+                native=R.publish(directory,"native_return.json",value)
+                returned.append(hashlib.sha256(native.read_bytes()).hexdigest())
+            return returned[0]
+        transport=R.deepseek_transport(authorized=True,sdk_pins={k:pins[k] for k in R.SDK_FILES},
+            expected_site=ack['verified_site'],owner_check=check,
+            on_native_return=lambda result:preserve(A.private_native_return(result)))
+        result=A.capture(acquisition,transport=transport,persist_native=preserve,check=check)
+        name="capture.json"
+    elif args.stage=="capture":
         if "numeric_cache" in bundle:raise R.RuntimeRefused("UNQUALIFIED_RAW_CACHE_UNAVAILABLE")
         if grant.get("provider")!=bundle["route"]["name"] or grant.get("allow_native_meter_telemetry") is not True:
             raise R.RuntimeRefused("PROVIDERS_OFF")
@@ -170,11 +213,16 @@ def worker(args):
     payload={"schema":R.VERSION,"result":result,"bundle_sha256":grant["bundle_sha256"],
         "source_pins":pins,"actual_completed_at":stamp(),"development_only":True}
     R.publish(directory,name,payload,check=check)
-    R.publish(directory,"route.json",{"family":"beta_v1_news_probability_v1","state":"DEVELOPMENT_INACTIVE",
-        "consumer":"beta_v1_consumers.current_draft qualified_return_records + reviewed vintage",
-        "grader":"beta_v1_news_outcomes.score/catchup exact endpoint sidecars",
+    route=({"family":"asml_issuer_current_measurement","state":"PRIVATE_INTERPRETATION_ONLY",
         "legacy_catalog_registered":False,"prospective_accrual":False,"trade_authority":False,
-        "required_reviews":["source","numeric_capture","exact_probability_row","derived_return","outcome"]},check=check)
+        "forecast_authority":False,"required_reviews":["native_capture","full_row_semantics","price_panel","diagnostic_writer"]}
+        if args.stage=="asml-current" else
+        {"family":"beta_v1_news_probability_v1","state":"DEVELOPMENT_INACTIVE",
+         "consumer":"beta_v1_consumers.current_draft qualified_return_records + reviewed vintage",
+         "grader":"beta_v1_news_outcomes.score/catchup exact endpoint sidecars",
+         "legacy_catalog_registered":False,"prospective_accrual":False,"trade_authority":False,
+         "required_reviews":["source","numeric_capture","exact_probability_row","derived_return","outcome"]})
+    R.publish(directory,"route.json",route,check=check)
     if args.stage=="capture" and result.get("capture"):
         from backend.services import world_digest as WD
         index={"namespace":"BETA_NEWS_CAPTURE_V1","capture_path":name,
@@ -208,8 +256,12 @@ def own(args):
         grant_raw=R.read_bound(args.grant,check=check,maximum=65536)
         review_raw=R.read_bound(args.review,check=check,maximum=65536)
         grant,review=R.strict_json(grant_raw),R.strict_json(review_raw)
-        pins=source_pins(check,provider=grant.get('provider'))
-        R.authorize(grant,now=stamp(),bundle_sha256=grant["bundle_sha256"],review=review,actual_sources=pins)
+        pins=source_pins(check,provider=grant.get('provider'),stage=args.stage)
+        if args.stage=="asml-current":
+            from backend.services import asml_current_adapter as A
+            A.authorize(grant,now=stamp(),review=review,actual_sources=pins)
+        else:
+            R.authorize(grant,now=stamp(),bundle_sha256=grant["bundle_sha256"],review=review,actual_sources=pins)
         if grant.get("stage")!=args.stage or Path(grant["bundle_path"]).resolve()!=Path(args.bundle).resolve():
             raise R.RuntimeRefused("EXACT_INPUT_STAGE_UNAVAILABLE")
         if Path(grant.get("private_output_root","")).resolve()!=PRIVATE.resolve():
@@ -222,7 +274,7 @@ def own(args):
         candidate.mkdir(exist_ok=False)
         directory=candidate.resolve()
         base,site,env=G.direct_environment()
-        if source_pins(check,provider=grant.get("provider"),expected_site=site)!=pins:raise R.RuntimeRefused("SDK_SOURCE_ORIGIN_DRIFT")
+        if source_pins(check,provider=grant.get("provider"),expected_site=site,stage=args.stage)!=pins:raise R.RuntimeRefused("SDK_SOURCE_ORIGIN_DRIFT")
         env["AEGIS_IGNORE_DOTENV"]="1";env.pop("AEGIS_PERSONAL_MODE",None)
         check()
         worker_process=subprocess.Popen([str(base),"-B","-S","-m","scripts.beta_v1_news_capture",
@@ -246,9 +298,13 @@ def own(args):
                 or guard.get("owned_pids")!=[worker_process.pid]):
             raise R.RuntimeRefused("OWNED_WORKER_REFUSED")
         check()
-        filename={"capture":"capture.json","normalize-reviewed":"candidate.json","calibrate-reviewed":"returns.json"}[args.stage]
+        filename={"capture":"capture.json","asml-current":"capture.json","normalize-reviewed":"candidate.json","calibrate-reviewed":"returns.json"}[args.stage]
         payload=R.strict_json(R.read_bound(directory/filename,check=check,maximum=R.MAX_OUTPUT))
-        if source_pins(check,provider=grant.get("provider"),expected_site=site)!=pins:raise R.RuntimeRefused("POST_SOURCE_DRIFT")
+        if args.stage=="asml-current":
+            native_raw=R.read_bound(directory/"native_return.json",check=check,maximum=R.MAX_OUTPUT)
+            if payload["result"].get("native_return_sha256")!=hashlib.sha256(native_raw).hexdigest():
+                raise R.RuntimeRefused("ASML_NATIVE_RETURN_BINDING_DRIFT")
+        if source_pins(check,provider=grant.get("provider"),expected_site=site,stage=args.stage)!=pins:raise R.RuntimeRefused("POST_SOURCE_DRIFT")
         if R.read_bound(args.grant,check=check,maximum=65536)!=grant_raw or R.read_bound(args.review,check=check,maximum=65536)!=review_raw:
             raise R.RuntimeRefused("POST_AUTHORITY_DRIFT")
         R.read_bound(args.bundle,expected_sha256=grant["bundle_sha256"],check=check)
@@ -276,6 +332,8 @@ def own(args):
             "bundle_sha256":grant["bundle_sha256"],"bundle_hash_domain":"FILE_BYTES_SHA256",
             "source_review_sha256":R.digest(review),"source_review_hash_domain":"CANONICAL_JSON_V1",
             "result_file":filename,"result_sha256":R.digest(payload),"result_hash_domain":"CANONICAL_JSON_V1",
+            "native_return_file_sha256":(hashlib.sha256(native_raw).hexdigest()
+                if args.stage=="asml-current" else None),
             "stage":args.stage,"provider_calls_authority":"EXPLICIT_ROOT_GRANT_ONLY","activation":"DEVELOPMENT_INACTIVE",
             "native_budget_scope":"PROCESS_LOCAL_CALL_METER_AND_BREAKER_NOT_SHARED_CUMULATIVE_BUDGET"}
         check();R.publish(directory,"outer_completion.json",proof,check=check,proof=True);check()
@@ -283,8 +341,11 @@ def own(args):
         return 0
     except Exception:
         if directory is not None:
-            try:R.publish(directory,"refusal.json",{"status":"UNAVAILABLE","reason":"BOUNDED_CAPTURE_REFUSED",
-                "provider_spend_status":"UNAVAILABLE_UNLESS_RETURNED_CAPTURE_METER_RECEIPT_EXISTS"},proof=True)
+            try:
+                returned=returned_refusal_evidence(directory)
+                R.publish(directory,"refusal.json",{"status":"UNAVAILABLE","reason":"BOUNDED_CAPTURE_REFUSED",
+                    "provider_spend_status":"NO_RETURNED_NATIVE_EVIDENCE" if not returned else returned["provider_spend_status"],
+                    **returned},proof=True)
             except Exception:pass
         print('{"status":"UNAVAILABLE","reason":"BOUNDED_CAPTURE_REFUSED"}')
         return 2
@@ -297,7 +358,7 @@ def own(args):
 
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--stage",choices=("capture","normalize-reviewed","calibrate-reviewed"),default="capture")
+    parser.add_argument("--stage",choices=("capture","asml-current","normalize-reviewed","calibrate-reviewed"),default="capture")
     for name in ("bundle","grant","review","directory","nonce"):parser.add_argument("--"+name)
     parser.add_argument("--worker",action="store_true")
     args=parser.parse_args(argv)

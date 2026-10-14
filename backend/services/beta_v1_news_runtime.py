@@ -176,6 +176,7 @@ def publish(directory, name, value, *, check=lambda: None, proof=False):
     if directory.is_symlink():raise RuntimeRefused("OUTPUT_DIRECTORY_AMBIGUOUS")
     directory = directory.resolve()
     if name not in {"capture.json", "candidate.json", "returns.json", "route.json",
+                    "native_return.json",
                     "identity.json", "ack.json", "outer_completion.json", "refusal.json"}:
         raise RuntimeRefused("OUTPUT_NAME_UNAVAILABLE")
     target = directory/name
@@ -395,7 +396,8 @@ def bounded_chunks(chunks, *, check=lambda:None, maximum=RESPONSE_BYTES):
     check()
 
 
-def deepseek_transport(*, authorized=False, sdk_pins=None, expected_site=None, owner_check=lambda:None):
+def deepseek_transport(*, authorized=False, sdk_pins=None, expected_site=None,
+                       owner_check=lambda:None, on_native_return=None):
     """Bound raw SDK body before SDK buffering/parsing; preserve native call code."""
     if not authorized:raise RuntimeRefused('PROVIDERS_OFF')
     if not isinstance(sdk_pins,dict) or set(sdk_pins)!=set(SDK_FILES):raise RuntimeRefused('SDK_CODE_PINS_UNAVAILABLE')
@@ -438,6 +440,7 @@ def deepseek_transport(*, authorized=False, sdk_pins=None, expected_site=None, o
             call.__kwdefaults__=dict(LA.call_named.__kwdefaults__ or {})
             result=call('deepseek',system,user,purpose=purpose,max_tokens=max_tokens,
                 production_budget=True,model_override='deepseek-flash',no_retry=True,non_thinking=True)
+            if on_native_return is not None:on_native_return(result)
             check()
             if result.get('status') in {'ERROR','RATE_LIMITED','BREAKING_BUDGET','BREAKER_OPEN'}:
                 result={**result,'cost_usd':None,'spend_status':'UNAVAILABLE_NO_RETURNED_USAGE'}
