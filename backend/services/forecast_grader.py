@@ -397,13 +397,18 @@ def unresolvable_reason(rec: dict, *, today: date, panel_dates, last_bar: dict,
     if t in last_bar:
         lb = last_bar[t]
         stopped = int((panel_dates > lb).sum())
-        have = int(bars_from(t, str(rec.get("made_at", ""))[:10]))
+        from backend.services import belief_state as B
+        try:
+            window_start = B.resolution_start_date(rec)
+        except ValueError:
+            return None
+        have = int(bars_from(t, window_start))
         if (stopped >= int(_cfg.FORECAST_VOID_DELISTED_MIN_SESSIONS)
                 and have < h + 1):
             return ("UNRESOLVABLE_DELISTED",
                     f"{t}'s bars stop at {str(lb)[:10]} while the panel runs to "
                     f"{str(newest)[:10]} ({stopped} sessions later); the window needs "
-                    f"{h + 1} bars from {str(rec.get('made_at'))[:10]} and {have} exist")
+                    f"{h + 1} bars from {window_start} and {have} exist")
         return None
     grace = int(_cfg.FORECAST_VOID_NO_BAR_GRACE_DAYS)
     import pandas as pd
