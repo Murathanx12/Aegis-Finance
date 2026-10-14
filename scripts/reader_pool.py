@@ -1224,7 +1224,10 @@ class Pool:
                 mc["items"] += len(resolved)
                 mc["with_transcript"] += sum(1 for x in resolved
                                              if x.get("transcript") != MT.NONE_PUBLISHED)
-        if RS.is_archive(art.get("published_utc"), self.now_fn()):
+        if (RS.is_archive(art.get("published_utc"), self.now_fn())
+                or (not art.get("published_utc") and WR.definitely_old_date_only(
+                    art.get("text") or "", self.now_fn(), RS.max_article_age_days(),
+                    article_header=True))):
             with self.lock:
                 self.stats[host]["archive_read"] += 1
             return "OK"                      # an archive page: read, not followed

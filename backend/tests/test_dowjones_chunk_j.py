@@ -1717,9 +1717,7 @@ def _quote_page(title: str, now: datetime) -> str:
     """A WSJ quote page snapshot: nav, a sign-in link, a sponsored unit, an old
     story, dated / relative / undated stories, and a market-data link."""
     def day(n: int) -> str:
-        # A visible publication instant is needed to age a link; a date alone
-        # does not identify when the story became available.
-        return (now - timedelta(days=n)).strftime("%B %d, %Y, 1:00 p.m. ET")
+        return (now - timedelta(days=n)).strftime("%B %d, %Y")
     rows = [
         ("link", "Markets", "https://www.wsj.com/finance"),
         ("link", "Sign In", "https://accounts.wsj.com/login"),
@@ -1763,7 +1761,7 @@ def test_search_lane_takes_three_recent_article_links_and_skips_nav_ads_and_old(
     assert [u.split("/")[-1] for u in sel["skipped_old"]] == ["micron-old-3c4d5e6f"]
     assert [u.split("/")[-1] for u in sel["skipped_ad"]] == ["wealth-plan-2b3c4d5e"]
     beats, upgrade, rally = sel["links"]
-    assert 19 <= (now - datetime.fromisoformat(beats["published_visible"])).days <= 21
+    assert beats["published_visible"] is None                 # date-only is not an instant
     assert (now - datetime.fromisoformat(upgrade["published_visible"])) < timedelta(hours=3)
     assert rally["published_visible"] is None                 # undated: kept
     assert all(lk["ref"] for lk in sel["links"])

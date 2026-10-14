@@ -1119,6 +1119,51 @@ def parse_published(text: str) -> str | None:
     return local.astimezone(timezone.utc).isoformat(timespec="seconds")
 
 
+def definitely_old_date_only(text: str, seen: datetime, max_age_days: float,
+                             *, article_header: bool = False) -> bool:
+    """Age a calendar date only when even its latest possible UTC instant is old.
+
+    This is a rejection/archival bound, never a publication timestamp. With an
+    unknown timezone, the end of a printed local day can be UTC noon on the
+    following day. Article dates must appear as a dateline in the first lines;
+    a date mentioned later in a story is not evidence of publication age.
+    """
+    lines = (text or "").splitlines()[:8] if article_header else [text or ""]
+    for line in lines:
+        m = DATE_RE.search(line)
+        day = None
+        if m and not m.group(2):
+            if article_header and not re.fullmatch(
+                    rf"\s*(?:(?:Published|Updated)\s+)?{re.escape(m.group(1))}\s*",
+                    line, re.I):
+                continue
+            date_text = m.group(1).replace(".", "").replace("Sept ", "Sep ")
+            for fmt in ("%b %d, %Y", "%B %d, %Y"):
+                try:
+                    day = datetime.strptime(date_text, fmt)
+                    break
+                except ValueError:
+                    pass
+        elif not m:
+            n = NUM_DATE_RE.search(line)
+            if n is None:
+                continue
+            if article_header and not re.fullmatch(
+                    rf"\s*(?:(?:Published|Updated)\s+)?{re.escape(n.group(0))}\s*",
+                    line, re.I):
+                continue
+            year = int(n.group(3))
+            year = year + 2000 if year < 100 else year
+            try:
+                day = datetime(year, int(n.group(1)), int(n.group(2)))
+            except ValueError:
+                pass
+        if day is not None:
+            upper = day.replace(tzinfo=timezone.utc) + timedelta(days=1, hours=12)
+            return seen.astimezone(timezone.utc) - upper > timedelta(days=max_age_days)
+    return False
+
+
 def parse_byline(text: str) -> str | None:
     for ln in (text or "").splitlines()[:40]:
         if BYLINE_RE.match(ln.strip()):
@@ -1204,8 +1249,11 @@ def _store_article(art: dict, root: Path) -> dict:
             _pt = _pt.replace(tzinfo=timezone.utc)
         if _st.tzinfo is None:
             _st = _st.replace(tzinfo=timezone.utc)
-        rec["archive"] = bool(_pt is not None and (_st - _pt).total_seconds() >
-                              float(_cfg("READER_MAX_ARTICLE_AGE_DAYS", 4.0)) * 86400)
+        age_days = float(_cfg("READER_MAX_ARTICLE_AGE_DAYS", 4.0))
+        rec["archive"] = bool(
+            (_pt is not None and (_st - _pt).total_seconds() > age_days * 86400)
+            or (_pt is None and definitely_old_date_only(rec["text"], _st, age_days,
+                                                        article_header=True)))
     except (TypeError, ValueError):
         rec["archive"] = False
     rec["pit_grade"] = NR.effective_pit_grade(
@@ -1428,19 +1476,11 @@ AD_TEXT = re.compile(r"sponsored|advertis|paid\s+(program|post|content)|partner\
 
 def visible_date(text: str, now: datetime) -> datetime | None:
     """The first date a reader could SEE in `text`: a dateline
-    (`Sept. 24, 2026`), a numeric `9/24/26`, or a relative age (`3 hours
-    ago`). None when nothing dated is visible."""
+    with a clock or a relative age (`3 hours ago`). Calendar dates without a
+    clock are handled separately as age bounds, never as instants."""
     iso = parse_published(text or "")
     if iso:
         return datetime.fromisoformat(iso)
-    m = NUM_DATE_RE.search(text or "")
-    if m:
-        mo, dd, yy = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        yy = yy + 2000 if yy < 100 else yy
-        try:
-            return datetime(yy, mo, dd, tzinfo=timezone.utc)
-        except ValueError:
-            pass
     m = REL_AGE_RE.search(text or "")
     if m:
         n, unit = int(m.group(1)), m.group(2).lower()
@@ -1488,7 +1528,8 @@ def select_search_links(snapshot_text: str, link_pattern: str, *, now: datetime,
             out["skipped_ad"].append(lk["url"])
             continue
         when = visible_date(ctx, now)
-        if when is not None and (now - when) > timedelta(days=max_age_days):
+        if ((when is not None and (now - when) > timedelta(days=max_age_days))
+                or (when is None and definitely_old_date_only(ctx, now, max_age_days))):
             out["skipped_old"].append(lk["url"])
             continue
         out["links"].append(dict(lk, published_visible=when.isoformat(timespec="seconds")

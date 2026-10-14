@@ -40,3 +40,16 @@ def test_date_only_and_eastern_dst_transition_clocks_have_no_instant():
     assert WR.parse_published("October 14, 2026") is None
     assert WR.parse_published("Published Nov 1, 2026, 1:30 a.m. ET") is None
     assert WR.parse_published("Published Mar 8, 2026, 2:30 a.m. ET") is None
+
+
+def test_date_only_age_bound_rejects_only_definitely_old_calendar_dates():
+    from datetime import datetime, timezone
+
+    cutoff = datetime(2026, 10, 14, 12, 0, tzinfo=timezone.utc)
+    assert not WR.definitely_old_date_only("Oct. 9, 2026", cutoff, 4)
+    assert WR.definitely_old_date_only("Oct. 8, 2026", cutoff, 4)
+    assert not WR.definitely_old_date_only("10/9/26", cutoff, 4)
+    assert WR.definitely_old_date_only("10/8/26", cutoff, 4)
+    assert not WR.definitely_old_date_only(
+        "Company discussed October 8, 2026 results", cutoff, 4,
+        article_header=True)
