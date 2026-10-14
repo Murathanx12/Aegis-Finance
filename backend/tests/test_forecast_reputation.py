@@ -13,7 +13,7 @@ Fixture dates derive from `today` (CLAUDE.md protocol item 5).
 from __future__ import annotations
 
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -60,7 +60,7 @@ def _synthetic_ledger(n_days: int = 150, per_day: int = 20, seed: int = 1) -> li
     boundary whatever `today` is.
     """
     rng = np.random.default_rng(seed)
-    start = date.today() - timedelta(days=n_days + 1)
+    start = datetime.now(timezone.utc).date() - timedelta(days=n_days + 1)
     rows = []
     for d in range(n_days):
         day = start + timedelta(days=d)
@@ -191,7 +191,7 @@ def test_restricted_check_says_when_the_restriction_binds_nothing():
 def test_refit_writes_receipt_with_tuned_constants_and_zero_persona(tmp_path):
     p = _write(tmp_path, _synthetic_ledger(n_days=150, per_day=8))
     out = tmp_path / "rep"
-    today = date.today().isoformat()
+    today = datetime.now(timezone.utc).date().isoformat()
     r = fr.refit(p, today=today, out_dir=out)
     assert r["status"] == "OK"
     f = out / f"reputation_{today}.json"
@@ -215,7 +215,8 @@ def test_refit_writes_receipt_with_tuned_constants_and_zero_persona(tmp_path):
 def test_refit_falls_back_to_day_blocks_inside_one_quarter(tmp_path):
     rows = _synthetic_ledger(n_days=10, per_day=8)
     p = _write(tmp_path, rows)
-    r = fr.refit(p, today=date.today().isoformat(), out_dir=tmp_path / "rep")
+    r = fr.refit(p, today=datetime.now(timezone.utc).date().isoformat(),
+                 out_dir=tmp_path / "rep")
     # ten consecutive days can straddle a quarter end; either way the unit is named
     assert r["cv"]["unit"] in ("quarter", "day")
     assert r["cv"]["n_folds"] >= 2
@@ -226,7 +227,7 @@ def test_refit_refuses_an_ungraded_ledger_and_still_writes_the_receipt(tmp_path)
     for x in rows:
         x["outcome"] = None
     p = _write(tmp_path, rows)
-    today = date.today().isoformat()
+    today = datetime.now(timezone.utc).date().isoformat()
     r = fr.refit(p, today=today, out_dir=tmp_path / "rep")
     assert r["status"] == "REFUSED"
     assert (tmp_path / "rep" / f"reputation_{today}.json").exists()
@@ -235,8 +236,8 @@ def test_refit_refuses_an_ungraded_ledger_and_still_writes_the_receipt(tmp_path)
 def test_refit_records_agreement_with_the_previous_refit(tmp_path):
     p = _write(tmp_path, _synthetic_ledger(n_days=150, per_day=8))
     out = tmp_path / "rep"
-    d1 = (date.today() - timedelta(days=1)).isoformat()
-    d2 = date.today().isoformat()
+    d1 = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+    d2 = datetime.now(timezone.utc).date().isoformat()
     fr.refit(p, today=d1, out_dir=out)
     r2 = fr.refit(p, today=d2, out_dir=out)
     assert r2["previous"]["date"] == d1
@@ -246,7 +247,8 @@ def test_refit_records_agreement_with_the_previous_refit(tmp_path):
 def test_refit_says_when_k_prior_is_not_identified(tmp_path):
     # one weighted arm: its n cancels in the normalisation, so k cannot matter
     p = _write(tmp_path, _synthetic_ledger(n_days=150, per_day=8))
-    r = fr.refit(p, today=date.today().isoformat(), out_dir=tmp_path / "rep")
+    r = fr.refit(p, today=datetime.now(timezone.utc).date().isoformat(),
+                 out_dir=tmp_path / "rep")
     assert r["tuned"]["identified"]["k_prior"] is False
     assert r["tuned"]["k_prior"] == 300.0     # tie-break: nearest DEFAULTS, not the data
 

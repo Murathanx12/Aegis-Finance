@@ -12,7 +12,8 @@ import numpy as np
 import pandas as pd
 
 VERSION = "beta_v1_legacy_kernels/1"
-SOURCE_PINS = {'expected_return': '71bc7540f87d67aec7eb6c31fe22143c92017cb958ce3fbabbf2fd979e75c839', 'forecast_reputation': '3baa28c6124c5bfda3f375c818acfebbc24fea57c4eb9ab26dfbc4baa80abc12'}
+SOURCE_PINS = {'expected_return': '71bc7540f87d67aec7eb6c31fe22143c92017cb958ce3fbabbf2fd979e75c839', 'forecast_reputation': '630c37de1e526037104d1d9e9736f0eac3f441bf2e1daf95b624364fc009d8c5'}
+# Reviewed UTC/admission safety repair changes refit only; weights AST is unchanged.
 ONE_AST_SHA256 = 'e15fbdc834cc861f67598838a19a41c645e9903740d8b70f5e2cb99e9fc1c396'
 MASS_AST_SHA256 = '828750f95a671f93a6c3f3685085f724082e07870c2f3532087d7458969e4eab'
 
