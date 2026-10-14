@@ -1016,6 +1016,16 @@ _MONTHS = ("jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|februar
 DATE_RE = re.compile(
     rf"\b(?:updated\s+|published\s+)?((?:{_MONTHS})\.?\s+\d{{1,2}},\s+\d{{4}})"
     rf"(?:,?\s+(?:at\s+)?(\d{{1,2}}:\d{{2}})\s*([ap])\.?m\.?\s*(ET|EDT|EST)?)?", re.I)
+# Yahoo displays a viewer-local GMT offset in the article header. Treat that
+# explicit clock as the publication timestamp before considering an issuer's
+# date-only dateline in the body.
+YAHOO_HEADER_LINE = re.compile(
+    r"^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+(\d{1,2}\s+"
+    r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+\d{4})\s+at\s+(\d{1,2}):(\d{2})\s*([ap])\.?m\.?\s+GMT(\S+)", re.I)
+YAHOO_HEADER_CANDIDATE = re.compile(
+    r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+\d{1,2}\s+\w+\s+\d{4}\s+at\s+.*\bGMT", re.I)
+GMT_OFFSET = re.compile(r"^([+-])(\d{1,2})(?::?(\d{2}))?(?=\s|$)")
 BYLINE_RE = re.compile(r"^By\s+[A-Z][\w.'\-]+(\s|$)")
 
 
@@ -1049,11 +1059,40 @@ def clean_text(text: str, title: str | None = None) -> str:
 
 
 def parse_published(text: str) -> str | None:
-    """The first dateline in the text, as UTC ISO (ET assumed when a time is
-    given, since every Dow Jones dateline is Eastern); a date alone -> 00:00 ET."""
+    """Parse an explicit Yahoo GMT-offset header or a timed Dow Jones dateline.
+
+    A date alone has no publication instant; malformed or conflicting Yahoo
+    headers fail closed instead of falling through to a body dateline.
+    """
     from zoneinfo import ZoneInfo
+    yahoo_headers = [ln.strip() for ln in (text or "").splitlines()
+                     if YAHOO_HEADER_CANDIDATE.match(ln.strip())]
+    if yahoo_headers:
+        instants = set()
+        for header in yahoo_headers:
+            ym = YAHOO_HEADER_LINE.match(header)
+            if ym is None:
+                return None
+            offset = GMT_OFFSET.match(ym.group(6))
+            if offset is None:
+                return None
+            oh, om = int(offset.group(2)), int(offset.group(3) or 0)
+            hh, mm = int(ym.group(3)), int(ym.group(4))
+            if oh > 14 or (oh == 14 and om != 0) or om > 59 or not 1 <= hh <= 12 or mm > 59:
+                return None
+            try:
+                day = datetime.strptime(ym.group(2), "%d %B %Y")
+            except ValueError:
+                return None
+            if day.strftime("%a").lower() != ym.group(1).lower():
+                return None
+            hour = hh % 12 + (12 if ym.group(5).lower() == "p" else 0)
+            seconds = (oh * 60 + om) * 60 * (1 if offset.group(1) == "+" else -1)
+            local = day.replace(hour=hour, minute=mm, tzinfo=timezone(timedelta(seconds=seconds)))
+            instants.add(local.astimezone(timezone.utc).isoformat(timespec="seconds"))
+        return next(iter(instants)) if len(instants) == 1 else None
     m = DATE_RE.search(text or "")
-    if not m:
+    if not m or not m.group(2):
         return None
     d = m.group(1).replace(".", "").replace("Sept ", "Sep ")
     for fmt in ("%b %d, %Y", "%B %d, %Y"):
@@ -1064,14 +1103,19 @@ def parse_published(text: str) -> str | None:
             day = None
     if day is None:
         return None
-    hh, mm = 0, 0
-    if m.group(2):
-        hh, mm = (int(x) for x in m.group(2).split(":"))
-        if m.group(3).lower() == "p" and hh != 12:
-            hh += 12
-        if m.group(3).lower() == "a" and hh == 12:
-            hh = 0
-    local = day.replace(hour=hh, minute=mm, tzinfo=ZoneInfo("America/New_York"))
+    hh, mm = (int(x) for x in m.group(2).split(":"))
+    if not 1 <= hh <= 12 or mm > 59:
+        return None
+    hh = hh % 12 + (12 if m.group(3).lower() == "p" else 0)
+    wall = day.replace(hour=hh, minute=mm)
+    eastern = ZoneInfo("America/New_York")
+    local = wall.replace(tzinfo=eastern)
+    # An ambiguous fall-back clock or a skipped spring-forward clock cannot be
+    # assigned an honest instant from a dateline without an explicit offset.
+    if local.utcoffset() != wall.replace(tzinfo=eastern, fold=1).utcoffset():
+        return None
+    if local.astimezone(timezone.utc).astimezone(eastern).replace(tzinfo=None) != wall:
+        return None
     return local.astimezone(timezone.utc).isoformat(timespec="seconds")
 
 
