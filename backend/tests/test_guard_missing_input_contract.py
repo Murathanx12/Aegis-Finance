@@ -1874,7 +1874,22 @@ def _case_public_flow_common():
             PublicFlowRefused, "load_crosswalk() with no crosswalk file")
 
 
+def _case_issuer_ir_html():
+    from backend.services.issuer_ir_html import IssuerPageRefused, parse_asml_release
+    return (lambda: parse_asml_release(
+        b"", "https://investor.asml.com/news-releases/news-release-details/missing"),
+        IssuerPageRefused, "issuer release bytes missing")
+
+
+def _case_issuer_ir_probability_v0():
+    from backend.services.issuer_ir_probability_v0 import ProbabilityRefused, preview
+    return (lambda: preview({}), ProbabilityRefused,
+            "no admitted typed issuer event or sentiment")
+
+
 CASES = {
+    "issuer_ir_html": _case_issuer_ir_html,
+    "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
     "pc_sleeves": _case_pc_sleeves,
     "pc_policy_epoch": _case_pc_policy_epoch,
     "results_voice": _case_results_voice,
