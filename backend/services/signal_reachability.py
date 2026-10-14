@@ -123,6 +123,13 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           gap rather than quietly excused, because the whole point of this
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
+    "backend.services.issuer_ir_probability_v0": (
+        "DEVELOPMENT/INACTIVE -- pure prospective measurement preview under "
+        "MEASUREMENT_ASML_IR_CURRENT_1.md, exercised by offline fixtures only. "
+        "It requires a verified typed ASML event and sentiment; the current "
+        "model row was rejected and factual context grants no forecast "
+        "authority. No running consumer, forecast accrual, policy or broker "
+        "activation is claimed. Wire and qualify a consumer before promotion."),
     "backend.services.beta_v1_news_outcomes": (
         "DEVELOPMENT/INACTIVE -- pure exact-endpoint Beta outcome adapter, "
         "currently called by synthetic fixtures only. The opt-in capture CLI "
