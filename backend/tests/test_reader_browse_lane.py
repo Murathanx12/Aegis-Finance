@@ -480,7 +480,7 @@ def test_old_links_are_not_queued_and_archive_pages_are_flagged_not_followed(led
     _drain(pool)
     opens = [u for v, u in d.actions if v == "open"]
     rec = {r["url"]: r for r in RR.pages_read_since(1, root=ledger, now=c.now())}
-    assert rec[CNBC_A1]["published_utc"]                      # the dateline parsed
+    assert rec[CNBC_A1]["published_utc"] is None                # a date alone has no UTC instant
     assert rec[CNBC_A1]["archive"] is True
     assert FED_PR not in opens
     assert pool.stats["cnbc.com"]["archive_read"] == 1

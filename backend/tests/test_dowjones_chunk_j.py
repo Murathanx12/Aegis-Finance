@@ -1761,7 +1761,7 @@ def test_search_lane_takes_three_recent_article_links_and_skips_nav_ads_and_old(
     assert [u.split("/")[-1] for u in sel["skipped_old"]] == ["micron-old-3c4d5e6f"]
     assert [u.split("/")[-1] for u in sel["skipped_ad"]] == ["wealth-plan-2b3c4d5e"]
     beats, upgrade, rally = sel["links"]
-    assert 19 <= (now - datetime.fromisoformat(beats["published_visible"])).days <= 21
+    assert beats["published_visible"] is None                 # date-only is not an instant
     assert (now - datetime.fromisoformat(upgrade["published_visible"])) < timedelta(hours=3)
     assert rally["published_visible"] is None                 # undated: kept
     assert all(lk["ref"] for lk in sel["links"])
