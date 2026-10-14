@@ -358,6 +358,22 @@ class PredictionRecord:
         return str(d + timedelta(days=int(horizon_days * 1.45) + 3))
 
 
+def resolution_start_date(rec: dict) -> str:
+    """Actual scheduled entry for the opt-in standalone source forecast only."""
+    made = str(rec["made_at"])
+    if rec.get("mechanism_id") != "source_context_direction_standalone_v1":
+        return made[:10]
+    entry = (rec.get("inputs_used") or {}).get("entry_after_utc")
+    try:
+        stamp = datetime.fromisoformat(str(entry).replace("Z", "+00:00"))
+        origin = datetime.fromisoformat(made.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("standalone source entry clock invalid") from exc
+    if stamp.tzinfo is None or origin.tzinfo is None or stamp <= origin:
+        raise ValueError("standalone source entry clock invalid")
+    return stamp.astimezone(timezone.utc).date().isoformat()
+
+
 #: PIT era boundaries, FROZEN. A changed boundary gets a new scheme name, never
 #: a rewrite: retagging history is how a number that was computed in one regime
 #: quietly starts being read as evidence about another.
@@ -845,13 +861,31 @@ def resolve_one(rec: dict, prices, *, today: date | None = None) -> dict | None:
         logger.warning("%s: %s is not in the price frame — this record can "
                        "never resolve", rec["prediction_id"], tkr)
         return None
-    start = pd.Timestamp(rec["made_at"][:10])
+    try:
+        start = pd.Timestamp(resolution_start_date(rec))
+    except ValueError:
+        logger.warning("%s: standalone source entry clock invalid", rec.get("prediction_id"))
+        return None
     s = prices[tkr].loc[start:].dropna()
     # The window is horizon_days + 1 bars (entry bar + horizon). Grading on
     # fewer bars grades a shorter horizon than the forecast committed to.
     if len(s) < rec["horizon_days"] + 1:
         return None
     w = s.iloc[: rec["horizon_days"] + 1]
+    standalone = rec.get("mechanism_id") == "source_context_direction_standalone_v1"
+    if standalone:
+        # Do not silently move the promised entry or shorten its trading-day
+        # window when one leg has a missing bar. The legacy resolver contract
+        # remains unchanged for historical records.
+        expected = prices.loc[start:].index[: rec["horizon_days"] + 1]
+        if not w.index.equals(expected) or w.index[0] != start:
+            logger.warning("%s: STANDALONE_ENTRY_OR_WINDOW_BAR_MISSING; not graded",
+                           rec.get("prediction_id"))
+            return None
+        if pd.Timestamp(w.index[-1]).date() > today:
+            logger.warning("%s: STANDALONE_WINDOW_END_FUTURE; not graded",
+                           rec.get("prediction_id"))
+            return None
     ret = float(w.iloc[-1] / w.iloc[0] - 1.0)
     obs = rec["observable"]
     detail = {"realised_return": ret, "n_bars": len(w)}
@@ -878,6 +912,10 @@ def resolve_one(rec: dict, prices, *, today: date | None = None) -> dict | None:
                            rec["benchmark"], len(b), rec["horizon_days"])
             return None
         b = b.iloc[: rec["horizon_days"] + 1]
+        if standalone and not b.index.equals(w.index):
+            logger.warning("%s: STANDALONE_BENCHMARK_WINDOW_MISMATCH; not graded",
+                           rec.get("prediction_id"))
+            return None
         bret = float(b.iloc[-1] / b.iloc[0] - 1.0)
         detail["benchmark_return"] = bret
         detail["vs_benchmark"] = ret - bret
