@@ -49,9 +49,9 @@ from typing import Any, Callable
 
 from backend import config as _config
 
-#: Verbs served over HTTP. Everything else (profiles, start, stop, gateway,
+#: Verbs served over HTTP. Everything else (start, stop, gateway,
 #: config, channels, agent, screenshot) stays on the CLI.
-HTTP_VERBS: frozenset[str] = frozenset({"tabs", "status", "navigate", "open", "close", "focus",
+HTTP_VERBS: frozenset[str] = frozenset({"tabs", "status", "profiles", "navigate", "open", "close", "focus",
                                         "snapshot", "evaluate", "press", "click",
                                         "scrollintoview", "wait"})
 
@@ -126,7 +126,11 @@ def tool_args(p: dict) -> dict | None:
     if p.get("profile"):
         out["profile"] = p["profile"]
     tid = fl.get("--target-id")
-    if verb in ("tabs", "status"):
+    if verb == "profiles":
+        if pos or set(fl) - {"--browser-profile", "--json"}:
+            return None
+        out["action"] = verb
+    elif verb in ("tabs", "status"):
         out["action"] = verb
     elif verb in ("navigate", "open"):
         if not pos:
@@ -191,6 +195,47 @@ def render(verb: str, result: dict) -> tuple[str, bool]:
     if isinstance(content, list):
         text = "\n".join(str(c.get("text") or "") for c in content
                          if isinstance(c, dict) and c.get("type") == "text")
+    if verb == "profiles":
+        if details.get("truncated") or "[truncated" in text[-200:]:
+            raise ValueError("HTTP_PROFILES_TRUNCATED")
+        rows = details.get("profiles")
+        if type(rows) is not list or len(rows) > 128:
+            raise ValueError("HTTP_PROFILES_SHAPE")
+        lines, seen = [], set()
+        for row in rows:
+            if type(row) is not dict:
+                raise ValueError("HTTP_PROFILES_ROW")
+            name, running = row.get("name"), row.get("running")
+            if (type(name) is not str or not re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", name)
+                    or name in seen or type(running) is not bool):
+                raise ValueError("HTTP_PROFILES_IDENTITY")
+            seen.add(name)
+            count = row.get("tabCount")
+            if count is not None and (type(count) is not int or not 0 <= count <= 1000000):
+                raise ValueError("HTTP_PROFILES_TAB_COUNT")
+            default = row.get("isDefault", False)
+            if type(default) is not bool:
+                raise ValueError("HTTP_PROFILES_DEFAULT")
+            remote = row.get("isRemote", False)
+            driver = row.get("driver")
+            port = row.get("cdpPort")
+            if (type(remote) is not bool
+                    or driver is not None and (type(driver) is not str or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", driver))
+                    or port is not None and (type(port) is not int or not 0 <= port <= 65535)):
+                raise ValueError("HTTP_PROFILES_METADATA")
+            state = "running" if running else "stopped"
+            tabs = f" ({count} tabs)" if running and count is not None else ""
+            tags = (" [default]" if default else "") + (" [remote]" if remote else "")
+            if driver is not None and driver != "openclaw":
+                tags += f" [{driver}]"
+            line = f"{name}: {state}{tabs}{tags}"
+            if port is not None:
+                line += f"\n  port: {port}"
+            lines.append(line)
+        output = "\n".join(lines)
+        if len(output.encode("utf-8")) > 16384:
+            raise ValueError("HTTP_PROFILES_OUTPUT_BOUND")
+        return output, False
     if verb == "navigate":
         return f"navigated to {details.get('url') or ''}", False
     if verb == "snapshot":

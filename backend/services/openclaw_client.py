@@ -754,8 +754,12 @@ def _run_http(args: list[str], key: str, *, timeout: float) -> subprocess.Comple
     finally:
         _ledger_add(key, time.monotonic() - t0, "http")
     if r is None:
+        if http.serves(args) and _cmd_key(args) == "browser profiles":
+            return subprocess.CompletedProcess(args, 1, "", "HTTP_PROFILES_UNAVAILABLE")
         return None
     if getattr(r, "http_truncated", False):
+        if _cmd_key(args) == "browser profiles":
+            return subprocess.CompletedProcess(args, 1, "", "HTTP_PROFILES_TRUNCATED")
         with _LEDGER_LOCK:
             _CLI_LEDGER["http_truncated_fallbacks"] = \
                 _CLI_LEDGER.get("http_truncated_fallbacks", 0) + 1
@@ -826,7 +830,8 @@ def _run_unleased(args: list[str], *, timeout: float = 180.0) -> subprocess.Comp
     # No shell: see "no shell between us and the CLI" above. A URL with `&`
     # arrives at the CLI as one argv element, byte-identical.
     key = _cmd_key(args)
-    if args[:1] == ["browser"] and browser_transport(_profile_of(args)) == "http":
+    route_profile = profile() if args == ["browser", "profiles"] else _profile_of(args)
+    if args[:1] == ["browser"] and browser_transport(route_profile) == "http":
         served = _run_http(args, key, timeout=timeout)
         if served is not None:
             return served
