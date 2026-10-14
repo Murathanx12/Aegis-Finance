@@ -435,10 +435,17 @@ def collect(since: datetime, until: datetime, *, root: Optional[Path] = None,
     counts["social_available"] = len(social)
 
     seen_title: set[str] = set()
+    from backend.services import news_registry
+
     for d in sorted(p for p in base.iterdir() if p.is_dir()) if base.exists() else []:
         if d.name in ("dowjones", "social", "media_transcripts") or \
                 d.name.startswith(HEADLINE_SKIP_PREFIXES):
             continue
+        try:
+            source = news_registry.get(d.name)
+            has_body = source.implemented and source.body_available
+        except news_registry.UnknownSource:
+            has_body = False
         for day in days:
             for r in _jsonl(d / f"{day}.jsonl"):
                 if not _in(r.get("first_seen_utc")):
@@ -458,14 +465,19 @@ def collect(since: datetime, until: datetime, *, root: Optional[Path] = None,
                 if u:
                     seen_url.add(u)
                 body = re.sub(r"<[^>]+>", " ", str(r.get("body") or ""))
-                items.append(Item(item_id=_sha(u or key), kind="headline",
+                body = " ".join(body.split())
+                # A registered full-text source must reach article extraction;
+                # treating its exhibit as a headline loses material evidence.
+                # Unknown feeds and short descriptions keep the headline path.
+                kind = "article" if has_body and len(body) >= 400 else "headline"
+                items.append(Item(item_id=_sha(u or key), kind=kind,
                                   source=_publisher_of_headline(r, d.name),
                                   url=str(r.get("url") or ""), title=title,
-                                  text=" ".join(body.split())[:300],
+                                  text=body[:6000] if kind == "article" else body[:300],
                                   first_seen_utc=str(r.get("first_seen_utc")),
                                   published_utc=r.get("published_utc"),
                                   tickers_named=[str(t).upper() for t in r.get("tickers") or []]))
-                counts["headline"] += 1
+                counts[kind] += 1
     return {"items": items, "counts": dict(counts), "since": since.isoformat(timespec="seconds"),
             "until": until.isoformat(timespec="seconds")}
 

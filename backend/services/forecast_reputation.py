@@ -48,6 +48,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+from collections import Counter
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -717,6 +718,57 @@ def _records(df: pd.DataFrame) -> list[dict]:
              for k, v in r.items()} for r in df.to_dict(orient="records")]
 
 
+def _grade_date(value: Any) -> tuple[date | None, str | None]:
+    """Return a declared UTC calendar date, or missing/malformed disposition."""
+    if value is None or value == "":
+        return None, "missing"
+    if not isinstance(value, str):
+        return None, "malformed"
+    try:
+        if "T" in value or " " in value:
+            stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if stamp.tzinfo is None:
+                return None, "malformed"
+            return stamp.astimezone(timezone.utc).date(), None
+        return date.fromisoformat(value), None
+    except ValueError:
+        return None, "malformed"
+
+
+def _admit_for_refit(rows: list[dict], cutoff: date) -> tuple[list[dict], dict]:
+    """Hold future/malformed graded rows without changing ledger or scoring maths."""
+    admitted = []
+    reasons: Counter[str] = Counter()
+    unknown: Counter[str] = Counter()
+    candidates = held = 0
+    for row in rows:
+        y = _outcome01(row.get("outcome"))
+        p = _num(row.get("probability"))
+        if y is None or not (0.0 <= p <= 1.0):
+            admitted.append(row)  # graded_frame_from_rows already excludes it
+            continue
+        candidates += 1
+        row_reasons = []
+        row_unknown = []
+        for field in ("resolves_after", "resolved_at"):
+            day, disposition = _grade_date(row.get(field))
+            if disposition == "missing":
+                row_unknown.append(field)
+            elif disposition == "malformed":
+                row_reasons.append(f"malformed_{field}")
+            elif day > cutoff:
+                row_reasons.append(f"future_{field}")
+        if row_reasons:
+            held += 1
+            reasons.update(row_reasons)
+        else:
+            admitted.append(row)
+            unknown.update(row_unknown)
+    return admitted, {"n_candidate": candidates, "n_held": held,
+                      "held_reasons": dict(reasons),
+                      "admitted_missing_dates": dict(unknown)}
+
+
 def refit(ledger_path: Path | str | None = None, *, today: str | None = None,
           out_dir: Path | str | None = None,
           grid: dict[str, tuple[float, ...]] | None = None) -> dict:
@@ -726,16 +778,27 @@ def refit(ledger_path: Path | str | None = None, *, today: str | None = None,
     whether it succeeds or refuses: a refusal is a finding, and a missing
     receipt is indistinguishable from a step that never ran.
     """
-    today = today or date.today().isoformat()
+    utc_today = datetime.now(timezone.utc).date()
+    today = today or utc_today.isoformat()
+    requested_asof = date.fromisoformat(today)
+    if requested_asof > utc_today:
+        raise ValueError(f"future refit as-of {today} exceeds UTC date {utc_today}")
+    cutoff = requested_asof
     out = _out_dir(out_dir)
     rows = load_ledger(ledger_path)
-    g = graded_frame_from_rows(rows)
+    admitted, admission = _admit_for_refit(rows, cutoff)
+    admission.update({"requested_asof": today, "cutoff_utc": cutoff.isoformat(),
+                      "actual_utc_date": utc_today.isoformat(),
+                      "rule": "explicit historical as-of is honored; a future as-of "
+                              "is refused before any output"})
+    g = graded_frame_from_rows(admitted)
     rec: dict[str, Any] = {
         "receipt": "forecast_reputation", "licence": "PRODUCT_EXPERIMENT",
         "llm_spend_usd": 0.0, "date": today,
         "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "ledger": str(ledger_path) if ledger_path else "OPTIMUS_LEDGER_DIR/predictions.jsonl",
         "n_ledger": len(rows), "n_graded": int(len(g)),
+        "admission": admission,
         "made_at_range": [str(g["made_at"].min())[:10], str(g["made_at"].max())[:10]]
         if len(g) else None,
         "formula": ("s_shr = n/(n+k_prior)*skill ; w = clip(s_shr, floor, 1)**gamma, "

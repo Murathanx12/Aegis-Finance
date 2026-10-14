@@ -519,8 +519,10 @@ def grade_due(*, path: Path | None = None, today: date | None = None,
     from backend.services import belief_state as B
     from backend.services import ledger_resolver as LR
 
-    day = str(today or date.today())
-    today = today or date.today()
+    # The forecast's resolves_after date is derived from its UTC made_at.
+    # A machine-local date can cross that gate before UTC (and the US session).
+    today = today or datetime.now(timezone.utc).date()
+    day = str(today)
     path = Path(path) if path is not None else B.PREDICTIONS
     source = bars_source()
     started = _now()
