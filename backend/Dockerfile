@@ -31,7 +31,7 @@ ENV PORT=8000
 
 # glibc arena bloat guard (2026-07-16): the 80-ticker screener runs numpy MC
 # across 8 worker threads; default glibc grows up to 8*ncores malloc arenas
-# and freed pages never return to the OS â€” Railway bills that plateau as
+# and freed pages never return to the OS — Railway bills that plateau as
 # RAM-hours. 2 arenas is the standard fix for threaded numpy services
 # (negligible lock contention at our request volume).
 ENV MALLOC_ARENA_MAX=2

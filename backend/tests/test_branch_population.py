@@ -22,7 +22,7 @@ def test_cash_control_clock_display_changes_do_not_inflate_economic_identity():
  assert p.digest(p.semantic(s))==p.digest(p.semantic(changed))
 
 def row(family='news',ticker='AAA'):
- return dict(ticker=ticker,family=family,observed_at='2026-10-15T12:01:00Z',event_at='2026-10-15T12:00:00Z',source_ref={'path':'source','sha256':'a'*64},source_sha256='a'*64,independent_admission_ref={'path':'review','sha256':'b'*64},score=1.0 if family=='news' else None,n_firms=3 if family=='revision' else None,net_raises=2 if family=='revision' else None,event_type='earnings',liquidity_segment='liquid',volatility=.2)
+ return dict(ticker=ticker,family=family,observed_at='2026-10-15T12:01:00Z',event_at='2026-10-15T12:00:00Z',source_ref={'path':'source','sha256':'a'*64},source_sha256='a'*64,independent_admission_ref={'path':'review','sha256':'b'*64},score=1.0 if family=='news' else None,n_firms=3 if family=='revision' else None,net_raises=2 if family=='revision' else None,event_type='earnings',liquidity_segment='liquid',volatility=.2,source_item_id='fixture:'+ticker if family=='news' else None)
 def spec(family='news_only'):
  return dict(family=family,state='SOURCE_ADAPTER_REVIEW_REQUIRED',event_type='earnings',max_age_days=3,input_families=['news'] if family=='news_only' else ['news','revision'],liquidity_segment='liquid',construction='equal',join_rule='none' if family=='news_only' else 'intersection',mechanism='supported_event_delta',max_names=10)
 @pytest.mark.parametrize('case',['future_observed','future_event','stale','missing_review'])
@@ -109,7 +109,7 @@ def test_data_declaration_before_real_registry_timestamp_refuses(monkeypatch,tmp
 def test_existing_dated_inputs_can_precede_declaration_without_retimestamping():
  r=row();r.update(observed_at='2026-10-15T10:00:00Z',event_at='2026-10-15T09:00:00Z')
  q=p.qualify_features(spec(),[r],declared_at='2026-10-15T11:00:00Z',observed_at='2026-10-15T12:00:00Z')
- assert q['rows']==[r] and r['observed_at']=='2026-10-15T10:00:00Z'
+ assert q['rows'][0]['_component_rows']==[r] and r['observed_at']=='2026-10-15T10:00:00Z'
 
 def test_negative_news_rejects_positive_intersection_but_declared_union_accepts():
  s=spec('hybrid_news_revision');n=row();n['score']=-.8;r=row('revision')
@@ -149,3 +149,14 @@ def test_source_package_allows_only_cross_platform_line_endings(monkeypatch,tmp_
  expected=c.source_package_hash();source.write_bytes(b'x = 1\r\n');assert c.source_package_hash()==expected
  source.write_bytes(b'x = 2\r\n')
  with pytest.raises(ValueError,match='EXACT_COMMITTED_POPULATION_SOURCE'):c.source_package_hash()
+
+def test_independent_reviewer_stale_story_cannot_inherit_fresh_story_clock():
+ old=row();old.update(source_item_id='old',score=1.,event_at='2026-10-11T12:00:00Z',observed_at='2026-10-11T13:00:00Z')
+ fresh=row();fresh.update(source_item_id='fresh',score=-.1,event_at='2026-10-15T00:00:00Z',observed_at='2026-10-15T01:00:00Z')
+ s=spec();s['max_age_days']=1
+ q=p.qualify_features(s,[old,fresh],declared_at='2026-10-15T11:00:00Z',observed_at='2026-10-15T12:00:00Z')
+ assert q['rows'][0]['score']==-.1 and q['rows'][0]['_component_rows']==[fresh] and p.targets(s,q['rows']) is None
+ s['max_age_days']=5
+ q=p.qualify_features(s,[old,fresh],declared_at='2026-10-15T11:00:00Z',observed_at='2026-10-15T12:00:00Z')
+ assert q['rows'][0]['score']==pytest.approx(.45) and len(q['rows'][0]['_component_rows'])==2
+ assert q['rows'][0]['event_at']==old['event_at']

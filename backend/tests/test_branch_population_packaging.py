@@ -8,7 +8,7 @@ def included(path):
     # escaping/**. Match parents too: ignoring a directory ignores children.
     parts=path.split('/');prefixes=['/'.join(parts[:n]) for n in range(1,len(parts)+1)]
     ignored=False
-    for raw in (ROOT/'.dockerignore').read_text().splitlines():
+    for raw in (ROOT/'.dockerignore').read_text(encoding='utf8').splitlines():
         rule=raw.strip()
         if not rule or rule.startswith('#'):continue
         negate=rule.startswith('!');pattern=rule.lstrip('!').strip('/')
@@ -18,7 +18,7 @@ def included(path):
     return not ignored
 
 def test_actual_exact_registration_sources_enter_image_other_docs_still_excluded():
-    docker=(ROOT/'backend/Dockerfile').read_text()
+    docker=(ROOT/'backend/Dockerfile').read_text(encoding='utf8')
     names=('POPULATION-1000-SOURCES.json','POPULATION-1000-SPECIFICATIONS.json','TRIAL-POPULATION-1000-20261015.md')
     for name in names:
         path='docs/TRIALS/'+name

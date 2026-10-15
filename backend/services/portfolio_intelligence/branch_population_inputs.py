@@ -6,7 +6,7 @@ Revision features reuse revision_flow.compute on its existing pit_safe events.
 """
 import datetime,hashlib,json,math,shutil,types
 from pathlib import Path
-from backend.services.portfolio_intelligence.branch_population import clock,digest
+from backend.services.portfolio_intelligence.branch_population import clock,digest,collapse_news
 ROOT=Path('C:/Users/mrthn/aegis-finance');DATA=ROOT/'backend/data/optimus'
 def sha(path):
  h=hashlib.sha256()
@@ -37,7 +37,7 @@ def revision_rows(path,receipt,review_ref,*,observed_at,rf,pandas,market):
   if ticker not in market:continue
   event=datetime.datetime.combine(now.date(),datetime.time(),tzinfo=datetime.timezone.utc)-datetime.timedelta(days=float(v['days_since_last']))
   if event>available:continue
-  rows.append(dict(ticker=str(ticker),family='revision',observed_at=available.isoformat(),event_at=event.isoformat(),source_ref=source,source_sha256=source['sha256'],independent_admission_ref=review_ref,score=None,n_firms=float(v['n_firms']),net_raises=float(v['net_raises']),event_type=None,liquidity_segment=market[ticker]['liquidity_segment'],volatility=market[ticker]['volatility']))
+  rows.append(dict(ticker=str(ticker),family='revision',observed_at=available.isoformat(),event_at=event.isoformat(),source_ref=source,source_sha256=source['sha256'],independent_admission_ref=review_ref,score=None,n_firms=float(v['n_firms']),net_raises=float(v['net_raises']),event_type=None,liquidity_segment=market[ticker]['liquidity_segment'],volatility=market[ticker]['volatility'],source_item_id=None))
  return rows
 def news_rows(path,review_ref,*,observed_at,market):
  now=clock(observed_at);latest={};refusals=[]
@@ -58,17 +58,15 @@ def news_rows(path,review_ref,*,observed_at,market):
    if key in latest and latest[key][1].get('event_type')!=row.get('event_type'):
     refusals.append({'item_id':key,'code':'AMBIGUOUS_TYPED_EVENT'});latest[key]=None;continue
    if key not in latest or latest[key][0]<known:latest[key]=(known,row,published)
- groups={}
+ source=ref(path);rows=[]
  for value in latest.values():
   if value is None:continue
   known,row,published=value
   for ticker in row.get('tickers',[]):
-   if ticker in market:groups.setdefault((ticker,row.get('event_type')),[]).append((known,published,float(row['sentiment'])))
- source=ref(path);rows=[]
- for (ticker,event_type),values in groups.items():
-  # One issuer/type feature collapses repeated stories; it is not n independent
-  # financial forecasts. Both signed values and original availability survive.
-  rows.append(dict(ticker=ticker,family='news',observed_at=max(v[0] for v in values).isoformat(),event_at=max(v[1] for v in values).isoformat(),source_ref=source,source_sha256=source['sha256'],independent_admission_ref=review_ref,score=sum(v[2] for v in values)/len(values),n_firms=None,net_raises=None,event_type=event_type,liquidity_segment=market[ticker]['liquidity_segment'],volatility=market[ticker]['volatility']))
+   if ticker in market:
+    # Keep each actual story clock. Policy-age filtering must precede averaging;
+    # a fresh story can never refresh a stale story's signed context.
+    rows.append(dict(ticker=ticker,family='news',observed_at=known.isoformat(),event_at=published.isoformat(),source_ref=source,source_sha256=source['sha256'],independent_admission_ref=review_ref,score=float(row['sentiment']),n_firms=None,net_raises=None,event_type=row.get('event_type'),liquidity_segment=market[ticker]['liquidity_segment'],volatility=market[ticker]['volatility'],source_item_id=row['item_id']))
  return rows,refusals
 def market_metadata(bars,lp,*,observed_at):
  import pandas as pd
@@ -99,7 +97,13 @@ class ExistingInputAdapters:
   news_features,self.refusals=news_rows(news,review_ref,observed_at=observed_at,market=market);self.features+=news_features
   if len(self.features)>10000:raise ValueError('SHARED_FEATURE_CAP')
   self.known_rows={digest(row) for row in self.features}
- def admit(self,spec,rows,observed_at):return bool(rows) and all(digest(row) in self.known_rows for row in rows)
+ def admit(self,spec,rows,observed_at):
+  for row in rows:
+   components=row.get('_component_rows')
+   if components is None:
+    if digest(row) not in self.known_rows:return False
+   elif any(digest(component) not in self.known_rows for component in components) or collapse_news(components)!=[row]:return False
+  return bool(rows)
  def callbacks(self):return {name:self.admit for name in ('news_only','hybrid_news_revision','revision_flow','net_raises')}
 
 class SharedGrader:

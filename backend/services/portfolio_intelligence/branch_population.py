@@ -89,13 +89,31 @@ def compile_population(target=1000):
   if row['family'] in ('news_only','hybrid_news_revision') and 'matched_no_news_policy_id' not in row:row['state']='WAIT_MATCHED_CONTROL'
  return dict(schema='prospective_population_specs/1',seed=SEED,target_operating_policies=target,root_policies=roots,specifications=unique,attempts=attempts,counts=dict(attempted_variants=len(attempts),semantic_duplicates=len(attempts)-len(unique),unique_specs=len(unique),declared_unseeded_roots=len(roots),by_family=dict(Counter(s['family'] for s in unique)),by_control_role=dict(Counter(s['control_role'] for s in unique)),by_attempt_family=dict(family_attempts),research_specs_only=sum(s['state']=='RESEARCH_SPEC_ONLY' for s in unique),data_qualified=0,pending_entry=0,seeded=0,marked=0,outcome_bearing=0),activation='NONE')
 
+def collapse_news(rows):
+ groups={};out=[]
+ for row in rows:
+  if row['family']!='news':out.append(row);continue
+  groups.setdefault((row['ticker'],row['event_type']),[]).append(row)
+ for key,items in sorted(groups.items()):
+  by_id={}
+  for row in items:
+   item=row['source_item_id']
+   if not isinstance(item,str) or not item:raise ValueError('ACTUAL_NEWS_ITEM_ID_REQUIRED')
+   if item in by_id and digest(by_id[item])!=digest(row):raise ValueError('AMBIGUOUS_NEWS_SOURCE_ITEM')
+   by_id[item]=row
+  components=[by_id[item] for item in sorted(by_id)]
+  if len({digest([r['source_ref'],r['independent_admission_ref'],r['volatility'],r['liquidity_segment']]) for r in components})!=1:raise ValueError('ONE_REVIEWED_NEWS_SNAPSHOT_REQUIRED')
+  aggregate=dict(components[0]);aggregate.update(source_item_id=None,score=sum(r['score'] for r in components)/len(components),event_at=min(components,key=lambda r:clock(r['event_at']))['event_at'],observed_at=max(components,key=lambda r:clock(r['observed_at']))['observed_at'],_component_rows=components)
+  out.append(aggregate)
+ return out
+
 def qualify_features(spec,rows,*,declared_at,observed_at):
  if spec['state'] in ('RESEARCH_SPEC_ONLY','WAIT_MATCHED_CONTROL') or spec['family'] not in SUPPORTED|{'no_news_control'}:return {'status':'WAIT_INPUT_ADAPTER','rows':[]}
  start=clock(declared_at);now=clock(observed_at)
  if now<start:raise ValueError('NO_PREDECLARATION_DATA')
  good=[];refused=[]
  for row in rows:
-  required={'ticker','family','observed_at','event_at','source_ref','source_sha256','independent_admission_ref','score','n_firms','net_raises','event_type','liquidity_segment','volatility'}
+  required={'ticker','family','observed_at','event_at','source_ref','source_sha256','independent_admission_ref','score','n_firms','net_raises','event_type','liquidity_segment','volatility','source_item_id'}
   if not isinstance(row,dict) or set(row)!=required:raise ValueError('EXACT_TIME_VALID_FEATURE_SCHEMA')
   known=clock(row['observed_at']);event=clock(row['event_at'])
   if known>now or event>known or (now-event).total_seconds()>spec['max_age_days']*86400:refused.append({'ticker':row['ticker'],'code':'TIME_OR_FRESHNESS_REFUSED'});continue
@@ -108,7 +126,7 @@ def qualify_features(spec,rows,*,declared_at,observed_at):
   good.append(row)
  present={r['family'] for r in good}
  if any(f not in present for f in spec['input_families']):return {'status':'WAIT_INPUT','rows':[],'refusals':refused}
- return {'status':'INPUT_ROWS_PRESENT_NOT_PRICE_OR_SOURCE_CONTENT_QUALIFICATION','rows':good,'refusals':refused}
+ return {'status':'INPUT_ROWS_PRESENT_NOT_PRICE_OR_SOURCE_CONTENT_QUALIFICATION','rows':collapse_news(good),'refusals':refused}
 
 def targets(spec,rows,*,asof=None):
  if spec['family']=='no_news_control':return {'CASH':1.0}
