@@ -1,0 +1,92 @@
+{
+  "activation": "NONE",
+  "canonical_files": {
+    "backend/config.py": "fdc0aef149c9c48e17133a56838e6053188a4b899fb73396aebabc90b636a5ae",
+    "backend/services/disk_guard.py": "dc32c5dbfac742cc99f7b73865f06e0c1221daa7aa0d4030d3e9afccbf1149fe",
+    "backend/services/llm_portfolio.py": "3e443d4a0999b4c11281d39f16387d4a7ce640a9e7ff34e7d20be6b533b65de4",
+    "backend/services/market_sessions.py": "10332229df522c44ad80e6a6d3c5bb99d9e1edf3114584e853cfb97dd8bbfdf5",
+    "backend/services/portfolio_intelligence/trial_registry.py": "d8ac9e45fdc5fae710ee8f0dd171b179938d7fee9589f71885279bd824b079fb",
+    "backend/services/prospective_exit_pair/__init__.py": "2bd02aa7cd9bc851ad1c7a4e324802b710d29f3d1edac1293e68587659c0dad9",
+    "backend/services/prospective_exit_pair/owned_stage.py": "e055b4c9edb917a6460ede6fcb839b3a1d535f261e10964952a2e4cffd34af83",
+    "backend/services/prospective_exit_pair/pair_core.py": "585a6367963785306e9d77b70ea31608d466115af25b8869b46e1d7bf80cc174",
+    "backend/services/xs_ranker.py": "ae3a41d22d165635c1ff1ac8ed899518b5186dbefe9611d1047e5c9676457529",
+    "backend/tests/dynamic_pair/test_canonical_integration.py": "8c3ab30a0f812e483b44158cbd8cfbf2f1e0e0261a81c281b9baf371a6bc547a",
+    "backend/tests/dynamic_pair/test_existing_accounting.py": "f0072aa14c2d773b706da8b6466a306a24bdd93c3454d4d8fe5431a9fcc2d27f",
+    "backend/tests/dynamic_pair/test_owned_stage.py": "4ac26fb01c7836cb0d3f310e729029e477eb255c77ec6754f8847e6ebf9b238e",
+    "backend/tests/dynamic_pair/test_pair_core.py": "a180823ef179efacaf767fa8d20a7c82366cba27dd57e56dd6a60d96ff85cebf",
+    "docs/TRIALS/DYNAMIC-EXIT5-PAIR-CONTRACT.json": "0beb3e5337a199f867e27ddc8565728ec392133adb0a52603e58b083d582147d",
+    "docs/TRIALS/DYNAMIC-EXIT5-PAIR-INTEGRATION.md": "e6949f1b6caf52bae72f1432bf04d45c45b5c8f527a1d3387fe232fe7b908248",
+    "docs/TRIALS/TRIAL-DYNAMIC-EXIT5-PAIR-20261015.md": "06198da290424017009f8dd667751d76bf512c7819782a8ea0c005901b8f5d1a"
+  },
+  "local_execution_root": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt",
+  "operational_transitive_custody_review_required": true,
+  "predecessor_packet_sha256": "b68af3969d14b0cccf3d8f0d985aa9ffd134bd46ee2a772a58414223148580a3",
+  "schema": "prospective_dynamic_pair_canonical_source_binding/1",
+  "source_refs": [
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/prospective_exit_pair/__init__.py",
+      "sha256": "2bd02aa7cd9bc851ad1c7a4e324802b710d29f3d1edac1293e68587659c0dad9"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/prospective_exit_pair/owned_stage.py",
+      "sha256": "e055b4c9edb917a6460ede6fcb839b3a1d535f261e10964952a2e4cffd34af83"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/prospective_exit_pair/pair_core.py",
+      "sha256": "585a6367963785306e9d77b70ea31608d466115af25b8869b46e1d7bf80cc174"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/tests/dynamic_pair/test_canonical_integration.py",
+      "sha256": "8c3ab30a0f812e483b44158cbd8cfbf2f1e0e0261a81c281b9baf371a6bc547a"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/tests/dynamic_pair/test_existing_accounting.py",
+      "sha256": "f0072aa14c2d773b706da8b6466a306a24bdd93c3454d4d8fe5431a9fcc2d27f"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/tests/dynamic_pair/test_owned_stage.py",
+      "sha256": "4ac26fb01c7836cb0d3f310e729029e477eb255c77ec6754f8847e6ebf9b238e"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/tests/dynamic_pair/test_pair_core.py",
+      "sha256": "de4381a263e52dd5109e6c525a2db4d6af15013271f5faff8dd807ce5b7e4620"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/docs/TRIALS/DYNAMIC-EXIT5-PAIR-CONTRACT.json",
+      "sha256": "e57e22b04de184f82d5bfe70b64454b545767fd40a828d641897c0f8566145f1"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/docs/TRIALS/DYNAMIC-EXIT5-PAIR-INTEGRATION.md",
+      "sha256": "e6949f1b6caf52bae72f1432bf04d45c45b5c8f527a1d3387fe232fe7b908248"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/docs/TRIALS/TRIAL-DYNAMIC-EXIT5-PAIR-20261015.md",
+      "sha256": "b6d09001a5f65f8bf7730cdf99e8c4c1461075ac345e60d6f0c05c73399f731e"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/llm_portfolio.py",
+      "sha256": "67bf9563055ca7807ac3e3430995935dbe22662858e792cc54908982f8f585fb"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/xs_ranker.py",
+      "sha256": "5c6557f3bb390f0fdfd085425466472b1ebf2f003194119c4dc12b77deb50b77"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/market_sessions.py",
+      "sha256": "cef10150874adfb9b3c43eb234a8e28e4a2c422b50cb0f54752aea838831f208"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/disk_guard.py",
+      "sha256": "3e84d3cfe99ad7fcc910d243af5e40cf0a59f9b4c50dbcdd3a037f7d6b8f46de"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/portfolio_intelligence/trial_registry.py",
+      "sha256": "20071ef620739a5d8a91d2885569bbfef912622997f268a7698bdc631921c202"
+    },
+    {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/config.py",
+      "sha256": "5d73104312c96e07ee75d385d30a79a53f6830ec5b6e5b38f8855d6e8efbe95e"
+    }
+  ],
+  "verdict": "SOURCE_ONLY_NOT_REGISTERED_NOT_ACCRUING"
+}

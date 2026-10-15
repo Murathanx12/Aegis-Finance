@@ -1,0 +1,44 @@
+{
+  "activation": "NONE",
+  "actual_proposal_id": "child-proposal:330af2e94471e32a37f2b184",
+  "actual_proposal_ref": {
+    "path": "C:\\Users\\mrthn\\aegis-recovery-evidence\\oct15-clean-recovery-20261015\\branching-outcome-review-r1\\ROOT_ACTUAL_CYCLE\\prospective-child-proposal.json",
+    "sha256": "11d26b0fedfa935b67af06c04d7bb436faa0bf3c7936723223dbee2aaa95769c"
+  },
+  "cash_interest": 0,
+  "control_exit_sessions": 126,
+  "exit_sessions": 5,
+  "fee_budget_rule": "COMMON_PROPORTIONAL_COST_BUDGET",
+  "historical_nav_inherited": false,
+  "hypothesis_selection_window": {
+    "end": "2026-10-14",
+    "includes_seen_outcomes": true,
+    "start": "2026-09-28"
+  },
+  "liquidity_rate_rule": "one_way_rate=XR.round_trip_bps(LP._entry_mdv(prior_closed_at_declaration,len(prior)))/20000; frozen both arms and both sides",
+  "model": "VIRTUAL_LP_BAND_COST_EVENT_LEDGER_NOT_G7_G8_NO_CAPACITY_CLAIM",
+  "new_inception": "AFTER_CANONICAL_COMMIT_BOTH_REGISTRIES_ACTUAL_READBACK_DECLARATION_REVIEW_AND_NEXT_XNYS_SESSION",
+  "parent_book_id": "784d2831c530f113",
+  "parent_record_sha256": "96d28155bac1668dd6cf35ff34fbed7298f9b689abae37e9cbcdbd38e65e57d2",
+  "parent_selection_asof": "2026-09-25",
+  "primary_sessions": 21,
+  "schema": "fixed_exit_pair_policy_contract/1",
+  "trade_cost_rule": "each traded notional times one-way entry-band rate; sell notional uses actual exit proceeds",
+  "weights": {
+    "ABNB": 0.06999999999999998,
+    "AFRM": 0.05999999999999997,
+    "AMGN": 0.05999999999999997,
+    "CASH": 0.04999999999999998,
+    "CRM": 0.06999999999999998,
+    "CRWD": 0.07999999999999996,
+    "DELL": 0.05999999999999997,
+    "DT": 0.05999999999999997,
+    "FTNT": 0.05999999999999997,
+    "NET": 0.05999999999999997,
+    "OKTA": 0.08999999999999996,
+    "PANW": 0.06999999999999998,
+    "S": 0.05999999999999997,
+    "SNOW": 0.07999999999999996,
+    "TGT": 0.06999999999999998
+  }
+}
