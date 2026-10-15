@@ -44,11 +44,14 @@ def shared_prices(*,observed_at,lp,pandas):
  session=closed[-1].date();start=session-datetime.timedelta(days=400)
  paths=(ROOT/'backend/data/optimus/prices_2025_26/bars.parquet',ROOT/'backend/data/optimus/llm_portfolio/global_bars.parquet')
  before=[(p.stat().st_size,p.stat().st_mtime_ns) for p in paths];frames=[]
- columns=['symbol','date','open','high','low','close','volume']
+ # Original union/grade/market metadata read only these five columns. Keep
+ # the exact400day filter and complete-symbol vendor selection unchanged.
+ columns=['symbol','date','open','close','volume']
  for path in paths:
   frames.append(pandas.read_parquet(path,columns=columns,filters=[('date','>=',pandas.Timestamp(start)),('date','<=',pandas.Timestamp(session))]))
   if sum(len(f) for f in frames)>3000000:raise ValueError('BOUNDED_SHARED_PRICE_PANEL')
  bars=lp.union_bars(*frames)
+ del frames  # Do not retain both decoded inputs while hashing/snapshotting.
  if bars.empty or bars['date'].max().date()!=session:raise ValueError('WAIT_SHARED_PRICE_REFRESH')
  pins=[{'path':str(p),'sha256':sha(p)} for p in paths]
  if before!=[(p.stat().st_size,p.stat().st_mtime_ns) for p in paths]:raise ValueError('WAIT_SHARED_PRICE_REFRESH')

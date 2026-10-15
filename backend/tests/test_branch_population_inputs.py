@@ -28,7 +28,7 @@ def test_revision_adapter_preserves_actual_prior_receipt_and_original_pit_guard(
  from backend.services import revision_flow as rf
  raw=pd.DataFrame([{'ticker':'AAA','event_date':'2026-10-14','firm':str(n),'target_action':'Raises','prior_target':100.,'current_target':110.,'pit_safe':True} for n in range(3)])
  f=tmp_path/'revision.parquet';f.write_bytes(b'fixture-source-only')
- fake=types.SimpleNamespace(read_parquet=lambda path:raw)
+ fake=types.SimpleNamespace(read_parquet=lambda path,columns:raw[columns])
  receipt={'written_utc':'2026-10-14T20:33:38Z'}
  rows=i.revision_rows(f,receipt,{},observed_at='2026-10-15T12:00:00Z',rf=rf,pandas=fake,market={'AAA':{'liquidity_segment':'liquid','volatility':.1}})
  assert rows[0]['n_firms']==3 and rows[0]['net_raises']==3 and rows[0]['observed_at']=='2026-10-14T20:33:38+00:00'

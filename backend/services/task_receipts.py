@@ -164,6 +164,8 @@ class TaskSpec:
     window_cfg: Optional[tuple[str, str]] = None
     #: fixed UTC repeat window; unlike an ET window this matches a fixed SGT trigger
     window_utc: Optional[tuple[str, str]] = None
+    #: A separately owned private task may declare cadence without repinning config.
+    cadence_h: Optional[float] = None
 
 
 def parse_stamp(v: Any) -> Optional[datetime]:
@@ -1060,7 +1062,7 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
                                         "local_runtime_digest/digest_*.json", registered_only=True),
     "AegisLocalBranchingPrivateGrade": TaskSpec(r_local_branching_private_grade,
         "~/aegis-recovery-evidence/oct14-continuation-20261014/local-branching/automation_runs.jsonl",
-        registered_only=True),
+        registered_only=True, cadence_h=2.0),
     "AegisAlerts": TaskSpec(r_alerts, "alerts/receipts/alert_pass_*.json",
                             hash_off="a quiet market legitimately repeats the same pass; its own state "
                                      "and bars_health are read instead"),
@@ -1143,7 +1145,8 @@ def _non_session_days(after: date, upto: date) -> int:
 
 def allowed_age_s(name: str, spec: TaskSpec, stamp: Optional[datetime], now: datetime) -> float:
     from backend.services import system_health as SH                # noqa: PLC0415
-    cad_h = float(_config.HEALTH_TASK_CADENCE_H.get(name, 24.0))
+    cad_h = float(spec.cadence_h if spec.cadence_h is not None
+                  else _config.HEALTH_TASK_CADENCE_H.get(name, 24.0))
     allowed = cad_h * 3600 * (1 + SH.GRACE)
     if spec.session_only and not spec.window_utc and stamp is not None:
         allowed += 86400 * _non_session_days(SH._et(stamp).date(), SH._et(now).date())

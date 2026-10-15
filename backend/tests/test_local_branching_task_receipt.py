@@ -67,3 +67,14 @@ def test_owner_identity_clock_and_real_two_hour_cadence(tmp_path):
     assert judge(ctx,p,row).state=='DEGRADED'
     row['utc']=(ctx.now-timedelta(hours=3)).isoformat()
     assert judge(ctx,p,row).state=='STALE'
+
+def test_private_cadence_override_preserves_other_task_config_fallback(tmp_path,monkeypatch):
+    ctx,_,_=setup(tmp_path)
+    monkeypatch.setattr(TR._config,'HEALTH_TASK_CADENCE_H',{NAME:99.0,'OtherOwnedTask':6.0})
+    private=TR.TASK_RECEIPT[NAME]
+    assert private.cadence_h==2.0
+    assert TR.allowed_age_s(NAME,private,None,ctx.now)==2*3600*(1+SH.GRACE)
+    ordinary=TR.TaskSpec(reader=lambda *_:TR.Reading(),receipt='fixture')
+    assert ordinary.cadence_h is None
+    assert TR.allowed_age_s('OtherOwnedTask',ordinary,None,ctx.now)==6*3600*(1+SH.GRACE)
+    assert TR.allowed_age_s('UndeclaredCadence',ordinary,None,ctx.now)==24*3600*(1+SH.GRACE)

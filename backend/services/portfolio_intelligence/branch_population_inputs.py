@@ -31,7 +31,10 @@ def revision_rows(path,receipt,review_ref,*,observed_at,rf,pandas,market):
  available=clock(receipt['written_utc']);now=clock(observed_at)
  if available>now:raise ValueError('FUTURE_REVISION_AVAILABILITY')
  # STRICT prior-date event cutoff is the original implementation's contract.
- frame=rf.compute(pandas.read_parquet(path),asof=now.date())
+ # Project unused columns only. DO NOT prefilter dates/rows: originalcompute
+ # validates whole-file pit_safe and normalization before its recentwindow.
+ columns=['ticker','event_date','firm','target_action','prior_target','current_target','pit_safe']
+ frame=rf.compute(pandas.read_parquet(path,columns=columns),asof=now.date())
  source=ref(path);rows=[]
  for ticker,v in frame.iterrows():
   if ticker not in market:continue
@@ -107,13 +110,34 @@ class ExistingInputAdapters:
  def callbacks(self):return {name:self.admit for name in ('news_only','hybrid_news_revision','revision_flow','net_raises')}
 
 class SharedGrader:
- """Original grade code/rules, one private grouping cache for one fixed frame."""
+ """Original grade code, lazily group only after a book can enter.
+
+ Originalgrade first gets its benchmark, then checks entry, then gets holdings.
+ A WAIT_ENTRY population needs only that small benchmark series. Once a held
+ symbol is requested, use the exact original wholeframe grouping once.
+ """
  def __init__(self,lp,bars):
-  self.read_books=lp.read_books;grouped=lp._grouped(bars)
-  def priced_freeze(book,**kwargs):return lp.freeze(book,universe=set(grouped),**kwargs)
+  self.read_books=lp.read_books;names=set(bars['symbol'].unique());state={'benchmark':None,'grouped':None};benchmarks={}
+  def priced_freeze(book,**kwargs):return lp.freeze(book,universe=names,**kwargs)
   self.freeze=priced_freeze
+  class LazyPrices:
+   def get(self,symbol,default=None):
+    if state['grouped'] is not None:return state['grouped'].get(symbol,default)
+    if symbol==state['benchmark']:
+     if symbol not in benchmarks:
+      selected=bars[bars['symbol']==symbol]
+      benchmarks[symbol]=selected.sort_values('date').reset_index(drop=True) if len(selected) else None
+     return benchmarks[symbol] if benchmarks[symbol] is not None else default
+    state['grouped']=lp._grouped(bars)
+    return state['grouped'].get(symbol,default)
+  lazy=LazyPrices()
   def same_frame(actual):
    if actual is not bars:raise ValueError('EXACT_SHARED_PRICE_FRAME_REQUIRED')
-   return grouped
-  self.grade=types.FunctionType(lp.grade.__code__,dict(lp.grade.__globals__,_grouped=same_frame),lp.grade.__name__,lp.grade.__defaults__,lp.grade.__closure__)
-  self.grade.__kwdefaults__=dict(lp.grade.__kwdefaults__ or {})
+   return lazy
+  original=types.FunctionType(lp.grade.__code__,dict(lp.grade.__globals__,_grouped=same_frame),lp.grade.__name__,lp.grade.__defaults__,lp.grade.__closure__)
+  original.__kwdefaults__=dict(lp.grade.__kwdefaults__ or {})
+  def grade(book,actual,**kwargs):
+   if actual is not bars:raise ValueError('EXACT_SHARED_PRICE_FRAME_REQUIRED')
+   state['benchmark']=lp.benchmark_of(book)
+   return original(book,actual,**kwargs)
+  self.grade=grade
