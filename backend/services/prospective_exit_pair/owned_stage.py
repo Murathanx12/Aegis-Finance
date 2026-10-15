@@ -80,7 +80,7 @@ def prerequisites(config):
   if len(selected)!=2 or len({r['param'] for r in selected})!=2:raise ValueError('EXACT_BOTH_REGISTRY_ROWS_REQUIRED')
   for r in selected:
    n=json.loads(r['notes']);want=expected[r['param']]
-   if any(n.get(k)!=v for k,v in {'kind':'prospective_dynamic_pair','contract_sha256':d['contract_sha256'],'source_commit':head,'source_manifest_sha256':config['source_manifest_ref']['sha256'],'arm':want['arm'],'parent_book_id':d['parent_book_id'],'historical_nav_inherited':False,'activation':'NONE'}.items()):raise ValueError('EXACT_REGISTERED_PAIR_CONTENT_REQUIRED')
+   if any(n.get(k)!=v for k,v in {'kind':'prospective_dynamic_pair','contract_sha256':d['contract_sha256'],'source_commit':head,'source_manifest_sha256':config['source_manifest_ref']['sha256'],'arm':want['arm'],'historical_nav_inherited':False,'activation':'NONE'}.items()):raise ValueError('EXACT_REGISTERED_PAIR_CONTENT_REQUIRED')
    if C.clock(n['registered_at_utc'])>C.clock(d['registered_utc']):raise ValueError('DECLARATION_AFTER_EVERY_REGISTRATION_REQUIRED')
  # Full source custody/owner identity/resource/STOP is supplied by the existing
  # reviewed native launcher. No self-labelled JSON value can establish it here.

@@ -52,9 +52,15 @@ Missing exact marks remain WAIT, never zeros, fabricated fills or stale marks.
    `dynamic-exit5:055a819a6b099cd95016ef97186ef8a087dd8d9c5241a7381c91a389060455a2:exit5`
    and
    `dynamic-exit5:055a819a6b099cd95016ef97186ef8a087dd8d9c5241a7381c91a389060455a2:fixed_hold`.
-   Notes bind actual NEW source commit, source-manifest SHA, contract SHA, arm,
-   parent, actual registration UTC, kind `prospective_dynamic_pair`,
-   `historical_nav_inherited=false`, `activation=NONE`. Use config_version
+   Registry notes are PUBLIC_REGISTRY_METADATA_ONLY: generic hypothesis,
+   primary metric, descriptive decision rule and public accounting rules; opaque
+   protocol/contract/source-manifest hashes; actual NEW source commit, arm and
+   registration UTC; kind `prospective_dynamic_pair`,
+   `historical_nav_inherited=false`, `activation=NONE`. Do not include full
+   private protocol, basket/weights, parent IDs/lineage, selection details,
+   accounts or local paths. Exact private lineage/protocol remains bound by
+   the canonical document, contract and declaration; internal parent/weights
+   checks stay intact, while public notes need no parent identifier. Use config_version
    `descriptive`. The helper's insertion verdict never means capital adoption.
    Keep full before/after/readback exports; use existing strict-SSH stdin remote
    workflow and deployed helper, without provider calls or deployment changes.

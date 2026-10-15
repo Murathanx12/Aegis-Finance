@@ -7,19 +7,19 @@
     "backend/services/market_sessions.py": "10332229df522c44ad80e6a6d3c5bb99d9e1edf3114584e853cfb97dd8bbfdf5",
     "backend/services/portfolio_intelligence/trial_registry.py": "d8ac9e45fdc5fae710ee8f0dd171b179938d7fee9589f71885279bd824b079fb",
     "backend/services/prospective_exit_pair/__init__.py": "2bd02aa7cd9bc851ad1c7a4e324802b710d29f3d1edac1293e68587659c0dad9",
-    "backend/services/prospective_exit_pair/owned_stage.py": "5eafdf5c0dc588b39a254132b32f95070838a4e0f8fdd716da3a155345ded5ee",
+    "backend/services/prospective_exit_pair/owned_stage.py": "3a0f358a615abd4b06181a73b50346c135f656bf48bc38406de50ac7d608bbb5",
     "backend/services/prospective_exit_pair/pair_core.py": "585a6367963785306e9d77b70ea31608d466115af25b8869b46e1d7bf80cc174",
     "backend/services/xs_ranker.py": "ae3a41d22d165635c1ff1ac8ed899518b5186dbefe9611d1047e5c9676457529",
-    "backend/tests/dynamic_pair/test_canonical_integration.py": "d4e305b707706e80b8a98ccc8b3226263c0e6b3c3488d0488eb1404af93eaa76",
+    "backend/tests/dynamic_pair/test_canonical_integration.py": "cb8dcc15d999967d6102c6a50af484dfec671a0f01a4b2603fcd9d253d9f278f",
     "backend/tests/dynamic_pair/test_declaration_liquidity.py": "5516fb839a3f083bcd9531775582c9f58bad3bddfaf12d0fdbba20f4a9f227af",
     "backend/tests/dynamic_pair/test_existing_accounting.py": "f0072aa14c2d773b706da8b6466a306a24bdd93c3454d4d8fe5431a9fcc2d27f",
     "backend/tests/dynamic_pair/test_owned_stage.py": "4ac26fb01c7836cb0d3f310e729029e477eb255c77ec6754f8847e6ebf9b238e",
     "backend/tests/dynamic_pair/test_pair_core.py": "a180823ef179efacaf767fa8d20a7c82366cba27dd57e56dd6a60d96ff85cebf",
     "docs/TRIALS/DYNAMIC-EXIT5-PAIR-CONTRACT.json": "0beb3e5337a199f867e27ddc8565728ec392133adb0a52603e58b083d582147d",
-    "docs/TRIALS/DYNAMIC-EXIT5-PAIR-INTEGRATION.md": "f4cb18f4ca8235416375811d886e1de8822d62be79afebb8cb637ab410c3412c",
-    "docs/TRIALS/TRIAL-DYNAMIC-EXIT5-PAIR-20261015.md": "06198da290424017009f8dd667751d76bf512c7819782a8ea0c005901b8f5d1a"
+    "docs/TRIALS/DYNAMIC-EXIT5-PAIR-INTEGRATION.md": "6ab5607ccccc5192eeb335faeab357f96785233ceb45505760cef49b2262f86c",
+    "docs/TRIALS/TRIAL-DYNAMIC-EXIT5-PAIR-20261015.md": "b3f68087d5b4dceed11dfd24c6d344b80a50b7d55ba27fb1a919031a5cf5b143"
   },
-  "canonical_predecessor_commit": "a918d3aac370f4dbd00bf5f9c2b8bf9234cc4068",
+  "canonical_predecessor_commit": "3eeb6cd529f7e209b0cc8197d3ad487bc56f49c0",
   "local_execution_root": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt",
   "operational_transitive_custody_review_required": true,
   "predecessor_packet_sha256": "b68af3969d14b0cccf3d8f0d985aa9ffd134bd46ee2a772a58414223148580a3",
@@ -31,7 +31,7 @@
     },
     {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/prospective_exit_pair/owned_stage.py",
-      "sha256": "5eafdf5c0dc588b39a254132b32f95070838a4e0f8fdd716da3a155345ded5ee"
+      "sha256": "3a0f358a615abd4b06181a73b50346c135f656bf48bc38406de50ac7d608bbb5"
     },
     {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/prospective_exit_pair/pair_core.py",
@@ -39,7 +39,7 @@
     },
     {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/tests/dynamic_pair/test_canonical_integration.py",
-      "sha256": "d4e305b707706e80b8a98ccc8b3226263c0e6b3c3488d0488eb1404af93eaa76"
+      "sha256": "cb8dcc15d999967d6102c6a50af484dfec671a0f01a4b2603fcd9d253d9f278f"
     },
     {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/tests/dynamic_pair/test_existing_accounting.py",
@@ -59,11 +59,11 @@
     },
     {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/docs/TRIALS/DYNAMIC-EXIT5-PAIR-INTEGRATION.md",
-      "sha256": "f4cb18f4ca8235416375811d886e1de8822d62be79afebb8cb637ab410c3412c"
+      "sha256": "9c7f1a52419ad091226a7ddc65a61c590157bd607bcf0da403f68ec708c44d5b"
     },
     {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/docs/TRIALS/TRIAL-DYNAMIC-EXIT5-PAIR-20261015.md",
-      "sha256": "b6d09001a5f65f8bf7730cdf99e8c4c1461075ac345e60d6f0c05c73399f731e"
+      "sha256": "cdf729a6e37dcda417659927af0d2be6041ce6aa36b2ae161a3d251e5f41ad74"
     },
     {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-dynamic-pair-canonical-r1/repo-wt/backend/services/llm_portfolio.py",
@@ -94,6 +94,6 @@
       "sha256": "5516fb839a3f083bcd9531775582c9f58bad3bddfaf12d0fdbba20f4a9f227af"
     }
   ],
-  "successor_delta": "Declaration validity only: unique closed dates; >=5 finite positive close/volume/product observations in unchanged LP prior63 basis; no fills/skips/extensions/formula or threshold change.",
+  "successor_delta": "Privacy only: remove private parent ID from public registry metadata comparison; retain exact internal declaration/contract parent/record/weights checks; sanitized public registration instructions.",
   "verdict": "SOURCE_ONLY_NOT_REGISTERED_NOT_ACCRUING"
 }
