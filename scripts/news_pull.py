@@ -530,6 +530,11 @@ class FetchResult:
     #: `fetch_yfinance_news`: without it, every capped run re-pulls the same
     #: alphabetical prefix and the rest of the universe is never covered.
     next_offset: int | None = None
+    # SEC work is committed by pull_source only AFTER archive persistence.
+    sec_pending: list[dict] | None = None
+    sec_completed: dict[str, list[str]] = field(default_factory=dict)
+    sec_archived_skipped: int = 0
+    sec_feed_entries: int | None = None
 
 
 def _sleep(seconds: float) -> None:
@@ -574,7 +579,8 @@ EX99_ITEMS = ("2.02", "7.01", "8.01")
 #: EX-99.2 — the press release and the prepared remarks.
 EX99_TYPE_PREFIX = "EX-99"
 
-#: Requests a single filing costs: one index-headers page, one exhibit body.
+#: Minimum cost of a single-exhibit filing: index headers plus one body.
+#: Multiple EX-99 documents cost one additional request each.
 #: A CONTRACT, asserted by test, because a fetcher whose per-item cost drifts
 #: silently is a fetcher that breaks somebody else's rate limit.
 EX99_REQUESTS_PER_FILING = 2
@@ -647,16 +653,40 @@ def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult
     the item filter. The feed row itself is already registered as
     `sec_edgar_8k_current_atom`; this source is the BODY, which did not exist.
     """
-    res = FetchResult()
+    res = FetchResult(sec_pending=list(ctx.cursor.get("sec_pending", [])),
+                      sec_completed=dict(ctx.cursor.get("sec_completed", {})))
     try:
         res.calls += 1
         entries = parse_edgar_atom(ctx.http_get_via(src, src.endpoint_or_feed))
+        res.sec_feed_entries = len(entries)
     except (FetchError, ET.ParseError) as e:
         res.failures.append(f"feed: {e}")
         return res
 
     wanted = {f"8-K:{i}" for i in EX99_ITEMS}
-    candidates = [e for e in entries if wanted & set(e.get("entity_tags") or [])]
+    current = [e for e in entries if wanted & set(e.get("entity_tags") or [])]
+    # Retain unfinished entries when the rolling feed changes. A positional
+    # offset into a moving feed can skip filings; accession identity cannot.
+    pending = ctx.cursor.get("sec_pending", [])
+    completed = dict(ctx.cursor.get("sec_completed", {}))
+    archived = _known_raw_ids(src.id, days=None)
+    completed = {acc: ids for acc, ids in completed.items()
+                 if ids and all(rid in archived for rid in ids)}
+    by_accession = {}
+    for entry in [*pending, *current]:
+        _, acc = _filing_base(entry.get("url") or "")
+        if acc not in completed:
+            stored = dict(entry)
+            if isinstance(stored.get("published"), datetime):
+                stored["published"] = _iso(stored["published"])
+            by_accession.setdefault(acc, stored)
+    candidates = list(by_accession.values())
+    res.sec_pending = list(candidates)
+    res.sec_completed = completed
+    # Persist discovery before a body can be appended. Otherwise a crash before
+    # final cursor commit plus a shifted feed loses a partly archived filing.
+    if ctx.persist_sec_work is not None:
+        ctx.persist_sec_work(candidates)
     res.failures.append(
         f"feed carried {len(entries)} filing(s); {len(candidates)} name an item in "
         f"{list(EX99_ITEMS)}. This is a FILTER, printed so a zero-row run is "
@@ -666,6 +696,8 @@ def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult
     for entry in candidates:
         if ctx.budget_spent(res):
             break
+        res.sec_pending.remove(entry)
+        res.sec_pending.append(entry)
         base, acc = _filing_base(entry.get("url") or "")
         if not base or not acc:
             res.failures.append(f"{entry.get('raw_id')}: no filing directory in the link")
@@ -681,21 +713,38 @@ def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult
         exhibits = exhibit_99_documents(docs)
         if not exhibits:
             no_exhibit += 1
+            # Parsed non-EX99 documents alone do not prove a complete index.
+            # Retain this work rather than committing a vacuous all([]) proof.
+            if not docs:
+                res.failures.append(f"{acc}: empty filing document index")
+            # Rotate attempted unfinished work so one no-exhibit or failing
+            # filing cannot monopolise every bounded run.
             continue
-        doc = exhibits[0]
-        url = f"{base}/{doc['filename']}"
-        _sleep(ctx.pace(src))
-        try:
-            res.calls += 1
-            body = _strip_html(fetch_scrapling._decode(ctx.http_get_via(src, url)))
-        except FetchError as e:
-            res.failures.append(f"{acc}: {doc['filename']}: {e}")
-            continue
-        res.items.append({
+        expected = [f"{acc}:{doc['filename']}" for doc in exhibits]
+        fetched = []
+        for doc in exhibits:
+            rid = f"{acc}:{doc['filename']}"
+            if rid in archived:
+                res.sec_archived_skipped += 1
+                fetched.append(rid)
+                continue
+            if ctx.budget_spent(res):
+                break
+            url = f"{base}/{doc['filename']}"
+            _sleep(ctx.pace(src))
+            try:
+                res.calls += 1
+                body = _strip_html(fetch_scrapling._decode(ctx.http_get_via(src, url)))
+                if not body.strip():
+                    raise FetchError("empty exhibit body")
+            except FetchError as e:
+                res.failures.append(f"{acc}: {doc['filename']}: {e}")
+                continue
+            res.items.append({
             "title": f"{entry.get('title')} — {doc['type']}",
             "url": url,
             "body": body,
-            "published": entry.get("published"),
+            "published": _parse_iso(entry.get("published") or ""),
             # The accession alone would collide with the FEED row's raw_id and
             # dedupe this source's body against that source's headline the day
             # somebody merges the two corpora. The exhibit file is what makes
@@ -704,7 +753,10 @@ def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult
             "entity_tags": list(entry.get("entity_tags") or [])
                            + [f"exhibit:{doc['type']}", f"accession:{acc}"],
             "resolve_text": entry.get("resolve_text") or entry.get("title") or "",
-        })
+            })
+            fetched.append(rid)
+        if set(fetched) == set(expected):
+            res.sec_completed[acc] = expected
     res.failures.append(
         f"{no_exhibit} filing(s) passed the item filter and attached NO Exhibit 99 — "
         f"that is an answer about the filing, not a parse failure.")
@@ -918,6 +970,7 @@ class RunContext:
     #: See `SOURCE_BUDGET_S` for why this is not optional.
     budget_s: float = 0.0
     cursor: dict = field(default_factory=dict)
+    persist_sec_work: Callable[[list[dict]], None] | None = None
     _t0: float = field(default_factory=time.time)
     _universe: list[str] | None = None
 
@@ -1075,16 +1128,17 @@ def _write_cursor(source_id: str, cur: dict) -> None:
     DG.atomic_write_json(p, cur, sort_keys=True, ensure_ascii=True, default=None)
 
 
-def _known_raw_ids(source_id: str, days: int = DEDUPE_LOOKBACK_DAYS) -> set[str]:
+def _known_raw_ids(source_id: str, days: int | None = DEDUPE_LOOKBACK_DAYS) -> set[str]:
     """Every `raw_id` written for this source in the last `days` UTC days."""
     out: set[str] = set()
     d = source_dir(source_id)
     if not d.exists():
         return out
     today = _now().date()
-    wanted = {(today - timedelta(days=i)).isoformat() for i in range(days + 1)}
+    wanted = ({(today - timedelta(days=i)).isoformat() for i in range(days + 1)}
+              if days is not None else None)
     for f in d.glob("*.jsonl"):
-        if f.stem not in wanted:
+        if wanted is not None and f.stem not in wanted:
             continue
         for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
             try:
@@ -1136,7 +1190,13 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
     """
     src = registry.get(source_id)
     ctx = ctx or RunContext()
-    ctx.cursor = _read_cursor(source_id) if ctx.resume else {}
+    # SEC traversal is durable work state, including for DailyPass callers
+    # which predate --resume. An ordinary pull must never erase unfinished work.
+    ctx.cursor = _read_cursor(source_id) if ctx.resume or src.parser == "edgar_ex99" else {}
+    if src.parser == "edgar_ex99":
+        def persist_pending(entries: list[dict]) -> None:
+            _write_cursor(src.id, {**ctx.cursor, "sec_pending": entries})
+        ctx.persist_sec_work = persist_pending
     t0 = time.time()
     started = _now()
     tbl = entities.tables()
@@ -1180,7 +1240,7 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
         _emit(receipt, src)
         return receipt
 
-    known = _known_raw_ids(src.id)
+    known = _known_raw_ids(src.id, days=None) if res.sec_pending is not None else _known_raw_ids(src.id)
     by_day: dict[str, list[dict]] = {}
     seen_this_run: set[str] = set()
     for item in res.items:
@@ -1207,6 +1267,8 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
         with (d / f"{day}.jsonl").open("a", encoding="utf-8") as fh:
             for row in rows:
                 fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
         receipt["rows_by_day"][day] = len(rows)
 
     graded = receipt["resolved"] + receipt["unresolved"]
@@ -1215,7 +1277,8 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
     # THE RED RULE. A zero-RECEIVED run is the one that counts: zero NEW rows
     # with rows received is a healthy feed we already have.
     zeros = int(ctx.cursor.get("consecutive_zero_runs", 0))
-    zeros = zeros + 1 if receipt["received"] == 0 else 0
+    received_current = receipt["received"] > 0 or (res.sec_feed_entries or 0) > 0
+    zeros = 0 if received_current else zeros + 1
     receipt["consecutive_zero_runs"] = zeros
     if zeros >= 2:
         receipt["status"] = "RED"
@@ -1227,7 +1290,25 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
     elif receipt["failures"] and receipt["new"] == 0:
         receipt["status"] = "DEGRADED"
 
+    sec_state = {}
+    if res.sec_pending is not None:
+        # This re-read also handles max_rows truncation and a crash after append
+        # but before cursor replace. Completion never precedes durable rows.
+        persisted = _known_raw_ids(src.id, days=None)
+        complete = {acc: ids for acc, ids in res.sec_completed.items()
+                    if ids and all(rid in persisted for rid in ids)}
+        pending = [entry for entry in res.sec_pending
+                   if _filing_base(entry.get("url") or "")[1] not in complete]
+        sec_state = {"sec_completed": complete, "sec_pending": pending}
+        receipt["sec_progress"] = {"completed_filings": len(complete),
+                                   "feed_entries": res.sec_feed_entries,
+                                   "completed_this_run": len(set(complete) - set(ctx.cursor.get("sec_completed", {}))),
+                                   "archived_exhibits_skipped": res.sec_archived_skipped,
+                                   "pending_filings": len(pending),
+                                   "archive_verified": True}
+        res.next_cursor = next(reversed(complete), ctx.cursor.get("next_cursor", ""))
     _write_cursor(src.id, {
+        **sec_state,
         "source": src.id,
         "last_run_utc": _iso(started),
         "next_cursor": res.next_cursor or ctx.cursor.get("next_cursor", ""),
