@@ -17,6 +17,12 @@ RUN pip install --no-cache-dir --prefer-binary --timeout 600 --retries 10 -r bac
 # Copy application code
 COPY backend/ backend/
 COPY engine/ engine/
+
+COPY .dockerignore .dockerignore
+
+# Frozen population registration package; no operating task starts in the API.
+COPY scripts/branch_population.py scripts/local_branching.py scripts/local_branching_task.py scripts/local_branching_grade_child.py scripts/beta_v1_news_capture.py scripts/
+COPY docs/TRIALS/POPULATION-1000-SOURCES.json docs/TRIALS/POPULATION-1000-SPECIFICATIONS.json docs/TRIALS/TRIAL-POPULATION-1000-20261015.md docs/TRIALS/
 # The public-assets health probe reads this committed pin at /app/scripts/.
 COPY scripts/render_public_assets.py scripts/render_public_assets.py
 
@@ -25,7 +31,7 @@ ENV PORT=8000
 
 # glibc arena bloat guard (2026-07-16): the 80-ticker screener runs numpy MC
 # across 8 worker threads; default glibc grows up to 8*ncores malloc arenas
-# and freed pages never return to the OS — Railway bills that plateau as
+# and freed pages never return to the OS â€” Railway bills that plateau as
 # RAM-hours. 2 arenas is the standard fix for threaded numpy services
 # (negligible lock contention at our request volume).
 ENV MALLOC_ARENA_MAX=2

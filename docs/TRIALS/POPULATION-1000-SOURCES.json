@@ -1,0 +1,27 @@
+{
+  "files": {
+    ".dockerignore": "ef4422fb1de3110331dfb825bfa75f6fad2e2beb77ce71b749a1637328386192",
+    "backend/Dockerfile": "e7f9046a1e0f42ab276a53e6da112664f5ebbf8c2772d36006e71bdd8100a771",
+    "backend/config.py": "fdc0aef149c9c48e17133a56838e6053188a4b899fb73396aebabc90b636a5ae",
+    "backend/db.py": "4b167d961ed159097fa6736edaf72b228917f9985974467fe667daff8c6bd9ba",
+    "backend/services/disk_guard.py": "dc32c5dbfac742cc99f7b73865f06e0c1221daa7aa0d4030d3e9afccbf1149fe",
+    "backend/services/llm_portfolio.py": "3e443d4a0999b4c11281d39f16387d4a7ce640a9e7ff34e7d20be6b533b65de4",
+    "backend/services/market_sessions.py": "10332229df522c44ad80e6a6d3c5bb99d9e1edf3114584e853cfb97dd8bbfdf5",
+    "backend/services/portfolio_intelligence/branch_population.py": "f86a4aec204d1fa4cef8fa19af0fff2e7504111cc99f59a522375a3a7993760a",
+    "backend/services/portfolio_intelligence/branch_population_inputs.py": "8d95b328831392c4cabdfb0eef22760ee32a60c098e730145b336fe3a589b1c4",
+    "backend/services/portfolio_intelligence/branch_population_operating.py": "a4e338d2d5875aa0eb16889abcd6b3b9989052106ed82699febf77f54ffe3619",
+    "backend/services/portfolio_intelligence/branch_population_registry.py": "21188deb044d239917730e030ead36ab67247f9f2576f68b44bb8c74e537f199",
+    "backend/services/portfolio_intelligence/branch_population_runtime.py": "c19f556d9a77e5f8153c258ca302364e7215d8d62b871b5122c784b153e94ccb",
+    "backend/services/portfolio_intelligence/trial_registry.py": "d8ac9e45fdc5fae710ee8f0dd171b179938d7fee9589f71885279bd824b079fb",
+    "backend/services/revision_flow.py": "e508f9dd7b49355817db8be1390026670fa682c605e37ca2d980639ecd457802",
+    "backend/services/xs_ranker.py": "ae3a41d22d165635c1ff1ac8ed899518b5186dbefe9611d1047e5c9676457529",
+    "docs/TRIALS/POPULATION-1000-SPECIFICATIONS.json": "5cf8cc3b7b2e9e9c1e47c1b2797b65dde5ee46abaca39012915e0fdd13e217d7",
+    "docs/TRIALS/TRIAL-POPULATION-1000-20261015.md": "184a42db6e09e97d4d8e12fe1863e0b8a87cf6d4b28c7f7397c7bf349e84abca",
+    "scripts/beta_v1_news_capture.py": "8c45efe5ff64a07292751a1aa408f895e5a0b9a3381a1e4cb9bba4b0be9cbc9f",
+    "scripts/branch_population.py": "b3d3cec694e313b0c33b3ecf9716479058959cb16a1d814e82acd2cba34f914b",
+    "scripts/local_branching.py": "c46c3746c9769e94f48a8850e1eac6781270bcceb2c70a3e214722baf9b2e10f",
+    "scripts/local_branching_grade_child.py": "7b887b858bb629754f702fe199babbceafab2e06776e60907840b12149306d0e"
+  },
+  "schema": "committed_population_source_package/1",
+  "source_encoding": "UTF8; CRLF to LF only; no other normalization"
+}
