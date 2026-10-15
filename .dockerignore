@@ -22,3 +22,12 @@ data_cache
 docs
 *.md
 !backend/requirements.txt
+
+# Only the frozen population registration package may enter from docs.
+!docs/
+docs/*
+!docs/TRIALS/
+docs/TRIALS/*
+!docs/TRIALS/POPULATION-1000-SOURCES.json
+!docs/TRIALS/POPULATION-1000-SPECIFICATIONS.json
+!docs/TRIALS/TRIAL-POPULATION-1000-20261015.md
