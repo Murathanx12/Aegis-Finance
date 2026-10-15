@@ -3,7 +3,7 @@
 A failed broker read is BROKER_ERROR by name (401, timeout, no key), never $0;
 every row carries `mark_status` and `mark_age_days`; the read is GET-only and
 prints no key; a key shared by two roles is refused, not aliased. Offline:
-every broker leg is injected. Dates derived from today.
+every broker leg is injected. Fixture dates use a fixed UTC clock.
 """
 from __future__ import annotations
 
@@ -11,13 +11,27 @@ import json
 from datetime import date, datetime, timedelta, timezone
 
 import pandas as pd
+import pytest
 
 from learner import benchmark as B
 from scripts import paper_accounts_roi as PA
 
 SECRET = "sk-THIS-MUST-NEVER-APPEAR"
-#: the receipt ages marks on the UTC date (the machine runs at UTC+8)
-TODAY = datetime.now(timezone.utc).date()
+#: Fixed UTC day shared by fixture marks and the production builder's clock.
+TODAY = date(2026, 10, 14)
+
+
+@pytest.fixture(autouse=True)
+def utc_clock(monkeypatch):
+    class SyntheticUTC(datetime):
+        instant = datetime(2026, 10, 14, 23, 59, tzinfo=timezone.utc)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.instant.astimezone(tz or timezone.utc)
+
+    monkeypatch.setattr(PA, "datetime", SyntheticUTC)
+    return SyntheticUTC
 
 
 class _Resp:
@@ -145,6 +159,18 @@ def test_mark_age_decides_live_or_stale_on_every_row(tmp_path, monkeypatch):
         assert row["mark_status"] in PA.MARK_STATUSES
         assert "mark_age_days" in row
     assert sum(rc["mark_status_counts"].values()) == len(rc["rows"])
+
+
+def test_utc_midnight_rollover_ages_every_mark_without_changing_live_status(
+        tmp_path, monkeypatch, utc_clock):
+    utc_clock.instant = datetime(2026, 10, 15, 0, 1, tzinfo=timezone.utc)
+    rc, _ = _build(tmp_path, monkeypatch, _env(hack1="kok"))
+    rows = _rows(rc)
+    assert rc["generated_utc"].startswith("2026-10-15T00:01:00")
+    assert rows["fresh_lane"]["mark_status"] == "LIVE"
+    assert rows["fresh_lane"]["mark_age_days"] == 1
+    assert rows["old_lane"]["mark_status"] == "STALE"
+    assert rows["old_lane"]["mark_age_days"] == 11
 
 
 def test_pending_void_and_never_marked_rows():
