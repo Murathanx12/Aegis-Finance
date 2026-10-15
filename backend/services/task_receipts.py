@@ -519,6 +519,60 @@ def r_local_runtime_digest(ctx, task) -> Reading:
                    detail=f"local model status {d.get('status')}; {valid} valid sampled log rows")
 
 
+def r_local_branching_private_grade(ctx, task) -> Reading:
+    """Read the existing native owner's journal, including its real refusals.
+
+    This private owner is registered separately, not by task_keeper. No grade,
+    source review or population admission is manufactured by this health reader.
+    """
+    from backend.services import system_health as SH
+    default = Path.home() / "aegis-recovery-evidence/oct14-continuation-20261014/local-branching/automation_runs.jsonl"
+    path = ctx.path("local_branching_runs", default)
+    lines = SH._tail_lines(path, 262144)
+    if not lines:
+        return _none(str(path))
+    # Never fall back to an older green row when the newest write is malformed.
+    try:
+        d = json.loads(lines[-1])
+    except ValueError:
+        return Reading(status="DEGRADED", detail="newest branching owner row is malformed", proof=str(path))
+    if not isinstance(d, dict):
+        return Reading(status="DEGRADED", detail="newest branching owner row is not an object", proof=str(path))
+    action = d.get("action")
+    status = {"GRADED": "OK", "ALREADY_GRADED": "IDLE", "WAIT_ENTRY": "IDLE",
+              "WAIT_SHARED_REFRESH": "IDLE", "WAIT_CONSTITUENT_MARKS": "IDLE",
+              "YIELD_IIF_WINDOW": "IDLE", "STOP": "STOPPED", "REFUSED": "REFUSED"}.get(action, "DEGRADED")
+    stamp = parse_stamp(d.get("utc"))
+    why = str(d.get("reason") or "")
+    if d.get("task") != "AegisLocalBranchingPrivateGrade" or stamp is None or stamp > ctx.now + timedelta(seconds=30):
+        status, why = "DEGRADED", "owner identity or receipt UTC is invalid"
+    if action in {"GRADED", "ALREADY_GRADED", "WAIT_ENTRY", "WAIT_SHARED_REFRESH", "WAIT_CONSTITUENT_MARKS"}:
+        proof = d.get("resource_proof") or {}
+        if not isinstance(proof, dict):
+            proof = {}
+        peak, limit = proof.get("aggregate_peak_upper_bound"), proof.get("aggregate_limit_bytes")
+        if (proof.get("child_reaped") is not True or type(peak) is not int or peak < 0
+                or type(limit) is not int or limit != 512 * 1024 ** 2 or peak >= limit):
+            status, why = "DEGRADED", "owned child cleanup or aggregate resource proof is absent/invalid"
+    if action == "GRADED" and (d.get("n_books") != 247 or d.get("n_twins") != 0 or not d.get("grade_receipt")):
+        status, why = "DEGRADED", "original frozen cohort grade receipt/counts are absent/invalid"
+    population = d.get("population1000")
+    if population is not None:
+        nested, note = receipt_status(population, fields=("action",), error_fields=("error", "errors", "traceback"))
+        if isinstance(population, dict) and population.get("action") == "POPULATION_OPERATED":
+            counts = [population.get(k) for k in ("new_frozen_books", "marked", "pending_entry")]
+            if population.get("activation") == "NONE" and all(type(n) is int and n >= 0 for n in counts):
+                errors, note = receipt_status(population, fields=(), error_fields=("error", "errors", "traceback"))
+                nested = worst("OK" if counts[0] or counts[1] else "IDLE", errors)
+            else:
+                nested, note = "DEGRADED", "population operating counts/activation are invalid"
+        status, why = worst(status, nested), "; ".join(x for x in (why, note) if x)
+    return Reading(stamp=stamp, status=status, reason=why,
+                   substance=substance(pick(d, ("action", "session", "grade_receipt", "population1000"))),
+                   proof=str(path) + "[-1]", detail=f"private branching owner {action}; population "
+                   + (str(population.get("action")) if isinstance(population, dict) else "not present in this owner version"))
+
+
 def r_alerts(ctx, task) -> Reading:
     p, d = _newest(ctx.optimus_dir / "alerts" / "receipts", "alert_pass_*.json")
     if not isinstance(d, dict):
@@ -1004,6 +1058,9 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisWorldDigest": TaskSpec(r_world_digest, "digest/world_digest_*.json"),
     "AegisLocalRuntimeDigest": TaskSpec(r_local_runtime_digest,
                                         "local_runtime_digest/digest_*.json", registered_only=True),
+    "AegisLocalBranchingPrivateGrade": TaskSpec(r_local_branching_private_grade,
+        "~/aegis-recovery-evidence/oct14-continuation-20261014/local-branching/automation_runs.jsonl",
+        registered_only=True),
     "AegisAlerts": TaskSpec(r_alerts, "alerts/receipts/alert_pass_*.json",
                             hash_off="a quiet market legitimately repeats the same pass; its own state "
                                      "and bars_health are read instead"),

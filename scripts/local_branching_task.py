@@ -90,7 +90,7 @@ def preflight(now_utc: datetime, *, task_sha: str, grade_sha: str,
             raise ValueError(f"reviewed source or frozen input pin differs: {file.name}")
     root = scripts.parent
     bindings_path = root / "docs/TRIALS/POPULATION-1000-SOURCES.json"
-    if digest(bindings_path) != "83b4ce69828814d549c5ff45d7b5b93dcccfbd4b36c4504d1673b4ba72936c56":
+    if digest(bindings_path) != "99ded27f15e34517e1eefe29b57a5995d5a1fb3a2cc049cb7d74ec99aa3c7f64":
         raise ValueError("population source binding differs")
     population_files = json.loads(bindings_path.read_bytes())["files"]
     for relative, expected in population_files.items():

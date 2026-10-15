@@ -6,7 +6,7 @@ the existing owned bounded task; importing this module never accrues data.
 import datetime,hashlib,json,os,subprocess
 from pathlib import Path
 from backend.services.portfolio_intelligence.branch_population import clock,digest,qualify_features,targets,validate_lineage
-REPO=Path(__file__).resolve().parents[3]
+REPO=Path(os.environ.get('AEGIS_REPO_ROOT') or Path(__file__).resolve().parents[3]).resolve()
 D=Path('C:/Users/mrthn/aegis-recovery-evidence/oct15-clean-recovery-20261015/branching-population-1000-r1')
 SOURCE_BINDINGS=REPO/'docs/TRIALS/POPULATION-1000-SOURCES.json'
 

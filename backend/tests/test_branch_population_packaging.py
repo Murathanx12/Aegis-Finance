@@ -1,5 +1,5 @@
 """Read actual Dockerfile/context rules; no image build/provider operation."""
-import fnmatch,json
+import fnmatch,json,hashlib,importlib.util
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -30,3 +30,19 @@ def test_actual_exact_registration_sources_enter_image_other_docs_still_excluded
     assert not included('docs/CANON.md') and not included('docs/TRIALS/UNRELATED.md') and not included('README.md')
     binding=json.loads((ROOT/'docs/TRIALS/POPULATION-1000-SOURCES.json').read_bytes())
     assert '.dockerignore' in binding['files'] and 'backend/Dockerfile' in binding['files']
+
+def test_frozen_runtime_reads_source_bindings_from_explicit_checkout(tmp_path,monkeypatch):
+    checkout=tmp_path/'external-checkout';(checkout/'docs/TRIALS').mkdir(parents=True)
+    (checkout/'pinned.py').write_bytes(b'actual source\n')
+    binding={'files':{'pinned.py':hashlib.sha256(b'actual source\n').hexdigest()}}
+    (checkout/'docs/TRIALS/POPULATION-1000-SOURCES.json').write_text(json.dumps(binding))
+    frozen=tmp_path/'_internal/runtime.py';frozen.parent.mkdir()
+    frozen.write_bytes((ROOT/'backend/services/portfolio_intelligence/branch_population_runtime.py').read_bytes())
+    monkeypatch.setenv('AEGIS_REPO_ROOT',str(checkout))
+    spec=importlib.util.spec_from_file_location('frozen_population_runtime_fixture',frozen)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    assert module.REPO==checkout.resolve()
+    assert module.source_package_hash()==module.digest(binding)
+    (checkout/'pinned.py').write_bytes(b'changed source\n')
+    import pytest
+    with pytest.raises(ValueError,match='EXACT_COMMITTED_POPULATION_SOURCE_REQUIRED'):module.source_package_hash()
