@@ -4,10 +4,10 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[3]
 class CanonicalIntegration(unittest.TestCase):
- def test_original_accounting_and_contract_are_exact(self):
+ def test_original_core_contract_and_reviewed_stage_successor_are_exact(self):
   expected={
    'backend/services/prospective_exit_pair/pair_core.py':'585a6367963785306e9d77b70ea31608d466115af25b8869b46e1d7bf80cc174',
-   'backend/services/prospective_exit_pair/owned_stage.py':'e055b4c9edb917a6460ede6fcb839b3a1d535f261e10964952a2e4cffd34af83',
+   'backend/services/prospective_exit_pair/owned_stage.py':'5eafdf5c0dc588b39a254132b32f95070838a4e0f8fdd716da3a155345ded5ee',
    'docs/TRIALS/DYNAMIC-EXIT5-PAIR-CONTRACT.json':'0beb3e5337a199f867e27ddc8565728ec392133adb0a52603e58b083d582147d'}
   for rel,want in expected.items():
    with self.subTest(rel=rel):self.assertEqual(hashlib.sha256((ROOT/rel).read_bytes().replace(b'\r\n',b'\n')).hexdigest(),want)

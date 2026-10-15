@@ -109,7 +109,15 @@ never infer pre-open local availability from a file first captured after entry.
   g=g[["date","open","close","volume"]].copy()
   closed=[x for x in g['date'] if cal.is_session(x) and cal.session_close(x).to_pydatetime()<=now]
   g=g[g['date'].isin(closed)].sort_values('date').reset_index(drop=True)
+  if g['date'].map(lambda x:pd.Timestamp(x).date()).duplicated().any():raise ValueError('WAIT_DUPLICATE_PRIOR_LIQUIDITY_SESSION')
   if len(g)<5:raise ValueError('WAIT_CLOSED_PRIOR_LIQUIDITY_HISTORY')
+  # Validate exactly the existing LP cost window before its NaN-skipping
+  # median. Never fill, collapse duplicates, or extend beyond63 observations.
+  try:
+   for row in g.iloc[-63:].itertuples():
+    close=C.number(float(row.close));volume=C.number(float(row.volume))
+    if close<=0 or volume<=0 or C.number(close*volume)<=0:raise ValueError('INVALID_LIQUIDITY_OBSERVATION')
+  except (ValueError,TypeError,OverflowError):raise ValueError('WAIT_VALID_PRIOR_LIQUIDITY_HISTORY') from None
   mdv=lp._entry_mdv(g,len(g))
   if mdv is None or not 0<C.number(mdv):raise ValueError('WAIT_PRIOR_LIQUIDITY_HISTORY')
   costs[t]={'one_way_rate':XR.round_trip_bps(mdv)/20000,'median_dollar_volume':mdv,'basis':'LP_PRIOR63_CLOSED_SESSIONS_AT_ACTUAL_DECLARATION_FROZEN_FOR_BOTH_SIDES'}

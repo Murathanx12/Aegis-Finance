@@ -19,8 +19,14 @@ The exact parent is `784d2831c530f113`, original record SHA
 The frozen private predecessor packet is
 `branching-dynamic-pair-r1/SOURCE_PACKET.json`, SHA
 `b68af3969d14b0cccf3d8f0d985aa9ffd134bd46ee2a772a58414223148580a3`,
-under the existing October15 evidence root. Both accounting sources and the
-policy contract are copied without changes. Tests now resolve this worktree's
+under the existing October15 evidence root. The pure accounting core and
+policy contract are copied without changes. The owned stage was initially
+byte-exact at commit a918d3aa; its successor corrects the declared liquidity
+validity gate: reject duplicate closed dates and invalid close/volume/product
+within the same last63-observation LP cost window, with at least5 valid unique
+closed observations. No invalid-row skipping, filling, lookback extension,
+new cost formula or threshold is introduced. The initial blocked independent
+review and its counterexamples remain retained. Tests resolve this worktree's
 code and existing LP/calendar/cost functions. The canonical trial's status and
 integration link are the only protocol-text changes.
 
