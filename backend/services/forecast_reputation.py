@@ -46,6 +46,8 @@ leave-one-DAY-out and the receipt names the unit it actually used.
 from __future__ import annotations
 
 import json
+import hashlib
+import base64
 import logging
 import math
 from collections import Counter
@@ -73,6 +75,82 @@ GRID: dict[str, tuple[float, ...]] = {
 
 #: Profit-Mirage cut: the first day the forward ledger was written.
 RESTRICT_SINCE = "2026-08-11"
+
+# The 214 Oct 15 outcomes were written on Oct 14 UTC by the SGT-local grader.
+# Their declared dates become nonfuture at midnight; that alone does not
+# establish a canonical resolution. The private, reviewed hold names only
+# those changed rows and is deliberately separate from the prediction ledger.
+_PREMATURE_HOLD_DAY = date(2026, 10, 15)
+_PREMATURE_HOLD_NAME = "premature_resolution_hold_2026-10-14.json"
+_PREMATURE_HOLD_SHA256 = "cf96d4f302fc3d534559ab28dfcecb23e36bade94bbc8ffff473111ea8b9958c"
+_PREMATURE_IDSET_SHA256 = "859c995b747401051336d7cd4ff5bd5b4b8c2c8c89d865310b1bd80bdf901a4c"
+_PREMATURE_ID_HASHES_B64 = (
+    'HYRLoJ9GJwIkB+ffNZCWUWhPBPzlEo/A0ue3oACC4CE5ARs0G0GfQaBdCLZk8imbCpn5TUNxMrptFEMm'
+    'WCOxeOEZo34/v4eZ04WZfHTzCKf6mRjMOKtHhFP2dvqmVkE7bWmQXcd1UeXiLbazoJ6RYD8rWijbs7i9'
+    'ipCnzaY2knzHvTaWfViCMBixNRb0nXbDoJEpR5vWy+8t2AexCfFZaKh5GtAXgQEwzUi9w4mcNEIH4IkF'
+    'XcWSLwaftckrH4BEIFzMSbgENyQldIqwwhNHAT2QlaTIc4guYWS48MQjlyEgNVhPjErH7zTw4kK0dxpP'
+    'nRMqF5K45wFBT1uSUktKIv53H03Qx0lJZiYkl4jCAiqzyYn8wShIb9UdEOoRhcDls43W/+mYWMFX90dw'
+    'eanqzvwlI7St9IL3j86Gly2Q8u6cNdT/bj9MjXDgylV9ki04bBfPGdh0angXCbpSdmqVm4JYAkuLrF2N'
+    '2lRQwNy5lmbY9/ALJqdVFNaItYRpfZg5jxnkkE+N22c8viCX5cHQ6MYyK/u+wa2g2ekIceIdg3diV0Ow'
+    'Y33V9JrFat7ZS9DurzwDqi+wBiIafMCxyr+JQSqadFB3NS8v5rKJzAI6Wkl04py1baodp7J+Ba8RNNt+'
+    'FRL5CWB7caaycPIZbILL/Hu5+HAigaEjx639oj/IQCyv0jFwRuZnfKvbd5+7+D3uBeJU8o6WlZWhEBRk'
+    'uC4IXHkT62M1dPb+t6HxVuJMoFpMvgH/lXO/xJdqe5zKPXFktAAm+4kaTyS9yxsE3OfzEnJ5ZE0HoBlb'
+    'vGg8mfLfxIZ4SB6jeyZ/8WJd+0wp3tqkRkxy7llitTMjEBbh8p2MhH69PlnYajmhup1CvoDMjoE/nZN/'
+    'JtrqnbVGdjKQ1XlQkdNs8TBolYOBCO3j04mS0Ej63sLoUCZFydB2vCBXKUjBX9oS4pcGv9v7ekT5l4ww'
+    'MOTt5CiwAL2UAhuhvvQRDuXMG/AoV3+7OY5Zc1BCFLB2kLgnvMGcAXtrT1ABWKPKPpqu+YVrCVQKY9Oc'
+    'oTPl7abKoRuYEdBjrbitNEKO3GOULTxndVBzGjs416ayrLB/fDacUslkEHNXeBr/rStv9pU7Zb47Dsk9'
+    'hLGJqLLWaO+p7rDW9NUaRMLTsgWEh50labtbMw3JVyg20dG+oUJhSYH46hxo8i8EmgTszy9N/5R/Y25b'
+    '8f1hGoFHZxyA5HIKZBtxxgbSZ74eyHoMqTybcpf6rPJKPG2ZHvxDPhhohmuAKyROBAXW8byPqwzVSXc2'
+    '98sNpKWVW3eoFtY4eduBACBinEK6eYO9roc3YynQhLag8ead2xGhvT0KsPxNi+WRMq1TfPoYr2zrpHsh'
+    'jZBSM9nIbmDrUnEMmSdnwbQBDW2ys+ljRKdbkdP5/+DAD2pckxuU/jr50NzKRVLVfx9hqiHkJrLrz3uA'
+    'Aq+LUSREC+X+17xx+/Oizq3Nds6XYR0+86J+A7Pwg997A9eiULM1kmlf9jczUWslIdQMHskTacV0gNBh'
+    'FC1j69ZQhjLLpzKc1dI2EM4f2PJArZ6pPKj8XyM17YEoDm8Y/SprIfbpiVkKWbxfN5ou3Fb0rbEGJgex'
+    'echWaPIILxRfB8kMWGlpg3Qh+3AEm46EOga1M60gyxamfyeU2ZOwqc84trz5MvbUHqdzZPMjoFf6N7a+'
+    'Z382/3gDqqUMonUhWf1fCuM3CZeXk1iRnec0kYMyQBuB/Gixk7Tkry2PQTiwm6lYhYLJlQzb6raK747J'
+    'TWDu6xfg7WqkS4VCsv6tW6yw+STHL9yQe6dsihIAxpmUnPVTcePt3EtomSV83xIFGizryH5bmS9HlDSI'
+    '+a4yAUxgUZlS5NrTvPpXmG36rkwL/mAeOBgKHlAJbu7T8aW7g6I9yL7+eyVVvcaosbDx2Up5pwhU3XtH'
+    'OMcPc/jVwXf51kopeqQcJpX+fHt/KVDZxBI38HEaFKhZnZ1z1bms9jW7uN1ZSMFtTYVTddk2fH5cUkwY'
+    '6t8n6rqgx5HUdCTnQ+x94MpKX9K1PVI6iWVJXVOFgRLKo4Y14FDqK7pFbX5PAZtAL+X5mZZQAXzrEiGn'
+    'ERKtb4nWjEfqg/ol1sealtIygT5rcAUOSRO//duuKmF7j0rt5kk/HD/OdYE1DLLolwqbmvrizFrr9ehD'
+    'V+d/svjGOlhRK5q9FPnkvYcuJDP10iBvq5xJcdnbl/luV3JB7SpZKpjka4F+lFiE3XnTyhopGNWiC+AG'
+    'j9ftfaO+8TkItd0WXPiVaO/ndI71CJ1T/TktUC8LStAqvWXMcFk/b75w4o1clSFdim8XRbN5oD20dnkB'
+    'dLpE7evDKfz3fHNOZ1FqhZLjzTueu43OPLXWUrtyQxkeluLgJbjXNVwtUaNXxu4TJuSUfKVp7EIs8gOe'
+    'HOIL4Ki9OouTEuK3S9FlX2X6UnC3++4O2oNOSvvn3CYjG3odbZYReQzZ3TgcJqReA3ojtCmCDABsrK/Z'
+    'm1Kh9ArKbXhfhSZigjn69S6dYSgAMpiMSu37chYy2Uq9Yz91T2vGi2QIEcVmG6SI98FdwS83Br8QFmpB'
+    'UPxF8ilAhmlzl06YHXjQqab39xwUSbTXtOV/x9vMPYgedFd/TgIv8y6TZWWw+2lX8kYLNxuk1b8aZ0eC'
+    'eYiTeOvCU5s5aaVz+RLRr/4OaJ8IZC2AvzngKHYDy9PirmNl7FI71wM2pD9+hKYXwz+bjDgVFx8Pw6pj'
+    'rH3NxBocyOqL+imbak9ftfDbFXbI6xnvc75yLHjbXl9lC+L3o49hiqVOTbvatfI926sN4blFHWMnh/z1'
+    'C8c9DBWmoOIDtBdFPRgkVrYcfDG0lBU8g9UHtMyf/uJZg9gAwoyMTFqH3U6MtKR2SxxiPlLEOQ1OwerH'
+    'nPWutITjFl0hCafgLHfyf7+JYOpABI7fJpBWO0Tow1OdoKcwJSQyfmm0o9nhEWahuhrEP4Se+L/qM5DX'
+    'csC3PB6MU1TiQwDsn//tWafX1yakHY1+TUeoa733N6+I7yvt3V4nE6z4DDaJzPQquuRIkBBM1L3T6mRG'
+    '43GB1/VvK/6X4e8PP538O6mmYV+tfTwZVbRrYuouO78lYjI3sX8BA9Bx2z30ZhOrQ4niSEWNyaR4c81F'
+    'JA92NCpXgsKtWrA1mdNt+T16Eemg/SqE+u5Bs1WD1v5m1SivBPnQ7FwKtjTds+T7EN0r3mAptcA1kP0A'
+    'xuO++vMrdHGryGtZqPq3an5vQ6w2zMW+g35PYjfUS126WUMxYWdEgsElbIGf2xS8hFOyrKT4zi1Fys6X'
+    'ubI42S7XBS3+fp6WN9NTzxeNTEHC7deHY86IPb/sGthkeQLF2I8CBRZFbJm1ohHcACmqtcOglSYnMDV/'
+    'wjR10khOjjZErPn3yH4/8Fl8vzDjsCQ/hktUqSJooBAIRU16T30JLGXOXhwQDf0IzroH8smp/hznFHS0'
+    'HrxTUPAau7BqPXzbwRxhC8LyUewGRWHriNQiUgLBDriclWpmDlBKrUrfFVCAqV5kH0jzoG21P3k35JMR'
+    'UaVXZOnKaZjQsgnEL+rFvOp38dm/NyKRdzAqHbFxb8rdphGtqQ8VaOyOvpASNsg29q3peZ5zKVl+WApq'
+    '4Ken4fHPF44hFJ+ykS1L1BynLr1BjLM32Kqg256O0OtIUmFOe8YawL3+MyX7rsjeCay2FHvENCpJDG9k'
+    '6WmN2vWNxmD9VhoncOiRH/bY88/riE9k3x5BovRZl5j6Iz+JJkcFJ6YkVTTdd0KWt2DBHAA4qD39pMfE'
+    'fKVy0/KRI3QhBXGfGwMjkviUnyLQhKQoQssPZ4wKdPttI2A0rBSq4+zVSvR2S2OZtPekCbeTOtsQNETw'
+    'KQJr1gT1lVMRboJr9HjHpNJJQRkyMM4Zzlq8wwkyur9CsHb2gOsfHNukjd3jlu7KjK3FvntJlr4bwjUn'
+    'vQTlxlq2BWTv1t9MMkLj/9bPVZf8aErmS75b3ntrKyNMZOft/fmYPy16/JYnQTLYOsV5mlp4aRYH+Rpu'
+    'VGqNBLl2WKqr1/Oz6QrHuT5qentOSFFFc52crpYXe23aCnpUNb+4U2qVPYkXIoXpKhgnYocLvSNFXwUe'
+    'DW18BJi+4nysNyj1ScU1VcTwK/oFn7PI8vefuMgfnYJ19fRShy+yS6s5jtixQ0hUkaRzJovS3phwEr/U'
+    'LffAokpN2RxbBGRrLtbt4EenPife9HQiCjvPUskLd6hp3ofAtAXVwAjBSpK3ZzCQ2b00WFxMWmn67p68'
+    'K+/p5NGVOU8Om5IvU+7dgihnhrEGzf2k9J/D0+CQIfP+JsQML4Om8MdD1mRU3ls2BDz0fXFydVxzRGVm'
+    '9sJve5ePoara/1HYSx1tFNUNX2vWDUVc08kiFiY+FeD+N7blFsEEkwDE5MJ7prbaerIDyTwUrx1wKpTi'
+    'LWa1MA9YcvdaMZGZ9w05egsY5BT4Rm5FWlfBQRH1dUYpsh+8b0Hn6eB0c/ekIjrYDNF/2F5mHfZqu/tc'
+    'PNWSifePACYypgctQ2H6Rk/uzUX0PkcDg2V/MJO3JoMXpEU8CZ50WLpK7B3e0jTgoUmWEFzXF22cEK3m'
+    'Y4Lhlg=='
+)
+_premature_id_hash_bytes = base64.b64decode(_PREMATURE_ID_HASHES_B64, validate=True)
+_PREMATURE_ID_HASHES = frozenset(
+    _premature_id_hash_bytes[i:i + 16]
+    for i in range(0, len(_premature_id_hash_bytes), 16)
+)
+if len(_PREMATURE_ID_HASHES) != 214 or len(_premature_id_hash_bytes) != 214 * 16:
+    raise RuntimeError("premature resolution ID fingerprints invalid")
 
 #: Probabilities are clipped before logit; a stated 0 or 1 is not infinite evidence.
 P_CLIP = 1e-3
@@ -735,7 +813,66 @@ def _grade_date(value: Any) -> tuple[date | None, str | None]:
         return None, "malformed"
 
 
-def _admit_for_refit(rows: list[dict], cutoff: date) -> tuple[list[dict], dict]:
+def _premature_hold_required(rows: list[dict], cutoff: date,
+                             ledger_path: Path | str | None) -> bool:
+    if cutoff < _PREMATURE_HOLD_DAY:
+        return False
+    # Opaque fingerprints identify the captured incident in any ledger path.
+    # A separate production ledger with none of those IDs needs no manifest.
+    # An old before-image with no graded outcome likewise remains reproducible.
+    return any(_outcome01(r.get("outcome")) is not None
+               and 0.0 <= _num(r.get("probability")) <= 1.0
+               and hashlib.blake2b(str(r.get("prediction_id")).encode(),
+                                   digest_size=16).digest() in _PREMATURE_ID_HASHES
+               for r in rows)
+
+
+def _premature_hold(rows: list[dict], path: Path | str) -> set[str]:
+    """Verify the private incident manifest and all 214 current row fingerprints."""
+    p = Path(path)
+    if p.stat().st_size > 65536:
+        raise ValueError("premature resolution hold exceeds 64 KiB")
+    raw = p.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != _PREMATURE_HOLD_SHA256:
+        raise ValueError("premature resolution hold content mismatch")
+    hold = json.loads(raw)
+    entries = hold.get("entries")
+    if (hold.get("schema") != "aegis_premature_resolution_hold/1"
+            or hold.get("status") != "HOLD_UNTIL_ATTENDED_CANONICAL_REGRADE"
+            or hold.get("count") != 214 or not isinstance(entries, list)
+            or len(entries) != 214
+            or hold.get("idset_sha256") != _PREMATURE_IDSET_SHA256):
+        raise ValueError("premature resolution hold declaration mismatch")
+    ids = [e["prediction_id"] for e in entries]
+    if (len(set(ids)) != 214 or
+            hashlib.sha256("\n".join(sorted(ids)).encode()).hexdigest()
+            != _PREMATURE_IDSET_SHA256):
+        raise ValueError("premature resolution hold membership mismatch")
+    if {hashlib.blake2b(pid.encode(), digest_size=16).digest() for pid in ids} != _PREMATURE_ID_HASHES:
+        raise ValueError("premature resolution hold ID fingerprints mismatch")
+    wanted = {e["prediction_id"]: e["premature_grade_sha256"] for e in entries}
+    seen: set[str] = set()
+    for row in rows:
+        pid = str(row.get("prediction_id"))
+        if pid not in wanted:
+            continue
+        if pid in seen:
+            raise ValueError("duplicate prematurely resolved prediction id")
+        seen.add(pid)
+        digest = hashlib.sha256(json.dumps(row, sort_keys=True,
+                         separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+        if (digest != wanted[pid]
+                or _grade_date(row.get("resolves_after"))[0] != _PREMATURE_HOLD_DAY
+                or _grade_date(row.get("resolved_at"))[0] != _PREMATURE_HOLD_DAY
+                or _outcome01(row.get("outcome")) is None):
+            raise ValueError("prematurely resolved row changed; attended disposition required")
+    if seen != set(ids):
+        raise ValueError("premature resolution hold rows absent from ledger")
+    return seen
+
+
+def _admit_for_refit(rows: list[dict], cutoff: date,
+                     premature_hold_ids: set[str] | None = None) -> tuple[list[dict], dict]:
     """Hold future/malformed graded rows without changing ledger or scoring maths."""
     admitted = []
     reasons: Counter[str] = Counter()
@@ -750,6 +887,8 @@ def _admit_for_refit(rows: list[dict], cutoff: date) -> tuple[list[dict], dict]:
         candidates += 1
         row_reasons = []
         row_unknown = []
+        if str(row.get("prediction_id")) in (premature_hold_ids or ()):
+            row_reasons.append("premature_resolution_2026_10_14")
         for field in ("resolves_after", "resolved_at"):
             day, disposition = _grade_date(row.get(field))
             if disposition == "missing":
@@ -771,6 +910,7 @@ def _admit_for_refit(rows: list[dict], cutoff: date) -> tuple[list[dict], dict]:
 
 def refit(ledger_path: Path | str | None = None, *, today: str | None = None,
           out_dir: Path | str | None = None,
+          premature_hold_path: Path | str | None = None,
           grid: dict[str, tuple[float, ...]] | None = None) -> dict:
     """Grade -> held-out arm skill -> tuned weights -> receipt. Read-only on the ledger.
 
@@ -786,9 +926,19 @@ def refit(ledger_path: Path | str | None = None, *, today: str | None = None,
     cutoff = requested_asof
     out = _out_dir(out_dir)
     rows = load_ledger(ledger_path)
-    admitted, admission = _admit_for_refit(rows, cutoff)
+    hold_ids: set[str] = set()
+    if _premature_hold_required(rows, cutoff, ledger_path):
+        if premature_hold_path is None:
+            from backend import config as _config
+            premature_hold_path = (Path(_config.OPTIMUS_LEDGER_DIR) / "reputation"
+                                   / _PREMATURE_HOLD_NAME)
+        hold_ids = _premature_hold(rows, premature_hold_path)
+    admitted, admission = _admit_for_refit(rows, cutoff, hold_ids)
     admission.update({"requested_asof": today, "cutoff_utc": cutoff.isoformat(),
                       "actual_utc_date": utc_today.isoformat(),
+                      "premature_resolution_hold_count": len(hold_ids),
+                      "premature_resolution_hold_sha256":
+                      _PREMATURE_HOLD_SHA256 if hold_ids else None,
                       "rule": "explicit historical as-of is honored; a future as-of "
                               "is refused before any output"})
     g = graded_frame_from_rows(admitted)
