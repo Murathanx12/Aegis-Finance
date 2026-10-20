@@ -1,9 +1,9 @@
 {
  "schema": "public_receipts/1",
- "published_utc": "2026-10-19T01:02:05+00:00",
+ "published_utc": "2026-10-20T01:02:51+00:00",
  "status": "OK",
  "why": null,
- "total_bytes": 4502164,
+ "total_bytes": 4527122,
  "max_bytes": 5000000,
  "how_public": "this folder is TRACKED; a commit of backend/data/public_receipts/ to main and its push make the pages public (publish_receipts.commit_public_receipts, the last step of the AegisDataCatalog firing; it refuses off main). Routers serve whichever of the live receipts and this copy is newer by the receipts' own stamps.",
  "sanitiser": "backend/services/legibility_sanitise.py (deny-by-default, per-page allow-list) + publish_receipts.leak_scan; each copy is a fixed point of the sanitiser",
@@ -16,25 +16,25 @@
    "sources": [
     {
      "kind": "paper_accounts_roi",
-     "file": "optimus/paper_accounts/roi_2026-10-18T235255Z.json",
-     "sha256": "c2d8048e60a43035fdd43815ead7ac438fe9b71691dd072124075df43c557904",
-     "stamp_utc": "2026-10-18T23:52:55+00:00",
+     "file": "optimus/paper_accounts/roi_2026-10-19T235619Z.json",
+     "sha256": "07a6e414878581c7d42d0bc43ce74a7df6cf60b6e1c9dc94c0e4b4a380fca637",
+     "stamp_utc": "2026-10-19T23:56:19+00:00",
      "role": "every book row",
      "status": "FRESH"
     },
     {
      "kind": "book_dna",
-     "file": "optimus/paper_accounts/book_dna_2026-10-18T235255Z.json",
-     "sha256": "d850ed9ef0b436d05a52cdc76aba15d1a1cb6f35e6b65df05a55968a912e7f3c",
-     "stamp_utc": "2026-10-18T23:53:05+00:00",
+     "file": "optimus/paper_accounts/book_dna_2026-10-19T235619Z.json",
+     "sha256": "bdc9c1d275cbeecf357fc2e9472556e8b344982dd715743e1d9387f8cc9c257d",
+     "stamp_utc": "2026-10-19T23:56:28+00:00",
      "role": "labels, clusters, ex-ante bets, losers",
      "status": "FRESH"
     }
    ],
-   "sha256": "a071810b0415c2b4295267e9f615bbc544c0d49421681821ab92be7cd042c964",
-   "bytes": 616342,
+   "sha256": "2f730543377514fbccb7728966690afa0dc1cd0e668de0c47af009a4c89276da",
+   "bytes": 625828,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "published_utc": "2026-10-20T01:02:51+00:00"
   },
   "arena_stories": {
    "page": "/arena (decision stories)",
@@ -45,32 +45,32 @@
     {
      "kind": "decision_story",
      "file": "optimus/decision_story/stories_2026-10.jsonl",
-     "sha256": "1e9cf7670966aff0882273128322268b3a4a5d37328a026fd78accf512e8d5d7",
-     "stamp_utc": "2026-10-19T00:23:03+00:00",
+     "sha256": "8adff74fc9ecc6384bd68696ba27982b7428b6a6ce5bfaca7ee6091fa181bae9",
+     "stamp_utc": "2026-10-19T22:00:51+00:00",
      "role": "stories",
      "status": "FRESH"
     },
     {
      "kind": "decision_story",
      "file": "optimus/decision_story/alternatives_2026-10.jsonl",
-     "sha256": "5db7839c8db820288749a50b27106bf5794a9d2bdc540ebfad5d3768a9eb3184",
-     "stamp_utc": "2026-10-19T00:23:03+00:00",
+     "sha256": "d33cbc4d60f0bd32a7963f6647cf8cbc6ba650b109b9556ae64c550586b72ec3",
+     "stamp_utc": "2026-10-19T22:00:51+00:00",
      "role": "alternatives",
      "status": "FRESH"
     },
     {
      "kind": "regret",
-     "file": "optimus/decision_story/regret/regret_20261018T234955Z_aa6693.json",
-     "sha256": "c8c4dbf10a43f74103a43d99f72799b17a9ad9e421afc09511d1f2c8555b375e",
-     "stamp_utc": "2026-10-18T00:00:00+00:00",
+     "file": "optimus/decision_story/regret/regret_20261019T235318Z_0612bf.json",
+     "sha256": "0495ea658fd69f5170f45fd28c9d7e64d914f45df35f91c3bedb632740d7b687",
+     "stamp_utc": "2026-10-19T00:00:00+00:00",
      "role": "h5 regret table",
      "status": "FRESH"
     }
    ],
-   "sha256": "af6d3e0fbaa1661430fa32057d19eb0270e39a82301d057415fda17e55be1040",
-   "bytes": 624023,
+   "sha256": "6a7e0c64340b53ed0bec88b6eadb755e789a1a23fd876912038f2e249be473cb",
+   "bytes": 628609,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "published_utc": "2026-10-20T01:02:51+00:00"
   },
   "forecast_lab": {
    "page": "/forecast-lab",
@@ -80,33 +80,33 @@
    "sources": [
     {
      "kind": "forecast_reputation",
-     "file": "optimus/reputation/reputation_2026-10-16.json",
-     "sha256": "1507c3a2ff3e36e95e125e22b154a31853f820e47d6b122c0db12e3d1468ee6a",
-     "stamp_utc": "2026-10-16T15:41:40+00:00",
+     "file": "optimus/reputation/reputation_2026-10-19.json",
+     "sha256": "73144ff63f1b20a23ad1d574fc542328109834229ae1e706c055875960e59afa",
+     "stamp_utc": "2026-10-19T15:10:23+00:00",
      "role": "skill by arm, calibration",
-     "status": "STALE"
+     "status": "FRESH"
     },
     {
      "kind": "learning_report",
-     "file": "optimus/learning_reports/report_2026-10-16.json",
-     "sha256": "3d5ee6bc9b800c62f65e7a6a3b8053fe162339f592134de4aae3e0c337078167",
-     "stamp_utc": "2026-10-16T22:41:59+00:00",
+     "file": "optimus/learning_reports/report_2026-10-19.json",
+     "sha256": "b7325203dc1b820268b919abe056064dceac4f8b0f0487367262362b0f4e0130",
+     "stamp_utc": "2026-10-19T22:08:39+00:00",
      "role": "sigma prior, closing lines",
-     "status": "STALE"
+     "status": "FRESH"
     },
     {
      "kind": "grade_forecasts",
-     "file": "optimus/night_factory_2026-10-19/grade_forecasts_2026-10-19.json",
-     "sha256": "c7091885233e2603c0d4da1735638fb8f63a93118bb58a1be2b01e200ca782b4",
-     "stamp_utc": "2026-10-19T00:23:19+00:00",
+     "file": "optimus/night_factory_2026-10-20/grade_forecasts_2026-10-19.json",
+     "sha256": "669999e32499a242832d76a8024253d3b53b6e0e16683da4a8d82b4b5e1329bb",
+     "stamp_utc": "2026-10-19T23:53:17+00:00",
      "role": "ledger headline",
      "status": "FRESH"
     },
     {
      "kind": "nn_lab_nightly",
-     "file": "optimus/nn_lab/receipts/nightly_20261019T003004Z.json",
-     "sha256": "c3100ba7ebe882fdccdacad6f1243683b3c3417d4227e8158398caba36fca862",
-     "stamp_utc": "2026-10-19T00:31:41+00:00",
+     "file": "optimus/nn_lab/receipts/nightly_20261020T003004Z.json",
+     "sha256": "e6b186a0697fa5744ac6263b5a433910549e4c2ac5f751a68131920d564444dd",
+     "stamp_utc": "2026-10-20T00:31:49+00:00",
      "role": "tournament rule, trust",
      "status": "FRESH"
     },
@@ -120,17 +120,17 @@
     },
     {
      "kind": "world_state",
-     "file": "optimus/digest/world_state_20261018T223002Z.json",
-     "sha256": "6b323ed72bace5b0367be0450a23ee9b228d0552e6c3530c315cb8424022266c",
-     "stamp_utc": "2026-10-18T22:31:02+00:00",
+     "file": "optimus/digest/world_state_20261019T223002Z.json",
+     "sha256": "44ed4ad37fd19ee0921360ee1cac9f4f57adbd5851aa818c9e0ce8eb519b38bf",
+     "stamp_utc": "2026-10-19T22:30:21+00:00",
      "role": "regime rows",
      "status": "FRESH"
     },
     {
      "kind": "world_state",
-     "file": "optimus/digest/world_digest_20261018T223002Z.json",
-     "sha256": "0158d1670ea95cb7bf194219a0a60261ccd86bf25c313513529a0e22b25e6989",
-     "stamp_utc": "2026-10-18T22:30:02+00:00",
+     "file": "optimus/digest/world_digest_20261019T223002Z.json",
+     "sha256": "25efba847f52c6948aef09c1e899171f3c9a104af22b0ceb9bdbc9683b13486b",
+     "stamp_utc": "2026-10-19T22:30:02+00:00",
      "role": "news-digest trust",
      "status": "FRESH"
     },
@@ -143,10 +143,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "70afa16bd220c73bdede181866c9c5ddc5aba3dbc54fc961cd0c7fe80766af26",
-   "bytes": 86040,
-   "payload_status": "STALE",
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "sha256": "b43033ee1d8f45c873349ba9087076b8eb154935f2bbe24239baffaf42c1a31a",
+   "bytes": 85316,
+   "payload_status": "FRESH",
+   "published_utc": "2026-10-20T01:02:51+00:00"
   },
   "theory_lab_sticky": {
    "page": "/theory-lab?board=sticky",
@@ -157,8 +157,8 @@
     {
      "kind": "hyp_lab_ledger",
      "file": "optimus/hyp_lab/ledger.jsonl",
-     "sha256": "d533cf69aaec7db75eeada4645efc2187edac6025ec65fd5d908ad7b94e55868",
-     "stamp_utc": "2026-10-18T01:30:16+00:00",
+     "sha256": "23d6a447be36492fa23d49b370f1eaccd65b6e8f638ed89874e5172d1007325b",
+     "stamp_utc": "2026-10-19T01:30:52+00:00",
      "role": "theories, family posteriors",
      "status": "FRESH"
     },
@@ -235,10 +235,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "eaae0325337b67147f0b1044a7945f09e0ba59513e93f8053cc0bb4c13051895",
-   "bytes": 645075,
+   "sha256": "8b49bf0c3d522702ded105353fdf7510a0a78a9db6a4eba3eaab80c7ff331b7d",
+   "bytes": 653098,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "published_utc": "2026-10-20T01:02:51+00:00"
   },
   "theory_lab_basket": {
    "page": "/theory-lab?board=basket",
@@ -249,8 +249,8 @@
     {
      "kind": "hyp_lab_ledger",
      "file": "optimus/hyp_lab/ledger.jsonl",
-     "sha256": "d533cf69aaec7db75eeada4645efc2187edac6025ec65fd5d908ad7b94e55868",
-     "stamp_utc": "2026-10-18T01:30:16+00:00",
+     "sha256": "23d6a447be36492fa23d49b370f1eaccd65b6e8f638ed89874e5172d1007325b",
+     "stamp_utc": "2026-10-19T01:30:52+00:00",
      "role": "theories, family posteriors",
      "status": "FRESH"
     },
@@ -327,10 +327,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "46bdf0411886dcdb59071ac2b097c2e18918b9c3d387047e2ee17a5bac05b1de",
-   "bytes": 646605,
+   "sha256": "e58325d8cf3b5448ed294e38934a80ba3e724d77e6669296c74b7ed7e4aee848",
+   "bytes": 654628,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "published_utc": "2026-10-20T01:02:51+00:00"
   },
   "system_health": {
    "page": "/health",
@@ -340,17 +340,17 @@
    "sources": [
     {
      "kind": "system_health",
-     "file": "optimus/health/health_20261018T235323Z.json",
-     "sha256": "fe5e39c7f2ac319c37abb188c192f2bdd78a6419c15a7a8b80a163c4231c4fe1",
-     "stamp_utc": "2026-10-18T23:53:23+00:00",
+     "file": "optimus/health/health_20261019T235656Z.json",
+     "sha256": "695ec232ac4830ff0768f48a7e2a954a5b198fc29062f2b5d1229fec11743d56",
+     "stamp_utc": "2026-10-19T23:56:56+00:00",
      "role": "every row",
      "status": "FRESH"
     }
    ],
-   "sha256": "b4cf7b7812693fcfcbf9971758b0c6153ad8453736cc0746e79ec7d30e2a2f1c",
-   "bytes": 93599,
+   "sha256": "97526815712d24bd8707f5b13ff9086dc104cbb0bf4248c3e5d42efb971c7dd3",
+   "bytes": 92046,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "published_utc": "2026-10-20T01:02:51+00:00"
   },
   "opportunities": {
    "page": "/opportunities",
@@ -360,17 +360,17 @@
    "sources": [
     {
      "kind": "opportunities",
-     "file": "optimus/opportunities/opportunities_2026-10-19_20261019T010141Z.json",
-     "sha256": "eec9ae97abded7e2416c1f93626c624da21fa1b1772a55f45b513bfc5b45519c",
-     "stamp_utc": "2026-10-19T01:01:41+00:00",
+     "file": "optimus/opportunities/opportunities_2026-10-20_20261020T010217Z.json",
+     "sha256": "1662f98828f94579112ae4d6dba90287a84e5d09e366233e8df5127e0905e3f4",
+     "stamp_utc": "2026-10-20T01:02:17+00:00",
      "role": "every row",
      "status": null
     }
    ],
-   "sha256": "623cea54344f515feb5ce11ffb5e1db5284e1d6476199cb39100bc549b2fd586",
-   "bytes": 1742109,
+   "sha256": "e6f0e1156d647930d11e8e9e5d40addb04396a585baac70f9be65ec6f5552d88",
+   "bytes": 1739232,
    "payload_status": null,
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "published_utc": "2026-10-20T01:02:51+00:00"
   },
   "brain": {
    "page": "/brain",
@@ -381,40 +381,40 @@
     {
      "kind": "world_state_beliefs",
      "file": "optimus/world_state/beliefs.json",
-     "sha256": "6c3e2ad23a7f3144279c94e31aab329367bdac874ef39d9a44166f4e9c7ce0b1",
-     "stamp_utc": "2026-10-18T22:31:02+00:00",
+     "sha256": "f8c8877862af548f84c2d2d0df5be08e353bc50cacf3bb0218b4b18a156457dd",
+     "stamp_utc": "2026-10-19T22:30:21+00:00",
      "role": "belief table",
      "status": "FRESH"
     },
     {
      "kind": "world_state_scenarios",
      "file": "optimus/world_state/scenarios.json",
-     "sha256": "ce4f7b9b422b25f862386e9ae87d144bf8a5f62e8deeb4bc0408b124a0a5ee5f",
-     "stamp_utc": "2026-10-18T22:31:02+00:00",
+     "sha256": "4010647c6718d3e969ebfc9bc24ef93ff25176faddad9613ebc8b88b4fc9a47b",
+     "stamp_utc": "2026-10-19T22:30:21+00:00",
      "role": "scenario strip",
      "status": "FRESH"
     },
     {
      "kind": "belief_updates",
      "file": "optimus/world_state/belief_updates_2026-10.jsonl",
-     "sha256": "a6ed0ccd8384041ecb84e85c41c404644cb3a256386dede1ccb3d785d4a26eb1",
-     "stamp_utc": "2026-10-18T04:30:15+00:00",
+     "sha256": "1c4e366c496e9bdbcbc6178ac91b775bf70a883e18660e108edce2ce5709f2a3",
+     "stamp_utc": "2026-10-19T04:30:18+00:00",
      "role": "what changed since the last cycle",
      "status": "FRESH"
     },
     {
      "kind": "world_state",
-     "file": "optimus/digest/world_state_20261018T223002Z.json",
-     "sha256": "6b323ed72bace5b0367be0450a23ee9b228d0552e6c3530c315cb8424022266c",
-     "stamp_utc": "2026-10-18T22:31:02+00:00",
+     "file": "optimus/digest/world_state_20261019T223002Z.json",
+     "sha256": "44ed4ad37fd19ee0921360ee1cac9f4f57adbd5851aa818c9e0ce8eb519b38bf",
+     "stamp_utc": "2026-10-19T22:30:21+00:00",
      "role": "regime rows, belief_stability",
      "status": "FRESH"
     }
    ],
-   "sha256": "9466a3bbcaba7839776d1ed00a05b99bd82809cd907cb302e13941d8c3b04f0b",
-   "bytes": 48371,
+   "sha256": "e7b00c7481af335b79dab8f907e20321051ccea0091daed5964b46c696a5eae1",
+   "bytes": 48365,
    "payload_status": "FRESH",
-   "published_utc": "2026-10-19T01:02:05+00:00"
+   "published_utc": "2026-10-20T01:02:51+00:00"
   }
  },
  "published": [
