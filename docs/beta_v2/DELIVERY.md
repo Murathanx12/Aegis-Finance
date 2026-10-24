@@ -10,7 +10,7 @@ datasets are not in this code change. Current private draft: [PR55](https://gith
 | C10a | Exact-ID census validates saved entry/mark clocks, declared horizon sets and finite outcome contracts. | 173 source files rehashed; original247 and new886 joins exact. Positive exposure247/883, new zero-exposure3; horizon maturity0. | Saved evidence, not independent price replay, broker fills or remote registration. Five global series lack Oct23 marks. |
 | C06 | Typed read-only projection of existing economic and task records; row clocks, direct task evidence and dependency evidence stay distinct. | Eight successor CLI invocations; actual citation/subject and contrary-evidence queries reproduce. Missing thesis lineage and task evidence stay unresolved. | No complete universe, causal qualification, event-store coverage or portfolio adoption claim. |
 | C12 | Explicit source/anchor packets, resume deltas and duplicate/nonfinite JSON refusal. | Actual initial/resume packets; changed registry/consumer sources correctly refuse old packets. | No global startup hook or runtime freshness claim. Broad Optimus ranking remains imperfect; exact page read works. |
-| C05a/C09a | Bounded existing-data qualification and hash-pinned resume; post-read verification failure discards diagnostics. | Ten slots attempted; six64-row structural samples across three families. Five families/21 proposed arms, zero evaluations or registrations. | Every arm remains blocked/unqualified; no PIT, return, backtest or strategy-result claim. |
+| C05a/C09a | Bounded existing-data qualification and hash-pinned resume; post-read verification failure discards diagnostics. | Ten slots attempted; six 64-row structural samples across three families. Five families/21 proposed arms, zero evaluations or registrations. | Every arm remains blocked/unqualified; no PIT, return, backtest or strategy-result claim. |
 
 Core four-tool suite: **203 tests and 51 subtests passed**. Research qualification:
 **48 tests passed**. Ruff passed for those scripts/tests. Independent review closed
@@ -34,6 +34,28 @@ insertion. Its earlier index bytes were archived and verified intact. No new
 implementation, scheduler, broker reset, NAV mutation, financial carrier operation
 or seed activation was installed. PR/CI status is software evidence only.
 
-R6 carrier engineering and the optional exact-session global-price diagnostic
-are separate follow-up chunks. Their source/actual-operation status must be read
-from their own final receipts; this core delivery does not qualify them.
+The optional exact-session [global-price diagnostic](global_prices.md) passed
+independent correctness and performance review, with **45 tests passed** and
+Ruff clean. It distinguishes historical presence from an explicitly supplied
+completed-session target. A grouped selection replaces repeated full-frame
+scans; complete outputs match the preserved candidate. Existing consumers do
+not yet supply those targets: this does not repair stale prices operationally.
+No fetch, cache write, regrade or runtime installation occurred.
+
+R6 carrier engineering remains a separate source-only package. The first freeze
+failed independent review on resource binding and proof/identity/type validation.
+It remains preserved and inactive while a successor is built and reviewed.
+No actual calibration or financial operation has been authorized by a test pass.
+
+The first full GitHub run passed the frontend and 15,573 backend tests, but failed
+two existing health assertions. Those failures are being isolated and repaired;
+the draft is not merge-ready and CI is not reported as green.
+
+Fresh service readback retained deployed `16f57156`, all 12 expected jobs and
+Oct23 NAV freshness. The IC degradation is now diagnosed precisely: the funnel
+file exists, but its 25-candidate snapshot was generated Oct6 and is 18 days old
+against a 10-day limit. This is stale coverage, not a missing-file diagnosis.
+The suggested opportunity-funnel runner performs real acquisition and cache
+writes; no blind rebuild or truncated-universe snapshot was published to make
+health green. C02 retains a bounded full-coverage refresh and actual IC consumer
+readback as a separate next task. Receipt: `live-service-final-observation.json`.

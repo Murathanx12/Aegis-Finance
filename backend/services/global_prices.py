@@ -18,8 +18,9 @@ THE FOUR RULES
    hits the vendor once. The state lives beside the parquet.
 3. **Only completed sessions.** A bar dated today (UTC) can be intraday; it is
    dropped and picked up by tomorrow's pull.
-4. **A failure is counted, never raised and never silent.** The receipt carries
-   `n_ok` / `n_failed` and the errors; the caller decides what a gap means.
+4. **Vendor failures are counted.** Legacy `n_ok` / `n_failed` describe historical
+   presence, not current marks. `freshness` separately checks an explicitly
+   supplied completed session (optionally one per ticker); no calendar is guessed.
 
 WHAT IT DOES NOT DO
 ===================
@@ -33,7 +34,9 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
+from collections.abc import Mapping
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
@@ -48,6 +51,7 @@ COLUMNS = ["symbol", "date", "open", "high", "low", "close", "volume",
            "source", "pulled_utc"]
 
 Downloader = Callable[[list[str], Any, Any], pd.DataFrame]
+RequiredSession = Optional[date | str | Mapping[str, date | str | None]]
 
 
 def base_dir() -> Path:
@@ -128,24 +132,139 @@ def _yf_download(tickers: list[str], start: Any, end: Any) -> pd.DataFrame:
     return out
 
 
+def _required_targets(want: list[str], required_session: RequiredSession) -> dict:
+    """Caller owns exchange/calendar/close availability; these are exact labels."""
+    if isinstance(required_session, Mapping):
+        targets = {}
+        for ticker, value in required_session.items():
+            key = str(ticker).strip().upper()
+            if key not in want or key in targets:
+                raise ValueError("UNKNOWN_OR_DUPLICATE_SESSION_TARGET_TICKER")
+            targets[key] = value
+    else:
+        targets = dict.fromkeys(want, required_session)
+    for ticker, value in targets.items():
+        if value is None:
+            continue
+        if isinstance(value, datetime):
+            raise ValueError("EXACT_SESSION_DATE_REQUIRED")
+        parsed = date.fromisoformat(str(value))
+        if parsed.isoformat() != str(value):
+            raise ValueError("EXACT_SESSION_DATE_REQUIRED")
+        targets[ticker] = pd.Timestamp(parsed)
+    return targets
+
+
+def freshness_diagnostic(bars: pd.DataFrame, tickers: Iterable[str], *,
+                         required_session: RequiredSession = None,
+                         previous_bars: Optional[pd.DataFrame] = None) -> dict:
+    """Pure read-only exact-session coverage/progress, never a fetch or regrade.
+
+    No target means UNKNOWN, not fresh. A scalar target is valid only when the
+    caller has established that completed session for every requested listing;
+    a mapping supports different exchange holidays/close times. This function
+    neither infers those calendars nor certifies vendor delivery availability.
+    An exact unique target row needs finite positive open and close, matching
+    the private branching consumer's mark checks. Historical rows stay untouched.
+    """
+    want = sorted({str(t).strip().upper() for t in tickers if str(t).strip()} - {"CASH"})
+    targets = _required_targets(want, required_session)
+
+    def frame(value: pd.DataFrame) -> pd.DataFrame:
+        # Unspecified targets preserve legacy historical-presence schemas.
+        # Open/close validation is needed only for an explicit resolved target.
+        columns = ["symbol", "date"] + (["open", "close"] if any(v is not None for v in targets.values()) else [])
+        if value.empty:
+            return pd.DataFrame(columns=columns)
+        if not set(columns) <= set(value.columns):
+            raise ValueError("PRICE_DIAGNOSTIC_COLUMNS_REQUIRED")
+        result = value[columns].copy()
+        result["symbol"] = result["symbol"].astype(str).str.upper()
+        result["date"] = pd.to_datetime(result["date"], errors="coerce")
+        if result["date"].dt.tz is not None:
+            result["date"] = result["date"].dt.tz_localize(None)
+        result["date"] = result["date"].dt.normalize()
+        return result
+
+    after = frame(bars)
+    before = frame(previous_bars) if previous_bars is not None else None
+    after_groups = after.groupby("symbol", sort=False).indices
+    before_groups = before.groupby("symbol", sort=False).indices if before is not None else {}
+    rows = []
+    for ticker in want:
+        held = after.iloc[after_groups.get(ticker, [])]
+        latest = held["date"].max() if len(held) else pd.NaT
+        target = targets.get(ticker)
+        marks = held[held["date"] == target] if target is not None else held.iloc[:0]
+        status = "UNKNOWN_REQUIRED_SESSION"
+        if target is not None:
+            if held["date"].isna().any():
+                status = "INVALID_CACHED_DATES"
+            elif held.empty:
+                status = "MISSING_HISTORY"
+            elif len(marks) == 0:
+                status = "STALE" if latest < target else "MISSING_EXACT_TARGET"
+            elif len(marks) != 1:
+                status = "DUPLICATE_TARGET_ROWS"
+            else:
+                values = marks.iloc[0][["open", "close"]]
+                try:
+                    valid = all(not pd.api.types.is_bool_dtype(type(v)) and
+                                math.isfinite(float(v)) and float(v) > 0 for v in values)
+                except (ValueError, TypeError, OverflowError):
+                    valid = False
+                status = "FRESH_AT_REQUIRED_SESSION" if valid else "INVALID_TARGET_MARK"
+        previous_latest = None
+        advanced = new_dates = None
+        if before is not None:
+            prior = before.iloc[before_groups.get(ticker, [])]
+            previous_latest = prior["date"].max() if len(prior) else pd.NaT
+            advanced = bool(pd.notna(latest) and (pd.isna(previous_latest) or latest > previous_latest))
+            new_dates = len(set(held["date"].dropna()) - set(prior["date"].dropna()))
+        rows.append({"symbol": ticker, "historical_rows": len(held),
+                     "latest_date": latest.date().isoformat() if pd.notna(latest) else None,
+                     "required_session": target.date().isoformat() if target is not None else None,
+                     "target_rows": len(marks) if target is not None else None, "status": status,
+                     "latest_before": previous_latest.date().isoformat() if pd.notna(previous_latest) else None,
+                     "latest_advanced": advanced, "new_session_dates": new_dates})
+    evaluated = required_session is not None
+    fresh = sum(r["status"] == "FRESH_AT_REQUIRED_SESSION" for r in rows)
+    unknown = sum(r["status"] == "UNKNOWN_REQUIRED_SESSION" for r in rows)
+    return {"schema": "global_prices_freshness/1",
+            "status": "EMPTY_REQUEST" if not want else "NOT_EVALUATED" if not evaluated else
+                      "COMPLETE_TARGET_COVERAGE" if fresh == len(want) else "INCOMPLETE_OR_UNKNOWN_TARGET_COVERAGE",
+            "target_authority": "CALLER_SUPPLIED_COMPLETED_SESSION; NO_CALENDAR_INFERRED",
+            "n_requested": len(want), "n_fresh": fresh if evaluated else None,
+            "n_not_fresh": len(want) - fresh - unknown if evaluated else None,
+            "n_unknown_target": unknown, "progress_evaluated": before is not None,
+            "n_latest_advanced": sum(r["latest_advanced"] is True for r in rows) if before is not None else None,
+            "symbols": rows}
+
+
 def ensure(tickers: Iterable[str], *, start: Any,
            path: Optional[Path] = None, today: Optional[date] = None,
            downloader: Optional[Downloader] = None,
-           write_receipt: bool = True) -> pd.DataFrame:
+           write_receipt: bool = True,
+           required_session: RequiredSession = None) -> pd.DataFrame:
     """Make sure the cache holds daily bars for `tickers` since `start`.
 
     Returns the cached rows for the requested tickers (dated >= start), with
     the run's receipt at `df.attrs["receipt"]`. Never raises on a vendor
     failure: a ticker that returned nothing is in `receipt["failed"]`.
+    Legacy counts keep their historical-presence semantics. The additive
+    `freshness` diagnostic checks `required_session` without changing pull
+    admission, UTC cutoff, return rows, prices, or historical cache identity.
     """
     p = Path(path) if path else cache_path()
     today = today or datetime.now(timezone.utc).date()
     start_ts = pd.Timestamp(start)
     want = sorted({str(t).strip().upper() for t in tickers if str(t).strip()})
     want = [t for t in want if t != "CASH"]
+    _required_targets(want, required_session)  # refuse invalid caller targets before any I/O
     dl = downloader or _yf_download
 
     cache = read_cache(p)
+    before = cache
     state_p = _state_path(p)
     try:
         state = json.loads(state_p.read_text(encoding="utf-8")) if state_p.exists() else {}
@@ -216,6 +335,10 @@ def ensure(tickers: Iterable[str], *, start: Any,
         "n_failed": len(failed),
         "failed": failed,
         "errors": errors,
+        "n_ok_semantics": "HISTORICAL_PRESENCE_NOT_CURRENT_SESSION_FRESHNESS",
+        "freshness": freshness_diagnostic(out, want, required_session=required_session,
+            previous_bars=before[before["symbol"].isin(want) & (before["date"] >= start_ts)]
+                if not before.empty else before),
         "cache": str(p),
         "caveats": ["local currency, no FX leg",
                     "unadjusted closes (auto_adjust=False), no dividends",
