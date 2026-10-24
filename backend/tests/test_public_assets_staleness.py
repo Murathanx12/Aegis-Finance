@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from backend import config as C
 from backend.services import public_assets_staleness as PAS
 from backend.services import system_health as SH
@@ -65,15 +67,45 @@ def test_pinned_run_id_reads_the_real_committed_file():
     assert PAS.pinned_run_id() == RPA.RESULTS_RUN_ID
 
 
-def test_registered_in_system_health_and_runs_through_run_probes():
+@pytest.mark.parametrize("age_days,verdict,state,light", [
+    (1, "ALIVE", "ALIVE", "GREEN"),
+    (40, "STALE", "DEGRADED", "RED"),
+    (None, "UNKNOWN", "UNKNOWN", "AMBER"),
+])
+def test_registered_in_system_health_and_runs_through_run_probes(
+        tmp_path, monkeypatch, age_days, verdict, state, light):
     assert any(p.name == "public_assets" for p in SH.PROBES)
-    now = datetime.now(timezone.utc)
-    # ctx.repo defaults to the real repo (ProbeCtx's own default), so this reads the real pin
-    ctx = SH.ProbeCtx(optimus_dir=SH.REPO, now=now, allow_proc=False)
+    # Select the local probe route explicitly, independent of the host/CI env.
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT", raising=False)
+    monkeypatch.delenv("RAILWAY_PROJECT_ID", raising=False)
+    monkeypatch.setattr(C, "PUBLIC_ASSETS_MAX_PIN_AGE_DAYS", 10)
+    now = datetime(2026, 10, 24, 18, tzinfo=timezone.utc)
+    if age_days is not None:
+        scripts = tmp_path / "scripts"
+        scripts.mkdir()
+        rid = (now - timedelta(days=age_days)).strftime("%Y-%m-%dT%H%M%SZ")
+        (scripts / "render_public_assets.py").write_text(
+            f'RESULTS_RUN_ID = "{rid}"\n', encoding="utf-8")
+    ctx = SH.ProbeCtx(optimus_dir=tmp_path, repo=tmp_path, now=now, allow_proc=False)
+    private = PAS.p_public_assets(ctx)
+    assert private.verdict == verdict and private.proof
     rows = SH.run_probes(ctx, only={"public_assets"})
     assert len(rows) == 1
-    assert rows[0]["verdict"] in ("ALIVE", "STALE", "UNKNOWN")
-    assert rows[0]["proof"]
+    row = rows[0]
+    assert row["name"] == row["probe"] == "public_assets"
+    assert row["verdict"] == verdict and row["state"] == state
+    assert row["evidence_utc"] == private.evidence_utc
+    assert row["age_s"] == private.age_s
+    assert row["alarm"]["light"] == light
+    assert row["alarm"]["healthy"] == (light == "GREEN")
+    assert row["alarm"]["attention_required"] == (light != "GREEN")
+    if light == "GREEN":
+        assert row["proof"] == private.proof
+    else:
+        # A stale/unknown public row withholds freeform proof, without hiding
+        # the failure verdict, structured clocks or alarm.
+        assert row["public_view"] == SH.PUBLIC_FAILURE_VIEW
+        assert row["proof"] == ""
 
 
 def test_an_empty_ctx_repo_reports_unknown_not_alive(tmp_path):
