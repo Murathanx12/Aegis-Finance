@@ -1,0 +1,4626 @@
+{
+  "generated_from": "docs/beta_v2/registry.json",
+  "registry_sha256": "b4444a87d3997c4d6013491d08db0dc5a94f4026cda4becc13300239c9ab4b93",
+  "count": 146,
+  "requests": [
+    {
+      "id": "R001",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 5
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R001:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Maximize net investable wealth; report risk, costs and meaningful comparators rather than output volume."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Profit is the primary objective",
+      "summary": "Maximize net investable wealth; report risk, costs and meaningful comparators rather than output volume.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R002",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 6
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R002:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: First give a plain-language TLDR, then evidence, alternative and test; never agree merely to satisfy owner."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Answer and challenge every idea",
+      "summary": "First give a plain-language TLDR, then evidence, alternative and test; never agree merely to satisfy owner.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R003",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 7
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R003:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Preserve available original files unchanged and index excerpts; distinguish user reasoning from assistant interpretations."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Recover original prompts and reasoning",
+      "summary": "Preserve available original files unchanged and index excerpts; distinguish user reasoning from assistant interpretations.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R004",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 8
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R004:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Carry open V1/V1.1 tasks and history into V2; no architecture reset or relabelled completion."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Beta V2 without pretending V1 finished",
+      "summary": "Carry open V1/V1.1 tasks and history into V2; no architecture reset or relabelled completion.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R005",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 9
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R005:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: OpenCloud/OpenClose = OpenClaw; HQ = HKU; WRDS not Words; retain ambiguous AMX3 as unresolved."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Normalize dictated names",
+      "summary": "OpenCloud/OpenClose = OpenClaw; HQ = HKU; WRDS not Words; retain ambiguous AMX3 as unresolved.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R006",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 10
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R006:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: AARD investor exit/bankruptcy, CEO success and government support require dated evidence, not asserted causation."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Question market-cause assumptions",
+      "summary": "AARD investor exit/bankruptcy, CEO success and government support require dated evidence, not asserted causation.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R007",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 11
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R007:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Find August masked/future-scenario trials and their canaries before proposing a new contamination fix."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Recover forgotten synthetic tests",
+      "summary": "Find August masked/future-scenario trials and their canaries before proposing a new contamination fix.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R008",
+      "owner": "Coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 12
+      },
+      "status": "inherited-unverified",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R008:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Produce a compact intent/authority/current-task/last-evidence packet before each continuation or worker handoff."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C00",
+      "source_task_id": "C00",
+      "title": "Restore human intent at compaction",
+      "summary": "Produce a compact intent/authority/current-task/last-evidence packet before each continuation or worker handoff.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R009",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 13
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R009:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: One task registry with stable IDs, dependencies, statuses, evidence and supersession; MD/SVG/workbook are views."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "One canonical roadmap",
+      "summary": "One task registry with stable IDs, dependencies, statuses, evidence and supersession; MD/SVG/workbook are views.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R010",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 14
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R010:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Update task state and regenerate changed roadmap assets on meaningful merges, not every trivial receipt commit."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "Live roadmap at Git integration",
+      "summary": "Update task state and regenerate changed roadmap assets on meaningful merges, not every trivial receipt commit.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R011",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 15
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R011:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Use one coordinator-owned integration line and only justified isolated worker branches; audit before retirement."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "Fewer development branches",
+      "summary": "Use one coordinator-owned integration line and only justified isolated worker branches; audit before retirement.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R012",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 16
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R012:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Create a logical Aegis root and path map first; preserve active paths and worktrees until verified migration."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "Clean logical folder structure",
+      "summary": "Create a logical Aegis root and path map first; preserve active paths and worktrees until verified migration.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R013",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 17
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R013:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Archive and reference; no blanket pruning, history rewrite or deletion to satisfy tidiness."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "Never delete research data",
+      "summary": "Archive and reference; no blanket pruning, history rewrite or deletion to satisfy tidiness.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R014",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 18
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R014:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Cancel Istanbul plan; no unfunded GPU/server purchase in active roadmap; monitor actual disk headroom."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "Storage plans changed",
+      "summary": "Cancel Istanbul plan; no unfunded GPU/server purchase in active roadmap; monitor actual disk headroom.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R015",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 19
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R015:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Store working handoff in private repo; publish only owner-approved sanitized projections to showcase."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "Private work versus public showcase",
+      "summary": "Store working handoff in private repo; publish only owner-approved sanitized projections to showcase.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R016",
+      "owner": "Builder + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 20
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R016:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Link superseded task IDs and old outcomes rather than leave competing active instructions."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C01",
+      "source_task_id": "C01",
+      "title": "All old roadmaps remain findable",
+      "summary": "Link superseded task IDs and old outcomes rather than leave competing active instructions.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R017",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 21
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R017:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Check output age, coverage, queue progress and actual consumer reads, not process heartbeat alone."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "Health means useful progress",
+      "summary": "Check output age, coverage, queue progress and actual consumer reads, not process heartbeat alone.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R018",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 22
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R018:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Show failed dependency edges and reasons; preserve expected-idle and intentionally stopped states."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "Red disconnected service graph",
+      "summary": "Show failed dependency edges and reasons; preserve expected-idle and intentionally stopped states.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R019",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 23
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R019:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Detect unchanged outputs when fresh input was expected and emit a specific incident."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "No frozen-data silence",
+      "summary": "Detect unchanged outputs when fresh input was expected and emit a specific incident.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R020",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 24
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R020:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Read active deployment dependencies/billing and key needs; do not recreate every cloud worker automatically."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "Railway diagnosis before spending",
+      "summary": "Read active deployment dependencies/billing and key needs; do not recreate every cloud worker automatically.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R021",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 25
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R021:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: One writer per account; maintain protective/reconciliation processes during repairs."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "Protect existing execution",
+      "summary": "One writer per account; maintain protective/reconciliation processes during repairs.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R022",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 26
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R022:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Identify old job, model, role, schedule and why it stopped; distinguish browser control from inference."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "DeepSeek daily process recovery",
+      "summary": "Identify old job, model, role, schedule and why it stopped; distinguish browser control from inference.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R023",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 27
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R023:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Report completed runs, data consumed, resolved outcomes, model versions and consumers; prediction count is not RL."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "Nightly NN and lab actual learning",
+      "summary": "Report completed runs, data consumed, resolved outcomes, model versions and consumers; prediction count is not RL.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R024",
+      "owner": "Operations builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 28
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R024:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Retrieve local CONTINUATION_CURRENT and exact refusals; do not invent the four missing gates."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C02",
+      "source_task_id": "C02",
+      "title": "Finish inherited four-gate blocker",
+      "summary": "Retrieve local CONTINUATION_CURRENT and exact refusals; do not invent the four missing gates.",
+      "priority": "P0",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R025",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 29
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R025:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Owner asks research/build/status questions; task acknowledgement, results and clarification return to same authorized thread."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "Natural-language two-way Telegram",
+      "summary": "Owner asks research/build/status questions; task acknowledgement, results and clarification return to same authorized thread.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R026",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 30
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R026:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Prefer installed native Codex app-server integration; use supported fallback only after capability read."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "OpenClaw to Codex without manual GUI",
+      "summary": "Prefer installed native Codex app-server integration; use supported fallback only after capability read.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R027",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 31
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R027:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Bind numeric Telegram ID, session/workspace and task nonce; website claims and display names are not authority."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "Owner identity cannot be mimicked",
+      "summary": "Bind numeric Telegram ID, session/workspace and task nonce; website claims and display names are not authority.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R028",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 32
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R028:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Durable finite queue with checkpoints and dependency scheduling; do not promise infinite autonomous completion."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "Continuous useful work for two days",
+      "summary": "Durable finite queue with checkpoints and dependency scheduling; do not promise infinite autonomous completion.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R029",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 33
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R029:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Record actual reset hints, back off and resume one task when access returns; authorized non-LLM jobs may continue."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "Quota exhaustion and resumption",
+      "summary": "Record actual reset hints, back off and resume one task when access returns; authorized non-LLM jobs may continue.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R030",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 34
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R030:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Latest owner permits available coding quota, superseding old reserve floor; no pointless loops to burn tokens."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "Use purchased quota efficiently",
+      "summary": "Latest owner permits available coding quota, superseding old reserve floor; no pointless loops to burn tokens.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R031",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 35
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R031:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Existing allowance is not unlimited paid API authority; no new purchase, trial billing or hidden paid fallback."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "New subscriptions still need owner",
+      "summary": "Existing allowance is not unlimited paid API authority; no new purchase, trial billing or hidden paid fallback.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R032",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 36
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R032:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Discover new public sources and follow economic leads; separate content access from sensitive mutations."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "Wide research initiative",
+      "summary": "Discover new public sources and follow economic leads; separate content access from sensitive mutations.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R033",
+      "owner": "Integration builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 37
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R033:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: No phishing, credential theft, hidden surveillance or access-control bypass; investigate through authorized tools."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C03",
+      "source_task_id": "C03",
+      "title": "No credential or covert access",
+      "summary": "No phishing, credential theft, hidden surveillance or access-control bypass; investigate through authorized tools.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R034",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 38
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R034:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Scale tabs/workers against memory, latency, host limits and error rates; no arbitrary permanent single-tab bottleneck."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Faster adaptive reader",
+      "summary": "Scale tabs/workers against memory, latency, host limits and error rates; no arbitrary permanent single-tab bottleneck.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R035",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 39
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R035:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Prefer feeds/APIs for prompt detection; browser for context; retain publication, first-seen, parsed, decision and fill clocks."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Live source and news latency",
+      "summary": "Prefer feeds/APIs for prompt detection; browser for context; retain publication, first-seen, parsed, decision and fill clocks.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R036",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 40
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R036:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Search contradictions, follow suppliers/customers, inspect primary sources and request missing documents."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Journalist-like investigation",
+      "summary": "Search contradictions, follow suppliers/customers, inspect primary sources and request missing documents.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R037",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 41
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R037:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Store original body/hash, extracted fact, attributed claim, AEGIS inference and forecast separately."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Raw evidence separate from opinions",
+      "summary": "Store original body/hash, extracted fact, attributed claim, AEGIS inference and forecast separately.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R038",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 42
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R038:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Deduplicate root events; normalize coverage so large-cap media volume is not mistaken for better opportunity."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Quality over headline volume",
+      "summary": "Deduplicate root events; normalize coverage so large-cap media volume is not mistaken for better opportunity.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R039",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 43
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R039:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Company/sector/country, event, crisis/demand/policy, materiality, novelty, timing and rights route work."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Tag during ingestion",
+      "summary": "Company/sector/country, event, crisis/demand/policy, materiality, novelty, timing and rights route work.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R040",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 44
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R040:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Reuse existing authorized subscriptions; free registrations only within owner delegation; paid sources require approval."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Newsletters and watchlists",
+      "summary": "Reuse existing authorized subscriptions; free registrations only within owner delegation; paid sources require approval.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R041",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 45
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R041:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Acquire original dated reports through entitled or public routes; do not bypass paywalls or redistribute licensed text."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Lawful analyst report collection",
+      "summary": "Acquire original dated reports through entitled or public routes; do not bypass paywalls or redistribute licensed text.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R042",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 46
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R042:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Run isolated news selection and matched engine hybrids on shared data; no model call per ordinary book."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "News-only and hybrid in parallel",
+      "summary": "Run isolated news selection and matched engine hybrids on shared data; no model call per ordinary book.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R043",
+      "owner": "Data + investigator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 47
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R043:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Prioritized event fan-out to affected accounts and services; not a global emergency from every negative headline."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C04",
+      "source_task_id": "C04",
+      "title": "Critical change broadcast",
+      "summary": "Prioritized event fan-out to affected accounts and services; not a global emergency from every negative headline.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R044",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 48
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R044:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: After owner sign-in/MFA, inspect schemas and entitlement and import incrementally with manifest/version keys."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "Use new Capital IQ transcripts",
+      "summary": "After owner sign-in/MFA, inspect schemas and entitlement and import incrementally with manifest/version keys.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R045",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 49
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R045:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Compare inventory with entitled transcripts, estimates, ownership, relationships, professionals and events; do not assume all subscribed."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "Find missed WRDS inputs",
+      "summary": "Compare inventory with entitled transcripts, estimates, ownership, relationships, professionals and events; do not assume all subscribed.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R046",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 50
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R046:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Hash and partition catalogue with high-water/correction logic; repair missing partitions rather than pull history again."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "No duplicate WRDS download",
+      "summary": "Hash and partition catalogue with high-water/correction logic; repair missing partitions rather than pull history again.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R047",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 51
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R047:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Each acquisition names an experiment, graph feature or decision consumer and demonstrates a successful read."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "Downloaded data must have consumers",
+      "summary": "Each acquisition names an experiment, graph feature or decision consumer and demonstrates a successful read.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R048",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 52
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R048:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Separate roles and sections, novelty, guidance changes, answer quality and contradictions."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "Transcript Q&A and prepared remarks",
+      "summary": "Separate roles and sections, novelty, guidance changes, answer quality and contradictions.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R049",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 53
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R049:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Link dated operational commitments to later reported outcomes, allowing uncertainty and attribution limits."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "Management promise tracking",
+      "summary": "Link dated operational commitments to later reported outcomes, allowing uncertainty and attribution limits.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R050",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 54
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R050:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: CIQ company IDs to dated issuer/security/CRSP links; no ticker-only joins or future membership."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "Identifier and historical joins",
+      "summary": "CIQ company IDs to dated issuer/security/CRSP links; no ticker-only joins or future membership.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R051",
+      "owner": "Data engineer",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 55
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R051:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Resolve global instruments/currency and coverage, not treat export prices as today or the list as contest rules."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C05",
+      "source_task_id": "C05",
+      "title": "Use Bloomberg membership",
+      "summary": "Resolve global instruments/currency and coverage, not treat export prices as today or the list as contest rules.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R052",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 56
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R052:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Represent stocks, issuers, sectors, actors, countries, policies, suppliers, evidence, scenarios and hypotheses."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "ATLAS is the universe",
+      "summary": "Represent stocks, issuers, sectors, actors, countries, policies, suppliers, evidence, scenarios and hypotheses.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R053",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 57
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R053:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Flagship consumes validated features and decisions; the graph is not itself a portfolio allocation."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "ATLAS paper reads the universe",
+      "summary": "Flagship consumes validated features and decisions; the graph is not itself a portfolio allocation.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R054",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 58
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R054:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Existing memory retrieves evidence/skills; ATLAS links economic entities and state; no second inconsistent truth store."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "Optimus connected, not replaced",
+      "summary": "Existing memory retrieves evidence/skills; ATLAS links economic entities and state; no second inconsistent truth store.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R055",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 59
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R055:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Keep source confidence, exposure, scenario probability, forecast coefficient and capital allocation distinct."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "Many weights have different meanings",
+      "summary": "Keep source confidence, exposure, scenario probability, forecast coefficient and capital allocation distinct.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R056",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 60
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R056:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Version directed edges, economic channel, sign, lag, expiry and source; co-mention does not establish causality."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "Shock propagation with meaning",
+      "summary": "Version directed edges, economic channel, sign, lag, expiry and source; co-mention does not establish causality.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R057",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 61
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R057:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Link task and service evidence to the relevant economic/hypothesis nodes in a separate operational namespace."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "World and roadmap connected",
+      "summary": "Link task and service evidence to the relevant economic/hypothesis nodes in a separate operational namespace.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R058",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 62
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R058:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Backcast 2027/2030 plausible futures and leading indicators; never use future realized outcomes as observations."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "Future scenarios from known plans",
+      "summary": "Backcast 2027/2030 plausible futures and leading indicators; never use future realized outcomes as observations.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R059",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 63
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R059:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Track industry/consumer/job-market/research/government/technology reports as claims with dated expectations. Crypto and prediction-market signals are observation-only; those instruments must not be traded."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "Demand and human-change context",
+      "summary": "Track industry/consumer/job-market/research/government/technology reports as claims with dated expectations. Crypto and prediction-market signals are observation-only; those instruments must not be traded.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R060",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 64
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R060:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Maintain current horizons, open questions, cases, catalysts and data coverage; rerank affected candidates and daily universe."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "Per-stock daily view",
+      "summary": "Maintain current horizons, open questions, cases, catalysts and data coverage; rerank affected candidates and daily universe.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R061",
+      "owner": "Data engineer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 65
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C01"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R061:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Track sourced role transitions and execution history; do not rank protected identities or invent psychological profiles."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C06",
+      "source_task_id": "C06",
+      "title": "CEO and actor mobility nodes",
+      "summary": "Track sourced role transitions and execution history; do not rank protected identities or invent psychological profiles.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R062",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 66
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R062:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Every eligible review records action, reason, alternatives, next trigger and expiry even when no order is sent."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Deliberate HOLD instead of silent inaction",
+      "summary": "Every eligible review records action, reason, alternatives, next trigger and expiry even when no order is sent.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R063",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 67
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R063:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Separate actions and position accounting, including long exit versus short entry."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "BUY ADD TRIM SELL SHORT COVER WAIT",
+      "summary": "Separate actions and position accounting, including long exit versus short entry.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R064",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 68
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R064:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Calendar, material news, price/risk alarm and daily refresh can trigger review; avoid repeated processing of same event."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Event and interval-driven review",
+      "summary": "Calendar, material news, price/risk alarm and daily refresh can trigger review; avoid repeated processing of same event.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R065",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 69
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R065:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Use price/event/horizon conditions with reevaluation, not a guarantee of execution at a target."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Conditional entry and planned exits",
+      "summary": "Use price/event/horizon conditions with reevaluation, not a guarantee of execution at a target.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R066",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 70
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R066:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Investigative alarm can supplement broker protection; an unavailable agent must not remove existing loss controls."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Alarms plus protection",
+      "summary": "Investigative alarm can supplement broker protection; an unavailable agent must not remove existing loss controls.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R067",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 71
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R067:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Any exit/hedge experiment includes when to re-enter or cover and missed rebound costs."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Explicit re-entry",
+      "summary": "Any exit/hedge experiment includes when to re-enter or cover and missed rebound costs.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R068",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 72
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R068:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Capital utilization is evaluated; missing inputs cannot masquerade as intentional cash; SPY remains a comparator."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "No forced all-in or benchmark hugging",
+      "summary": "Capital utilization is evaluated; missing inputs cannot masquerade as intentional cash; SPY remains a comparator.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R069",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 73
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R069:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Weakened thesis can rotate to better-ranked candidates under a declared policy rather than random churn."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Update candidate list dynamically",
+      "summary": "Weakened thesis can rotate to better-ranked candidates under a declared policy rather than random churn.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R070",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 74
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R070:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Record cash, positions, fees, borrow, dividends, corporate actions and fills/marks distinctly."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Dynamic account accounting",
+      "summary": "Record cash, positions, fees, borrow, dividends, corporate actions and fills/marks distinctly.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R071",
+      "owner": "Portfolio builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 75
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C04",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R071:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Forecast scenarios and calibrated uncertainty; do not write that news means we know price will fall."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C07",
+      "source_task_id": "C07",
+      "title": "Reaction is not certainty",
+      "summary": "Forecast scenarios and calibrated uncertainty; do not write that news means we know price will fall.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R072",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 76
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R072:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Keep original frozen inception, weights and history; add policy siblings rather than rewrite parent."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "Preserve Revision Flow baseline",
+      "summary": "Keep original frozen inception, weights and history; add policy siblings rather than rewrite parent.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R073",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 77
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R073:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Compare daily and event-driven refresh, replacement and sizing under same information clock."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "RF dynamic reranking",
+      "summary": "Compare daily and event-driven refresh, replacement and sizing under same information clock.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R074",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 78
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R074:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Test action-specific increments and costs; compare same names/weights controls to isolate contribution."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "RF buy-more and sell-more arms",
+      "summary": "Test action-specific increments and costs; compare same names/weights controls to isolate contribution.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R075",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 79
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R075:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Test a distinct short policy with borrow/entry/cover/risk, not a sign flip of every weak long."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "RF negative-event short arm",
+      "summary": "Test a distinct short policy with borrow/entry/cover/risk, not a sign flip of every weak long.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R076",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 80
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R076:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Separate Buy/Hold/Sell proportions, target revisions, target levels, remaining upside and earnings expectations."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "Analyst rating versus target",
+      "summary": "Separate Buy/Hold/Sell proportions, target revisions, target levels, remaining upside and earnings expectations.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R077",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 81
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R077:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Test normalization, thin coverage, individual bias/timeliness, latest-per-firm and first-mover diffusion."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "Coverage and skill branches",
+      "summary": "Test normalization, thin coverage, individual bias/timeliness, latest-per-firm and first-mover diffusion.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R078",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 82
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R078:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Show ancestry, selection signals, positions, weights, timing, returns and overlap separately."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "Common names do not mean identical strategies",
+      "summary": "Show ancestry, selection signals, positions, weights, timing, returns and overlap separately.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R079",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 83
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R079:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Test different episodes and selections; unchanged picks allowed when justified, forced turnover is not learning."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "Same winning basket is not generalization",
+      "summary": "Test different episodes and selections; unchanged picks allowed when justified, forced turnover is not learning.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R080",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 84
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R080:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Oct23 recovery joins October losses in evaluation; no strategy designed only to win the known losing day."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "Current RF recovery included",
+      "summary": "Oct23 recovery joins October losses in evaluation; no strategy designed only to win the known losing day.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R081",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 85
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R081:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Fetch actual composition and action path; average true range label alone does not explain winning performance."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C08",
+      "source_task_id": "C08",
+      "title": "Conservative ATR explained from code",
+      "summary": "Fetch actual composition and action path; average true range label alone does not explain winning performance.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R082",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 86
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R082:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Run multiple families, horizons and policy arms from shared frozen panels; do not wait for every integration."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Broad batch backtesting immediately where inputs exist",
+      "summary": "Run multiple families, horizons and policy arms from shared frozen panels; do not wait for every integration.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R083",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 87
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R083:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: One full-system challenge plus component/control arms diagnoses why a large task failed."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Ambitious and isolated tests together",
+      "summary": "One full-system challenge plus component/control arms diagnoses why a large task failed.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R084",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 88
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R084:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Define event cohorts and causal/economic mechanisms before selecting winning securities."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Learn from events not portfolio fitting",
+      "summary": "Define event cohorts and causal/economic mechanisms before selecting winning securities.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R085",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 89
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R085:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Support, conditional support, invalid data/design, underpowered, no incremental value or scoped refutation."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "All hypotheses have useful dispositions",
+      "summary": "Support, conditional support, invalid data/design, underpowered, no incremental value or scoped refutation.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R086",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 90
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R086:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Historical ideal-public replay and actual-AEGIS-received replay are separately labelled."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Fast tests still respect known clocks",
+      "summary": "Historical ideal-public replay and actual-AEGIS-received replay are separately labelled.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R087",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 91
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R087:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Tuning allowed in discovery; count trials, freeze finalists and validate on untouched or forward data."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Separate discovery and honest validation",
+      "summary": "Tuning allowed in discovery; count trials, freeze finalists and validate on untouched or forward data.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R088",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 92
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R088:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Same data/date/cost definitions, second codepath for consequential finalists, not redundant shared function call."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Independent LEAN finalist replication",
+      "summary": "Same data/date/cost definitions, second codepath for consequential finalists, not redundant shared function call.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R089",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 93
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R089:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Use registry and known-null/known-edge tests; audit negative verdicts as hard as positive ones."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Retain existing conditional/evaluator fixes",
+      "summary": "Use registry and known-null/known-edge tests; audit negative verdicts as hard as positive ones.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R090",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 94
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R090:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Preserve parent verdict and new scope; do not relabel retries as new discoveries."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Research result can create a child hypothesis",
+      "summary": "Preserve parent verdict and new scope; do not relabel retries as new discoveries.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R091",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 95
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R091:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Batch computations and shared extraction; no unlimited agents/tabs/CPU that starve market jobs."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C09",
+      "source_task_id": "C09",
+      "title": "Parallel breadth is resource-aware",
+      "summary": "Batch computations and shared extraction; no unlimited agents/tabs/CPU that starve market jobs.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R092",
+      "owner": "Research + operations",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 96
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R092:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Use cohort IDs and exact states; answer registered, waiting, entered, marked, matured, retired separately."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C10",
+      "source_task_id": "C10",
+      "title": "Reconcile 800/886/900 pending descriptions",
+      "summary": "Use cohort IDs and exact states; answer registered, waiting, entered, marked, matured, retired separately.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R093",
+      "owner": "Research + operations",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 97
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R093:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Public zero-pending subset cannot establish new cohort entered; report omission/coverage explicitly."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C10",
+      "source_task_id": "C10",
+      "title": "No public-count inference",
+      "summary": "Public zero-pending subset cannot establish new cohort entered; report omission/coverage explicitly.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R094",
+      "owner": "Research + operations",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 98
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R094:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Parent/control comparison yields prospective child, meaningful mutation, future entry and grade."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C10",
+      "source_task_id": "C10",
+      "title": "Outcome-driven descendants",
+      "summary": "Parent/control comparison yields prospective child, meaningful mutation, future entry and grade.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R095",
+      "owner": "Research + operations",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 99
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R095:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Thousands of strategy variants are registry records; use few code branches for implementations."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C10",
+      "source_task_id": "C10",
+      "title": "Not every experiment needs Git branch",
+      "summary": "Thousands of strategy variants are registry records; use few code branches for implementations.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R096",
+      "owner": "Research + operations",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 100
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R096:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Show each portfolio returns plus family distribution/independence, not only entire-universe winner fraction."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C10",
+      "source_task_id": "C10",
+      "title": "Family-level and account-level wins",
+      "summary": "Show each portfolio returns plus family distribution/independence, not only entire-universe winner fraction.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R097",
+      "owner": "Research + operations",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 101
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C02",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R097:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Allocate research by information value and unresolved mechanism, not only green returns."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C10",
+      "source_task_id": "C10",
+      "title": "Losing books teach without contaminating winners",
+      "summary": "Allocate research by information value and unresolved mechanism, not only green returns.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R098",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 102
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R098:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Keep forecast quality, net decision value, execution and coverage visible rather than one uncalibrated magic score."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Own transparent metric system",
+      "summary": "Keep forecast quality, net decision value, execution and coverage visible rather than one uncalibrated magic score.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R099",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 103
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R099:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Proper scores versus task-specific base rates; direction and move magnitude separately."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Probability calibration matters",
+      "summary": "Proper scores versus task-specific base rates; direction and move magnitude separately.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R100",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 104
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R100:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Paired full/no-news/no-analyst/other removals using same dates, costs and model version."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Decision contribution of every input",
+      "summary": "Paired full/no-news/no-analyst/other removals using same dates, costs and model version.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R101",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 105
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R101:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Ex-post best is a diagnostic ceiling; fixed-default and menu/state-matched null comparisons are decisive."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Regret without hindsight condemnation",
+      "summary": "Ex-post best is a diagnostic ceiling; fixed-default and menu/state-matched null comparisons are decisive.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R102",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 106
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R102:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Attribute action improvements separately from which stock happened to win."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Judge selection timing size and exits",
+      "summary": "Attribute action improvements separately from which stock happened to win.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R103",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 107
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R103:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Version/shrink context-dependent weights; repeated correlated forecasts do not create independent data."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Learn weights from measured outcomes",
+      "summary": "Version/shrink context-dependent weights; repeated correlated forecasts do not create independent data.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R104",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 108
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R104:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Demonstrate changed parameters, consuming policy and valid feedback before calling it reinforcement learning."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Separate NN forecast, learning and RL",
+      "summary": "Demonstrate changed parameters, consuming policy and valid feedback before calling it reinforcement learning.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R105",
+      "owner": "Data scientist",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 109
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C09"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R105:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Forecast value may be useful without a causal discovery; report what test actually establishes."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C11",
+      "source_task_id": "C11",
+      "title": "Causal claim is stronger than feature association",
+      "summary": "Forecast value may be useful without a causal discovery; report what test actually establishes.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R106",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 110
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R106:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Retrieve current task, relevant existing code, failures and sources through Optimus before build; fail visibly if unavailable."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Mandatory context handshake",
+      "summary": "Retrieve current task, relevant existing code, failures and sources through Optimus before build; fail visibly if unavailable.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R107",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 111
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R107:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Use existing skill format; version draft, test on unseen cases, promote/rollback independently."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Skill creator and editor",
+      "summary": "Use existing skill format; version draft, test on unseen cases, promote/rollback independently.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R108",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 112
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R108:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Evidence, economic mechanism, contradiction, quantified hypothesis, decision and resolution; not persona-only confidence."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Investigator process into a skill",
+      "summary": "Evidence, economic mechanism, contradiction, quantified hypothesis, decision and resolution; not persona-only confidence.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R109",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 113
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R109:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Select actual available models/effort; Astra high or targeted xhigh, Sol medium and high for hard problems."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Astra plans, Sol builds",
+      "summary": "Select actual available models/effort; Astra high or targeted xhigh, Sol medium and high for hard problems.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R110",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 114
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R110:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Offer feasible alternative and experiment; review meaningful changed boundaries, not constant whole-project rechecks."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Reviewer is skeptical not obstructionist",
+      "summary": "Offer feasible alternative and experiment; review meaningful changed boundaries, not constant whole-project rechecks.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R111",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 115
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R111:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Code for arithmetic, small models for extraction, capable reasoning for material unresolved cases."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Model per task not per account",
+      "summary": "Code for arithmetic, small models for extraction, capable reasoning for material unresolved cases.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R112",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 116
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R112:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Benchmark retrieval/skills before adapters; changing weights is not updating a facts database."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Fine-tune rather than train frontier model",
+      "summary": "Benchmark retrieval/skills before adapters; changing weights is not updating a facts database.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R113",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 117
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R113:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Verify distinct names/versions/licences; compare same data against ridge, persistence, volatility and existing NN. Include nearest-neighbor and gradient-based/boosted alternatives where task-relevant; resolve ambiguous algorithm names."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "TimesFM 3 Kronos and Chronos candidates",
+      "summary": "Verify distinct names/versions/licences; compare same data against ridge, persistence, volatility and existing NN. Include nearest-neighbor and gradient-based/boosted alternatives where task-relevant; resolve ambiguous algorithm names.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R114",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 118
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R114:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Borrow durable roles and coordination, but measure equal-cost value; exact Kurzgesagt link still needed."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Agent-community inspiration",
+      "summary": "Borrow durable roles and coordination, but measure equal-cost value; exact Kurzgesagt link still needed.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R115",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 119
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R115:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Encode Murat preferences and skeptical questions as a role; cannot authorize as Murat."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Owner-style critic not owner impersonation",
+      "summary": "Encode Murat preferences and skeptical questions as a role; cannot authorize as Murat.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R116",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 120
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R116:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Translate to observable, testable behavior or demand features; no speculative diagnosis of individuals."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "Neuropsychology and behavioral ideas",
+      "summary": "Translate to observable, testable behavior or demand features; no speculative diagnosis of individuals.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R117",
+      "owner": "Model + skill builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 121
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R117:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Keep candidate in business parking; synthetic feedback generates questions, not real market validation."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C12",
+      "source_task_id": "C12",
+      "title": "MiroFish simulated customer research",
+      "summary": "Keep candidate in business parking; synthetic feedback generates questions, not real market validation.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R118",
+      "owner": "Coordinator + owner",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 122
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C08",
+        "C10"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R118:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Resolve exact alias-to-account mapping with owner after read-only inventory and archive."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C13",
+      "source_task_id": "C13",
+      "title": "Refresh six Alpaca mandates",
+      "summary": "Resolve exact alias-to-account mapping with owner after read-only inventory and archive.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R119",
+      "owner": "Coordinator + owner",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 123
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C08",
+        "C10"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R119:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: ATLAS may become successor policy; preserve old $1m lineage and distinguish $40k scaled view."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C13",
+      "source_task_id": "C13",
+      "title": "ATLAS PC-PAPER continuity",
+      "summary": "ATLAS may become successor policy; preserve old $1m lineage and distinguish $40k scaled view.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R120",
+      "owner": "Coordinator + owner",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 124
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C08",
+        "C10"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R120:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Export history/open orders/positions and confirm reset workflow; no reset from this documentation session."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C13",
+      "source_task_id": "C13",
+      "title": "Owner conducts consequential reset",
+      "summary": "Export history/open orders/positions and confirm reset workflow; no reset from this documentation session.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R121",
+      "owner": "Coordinator + owner",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 125
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C08",
+        "C10"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R121:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Shared engine manages many virtual books; broker slots are operating demonstrations, not research capacity limit."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C13",
+      "source_task_id": "C13",
+      "title": "Local experiments exceed six",
+      "summary": "Shared engine manages many virtual books; broker slots are operating demonstrations, not research capacity limit.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R122",
+      "owner": "Coordinator + owner",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 126
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C08",
+        "C10"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R122:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Verify provider current limits only if purchase pursued; local papers can proceed without upgrade."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C13",
+      "source_task_id": "C13",
+      "title": "Paid Alpaca is not assumed unlimited accounts",
+      "summary": "Verify provider current limits only if purchase pursued; local papers can proceed without upgrade.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R123",
+      "owner": "Coordinator + owner",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 127
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C07",
+        "C08",
+        "C10"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R123:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Owner enters keys locally; verify environment consumer and paper endpoint, never echo secrets into reports."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C13",
+      "source_task_id": "C13",
+      "title": "Secure API-key setup",
+      "summary": "Owner enters keys locally; verify environment consumer and paper endpoint, never echo secrets into reports.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R124",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 128
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R124:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: One issuer file referenced across portfolios with unique decision/policy histories."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "Shared company dossiers",
+      "summary": "One issuer file referenced across portfolios with unique decision/policy histories.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R125",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 129
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R125:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Name ticker industry action quantity weights actual entry/current/exit, ROI/contribution, thesis and sources."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "Required stock fields",
+      "summary": "Name ticker industry action quantity weights actual entry/current/exit, ROI/contribution, thesis and sources.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R126",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 130
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R126:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Low mean median high, horizon, counts, last report date and labelled rating mapping; not implied return probability."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "Analyst range and consensus on same workbook",
+      "summary": "Low mean median high, horizon, counts, last report date and labelled rating mapping; not implied return probability.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R127",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 131
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R127:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Label old IEX reconstructions and missing actual fills; do not manufacture current prices."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "Reference is not actual execution",
+      "summary": "Label old IEX reconstructions and missing actual fills; do not manufacture current prices.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R128",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 132
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R128:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Select account, winners/losers, equity/benchmark, action timeline, family tree and active input links."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "Portfolio and lineage drilldown",
+      "summary": "Select account, winners/losers, equity/benchmark, action timeline, family tree and active input links.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R129",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 133
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R129:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Use shared path coordinates for nodes/dots, bounds and fallback-font tests, reduced-motion/print view."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "SVG geometry reliability",
+      "summary": "Use shared path coordinates for nodes/dots, bounds and fallback-font tests, reduced-motion/print view.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R130",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 134
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R130:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Orbit + blackline on screen; readable black-and-white print and workbook, no new generic visual language."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "Preserve brand",
+      "summary": "Orbit + blackline on screen; readable black-and-white print and workbook, no new generic visual language.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R131",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 135
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R131:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Generate from canonical structured data; no model needed to narrate every repeated cell."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "Print PDF and Excel, not another HTML",
+      "summary": "Generate from canonical structured data; no model needed to narrate every repeated cell.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R132",
+      "owner": "UI + reporting builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 136
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C01",
+        "C02",
+        "C06"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R132:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Define vintage, percentage points, sigma, calibration, borrow and scenario in plain language."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C14",
+      "source_task_id": "C14",
+      "title": "User wording explained",
+      "summary": "Define vintage, percentage points, sigma, calibration, borrow and scenario in plain language.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R133",
+      "owner": "Independent reviewer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 137
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C03",
+        "C07",
+        "C09",
+        "C11",
+        "C14"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R133:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Prove event→fact→forecast→decision→paper action/HOLD→outcome→learning; first trace is smoke test not entire scope."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C15",
+      "source_task_id": "C15",
+      "title": "One end-to-end change test",
+      "summary": "Prove event→fact→forecast→decision→paper action/HOLD→outcome→learning; first trace is smoke test not entire scope.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R134",
+      "owner": "Independent reviewer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 138
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C03",
+        "C07",
+        "C09",
+        "C11",
+        "C14"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R134:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: A document or PR is not deployment; local import, invocation, output and consumer receipts required."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C15",
+      "source_task_id": "C15",
+      "title": "Verify actual installed skills and consumers",
+      "summary": "A document or PR is not deployment; local import, invocation, output and consumer receipts required.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R135",
+      "owner": "Independent reviewer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 139
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C03",
+        "C07",
+        "C09",
+        "C11",
+        "C14"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R135:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: After each useful completion take next ready task; specific blocked dependencies do not halt unrelated work."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C15",
+      "source_task_id": "C15",
+      "title": "Resumable queue and nightly throughput",
+      "summary": "After each useful completion take next ready task; specific blocked dependencies do not halt unrelated work.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R136",
+      "owner": "Independent reviewer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 140
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C03",
+        "C07",
+        "C09",
+        "C11",
+        "C14"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R136:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Separate code released, runtime active, experiment result and investment claim."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C15",
+      "source_task_id": "C15",
+      "title": "Truthful release verdict",
+      "summary": "Separate code released, runtime active, experiment result and investment claim.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R137",
+      "owner": "Independent reviewer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 141
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C03",
+        "C07",
+        "C09",
+        "C11",
+        "C14"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R137:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Idempotent dispatch, no duplicate order/download/grading/worker, persisted ownership and checkpoints."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C15",
+      "source_task_id": "C15",
+      "title": "Recover from quota and restarts",
+      "summary": "Idempotent dispatch, no duplicate order/download/grading/worker, persisted ownership and checkpoints.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R138",
+      "owner": "Independent reviewer + coordinator",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 142
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C03",
+        "C07",
+        "C09",
+        "C11",
+        "C14"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R138:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Run useful work while available; leave evidence and exact remaining owner steps rather than vague success."
+        }
+      ],
+      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "C15",
+      "source_task_id": "C15",
+      "title": "No promise of two-day completion",
+      "summary": "Run useful work while available; leave evidence and exact remaining owner steps rather than vague success.",
+      "priority": "P1",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "TO_VERIFY_OR_BUILD",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R139",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 143
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R139:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Retain investment engine, research workspace, evaluation infrastructure and data product hypotheses."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "Save business ideas separately",
+      "summary": "Retain investment engine, research workspace, evaluation infrastructure and data product hypotheses.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R140",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 144
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R140:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: HKU TEC/SEED/iDendron, HKSTP Ideation, Cyberport, RISE exact identity unresolved; refresh deadlines later."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "Save prior pitches and program list",
+      "summary": "HKU TEC/SEED/iDendron, HKSTP Ideation, Cyberport, RISE exact identity unresolved; refresh deadlines later.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R141",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 145
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R141:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Research access and author affiliations are not venture endorsement; no backing currently claimed."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "University backing correction",
+      "summary": "Research access and author affiliations are not venture endorsement; no backing currently claimed.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R142",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 146
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R142:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: GPU/RAM/SSD/server purchases are outside active engineering promises; user decides when funded."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "Funding and hardware later",
+      "summary": "GPU/RAM/SSD/server purchases are outside active engineering promises; user decides when funded.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R143",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 147
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R143:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Draft education/stock methodology posts with source dates and approvals; no automated public claims from raw P&L."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "Marketing and publishing later",
+      "summary": "Draft education/stock methodology posts with source dates and approvals; no automated public claims from raw P&L.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R144",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 148
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R144:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Inspect existing publication/licences and data rights; private repo cannot erase prior public disclosure."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "IP and privacy review",
+      "summary": "Inspect existing publication/licences and data rights; private repo cannot erase prior public disclosure.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R145",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 149
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R145:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Verify authentic Bloomberg rules and dates, not historical report assumptions; expired grants not upcoming."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "Competition deadlines register",
+      "summary": "Verify authentic Bloomberg rules and dates, not historical report assumptions; expired grants not upcoming.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    },
+    {
+      "id": "R146",
+      "owner": "Business researcher (deferred)",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Requests",
+        "row": 150
+      },
+      "status": "deferred",
+      "dependencies": [],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "R146:acceptance",
+          "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Evidence-to-action lineage, conditional learning and measured components are candidate differentiators, not patented/proven novelty."
+        }
+      ],
+      "revisit": "Owner reactivation of B01 and refreshed eligibility/evidence.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "task_id": "B01",
+      "source_task_id": "B01",
+      "title": "Originality statement",
+      "summary": "Evidence-to-action lineage, conditional learning and measured components are candidate differentiators, not patented/proven novelty.",
+      "priority": "Later",
+      "source_basis": "U0; earlier source links in the main handoff",
+      "source_status": "DEFERRED_OWNER",
+      "source_legacy_id": "RESOLVE_LOCALLY"
+    }
+  ]
+}

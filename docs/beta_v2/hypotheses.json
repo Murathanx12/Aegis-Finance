@@ -1,0 +1,875 @@
+{
+  "generated_from": "docs/beta_v2/registry.json",
+  "registry_sha256": "b4444a87d3997c4d6013491d08db0dc5a94f4026cda4becc13300239c9ab4b93",
+  "count": 28,
+  "hypotheses": [
+    {
+      "id": "H01",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 5
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H01:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "News adds incremental return information beyond revision flow.",
+      "first_comparison": "Same-entry RF, news-only and hybrid; normalized versus raw blend.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H02",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 6
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H02:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "First analyst changes predict later diffusion.",
+      "first_comparison": "Freeze t₀ revision; model future followers without seeing them.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H03",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 7
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H03:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Thin analyst coverage can contain useful specialist information.",
+      "first_comparison": "Hierarchical analyst prior versus blanket minimum-count filter.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H04",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 8
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H04:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Unusual public insider buying improves a business-economics model.",
+      "first_comparison": "Routine/size/time matched transactions; post-disclosure entries.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H05",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 9
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H05:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Management execution adds information beyond industry and ratios.",
+      "first_comparison": "Fundamentals-only versus dated execution history added.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H06",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 10
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H06:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Policy surprise converts to shareholder value.",
+      "first_comparison": "Matched award/no-award cases and per-share cash-flow bridge.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H07",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 11
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H07:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Review tone predicts changing consumer fundamentals.",
+      "first_comparison": "Ratings/volume baseline versus abnormal tone.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H08",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 12
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H08:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Recovery requires improving economics, not merely a drawdown.",
+      "first_comparison": "Drawdown-only baseline versus quality + catalyst evidence.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H09",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 13
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H09:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Public customer shocks transmit to suppliers before full pricing.",
+      "first_comparison": "Direct event only versus dated, material exposure links; respect earlier supplier failures.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H10",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 14
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H10:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Fiscal spending matters only for exposed contractors.",
+      "first_comparison": "Actual award timing × revenue exposure versus calendar-only seasonality.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H11",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 15
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H11:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Negative-event information can support profitable shorts.",
+      "first_comparison": "Avoidance/trim/short with actual borrow or an explicit sensitivity study.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H12",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 16
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H12:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Relative-value divergence is temporary rather than structural.",
+      "first_comparison": "Pre-frozen pairs, random pairs, sector baseline and break detection.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H13",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 17
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H13:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Event-conditioned exits preserve more value than blunt stops.",
+      "first_comparison": "Hold/partial adjustment/exit with gaps, re-entry and turnover costs.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H14",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 18
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H14:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Scenario-linked evidence improves long-horizon thematic selection.",
+      "first_comparison": "Same universe and valuation model, with/without the scenario state.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H15",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 19
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H15:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Non-US events add genuinely new information.",
+      "first_comparison": "US context-only versus international shadow books with local/FX benchmarks.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H16",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 20
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H16:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Agent cooperation adds value at equal cost.",
+      "first_comparison": "One investigator versus roles plus skeptic, identical information and dollar budget.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H17",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 21
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H17:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Retrieval quality improves decision reliability.",
+      "first_comparison": "Lexical versus hybrid/reranker on current/obsolete evidence traps.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H18",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 22
+      },
+      "status": "inherited-unverified",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H18:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Compact forecasting models improve a specific existing target.",
+      "first_comparison": "TimesFM/Chronos/NN versus ridge and trailing-volatility baselines.",
+      "previous_report_state": "PROPOSED_NOT_RUN",
+      "source_status": "VERIFY_EXISTING_THEN_BATCH_TEST",
+      "scope_note": "Existing family history may contain scoped trials; reconcile IDs before registration.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H19",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 23
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H19:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Transcript role separation improves decisions beyond full-call sentiment.",
+      "first_comparison": "Prepared remarks / management answers / analyst questions / full call; matched earnings surprise and time.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H20",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 24
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H20:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "New analyst questions and answer specificity reveal incremental operating information.",
+      "first_comparison": "Question novelty with answer detail versus novelty alone and shuffled-question controls.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H21",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 25
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H21:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Management promise delivery predicts later fundamental changes beyond past returns.",
+      "first_comparison": "Dated promises→future observed operations; firm/sector/CEO-turnover matched comparisons.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H22",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 26
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H22:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "A material event benefits from faster detection only while tradable price response remains.",
+      "first_comparison": "Actual-received replay versus public-first replay; observed latency, gap, costs and capacity.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H23",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 27
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H23:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Context-first agent startup prevents repeated or contradictory work at lower total cost.",
+      "first_comparison": "Same tasks with/without source-bound briefing; missed-context defects and total review cost.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H24",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 28
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H24:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Alarm-led investigation improves exit/re-entry versus price stops alone.",
+      "first_comparison": "Same selector, risk envelope and full episodes; exits, rebounds, outages and transaction costs.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H25",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 29
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H25:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "A graph adds decision information beyond flat retrieved evidence.",
+      "first_comparison": "Same sources and model budget; graph versus flat RAG with edge permutation/placebo controls.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H26",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 30
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H26:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Adaptive browser concurrency raises usable event throughput without lowering correctness.",
+      "first_comparison": "Same source workload, vary controlled concurrency; bodies admitted, latency, RAM and duplicate rates.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H27",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 31
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H27:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Quality-adjusted independent consensus improves ranking over raw counts.",
+      "first_comparison": "Root-event/source-family clusters versus counts; sector/size/coverage controls.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    },
+    {
+      "id": "H28",
+      "owner": "Research builder",
+      "source": {
+        "archive": "owner-workbook",
+        "sheet": "Hypotheses",
+        "row": 32
+      },
+      "status": "proposed",
+      "dependencies": [
+        "C00",
+        "C05"
+      ],
+      "evidence": [],
+      "acceptance": [
+        {
+          "id": "H28:acceptance",
+          "description": "Reconcile prior trials and closed cells, pre-register an admissible design, calibrate the instrument, and record a scoped result including power and controls."
+        }
+      ],
+      "revisit": "Check prior trial IDs, NEGATIVE_RESULTS and canon before registration; underpowered evidence alone cannot reopen a closed cell.",
+      "legacy_aliases": [],
+      "legacy_resolution": "inherited-unverified",
+      "title": "Capacity-aware short event policies improve net portfolio outcomes.",
+      "first_comparison": "Short eligible event cohorts versus exit/hedge/hold, realistic borrow and unavailable-price exclusions.",
+      "previous_report_state": "NEW_V2_DESIGN",
+      "source_status": "PROPOSED_NOT_RUN",
+      "scope_note": "Register exact design and reuse relevant historical controls; no outcome claimed.",
+      "task_id": "C09",
+      "mapping_status": "proposed"
+    }
+  ]
+}

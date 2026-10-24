@@ -22,3 +22,6 @@ backend/tests/fixtures/**/*.csv text eol=lf
 # committed LF bytes on Windows too; never relax the runtime source hashes.
 backend/services/expected_return.py text eol=lf
 backend/services/forecast_reputation.py text eol=lf
+
+# Beta V2 source ownership is code-pinned to these exact normalized bytes.
+docs/beta_v2/source_baseline.json text eol=lf

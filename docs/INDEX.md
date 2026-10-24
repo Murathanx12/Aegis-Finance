@@ -4,6 +4,10 @@ Hundreds of markdown files live here; many are roadmaps or handoffs. A new sessi
 NOT read them all. Tiers below; Optimus should embed TIER 2 and ARCHIVE for
 retrieval and load TIER 0 + the current TIER 1 verbatim.
 
+## Current owner direction: Beta V2 (2026-10-25)
+
+Read [BETA_V2_PICKUP.md](BETA_V2_PICKUP.md), then the [generated V2 roadmap](AEGIS_BETA_V2_ROADMAP.md) and its [registry](beta_v2/registry.json). This is the current execution direction. Earlier dated orders below are historical evidence; retain their unclosed acceptance gates. The private originals and recovered research are indexed in the pickup. No V1/V1.1 or V2 release acceptance is implied.
+
 ## The skim → read ladder (four rungs, stop at the one that answers you)
 
 | Rung | Read | Cost | You now know |
