@@ -115,3 +115,10 @@ Optimus ingestion saved eight source-linked notes plus their index under
 Broad ranking remains imperfect; use that exact page ID or the local pickup.
 The new project slug is not registered in Optimus's finance-domain mapping; no
 shared MCP process or global ranking behavior was changed in this build.
+
+## Delivered build checkpoint
+
+See [DELIVERY.md](beta_v2/DELIVERY.md) for reviewed chunks, exact test/consumer
+evidence and remaining boundaries. Private draft [PR55](https://github.com/Murathanx12/Aegis-Finance/pull/55)
+contains the isolated implementation. This runtime has received a pickup pointer
+only; code and operational acceptance remain separate.

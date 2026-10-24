@@ -17,7 +17,7 @@ Source rows refer to the archived owner workbook. Blank evidence and legacy alia
 | C06 | ATLAS universe and task graph | in-progress | Data engineer + coordinator | C00, C01 | R052, R053, R054, R055, R056, R057, R058, R059, R060, R061 | Roadmap row 11 |
 | C07 | Dynamic decisions and paper lifecycle | proposed | Portfolio builder | C02, C04, C06 | R062, R063, R064, R065, R066, R067, R068, R069, R070, R071 | Roadmap row 12 |
 | C08 | RF and net-raises policy branches | proposed | Research builder | C07 | R072, R073, R074, R075, R076, R077, R078, R079, R080, R081 | Roadmap row 13 |
-| C09 | Broad historical experiment factory | proposed | Research builder | C00, C05 | R082, R083, R084, R085, R086, R087, R088, R089, R090, R091 | Roadmap row 14 |
+| C09 | Broad historical experiment factory | in-progress | Research builder | C00, C05 | R082, R083, R084, R085, R086, R087, R088, R089, R090, R091 | Roadmap row 14 |
 | C10 | Population census and outcome branching | in-progress | Research + operations | C02, C09 | R092, R093, R094, R095, R096, R097 | Roadmap row 15 |
 | C11 | Forecast, decision and execution learning | proposed | Data scientist | C07, C09 | R098, R099, R100, R101, R102, R103, R104, R105 | Roadmap row 16 |
 | C12 | Models, retrieval and reusable skills | in-progress | Model + skill builder | C00 | R106, R107, R108, R109, R110, R111, R112, R113, R114, R115, R116, R117 | Roadmap row 17 |
@@ -34,7 +34,7 @@ Acceptance: A context receipt names latest sources, unresolved conflicts and act
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Five supplied originals and full returned Consensus research archived; latest raw review TXT is heading-only. See DELIVERY.md; complete original context remains unresolved.
 
 Legacy aliases: V1:B00
 
@@ -46,7 +46,7 @@ Acceptance: Every active request maps to one task; unmerged and dirty work is pr
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Registry, source attestation and prerequisite/slice boundaries independently reviewed; 13 legacy tasks and 73 subchunks retained. Reconcile unresolved subchunk applicability before full acceptance.
 
 Legacy aliases: V1:B00
 
@@ -106,7 +106,7 @@ Acceptance: Source-to-company-to-thesis-to-decision and task-to-evidence queries
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Typed saved-receipt projection and eight CLI consumers independently reviewed. No causal or live portfolio adoption claim; qualify missing native lineage next.
 
 Legacy aliases: V1:B11
 
@@ -142,7 +142,7 @@ Acceptance: A resumable batch produces scoped diagnoses including invalid/underp
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Existing-data readiness adapter reviewed: five families, 21 proposed arms, zero evaluations. Qualify clocks, keys, matched controls and instruments before broad actual batches; R6 engineering proceeds independently.
 
 Legacy aliases: Unresolved; inherited-unverified.
 
@@ -154,7 +154,7 @@ Acceptance: Every requested spec has a disposition; no pending count is presente
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Corrected exact-ID saved census independently reviewed: original247/new886; 114 waits; positive market exposure247/883; zero matured horizons. Global Oct23 marks, remote registration and intended consumers remain separate.
 
 Legacy aliases: V1:B03, V1:B04
 
@@ -178,7 +178,7 @@ Acceptance: Same-case equal-budget comparisons identify quality/latency/cost; pr
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Source-bound packet/resume contract reviewed, changed source refusal demonstrated. Exact Optimus pickup page works; broad ranking and persistent startup adoption remain unresolved.
 
 Legacy aliases: V1:B06
 

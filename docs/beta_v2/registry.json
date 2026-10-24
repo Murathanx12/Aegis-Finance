@@ -24,7 +24,9 @@
     "legacy_policy": "Retain legacy IDs when verified; empty aliases plus inherited-unverified mean unresolved, not absent or retired. Coordinator must bind current continuation receipts; V1/V1.1 is not declared complete.",
     "hypothesis_mapping": "C09 is a proposed administrative home for all hypotheses, not a workbook claim or an experiment registration.",
     "legacy_crosswalk": "docs/beta_v2/legacy_crosswalk.json",
-    "slice_policy": "Workbook parent dependencies retained. Slices expose independent work; no slice result completes its parent or authorizes activation."
+    "slice_policy": "Workbook parent dependencies retained. Slices expose independent work; no slice result completes its parent or authorizes activation.",
+    "delivery_record": "docs/beta_v2/DELIVERY.md",
+    "archive_inventory": "C:/Users/mrthn/aegis-recovery-evidence/beta-v2-owner-20261025/archive_inventory.json"
   },
   "tasks": [
     {
@@ -44,7 +46,7 @@
           "description": "A context receipt names latest sources, unresolved conflicts and actual working paths; no reset"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Five supplied originals and full returned Consensus research archived; latest raw review TXT is heading-only. See DELIVERY.md; complete original context remains unresolved.",
       "legacy_aliases": [
         "V1:B00"
       ],
@@ -73,7 +75,7 @@
           "description": "Every active request maps to one task; unmerged and dirty work is preserved"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Registry, source attestation and prerequisite/slice boundaries independently reviewed; 13 legacy tasks and 73 subchunks retained. Reconcile unresolved subchunk applicability before full acceptance.",
       "legacy_aliases": [
         "V1:B00"
       ],
@@ -223,7 +225,7 @@
           "description": "Source-to-company-to-thesis-to-decision and task-to-evidence queries return traceable results"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Typed saved-receipt projection and eight CLI consumers independently reviewed. No causal or live portfolio adoption claim; qualify missing native lineage next.",
       "legacy_aliases": [
         "V1:B11"
       ],
@@ -301,7 +303,7 @@
         "sheet": "Roadmap",
         "row": 14
       },
-      "status": "proposed",
+      "status": "in-progress",
       "dependencies": [
         "C00",
         "C05"
@@ -313,7 +315,7 @@
           "description": "A resumable batch produces scoped diagnoses including invalid/underpowered cases, not just a winner"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Existing-data readiness adapter reviewed: five families, 21 proposed arms, zero evaluations. Qualify clocks, keys, matched controls and instruments before broad actual batches; R6 engineering proceeds independently.",
       "legacy_aliases": [],
       "legacy_resolution": "inherited-unverified",
       "title": "Broad historical experiment factory",
@@ -341,7 +343,7 @@
           "description": "Every requested spec has a disposition; no pending count is presented as entered or profitable"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Corrected exact-ID saved census independently reviewed: original247/new886; 114 waits; positive market exposure247/883; zero matured horizons. Global Oct23 marks, remote registration and intended consumers remain separate.",
       "legacy_aliases": [
         "V1:B03",
         "V1:B04"
@@ -402,7 +404,7 @@
           "description": "Same-case equal-budget comparisons identify quality/latency/cost; proposed skills remain separate from installed"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Source-bound packet/resume contract reviewed, changed source refusal demonstrated. Exact Optimus pickup page works; broad ranking and persistent startup adoption remain unresolved.",
       "legacy_aliases": [
         "V1:B06"
       ],
