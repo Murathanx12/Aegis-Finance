@@ -1,11 +1,62 @@
 # R6 four-gate source candidate
 
-**Original R6 freeze refused; R6-A1 successor frozen for Astra/Hume review.** No actual
-carrier/native operation, calibration, audit, financial action, runtime install
-or deployment was performed. No approval, signature, operating nonce or genuine
-R3 receipt copy was created. R5 and its actual receipts remain untouched.
+**R6-A3 passed combined independent source review and actual same-package local
+read-only calibration/audit. Financial operation remains unauthorized.**
+R5 and all refused source freezes and operating receipts remain preserved.
+No financial action, runtime installation or deployment occurred.
 
-## R6-A1 successor review handoff
+## Current accepted source and actual observation
+
+Current private package: `C:/Users/mrthn/aegis-recovery-evidence/beta-v2-owner-20261025/carrier-r6-a3`.
+Freeze SHA-256: `f6912f8c6c6184f89a795337053fea8b1476a1ae2c102b0697766b8937201ae5`.
+Package identity: `d442ce72fb65568e73faf36fb7c9775e306bb0149e3bdd952926c536c538469d`.
+All **351 fixture tests passed**. Independent reviews closed the double-binding,
+resource proof, identity joins, scalar-type and exact whole-string grammar
+findings. Accepted Python/native/binder sources stayed unchanged across the last
+two parsing corrections. Combined review: `reviews/R6_COMBINED_SOURCE_CLOSURE.md`
+under the private evidence root.
+
+A genuine independent operating review admitted one local READONLY_CALIBRATION
+attempt, nonce `0cf64e9b63bd4de185dc5b058d1013d3`. It reached existing resource
+preflight and refused with `SCHEDULED_RESOURCE_COLLISION`. The offending task
+was not recorded; a later scheduler snapshot cannot establish its identity.
+No calibration completion, shim-success receipt or financial attempt marker
+was produced. The independent actual audit confirms containment, reaping, EOF,
+complete resource measurement and zero active Job processes after cleanup.
+Measured guard peaks were 26,910,720 bytes parent working set and 164,950,016
+bytes Job commit; parent completion took 5,699 ms. These are refusal evidence,
+not a successful calibration or financial admission.
+
+Actual audit: `operations/0cf64e9b63bd4de185dc5b058d1013d3/ACTUAL_READONLY_AUDIT.md`.
+The consumed review/nonce must not be reused. A later local attempt requires a
+separate genuine review and fresh operation identity, retaining all live gates.
+No task, STOP file, global owner record, resource cap or protected window was
+changed to obtain admission.
+
+A separately reviewed follow-up, nonce `a3848108e39c4f4b89b3a813aac5def8`, completed
+the native, shim, outer guard and PowerShell read-only chain at
+`2026-10-24T19:18:23Z`. It retained all gates and did not modify the scheduled
+jobs. Independent actual audit returned
+`PASS_ACTUAL_SAME_PACKAGE_READONLY_ZERO_SQL`, checking actual-chain validators,
+69 source/prehold paths, identity/resource joins and cleanup. The exact audit is
+`operations/a3848108e39c4f4b89b3a813aac5def8/independent-actual-calibration-audit.json`,
+SHA-256 `a668591d8b6aefdae729a68ac4cc7deba105c2b63c568316a175cab0bd15f6e3`.
+
+The successful parent completed in 6,005 ms with 73 held files and no stderr.
+Guard peaks were 27,168,768 bytes parent working set and 147,271,680 bytes Job
+commit; cleanup left zero active Job processes. The actual resource receipt
+records one trusted psutil bind, one checked reuse and a 0.0% controlled-parent
+CPU sample over 0.02 seconds. This measures that observation, not all-actor
+idleness or future resource fitness. Calibration records zero SQL writes and
+no attempt marker, leaf or SSH start.
+
+The first refusal is not relabelled successful. Both operation reviews/nonces
+are consumed. No financial review, genuine R3 receipt staging, remote state
+reconciliation, financial append, scheduler installation or production activation
+was performed. Any future change of the frozen package invalidates transfer of
+this same-package qualification and must be reassessed explicitly.
+
+## Historical R6-A1 review handoff (superseded)
 
 The original source record below is preserved as history. Its independent
 reviews found the psutil double-binding blocker and saved-proof/parsing gaps;

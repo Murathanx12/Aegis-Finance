@@ -47,5 +47,7 @@ unbounded inference spending are not included.
 
 Use [execution packets](execution.md) for assignments and
 [the generated roadmap](../AEGIS_BETA_V2_ROADMAP.md) for the complete task list.
+The [delivery record](DELIVERY.md) distinguishes the reviewed implementation
+chunks from their actual consumer receipts and remaining acceptance conditions.
 Current observations are dated receipts, not a declaration that V1/V1.1 or V2
 has passed release acceptance.

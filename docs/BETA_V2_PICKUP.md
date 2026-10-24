@@ -122,3 +122,12 @@ See [DELIVERY.md](beta_v2/DELIVERY.md) for reviewed chunks, exact test/consumer
 evidence and remaining boundaries. Private draft [PR55](https://github.com/Murathanx12/Aegis-Finance/pull/55)
 contains the isolated implementation. This runtime has received a pickup pointer
 only; code and operational acceptance remain separate.
+
+The [carrier readout](beta_v2/carrier_r6.md) now supersedes the initial R6 source
+handoff: A3 has combined source acceptance. The first actual local read-only
+attempt has an independently audited scheduler refusal; a separately reviewed
+follow-up completed and passed the actual same-package zero-SQL audit. Read the
+exact latest operation receipt before any new attempt; neither consumed
+review/nonce may be reused. No financial operation is authorized by this result.
+The [delivery record](beta_v2/DELIVERY.md) also records the bounded research
+successor and CI process-isolation fix. Neither is full V2 release acceptance.

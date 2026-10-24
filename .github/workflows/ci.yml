@@ -56,7 +56,24 @@ jobs:
         # pre-registration cannot spend money against it.
         env:
           AEGIS_IIF1_PREREG_ABSENT_OK: "1"
-        run: python -m pytest backend/tests/ -m "not slow" -q -rf -p pytest_github_actions_annotate_failures
+        # Replay's production cap reads PROCESS-LIFETIME peak RSS (ru_maxrss).
+        # Collecting/running the full suite in that same process can exhaust it
+        # before these tiny fixtures begin. Use fresh interpreters, not a cap
+        # override or -k filtering (which still imports the whole collection).
+        # Run every partition even after a failure; any failure keeps CI red.
+        run: |
+          status=0
+          for test_module in \
+            backend/tests/test_beta_v1_consumers.py \
+            backend/tests/test_beta_v1_replay.py
+          do
+            python -m pytest "$test_module" -m "not slow" -q -rf -p pytest_github_actions_annotate_failures || status=1
+          done
+          python -m pytest backend/tests/ \
+            --ignore=backend/tests/test_beta_v1_consumers.py \
+            --ignore=backend/tests/test_beta_v1_replay.py \
+            -m "not slow" -q -rf -p pytest_github_actions_annotate_failures || status=1
+          exit "$status"
 
   frontend:
     name: frontend (next build)

@@ -47,8 +47,10 @@ test suite cannot substitute for the latter. Use exact receipt hashes and clocks
 not checkout modification time. All historical legacy subchunks remain in
 `legacy_crosswalk.json`; unresolved mappings are visible rather than retired.
 
-Current sequencing: R6 is the next engineering implementation after parser
-repairs. Existing-data readiness/design proceeds in parallel; a broad actual
+Current sequencing: the R6-A3 source findings are closed; its actual operating
+frontier is recorded in [the carrier readout](carrier_r6.md), preserving all
+refusals and separate review requirements. Existing-data readiness/design has
+bounded consumer receipts in [the delivery record](DELIVERY.md); a broad actual
 C09 batch follows its own input and instrument qualification. Slices are advisory
 planning records and cannot claim completion independently of validated parent
 acceptance. This sequencing does not reduce the broad-research objective.

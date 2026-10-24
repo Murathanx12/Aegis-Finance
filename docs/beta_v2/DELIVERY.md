@@ -27,7 +27,10 @@ preserving temporal-type and named-date priorities. Four independently repeated
 tests cover eight process hash seeds, both schema orders and priority rules.
 This makes footer selection deterministic, not a qualified point-in-time clock.
 Existing cached rows are not invalidated. Earlier research receipts retain their
-original adapter fingerprint; current-source qualification requires a successor.
+original adapter fingerprint. The actual successor refused the old resume and
+recomputed matching metadata/diagnostics for fresh qualification and resume:
+`research/catalogue-stable-20261024T184855Z-readback.json`. Each pass sampled six
+64-row prefixes; all 21 proposed arms remain blocked and unqualified.
 Review: `data_catalog/INDEPENDENT_REVIEW.md` in the private evidence root.
 
 An explicit reviewed C01 context successor now binds the current registry and
@@ -49,18 +52,31 @@ scans; complete outputs match the preserved candidate. Existing consumers do
 not yet supply those targets: this does not repair stale prices operationally.
 No fetch, cache write, regrade or runtime installation occurred.
 
-R6 carrier engineering remains a separate [source-only package](carrier_r6.md).
-The first freeze failed independent review on resource binding and
-proof/identity/type validation. It remains preserved and inactive. The R6-A1
-successor is frozen with 204 fixture tests passing and independent review pending.
-No actual calibration or financial operation has been authorized by a test pass.
+R6 carrier engineering remains a separate [private package](carrier_r6.md).
+The earlier freezes failed independent review and remain preserved. R6-A3 passed
+combined source review with 351 fixture tests. A separately reviewed actual local
+read-only invocation refused at `SCHEDULED_RESOURCE_COLLISION`, before calibration
+completion or the financial boundary. Independent actual audit confirms cleanup;
+it does not qualify calibration or financial operation. The offending task was
+not recorded. A fresh, separately reviewed follow-up completed all four local
+read-only layers. Independent actual audit returned
+`PASS_ACTUAL_SAME_PACKAGE_READONLY_ZERO_SQL`; its exact audit hash and resource
+measurements are in the carrier readout. This is local read-only qualification,
+not financial authority or full C07 acceptance.
 
 The first full GitHub run passed the frontend and 15,573 backend tests, but failed
 two health assertions unchanged from the base branch. The test-only fixes cover
 fresh/stale/unknown clocks and intentional failure-proof redaction; production
 services remain unchanged. They passed 103 focused tests, independent review and
-six independently repeated cases. The corrected code is pushed; full CI remains
-pending and the draft is not reported as merge-ready.
+six independently repeated cases. The next full run passed 15,641 tests but
+refused 23 replay cases on process-lifetime peak RSS. The replay code/cap and
+tests match the base; logs do not distinguish collection imports from earlier
+allocations. The reviewed workflow now gives each capped module a fresh
+interpreter, then runs the remainder. All 788 test files partition exactly once;
+every partition still runs and any failure keeps CI red. Narrow checks passed
+64 tests and independent review. Hosted CI is a separate gate; use the exact-head
+[PR checks](https://github.com/Murathanx12/Aegis-Finance/pull/55/checks) for its
+current result. No merge or production activation is included in this checkpoint.
 
 Fresh service readback retained deployed `16f57156`, all 12 expected jobs and
 Oct23 NAV freshness. The IC degradation is now diagnosed precisely: the funnel
