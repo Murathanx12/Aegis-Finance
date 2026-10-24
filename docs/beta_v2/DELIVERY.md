@@ -22,12 +22,19 @@ Private review receipts:
 - `reviews/C06_C12_FIX_REVIEW.md`
 - `reviews/RESEARCH_RQ1_FIX_REVIEW.md`
 
-The research adapter does not yet promise byte-identical footer summaries:
-the existing catalogue inspector has an equal-priority date-column tie that can
-select `first_bar` or `asof_session`. Explicit clock diagnostics, contracts,
-admission decisions and arm counts reproduced; footer metadata is not public
-availability evidence. Track the deterministic tie-break in C05 rather than
-promoting a footer into a qualified clock.
+The catalogue inspector now resolves equal-priority date columns by exact name,
+preserving temporal-type and named-date priorities. Four independently repeated
+tests cover eight process hash seeds, both schema orders and priority rules.
+This makes footer selection deterministic, not a qualified point-in-time clock.
+Existing cached rows are not invalidated. Earlier research receipts retain their
+original adapter fingerprint; current-source qualification requires a successor.
+Review: `data_catalog/INDEPENDENT_REVIEW.md` in the private evidence root.
+
+An explicit reviewed C01 context successor now binds the current registry and
+renderer, retaining the old packet and refusal history. The actual receipt shows
+those two changed sources and five unchanged sources reobserved. Runtime status
+remains unknown and activation unauthorized. Receipt:
+`c01_context_reviewed_successor_receipt.json`.
 
 The runtime received only a new pickup pointer and a byte-preserving index
 insertion. Its earlier index bytes were archived and verified intact. No new
@@ -42,14 +49,18 @@ scans; complete outputs match the preserved candidate. Existing consumers do
 not yet supply those targets: this does not repair stale prices operationally.
 No fetch, cache write, regrade or runtime installation occurred.
 
-R6 carrier engineering remains a separate source-only package. The first freeze
-failed independent review on resource binding and proof/identity/type validation.
-It remains preserved and inactive while a successor is built and reviewed.
+R6 carrier engineering remains a separate [source-only package](carrier_r6.md).
+The first freeze failed independent review on resource binding and
+proof/identity/type validation. It remains preserved and inactive. The R6-A1
+successor is frozen with 204 fixture tests passing and independent review pending.
 No actual calibration or financial operation has been authorized by a test pass.
 
 The first full GitHub run passed the frontend and 15,573 backend tests, but failed
-two existing health assertions. Those failures are being isolated and repaired;
-the draft is not merge-ready and CI is not reported as green.
+two health assertions unchanged from the base branch. The test-only fixes cover
+fresh/stale/unknown clocks and intentional failure-proof redaction; production
+services remain unchanged. They passed 103 focused tests, independent review and
+six independently repeated cases. The corrected code is pushed; full CI remains
+pending and the draft is not reported as merge-ready.
 
 Fresh service readback retained deployed `16f57156`, all 12 expected jobs and
 Oct23 NAV freshness. The IC degradation is now diagnosed precisely: the funnel
