@@ -109,12 +109,14 @@ weight and three have zero; all 247 originals have positive saved market weight.
 The corrected parser preserves those observations while refusing impossible
 clocks, incomplete horizon sets and premature or malformed maturity labels.
 
-Optimus ingestion saved eight source-linked notes plus their index under
+Initial Optimus ingestion saved eight source-linked notes plus their index under
 `aegis-beta-v2-owner-20261025`. Exact MCP page readback succeeded for
 `aegis-beta-v2-owner-20261025-beta-v2-owner-20261025-context-population-registry`.
 Broad ranking remains imperfect; use that exact page ID or the local pickup.
 The new project slug is not registered in Optimus's finance-domain mapping; no
 shared MCP process or global ranking behavior was changed in this build.
+The final refresh contains 12 source-linked notes plus the project index,
+including delivery, owner readout, price diagnostics and audited calibration.
 
 ## Delivered build checkpoint
 
