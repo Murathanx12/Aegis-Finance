@@ -123,6 +123,18 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           gap rather than quietly excused, because the whole point of this
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
+    "backend.services.funnel_eligibility_staging": (
+        "DEVELOPMENT/INACTIVE -- private original stage-1 arithmetic and sampling "
+        "over verified full-domain price inputs, checked against the original "
+        "mocked-provider path. No production funnel, acquisition, enrichment, "
+        "ranking or promotion consumer is wired; the Beta V2 roadmap owns that gap."
+    ),
+    "backend.services.funnel_price_bridge": (
+        "DEVELOPMENT/INACTIVE -- pure private C02 artifact and declared-history "
+        "verifier with original Close/Volume export. Offline fixtures exercise "
+        "it; no production funnel, provider, ranking or promotion consumer is wired. "
+        "The Beta V2 roadmap retains the full-domain refresh and consumer gap."
+    ),
     "backend.services.issuer_ir_probability_v0": (
         "DEVELOPMENT/INACTIVE -- pure prospective measurement preview under "
         "MEASUREMENT_ASML_IR_CURRENT_1.md, exercised by offline fixtures only. "

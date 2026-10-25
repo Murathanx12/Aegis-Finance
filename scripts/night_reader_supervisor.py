@@ -126,15 +126,18 @@ READER_CMDLINE = "'scripts[.](dowjones_pull|reader_pool)'"
 
 
 def pool_cmd_text(*, until: str, profile: str = "muratclaw", py: str | None = None,
-                  day: str | None = None) -> str:
+                  day: str | None = None, max_tabs: int | None = None) -> str:
     """PURE. The launcher for the pool: same python, stdin and log shape as the
     queue launcher, so `queue_logs` and `classify_exit` read it the same way."""
+    from scripts.beta_v2_reader_tab_limit import supervisor_limit
+    tabs = supervisor_limit(max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6),
+                            preferred=getattr(_config, "READER_POOL_MAX_TABS", 2))
     day = day or datetime.now().strftime("%Y-%m-%d")
     log = f"backend\\data\\optimus\\dowjones\\reader_pool_{day}.log"
     deadline = "" if until == "continuous" else f"--until {until} "
     return ("@echo off\n"
             f"cd /d {REPO}\n"
-            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} {deadline}"
+            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} --max-tabs {tabs} {deadline}"
             f"< backend\\data\\optimus\\empty_stdin.txt >> {log} 2>> {log}.err\n")
 
 
@@ -1154,7 +1157,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--probe", action="store_true", help="print one dependency probe and exit")
     ap.add_argument("--repair-once", action="store_true",
                     help="probe, repair if faulted (bounded), print, exit")
+    ap.add_argument("--max-tabs", type=int, default=None, help="reader tab ceiling, at most configured max")
     a = ap.parse_args(argv)
+    from scripts.beta_v2_reader_tab_limit import supervisor_limit
+    try:
+        a.max_tabs = supervisor_limit(a.max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6),
+                                      preferred=getattr(_config, "READER_POOL_MAX_TABS", 2))
+    except ValueError as exc:
+        ap.error(str(exc))
     if a.probe:
         print(json.dumps(GR.probe(), indent=1, default=str))
         return 0
@@ -1173,7 +1183,7 @@ def main(argv: list[str] | None = None) -> int:
     # the candidate set, oldest-read names first, rebuilt when it is exhausted
     if a.pool:
         a.rolling = False
-        GR_atomic_text(POOL_CMD, pool_cmd_text(until=a.until))
+        GR_atomic_text(POOL_CMD, pool_cmd_text(until=a.until, max_tabs=a.max_tabs))
         log(event="pool_mode", cmd=str(POOL_CMD))
     rq = rolling_queue(template) if a.rolling else None
     queue_cmd = POOL_CMD if a.pool else (rq["cmd"] if rq else template)

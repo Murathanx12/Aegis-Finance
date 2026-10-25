@@ -1952,6 +1952,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--front-links", type=int, default=None,
                     help="article links taken per front (default config READER_FRONT_LINKS_MAX)")
     a = ap.parse_args(argv)
+    from scripts.beta_v2_reader_tab_limit import tab_limit
+    try:
+        a.max_tabs = tab_limit(a.max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6))
+    except ValueError as exc:
+        ap.error(str(exc))
     hand = Path(getattr(_config, "DOWJONES_HANDOFF_FILE", REPO / "HANDOFF_PC"))
     if not a.handoff or not hand.exists():
         print(f"REFUSED_NO_HANDOFF: the pool needs --handoff AND {hand} (Murat's act).")
@@ -1979,7 +1984,7 @@ def main(argv: list[str] | None = None) -> int:
         if not a.tickers:
             names = list(dict.fromkeys(names + sorted(books)))
         fronts = parse_fronts(a.fronts) if a.fronts else (None if not a.trial else [])
-        gov = RS.TabGovernor(max_tabs=a.max_tabs or int(getattr(_config, "READER_MAX_TABS", 6)))
+        gov = RS.TabGovernor(max_tabs=a.max_tabs)
         thr = WR.Throttle(WR.throttle_path(), wait_on_hour_cap=True, per_host_mode=True)
         pool = Pool(driver=OC, throttle=thr, profile=a.profile, names=names, books=books,
                     fresh=fresh_names(_now()), fronts=fronts, social=not a.no_social,

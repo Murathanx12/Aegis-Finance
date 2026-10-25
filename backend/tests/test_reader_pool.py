@@ -695,11 +695,13 @@ class _FB(FakeBrowser):
 
 
 @pytest.fixture
-def real(monkeypatch):
+def real(monkeypatch, tmp_path):
     proofs: list = []
     monkeypatch.setattr(OC, "_PROVER", lambda **k: proofs.append(k) or {"ok": True})
     monkeypatch.setattr(OC, "attached_to", lambda **k: {"pid": 1})
     monkeypatch.setattr(OC, "_topology_lock", lambda: __import__("contextlib").nullcontext())
+    monkeypatch.setattr(OC, "_paper_scope_lock",
+                        lambda: DG.file_lock(tmp_path / "fixture_paper_scope.lock", timeout_s=0))
     fb = _FB()
     OC.invalidate_profile_cache()
     OC._SNAPSHOTS.clear()
@@ -734,7 +736,8 @@ def test_no_guard_was_removed_per_action_on_the_pool_path(real, ledger):
     pool.process(it, 0)
     got = Counter(OC.cli_ledger()["guards"])
     acts = Counter(real.actions)
-    assert acts["open"] == 1 and acts["close"] == 1 and acts["evaluate"] == 2
+    assert acts["open"] == 1 and acts["close"] == 1 and acts["evaluate"] == 2, (
+        pool.errors, pool.stop_reason, pool.stats, pool.robots_refused)
     # each action alone, on a fresh tab of the same Chrome
     per = {}
     per["open"] = _guards_of(lambda: per.setdefault("tab", OC.open_tab(
@@ -777,7 +780,9 @@ def test_the_reading_report_counts_what_was_read(ledger):
 def test_the_supervisor_launches_the_pool_and_finds_its_pid_by_command_line():
     from scripts import night_reader_supervisor as S
     txt = S.pool_cmd_text(until="08:00", py="python.exe", day=NOW.date().isoformat())
-    assert "-m scripts.reader_pool --handoff --profile muratclaw --until 08:00" in txt
+    assert "-m scripts.reader_pool --handoff --profile muratclaw --max-tabs 2 --until 08:00" in txt
+    explicit = S.pool_cmd_text(until="continuous", max_tabs=6, py="python.exe")
+    assert "--max-tabs 6" in explicit and "--until" not in explicit
     assert ">> backend\\data\\optimus\\dowjones\\reader_pool_" in txt
     assert "reader_pool" in S.READER_CMDLINE and "dowjones_pull" in S.READER_CMDLINE
     assert S.decide(kind="QUEUE_DONE", probe={"healthy": True}, restarts=0, since_launch_s=None,

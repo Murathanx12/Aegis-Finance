@@ -202,6 +202,52 @@ def _case_global_price_admission():
             "price admission without staged OHLCV, receipt, targets or owner context")
 
 
+def _case_funnel_eligibility_staging():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_eligibility_staging as eligibility
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing eligibility inputs reached file I/O"))
+        launch = Mock(side_effect=AssertionError("missing eligibility inputs launched a worker"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch("subprocess.Popen", launch)):
+                return eligibility.stage_original_eligibility(manifest={}, artifacts={})
+        finally:
+            assert file_access.call_count == 0, "missing eligibility inputs reached file I/O"
+            assert launch.call_count == 0, "missing eligibility inputs launched a worker"
+
+    return (call, eligibility.EligibilityRefused,
+            "original eligibility without admitted domain, price artifacts or calendar manifest")
+
+
+def _case_funnel_price_bridge():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_price_bridge as bridge
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing bridge manifest reached file I/O"))
+        launch = Mock(side_effect=AssertionError("missing bridge manifest launched a worker"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch("subprocess.Popen", launch)):
+                return bridge.validate_manifest({})
+        finally:
+            assert file_access.call_count == 0, "missing bridge manifest reached file I/O"
+            assert launch.call_count == 0, "missing bridge manifest launched a worker"
+
+    return (call, bridge.PriceBridgeRefused,
+            "price bridge without an explicit admitted domain, source or calendar manifest")
+
+
 def _case_funnel_acquisition():
     from unittest.mock import Mock, patch
 
@@ -1964,6 +2010,8 @@ def _case_issuer_ir_probability_v0():
 
 
 CASES = {
+    "funnel_eligibility_staging": _case_funnel_eligibility_staging,
+    "funnel_price_bridge": _case_funnel_price_bridge,
     "global_price_admission": _case_global_price_admission,
     "funnel_acquisition": _case_funnel_acquisition,
     "funnel_staging": _case_funnel_staging,

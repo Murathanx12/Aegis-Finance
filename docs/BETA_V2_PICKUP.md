@@ -2,7 +2,14 @@
 
 Pickup key: `beta-v2-owner-20261025-context-population-registry`.
 
-Latest continuation: [build batch 3](beta_v2/BUILD_BATCH3.md). The actual bounded
+Latest continuation: [build batch 4](beta_v2/BUILD_BATCH4.md). The reviewed native
+reader now runs max/target2 through the existing clean scheduled action, with
+all192saved carry entries accepted and its original task settings preserved.
+PM radar now reads the canonical funnel and its actual generation clock; the
+native receipt correctly remains STALE. WRDS background waves and the original
+funnel input/eligibility seams continue under separate source/consumer reviews.
+
+Prior continuation: [build batch 3](beta_v2/BUILD_BATCH3.md). The actual bounded
 five-constituent fetch and append repaired the missing October23 global marks;
 the source-bound native projection is76fresh/0unknown/MARKS_READY. All185342old
 cache rows are retained and the private grader remains separately pinned, with
