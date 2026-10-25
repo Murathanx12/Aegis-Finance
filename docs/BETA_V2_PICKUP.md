@@ -2,13 +2,13 @@
 
 Pickup key: `beta-v2-owner-20261025-context-population-registry`.
 
-Latest continuation: [build batch 5](beta_v2/BUILD_BATCH5.md). The native two-tab
-window exposed a same-process scope-lock defect. Its reviewed client fix is now
-installed; the reader is stopped with fully accounted carry while exact owned
-orphan cleanup and a clean observation are qualified. The existing18:15scheduled
-owner graded all247frozen books successfully throughOctober23 without changing
-NAV/history. WRDS has31completed source days; more history remains in scope.
-
+Latest continuation: [build batch 5](beta_v2/BUILD_BATCH5.md). The native reader
+restart accepted all 72 carry entries. A 600-second / 40-snapshot observation showed
+two owned tabs, 26 completed front reads, zero scope-lock errors and zero orphans.
+New article bodies remain 0; a separate queue fairness slice is in source-only
+review. The existing 18:15 scheduled owner graded all 247 frozen books through Oct 23,
+with NAV/history preserved. WRDS has 49 verified source creation-days and 10,697
+headers / 487,235 components; current remaining-family work is catalogue-first.
 Prior continuation: [build batch 4](beta_v2/BUILD_BATCH4.md). The reviewed native
 reader now runs max/target2 through the existing clean scheduled action, with
 all192saved carry entries accepted and its original task settings preserved.
