@@ -179,6 +179,36 @@ def _case_charter():
 
 
 
+def _case_funnel_staging():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_staging as staging
+
+    def call():
+        provider = Mock(side_effect=AssertionError("provider must not be called"))
+        writer = Mock(side_effect=AssertionError("writer must not be called"))
+        file_access = Mock(side_effect=AssertionError("file I/O must not be called"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch.object(staging, "write_price_coverage", writer)):
+                return staging.collect_price_coverage(
+                    universe={}, provider=provider,
+                    limits=staging.Limits(batch_size=1, max_logical_calls=1,
+                                          max_batches=1, max_symbols=1),
+                    start_date="2026-10-22", end_date="2026-10-23", min_rows=2)
+        finally:
+            # A caught provider error converted to CoverageRefused cannot mask a call.
+            assert provider.call_count == 0, "missing universe reached provider"
+            assert writer.call_count == 0, "missing universe reached writer"
+            assert file_access.call_count == 0, "missing universe reached file I/O"
+
+    return (call, staging.CoverageRefused,
+            "price coverage with no admitted universe or provenance")
+
+
 def _case_investment_committee():
     import json, tempfile
     from pathlib import Path as _P
@@ -1888,6 +1918,7 @@ def _case_issuer_ir_probability_v0():
 
 
 CASES = {
+    "funnel_staging": _case_funnel_staging,
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
     "pc_sleeves": _case_pc_sleeves,
