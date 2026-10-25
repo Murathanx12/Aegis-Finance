@@ -2,6 +2,15 @@
 
 Pickup key: `beta-v2-owner-20261025-context-population-registry`.
 
+Latest continuation: [build batch 3](beta_v2/BUILD_BATCH3.md). The actual bounded
+five-constituent fetch and append repaired the missing October23 global marks;
+the source-bound native projection is76fresh/0unknown/MARKS_READY. All185342old
+cache rows are retained and the private grader remains separately pinned, with
+scheduled advancement pending. Current owner priority is the hardcoded one-tab
+launcher/setup repair and background incremental WRDS collection. Direct WRDS
+read-only access and actual CIQ transcript SELECTs are verified; follow its dated
+private manifests rather than assuming the source is current through today.
+
 The owner adopted Beta V2 on 25 October 2026. The canonical task registry is
 [`beta_v2/registry.json`](beta_v2/registry.json); its generated owner roadmap is
 [`AEGIS_BETA_V2_ROADMAP.md`](AEGIS_BETA_V2_ROADMAP.md). This supersedes the V1

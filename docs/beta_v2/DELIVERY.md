@@ -98,3 +98,22 @@ next adoption work. The first final hosted run passed 15,668 backend tests and
 51 subtests plus frontend build at `4f59e6e3`; the second batch's own final GitHub
 result must be read for its new commit. Neither run substitutes for production
 or private-writer adoption.
+
+## Continued agent implementation and actual price repair
+
+[Build batch 3](BUILD_BATCH3.md) records the independently reviewed 76-instrument
+calendar policy, contained acquisition worker, append-only admission and private
+owner cockpit. The actual five-constituent fetch completed with 12 transfer
+entries; exactly five missing October23 rows were then appended with all185342
+prior rows preserved. The source-bound native projection now reports76fresh,
+zero unknown and MARKS_READY. This is not a completed scheduled grade or full
+market funnel refresh. Original book entries, pull markers and paper NAV remain
+protected; two local source modules were adopted separately from Git/deployment.
+
+The owner subsequently prioritized the single-tab issue and setups and authorized
+background WRDS downloads using existing local login storage. Investigation found
+the running reader's launcher explicitly caps it at one despite configured six;
+it is healthy and budget-waiting, not a dead process. That source/setup repair
+and incremental entitled WRDS collection continue as separate packets. The
+source feed's observed transcript high-water is October11, so an empty October23
+query is retained as an explicit empty partition, not acquisition completion.

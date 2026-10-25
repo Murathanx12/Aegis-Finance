@@ -414,22 +414,22 @@ def test_default_reviewed_identity_policy_is_exact():
     def load(mic):
         calls.append(mic)
         return Calendar(15)
-    proof = child.completed_session_targets(requested, S, NOW, calendar_loader=load)
-    assert child.REVIEWED_US_LISTINGS == {"SPY"}
+    proof = child.completed_session_targets(requested, S, NOW + timedelta(days=2), calendar_loader=load)
     assert proof["required_sessions"]["SPY"] == S.isoformat()
     assert proof["symbols"]["SPY"]["calendar"] == "XNYS"
     assert {s: proof["symbols"][s]["calendar"] for s in FIVE} == {
         "EVO.ST": "XSTO", "SAAB-B.ST": "XSTO", "HAG.DE": "XETR", "RHM.DE": "XETR", "KOG.OL": "XOSL"}
-    for symbol in ("UNREVIEWED", "OTHER.ST", "2330.TW", "ASML", "NVDA"):
+    for symbol in ("UNREVIEWED", "OTHER.ST"):
         assert proof["required_sessions"][symbol] is None
-    assert sorted(calls) == ["XETR", "XNYS", "XOSL", "XSTO"]
+    for symbol in ("2330.TW", "ASML", "NVDA"):
+        assert proof["required_sessions"][symbol] == S.isoformat()
+    assert set(calls) == {"XASX", "XETR", "XKRX", "XNYS", "XOSL", "XSTO", "XTAI", "XTKS"}
 
 
-def test_default_consumer_refuses_unproven_us_panel_identity(consumer):
+def test_default_consumer_requires_complete_frozen_identity_binding(consumer):
     result = consumer.run(listing_calendars=None)
     assert_wait(consumer, result)
-    assert result["reasons"]["NVDA"]["target"] == "UNKNOWN_LISTING_IDENTITY"
-    assert result["freshness_diagnostic"]["n_unknown_target"] == 1
+    assert result["reason"] == "FROZEN_IDENTITY_SET_MISMATCH"
 
 
 @pytest.mark.parametrize("field,value", [
@@ -516,17 +516,19 @@ def test_r1_equivalent_aware_offsets_preserve_success(consumer):
 
 
 def test_r1_adapter_cannot_promote_unreviewed_default_identity(consumer):
-    def adapter(*args, **kwargs):
-        proof = child.completed_session_targets(*args, **kwargs)
-        forged = dict(proof["symbols"]["SPY"], symbol="NVDA", listing_identity="NVDA")
-        proof["symbols"]["NVDA"] = forged
-        proof["required_sessions"]["NVDA"] = S.isoformat()
-        return proof
-    consumer.allow_writer()
-    result = consumer.run(listing_calendars=None, target_adapter=adapter)
-    assert_wait(consumer, result)
-    assert set(result["completion_proof_validation"]["errors"]) == {"NVDA"}
-    assert result["freshness_diagnostic"]["n_unknown_target"] == 1
+    # The expanded manifest admits NVDA; an unregistered exact key still cannot
+    # be promoted by an adapter label or by copying another instrument's proof.
+    names = NAMES | {"UNREVIEWED"}
+    now = NOW + timedelta(days=2)
+    reference = child.completed_session_targets(names, S, now, calendar_loader=consumer.calendars.__getitem__)
+    import copy
+    proof = copy.deepcopy(reference)
+    proof["symbols"]["UNREVIEWED"] = dict(proof["symbols"]["SPY"], symbol="UNREVIEWED", listing_identity="UNREVIEWED")
+    proof["required_sessions"]["UNREVIEWED"] = S.isoformat()
+    targets, errors = child.validate_completion_proofs(proof, reference, names, S, now)
+    assert targets["UNREVIEWED"] is None
+    assert "UNREVIEWED" in errors
+    consumer.writer.assert_not_called()
 
 
 @pytest.mark.parametrize("shape", ["not_object", "bad_targets", "bad_proofs", "bad_symbol_proof", "extra_symbol"])

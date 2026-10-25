@@ -5,16 +5,14 @@ import sys
 from datetime import date, datetime, timedelta, timezone
 
 
-# The original frozen consumer explicitly binds its SPY benchmark to XNYS.
-# Its saved US-panel membership is NOT listing authority for other names.
-# Additional US identities need reviewed witnesses before this exact set grows.
-# XNYS is the US session contract here, not a claim that SPY's venue is XNYS.
+# Legacy explicit fixture mappings remain available to injected callers. The
+# production default loads the pinned original247 manifest, never these as fallback.
 REVIEWED_US_LISTINGS = frozenset({"SPY"})
 REVIEWED_FOREIGN_CALENDARS = {
     "EVO.ST": "XSTO", "SAAB-B.ST": "XSTO", "HAG.DE": "XETR",
     "RHM.DE": "XETR", "KOG.OL": "XOSL",
 }
-LISTING_POLICY = "original247_completed_session/1"
+LISTING_POLICY = "original247_completed_session/2"
 
 
 def listing_calendar(mic):
@@ -32,22 +30,33 @@ def completed_session_targets(names, session, now, *, calendar_loader=None,
     import pandas as pd
 
     loader = calendar_loader or listing_calendar
-    identities = ({**dict.fromkeys(REVIEWED_US_LISTINGS, "XNYS"),
-                   **REVIEWED_FOREIGN_CALENDARS}
-                  if listing_calendars is None else dict(listing_calendars))
-    policy_sha = hashlib.sha256(json.dumps(identities, sort_keys=True,
-                                           separators=(",", ":")).encode()).hexdigest()
     observed = pd.Timestamp(now)
     if observed.tzinfo is None or pd.isna(observed):
         raise ValueError("completed-session observation must be timezone-qualified")
     observed = observed.tz_convert("UTC")
+    policy_receipt = None
+    policy_error = None
+    if listing_calendars is None:
+        from scripts import original247_listing_policy as OP
+        try:
+            policy = OP.load_policy(session=session, observed_at=observed.to_pydatetime(),
+                                    calendar_loader=loader)
+            identities, policy_receipt = policy["mapping"], policy["receipt"]
+        except OP.PolicyError as exc:
+            identities = {}
+            policy_error = str(exc)
+            policy_receipt = {"status": "INVALID", "reason": policy_error}
+    else:
+        identities = dict(listing_calendars)
+    policy_sha = hashlib.sha256(json.dumps(identities, sort_keys=True,
+                                           separators=(",", ":")).encode()).hexdigest()
     targets, proofs, calendars = {}, {}, {}
     for symbol in sorted(names):
         mic = identities.get(symbol)
         row = {"symbol": symbol, "listing_identity": symbol, "calendar": mic,
                "common_session": session.isoformat(), "required_session": None,
                "close_at": None, "eligible_at": None,
-               "status": "UNKNOWN_LISTING_IDENTITY"}
+               "status": "POLICY_UNAVAILABLE" if policy_error else "UNKNOWN_LISTING_IDENTITY"}
         targets[symbol] = None
         if mic:
             try:
@@ -72,8 +81,9 @@ def completed_session_targets(names, session, now, *, calendar_loader=None,
                 row.update(status="CALENDAR_UNAVAILABLE", error_type=type(exc).__name__)
         proofs[symbol] = row
     return {"policy": LISTING_POLICY, "listing_calendars_sha256": policy_sha,
-            "identity_authority": ("original SPY/XNYS contract + C10 explicit foreign-five mapping"
+            "identity_authority": ("pinned original247 frozen-instrument calendar policy"
                                    if listing_calendars is None else "injected reviewed identity mapping"),
+            "listing_policy_receipt": policy_receipt,
             "observed_at": observed.isoformat(), "common_session": session.isoformat(),
             "completion_lag_minutes": 90, "required_sessions": targets, "symbols": proofs}
 
@@ -95,7 +105,8 @@ def validate_completion_proofs(targets, reference, names, session, now):
     try:
         if not isinstance(targets, dict):
             raise ValueError("TARGET_PROOF_OBJECT_REQUIRED")
-        for key in ("policy", "listing_calendars_sha256", "identity_authority", "common_session"):
+        for key in ("policy", "listing_calendars_sha256", "identity_authority", "common_session",
+                    "listing_policy_receipt"):
             if key not in targets or targets[key] != reference[key]:
                 raise ValueError(f"TARGET_HEADER_MISMATCH:{key}")
         if (type(targets.get("completion_lag_minutes")) is not int or
@@ -284,6 +295,14 @@ def run_original(*, now=None, calendar_loader=None, listing_calendars=None,
     if existing is not None:
         return {"action": "ALREADY_GRADED", "session": session.isoformat(),
                 "grade_receipt": str(existing), "n_books": 247}
+    if listing_calendars is None:
+        from scripts import original247_listing_policy as OP
+        try:
+            OP.load_policy(session=session, observed_at=now, calendar_loader=loader,
+                           exact_symbols=names)
+        except OP.PolicyError as exc:
+            return {"action": "WAIT_CONSTITUENT_MARKS", "session": session.isoformat(),
+                    "reason": str(exc), "listing_policy_status": "INVALID"}
     price_paths = (LB.SOURCE_ROOT / "prices_2025_26" / "bars.parquet",
                    LB.SOURCE_ROOT / "llm_portfolio" / "global_bars.parquet")
     if any(not p.exists() or p.stat().st_mtime <= close.timestamp() for p in price_paths):

@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
 
 import pandas as pd
+from filelock import FileLock
 
 from backend import config as _config
 
@@ -241,7 +242,7 @@ def freshness_diagnostic(bars: pd.DataFrame, tickers: Iterable[str], *,
             "symbols": rows}
 
 
-def ensure(tickers: Iterable[str], *, start: Any,
+def _ensure_locked(tickers: Iterable[str], *, start: Any,
            path: Optional[Path] = None, today: Optional[date] = None,
            downloader: Optional[Downloader] = None,
            write_receipt: bool = True,
@@ -353,6 +354,38 @@ def ensure(tickers: Iterable[str], *, start: Any,
             logger.warning("global_prices: receipt not written (%s)", exc)
     out.attrs["receipt"] = receipt
     return out
+
+
+def cache_lock(path: Path, *, timeout: float = 60):
+    """Cooperative serialization only; legacy imported writers need owner closure."""
+    return FileLock(str(Path(path).resolve()) + ".lock", timeout=timeout)
+
+
+def ensure(tickers: Iterable[str], *, start: Any,
+           path: Optional[Path] = None, today: Optional[date] = None,
+           downloader: Optional[Downloader] = None,
+           write_receipt: bool = True,
+           required_session: RequiredSession = None) -> pd.DataFrame:
+    """Existing daily-fetch contract, serialized with staged cache admission.
+
+    Fetch cutoff, once-daily markers, append semantics, returned rows and receipt
+    shape are unchanged. Invalid target arguments still refuse before file I/O.
+    """
+    p = Path(path) if path else cache_path()
+    today = today or datetime.now(timezone.utc).date()
+    want = sorted({str(t).strip().upper() for t in tickers if str(t).strip()} - {"CASH"})
+    _required_targets(want, required_session)
+    pd.Timestamp(start)  # preserve invalid-start refusal before any I/O
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with cache_lock(p):
+        return _ensure_locked(want, start=start, path=p, today=today, downloader=downloader,
+                              write_receipt=write_receipt, required_session=required_session)
+
+
+def prepare_staged_admission(staged=None, **kwargs):
+    """Read-only preparation entry; actual publish is a separate explicit API."""
+    from backend.services.global_price_admission import prepare_admission
+    return prepare_admission(staged, **kwargs)
 
 
 def resolve(tickers: Iterable[str], *, path: Optional[Path] = None,

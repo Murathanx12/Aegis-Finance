@@ -24,11 +24,18 @@ not its own independent reviewer. Requested model routing is recorded, but a
 spawn request alone does not independently prove the served model. Keep packets
 narrow and source-linked; checkpoint each result, failure and exact next action.
 
-The next requested agent round is [build batch 2](BUILD_BATCH2.md): Cicero built
+The preceding agent round is [build batch 2](BUILD_BATCH2.md): Cicero built
 the C02 price-coverage staging slice, Mendel built the C10 original-consumer
 calendar/freshness slice, and Dewey independently reviewed both. Parent task
 statuses remain open; listing-map qualification, actual acquisition and owned
 consumer adoption retain their separate evidence requirements.
+
+The active continuation is [build batch 3](BUILD_BATCH3.md): full frozen-instrument
+calendar classification, bounded private acquisition and staged append-only
+global-price admission. The reviewed native check resolved 76 targets with 71
+fresh and five stale; source builds do not publish those missing marks. The
+coordinator continues actual qualification and integration while the independent
+reviewer checks each builder's fixed package.
 
 ## Remaining owner-dependent inputs
 

@@ -179,6 +179,52 @@ def _case_charter():
 
 
 
+def _case_global_price_admission():
+    from unittest.mock import Mock, patch
+
+    from backend.services import global_price_admission as admission
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing admission reached file I/O"))
+        publish = Mock(side_effect=AssertionError("missing admission published prices"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch.object(admission, "publish_admission", publish)):
+                return admission.prepare_admission()
+        finally:
+            assert file_access.call_count == 0, "missing admission reached file I/O"
+            assert publish.call_count == 0, "missing admission published prices"
+
+    return (call, admission.AdmissionError,
+            "price admission without staged OHLCV, receipt, targets or owner context")
+
+
+def _case_funnel_acquisition():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_acquisition as acquisition
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing plan reached file I/O"))
+        launch = Mock(side_effect=AssertionError("missing plan launched a worker"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch("subprocess.Popen", launch)):
+                return acquisition.validate_request({}, finnhub_key=None)
+        finally:
+            assert file_access.call_count == 0, "missing plan reached file I/O"
+            assert launch.call_count == 0, "missing plan launched a worker"
+
+    return (call, acquisition.AcquisitionRefused,
+            "acquisition with no explicit domain, source, entitlement or limits")
+
+
 def _case_funnel_staging():
     from unittest.mock import Mock, patch
 
@@ -1918,6 +1964,8 @@ def _case_issuer_ir_probability_v0():
 
 
 CASES = {
+    "global_price_admission": _case_global_price_admission,
+    "funnel_acquisition": _case_funnel_acquisition,
     "funnel_staging": _case_funnel_staging,
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
