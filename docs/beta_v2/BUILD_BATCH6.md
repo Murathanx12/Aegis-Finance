@@ -1,5 +1,46 @@
 # Beta V2 build batch 6: native fairness adoption and private evidence
 
+Current source and evidence update, 25 October 2026 at 15:53 UTC.
+The source branch now includes the cross-host front-burst correction. It counts
+actual dequeues under the existing pool lock and allows an article to break a
+front burst only when the unchanged scheduler places that article in its original
+ready, minimum-in-flight winning group. It preserves the key tuple, readiness,
+non-front ordering, pacing and quotas; it promises no elapsed time or body yield.
+Independent source/portable review passed, followed by actual build-checkout
+102 tests and 26 subtests, plus 154 guard/reachability tests. Native adoption of
+this global correction is still pending. The existing native per-host reader
+continues; its separate 900-second window and one article are described below.
+
+Original full local CI finished with 41 failures and 16,201 passes. Its log is
+retained. Independent triage identified 37 mocked-browser tests contending with
+the real shared paper lock and four public-mode assertions observing personal
+mode. A test-only fixture now redirects only the exact paper-lock path in four
+mocked test modules, retaining the real lock implementation and unrelated paths.
+Actual checkout verification passed 306 tests with three skips, including all
+41 original failure nodes. Child test processes explicitly set public mode and
+dotenv opt-out. This targeted closure is not a fresh full-suite PASS.
+Hosted runs for 41ef5c4b and 3808c4ff never started either job: annotations report
+payment failure OR an Actions spending-limit condition. No account settings or
+manual reruns were changed. The older c598 hosted PASS is dated source evidence.
+
+WRDS January-August 2025 now has 32 completed private IBES table partitions:
+2,370,282 raw table rows and 1,272,979,903 typed-file bytes. Each month has its own
+independent all-row hash/column/OID/date/count and owner-closure checks. These are
+raw partial historical records, not unique entities, PIT qualification or current
+coverage. August contributed 328,992 rows and 173,967,676 bytes; its owner and
+worker exited, connection closed and exclusive lock was released. Further fixed
+months require separate reviewed packets within the existing bounded window.
+Licensed rows, stored article text and operational receipts remain outside Git.
+
+The one-article copied-file auditor also passed independent source review and
+an actual private frozen-file consistency audit. The claim pointer is null and
+all downstream event/forecast/position consumption remains UNKNOWN. This proves
+consistency of the supplied copies; it does not prove native authenticity, text
+quality, publisher completeness or inference. Full C04 and Beta acceptance remain
+open. Draft PR55 is unmerged and undeployed; NAV/history and the IIF task remain
+protected. Earlier pending statements below are dated history.
+
+
 Latest snapshot after the completed follow-up and independent article review.
 The separate900.221594-second window retained59 hash-bound snapshots:52 with
 two open tabs and7 with one; page starts18 to34, zero reader errors/orphans and
