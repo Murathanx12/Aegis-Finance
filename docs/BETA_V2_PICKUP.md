@@ -2,7 +2,14 @@
 
 Pickup key: `beta-v2-owner-20261025-context-population-registry`.
 
-Latest continuation: [build batch 4](beta_v2/BUILD_BATCH4.md). The reviewed native
+Latest continuation: [build batch 5](beta_v2/BUILD_BATCH5.md). The native two-tab
+window exposed a same-process scope-lock defect. Its reviewed client fix is now
+installed; the reader is stopped with fully accounted carry while exact owned
+orphan cleanup and a clean observation are qualified. The existing18:15scheduled
+owner graded all247frozen books successfully throughOctober23 without changing
+NAV/history. WRDS has31completed source days; more history remains in scope.
+
+Prior continuation: [build batch 4](beta_v2/BUILD_BATCH4.md). The reviewed native
 reader now runs max/target2 through the existing clean scheduled action, with
 all192saved carry entries accepted and its original task settings preserved.
 PM radar now reads the canonical funnel and its actual generation clock; the
