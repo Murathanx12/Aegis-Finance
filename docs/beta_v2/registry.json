@@ -153,7 +153,7 @@
         "sheet": "Roadmap",
         "row": 9
       },
-      "status": "proposed",
+      "status": "in-progress",
       "dependencies": [
         "C02"
       ],
@@ -164,7 +164,7 @@
           "description": "Material event captured, interpreted and delivered to affected positions without duplicate processing"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Reviewed reader limits and scope-lock repair adopted locally; qualify the exact native two-tab window and stored bodies, then trace interpretation and affected-position delivery. See docs/beta_v2/BUILD_BATCH5.md; parent acceptance remains open.",
       "legacy_aliases": [
         "V1:B06",
         "V1:B07"
@@ -6043,12 +6043,12 @@
     {
       "id": "C05b",
       "parent": "C05",
-      "scope": "authenticated entitlement discovery and missing partition acquisition",
+      "scope": "authenticated entitlement discovery and missing partition acquisition; direct read-only access verified, private dated coverage remains partial",
       "depends_on": [
         "C05a"
       ],
       "owner_gate": "WRDS MFA if required",
-      "status": "proposed"
+      "status": "in-progress"
     },
     {
       "id": "C09a",
@@ -6097,6 +6097,24 @@
         "C10",
         "C13",
         "C15a"
+      ],
+      "status": "proposed"
+    },
+    {
+      "id": "C04a",
+      "parent": "C04",
+      "scope": "qualify native two-tab reader ownership, carry continuity, contention-free progress and actual stored article bodies",
+      "depends_on": [
+        "C02"
+      ],
+      "status": "in-progress"
+    },
+    {
+      "id": "C04b",
+      "parent": "C04",
+      "scope": "join native article IDs and stored text hashes to interpretation and affected-position delivery without duplicate processing",
+      "depends_on": [
+        "C04a"
       ],
       "status": "proposed"
     }

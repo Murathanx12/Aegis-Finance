@@ -12,7 +12,7 @@ Source rows refer to the archived owner workbook. Blank evidence and legacy alia
 | C01 | One roadmap and safe workspace | in-progress | Builder + coordinator | C00 | R009, R010, R011, R012, R013, R014, R015, R016 | Roadmap row 6 |
 | C02 | Repair live service connections | in-progress | Operations builder | C00 | R017, R018, R019, R020, R021, R022, R023, R024 | Roadmap row 7 |
 | C03 | Persistent agent and Telegram control | proposed | Integration builder | C00, C01 | R025, R026, R027, R028, R029, R030, R031, R032, R033 | Roadmap row 8 |
-| C04 | News acquisition and interpretation | proposed | Data + investigator | C02 | R034, R035, R036, R037, R038, R039, R040, R041, R042, R043 | Roadmap row 9 |
+| C04 | News acquisition and interpretation | in-progress | Data + investigator | C02 | R034, R035, R036, R037, R038, R039, R040, R041, R042, R043 | Roadmap row 9 |
 | C05 | WRDS and existing-data use | in-progress | Data engineer | C00, C01 | R044, R045, R046, R047, R048, R049, R050, R051 | Roadmap row 10 |
 | C06 | ATLAS universe and task graph | in-progress | Data engineer + coordinator | C00, C01 | R052, R053, R054, R055, R056, R057, R058, R059, R060, R061 | Roadmap row 11 |
 | C07 | Dynamic decisions and paper lifecycle | proposed | Portfolio builder | C02, C04, C06 | R062, R063, R064, R065, R066, R067, R068, R069, R070, R071 | Roadmap row 12 |
@@ -82,7 +82,7 @@ Acceptance: Material event captured, interpreted and delivered to affected posit
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Reviewed reader limits and scope-lock repair adopted locally; qualify the exact native two-tab window and stored bodies, then trace interpretation and affected-position delivery. See docs/beta_v2/BUILD_BATCH5.md; parent acceptance remains open.
 
 Legacy aliases: V1:B06, V1:B07
 
