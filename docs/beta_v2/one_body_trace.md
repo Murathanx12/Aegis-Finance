@@ -6,10 +6,22 @@ Pure validate_bundle(manifest_raw, body_raw, status_raw, manifest_sha256=...) pe
 
 The CLI accepts --manifest, --manifest-sha256 and --output-dir. Its fixed private recovery-evidence root can only be narrowed by the Python API; it cannot be replaced by a repository or another directory. No root override is exposed by CLI. Body <=16MiB; status/manifest <=1MiB each. It reads the three supplied files, validates, rereads all three for bytes/file-identity stability, then exclusively creates a NEW output directory and TRACE.json. Existing outputs refuse; no truncation/fallback or native locator read exists. Input bounds and integrity reread accounting are not RSS/wall/HTTP caps.
 
-Unsupported hosts without that approved private root should refuse. Normal portable tests must not create or override the PC's authority root, monkeypatch Path.resolve/scope predicates, or treat a synthetic filesystem admission as native authorization. The portable tests exercise pure byte validation, controlled CLI projection/refusal and zero-effect outside-root/default refusal. CLI projection stubs do not qualify filesystem authority or successful real auditing. Existing separately reviewed native synthetic I/O/actual frozen-file receipts remain separate evidence; Windows execution is not a POSIX runtime qualification.
+Unsupported hosts without that approved private root should refuse. Normal portable tests must not create or override the PC's authority root, change path resolution or scope predicates to admit unauthorized paths, or treat a synthetic filesystem admission as native authorization. Negative tests may replace filesystem methods with traps solely to verify refusal before I/O. The portable tests exercise pure byte validation, controlled CLI projection/refusal and zero-effect outside-root/default refusal. CLI projection stubs do not qualify filesystem authority or successful real auditing. Existing separately reviewed native synthetic I/O/actual frozen-file receipts remain separate evidence; Windows execution is not a POSIX runtime qualification.
 
 COPIED_BODY_FILE_CONSISTENT/VERIFIED_COPY_BYTES mean only coordinator-supplied frozen-file consistency. They do not authenticate native origin, publisher text quality/completeness, current-reader status or eligibility. Publication/first-seen remain declared metadata; witness observation is a separate clock; storage_completion_utc stays null.
 
 A null claim pointer yields ROW_LOCATOR_REQUIRED/UNKNOWN. A supplied pointer stays DECLARED_NOT_READ with zero bytes read; its row digest is declared and any prefix digest remains DECLARED_UPSTREAM_REFERENCE. actual_consumed_ids stays null and typed/event/forecast/position edges remain UNKNOWN. Report contains hashes/counts/IDs/clocks/locators/statuses only, never body/title/raw URL or external error strings. No semantic claim, hypothesis, causation or financial action is produced.
 
 The scripts guard case is directly exercised through backend.tests.guard_contract.assert_refuses_missing_input in test_beta_v2_one_body_trace.py, with content/writer/network/SQLite/subprocess counters asserted zero outside collector/helper exception handling. The services discovery/CLASSIFIED registries do not enumerate scripts; do not add a fake backend-service key or NOT_INPUT_GUARDS exemption. A future move into services would need normal service CASE/classification enrollment then.
+
+Path preflight now rejects requests outside the fixed private root, including
+UNC paths and a requested subroot's siblings, before resolving or inspecting
+them. This covers root, manifest, output, body-copy and status-copy paths;
+physical containment checks remain. The focused Windows tests exercise those
+refusals without touching the named outside paths. A separate private replay
+on the same previously accepted copied inputs produced the original TRACE
+bytes exactly. That replay reads copied body evidence; it opens no native
+body, claim or downstream record and adds no consumption qualification.
+Private filesystem fixtures and archived-source AST checks remain in their
+separate qualification packet. Public regression tests add only refusal cases
+that assert zero filesystem effects on the named outside paths.

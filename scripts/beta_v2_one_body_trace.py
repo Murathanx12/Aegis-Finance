@@ -229,9 +229,24 @@ def validate_bundle(manifest_raw, body_raw, status_raw, *, manifest_sha256):
     }
 
 
+def _lexical_private(value, root=PRIVATE_ROOT):
+    """Pure fixed-E/subroot check before any path resolution or metadata lookup."""
+    locator(value)
+    locator(str(root))
+    fixed = ntpath.normcase(ntpath.normpath(str(PRIVATE_ROOT)))
+    base = ntpath.normcase(ntpath.normpath(str(root)))
+    target = ntpath.normcase(ntpath.normpath(value))
+    try:
+        inside = ntpath.commonpath((fixed, base)) == fixed and ntpath.commonpath((base, target)) == base
+    except ValueError:
+        inside = False
+    require(inside, "outside_private_root")
+    return value
+
+
 def private_path(value, root):
     try:
-        path = Path(value).resolve(strict=True)
+        path = Path(_lexical_private(value, root)).resolve(strict=True)
         require(path.is_relative_to(root), "outside_private_root")
         require(path.is_file(), "regular_file_required")
         return path
@@ -261,6 +276,9 @@ def audit_to_private(manifest_path, manifest_sha256, output_dir, *, private_root
         locator(str(private_root))
         locator(manifest_path)
         locator(output_dir)
+        _lexical_private(str(private_root))
+        _lexical_private(manifest_path, private_root)
+        _lexical_private(output_dir, private_root)
         root = Path(private_root).resolve(strict=True)
         require(root.is_relative_to(PRIVATE_ROOT.resolve(strict=True)), "outside_private_root")
         require(root.is_dir(), "private_root_required")
