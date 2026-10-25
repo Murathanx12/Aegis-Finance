@@ -86,3 +86,15 @@ The suggested opportunity-funnel runner performs real acquisition and cache
 writes; no blind rebuild or truncated-universe snapshot was published to make
 health green. C02 retains a bounded full-coverage refresh and actual IC consumer
 readback as a separate next task. Receipt: `live-service-final-observation.json`.
+
+## Second agent build round
+
+The owner requested the next builds on October25. [Build batch 2](BUILD_BATCH2.md)
+records the C02 price-coverage staging API and C10 original-consumer
+completed-session integration, separate builders and independent frozen-source
+PASS verdicts. It preserves the C10 proof-validation defect and corrected
+reproductions, actual read-only native preflights, listing-witness gaps and exact
+next adoption work. The first final hosted run passed 15,668 backend tests and
+51 subtests plus frontend build at `4f59e6e3`; the second batch's own final GitHub
+result must be read for its new commit. Neither run substitutes for production
+or private-writer adoption.

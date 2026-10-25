@@ -24,6 +24,12 @@ not its own independent reviewer. Requested model routing is recorded, but a
 spawn request alone does not independently prove the served model. Keep packets
 narrow and source-linked; checkpoint each result, failure and exact next action.
 
+The next requested agent round is [build batch 2](BUILD_BATCH2.md): Cicero built
+the C02 price-coverage staging slice, Mendel built the C10 original-consumer
+calendar/freshness slice, and Dewey independently reviewed both. Parent task
+statuses remain open; listing-map qualification, actual acquisition and owned
+consumer adoption retain their separate evidence requirements.
+
 ## Remaining owner-dependent inputs
 
 - The supplied `AEGIS REVIEWS.txt` has only a heading. Latest substantive raw

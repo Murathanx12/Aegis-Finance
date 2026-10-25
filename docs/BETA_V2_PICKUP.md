@@ -115,7 +115,7 @@ Initial Optimus ingestion saved eight source-linked notes plus their index under
 Broad ranking remains imperfect; use that exact page ID or the local pickup.
 The new project slug is not registered in Optimus's finance-domain mapping; no
 shared MCP process or global ranking behavior was changed in this build.
-The final refresh contains 12 source-linked notes plus the project index,
+The first build's final refresh contains 12 source-linked notes plus the project index,
 including delivery, owner readout, price diagnostics and audited calibration.
 
 ## Delivered build checkpoint
@@ -133,3 +133,12 @@ exact latest operation receipt before any new attempt; neither consumed
 review/nonce may be reused. No financial operation is authorized by this result.
 The [delivery record](beta_v2/DELIVERY.md) also records the bounded research
 successor and CI process-isolation fix. Neither is full V2 release acceptance.
+
+## Next agent build: 25 October
+
+[Build batch 2](beta_v2/BUILD_BATCH2.md) adds reviewed C02 price-coverage staging
+and C10 completed-session validation in the original247 consumer. Its independent
+review, corrected completion-proof defect, native readbacks and remaining listing
+authority are recorded there. Source acceptance remains separate from the actual
+funnel refresh and private writer adoption. The existing Optimus project notes
+channel also retains this batch's source-linked pickup.
