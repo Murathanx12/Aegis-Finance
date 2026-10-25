@@ -654,6 +654,34 @@ def _has_reasoning_only(response) -> bool:
         return False
 
 
+def _budget_refusal_metadata(error=None, *, gate=None) -> dict:
+    """Controlled diagnostics only; never retain an exception's raw text."""
+    if type(gate) is str and gate in ("production_gate", "billing_breaker"):
+        return {"budget_reason_code": gate, "no_wire": True}
+    reason = "unknown_budget_refusal"
+    no_wire = None
+    try:
+        if getattr(error, "no_wire", None) is True:
+            no_wire = True
+            message = str(error)
+            reasons = {
+                "price authority requires official HTTPS DeepSeek endpoint": "endpoint_authority",
+                "unpriced request model or invalid output bound": "request_contract",
+                "unsupported non-text request": "request_contract",
+                "only two plain text messages are reservation-qualified": "request_contract",
+                "shared envelope absent/unreadable; explicit initialization required":
+                    "shared_envelope_unavailable",
+                "shared incremental dollar cap would be exceeded": "shared_incremental_cap",
+                "shared production daily call cap": "shared_production_cap",
+            }
+            reason = reasons.get(message, reason)
+            if message.startswith("shared envelope blocked: "):
+                reason = "shared_envelope_blocked"
+    except Exception:
+        pass  # Diagnostic classification must not change the existing refusal.
+    return {"budget_reason_code": reason, "no_wire": no_wire}
+
+
 def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                purpose: str, max_tokens: int | None = None,
                validate=None, ensure_reason: str | None = None,
@@ -733,9 +761,11 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
         if production_budget:
             if not _acquire_call_budget():
                 return {**out, "model": model, "status": "BUDGET_REFUSED",
+                        **_budget_refusal_metadata(gate="production_gate"),
                         "error": "daily call cap or billing breaker"}
         elif time.time() < _spend_state["breaker_until"]:
             return {**out, "model": model, "status": "BUDGET_REFUSED",
+                    **_budget_refusal_metadata(gate="billing_breaker"),
                     "error": "billing breaker"}
     elif provider == "nvidia":
         model, client = _nvidia_model(), _get_nvidia_client()

@@ -901,6 +901,12 @@ class Meter:
     """Sums the per-call price `call_named` returns. A call it cannot price is
     charged at the dearest DeepSeek list price for its tokens (never $0)."""
 
+    _BUDGET_REASON_CODES = frozenset({
+        "production_gate", "billing_breaker", "endpoint_authority", "request_contract",
+        "shared_envelope_unavailable", "shared_envelope_blocked", "shared_incremental_cap",
+        "shared_production_cap", "unknown_budget_refusal",
+    })
+
     def __init__(self, budget_usd: float, *, llm: Optional[Callable[..., dict]] = None):
         # no declared budget, no paid call: a NaN budget compared False against
         # every spend and would never have refused (guard contract, 2026-09-29)
@@ -917,6 +923,8 @@ class Meter:
         self.unpriced = 0
         self.models: Counter = Counter()
         self.statuses: Counter = Counter()
+        self.budget_refusal_reasons: Counter = Counter()
+        self.budget_refusal_no_wire: Counter = Counter()
         self.by_stage: Counter = Counter()
         self._lock = threading.Lock()
         self._llm = llm
@@ -956,6 +964,14 @@ class Meter:
             self.spent += float(cost)
             self.by_stage[stage] += float(cost)
             self.statuses[str(res.get("status"))] += 1
+            if res.get("status") == "BUDGET_REFUSED":
+                reason = res.get("budget_reason_code")
+                if type(reason) is not str or reason not in self._BUDGET_REASON_CODES:
+                    reason = "unknown_budget_refusal"
+                self.budget_refusal_reasons[reason] += 1
+                no_wire = res.get("no_wire")
+                wire_bucket = "true" if no_wire is True else "false" if no_wire is False else "unknown"
+                self.budget_refusal_no_wire[wire_bucket] += 1
             if res.get("served_model") or res.get("model"):
                 self.models[str(res.get("served_model") or res.get("model"))] += 1
             if not res.get("ok"):
@@ -966,6 +982,8 @@ class Meter:
         return {"budget_usd": self.budget, "spent_usd": round(self.spent, 5),
                 "calls": self.calls, "failed": self.failed, "unpriced_calls": self.unpriced,
                 "served_models": dict(self.models), "statuses": dict(self.statuses),
+                "budget_refusal_reasons": dict(self.budget_refusal_reasons),
+                "budget_refusal_no_wire": dict(self.budget_refusal_no_wire),
                 "by_stage_usd": {k: round(v, 5) for k, v in self.by_stage.items()}}
 
 
