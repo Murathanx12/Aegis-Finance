@@ -1,5 +1,56 @@
 # Beta V2 owner programme - current pickup
 
+## Latest follow-up and article readback - 25 October 2026
+
+The900.221594-second follow-up is independently qualified:59 snapshots,
+52 two-open/7 one-open, page starts18 to34, zero reader errors/orphans,
+two still open. Fifteen completion clocks lie inside the window:11 fronts,
+3 robots,1 article;14 OK and1 BLANK front. The32 receipt timings are cumulative.
+One new article's14,245 file bytes/5,915 text characters/hash/source/item/gen joins
+passed; first sampled witness13:59:16Z. It is not an initial100 carry item.
+Stored first_seen metadata is not storage completion. No text-quality,
+interpretation or position-consumption claim follows. Both observers are closed;
+the same native reader remains active with the two-tab bound.
+
+January-April IBES now has16 completed private partitions:1,190,196 raw table rows,
+644,211,660 typed-file bytes, all four monthly coordinator streaming audits PASS.
+May is preparation only. Counts are raw, not distinct entities/PIT/current data.
+A cross-host continuous-front limitation is source-proven; the proposed global
+burst correction is a separate private candidate, not adopted source or runtime.
+See [batch6](beta_v2/BUILD_BATCH6.md) and newer private receipts. Earlier pending
+follow-up/download statements below are dated history.
+
+## Newest pickup — 25 October 2026, batch6 refreshed
+
+Latest continuation: [build batch6](beta_v2/BUILD_BATCH6.md). Old100-entry carry
+70cb… and natural exit21:12 are independently joined; native fairness5534455/
+helper31c638 installed21:20, then one clean Task launch21:23. Pool89828/gen90382c…
+accepted all100/ACCOUNTED. Independently reviewed600.068447s:
+**QUALIFIED_PROGRESS_BODY_OPEN**;40 snapshots/37two3one/pages2→12/10 completed
+fronts allOK/zero reader errors,orphans,bodies/two still open. Six checkout-frame
+observations are not extra completions,bodies or transactions. Separate900s
+follow-up/session16525 is running and **NOT ACCEPTED**.
+
+Sampled23-process broker count is zero and Python/cmd dotenv flags true, but seven
+Chrome flags are absent; cause unproved. Strict all-descendant assertion remains
+**NOT PASSED**; future children unobserved. Earlier B5 zero-body window and later
+12 article+2 stock_text/3 duplicate-front witnesses remain separate captures.
+Transcript49-day coverage and Jan–Mar IBES868,166 raw rows/471,632,455 bytes are
+private; all three monthly coordinator readbacks PASS, not unique/PIT. April is
+preparation only, not launched.
+
+Budget observability remains source-qualified/inactive, without adoption/unblock.
+41ef5c4b hosted CI40198323984 is **UNQUALIFIED**: neither job started because of
+a payment-or-spending-limit account gate; alternative unresolved, no billing
+change/retry. Prior c598 hosted PASS is older-source evidence. Draft PR55 remains
+unmerged/undeployed; NAV/history protected.
+
+Earlier pickup text is preserved below as dated history; its older “latest”
+labels and pending statements are not this newest snapshot.
+
+---
+
+
 Pickup key: `beta-v2-owner-20261025-context-population-registry`.
 
 Latest continuation: [build batch 5](beta_v2/BUILD_BATCH5.md). The native reader
