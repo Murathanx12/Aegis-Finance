@@ -31,3 +31,24 @@ def next_front_streak(previous: int, item: dict) -> int:
     if item.get("kind") in FRONT_KINDS:
         return min(FRONT_DISPATCH_CAP, previous + 1)
     return 0
+
+
+def global_front_key(
+    by_host, streak, *, choose, key, free_slots, blocked, free_at, now, in_flight
+):
+    """Local ordering only; let the unchanged chooser decide article eligibility."""
+    if streak < FRONT_DISPATCH_CAP:
+        return key
+
+    def article(item):
+        return item.get("kind") == "article" and bool(item.get("parent_url"))
+
+    # The chooser retains its original ready band and minimum in-flight group.
+    # No original priority evaluation or candidate-map mutation is needed here.
+    probe = choose(
+        by_host, free_slots=free_slots, blocked=blocked, free_at=free_at, now=now,
+        in_flight=in_flight, key=lambda item: (not article(item),),
+    )
+    if probe is None or not article(probe):
+        return key
+    return lambda item: (item.get("kind") in FRONT_KINDS, *key(item))

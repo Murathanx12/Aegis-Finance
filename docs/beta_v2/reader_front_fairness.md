@@ -31,3 +31,33 @@ This is an isolated source build. The native pool differs from the worktree;
 adoption requires the exact preimage-bound minimal delta and independent review,
 then the coordinator's separate runtime transition. No whole-file replacement
 from the worktree is qualified by these tests.
+
+
+## Conditional global front burst
+
+The global dequeue counter also saturates at two for front/front_text and resets
+on every nonfront dispatch, under the same Pool lock. At the cap, a pure probe
+uses the unchanged RS.choose with an article-first key and the exact existing
+candidate map, blocked/free-slot/readiness/clock/in-flight inputs. It activates
+only if an already discovered, budget-admitted article is in that chooser's
+winning five-second-ready and minimum-in-flight group. It never deletes global
+fronts or rebuilds readiness. Without such an article, the original key is used
+and fronts continue without added idle.
+
+When activated, a local front flag prefixes the original key for that final
+choose call. Pool._key stays its original tuple; all nonfront kinds retain
+their original relative order. Robots/search may still precede articles. This
+counts dispatch grants, including later failures; it does not promise FIFO,
+body success, publisher completeness, a deadline or any native performance.
+Continuous eligible nonfront work and articles outside the winning group remain
+outside this front-only ordering rule. Restart resets the counter.
+
+Portable synthetic tests use the actual helper, Pool.take AST and unchanged
+RS.choose from repository paths. The real-thread negative control has THREE
+hosts: after B's first front, article host A and another front host D both have
+zero in-flight. With only the global rule disabled the second dispatch is D's
+front; with it enabled the second is A's article. A two-host case alone cannot
+prove this effect because ordinary in-flight precedence may favor A. Additional
+tests preserve five-second boundaries, blocked/slots/budget holds, item identity,
+nonfront ordering and exception-before-dequeue behavior. These fixtures do not
+qualify runtime adoption or real article yield.

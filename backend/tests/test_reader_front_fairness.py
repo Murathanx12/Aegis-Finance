@@ -40,6 +40,7 @@ def pool(items, *, streak=0, budget_filter=None):
     p.gov = SimpleNamespace(target=2, may_open=lambda n: n < 2)
     p.pending = list(items)
     p.front_dispatch_streak = Counter({HOST: streak})
+    p.global_front_dispatch_streak = 0
     p.inflight = Counter()
     p.per_host = {HOST: 2, "barrons.com": 2}
     p.thr = SimpleNamespace(_rows=lambda: [], global_gap_s=(1.0, 1.0))

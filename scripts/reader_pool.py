@@ -308,6 +308,7 @@ class Pool:
         self.queued: set[str] = set()
         self.inflight: Counter = Counter()
         self.front_dispatch_streak: Counter = Counter()
+        self.global_front_dispatch_streak = 0
         self.open_tabs: dict[str, str] = {}
         #: every tab id this process opened (newest last, capped): a tab left
         #: open by a stop or a failed close is still the READER's, so the
@@ -597,14 +598,20 @@ class Pool:
                 if not by_host:
                     return None
             by_host = RF.filter_front_streaks(by_host, self.front_dispatch_streak)
+            dispatch_key = RF.global_front_key(
+                by_host, self.global_front_dispatch_streak, choose=RS.choose, key=self._key,
+                free_slots=free, blocked=blocked, free_at=free_at, now=now,
+                in_flight=dict(self.inflight))
             it = RS.choose(by_host, free_slots=free, blocked=blocked,
-                           free_at=free_at, now=now, key=self._key,
+                           free_at=free_at, now=now, key=dispatch_key,
                            in_flight=dict(self.inflight))
             if it is None:
                 return None
             self.pending.remove(it)
             self.front_dispatch_streak[it["host"]] = RF.next_front_streak(
                 self.front_dispatch_streak[it["host"]], it)
+            self.global_front_dispatch_streak = RF.next_front_streak(
+                self.global_front_dispatch_streak, it)
             self.inflight[it["host"]] += 1
             lane = it.get("blane") or RS.budget_lane(it, books=self.books, fresh=self.fresh)
             it["blane"] = lane
