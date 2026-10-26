@@ -103,6 +103,9 @@ _replies carry buttons; a research button waits for your Approve tap_
 *System*
 `/status` sim + model server (receipts)
 `/system` broker, sim, model server, ranker
+`/codex task <text>` prepare an owner-only task (disabled until configured)
+`/codex submit <task-id> <nonce>` confirm and submit once; `/codex status <task-id>`
+`/codex resume <task-id>` read native progress without repeating work
 `/help` this
 
 _This bot answers only this chat. It never places an order and never approves
@@ -458,6 +461,12 @@ HANDLERS = {
     **{c: _reply_cmd(c) for c in ("stock", "news", "report", "digest", "analyze", "queue")},
 }
 
+# Fixed handler on the existing consumer. This does not create an OpenClaw
+# channel, another Telegram poller, or a second Codex daemon.
+from scripts.beta_v2_codex_bridge import (telegram_command as cmd_codex, automation_tick as codex_tick,
+                                        Refused as CodexBridgeRefused, NativeError as CodexBridgeNativeError)
+HANDLERS["codex"] = cmd_codex
+
 
 _DAILY_DONE: dict[str, str] = {}
 
@@ -744,6 +753,17 @@ def main(argv=None) -> int:
             logger.exception("poll failed")
             state, err = "failed", f"{type(exc).__name__}: {str(exc)[:200]}"
             time.sleep(10)
+        try:
+            result = codex_tick()
+            if result:
+                logger.info("codex owner task state=%s delivery=%s", result.get("state"),
+                            result.get("delivery_state", "not_delivered"))
+        except (CodexBridgeRefused, CodexBridgeNativeError) as exc:
+            logger.warning("codex owner queue held: %s", str(exc))
+        except Exception as exc:
+            # Fixed bridge exceptions contain no task text, nonce or identity.
+            # A bridge failure must not take down the existing Telegram owner.
+            logger.warning("codex owner queue check held (%s)", type(exc).__name__)
         loops += 1
         try:
             beat(loops=loops, last_poll=state, error=err)

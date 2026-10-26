@@ -217,6 +217,30 @@ def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
     return out
 
 
+def send_owner_once(text: str, *, tag: str = "codex-result", expected_owner: str | None = None) -> dict:
+    """Single bounded owner result, no parse-mode or ambiguous transport retry.
+
+    The caller checkpoints SENDING before this call and records unknown delivery
+    on any exception. Existing briefing/message formatting behavior is unchanged.
+    """
+    target = owner_chat_id()
+    if not target or not target.isdecimal():
+        raise TelegramRefused("NUMERIC_PRIVATE_OWNER_REQUIRED")
+    if expected_owner is not None and target != str(expected_owner):
+        raise TelegramRefused("OWNER_CHANGED_BEFORE_RESULT_DELIVERY")
+    text = redact(text)
+    if len(text) > MAX_LEN:
+        raise TelegramRefused("SINGLE_RESULT_MESSAGE_TOO_LONG")
+    result = _call("sendMessage", {"chat_id": target, "text": text,
+                   "disable_web_page_preview": True})
+    if (not isinstance(result, dict) or not result.get("message_id")
+            or str((result.get("chat") or {}).get("id")) != target):
+        raise TelegramRefused("OWNER_DELIVERY_ACK_UNVERIFIED")
+    _append(OUTBOX_PATH, {"t": _now(), "tag": tag, "chat": "owner",
+                          "chars": len(text), "state": "SENT"})
+    return {"state": "SENT", "messages": 1}
+
+
 #: Sends that are the phone's front page: the probes' DEAD/STALE rows go FIRST.
 BRIEF_TAGS = ("brief", "cmd:brief")
 
@@ -447,7 +471,11 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
         msg = u.get("message") or {}
         cid = str((msg.get("chat") or {}).get("id"))
         text = (msg.get("text") or "").strip()
-        row = {"t": _now(), "chat_id": cid, "text": text[:400],
+        # Keep the raw command for the authenticated handler, but never persist
+        # a Codex confirmation nonce in the inherited inbox (including strangers).
+        logged_text = ("/codex submit [REDACTED]" if re.match(
+            r"^/codex(?:@\w+)?\s+submit(?:\s|$)", text, re.IGNORECASE) else text[:400])
+        row = {"t": _now(), "chat_id": cid, "text": logged_text,
                "from": (msg.get("from") or {}).get("username")}
         if not owner or cid != owner:
             row["refused"] = "not the owner chat" if owner else "no owner configured"
