@@ -1,7 +1,7 @@
 """C0: receipts that can go red.
 
-Dates derive from `date.today()` (protocol item 5): a fixture pinned to a
-calendar moment fails the day after it passes.
+Most fixtures derive from `date.today()` (protocol item 5). Historical UTC
+calendar-boundary regressions pass an explicit `today`, independent of run date.
 """
 
 from __future__ import annotations
@@ -60,6 +60,31 @@ def test_only_the_tail_is_read_and_still_sees_the_newest_row(tmp_path):
     r = ac.forecast_accrual(p, today=today, tail_bytes=4096)
     assert r["status"] == "ok"
     assert r["rows_by_day"] == {today.isoformat(): 1}
+
+
+def test_monday_window_excludes_friday_without_assessing_cadence(tmp_path):
+    # Historical boundary: Monday Oct 26 excludes Friday Oct 23 at the cutoff.
+    p, today = _write(tmp_path, [3], today=date(2026, 10, 26))
+    r = ac.forecast_accrual(p, today=today, window_days=3)
+    assert r["status"] == "DEGRADED"
+    assert r["rows_by_day"] == {}
+    assert r["last_new_row_utc"] == "2026-10-23T12:00:00Z"
+    assert "UTC calendar day(s)" in r["reason"]
+    assert "cutoff 2026-10-23 excluded" in r["reason"]
+    assert "expected cadence not assessed" in r["reason"]
+    assert "stopped accruing" not in r["reason"]
+
+
+def test_observed_sunday_row_counts_in_monday_utc_window(tmp_path):
+    # An observed Sunday row is counted; this adds no weekend expectation rule.
+    p, today = _write(tmp_path, [3, 1], today=date(2026, 10, 26))
+    r = ac.forecast_accrual(p, today=today, window_days=3)
+    assert r["status"] == "ok"
+    assert r["rows_by_day"] == {"2026-10-25": 1}
+    assert r["last_new_row_utc"] == "2026-10-25T12:00:00Z"
+    assert "1 new row(s) observed" in r["reason"]
+    assert "UTC calendar day(s)" in r["reason"]
+    assert "expected cadence not assessed" in r["reason"]
 
 
 def test_stuck_counter():

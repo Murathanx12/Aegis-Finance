@@ -83,10 +83,12 @@ def _parse_day(v: Any) -> date | None:
 def forecast_accrual(ledger_path: Path, *, today: date,
                      window_days: int = 3,
                      tail_bytes: int = TAIL_BYTES) -> dict:
-    """Did the forecast ledger gain rows in the last `window_days` UTC days?
+    """Count observed rows in a UTC calendar-day window, without assessing cadence.
 
-    `ok` needs at least one row whose `made_at` falls in the window.
-    `DEGRADED` is a readable ledger with none. `UNKNOWN` is a ledger that is
+    Included `made_at` UTC dates satisfy `today - window_days < date <= today`:
+    the lower cutoff date is excluded and today's UTC date is included.
+    `ok` needs at least one observed row in that window; `DEGRADED` means none.
+    Expected forecast cadence is not assessed. `UNKNOWN` is a ledger that is
     absent or carries no parseable `made_at` -- an undateable ledger is not a
     fresh one.
     """
@@ -140,11 +142,12 @@ def forecast_accrual(ledger_path: Path, *, today: date,
     n = sum(by_day.values())
     if n == 0:
         return {**base, "status": "DEGRADED",
-                "reason": (f"0 new rows in the last {window_days} day(s) "
-                           f"(newest made_at {last}); forecasts have stopped "
-                           f"accruing")}
+                "reason": (f"0 new rows observed in the last {window_days} UTC calendar day(s) "
+                           f"(cutoff {start.isoformat()} excluded; through {today.isoformat()} "
+                           f"inclusive; newest made_at {last}); expected cadence not assessed")}
     return {**base, "status": "ok",
-            "reason": f"{n} new row(s) in the last {window_days} day(s)"}
+            "reason": (f"{n} new row(s) observed in the last {window_days} UTC calendar day(s); "
+                       "expected cadence not assessed")}
 
 
 # ─────────────────────────────── collector liveness ─────────────────────────
