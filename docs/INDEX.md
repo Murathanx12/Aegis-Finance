@@ -1,5 +1,10 @@
 # docs/INDEX.md — what to read, in what order (2026-09-04)
 
+## Latest reviewed batch - 27 October 2026
+
+Read [the current pickup](BETA_V2_PICKUP.md), then [batch 7 results and next gates](beta_v2/BUILD_BATCH7.md). Approved Blackline form, actual synthetic completion, independently reproduced identity joins and inactive reader source candidates are distinguished there.
+
+
 Hundreds of markdown files live here; many are roadmaps or handoffs. A new session must
 NOT read them all. Tiers below; Optimus should embed TIER 2 and ARCHIVE for
 retrieval and load TIER 0 + the current TIER 1 verbatim.

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "as_of": "2026-10-25",
+  "as_of": "2026-10-27",
   "purpose": "Private planning; no activation or completion claim.",
   "archives": {
     "owner-workbook": {
@@ -10,6 +10,10 @@
     "owner-start": {
       "path": "C:/Users/mrthn/aegis-recovery-evidence/beta-v2-owner-20261025/sources/00_START_CODEX.md",
       "sha256": "685edc7987daa6ffe75bc8681005d7d2f2998efd1f87acbbe9c83d890cdfc008"
+    },
+    "owner-review-restored": {
+      "path": "C:/Users/mrthn/aegis-recovery-evidence/beta-v2-owner-20261025/review-restored-20261026/AEGIS_REVIEWS_RESTORED_SOURCE.txt",
+      "sha256": "4c9b14f56bfe2883639a97da505712aca2e0f5cd7c1ef5fd187e4812a0c32258"
     }
   },
   "integration": {
@@ -26,7 +30,9 @@
     "legacy_crosswalk": "docs/beta_v2/legacy_crosswalk.json",
     "slice_policy": "Workbook parent dependencies retained. Slices expose independent work; no slice result completes its parent or authorizes activation.",
     "delivery_record": "docs/beta_v2/DELIVERY.md",
-    "archive_inventory": "C:/Users/mrthn/aegis-recovery-evidence/beta-v2-owner-20261025/archive_inventory.json"
+    "archive_inventory": "C:/Users/mrthn/aegis-recovery-evidence/beta-v2-owner-20261025/archive_inventory.json",
+    "owner_review_reconciliation": "docs/beta_v2/OWNER_REVIEW_RECONCILIATION_2026-10-26.md",
+    "current_owner_quota_constraint": "Later direct instruction: stop before 20% weekly allowance remains; historical workbook R030 wording is not the current quota authority."
   },
   "tasks": [
     {
@@ -46,7 +52,7 @@
           "description": "A context receipt names latest sources, unresolved conflicts and actual working paths; no reset"
         }
       ],
-      "revisit": "Five supplied originals and full returned Consensus research archived; latest raw review TXT is heading-only. See DELIVERY.md; complete original context remains unresolved.",
+      "revisit": "Full owner assessment is preserved and reconciled. The dated Downloads archive has byte-verified copies and a context/date index; originals remain intact. The owner approved the delivered Blackline handbook form. Private-chat completeness and parent acceptance remain open.",
       "legacy_aliases": [
         "V1:B00"
       ],
@@ -104,7 +110,7 @@
           "description": "Producer output is read by the intended consumer and survives restart; intentional stops remain explicit"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Forecast-accrual wording now distinguishes observed UTC calendar-day counts from expected cadence. Independent source review passed; thresholds, statuses, counts and UNKNOWN behavior are unchanged. This isolated edit is not deployed. Production overdue forecasts and IC-funnel degradation remain unresolved.",
       "legacy_aliases": [
         "V1:B01",
         "V1:B09"
@@ -123,7 +129,7 @@
         "sheet": "Roadmap",
         "row": 8
       },
-      "status": "proposed",
+      "status": "in-progress",
       "dependencies": [
         "C00",
         "C01"
@@ -135,7 +141,7 @@
           "description": "A benign Telegram task returns evidence through the right thread, rejects impostors and resumes once"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Stored-thread readback independently ACTUAL PASS after repair-r5 SOURCE PASS (272 offline tests). The original benign synthetic fixture then reached COMPLETED through one reviewed same-instance observation/commit; independent actual review passed. No new model turn or Telegram delivery occurred. Real-owner ingress/delivery and runtime adoption remain open and coupled to C04 manifests.",
       "legacy_aliases": [
         "V1:B00"
       ],
@@ -164,7 +170,7 @@
           "description": "Material event captured, interpreted and delivered to affected positions without duplicate processing"
         }
       ],
-      "revisit": "Reviewed reader limits and scope-lock repair adopted locally; qualify the exact native two-tab window and stored bodies, then trace interpretation and affected-position delivery. See docs/beta_v2/BUILD_BATCH5.md; parent acceptance remains open.",
+      "revisit": "Prospective lifecycle checkpoint A independently SOURCE PASS (123 synthetic executions); the reproduced finalization/latch race is closed in isolated candidates. Active reader is unchanged. Authenticated startup/transport, protected native exit and installer/carry joins remain unqualified. No Watch/STOP/install/dispatch; the old generation still needs a separately established normal stopped boundary.",
       "legacy_aliases": [
         "V1:B06",
         "V1:B07"
@@ -195,7 +201,7 @@
           "description": "Downloaded partitions join existing identifiers, support a named test and are not fetched again"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Two actual identity diagnostics on the same 36,344 January2025 observations independently reproduce. Baseline:25,699 unique PERMNO/10,645 no link. Alternative existing map:33,125 unique/192 no link/3,027 unqualified. No redownload. The baseline manifest records universe filtering; smaller coverage alone is not failed acquisition. Resolve provenance and missing identifiers/interval ends before PIT or named research use; no parent completion.",
       "legacy_aliases": [
         "V1:B03"
       ],
@@ -404,7 +410,7 @@
           "description": "Same-case equal-budget comparisons identify quality/latency/cost; proposed skills remain separate from installed"
         }
       ],
-      "revisit": "Source-bound packet/resume contract reviewed, changed source refusal demonstrated. Exact Optimus pickup page works; broad ranking and persistent startup adoption remain unresolved.",
+      "revisit": "Existing Optimus and GitHub design retrieval works. Approved Blackline references and print/container checks are explicit in the existing workflow. No replacement MCP, paid provider or new configuration was needed for this batch. Broader model/retrieval acceptance remains open.",
       "legacy_aliases": [
         "V1:B06"
       ],
@@ -454,7 +460,7 @@
         "sheet": "Roadmap",
         "row": 19
       },
-      "status": "proposed",
+      "status": "in-progress",
       "dependencies": [
         "C01",
         "C02",
@@ -467,7 +473,7 @@
           "description": "Every shown metric has a clock/source; static diagrams cannot impersonate live telemetry"
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Owner approved the delivered 28-page Blackline handbook form. The private cockpit renderer now follows it; independent visual review and the exact keyboard-focus repair pass at desktop/mobile sizes. The view retains 146 requests,17 workstreams,28 hypotheses, source clocks and missing acceptance evidence. This is design/source acceptance, not a live operational cockpit or parent completion.",
       "legacy_aliases": [
         "V1:B09"
       ],
@@ -615,7 +621,7 @@
           "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Preserve available original files unchanged and index excerpts; distinguish user reasoning from assistant interpretations."
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Restored full review archived byte-identically and source reconciliation saved 2026-10-26. Historical owner statements, quoted assistant replies and unresolved names are separated. This does not certify all linked chats were recovered.",
       "legacy_aliases": [],
       "legacy_resolution": "inherited-unverified",
       "task_id": "C00",
@@ -1448,7 +1454,7 @@
           "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Latest owner permits available coding quota, superseding old reserve floor; no pointless loops to burn tokens."
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Current authority correction 2026-10-26: later direct user instruction retains 20% weekly allowance. Original workbook summary is preserved as historical intent; no new paid plan or pointless quota burn.",
       "legacy_aliases": [],
       "legacy_resolution": "inherited-unverified",
       "task_id": "C03",

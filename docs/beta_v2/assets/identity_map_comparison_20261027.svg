@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-labelledby="title desc">
+<title id="title">AEGIS: two identifier mappings on the same January 2025 observations</title>
+<desc id="desc">Baseline: 25,699 unique PERMNO, 10,645 no link. Alternative: 33,125 unique PERMNO, 3,027 unqualified, 192 no link. Same 36,344 observations including duplicates. This does not establish point-in-time eligibility.</desc>
+<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#fff"/><path d="M-1 1L1-1M0 7L7 0M6 8L8 6" stroke="#111" stroke-width="1"/></pattern></defs>
+<rect width="1120" height="660" fill="white"/>
+<g font-family="Arial,Helvetica,sans-serif" fill="#111">
+<path d="M56 49V30H79M1041 30H1064V49" fill="none" stroke="#111" stroke-width="3"/>
+<text x="56" y="72" font-family="Consolas,monospace" font-size="12" letter-spacing="2">AEGIS / DATA READINESS / 27 OCT 2026</text>
+<text x="56" y="121" font-size="39" font-weight="700" letter-spacing="-1">Two mappings. One fixed sample.</text>
+<text x="56" y="151" font-size="16">January 2025 IBES summary observations · same input · independently recomputed</text>
+<path d="M56 174H1064" stroke="#111" stroke-width="2"/>
+<text x="56" y="208" font-family="Consolas,monospace" font-size="13">BASELINE / 22,802 LINK ROWS</text>
+<rect x="56.00000" y="226" width="712.76117" height="44" fill="#111" stroke="#111" stroke-width="1"/>
+<rect x="768.76117" y="226" width="295.23883" height="44" fill="#ddd" stroke="#111" stroke-width="1"/>
+<text x="70" y="255" font-size="20" font-weight="700" fill="white">25,699</text>
+<text x="56" y="299" font-size="15">25,699 one unique PERMNO</text>
+<text x="445" y="299" font-size="15">0 unqualified</text>
+<text x="1064" y="299" text-anchor="end" font-size="15">10,645 no link</text>
+<text x="56" y="356" font-family="Consolas,monospace" font-size="13">ALTERNATIVE / 37,662 LINK ROWS</text>
+<rect x="56.00000" y="374" width="918.72111" height="44" fill="#111" stroke="#111" stroke-width="1"/>
+<rect x="974.72111" y="374" width="83.95378" height="44" fill="url(#hatch)" stroke="#111" stroke-width="1"/>
+<rect x="1058.67488" y="374" width="5.32512" height="44" fill="#ddd" stroke="#111" stroke-width="1"/>
+<text x="70" y="403" font-size="20" font-weight="700" fill="white">33,125</text>
+<text x="56" y="447" font-size="15">33,125 one unique PERMNO</text>
+<text x="445" y="447" font-size="15">3,027 unqualified</text>
+<text x="1064" y="447" text-anchor="end" font-size="15">192 no link</text>
+<path d="M56 478H1064" stroke="#111"/>
+<path d="M56.00000 478v6" stroke="#111"/><text x="56.00000" y="502" text-anchor="start" font-size="12" font-family="Consolas,monospace">0</text>
+<path d="M333.34977 478v6" stroke="#111"/><text x="333.34977" y="502" text-anchor="middle" font-size="12" font-family="Consolas,monospace">10,000</text>
+<path d="M610.69954 478v6" stroke="#111"/><text x="610.69954" y="502" text-anchor="middle" font-size="12" font-family="Consolas,monospace">20,000</text>
+<path d="M888.04931 478v6" stroke="#111"/><text x="888.04931" y="502" text-anchor="middle" font-size="12" font-family="Consolas,monospace">30,000</text>
+<path d="M1064.00000 478v6" stroke="#111"/><text x="1064.00000" y="502" text-anchor="end" font-size="12" font-family="Consolas,monospace">36,344</text>
+<rect x="56" y="531" width="20" height="16" fill="#111" stroke="#111"/><text x="86" y="544" font-size="14">One unique PERMNO</text>
+<rect x="420" y="531" width="20" height="16" fill="url(#hatch)" stroke="#111"/><text x="450" y="544" font-size="14">Unqualified link</text>
+<rect x="785" y="531" width="20" height="16" fill="#ddd" stroke="#111"/><text x="815" y="544" font-size="14">No link</text>
+<path d="M56 568H1064" stroke="#111"/>
+<text x="56" y="593" font-size="13">Observations include duplicates. The other four diagnostic categories are zero in both runs.</text>
+<text x="56" y="615" font-size="13">Identifier matches alone establish neither point-in-time eligibility nor investment performance.</text>
+<text x="1064" y="642" text-anchor="end" font-family="Consolas,monospace" font-size="10">C05 / DATED IDENTITY DIAGNOSTIC</text>
+</g></svg>

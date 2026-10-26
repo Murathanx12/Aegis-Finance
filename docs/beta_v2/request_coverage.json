@@ -1,6 +1,6 @@
 {
   "generated_from": "docs/beta_v2/registry.json",
-  "registry_sha256": "ed074adef19fef17ea9517391d8e4284c42722e5af694cd7f666105008f18710",
+  "registry_sha256": "a8ab2a9b6e50607cdb6badc8f6589b36073c31485fae101435a59b0dbc0dfe0a",
   "count": 146,
   "requests": [
     {
@@ -78,7 +78,7 @@
           "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Preserve available original files unchanged and index excerpts; distinguish user reasoning from assistant interpretations."
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Restored full review archived byte-identically and source reconciliation saved 2026-10-26. Historical owner statements, quoted assistant replies and unresolved names are separated. This does not certify all linked chats were recovered.",
       "legacy_aliases": [],
       "legacy_resolution": "inherited-unverified",
       "task_id": "C00",
@@ -911,7 +911,7 @@
           "description": "Demonstrate this request's summarized behavior with dated evidence and independent review: Latest owner permits available coding quota, superseding old reserve floor; no pointless loops to burn tokens."
         }
       ],
-      "revisit": "Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.",
+      "revisit": "Current authority correction 2026-10-26: later direct user instruction retains 20% weekly allowance. Original workbook summary is preserved as historical intent; no new paid plan or pointless quota burn.",
       "legacy_aliases": [],
       "legacy_resolution": "inherited-unverified",
       "task_id": "C03",

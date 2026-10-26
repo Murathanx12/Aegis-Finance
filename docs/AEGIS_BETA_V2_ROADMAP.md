@@ -11,7 +11,7 @@ Source rows refer to the archived owner workbook. Blank evidence and legacy alia
 | C00 | Reconcile and preserve context | in-progress | Coordinator | None | R001, R002, R003, R004, R005, R006, R007, R008 | Roadmap row 5 |
 | C01 | One roadmap and safe workspace | in-progress | Builder + coordinator | C00 | R009, R010, R011, R012, R013, R014, R015, R016 | Roadmap row 6 |
 | C02 | Repair live service connections | in-progress | Operations builder | C00 | R017, R018, R019, R020, R021, R022, R023, R024 | Roadmap row 7 |
-| C03 | Persistent agent and Telegram control | proposed | Integration builder | C00, C01 | R025, R026, R027, R028, R029, R030, R031, R032, R033 | Roadmap row 8 |
+| C03 | Persistent agent and Telegram control | in-progress | Integration builder | C00, C01 | R025, R026, R027, R028, R029, R030, R031, R032, R033 | Roadmap row 8 |
 | C04 | News acquisition and interpretation | in-progress | Data + investigator | C02 | R034, R035, R036, R037, R038, R039, R040, R041, R042, R043 | Roadmap row 9 |
 | C05 | WRDS and existing-data use | in-progress | Data engineer | C00, C01 | R044, R045, R046, R047, R048, R049, R050, R051 | Roadmap row 10 |
 | C06 | ATLAS universe and task graph | in-progress | Data engineer + coordinator | C00, C01 | R052, R053, R054, R055, R056, R057, R058, R059, R060, R061 | Roadmap row 11 |
@@ -22,7 +22,7 @@ Source rows refer to the archived owner workbook. Blank evidence and legacy alia
 | C11 | Forecast, decision and execution learning | proposed | Data scientist | C07, C09 | R098, R099, R100, R101, R102, R103, R104, R105 | Roadmap row 16 |
 | C12 | Models, retrieval and reusable skills | in-progress | Model + skill builder | C00 | R106, R107, R108, R109, R110, R111, R112, R113, R114, R115, R116, R117 | Roadmap row 17 |
 | C13 | Six broker mandates and ATLAS epoch | proposed | Coordinator + owner | C07, C08, C10 | R118, R119, R120, R121, R122, R123 | Roadmap row 18 |
-| C14 | Readable cockpit, workbook and design | proposed | UI + reporting builder | C01, C02, C06 | R124, R125, R126, R127, R128, R129, R130, R131, R132 | Roadmap row 19 |
+| C14 | Readable cockpit, workbook and design | in-progress | UI + reporting builder | C01, C02, C06 | R124, R125, R126, R127, R128, R129, R130, R131, R132 | Roadmap row 19 |
 | C15 | Integrated review and continued operation | proposed | Independent reviewer + coordinator | C03, C07, C09, C11, C14 | R133, R134, R135, R136, R137, R138 | Roadmap row 20 |
 | B01 | AEGIS Business Plan parking area | deferred | Business researcher (deferred) | None | R139, R140, R141, R142, R143, R144, R145, R146 | Roadmap row 21 |
 
@@ -34,7 +34,7 @@ Acceptance: A context receipt names latest sources, unresolved conflicts and act
 
 Evidence: None verified.
 
-Revisit: Five supplied originals and full returned Consensus research archived; latest raw review TXT is heading-only. See DELIVERY.md; complete original context remains unresolved.
+Revisit: Full owner assessment is preserved and reconciled. The dated Downloads archive has byte-verified copies and a context/date index; originals remain intact. The owner approved the delivered Blackline handbook form. Private-chat completeness and parent acceptance remain open.
 
 Legacy aliases: V1:B00
 
@@ -58,7 +58,7 @@ Acceptance: Producer output is read by the intended consumer and survives restar
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Forecast-accrual wording now distinguishes observed UTC calendar-day counts from expected cadence. Independent source review passed; thresholds, statuses, counts and UNKNOWN behavior are unchanged. This isolated edit is not deployed. Production overdue forecasts and IC-funnel degradation remain unresolved.
 
 Legacy aliases: V1:B01, V1:B09
 
@@ -70,7 +70,7 @@ Acceptance: A benign Telegram task returns evidence through the right thread, re
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Stored-thread readback independently ACTUAL PASS after repair-r5 SOURCE PASS (272 offline tests). The original benign synthetic fixture then reached COMPLETED through one reviewed same-instance observation/commit; independent actual review passed. No new model turn or Telegram delivery occurred. Real-owner ingress/delivery and runtime adoption remain open and coupled to C04 manifests.
 
 Legacy aliases: V1:B00
 
@@ -82,7 +82,7 @@ Acceptance: Material event captured, interpreted and delivered to affected posit
 
 Evidence: None verified.
 
-Revisit: Reviewed reader limits and scope-lock repair adopted locally; qualify the exact native two-tab window and stored bodies, then trace interpretation and affected-position delivery. See docs/beta_v2/BUILD_BATCH5.md; parent acceptance remains open.
+Revisit: Prospective lifecycle checkpoint A independently SOURCE PASS (123 synthetic executions); the reproduced finalization/latch race is closed in isolated candidates. Active reader is unchanged. Authenticated startup/transport, protected native exit and installer/carry joins remain unqualified. No Watch/STOP/install/dispatch; the old generation still needs a separately established normal stopped boundary.
 
 Legacy aliases: V1:B06, V1:B07
 
@@ -94,7 +94,7 @@ Acceptance: Downloaded partitions join existing identifiers, support a named tes
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Two actual identity diagnostics on the same 36,344 January2025 observations independently reproduce. Baseline:25,699 unique PERMNO/10,645 no link. Alternative existing map:33,125 unique/192 no link/3,027 unqualified. No redownload. The baseline manifest records universe filtering; smaller coverage alone is not failed acquisition. Resolve provenance and missing identifiers/interval ends before PIT or named research use; no parent completion.
 
 Legacy aliases: V1:B03
 
@@ -178,7 +178,7 @@ Acceptance: Same-case equal-budget comparisons identify quality/latency/cost; pr
 
 Evidence: None verified.
 
-Revisit: Source-bound packet/resume contract reviewed, changed source refusal demonstrated. Exact Optimus pickup page works; broad ranking and persistent startup adoption remain unresolved.
+Revisit: Existing Optimus and GitHub design retrieval works. Approved Blackline references and print/container checks are explicit in the existing workflow. No replacement MCP, paid provider or new configuration was needed for this batch. Broader model/retrieval acceptance remains open.
 
 Legacy aliases: V1:B06
 
@@ -202,7 +202,7 @@ Acceptance: Every shown metric has a clock/source; static diagrams cannot impers
 
 Evidence: None verified.
 
-Revisit: Reconcile current local evidence and unresolved predecessors before execution; review after dependency or evidence changes.
+Revisit: Owner approved the delivered 28-page Blackline handbook form. The private cockpit renderer now follows it; independent visual review and the exact keyboard-focus repair pass at desktop/mobile sizes. The view retains 146 requests,17 workstreams,28 hypotheses, source clocks and missing acceptance evidence. This is design/source acceptance, not a live operational cockpit or parent completion.
 
 Legacy aliases: V1:B09
 
