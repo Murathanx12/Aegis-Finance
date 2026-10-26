@@ -278,6 +278,22 @@ section,tr{scroll-margin-top:20px}
 @media(max-width:760px){main{padding:0 16px 40px}header{grid-template-columns:1fr;gap:28px;margin:0 -16px 22px;padding:30px 20px}h1{font-size:44px}.edition{font-size:11px;letter-spacing:.12em}.ledger{border-left:0;border-top:1px solid #777;padding:20px 0 0;max-width:100%}.ledger strong{font-size:32px}.ledger .dates{margin-top:12px}section{margin:22px 0;padding:20px 16px}h2{font-size:24px}.filters{gap:16px 12px}.filters label{letter-spacing:0}summary{flex-wrap:wrap;gap:7px 12px}summary>.key{min-width:52px}summary>span:nth-child(2){flex-basis:calc(100% - 68px)}summary small{margin-left:64px;min-width:0}.detail{padding:12px 4px 22px}.sources{padding-left:22px}.notice{padding:12px 14px}nav{gap:10px 22px}}
 @media(max-width:380px){.filters{grid-template-columns:minmax(0,1fr)}.filters label:first-child{grid-column:auto}h1{font-size:38px}}
 @media(max-width:760px){caption{width:calc(100vw - 66px);max-width:calc(100vw - 66px)}}
+/* Phone task ledger: retain native table/header semantics and stack all five cells. */
+@media screen and (max-width:760px){
+.table-scroll{overflow:visible}
+table{display:block;min-width:0;table-layout:auto}
+caption{display:block;width:100%;max-width:100%}
+thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}
+tbody{display:block}
+tbody tr{display:block;border-top:3px solid var(--ink);margin-top:18px}
+tbody td{display:block;width:100%;padding:12px 13px}
+tbody td::before{display:block;margin-bottom:6px;font:700 12px/1.5 var(--mono);letter-spacing:.015em;color:var(--ink)}
+tbody td:nth-child(1)::before{content:"Task and deliverable"}
+tbody td:nth-child(2)::before{content:"Owner / recorded state"}
+tbody td:nth-child(3)::before{content:"Prerequisites"}
+tbody td:nth-child(4)::before{content:"Direct task evidence"}
+tbody td:nth-child(5)::before{content:"Next review / receipt dates"}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 @media print{.filters,button{display:none}body{background:#fff}main{max-width:none;padding:0}header{margin:0;padding:26px;print-color-adjust:exact;-webkit-print-color-adjust:exact}section{break-inside:auto;padding:18px}details{break-inside:avoid}table{min-width:0;table-layout:auto;font-size:10px}th{print-color-adjust:exact;-webkit-print-color-adjust:exact}th,td{padding:6px}.table-scroll{overflow:visible}}
 """
