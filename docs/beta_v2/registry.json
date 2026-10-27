@@ -32,7 +32,9 @@
     "delivery_record": "docs/beta_v2/DELIVERY.md",
     "archive_inventory": "C:/Users/mrthn/aegis-recovery-evidence/beta-v2-owner-20261025/archive_inventory.json",
     "owner_review_reconciliation": "docs/beta_v2/OWNER_REVIEW_RECONCILIATION_2026-10-26.md",
-    "current_owner_quota_constraint": "Later direct instruction: stop before 20% weekly allowance remains; historical workbook R030 wording is not the current quota authority."
+    "current_owner_quota_constraint": "Latest direct instruction, 27 October 2026: continue roadmap, qualified experiments and GitHub fixes with Sol builders and Astra planning/review; stop before 10% weekly allowance remains. This supersedes the earlier 20% reserve; historical workbook R030 wording is not the current quota authority.",
+    "latest_research_intake": "docs/beta_v2/RESEARCH_INTAKE_2026-10-27.md",
+    "decision_under_uncertainty": "Owner requirement 2026-10-27: by deadline emit a dated provisional assessment with evidence, uncertainty, action within mandate and update triggers even when a report is unavailable. C07/C11 decision output, C04 delivery receipt, C02 visible fallback, C05/C09 PIT evaluation; specified, not installed."
   },
   "tasks": [
     {

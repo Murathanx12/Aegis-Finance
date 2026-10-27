@@ -1,3 +1,7 @@
+## Current batch ? 27 October 2026
+
+Read [batch 8](beta_v2/BUILD_BATCH8.md) and [current pickup](BETA_V2_PICKUP.md) before older checkpoints.
+
 # docs/INDEX.md — what to read, in what order (2026-09-04)
 
 ## Latest reviewed batch - 27 October 2026

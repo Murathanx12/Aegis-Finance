@@ -1,3 +1,20 @@
+## Current closeout ? 27 October 2026, 11:24 UTC
+
+Read [batch 8](beta_v2/BUILD_BATCH8.md), [GitHub usage](beta_v2/GITHUB_USAGE_2026-10-27.md) and [new research intake](beta_v2/RESEARCH_INTAKE_2026-10-27.md). Latest owner reserve is 10%; earlier 20% instructions below are historical. H19 aggregate audit passed and the reviewed one-page Blackline chart is in Downloads. C12 native replay refused at 30 seconds; no adoption or rerun. Current GitHub repo is PRIVATE, export net charge $0; CI R2 and earnings fixes passed independent review and remain local only. Research fallback arithmetic reproduced exactly, operational decision/delivery integration remains open. Resume the exact STATE_NEXT receipt rather than rerunning the recovery audit. No trades, resets, paid changes, pushes or deployments.
+
+## Active daytime continuation - 27 October 2026 SGT
+
+Owner resumed roadmap, qualified experiments and GitHub fixes with Sol builders
+and Astra planning/review. New weekly reserve is 10%, superseding the earlier
+20% reserve below. Start observation: 24% remaining at 08:39 UTC. Three bounded
+workers are active; their results are not yet accepted. The protected local
+16:45-17:05 IIF window admits source preparation only. Current live NAV date is
+October 26, all ten lanes fresh, all twelve jobs registered. IC funnel exists
+but its October 6 snapshot is stale; the earlier 25-overdue summary alarm is
+absent. GitHub jobs are blocked before steps by a billing/platform annotation;
+owner-only billing inspection is pending. Exact private working record:
+`overnight-20261026/continuation-day-20261027/START.json`.
+
 ## Reviewed roadmap batch and Blackline cockpit - 27 October 2026 SGT
 
 Current continuation receipt: 2026-10-26T18:37:34.345809+00:00. Read [batch 7](beta_v2/BUILD_BATCH7.md) for the
