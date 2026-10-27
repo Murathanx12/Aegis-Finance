@@ -18,7 +18,7 @@ Usage:
 """
 
 import logging
-from datetime import datetime
+from datetime import date, datetime
 
 import numpy as np
 import pandas as pd
@@ -48,22 +48,7 @@ def get_earnings_summary(ticker: str) -> dict:
             if calendar is not None:
                 if isinstance(calendar, dict):
                     earnings_date = calendar.get("Earnings Date")
-                    if isinstance(earnings_date, list) and len(earnings_date) > 0:
-                        next_date = earnings_date[0]
-                        if hasattr(next_date, 'strftime'):
-                            result["next_earnings_date"] = next_date.strftime("%Y-%m-%d")
-                            now = datetime.now(tz=getattr(next_date, 'tzinfo', None))
-                            days_until = (next_date - now).days
-                            result["days_until_earnings"] = max(0, days_until)
-                            if 0 <= days_until <= 14:
-                                result["earnings_imminent"] = True
-                    elif isinstance(earnings_date, (datetime, pd.Timestamp)):
-                        result["next_earnings_date"] = earnings_date.strftime("%Y-%m-%d")
-                        now = datetime.now(tz=getattr(earnings_date, 'tzinfo', None))
-                        days_until = (earnings_date - now).days
-                        result["days_until_earnings"] = max(0, days_until)
-                        if 0 <= days_until <= 14:
-                            result["earnings_imminent"] = True
+                    result.update(_calendar_fields(earnings_date))
 
                     # Revenue/EPS estimates
                     if "Revenue Estimate" in calendar:
@@ -123,25 +108,19 @@ def get_earnings_summary(ticker: str) -> dict:
         try:
             financials = stock.quarterly_financials
             if financials is not None and not financials.empty:
-                if "Total Revenue" in financials.index:
-                    rev = financials.loc["Total Revenue"].dropna().sort_index()
-                    if len(rev) >= 4:
-                        # YoY revenue growth (latest quarter vs same quarter last year)
-                        yoy_growth = (float(rev.iloc[-1]) / float(rev.iloc[-4]) - 1) * 100
-                        result["revenue_yoy_growth"] = round(yoy_growth, 1)
-                        # QoQ growth
-                        qoq_growth = (float(rev.iloc[-1]) / float(rev.iloc[-2]) - 1) * 100
-                        result["revenue_qoq_growth"] = round(qoq_growth, 1)
-
-                if "Net Income" in financials.index:
-                    ni = financials.loc["Net Income"].dropna().sort_index()
-                    if len(ni) >= 4:
-                        current = float(ni.iloc[-1])
-                        prev = float(ni.iloc[-4])
-                        if prev > 0:
-                            earnings_growth = (current / prev - 1) * 100
-                            result["earnings_yoy_growth"] = round(earnings_growth, 1)
-                        elif prev < 0 and current > 0:
+                result["growth_comparisons"] = {}
+                for row_name, prefix in (("Total Revenue", "revenue"), ("Net Income", "earnings")):
+                    if row_name not in financials.index:
+                        continue
+                    series = financials.loc[row_name]
+                    for interval, months in (("yoy", 12), ("qoq", 3)):
+                        if prefix == "earnings" and interval == "qoq":
+                            continue
+                        comparison = _period_growth(series, months, positive_base=prefix == "earnings")
+                        result["growth_comparisons"][f"{prefix}_{interval}"] = comparison
+                        if comparison["status"] == "MATCHED":
+                            result[f"{prefix}_{interval}_growth"] = comparison["growth_pct"]
+                        elif comparison["status"] == "TURNAROUND":
                             result["earnings_yoy_growth"] = None
                             result["earnings_turnaround"] = True
         except Exception as e:
@@ -218,6 +197,82 @@ def get_earnings_summary(ticker: str) -> dict:
     except Exception as e:
         logger.warning("Earnings analysis failed for %s: %s", ticker, e)
         return {"error": str(e), "ticker": ticker}
+
+
+def _calendar_fields(value) -> dict:
+    """Keep source precision; day counts are signed calendar days, not 24h bins.
+
+    No timezone is assigned to a date or naive timestamp. Naive timestamps
+    cannot establish imminence. Date-only imminence means a calendar-day window.
+    """
+    if isinstance(value, (list, tuple)):
+        if len(value) != 1:
+            return {"earnings_timing_status": "AMBIGUOUS_RANGE" if value else "MISSING",
+                    "earnings_imminent": False}
+        value = value[0]
+    if value is None or value is pd.NaT:
+        return {"earnings_timing_status": "MISSING", "earnings_imminent": False}
+    if not isinstance(value, (date, datetime, pd.Timestamp)):
+        return {"earnings_timing_status": "UNSUPPORTED_TYPE", "earnings_imminent": False}
+    timed = isinstance(value, (datetime, pd.Timestamp))
+    aware = timed and value.tzinfo is not None and value.utcoffset() is not None
+    now = datetime.now(tz=value.tzinfo if aware else None)
+    event_day = value.date() if timed else value
+    days = (event_day - now.date()).days
+    status = "TIMESTAMP_AWARE" if aware else "TIMEZONE_UNSPECIFIED" if timed else "DATE_ONLY"
+    imminent = 0 <= days <= 14
+    if timed:
+        imminent = imminent and aware and value >= now
+    return {
+        "next_earnings_date": event_day.isoformat(),
+        "next_earnings_timestamp": value.isoformat() if timed else None,
+        "earnings_date_type": type(value).__name__,
+        "earnings_time_precision": "timestamp" if timed else "date",
+        "earnings_timezone": str(value.tzinfo) if aware else None,
+        "earnings_timing_status": status,
+        "days_until_earnings": days,
+        "earnings_countdown_basis": "CALENDAR_DAYS_EVENT_TIMEZONE" if aware else "CALENDAR_DAYS_SYSTEM_LOCAL_DATE",
+        "earnings_imminent": bool(imminent),
+    }
+
+
+def _period_growth(series, months: int, positive_base: bool = False) -> dict:
+    """Match exact calendar period ends, including month-end/leap alignment.
+
+    Fiscal 52/53-week shifts cannot be inferred from yfinance column dates
+    alone: refuse unmatched dates rather than guess a corresponding quarter.
+    Keep missing latest values; dropping them would silently move the as-of.
+    """
+    result = {"status": "MISSING_OR_AMBIGUOUS_PERIOD", "growth_pct": None}
+    try:
+        dates = pd.DatetimeIndex(series.index)
+        if dates.hasnans or dates.has_duplicates or len(dates) == 0:
+            return result
+        order = dates.argsort()
+        dates = dates[order]
+        values = series.iloc[order]
+        latest = dates[-1]
+        target = latest - pd.DateOffset(months=months)
+        if latest.is_month_end:
+            target = target + pd.offsets.MonthEnd(0)
+        result.update(current_period=latest.date().isoformat(), expected_prior_period=target.date().isoformat())
+        matches = [i for i, stamp in enumerate(dates) if stamp.date() == target.date()]
+        if len(matches) != 1 or len({stamp.date() for stamp in dates}) != len(dates):
+            return result
+        current, prior = float(values.iloc[-1]), float(values.iloc[matches[0]])
+        result["prior_period"] = target.date().isoformat()
+        if not np.isfinite(current) or not np.isfinite(prior):
+            return dict(result, status="NONFINITE_VALUE")
+        if prior == 0:
+            return dict(result, status="ZERO_BASE")
+        if positive_base and prior < 0:
+            return dict(result, status="TURNAROUND" if current > 0 else "NONPOSITIVE_BASE")
+        growth = (current / prior - 1) * 100
+        if not np.isfinite(growth):
+            return dict(result, status="NONFINITE_VALUE")
+        return dict(result, status="MATCHED", growth_pct=round(growth, 1))
+    except (TypeError, ValueError, OverflowError):
+        return dict(result, status="INVALID_PERIOD_OR_VALUE")
 
 
 def _safe_float(df, col):
@@ -318,7 +373,10 @@ def _generate_earnings_signal(data: dict) -> dict:
     return {
         "score": round(score, 3),
         "sentiment": sentiment,
+        # Legacy numeric alias retained for callers; this is coverage, not probability.
         "confidence": min(n_signals * 15, 100),
+        "evidence_coverage": {"label": "HEURISTIC_SIGNAL_COVERAGE", "score": min(n_signals * 15, 100)},
+        "probability_status": "NOT_CALIBRATED",
         "n_signals": n_signals,
         "reasons": reasons[:4],
     }
