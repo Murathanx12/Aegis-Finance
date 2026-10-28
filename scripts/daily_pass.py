@@ -967,6 +967,22 @@ def step_decision_contract(ctx: dict) -> dict:
     t0 = time.time()
     from backend.services import decision_contract as DC
 
+    if "provisional_request" in ctx:
+        # Review/replay seam only. No scheduler supplies this keyword today.
+        # In particular, do not call latest(), record_decided() or delivery.
+        if ctx.get("offline") is not True:
+            raise ValueError("provisional requests require explicit offline=True")
+        history = ctx.get("prior_records") or []
+        rows = build_decision_contracts(
+            write=False, provisional_request=ctx["provisional_request"],
+            prior_records=history)
+        return _row(
+            "decision_contract", "ok", rows=len(rows),
+            mode="OFFLINE_ONLY", decision_status="PROVISIONAL",
+            new_records=len(rows) - len(history), contracts=rows,
+            answer=DC.summarise_for_reader({"rows": rows}),
+            receipt=None, runtime_requirement_fulfilled=False)
+
     try:
         rows = build_decision_contracts(asof=ctx["date_obj"])
     except DC.CostModelRefused as exc:
