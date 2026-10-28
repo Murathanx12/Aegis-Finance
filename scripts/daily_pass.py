@@ -85,6 +85,7 @@ runs `30m` only when the US market is inside 09:30-16:00 ET on an XNYS session
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 import json
 import logging
 import os
@@ -946,7 +947,77 @@ def step_grade_promises(ctx: dict) -> dict:
                 receipt=r.get("receipt"))
 
 
-def step_decision_contract(ctx: dict) -> dict:
+def _cost_refusal_assessment(ctx: dict, exc: BaseException, *,
+                             observed_clock: Callable[[], datetime] | None = None) -> dict:
+    """Describe this observed failure, without inventing a market assessment.
+
+    The pass date is a context cutoff label, never a historical PIT instant.
+    No market data, storage, delivery, mandate derivation or sizing is called.
+    """
+    warnings = []
+    try:
+        observed = (observed_clock or (lambda: datetime.now(timezone.utc)))()
+        if not isinstance(observed, datetime) or observed.tzinfo is None or observed.utcoffset() is None:
+            raise ValueError("observation clock requires an aware datetime")
+        asof = observed.astimezone(timezone.utc).isoformat()
+    except Exception:
+        asof = None
+        warnings.append("INVALID_OBSERVATION_CLOCK: no assessment timestamp was inferred")
+    mandate = None
+    mandate_status = "NOT_SUPPLIED"
+    if "mandate" in ctx:
+        try:
+            if not isinstance(ctx["mandate"], dict):
+                raise ValueError("mandate must be an object")
+            json.dumps(ctx["mandate"], allow_nan=False)
+            mandate = deepcopy(ctx["mandate"])
+            mandate_status = "SUPPLIED_UNVERIFIED"
+        except (TypeError, ValueError, OverflowError):
+            mandate_status = "INVALID"
+            warnings.append("INVALID_SUPPLIED_MANDATE: no replacement mandate was inferred")
+    cause = _trunc(exc)
+    return {
+        "row_kind": "PROVISIONAL_REFUSAL_ASSESSMENT",
+        "decision_status": "PROVISIONAL" if asof else "PROVISIONAL_UNTIMED",
+        "asof": asof, "asof_basis": ("ACTUAL_REFUSAL_OBSERVATION_CLOCK" if asof else
+                                    "UNKNOWN_INVALID_OBSERVATION_CLOCK"),
+        "context_cutoff": {"date": ctx["date"], "instant": None,
+                           "qualification": "DATE_LABEL_ONLY_NOT_HISTORICAL_AVAILABILITY"},
+        "horizon": "Until the cost-model refusal is resolved and inputs are revalidated",
+        "horizon_end": None,
+        "original_failure": {"type": type(exc).__name__, "cause": cause,
+                             "source": "daily_pass.build_decision_contracts"},
+        "available_evidence": [{"evidence_id": "typed_cost_model_refusal",
+                                "kind": "OPERATIONAL_FAILURE_ONLY",
+                                "observed_at": asof, "cause": cause}],
+        "missing_evidence": ["usable_cost_model", "completed_decision_contract",
+                             "qualified_market_prices", "verified_holdings_and_exposure",
+                             "qualified_directional_evidence", "verified_mandate"],
+        "market_assessment_status": "UNAVAILABLE_FROM_REFUSED_BUILD",
+        "mandate": mandate, "mandate_status": mandate_status,
+        "mandate_compliance": "NOT_ASSESSED",
+        "price_usd": None, "exposure_usd": None, "equity_usd": None,
+        "conditional_risk": {"status": "UNKNOWN_NO_EXPLICIT_EXPOSURE_ASSUMPTION",
+                             "assumption": None, "loss_per_unit_exposure": None,
+                             "loss_usd": None, "scenarios": []},
+        "probability_type": "NOT_ESTIMATED", "estimated_probability": None,
+        "uncertainty": "The failed build supplies no qualified market, exposure or directional estimate.",
+        "action": "NO_NEW_BET", "operational_action": "NO_AUTOMATED_CHANGE",
+        "investment_action": "UNRESOLVED", "orders_authorized": False,
+        "rationale": "The cost model refused the build. No new bet or automated position change "
+                     "is supported by this failed build. This is not a hold-every-position "
+                     "recommendation or a mandate-compliance assessment.",
+        "invalidating_evidence": ["Corrected cost inputs and a successfully rebuilt, qualified contract",
+                                  "Verified market/holding evidence changes the assessment inputs"],
+        "update_trigger": ["Resolve the recorded cost-model cause and rebuild with explicit costs",
+                           "Revalidate evidence availability, holdings and the supplied mandate"],
+        "delivery_status": {"status": "NOT_ATTEMPTED", "receipt": None},
+        "data_quality_warnings": warnings,
+    }
+
+
+def step_decision_contract(ctx: dict, *,
+                           observed_clock: Callable[[], datetime] | None = None) -> dict:
     """The decision contract, on the UNATTENDED path (chunk 18).
 
     `backend/services/morning.py` has the same step, and both exist on purpose:
@@ -967,6 +1038,8 @@ def step_decision_contract(ctx: dict) -> dict:
     t0 = time.time()
     from backend.services import decision_contract as DC
 
+    if not isinstance(ctx, dict):
+        raise ValueError("decision context must be an object")
     if "provisional_request" in ctx:
         # Review/replay seam only. No scheduler supplies this keyword today.
         # In particular, do not call latest(), record_decided() or delivery.
@@ -984,10 +1057,31 @@ def step_decision_contract(ctx: dict) -> dict:
             receipt=None, runtime_requirement_fulfilled=False)
 
     try:
+        context_day = date.fromisoformat(ctx["date"])
+        cutoff = ctx["date_obj"]
+        if isinstance(cutoff, str):
+            cutoff = date.fromisoformat(cutoff)
+        if type(cutoff) is not date or cutoff != context_day:
+            raise ValueError("date and date_obj must identify the same date-only cutoff")
+    except (KeyError, TypeError, ValueError):
+        return _row("decision_contract", "error", rows=0,
+                    seconds=round(time.time() - t0, 2),
+                    refusals=["INVALID_DECISION_CONTEXT: matching date/date_obj cutoff required"],
+                    decision_status="UNAVAILABLE", receipt=None)
+    try:
         rows = build_decision_contracts(asof=ctx["date_obj"])
     except DC.CostModelRefused as exc:
+        assessment = _cost_refusal_assessment(ctx, exc, observed_clock=observed_clock)
         return _row("decision_contract", "refused", rows=0,
-                    seconds=round(time.time() - t0, 2), refusals=[_trunc(exc)])
+                    seconds=round(time.time() - t0, 2), refusals=[_trunc(exc)],
+                    provisional_decision=assessment,
+                    answer=(f"PROVISIONAL as of {assessment['asof'] or 'UNKNOWN (invalid observation clock)'}: "
+                            f"{assessment['action']} / {assessment['operational_action']}. "
+                            f"Original failure: {_trunc(exc)}. {assessment['rationale']} "
+                            "Market/exposure/risk/probability estimates unavailable. "
+                            "Update: resolve explicit costs and revalidate evidence. Delivery not attempted."),
+                    decision_status=assessment["decision_status"],
+                    receipt=None, runtime_requirement_fulfilled=False)
     counts = {d: sum(1 for r in rows if r.get("direction") == d)
               for d in DC.DIRECTIONS}
     ledger = record_decided(rows, ctx["date"])
