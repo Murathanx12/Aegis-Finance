@@ -6,7 +6,7 @@ Synthetic inputs, dates derived from today, no network."""
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -267,10 +267,26 @@ def test_freeze_time_is_computed_in_et_with_the_dst_rule(ahead):
     f = cd.freeze_time_et(d)
     hk = datetime(d.year, d.month, d.day, 14, 30, tzinfo=ZoneInfo("Asia/Hong_Kong"))
     gap_h = (hk.utcoffset() - f.utcoffset()).total_seconds() / 3600
-    assert f == hk and gap_h in (12.0, 13.0)
+    # Cross-zone equality is false for an ambiguous wall time even when the
+    # instants match. Compare in UTC so the selected fold remains significant.
+    assert f.astimezone(timezone.utc) == hk.astimezone(timezone.utc)
+    assert gap_h in (12.0, 13.0)
     assert gap_h == (12.0 if f.dst() else 13.0)                 # NY on daylight time: 12 h behind HKT
     assert (f.hour, f.minute) == ((2, 30) if f.dst() else (1, 30))
     assert f < cd.us_open_et(d)                                 # the sheet freezes before that day's US open
+
+
+def test_freeze_fall_back_instant_and_fold():
+    day = date(2026, 11, 1)
+    freeze = cd.freeze_time_et(day)
+    instant = datetime(2026, 11, 1, 6, 30, tzinfo=timezone.utc)
+    assert freeze.astimezone(timezone.utc) == instant
+    assert (freeze.hour, freeze.minute, freeze.fold) == (1, 30, 1)
+    assert freeze.utcoffset() == timedelta(hours=-5)
+    # The first 01:30 is a different instant and must fail the UTC contract.
+    assert freeze.replace(fold=0).astimezone(timezone.utc) == instant - timedelta(hours=1)
+    hk = freeze.astimezone(ZoneInfo("Asia/Hong_Kong"))
+    assert (hk.date(), hk.hour, hk.minute) == (day, 14, 30)
 
 
 def test_contest_deadlines_in_hkt_are_derived_from_new_york():

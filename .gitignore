@@ -516,3 +516,6 @@ backend/data/optimus/llama_reaper*
 backend/data/optimus/llama_server_stops.jsonl
 backend/data/optimus/telegram_agent_lock.json
 backend/data/optimus/local_runtime_digest/
+
+# Generated after the final source commit for CLI deployment provenance.
+/backend/_build_source.json

@@ -171,7 +171,9 @@ def test_a_failing_job_leaves_a_row_and_the_night_continues(nn_dir):
 
 
 def test_a_full_night_writes_history_and_the_next_night_compares(nn_dir):
-    month = NN.held_out_month(date.today())
+    # Both synthetic nights must evaluate the same fully closed month.
+    today = date.today().replace(day=2)
+    month = NN.held_out_month(today)
     csv = nn_dir / "e1_daily.csv"
     hist = nn_dir / "h.jsonl"
     _daily_csv(csv, month, {"GBM_EVENT": 0.010})
@@ -181,7 +183,7 @@ def test_a_full_night_writes_history_and_the_next_night_compares(nn_dir):
                 "daily_csv": str(csv) if job == "E1_event_head" else None,
                 "event_source": "keyword_proxy"}
 
-    night1 = NN.run_nn_lab(today=date.today() - timedelta(days=1), runner=_runner,
+    night1 = NN.run_nn_lab(today=today - timedelta(days=1), runner=_runner,
                            history_file=hist)
     assert night1["n_heads"] == 1
     assert night1["comparisons"][0]["beat_last_night"] is None
@@ -189,7 +191,7 @@ def test_a_full_night_writes_history_and_the_next_night_compares(nn_dir):
         "the receipt says which event source it ran on, unprompted, every night")
 
     _daily_csv(csv, month, {"GBM_EVENT": 0.014})
-    night2 = NN.run_nn_lab(today=date.today(), runner=_runner, history_file=hist)
+    night2 = NN.run_nn_lab(today=today, runner=_runner, history_file=hist)
     c = night2["comparisons"][0]
     assert c["beat_last_night"] is True and c["n_nights_compared"] == 2
     assert night2["n_beat_last_night"] == 1
