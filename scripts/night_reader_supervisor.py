@@ -114,6 +114,12 @@ DISK_FLOOR_GB = 20.0
 PY = str(REPO / ".venv" / "Scripts" / "python.exe")
 
 
+def reader_iif_quiet(now_local: datetime) -> bool:
+    """Pause reader work for the IIF handoff in this PC's local time."""
+    minute = now_local.hour * 60 + now_local.minute
+    return 16 * 60 + 45 <= minute < 17 * 60 + 5
+
+
 def log(**row: object) -> None:
     row = {"t": datetime.now().astimezone().isoformat(timespec="seconds"), **row}
     LOG.parent.mkdir(parents=True, exist_ok=True)
@@ -126,15 +132,21 @@ READER_CMDLINE = "'scripts[.](dowjones_pull|reader_pool)'"
 
 
 def pool_cmd_text(*, until: str, profile: str = "muratclaw", py: str | None = None,
-                  day: str | None = None) -> str:
+                  day: str | None = None, max_tabs: int | None = None,
+                  capacity_ceiling: int | None = None) -> str:
     """PURE. The launcher for the pool: same python, stdin and log shape as the
     queue launcher, so `queue_logs` and `classify_exit` read it the same way."""
+    from scripts.beta_v2_reader_tab_limit import supervisor_limit
+    tabs = supervisor_limit(max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6),
+                            preferred=getattr(_config, "READER_POOL_MAX_TABS", None),
+                            capacity_ceiling=capacity_ceiling)
     day = day or datetime.now().strftime("%Y-%m-%d")
     log = f"backend\\data\\optimus\\dowjones\\reader_pool_{day}.log"
     deadline = "" if until == "continuous" else f"--until {until} "
+    capacity = "" if capacity_ceiling is None else f"--capacity-ceiling {capacity_ceiling} "
     return ("@echo off\n"
             f"cd /d {REPO}\n"
-            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} {deadline}"
+            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} --max-tabs {tabs} {capacity}{deadline}"
             f"< backend\\data\\optimus\\empty_stdin.txt >> {log} 2>> {log}.err\n")
 
 
@@ -585,10 +597,20 @@ def pid_alive(pid: int | None, needle: str = "scripts.official_sources") -> bool
 
 
 def digest(claims_since: str) -> None:
-    step("claims", ["scripts.dowjones_pull", "--claims", "--claims-since", claims_since], 1800)
-    step("three_source", ["scripts.three_source_compare"], 300)
-    step("scorecard", ["scripts.source_scorecard"], 1800)
-    step("reading_report", ["backend.services.reader_report"], 300)
+    # Keep the existing serial ownership. OFF never kills an analysis writer;
+    # claims cooperates between articles, then no subsequent step is admitted.
+    steps = (
+        ("claims", ["scripts.dowjones_pull", "--claims", "--claims-since", claims_since,
+                    "--claims-stop-file", str(STOP), "--claims-max-run-seconds", "1500"], 1800),
+        ("three_source", ["scripts.three_source_compare"], 300),
+        ("scorecard", ["scripts.source_scorecard"], 1800),
+        ("reading_report", ["backend.services.reader_report"], 300),
+    )
+    for name, args, timeout in steps:
+        if STOP.exists():
+            log(event="digest_stopped", before_step=name, reason="SUPERVISOR_STOP")
+            return
+        step(name, args, timeout)
 
 
 def end_time(hhmm: str) -> datetime | None:
@@ -633,6 +655,7 @@ READING, WAITING_FOR_CAP, REPAIRING, STALLED, DOWN, STARTING = (
     "READING", "WAITING_FOR_CAP", "REPAIRING", "STALLED", "DOWN", "STARTING")
 #: 2026-09-29: the pool's own queue states (reader_scheduler.Q_*)
 QUEUE_EMPTY, REFILLING = "QUEUE_EMPTY", "REFILLING"
+WAITING_FOR_RESOURCES = "WAITING_FOR_RESOURCES"
 #: a pool status older than this is not trusted for its queue state
 POOL_STATUS_FRESH_S = 180.0
 STALL_LADDER_FILE = DJ / "stall_ladder.json"
@@ -691,6 +714,8 @@ def derive_state(*, alive: bool, repairing: bool, ok_10m: int, last_ok_age: floa
                           its list is empty with caps free (2026-09-29): it is
                           waiting for its next front revisit, not stalled;
     * REFILLING        -- the pool says a front is due and is being queued;
+    * WAITING_FOR_RESOURCES -- fresh pool evidence says admission is held;
+                          do not restart active analysis/browser ownership;
     * STARTING         -- alive, launched less than the stall window ago;
     * STALLED          -- alive, no page OK for the stall window while there
                           was work to do (a fault the supervisor acts on).
@@ -701,6 +726,8 @@ def derive_state(*, alive: bool, repairing: bool, ok_10m: int, last_ok_age: floa
         return REPAIRING
     if not alive:
         return DOWN
+    if pool_state == WAITING_FOR_RESOURCES:
+        return WAITING_FOR_RESOURCES
     if ok_10m > 0:
         return READING
     if attempts_10m == 0 and pool_state in (QUEUE_EMPTY, WAITING_FOR_CAP):
@@ -725,11 +752,20 @@ def pool_state_of(pst: dict | None, now: datetime | None = None) -> str | None:
     try:
         t = datetime.fromisoformat(str(pst.get("t")))
         now = now or datetime.now().astimezone()
-        if (now.astimezone() - t).total_seconds() > POOL_STATUS_FRESH_S:
+        if not 0 <= (now.astimezone() - t).total_seconds() <= POOL_STATUS_FRESH_S:
             return None
     except (TypeError, ValueError):
         return None
-    return str(pst["queue_state"])
+    state = str(pst["queue_state"])
+    if state == WAITING_FOR_RESOURCES:
+        try:
+            tabs = pst['tabs']
+            if (tabs['resource_admission']['verdict'].get('ok') is not False
+                    or type(tabs['in_flight']) is not int or tabs['in_flight'] != 0):
+                return None
+        except (KeyError, TypeError, AttributeError):
+            return None
+    return state
 
 
 def next_action_for(state: str, pst: dict | None = None) -> str:
@@ -745,6 +781,8 @@ def next_action_for(state: str, pst: dict | None = None) -> str:
         return "refilling the list from the section fronts"
     if state == WAITING_FOR_CAP:
         return "wait for the hourly / daily cap window (or a cooling host)"
+    if state == WAITING_FOR_RESOURCES:
+        return "resource admission held: let active work finish; inspect resource telemetry"
     if state == STARTING:
         return "starting: first pages"
     return "see the stall ladder"
@@ -1154,7 +1192,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--probe", action="store_true", help="print one dependency probe and exit")
     ap.add_argument("--repair-once", action="store_true",
                     help="probe, repair if faulted (bounded), print, exit")
+    ap.add_argument("--max-tabs", type=int, default=None, help="reader tab ceiling, at most configured max")
+    ap.add_argument("--capacity-ceiling", type=int, default=None,
+                    help="explicit per-run capacity envelope, 1..12; leaves settings unchanged")
     a = ap.parse_args(argv)
+    from scripts.beta_v2_reader_tab_limit import supervisor_limit
+    try:
+        a.max_tabs = supervisor_limit(a.max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6),
+                                      preferred=getattr(_config, "READER_POOL_MAX_TABS", None),
+                                      capacity_ceiling=a.capacity_ceiling)
+    except ValueError as exc:
+        ap.error(str(exc))
     if a.probe:
         print(json.dumps(GR.probe(), indent=1, default=str))
         return 0
@@ -1173,7 +1221,8 @@ def main(argv: list[str] | None = None) -> int:
     # the candidate set, oldest-read names first, rebuilt when it is exhausted
     if a.pool:
         a.rolling = False
-        GR_atomic_text(POOL_CMD, pool_cmd_text(until=a.until))
+        GR_atomic_text(POOL_CMD, pool_cmd_text(until=a.until, max_tabs=a.max_tabs,
+                                            capacity_ceiling=a.capacity_ceiling))
         log(event="pool_mode", cmd=str(POOL_CMD))
     rq = rolling_queue(template) if a.rolling else None
     queue_cmd = POOL_CMD if a.pool else (rq["cmd"] if rq else template)
@@ -1256,6 +1305,7 @@ def main(argv: list[str] | None = None) -> int:
         if gap is not None:
             pending_resume = gap
 
+    quiet = False
     while end is None or datetime.now() < end:
         if STOP.exists():
             why = "STOP file"
@@ -1263,6 +1313,16 @@ def main(argv: list[str] | None = None) -> int:
         if not HANDOFF.exists():
             why = "HANDOFF_PC absent"
             break
+        if reader_iif_quiet(datetime.now()):
+            if not quiet:
+                quiet = True
+                write_status("paused", next_action="resume after IIF quiet window")
+                log(event="iif_quiet_entered")
+            tick_sleep()
+            continue
+        if quiet:
+            quiet = False
+            log(event="iif_quiet_resumed")
         if pending_resume is not None:
             slept, pending_resume = pending_resume, None
             resume_grace_until = time.time() + RESUME_GRACE_S
@@ -1519,6 +1579,9 @@ def main(argv: list[str] | None = None) -> int:
         if time.time() - last_hourly >= HOURLY_S:
             last_hourly = time.time()
             digest(a.claims_since)
+            if STOP.exists():
+                why = "STOP file"
+                break
         write_status(state, next_action=next_action, last_error=last_err,
                      extra={"restarts": restarts, "free_disk_gb": round(free, 1),
                             "free_ram_gb": free_ram_gb(), "detail": detail if not pids else "",
@@ -1539,7 +1602,10 @@ def main(argv: list[str] | None = None) -> int:
         log(event="pool_stopped", why="supervisor stopping: " + why, **st_)
     log(event="stopping", why=why, reader_pids_stopped=stopped)
     write_status("stopped", next_action="none: " + why, last_error=last_err)
-    digest(a.claims_since)
+    if not STOP.exists():
+        digest(a.claims_since)
+    else:
+        log(event="final_digest_skipped", reason="SUPERVISOR_STOP")
     log(event="end", why=why, restarts=restarts, page_loads_total=loads())
     return 0
 

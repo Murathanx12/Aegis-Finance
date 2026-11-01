@@ -18,7 +18,7 @@ import pytest
 
 from backend import config as _config
 from backend.services import reader_scheduler as RS
-from backend.tests.test_reader_pool import Clock, FakeDriver, _thr
+from backend.tests.test_reader_pool import Clock, FakeDriver, _thr, healthy_governor
 from scripts import night_reader_supervisor as S
 from scripts import reader_pool as RP
 
@@ -153,7 +153,7 @@ def ledger(tmp_path, monkeypatch):
 
 def _pool(ledger, clock, **kw):
     thr = _thr(ledger, clock, wait_on_hour_cap=True)
-    gov = RS.TabGovernor(max_tabs=4, mem_fn=lambda: 9.0, target=4)
+    gov = healthy_governor(clock)
     return RP.Pool(driver=FakeDriver({}), throttle=thr, names=[], books={"NVDA"}, fresh=set(),
                    fronts=[], social=False, stock_pages=(), governor=gov,
                    cooling=RS.HostCooling(path=ledger / "cool.json"), stored={},

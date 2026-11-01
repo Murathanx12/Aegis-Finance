@@ -103,12 +103,20 @@ if str(REPO) not in sys.path:
 from backend import config as _config  # noqa: E402
 from backend.services import disk_guard as DG  # noqa: E402
 from backend.services import media_transcripts as MT  # noqa: E402
+from backend.services import reader_front_fairness as RF  # noqa: E402
 from backend.services import reader_scheduler as RS  # noqa: E402
 from backend.services import web_reader as WR  # noqa: E402
+from scripts.reader_carry_receipts import CarryReceipts, item_id, native_generation  # noqa: E402
 
 DJ = Path(_config.OPTIMUS_LEDGER_DIR) / "dowjones"
 STATUS = DJ / "reader_pool_status.json"
 STOP_FILES = (DJ / "SUPERVISOR_STOP", DJ / "READER_POOL_STOP")
+
+
+def reader_iif_quiet(now_local: datetime) -> bool:
+    """Pause new page dispatch during the local IIF handoff window."""
+    minute = now_local.hour * 60 + now_local.minute
+    return 16 * 60 + 45 <= minute < 17 * 60 + 5
 FRONT_SCHEDULE = DJ / "front_schedule.json"
 #: 2026-09-29: the found links still pending when a pool stops (a memory
 #: recycle, a stall restart) are carried to the next pool, so a restart never
@@ -240,6 +248,32 @@ def social_last_reads() -> dict[tuple[str, str], datetime]:
 
 # ───────────────────────────────── the pool ──────────────────────────────────
 
+def startup_status(phase, *, state="STARTING", **counts):
+    """Separate startup evidence: no URLs/bodies, no invented collection health."""
+    safe = {k: v for k, v in counts.items() if k in
+            {"scanned_files", "cache_hits", "article_reads", "read_errors", "cache_status"}}
+    row = {"schema": "reader_pool_startup/1", "observed_utc": _now().isoformat(),
+           "pid": os.getpid(), "state": state, "phase": phase, **safe}
+    for attempt in range(5):
+        try:
+            DG.atomic_write_json(DJ / "reader_pool_startup.json", row)
+            break
+        except PermissionError as exc:
+            if getattr(exc, "winerror", None) not in {5, 32, 33}:
+                raise
+            if attempt == 4:
+                if phase == "REFUSED" and state == "FAILED":
+                    # Preserve the primary startup refusal if its diagnostic
+                    # file is also locked. This is not a successful publication.
+                    print("POOL_STARTUP_WRITE_FAILED " + json.dumps({
+                        "phase": phase, "state": state, "error_class": "PermissionError",
+                        "winerror": exc.winerror, "attempts": 5}, sort_keys=True), flush=True)
+                    return
+                raise
+            time.sleep(0.05)
+    print("POOL_STARTUP " + json.dumps(row, sort_keys=True), flush=True)
+
+
 class Pool:
     """Several tabs, one scheduler, one governor. Every side effect is
     injectable (driver, throttle, clock, sleep, memory) for the tests."""
@@ -260,7 +294,7 @@ class Pool:
                  read_next_path: Path | None = None, x_handles: list[str] | None = None,
                  keep_window: Any = None, budget: bool | None = None,
                  target_scan: Any = None, close_target: Any = None,
-                 planner_queue_path: Path | None = None) -> None:
+                 planner_queue_path: Path | None = None, startup_fn=None) -> None:
         self.driver, self.thr, self.profile = driver, throttle, profile
         self.names = [n.upper() for n in dict.fromkeys(names)]
         self.universe = set(self.names)
@@ -289,15 +323,26 @@ class Pool:
         self.front_links_max = int(front_links_max if front_links_max is not None else
                                    getattr(_config, "READER_FRONT_LINKS_MAX", 12))
         self.lock = threading.RLock()
-        self.stored = WR.stored_urls() if stored is None else stored
+        def phase(name, **counts):
+            if startup_fn is not None:
+                startup_fn(name, **counts)
+        phase("STORED_URLS")
+        self.stored = (WR.stored_urls(
+            cache_path=WR.corpus_root() / "_stored_urls_index.json" if persist else None,
+            progress=lambda counts: phase("STORED_URLS", **counts),
+            stop=lambda: any(p.exists() for p in STOP_FILES)) if stored is None else stored)
+        phase("SECTION_HISTORY")
         self.dropped = RS.dropped_section_urls() if dropped is None else set(dropped)
         self.front_last: dict[str, datetime] = dict(front_last if front_last is not None else {
             k: datetime.fromisoformat(v) for k, v in _load_json(FRONT_SCHEDULE).items()})
+        phase("STOCK_HISTORY")
         self.stock_last = dict(stock_last if stock_last is not None
                                else stock_last_reads(stored=self.stored))
+        phase("SOCIAL_HISTORY")
         self.social_last = dict(social_last if social_last is not None else social_last_reads())
         try:
             from scripts import dowjones_pull as DP
+            phase("PRIORITY_HISTORY")
             self.last_read = DP.last_read_days(self.names, stored=self.stored)
             self._nf = {src: DP.not_found_tickers(src) for src in
                         ("marketwatch", "wsj", "barrons")}
@@ -306,6 +351,7 @@ class Pool:
         self.pending: list[dict] = []
         self.queued: set[str] = set()
         self.inflight: Counter = Counter()
+        self.front_dispatch_streak: Counter = Counter()
         self.open_tabs: dict[str, str] = {}
         #: every tab id this process opened (newest last, capped): a tab left
         #: open by a stop or a failed close is still the READER's, so the
@@ -372,8 +418,19 @@ class Pool:
         self.lane_inflight: Counter = Counter()
         self.budget_block: dict = {}
         self.budget_grants: Counter = Counter()
+        self.generation = native_generation(Path(__file__), persist)
+        self.carry_receipts = CarryReceipts(self.generation, self.now_fn)
+        self.finalization_status = 'RUNNING'
+        phase("CARRY_HISTORY")
         self.carried_in = self._load_carry() if persist else 0
+        phase("INITIALIZED", state="INITIALIZED")
         self.started = self.now_fn()
+
+    def _carry_id(self, it: dict) -> str:
+        return item_id(it, it.get('key') or WR.norm_url(it.get('url') or ''))
+
+    def _carry_snapshot(self) -> dict:
+        return self.carry_receipts.snapshot(self._carry_id(it) for it in self.pending)
 
     # ── the queue ───────────────────────────────────────────────────────────
 
@@ -571,7 +628,7 @@ class Pool:
         or nothing can be served now)."""
         now = self.now_fn()
         with self.lock:
-            if slot >= self.gov.target or not self.gov.may_open(sum(self.inflight.values())):
+            if slot >= self.gov.target or not self.gov.may_open(sum(self.inflight.values()), len(self.open_tabs)):
                 return None
             by_host: dict[str, list[dict]] = defaultdict(list)
             for it in self.pending:
@@ -594,13 +651,18 @@ class Pool:
                                               now=now)
                 if not by_host:
                     return None
+            by_host = RF.filter_front_streaks(by_host, self.front_dispatch_streak)
             it = RS.choose(by_host, free_slots=free, blocked=blocked,
                            free_at=free_at, now=now, key=self._key,
                            in_flight=dict(self.inflight))
             if it is None:
                 return None
             self.pending.remove(it)
+            self.front_dispatch_streak[it["host"]] = RF.next_front_streak(
+                self.front_dispatch_streak[it["host"]], it)
+            self.carry_receipts.note(self._carry_id(it), 'DEQUEUED_FOR_PROCESS')
             self.inflight[it["host"]] += 1
+            self.gov.admitted()
             lane = it.get("blane") or RS.budget_lane(it, books=self.books, fresh=self.fresh)
             it["blane"] = lane
             self.lane_inflight[lane] += 1
@@ -678,6 +740,7 @@ class Pool:
     def requeue(self, it: dict) -> None:
         with self.lock:
             self.pending.append(it)
+            self.carry_receipts.note(self._carry_id(it), 'REQUEUED')
 
     # ── one page ────────────────────────────────────────────────────────────
 
@@ -853,6 +916,9 @@ class Pool:
                 seconds=float(getattr(_config, "READER_FRONTS_ONLY_S", 21600.0)))
             with self.lock:
                 self.fronts_only_until[blame] = max(until, self.fronts_only_until.get(blame, until))
+                self.carry_receipts.removed([self._carry_id(x) for x in self.pending
+                                             if x['host'] == blame and x['kind'] == 'article'],
+                                            'EXISTING_CHECKOUT_FRAME_FRONTS_ONLY')
                 self.pending = [x for x in self.pending
                                 if not (x["host"] == blame and x["kind"] == "article")]
                 self.classes[blame]["PAYWALL_CHECKOUT_FRAME"] += 1
@@ -1032,6 +1098,9 @@ class Pool:
                         self.fronts_only_until[host] = until
                         self.printer(f"FRONTS_ONLY {host}: {self.paywall_streak[host]} paywalled "
                                      f"pages in a row; headlines only until {until:%H:%M}Z")
+                    self.carry_receipts.removed([self._carry_id(x) for x in self.pending
+                                                 if x['host'] == host and x['kind'] in ('article',)],
+                                                'EXISTING_PAYWALL_FRONTS_ONLY')
                     self.pending = [x for x in self.pending
                                     if not (x["host"] == host and x["kind"] in ("article",))]
             elif cls == "OK":
@@ -1203,6 +1272,7 @@ class Pool:
                 self._paywall(host, m.group(1))
             raise
         self._paywall(host, "OK")
+        self.carry_receipts.stored_body(self._carry_id(it), art.get('stored'), WR.corpus_root())
         with self.lock:
             self.classes[it["host"]]["OK"] += 1
             self.stored.setdefault(WR.norm_url(art.get("url") or it["url"]), set()).add(
@@ -1397,6 +1467,7 @@ class Pool:
         """Pending found links a previous pool left (read once, then removed)."""
         pth = path or PENDING_CARRY or DJ / "pool_pending_carry.json"
         d = _load_json(pth)
+        self.carry_receipts.capture(pth, d)
         n = 0
         try:
             t = datetime.fromisoformat(str(d.get("t")))
@@ -1404,32 +1475,53 @@ class Pool:
         except (TypeError, ValueError):
             fresh = False
         if fresh:
-            for it in d.get("items") or []:
+            for index, it in enumerate(d.get("items") or []):
                 if not isinstance(it, dict) or it.get("kind") not in CARRY_KINDS:
+                    self.carry_receipts.decision(index, it, None, 'REJECTED', 'INVALID_KIND_OR_SHAPE')
                     continue
+                identity = self._carry_id(it)
                 if self.stored.get(WR.norm_url(it.get("url") or "")):
+                    self.carry_receipts.decision(index, it, identity, 'REJECTED', 'ALREADY_STORED')
                     continue
                 # 2026-09-30: a host that LEFT the allowlist since (the Fed) or a
                 # refused address is never carried into the new pool
                 if it.get("kind") != "social" and not WR.host_ok(str(it.get("url") or "")):
+                    self.carry_receipts.decision(index, it, identity, 'REJECTED', 'HOST_NOT_ALLOWED')
                     continue
                 it = {k: v for k, v in it.items() if k != "seq"}
                 if it.get("kind") == "search" or it.get("via") == "read_next":
                     it["tier"] = RS.TIER_FRONT        # the digest's asks rank with the fronts
-                n += self._add(it)
+                accepted = self._add(it)
+                n += accepted
+                self.carry_receipts.decision(index, it, identity, 'ACCEPTED' if accepted else 'REJECTED',
+                                             'QUEUED' if accepted else 'QUEUE_DUPLICATE_OR_RETRY')
+        else:
+            for index, it in enumerate(d.get('items') or []):
+                self.carry_receipts.decision(index, it, self._carry_id(it) if isinstance(it, dict) else None,
+                                             'REJECTED', 'STALE_OR_UNVERIFIED_SOURCE_CLOCK')
         try:
             pth.unlink()
+            self.carry_receipts.source_deleted = True
         except OSError:
-            pass
+            self.carry_receipts.source_deleted = False
+            if self.carry_receipts.source['present'] is not False:
+                self.carry_receipts.errors.append('SOURCE_DELETE_UNPROVED')
+        self.carry_receipts.load_complete = True
         return n
 
     def save_carry(self, path: Path | None = None) -> int:
         with self.lock:
             items = [it for it in self.pending if it.get("kind") in CARRY_KINDS]
         try:
-            DG.atomic_write_json(path or PENDING_CARRY or DJ / "pool_pending_carry.json", {
-                "t": self.now_fn().isoformat(timespec="seconds"), "items": items})
+            target = path or PENDING_CARRY or DJ / 'pool_pending_carry.json'
+            identities = [self._carry_id(it) for it in items]
+            DG.atomic_write_json(target, {
+                "t": self.now_fn().isoformat(timespec="seconds"), "items": items,
+                'generation': self.generation, 'item_ids': identities})
+            self.carry_receipts.saved_carry(target, items, self.generation, identities, True)
         except Exception:  # noqa: BLE001 -- a carry file never blocks a stop
+            self.carry_receipts.saved_carry(path or PENDING_CARRY or DJ / 'pool_pending_carry.json',
+                                             items, self.generation, [], False)
             return 0
         return len(items)
 
@@ -1536,6 +1628,9 @@ class Pool:
     def slot_loop(self, slot: int) -> None:
         idle = 0
         while not self.stop_event.is_set():
+            if reader_iif_quiet(datetime.now()):
+                self.stop_event.wait(2.0)
+                continue
             it = self.take(slot)
             if it is None:
                 idle += 1
@@ -1550,6 +1645,7 @@ class Pool:
                 self._fail(it, exc)
             finally:
                 self.release(it)
+                self.carry_receipts.note(self._carry_id(it), 'PROCESS_RETURNED')
 
     def should_stop(self) -> str | None:
         if self.until is not None and self.now_fn() >= self.until:
@@ -1579,6 +1675,7 @@ class Pool:
             hr = [r for r in rows if r[1] == h]
             by_host[h] = {
                 "open_tabs": self.inflight[h], "tab_limit": int(self.per_host.get(h, 1)),
+                "front_dispatch_streak": self.front_dispatch_streak[h],
                 # reserved slots (future-dated) count: they are opens already granted
                 "loads_60m": sum(1 for r in hr if now - r[0] < timedelta(hours=1)),
                 "cap_hour": self.thr.host_hour_cap(h),
@@ -1621,11 +1718,17 @@ class Pool:
         nxt = RS.next_front_due_s(self.fronts, self.front_last, now, pending_by_host=pend,
                                   dropped=self.dropped, blocked=blocked)
         tiers = Counter(RS.TIER_NAMES[self._key(it)[0]] for it in self.pending)
-        ok_60 = sum(1 for t in self.timings if t.get("outcome") == "OK" and
-                    now - datetime.fromisoformat(t["at"]) <= timedelta(hours=1))
+        from backend.services.reader_resources import throughput_window
+        ok_60 = throughput_window(self.timings, now=now, started=self.started,
+                                  window_s=3600)['successful_pages']
         run_h = max(1e-9, (now - self.started).total_seconds() / 3600.0)
         ok_run = sum(self.classes[h]["OK"] for h in self.classes)
+        admission = self.gov.snapshot()
+        if (qstate in (RS.Q_READING, RS.Q_REFILLING) and sum(self.inflight.values()) == 0
+                and admission['verdict'].get('ok') is False):
+            qstate = 'WAITING_FOR_RESOURCES'
         return {"t": now.isoformat(timespec="seconds"), "pid": os.getpid(),
+                'generation': self.generation, 'carry_lineage': self._carry_snapshot(),
                 # review 2026-09-29 F2: the state is what the pool is DOING,
                 # never "reading" merely because the process is alive
                 "state": "stopping" if self.stop_event.is_set() else qstate.lower(),
@@ -1633,7 +1736,9 @@ class Pool:
                 "throughput": {"ok_last_60m": ok_60, "run_hours": round(run_h, 2),
                                # measured over the whole run, not a burst
                                "sustained_ok_per_hour": round(ok_run / run_h, 1)
-                               if run_h >= 0.5 else None}, "next_front_due_s": None if nxt is None else round(nxt, 1),
+                               if run_h >= 0.5 else None,
+                               "observed_5m": throughput_window(self.timings, now=now, started=self.started)},
+                "next_front_due_s": None if nxt is None else round(nxt, 1),
                 "last_refill": self.last_refill,
                 "carried_in": getattr(self, "carried_in", 0),
                 "early_front_revisits": dict(self.early_fronts),
@@ -1642,7 +1747,7 @@ class Pool:
                 "tabs": {"target": self.gov.target, "max": self.gov.max_tabs,
                          "open_now": len(self.open_tabs), "in_flight": sum(self.inflight.values()),
                          "why": self.gov.reason, "free_gb": self.gov.free_gb,
-                         "floor_gb": self.gov.floor_gb},
+                         "floor_gb": self.gov.floor_gb, "resource_admission": admission},
                 "caps": {"hour_all": self.thr.max_per_hour, "day_all": self.thr.max_per_day,
                          "loads_60m_all": sum(1 for r in rows
                                               if now - r[0] < timedelta(hours=1)),
@@ -1712,6 +1817,8 @@ class Pool:
                                       for f in ("wait_s", "open_s", "work_s")}}
                   for k, v in agg.items()}
         return {"receipt": "reader_pool", "started_utc": self.started.isoformat(timespec="seconds"),
+                'receipt_utc': self.now_fn().isoformat(), 'generation': self.generation,
+                'carry_lineage': self._carry_snapshot(), 'finalization_status': self.finalization_status,
                 "pid": os.getpid(), "profile": self.profile, "names": len(self.names),
                 "books": sorted(self.books), "fresh": sorted(self.fresh),
                 "stop_reason": self.stop_reason, "pages": self.pages,
@@ -1743,7 +1850,8 @@ class Pool:
                 if why:
                     self.stop(why)
                     break
-                self.gov.update(len(self.open_tabs))
+                with self.lock:
+                    self.gov.update(len(self.open_tabs), sum(self.inflight.values()))
                 if time.time() - last_refill > 60:
                     self.refill()
                     last_refill = time.time()
@@ -1776,6 +1884,8 @@ class Pool:
                     self.driver.browser("close", profile_name=self.profile, target_id=tab)
                 except Exception:  # noqa: BLE001
                     self.orphans.append(tab)
+            self.finalization_status = 'THREADS_STILL_ACTIVE_UNQUALIFIED' if any(th.is_alive() for th in threads) else 'FINALIZED'
+            self.carry_receipts.finalized_utc = self.now_fn().isoformat()
             if status_path is not None:
                 try:
                     DG.atomic_write_json(status_path, self.status())
@@ -1943,6 +2053,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--until", default=None, help="local HH:MM")
     ap.add_argument("--max-pages", type=int, default=None)
     ap.add_argument("--max-tabs", type=int, default=None)
+    ap.add_argument("--capacity-ceiling", type=int, default=None,
+                    help="explicit per-run capacity envelope, 1..12; leaves settings unchanged")
     ap.add_argument("--worker-id", default="pool")
     ap.add_argument("--trial", action="store_true",
                     help="a short trial: only --fronts and --tickers, fronts due at once")
@@ -1952,6 +2064,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--front-links", type=int, default=None,
                     help="article links taken per front (default config READER_FRONT_LINKS_MAX)")
     a = ap.parse_args(argv)
+    from scripts.beta_v2_reader_tab_limit import tab_limit
+    try:
+        a.max_tabs = tab_limit(a.max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6),
+                               capacity_ceiling=a.capacity_ceiling)
+    except ValueError as exc:
+        ap.error(str(exc))
     hand = Path(getattr(_config, "DOWJONES_HANDOFF_FILE", REPO / "HANDOFF_PC"))
     if not a.handoff or not hand.exists():
         print(f"REFUSED_NO_HANDOFF: the pool needs --handoff AND {hand} (Murat's act).")
@@ -1963,6 +2081,9 @@ def main(argv: list[str] | None = None) -> int:
     rpath = DJ / f"pool_{stamp}{'_trial' if a.trial else ''}.json"
     lock = None
     try:
+        startup_status("ATTACHING")
+        if any(p.exists() for p in STOP_FILES):
+            raise WR.ReaderRefused("REFUSED_STARTUP_STOP")
         WR.ensure_attached(a.profile, oc=OC, log=[])
         proof = DP.instance_gate(a.profile, OC)
         if proof is None or not WR.direct_open_ok(OC, a.profile):
@@ -1970,23 +2091,30 @@ def main(argv: list[str] | None = None) -> int:
                   f"{a.profile!r} is not one")
             return 2
         lock = WR.acquire_reader_lock(worker=a.worker_id)
+        startup_status("CLEANUP")
         cleanup = WR.close_leftover_tabs(OC, a.profile, previous_open_tabs())
         print(f"startup cleanup: closed {len(cleanup.get('closed') or [])} leftover tab(s)",
               flush=True)
+        startup_status("NAMES")
         names = ([t.strip().upper() for t in a.tickers.split(",") if t.strip()] if a.tickers
                  else DP.rolling_names())
+        startup_status("BOOKS")
         books = book_names()
         if not a.tickers:
             names = list(dict.fromkeys(names + sorted(books)))
         fronts = parse_fronts(a.fronts) if a.fronts else (None if not a.trial else [])
-        gov = RS.TabGovernor(max_tabs=a.max_tabs or int(getattr(_config, "READER_MAX_TABS", 6)))
+        gov = RS.TabGovernor(max_tabs=a.max_tabs)
         thr = WR.Throttle(WR.throttle_path(), wait_on_hour_cap=True, per_host_mode=True)
+        startup_status("RECENT_NAMES")
+        recent = fresh_names(_now())
+        startup_status("SOCIAL_HANDLES")
+        handles = [] if (a.trial or a.no_social) else SB_registry_handles()
         pool = Pool(driver=OC, throttle=thr, profile=a.profile, names=names, books=books,
-                    fresh=fresh_names(_now()), fronts=fronts, social=not a.no_social,
+                    fresh=recent, fronts=fronts, social=not a.no_social,
                     governor=gov, until=end_time(a.until), max_pages=a.max_pages,
                     front_last={} if a.trial else None, persist=True,
                     front_links_max=a.front_links,
-                    x_handles=[] if (a.trial or a.no_social) else SB_registry_handles(),
+                    x_handles=handles, startup_fn=startup_status,
                     keep_window=_anchor_fn(), target_scan=_cdp_targets,
                     close_target=_close_money_target)
         print(f"pool: {len(names)} names, {len(pool.fronts)} fronts, social "
@@ -1995,6 +2123,7 @@ def main(argv: list[str] | None = None) -> int:
               f"({pool.per_host}), receipt {rpath}", flush=True)
         rc = pool.run(receipt_path=rpath)
     except Exception as exc:  # noqa: BLE001 -- the refusal is printed for the supervisor
+        startup_status("REFUSED", state="FAILED")
         print(f"REFUSED: {type(exc).__name__}: {exc}", flush=True)
         return 2
     finally:
