@@ -379,3 +379,22 @@ to connect to terminal there you can guide me”. Application submission,
 sponsor approval, authentic WLS membership, current TMSG rules, policy choice
 and verified fills remain separate facts. Prepare attended lab guidance;
 approval and current Terminal evidence are not inferred from registration.
+
+
+## 2026-10-25 ? Beta V2 owner direction (normalized record)
+
+The owner supplied Edition 02, the Beta V2 handoff/workbook and startup guide,
+asked that the reviews and ChatGPT research be saved and read carefully, and
+authorized an autonomous roadmap split into agent build chunks while they sleep.
+This paragraph records intent in normalized form; it is not a verbatim review.
+The supplied latest review TXT contains only its heading, so completeness of the
+original review/chat archive remains unresolved.
+
+The supplied startup guide supersedes the old coding-quota floor and cancels the
+Istanbul host migration. Broad existing-data research and prospective dynamic
+policy work proceed alongside repairs. Frozen controls, NAV/history, authentic
+source evidence and explicit owner account/authentication gates remain intact.
+
+Current sources and interpretation: [Beta V2 pickup](BETA_V2_PICKUP.md).
+Canonical task list: [Beta V2 roadmap](AEGIS_BETA_V2_ROADMAP.md);
+[execution packets](beta_v2/execution.md). Earlier dated intent remains preserved.

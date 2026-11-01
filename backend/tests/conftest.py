@@ -516,3 +516,41 @@ def _owner_d14_flags_off(monkeypatch):
     from backend import config as _c
     for f in OWNER_D14_FLAGS:
         monkeypatch.setattr(_c, f, False, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _paper_scope_isolated_for_fake_transports(request):
+    """Keep four fake-transport modules off the owner's global paper lock."""
+    from pathlib import Path
+
+    tests = (Path(request.config.rootpath) / "backend" / "tests").resolve()
+    members = {
+        tests / "test_dowjones_chunk_j.py",
+        tests / "test_lane_o_muratclaw.py",
+        tests / "test_openclaw_client.py",
+        tests / "test_reader_throughput.py",
+    }
+    if Path(request.node.path).resolve() not in members:
+        yield
+        return
+
+    # Resolve membership before allocating either function-scoped fixture.
+    monkeypatch = request.getfixturevalue("monkeypatch")
+    tmp_path = request.getfixturevalue("tmp_path")
+    from contextlib import contextmanager
+    import tempfile
+    from backend.services import disk_guard as DG
+
+    original = DG.file_lock
+    native_scope = (Path(tempfile.gettempdir()) /
+                    "aegis_openclaw_exclusive_paper_scope.lock").resolve()
+    private_scope = tmp_path / "aegis_openclaw_exclusive_paper_scope.lock"
+
+    @contextmanager
+    def isolated_file_lock(path, *args, **kwargs):
+        selected = private_scope if Path(path).resolve() == native_scope else path
+        with original(selected, *args, **kwargs) as held:
+            yield held
+
+    monkeypatch.setattr(DG, "file_lock", isolated_file_lock)
+    yield

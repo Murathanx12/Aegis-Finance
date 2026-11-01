@@ -103,6 +103,7 @@ if str(REPO) not in sys.path:
 from backend import config as _config  # noqa: E402
 from backend.services import disk_guard as DG  # noqa: E402
 from backend.services import media_transcripts as MT  # noqa: E402
+from backend.services import reader_front_fairness as RF  # noqa: E402
 from backend.services import reader_scheduler as RS  # noqa: E402
 from backend.services import web_reader as WR  # noqa: E402
 
@@ -306,6 +307,8 @@ class Pool:
         self.pending: list[dict] = []
         self.queued: set[str] = set()
         self.inflight: Counter = Counter()
+        self.front_dispatch_streak: Counter = Counter()
+        self.global_front_dispatch_streak = 0
         self.open_tabs: dict[str, str] = {}
         #: every tab id this process opened (newest last, capped): a tab left
         #: open by a stop or a failed close is still the READER's, so the
@@ -594,12 +597,21 @@ class Pool:
                                               now=now)
                 if not by_host:
                     return None
+            by_host = RF.filter_front_streaks(by_host, self.front_dispatch_streak)
+            dispatch_key = RF.global_front_key(
+                by_host, self.global_front_dispatch_streak, choose=RS.choose, key=self._key,
+                free_slots=free, blocked=blocked, free_at=free_at, now=now,
+                in_flight=dict(self.inflight))
             it = RS.choose(by_host, free_slots=free, blocked=blocked,
-                           free_at=free_at, now=now, key=self._key,
+                           free_at=free_at, now=now, key=dispatch_key,
                            in_flight=dict(self.inflight))
             if it is None:
                 return None
             self.pending.remove(it)
+            self.front_dispatch_streak[it["host"]] = RF.next_front_streak(
+                self.front_dispatch_streak[it["host"]], it)
+            self.global_front_dispatch_streak = RF.next_front_streak(
+                self.global_front_dispatch_streak, it)
             self.inflight[it["host"]] += 1
             lane = it.get("blane") or RS.budget_lane(it, books=self.books, fresh=self.fresh)
             it["blane"] = lane
@@ -1579,6 +1591,7 @@ class Pool:
             hr = [r for r in rows if r[1] == h]
             by_host[h] = {
                 "open_tabs": self.inflight[h], "tab_limit": int(self.per_host.get(h, 1)),
+                "front_dispatch_streak": self.front_dispatch_streak[h],
                 # reserved slots (future-dated) count: they are opens already granted
                 "loads_60m": sum(1 for r in hr if now - r[0] < timedelta(hours=1)),
                 "cap_hour": self.thr.host_hour_cap(h),
@@ -1952,6 +1965,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--front-links", type=int, default=None,
                     help="article links taken per front (default config READER_FRONT_LINKS_MAX)")
     a = ap.parse_args(argv)
+    from scripts.beta_v2_reader_tab_limit import tab_limit
+    try:
+        a.max_tabs = tab_limit(a.max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6))
+    except ValueError as exc:
+        ap.error(str(exc))
     hand = Path(getattr(_config, "DOWJONES_HANDOFF_FILE", REPO / "HANDOFF_PC"))
     if not a.handoff or not hand.exists():
         print(f"REFUSED_NO_HANDOFF: the pool needs --handoff AND {hand} (Murat's act).")
@@ -1979,7 +1997,7 @@ def main(argv: list[str] | None = None) -> int:
         if not a.tickers:
             names = list(dict.fromkeys(names + sorted(books)))
         fronts = parse_fronts(a.fronts) if a.fronts else (None if not a.trial else [])
-        gov = RS.TabGovernor(max_tabs=a.max_tabs or int(getattr(_config, "READER_MAX_TABS", 6)))
+        gov = RS.TabGovernor(max_tabs=a.max_tabs)
         thr = WR.Throttle(WR.throttle_path(), wait_on_hour_cap=True, per_host_mode=True)
         pool = Pool(driver=OC, throttle=thr, profile=a.profile, names=names, books=books,
                     fresh=fresh_names(_now()), fronts=fronts, social=not a.no_social,

@@ -1,0 +1,280 @@
+{
+  "schema": "aegis-beta-v2-context/1",
+  "observed_at": "2026-10-24T17:13:40.700604+00:00",
+  "source_archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025",
+  "source_manifest_sha256": "d8d4f16726c0e70d6bf949037947d5d04402044d3520a85a287a18dc5d7f4910",
+  "sources": [
+    {
+      "source": "C:\\Users\\mrthn\\Downloads\\AEGIS REVIEWS.txt",
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\AEGIS REVIEWS.txt",
+      "bytes": 13,
+      "sha256": "a1abc5bba21594943c7bcd118f0816785ca58d47fec30a6709612679b691b137"
+    },
+    {
+      "source": "C:\\Users\\mrthn\\Downloads\\AEGIS_OWNER_DECISION_EDITION_02.pdf",
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\AEGIS_OWNER_DECISION_EDITION_02.pdf",
+      "bytes": 870192,
+      "sha256": "1a9361f64ec283675e0d72b28709297f394f6047385f33262ca58a83da41ba6d",
+      "pages": 46
+    },
+    {
+      "source": "C:\\Users\\mrthn\\Downloads\\AEGIS_BETA_V2_OWNER_HANDOFF.pdf",
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\AEGIS_BETA_V2_OWNER_HANDOFF.pdf",
+      "bytes": 232582,
+      "sha256": "5dc8fe4bff23639ff362b705f3ba3147abbb0c4b4ea02b67a40b1149aed3933a",
+      "pages": 40
+    },
+    {
+      "source": "C:\\Users\\mrthn\\Downloads\\AEGIS_BETA_V2_WORKBOOK.xlsx",
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\AEGIS_BETA_V2_WORKBOOK.xlsx",
+      "bytes": 77364,
+      "sha256": "8611e67091c6d69d829af2b0a8b3b90d31cd6dff42aaefb4aae6f9296cc6eafc",
+      "sheets": [
+        {
+          "name": "Start",
+          "rows": 27,
+          "cols": 8
+        },
+        {
+          "name": "Roadmap",
+          "rows": 21,
+          "cols": 8
+        },
+        {
+          "name": "Requests",
+          "rows": 150,
+          "cols": 10
+        },
+        {
+          "name": "Hypotheses",
+          "rows": 32,
+          "cols": 6
+        },
+        {
+          "name": "Portfolio snapshot",
+          "rows": 9,
+          "cols": 12
+        },
+        {
+          "name": "RF endpoints",
+          "rows": 10,
+          "cols": 7
+        },
+        {
+          "name": "Stock reference",
+          "rows": 37,
+          "cols": 25
+        },
+        {
+          "name": "Holding reference",
+          "rows": 100,
+          "cols": 15
+        },
+        {
+          "name": "Population",
+          "rows": 16,
+          "cols": 6
+        },
+        {
+          "name": "Evidence gaps",
+          "rows": 18,
+          "cols": 4
+        },
+        {
+          "name": "Owner steps",
+          "rows": 11,
+          "cols": 4
+        },
+        {
+          "name": "Sources",
+          "rows": 45,
+          "cols": 7
+        },
+        {
+          "name": "Glossary",
+          "rows": 34,
+          "cols": 2
+        },
+        {
+          "name": "Data plan",
+          "rows": 16,
+          "cols": 6
+        },
+        {
+          "name": "Business parked",
+          "rows": 15,
+          "cols": 3
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\mrthn\\Downloads\\00_START_CODEX.md",
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\00_START_CODEX.md",
+      "bytes": 7934,
+      "sha256": "685edc7987daa6ffe75bc8681005d7d2f2998efd1f87acbbe9c83d890cdfc008"
+    },
+    {
+      "source": "C:\\Users\\mrthn\\Downloads\\AEGIS PRE BETA REVIEW.txt",
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\AEGIS PRE BETA REVIEW.txt",
+      "sha256": "5451af58397ba346266ed85322f363878ee877b441ac0a873d6fe4a1b8d35b68",
+      "reason": "Referenced historical original / structured companion; not replacement for missing latest raw review"
+    },
+    {
+      "source": "C:\\Users\\mrthn\\Downloads\\AEGIS_OWNER_DECISION_EDITION_02_COMPLETE.zip",
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\AEGIS_OWNER_DECISION_EDITION_02_COMPLETE.zip",
+      "sha256": "5dd4c030d0d037ba13bfd5b84da0a662058759ddd61d5170082e0345bd7ba65e",
+      "reason": "Referenced historical original / structured companion; not replacement for missing latest raw review"
+    },
+    {
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\CONSENSUS_RESEARCH.md",
+      "sha256": "60f2d481cef29d586fa3d7e74220c90f020038e3033f5db0dfaa87d25a7958bf",
+      "source": "Consensus thread xWBv6BqGR8SLw1RyMWrrAw; fetched via connector"
+    },
+    {
+      "archive": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\consensus_thread.json",
+      "sha256": "569df4ca32feb672936ba6d4b6b4ecb1d5f82d63287a231c000fe8277916d330",
+      "source": "Consensus thread xWBv6BqGR8SLw1RyMWrrAw; fetched via connector"
+    }
+  ],
+  "latest_raw_review": {
+    "status": "MISSING_CONTENT",
+    "file": "AEGIS REVIEWS.txt",
+    "bytes": 13,
+    "text": "AEGIS REVIEWS",
+    "substitute": "Historical PRE BETA REVIEW preserved separately; not latest raw review"
+  },
+  "git": {
+    "runtime_head": "4e19219900c9de9fa35315fec63478783b6af3b5",
+    "runtime_branch": "wip/2026-10-07-day",
+    "dirty_paths_at_capture": 2164,
+    "base_sha": "1e8e60a1211faded150c492c3fee6938376b897e",
+    "worktree": "C:\\Users\\mrthn\\aegis-worktrees\\beta-v2-owner-20261025",
+    "branch": "codex/beta-v2-owner-20261025",
+    "github_private_verified": true
+  },
+  "optimus": {
+    "session_briefing": "CALLED_STALE_19.4_HOURS",
+    "aegis_verified_state": "CALLED_LIVE",
+    "brain_query": "CALLED_PRIOR_CONTEXT",
+    "aegis_postmortems": "CALLED",
+    "raw_receipts": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025",
+    "replacement_memory_database": false
+  },
+  "production": {
+    "deployed_commit": "16f5715663bd6a88cb3f8d8d3e716c65f45386cc",
+    "degraded_reasons": [
+      "ic funnel unavailable"
+    ],
+    "nav_all_fresh": true,
+    "nav_date": "2026-10-23",
+    "scheduled_jobs": 12
+  },
+  "continuation": {
+    "path": "C:/Users/mrthn/AEGIS_DOCUMENTS/Work Plan/CONTINUATION_CURRENT.md",
+    "top_clock": "2026-10-15T20:49:00Z",
+    "status": "HISTORICAL_REQUIRES_CURRENT_QUALIFICATION",
+    "four_gate_layers": [
+      "native.qualify",
+      "shim",
+      "outer bootstrap/guard",
+      "PowerShell"
+    ],
+    "next_slice": "R6 same-source read-only calibration before attempt marker/leaf/SSH; SQLwrites=0; independent audit before any financial mode"
+  },
+  "authority_overrides": [
+    {
+      "older": "20% coding quota reserve",
+      "current": "Productive use of purchased quota; no purchases/topups/unbounded API billing",
+      "source": "00_START_CODEX.md Resources and operating boundaries"
+    },
+    {
+      "older": "Istanbul host relocation",
+      "current": "Cancelled; logical path map only",
+      "source": "00_START_CODEX.md Resources and operating boundaries"
+    },
+    {
+      "older": "one small pilot / permanently one tab",
+      "current": "Broad batches; measured browser concurrency",
+      "source": "V2 handoff pp6-9,21"
+    },
+    {
+      "older": "V1 must finish before V2 planning",
+      "current": "V2 inherits unresolved V1/V1.1 dependencies",
+      "source": "V2 handoff p4"
+    },
+    {
+      "older": "frozen holdings as universal policy",
+      "current": "Preserve controls; dynamic siblings have new prospective identity",
+      "source": "V2 handoff pp12-16"
+    }
+  ],
+  "retained_boundaries": [
+    "No real-money trading",
+    "No account reset without owner alias confirmation and archive",
+    "No AEGIS_SEED_ARENA activation",
+    "No unique-data deletion or dirty-tree reset",
+    "No IIF launcher changes or load 16:45-17:05 local",
+    "Source-only tests are not live acceptance",
+    "Existing learner hold and frozen history retained"
+  ],
+  "gaps": [
+    "Latest original full review not supplied",
+    "Referenced Part II/full V2 archive not found in the five supplied files",
+    "AMX3/video/private ChatGPT conversation unresolved",
+    "WRDS authenticated entitlement/MFA and licensing",
+    "Telegram numeric owner/workspace acceptance",
+    "Broker role alias/reset confirmation"
+  ],
+  "data_catalog": {
+    "path": "C:/Users/mrthn/aegis-finance/backend/data/optimus/data_catalog/catalog_20261024T010006Z.json",
+    "observed_catalog_clock": "2026-10-24T01:00:06Z",
+    "selected_related_rows": 1396,
+    "transcript_path_matches": 0,
+    "caveat": "No pathname match is not proof of no transcript content; static consumer refs are not runtime proof"
+  },
+  "runtime_mutations": [],
+  "population_observation": {
+    "source": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\population\\current-census-corrected-f2-f3-final.json",
+    "sha256": "45e2789bdb97f458508596b9707a8987ae25c7f709a1ca4080be5b7c654819db",
+    "original247": {
+      "entered": 247,
+      "marked": 247,
+      "mark_session": "2026-10-16",
+      "matured_declared_horizons": 0,
+      "positive_market_weight": 247
+    },
+    "new1000": {
+      "frozen_entered_marked": 886,
+      "mark_session": "2026-10-23",
+      "explicit_waits": 114,
+      "matured_declared_horizons": 0,
+      "positive_market_weight": 883,
+      "zero_market_weight": 3
+    },
+    "scope": "saved-evidence exact-ID join, independent review pending; not revaluation or remote registration",
+    "five_symbol_gap": {
+      "symbols": [
+        "EVO.ST",
+        "HAG.DE",
+        "KOG.OL",
+        "RHM.DE",
+        "SAAB-B.ST"
+      ],
+      "global_panel_through": "2026-10-22",
+      "oct23_rows": 0,
+      "diagnostic": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\population\\missing-five-price-diagnostic.json"
+    }
+  },
+  "context_delta_observation": {
+    "receipt": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\c01_context_after_registry_edit.json",
+    "result": "old packet correctly refused changed registry; source expectations not silently rebound",
+    "runtime_status": "unknown"
+  },
+  "optimus_ingestion": {
+    "project": "aegis-beta-v2-owner-20261025",
+    "notes": 8,
+    "exact_pickup_page": "aegis-beta-v2-owner-20261025-beta-v2-owner-20261025-context-population-registry",
+    "exact_readback_verified": true,
+    "broad_ranking": "imperfect; exact page fallback retained"
+  }
+}

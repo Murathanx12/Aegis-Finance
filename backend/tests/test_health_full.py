@@ -5,7 +5,9 @@ Covers: ring buffer capture + cap, source-health counters + rates,
 endpoint aggregation shape, and per-lane since-inception delta math.
 """
 
+import json
 import logging
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -117,30 +119,42 @@ class TestHealthFullEndpoint:
         # Lane with no NAV rows yet is present with explicit nulls.
         assert tr["lanes"]["conservative"]["nav"] is None
 
-    def test_ic_funnel_row_present_and_visible_when_missing(self, monkeypatch):
+    @pytest.mark.parametrize("age_days", [1, 40, None])
+    def test_ic_funnel_row_present_and_visible_when_missing(self, monkeypatch, tmp_path, age_days):
         """NIGHT-13 audit F1/F5: the IC page degrades to pure benchmark core
         when its funnel artifact is missing — that state must be visible on the
         health surface, not only inside the page payload."""
-        body = client.get("/api/health/full").json()
-        ic = body["investment_committee"]
-        assert "funnel_available" in ic and "status" in ic
-        # The artifact ships under backend/data, so the file is THERE. Its
-        # status now depends on its AGE, and this assertion used to read
-        # `status == "ok"` -- which quietly encoded "the shipped funnel will
-        # never get old". It did get old (44 days by 2026-09-24) and the test
-        # would have gone red on the day the staleness check started working,
-        # blaming the check rather than the snapshot. Derive the expectation
-        # from the file, never from the calendar moment the test was written in.
-        assert ic["funnel_available"] is True
-        assert ic["status"] in ("ok", "DEGRADED")
-        if ic["status"] == "DEGRADED":
-            assert "stale" in ic["error"] or "age" in ic["error"].lower(), (
-                f"a present funnel may only degrade on AGE here, not: {ic['error']}")
-
         from pathlib import Path
         from backend import config as cfg
+        from backend.services.investment_committee import FUNNEL_STALE_DAYS
+
+        # Keep the shipping contract, but exercise age states independently of
+        # how old the committed snapshot happens to be on the day CI runs.
+        assert Path(cfg.IC_FUNNEL_PATH).is_file()
+        generated_at = ((datetime.now(timezone.utc) - timedelta(days=age_days)).isoformat()
+                        if age_days is not None else None)
+        funnel = tmp_path / "funnel.json"
+        funnel.write_text(json.dumps({"generated_at": generated_at, "candidates": []}),
+                          encoding="utf-8")
+        monkeypatch.setattr(cfg, "IC_FUNNEL_PATH", funnel)
+        body = client.get("/api/health/full").json()
+        ic = body["investment_committee"]
+        assert ic["funnel_available"] is True
+        assert ic["funnel_generated_at"] == generated_at
+        if age_days is None:
+            assert ic["funnel_age_days"] is None
+        else:
+            assert age_days <= ic["funnel_age_days"] < age_days + 1
+        degraded = age_days is None or age_days > FUNNEL_STALE_DAYS
+        assert ic["status"] == ("DEGRADED" if degraded else "ok")
+        assert ("ic funnel unavailable" in body["degraded_reasons"]) == degraded
+        if degraded:
+            assert ic["error"]
+        else:
+            assert "error" not in ic
+
         monkeypatch.setattr(cfg, "IC_FUNNEL_PATH",
-                            Path("Z:/nonexistent/funnel.json"))
+                            tmp_path / "missing-funnel.json")
         body = client.get("/api/health/full").json()
         ic = body["investment_committee"]
         assert ic["funnel_available"] is False and ic["status"] == "DEGRADED"

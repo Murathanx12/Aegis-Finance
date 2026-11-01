@@ -145,7 +145,7 @@ def test_outer_refusal_reports_actual_returned_usage_without_reinterpreting(tmp_
 
 
 def test_external_review_and_fresh_root_grant_required():
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime(2026, 10, 13, 10, 0, tzinfo=timezone.utc).isoformat()
     pins = {"synthetic": "a" * 64}
     review = {"independent": True, "verdict": "PASS_BOUNDED_ASML_CURRENT_CAPTURE_SOURCE",
               "source_pin_hash_domain": "FILE_BYTES_SHA256", "source_pins": pins,

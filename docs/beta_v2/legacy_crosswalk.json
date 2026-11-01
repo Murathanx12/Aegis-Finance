@@ -1,0 +1,1036 @@
+{
+  "schema": "aegis-beta-v2-legacy-crosswalk/1",
+  "source": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-through-monday\\dependency-queue.json",
+  "source_sha256": "9d7b023dc6da2255b497f313505a9f39ce6011c6162fc3f33c6d3872575e81ae",
+  "policy": "Historical states preserved verbatim; aliases are scope mappings, not current acceptance. V1:B01 is release recovery; V2:B01 is parked business. Subchunk applicability remains inherited-unverified.",
+  "tasks": [
+    {
+      "id": "V1:B00",
+      "v2_tasks": [
+        "C00",
+        "C01",
+        "C03"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "323062462c1db6f82e0676badbe1c3048a8702381a85a07735d0fa708c0c38d1",
+      "historical_status": "TESTED",
+      "historical_acceptance": "installed client help, checkpoint/resume, owner and STOP control",
+      "historical_artifact": "continuity-receipt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "same-thread client resume passed; STOP/duplicate-owner/reload checks pass; root retains owner"
+    },
+    {
+      "id": "V1:B01",
+      "v2_tasks": [
+        "C02",
+        "C15"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "65a2fc2ebcd629216d5bc650aa2d2d6536f5b5f6953ba3e06fecdfb19197ffbe",
+      "historical_status": "DEPLOY_OPERATIONALLY_OBSERVED",
+      "historical_acceptance": "PR20 exact head/source pins, independent review and current CI qualify",
+      "historical_artifact": "pr20-production-verification.json",
+      "historical_dependencies": [],
+      "historical_next_step": "closed; do not repeat publication recovery"
+    },
+    {
+      "id": "V1:B02",
+      "v2_tasks": [
+        "C07",
+        "C11"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "99962097b2dda9b0006b1716b8b36e9fcb7d2e595460a076a2df30c42ce977fb",
+      "historical_status": "MERGED_DEPLOYED_LOCAL_SOURCE_INSTALLED_NATIVE_CAP_OBSERVED",
+      "historical_acceptance": "frozen without-analyst replay matches or precise nonseparable reason; regression; independent review",
+      "historical_artifact": "ablation-reviewer-packet.json",
+      "historical_dependencies": [
+        "V1:B01"
+      ],
+      "historical_next_step": "B02 repaired: actualfreshnative10%fallbackcap verified, historicalmismatchpreserved; no existinglongprocessreloadclaim."
+    },
+    {
+      "id": "V1:B03",
+      "v2_tasks": [
+        "C05",
+        "C10"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "e9ee429d901005ee8287a50acff08e4275e3abfa253db06ed58208ea2d3e197b",
+      "historical_status": "INVENTORIED",
+      "historical_acceptance": "all known producer/store/consumer manifests incl archives/siblings; unavailable != empty",
+      "historical_artifact": "output-family-inventory.json",
+      "historical_dependencies": [],
+      "historical_next_step": "coverage census now reviewed; unknown/protected populations retained"
+    },
+    {
+      "id": "V1:B04",
+      "v2_tasks": [
+        "C10"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "ffb8cafc18928d776a9a40d27b0ed92a1351e4611f5e8bfb06eeade61767bb19",
+      "historical_status": "PARTIAL_ORIGINAL_SETS_MEASURED_SOURCE_CROSSWALK_REFUSED_PARKED",
+      "historical_acceptance": "raw/unique/duplicates/status dates for each family, original frozen records retained",
+      "historical_artifact": "coverage-reviewed.json",
+      "historical_dependencies": [
+        "V1:B03"
+      ],
+      "historical_next_step": "Original211/22/189exacthistoricalsets53a and22immutablematches4e1 retained. W14actualprefixAPPROVED78ac; W13actualwhole120secresourceREFUSEDparked2cyclesSPENT/no result/currenteligibilityUNKNOWN. Independentexact3 localpriceprerequisites continue."
+    },
+    {
+      "id": "V1:B05",
+      "v2_tasks": [
+        "C11"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "e990c1f160e481b5e7bd38711e9f57d4d84bc3f436c57ffb137dba380781b853",
+      "historical_status": "ACTUAL_REFIT_PUBLISHED_AND_DEFAULT_NATIVE_CONSUMER_VERIFIED",
+      "historical_acceptance": "eligible matured outputs catch up idempotently; trial gates respected; learning read in later consumer",
+      "historical_artifact": "docs/BETA_LEARNING_CATCHUP_2026-10-10.md; catchup-root-operations/root-runtime-exact22-20261010/operation-result.json; catchup-learning-forecast-native/trace.json",
+      "historical_dependencies": [
+        "V1:B04"
+      ],
+      "historical_next_step": "22actualcanonicalgrades and0rerun; actualnativefit/build22/2 vs0/0 independentlyaccepted; allfamilygrading stillpartial"
+    },
+    {
+      "id": "V1:B06",
+      "v2_tasks": [
+        "C04",
+        "C12"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "ee97af98bc29bb1d0f22061a176028e414cec73130bfaef86705cf19c16d54d2",
+      "historical_status": "ACTUAL_PROVIDER_PROVED_READER_R5_HEADROOM_AND_NATIVE_LINEAGE_REFUSED",
+      "historical_acceptance": "guarded memory/quality sample and bounded approved route; validated cached extraction",
+      "historical_artifact": "reader-owned-restart-operation/repair2/root-readonly-entry-refusal.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Newverified originaltasklauncherinnerwhitespace hypothesis reviewed+actualrestored.40OKand20storedrecords observed, oldcap2 branch preserved. Articleinterpretation/consumerstillunproved; preservebrowserowner."
+    },
+    {
+      "id": "V1:B07",
+      "v2_tasks": [
+        "C04",
+        "C07"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "5f16f73b5a98eaf2b1e0526cf2217f43561c909ee5251c841db87d4ba83367d5",
+      "historical_status": "ACTUAL_23_STOCK_95GROSS_MECHANICS_QUALIFIED_NATIVE_CLOSE_ADOPTION_PENDING",
+      "historical_acceptance": "actual source->interpretation->features->forecast->isolated plan->outcome->learning ablations",
+      "historical_artifact": "news-runtime-selective/execution-receipt.json; news-runtime-selective/root-native-import-proof.json; pr25-live-20261010T180001Z/receipt.json; news-current-strict-engineering/call-attempt.json",
+      "historical_dependencies": [
+        "V1:B02",
+        "V1:B06"
+      ],
+      "historical_next_step": "Historicalstrictcasesrefused preserved; new actual default7B QAinvalidenum+unsupportedforwardclaim e3f355; oldhostedteacher semanticrefused e487 differentprompt. Currentadmission/newnewsforecastunproved; no productioncache or sourcehistory rewrite."
+    },
+    {
+      "id": "V1:B08",
+      "v2_tasks": [
+        "C13"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "d5e034fdcf786887c002a1f2ebc2d7b5a78ee619ef5f5535c9c49bb2042d5760",
+      "historical_status": "FIVE_NEW_ROLES_UNASSIGNED_LEGACY_HACK2_CONTINUES",
+      "historical_acceptance": "GET-only safety/fleet reconciliation; approved inactive epoch transition packet",
+      "historical_artifact": "fleet-exact5-runtime-commit-receipt.json; fleet-after-exact5/fleet-reconciliation-diagnostic.json",
+      "historical_dependencies": [],
+      "historical_next_step": "FreshOct12SGT GET36 fiveOK/85positionsprotected/0mismatch; sixthcredentialinvalid. ExistingGTC/fleetopen/preclose/daily preserved; protection-only sweep neverinstalled and2oldDRYownershiprefusals remaininactive. EpochgateOFF."
+    },
+    {
+      "id": "V1:B09",
+      "v2_tasks": [
+        "C02",
+        "C14"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "6be4a0b5d8a0c1988b9f01dd5f452ce73aff1121250853940cee51299ebba31f",
+      "historical_status": "RAW_DUPLICATE_PREFIX_NO_CURSOR_PROGRESS_READER_NOT_HEALTHY",
+      "historical_acceptance": "progress-aware service/dashboard actual consumers; restart ownership and advancing outputs",
+      "historical_artifact": "producer-runtime-selective/installed/receipt.json; pr23-live-20261010T163828Z/receipt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Closed currentday nativeproducer; do not rerun. Otherlearning/collector/fullhealth/dashboard evidence remainsseparate, observe natural06:30SGT."
+    },
+    {
+      "id": "V1:B10",
+      "v2_tasks": [
+        "C13",
+        "B01"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "455550bb856f38fd5dfad0475fd2a93d1f2916a6e22bf8ac9519bd6b0aaf5ba6",
+      "historical_status": "DRAFTED_EXTERNAL_PENDING",
+      "historical_acceptance": "Monday Terminal packet retains authentic WLS/rules/fills and gates; offline preview",
+      "historical_artifact": "docs/MONDAY_TERMINAL_PREPARATION_2026-10-12.md",
+      "historical_dependencies": [],
+      "historical_next_step": "application submitted approval pending; Monday authentic universe/rules/fills needed"
+    },
+    {
+      "id": "V1:B11",
+      "v2_tasks": [
+        "C06",
+        "C07"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "cf4fc9ada1d0ca30563b03ddb8913b148acc0e5b31ee708985f27312b8882f9f",
+      "historical_status": "INACTIVE_DRAFT_REVIEWED",
+      "historical_acceptance": "ATLAS v3 dated inactive draft with engine weights, news/revision evidence, prices/ranges/risks/exits/deltas",
+      "historical_artifact": "docs/ATLAS_LLM_PORTFOLIO_V3_2026-10-10_REVIEW.md; atlas-prior-version-comparison.json",
+      "historical_dependencies": [
+        "V1:B04",
+        "V1:B07"
+      ],
+      "historical_next_step": "Inactive revieweddateddraft nowhas exactv1/v2/v3comparison/alltotals100%; ownerfinalreview, authenticeligibility andfreeze/cost/benchmark terms pending."
+    },
+    {
+      "id": "V1:B12",
+      "v2_tasks": [
+        "C15"
+      ],
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "fb944c5a33d98f7a9ca9c7fc2abd6221fcceeea4b34a908b71e37c4af2040fda",
+      "historical_status": "PR31_AND_HEALTH97A_INTEGRATED_DEPLOYED_STRICT_CANARY_FAILED",
+      "historical_acceptance": "acceptance matrix separates implementation/tests/integration/observations/blocked/failed; compact Astra packet",
+      "historical_artifact": "public-refresh-2110/main-ci-success.json; pr27-live-20261010T221334Z/receipt.json",
+      "historical_dependencies": [
+        "V1:B02",
+        "V1:B04",
+        "V1:B05",
+        "V1:B07",
+        "V1:B08",
+        "V1:B09",
+        "V1:B10",
+        "V1:B11"
+      ],
+      "historical_next_step": "Currentrelease15130localPASS/exact97CI/deploy/readback7e061; strictexistingwarning/newpanelverdicts retainedFAIL. InitialAstra6.5; latestowner authorizes finaloperaddendum. No wholeBetaacceptance."
+    }
+  ],
+  "subchunks": [
+    {
+      "id": "V1:W7",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "b6e60d3d4522fe1dd57bd05dc3351b4c8508fa980aa82de20becdd18224d3245",
+      "historical_status": "OPERATIONALLY_OBSERVED_INDEPENDENTLY_APPROVED",
+      "historical_acceptance": "22 original census immutable hashes equal actual canonical non-resolution forecast objects",
+      "historical_artifact": "residual-immutable-crosswalk-operation/independent/independent-actual-immutable-review.json",
+      "historical_dependencies": [
+        "V1:W5",
+        "V1:W6"
+      ],
+      "historical_next_step": "Current eligibility remains separate"
+    },
+    {
+      "id": "V1:W8",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "1dc34903e16f16d6c3647098de6bb342e793638898e0d6eeed7bbe081910a3a4",
+      "historical_status": "SOURCE_FEASIBILITY_APPROVED",
+      "historical_acceptance": "Exact other11 original-cell source counts/routes/schema match frozen census; protected outcomes unopened",
+      "historical_artifact": "residual-due-other-family-feasibility/independent/independent-review.json",
+      "historical_dependencies": [
+        "V1:B04"
+      ],
+      "historical_next_step": "W9 guarded hashed-ID enumeration"
+    },
+    {
+      "id": "V1:W9",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "a31d4eaad361ebb99730fd54834e7c1a9c5dc863d2a5f572617e5bc8bd0ec58e",
+      "historical_status": "OPERATIONALLY_OBSERVED_INDEPENDENTLY_APPROVED",
+      "historical_acceptance": "Exact11 due-status identity-only lookup accepts187, original source/index guards retained",
+      "historical_artifact": "residual-due-other-family-operation/independent/independent-actual-identity-review.json",
+      "historical_dependencies": [
+        "V1:W8"
+      ],
+      "historical_next_step": "W10/W12 qualified per-ID source metadata mapping, eligibility unknown"
+    },
+    {
+      "id": "V1:W10",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "8dfbb56a952c041e9e9ea53e99f3d2c99921b43bf67a236b6ee4df9f8dd35197",
+      "historical_status": "SOURCE_DIAGNOSIS_APPROVED_REAL_READ_BLOCKED",
+      "historical_acceptance": "Source-schema and protection boundary qualification, existing saved perIDmanifest feasibility",
+      "historical_artifact": "residual-due-source-crosswalk-feasibility/independent/independent-review.json",
+      "historical_dependencies": [
+        "V1:W9"
+      ],
+      "historical_next_step": "W12 safe selective metadata reader; no blanket metadata ban/new permission"
+    },
+    {
+      "id": "V1:W11",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "bf47225592426bc63111002abf424c1fcce0cb59057065d37a7e65c70f0abc53",
+      "historical_status": "OPERATIONALLY_OBSERVED_INDEPENDENTLY_APPROVED",
+      "historical_acceptance": "Exactfour original due identity-only lookup24cellsIDs/9635familykeys,28sentinel cap and unchanged guards",
+      "historical_artifact": "residual-due-four-family-operation/independent/independent-actual-identity-review.json",
+      "historical_dependencies": [
+        "V1:W5",
+        "V1:W7"
+      ],
+      "historical_next_step": "Exact historical15pair crosswalk53a completed; W13 perIDsource proof separate"
+    },
+    {
+      "id": "V1:W12",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "0cfc898d9eee9f9f6851e3bacd2cd744dd1e100d29f4b4c06d5dfa51b55984f9",
+      "historical_status": "PRIVATE_UNIT_INDEPENDENTLY_APPROVED",
+      "historical_acceptance": "Field-aware selective metadata reader skips nonmetadata protected values; adversarial ordering/escaping/nesting/duplicate/unknown malformed guards",
+      "historical_artifact": "residual-due-selective-metadata-reader/independent/independent-review.json",
+      "historical_dependencies": [
+        "V1:W10"
+      ],
+      "historical_next_step": "W13 stableprefix/source/root/whole-operation guardreview before realread"
+    },
+    {
+      "id": "V1:W13",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "2f179efb655226b587ab8fb57a1099f47d33951cdff5a8d0469369694132a419",
+      "historical_status": "ACTUAL_RESOURCE_REFUSED_PARKED_CAP2_SPENT",
+      "historical_acceptance": "Bounded stable-prefix exact189 source-metadata crosswalk with protectedvalue skipping/naturalappend/malformed and duplicate quarantine guards; defaultPLAN0reads",
+      "historical_artifact": "residual-due-source-crosswalk-operation/root-repair2-actual/receipt.json",
+      "historical_dependencies": [
+        "V1:W9",
+        "V1:W10",
+        "V1:W11",
+        "V1:W12"
+      ],
+      "historical_next_step": "Savedfailure independentqualification only; no thirdrepair/capwiden/retry;189historicalsetnotcurrenteligible"
+    },
+    {
+      "id": "V1:W14",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "6831bce9df999b4c6026a05dab1719f9d74697aa11b9543973076c31cac15423",
+      "historical_status": "ACTUAL_SAVED_PREFIX_APPROVED",
+      "historical_acceptance": "Exact2 native sourceprefix bytehash+metadata, bounded resource/namespace/truncation/torn/STOPownerIIF/source-pins and naturalappend unchangedprefix proof; noJSON/outcome decode",
+      "historical_artifact": "residual-due-source-prefix-qualification/root-repair1-actual/independent/independent-review.json",
+      "historical_dependencies": [
+        "V1:W13"
+      ],
+      "historical_next_step": "Closed capture; W13actualresource refusal parked no grading"
+    },
+    {
+      "id": "V1:W15",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "4012d7ff34c67c7b098304aa9b8cf79a184aa1da9d9a9e34e11563f765e83ca3",
+      "historical_status": "SOURCE_APPROVED_PREREQUISITE_PLAN_REVIEW_RUNNING",
+      "historical_acceptance": null,
+      "historical_artifact": "current-three-price-prerequisites/review-packet.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Originaldatebaseline/exact3metadata+assetadjustmentreceipt prerequisite qualification beforevalues; no pricesread"
+    },
+    {
+      "id": "V1:W16",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "1a9e5859e9c8b5c855df10ca3e1caa3d04c2f18ae33bdc1d07b23701ecced5e8",
+      "historical_status": "ACTUAL_ADMIN_METADATA_APPROVED_NO_GRADE_AUTHORITY",
+      "historical_acceptance": null,
+      "historical_artifact": "current-three-price-metadata-operation/root-repair2-actual/independent/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Closed exact3savedscreen admin; originalnativecontract/basis/session windows UNKNOWN, independentminimalSOURCEroute next"
+    },
+    {
+      "id": "V1:W17",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "2450974464eec1e2b4f7f2cd62321e3c47995c79c174c55c08932f068b31c9bf",
+      "historical_status": "FINAL_FAILED_PARKED_2_OF_2_SPENT",
+      "historical_acceptance": null,
+      "historical_artifact": "news-date-parser-candidate/repair2/independent/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No thirdrepair/release/install/reload; sourcebug retainedexplicitlyunverified, continueindependentsavedcontracts"
+    },
+    {
+      "id": "V1:W18",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "3e8fc2fc6e4aefe99d4ce70f01696698ab4a5979d47014983d570c91fcc97d52",
+      "historical_status": "FINAL_FAILED_RESOURCE_BOUND_PARKED_2_OF_2_SPENT",
+      "historical_acceptance": null,
+      "historical_artifact": "current-three-saved-contract-operation/repair2/independent/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "PARK inactive no thirdrepair/capswiden/actualrerun/grade or dependentpriceexecution. Preserve earlier actual120s stack/refusal and saved3ADMIN319f independently closed."
+    },
+    {
+      "id": "V1:W19",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "7535c637409436b6f5a916b012db1c8f6debcd304dd87cd181d390286f777eb9",
+      "historical_status": "SOURCE_PLAN_APPROVED_DEPENDENT_CONTRACT_BLOCKED",
+      "historical_acceptance": null,
+      "historical_artifact": "current-three-local-price-operation-plan/independent/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Dependent exact3 originalcontract recovery FAILED_RESOURCE/PARKED, so no localpriceexecution/grade. SOURCEplan9eaaa retained with basis/asset/currency/aux prerequisites UNKNOWN."
+    },
+    {
+      "id": "V1:W20",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "feabadbcd9ccd852a4612a7d2f3813bfe13c4d6b31e8f1b8ebf5dae6d774edd6",
+      "historical_status": "SOURCE_APPROVED_FINAL_P2_ACTUAL_SAFE_REFUSAL_PARKED_2OF2",
+      "historical_acceptance": null,
+      "historical_artifact": "natural-run-observation-operation/file-wrapper-final-p2/root-passive-final-p2/independent-actual/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Admin semantic result UNKNOWN; no third projection repair/bypass/native reread or actual retry; old+new scopes preserved; independent NN continues"
+    },
+    {
+      "id": "V1:W21",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "ef17a01f467bec9b88ff54b0d394aa01c9ab901fedcb987cb492448bcf96329c",
+      "historical_status": "AUTHENTIC_NATIVE_ADMIN_REFUSED_OBSERVED_PASSIVE_OBSERVER_SUCCESS_ONLY",
+      "historical_acceptance": null,
+      "historical_artifact": "nn-natural-root-caller-source/actual-once/independent-actual/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No native reason/end/stages/ROWprogress/cells/grades/learning/health qualification; no reread or retry; W26sourcefacts qualify withoutrepair"
+    },
+    {
+      "id": "V1:W22",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "73ff17be711392c0a37304373ac8c8aea87c40adec6519780fe4741b4dcad90f",
+      "historical_status": "INTEGRATED_MAIN_CI_SUCCESS_DEPLOY_MATCH_FORECAST_WARNING_NOT_HEALTHY",
+      "historical_acceptance": null,
+      "historical_artifact": "pr28-live-20261011T001218Z\\receipt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "NAV/registry/lanes unchanged anddeploy795 matches; investigate25due arena_forward viaW23, no publicationrecoveryredo/canarypassclaim."
+    },
+    {
+      "id": "V1:W23",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "6f85e583af1d63135418c2cec7db3c40ea9265427f3e4e7e67fe435599d7df5d",
+      "historical_status": "LIVE25_REPRODUCED_SOURCE_NO_SKIP_DEFECT_ADMIN_ACCESS_INACCESSIBLE_ROUTE_PARKED",
+      "historical_acceptance": null,
+      "historical_artifact": "arena-forward25-admin-actual-launch-fixed/independent-actual/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Exacteligibility/jobexecution UNKNOWN; no empty/missedjob/cause inference or wholebook trigger; no SSHrepeat; futureaccess/scheduled evidence required"
+    },
+    {
+      "id": "V1:W24",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "e633193a83199eb7a89788c4fd247b599e679473a37a29beaa1f76006c43948c",
+      "historical_status": "RENDERED_UI_UNOBSERVED_CLIENT_BROWSER_UNAVAILABLE",
+      "historical_acceptance": null,
+      "historical_artifact": "dashboard-consumer-source-inventory\\browser-availability-attempt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Rendered UI only when client supplies enabled browser surface; existing source/CI and admin receipts continue independently, no original OpenClaw browser takeover."
+    },
+    {
+      "id": "V1:W25",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "631217cb33bbb192558186694a23064dce73217b1b52c1bcdf03dd6b1e798573",
+      "historical_status": "BOUNDED_SOURCE_SCREEN_COMPLETE_NO_QUALIFIED_EVENT_NOT_GLOBAL_ABSENCE",
+      "historical_acceptance": null,
+      "historical_artifact": "new-dated-event-feasibility/",
+      "historical_dependencies": [],
+      "historical_next_step": "No blind body/model repetitions; different genuine source required for new interpretation admission; two old failed cases preserved neverretried"
+    },
+    {
+      "id": "V1:W26",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "d6921e9c37f757b6c967463934e7fc69565d1c0082218e2d516a3cd16f279816",
+      "historical_status": "SOURCE_FACTS_INDEPENDENTLY_APPROVED_NO_REPAIR_JUSTIFIED_ACTUAL_CAUSE_UNKNOWN",
+      "historical_acceptance": null,
+      "historical_artifact": "nn-native-refusal-source-qualification/independent/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "CorrectSundayclosedweekdaySOURCE anddifferentstale/refused status, lowRAMnotproved; retainunknown, no newprojection/retry. Continue independent release/reader/nativekeepersoak"
+    },
+    {
+      "id": "V1:W27",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "e53746871de86e8b26bbe3f8d69d650fa1b538b1d45d7fecf0b7554a32ef413c",
+      "historical_status": "MERGED_MAIN_CI_SUCCESS_DEPLOY_OPERATIONALLY_OBSERVED_KNOWN_DEGRADED",
+      "historical_acceptance": null,
+      "historical_artifact": "pr29-live-20261011T015209Z\\receipt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Documentation release integrated; full health remains arena25 degraded. Continue independent existing reader soak; do not invent source repair from docs0."
+    },
+    {
+      "id": "V1:W28",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "338dd3864c1bcd0b87cc8e3dbb784d89611890dc189baff0e386cfe83c0d972e",
+      "historical_status": "SOURCE_AND_CATALOG_GAPS_QUALIFIED_PROD25_ELIGIBILITY_BLOCKED",
+      "historical_acceptance": null,
+      "historical_artifact": "arena-public-forecast-source-qualification/catalog-followup.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No per-rowGET/explicitalias; literallocalpathnotfound unknownconfigurednamespace; SSHrouteparked. No syntheticgrade/wholebooktrigger or archive-substitution; independentrelease/soak continue"
+    },
+    {
+      "id": "V1:W29",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "334dab6ad62dd8cf3941ec7249513810a3fff66fecd032e9b40dabb4d813d054",
+      "historical_status": "FINITE_COORDINATOR_SOAK_OPERATIONALLY_OBSERVED",
+      "historical_acceptance": null,
+      "historical_artifact": "bounded-openclaw-soak\\20261011T0541Z\\openclaw-progress-probe-corrected.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Status-only0911UTC afterIIFwindow; browseroriginalowner checked/readeradvancing, lowRAMQwenparked"
+    },
+    {
+      "id": "V1:W30",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "16aa07c0609b85cd099a6548851de260747bf7f16556bfc948520527073dfe78",
+      "historical_status": "SAVED_AGGREGATE_OPERATIONAL_EVIDENCE_INDEPENDENTLY_APPROVED",
+      "historical_acceptance": null,
+      "historical_artifact": "arena-log-admin-source-qualification/pass-summary-actual.json + independent-actual/independent-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Close boundedlogqueries; 25rowcausal/eligibility diagnosis remainsexternallyblocked; continue independent existingreader soak. Include distinct units/executionevidence in Mondaypacket."
+    },
+    {
+      "id": "V1:S27-BASELINE-SUBSET",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "389e539462341e18649b2551e838767f46c88d72ea5966d550592a5df762989f",
+      "historical_status": "ACTUAL_INDEPENDENTLY_APPROVED_SUBSET100",
+      "historical_acceptance": "Original126/63/3M eligibility/ST/BD semantics, separate immutable103 subset and allsource clocks; bounded512MiB45s actual after review",
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\baseline-actual-metadata-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Compose BOTH outputs+outers+review into separately reviewed fresh draft"
+    },
+    {
+      "id": "V1:S01-PAUSE",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "b7990d1c85e46bf1134706d80bcb5282e3f0663c5ac64386867cd8ddbd54cdd4",
+      "historical_status": "PAUSED_BY_OWNER_OFF_TONIGHT",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\restore-stack.ps1",
+      "historical_dependencies": [],
+      "historical_next_step": "Tomorrow explicit -Restore; inference optional RAM/quality guard"
+    },
+    {
+      "id": "V1:S02-WEIGHT-REPLAY",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "7bcb78fea63ab6880172a00e9e0e308fab265f9af6f068edb7951d542397adaa",
+      "historical_status": "ACTUAL_REPLAY_OBSERVED_H21_NUMERICAL_PARKED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\replay-real-cycle1",
+      "historical_dependencies": [],
+      "historical_next_step": "Review compatible legacy adapter then rerun current semantic consumer; no third H21 model retry"
+    },
+    {
+      "id": "V1:S03-INTEGRATION",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "44b7d9e5af5c209359b3ecf5fc46d051050c0c59688fc641625d9c5b01b27d7e",
+      "historical_status": "FINAL_REVIEWED_CODE_DOCS_PUSHED_PR30_FULL_R3_RUNNING_REMOTE_FINAL_CI_PENDING",
+      "historical_acceptance": null,
+      "historical_artifact": "https://github.com/Murathanx12/Aegis-Finance/pull/30",
+      "historical_dependencies": [],
+      "historical_next_step": "BothrequiredfinalchecksPASS thensource/laneproofmerge/deployverification"
+    },
+    {
+      "id": "V1:S04-ORDINAL-DRAFT",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "88b8143f1771cf0566b88bfcc234337b8194240a370659b36ff66a38888da5c1",
+      "historical_status": "R6_ACTUAL_INDEPENDENT_PASS_CONDITIONAL_REVIEW_ONLY",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\rank-fallback-draft\\r6\\actual-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Finalportfolio/docreview theninactiveartifactrelease; no tradingapproval"
+    },
+    {
+      "id": "V1:S05-COVERAGE",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "672ec3a3223dd53f58382c59f3f11c43ee150d1aa3fad9dce94d227cdc39aa02",
+      "historical_status": "PARTIAL_CENSUS_AND_LEARNING_TRACE_COMPILED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\coverage-release-packet\\beta-coverage-learning-acceptance-v2.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Final money-first acceptance/review packet; inaccessible and unknown not empty"
+    },
+    {
+      "id": "V1:S06-AWARDS",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "fcdc03b4cd2a9702b59651f216ad851c2d3abd18a6b7ddf6fa4aa6a4166de705",
+      "historical_status": "BOUNDED_LICENSED_MECHANISM_RESEARCH_COMPLETE",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\award-mechanisms.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Reuse only closing real gaps; no more research without new evidence"
+    },
+    {
+      "id": "V1:S07-OWNER-CAUSAL-RESEARCH",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "ffae40c2abdc1378c248686d6c9770297bc7e90c55a31ee79224324b7994faf0",
+      "historical_status": "DATED_HYPOTHESES_RECORDED_UNCALIBRATED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\owner-causal-hypotheses.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Later outcomes/news/analyst ablations; consensus horizons/currency remain unverified"
+    },
+    {
+      "id": "V1:S08-RESTORE-REVIEW",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "b5cf952ddc33d129ef6bd928ced79b10c3a7c785c7a81d8132eaa8b4ae52f9f2",
+      "historical_status": "INDEPENDENT_SOURCE_MOCKED_PASS_OFF_TONIGHT_NO_LIVE_RESTORE",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\restore-repair1\\source-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "AttendedownerOct12outsidequiet; liveownership+qualityafterrestore"
+    },
+    {
+      "id": "V1:DEFERRED-INDEPENDENT-INVESTMENT",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "f9e78b7c632606dc318836bbea97b30682efa41a52f17d68fdfcf9bcb5bdfdcc",
+      "historical_status": "CAPTURED_LINKED_EXISTING_OPTIMUS_RETRIEVAL_VERIFIED_DEFERRED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:/Users/mrthn/aegis-finance-budgeted-roadmap/docs/DEFERRED_INDEPENDENT_INVESTMENT_REASONING_2026-10-11.md",
+      "historical_dependencies": [],
+      "historical_next_step": "OwnerprioritizationonlyafterBeta/Bloombergsetup; noacceptanceexpansion"
+    },
+    {
+      "id": "V1:S09-SEMANTIC-ACTUAL",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "e8bddb40dff015be2e76b37c832f8c2765ab8a2ad9e3e55483d2e4034d22e3d2",
+      "historical_status": "ACTUAL_INDEPENDENT_PASS_INPUTS_UNAVAILABLE_NOT_CASH",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\consumer-semantic-cycle2\\r2\\actual-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Reportwithsameprobabilitysectionsandoriginalsnapshotdate"
+    },
+    {
+      "id": "V1:S10-FINAL-PACKET",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "0c1bdd09d4faf97b80756e35619d2f53c4adad76ddc91b750300358933c677d4",
+      "historical_status": "INDEPENDENT_DOCS_PASS_COMMITTED_REVIEW_TIME_SNAPSHOT",
+      "historical_acceptance": null,
+      "historical_artifact": "C:/Users/mrthn/aegis-finance-budgeted-roadmap/docs/BETA_BUILD_ACCEPTANCE_2026-10-11.md",
+      "historical_dependencies": [],
+      "historical_next_step": "Finalchecks/currentreleaseobservations supplement+handoff; preserveoriginalsnapshots"
+    },
+    {
+      "id": "V1:W38-FINAL-RELEASE",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "d05020d59945ed3e826518fe63f7f185b183d7c58c78a2ff66f7dacbe92943fa",
+      "historical_status": "MERGED_DEPLOYED_EXACT_CI_PASS_SCOPED_CORE_CANARIES_STABLE_FORMAL_WARNING_FAIL_PRESERVED",
+      "historical_acceptance": "Frozen25 source pins; required full local suite; exact final backend/frontendCI; independentreview; before/after registry/laneNAV/deploy checks",
+      "historical_artifact": "Main68061b2f/PR30; exactPR38139182218/main38140929918PASS; R3receipt9e3e14822; beforece4d/after9e62+5505; warningadjudication04365; currentpacketreviewb5f921",
+      "historical_dependencies": [],
+      "historical_next_step": "Owner/Astra scopedreview; oldledgercompleteness debt remainsunverified, no guard/ledger mutation"
+    },
+    {
+      "id": "V1:W39-FINAL-REVIEW-DRAFT",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "86da6c2a5311666a2252bc60ab27f0924b952be377964eb0d7a7606d05793025",
+      "historical_status": "FRESH_INACTIVE_PORTFOLIO_AND_CURRENT_ACCEPTANCE_DELIVERABLE_READY",
+      "historical_acceptance": "Fresh exactinputs/currenteligibility conditional nativepreview, originalportfolios preserved, SPYcomparator, limits honest",
+      "historical_artifact": "C/docs/BETA_FINAL_RELEASE_STATUS_2026-10-11.md c93; BETA_V1_PORTFOLIO review R6actuala049; currentpacketb5f921",
+      "historical_dependencies": [],
+      "historical_next_step": "Owner/Astra review plusMondayauthenticinputs; notfullBetaacceptance/automaticactivation"
+    },
+    {
+      "id": "V1:W38-CONSUMER-RESTART",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "3af3814665bad5c448ca6743d1d75c29d7b38b87e08a2c6ca100b031aecb2df4",
+      "historical_status": "INDEPENDENT_ACTUAL_PASS_BYTE_IDENTICAL",
+      "historical_acceptance": "Freshdirectownedworker under512MiB30s withsame4admittedoriginalsnapshots; old/newoutput byteequal; no newPIT/nativewrites",
+      "historical_artifact": "Actualreview94fa; newouter0f85; both3eba1716119B/logicalb784;1.593s163303424B",
+      "historical_dependencies": [],
+      "historical_next_step": "Closed scopedrestart; no newPIT/forwardperformance claim or rerun"
+    },
+    {
+      "id": "V1:W38-FINITE-OPERATIONAL-SOAK",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "92dffe00e0743c80c5e3b754a3fee542a765a844832ae255b341b8a6b62e65be",
+      "historical_status": "SCOPED_STABILITY_OBSERVED_WITH_EXISTING_WARNING",
+      "historical_acceptance": "Two read-only exactdeploy/registry/full-lane/service snapshots>=600s apart, no extra warnings, preserve formal failures andknownadjudication",
+      "historical_artifact": "finite-operational-soak-summary.json facc514e; final-current-packet-review.json b5f921;619.42387s",
+      "historical_dependencies": [],
+      "historical_next_step": "Closed finiteobservation; no reader/modelsoak tonight, newBeta forward outcomes requirefuturetime"
+    },
+    {
+      "id": "V1:BETA_REACTOR_ALARMS_20261011",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "4c46c540b14505e6a15d0f22467512170d873d85d27d8f4e3513aa2b48143360",
+      "historical_status": "PARKED_INACTIVE_FINAL_REPAIR2_FAILED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\reactor-final-repair2-park-receipt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No thirdpatternrepair. Preservequalifiedexpirylogic; onlynewconservativehypothesis can be separatelyadmitted, oldfailureunreleased."
+    },
+    {
+      "id": "V1:H21_MEMORY_LIFETIME_20261011",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "b0c2568ee4490c85607fcbf6d1a07934da59ff384830139e0711d3fdd3a89516",
+      "historical_status": "REFUSAL_OWNERSHIP_QUALIFIED_PHASE_ERRATUM",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\strict-view-and-native-refusal-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No fit benefit. Preserve c46 phase error with current correction. Changed RAM evidence required before fresh unique admission."
+    },
+    {
+      "id": "V1:OWNER_ASTRA_RESTORE_CHALLENGERS_20261011",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "675d45c93b5854cd3aa2f5ce703bda2499a0b0783cdedc8dc0fa936111cc95dd",
+      "historical_status": "WAITING_BUILD_RELEASE",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-finance-budgeted-roadmap\\docs\\BETA_OVERNIGHT_OWNER_ORDER_2026-10-11.md",
+      "historical_dependencies": [],
+      "historical_next_step": "Complete build/release first; keepstackpaused until restoration step."
+    },
+    {
+      "id": "V1:BETA_ENGINE_MATCHED_FEEDBACK_20261011",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "0690e49bd3b0557feefc221008a60835d9adc2f8a62656f5fcd6e7103b5536bf",
+      "historical_status": "DATED_COORDINATOR_FEEDBACK_SAVED_FUTURE_COMPARISON_PENDING",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-finance-budgeted-roadmap\\docs\\BETA_ENGINE_COMPARATIVE_FEEDBACK_2026-10-11.md",
+      "historical_dependencies": [],
+      "historical_next_step": "Afternews/Betaready rungenuineisolatedfuture variants; reportdatedmoney/losses/coverage thenfeedback/scores."
+    },
+    {
+      "id": "V1:BETA_STRICT_FAILURE_VIEW_20261011",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "3c415f5d2b739f2100a3a0c0fac1df02c69da472b46c7150a2c1b3c4423ea595",
+      "historical_status": "NEW_SOURCE_VARIANT_ADMITTED_BUILDING",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\reactor-strict-view-source-admission-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Independent exact source review then fixture-only commands and mandatory release checks."
+    },
+    {
+      "id": "V1:BETA_CURRENT_VINTAGE_CONSUMER_20261011",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "b0b112aac83f95f5549cb8d798fd6b9beaaf3555e99f06c37db316bc0e8b7eaa",
+      "historical_status": "SOURCE_AND_72_SYNTHETIC_FIXTURES_INDEPENDENT_PASS_UNRELEASED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\current-vintage-prior-guard-actual-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "New exact fullrelease/CI; authentic current qualified vintage input required."
+    },
+    {
+      "id": "V1:BETA_AUTONOMOUS_CHEAP_NEWS_NUMERIC_20261011",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "6aba06b64910c112b01008b6545d7d3e88b7e585c3c47c87265f20cfd7ce357e",
+      "historical_status": "SOURCE_AND_73_SYNTHETIC_FIXTURES_INDEPENDENT_PASS_UNRELEASED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\beta-news-actual-focused-final-r1-review.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Thin opt-in existingcheaproute runtime/capture/exactoutcome family route implementation running; authenticH21labels remain independent inputblocker."
+    },
+    {
+      "id": "V1:BETA_H21_FINAL_LIFETIME_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "0ad612166714cfc7f6cbc509080d39c82932bbb13f1fa36fa2eea5b2562f655c",
+      "historical_status": "TESTED_ACTUAL_INDEPENDENT_SCOPED_PASS_UNRELEASED",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\h21-final-fold-actual-independent-r4.json",
+      "historical_dependencies": [],
+      "historical_next_step": "New current return/instrument/weight admission and actual frozen planner trace; no activation."
+    },
+    {
+      "id": "V1:BETA_CURRENT_NATIVE_DAILY_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "6676d1048765135e0a87bfbd7be924bc77ae7d43ab85592d09e7ccab49c0b143",
+      "historical_status": "PARKED_INACTIVE_ACTUAL_NAMESPACE_REFUSAL_AFTER_CAP2_NEW_EVIDENCE_ADJUDICATION_PENDING",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\current-native-actual-refusal-metadata-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Independentnew-evidence disposition; no automaticthirdrepair/current plan claim. Continueindependentnews/release work."
+    },
+    {
+      "id": "V1:BETA_NEWS_RUNTIME_OUTCOMES_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "f3e679e89f80afca3e5e4451c1709e6c39549798632b6289ee678e9f021d9b79",
+      "historical_status": "FINAL_REPAIR2_SOURCE_AND142SYNTHETICPASS_ACTUAL_OFF_RELEASE_PENDING",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\beta-news-runtime-outcomes-independent-source-repair2.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Freshrequiredfullsuite/exactCI/integration, thenactualcheaptransportafterAstra/restoration/externalreview gates."
+    },
+    {
+      "id": "V1:BETA_REQUIRED_RELEASE_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "b8c9dae460e3723ff43e10a2c6a1e5f9bd9e5db315f0f9f4de12e8663a83d875",
+      "historical_status": "FULLGENUINEBACKEND_RUNNING_ONE_UNCLASSIFIED_FAILURE_SEEN_RELEASE_HELD",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\backend-release-suite-20261012-r1.log",
+      "historical_dependencies": [],
+      "historical_next_step": "Completefullreportthenfocus exactfailure/independentreview boundedrepair, no waiver. Front3passed; nooldCIreuse."
+    },
+    {
+      "id": "V1:BETA_CURRENT_PLATFORM_NAMESPACE_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "b3261f31f9a31b369dc8b7a8cc4547c5146b708060d9e4fef41dc54693f09446",
+      "historical_status": "PARKED_INACTIVE_FINAL_REPAIR2_ACTUAL_REFUSAL_NO_CANDIDATE_OR_RESOURCE_QUALIFICATION",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\current-native-namespace-actual-final-refusal-r2.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Independentmetadata disposition; no3rdcycle/retry/capwaiver. Existingmodelreplay/baselines remainvalid; completeindependentrelease/ops."
+    },
+    {
+      "id": "V1:BETA_REPLAY_REGIME_DIAGNOSTIC_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "7967752b8928d5621ccec3e6fc3fc51a0ab57eab7308537e405f231d3418299a",
+      "historical_status": "EXECUTED_AND_INDEPENDENT_SCOPED_PASS",
+      "historical_acceptance": null,
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\h21-replay-regime-diagnostic-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Carryfairmodestdisjointresult andusefuldatedbaselineprofits intoAstra packet; no retrospective strategy adoption."
+    },
+    {
+      "id": "V1:release-contract-integration-20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "8dd0592a33b8f46e8ac61053b42b457bee6a7c062b8884ad56fe9a245b41a09e",
+      "historical_status": "EXACT_MAIN099_REQUIRED_CI_DEPLOY_AND_SCOPED_LIVE_REVIEW_PASS_CANARY_FALSE",
+      "historical_acceptance": null,
+      "historical_artifact": "final-main-099-live-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No repeated release; native future grading execution still awaits scheduled evidence."
+    },
+    {
+      "id": "V1:BETA_RESTORE_OWNED_JOB_ANCHOR_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "7787b07dca64c22c6543673409f5304ea4bcdc543babbb6b37ae05192aea9dfb",
+      "historical_status": "PARKED_AFTER_TWO_REPAIR_CYCLES_ACTUAL_ANCESTRY_REFUSAL",
+      "historical_acceptance": null,
+      "historical_artifact": "restore-actual-repair2/actual-refusal-review-r2.json03f602; fixture-independent-r2.json16c3",
+      "historical_dependencies": [],
+      "historical_next_step": "No furtheroldbranchrepair/retry. Separate newevidence assessment only; holdsretained."
+    },
+    {
+      "id": "V1:BETA_ORIGINAL_LAUNCHER_INNER_WHITESPACE_ASSESSMENT_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "fd4b9c1dc71964986eab3639c98c0060cebed83c47491d3832c1ce2a83891550",
+      "historical_status": "SOURCE_ASSESSMENT_PASS_AND_PAIRED_PURE_ACTUAL_PASS_PENDING_INDEPENDENT",
+      "historical_acceptance": null,
+      "historical_artifact": "source-assessment-review-r1.jsonb492; assessment-actual.log47PASS; parkedcontrolFAILcorroboratedstackline94; runtime8bunchanged",
+      "historical_dependencies": [],
+      "historical_next_step": "Independentactualpairqualify; thenRootexplicitNEWverifiedevidence reopeningdecision/newguardedgrant beforeliveaction"
+    },
+    {
+      "id": "V1:BETA_CURRENT_NATIVE_SCALAR_DRY_DIAGNOSTIC_20261012",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "ea5b1125e5c6cfe040d6f0930686abdc3b5594e6fb85e3899dfbfd8a709790d4",
+      "historical_status": "INITIAL_SOURCE_REVIEW_BLOCKERS_CONSOLIDATING_REPAIR1_QUEUED",
+      "historical_acceptance": null,
+      "historical_artifact": "current-native-scalar-diagnostic-source-r1.json5a9fe318",
+      "historical_dependencies": [],
+      "historical_next_step": "FixpreACKinputreads/samebytesauthority/prepubcounterlabels, preserveguardbounds andnoforecastauthority; source/testreview beforeanyrun"
+    },
+    {
+      "id": "V1:c77-protection-safety",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "520356faddda68834c30a47783edff66573f1a1fbedc1e4fd9ef1a975e5c8fa2",
+      "historical_status": "OBSERVED_SCOPED_EXTERNAL_CREDENTIAL_AND_SWEEP_OWNERSHIP_BLOCKED",
+      "historical_acceptance": "GET-only exact current coverage; preserve GTC/orders/history; do not install failing sweep",
+      "historical_artifact": "S/fleet-current-safety-disposition-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Authentic exact stop ownership/intent repair and sixth credential separate gates"
+    },
+    {
+      "id": "V1:c78-public-health",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "d3a59c8ed848428730af889f052868c824c382b8d471d8a7a2a8551b82338727",
+      "historical_status": "PUSHED_PENDING_CI_DEPLOY_READBACK",
+      "historical_acceptance": "Reviewed exact2assets/7otherdata+metadataunchanged/leakscan5Mcap/nativepublisher/mainCI/exactlivehealth",
+      "historical_artifact": "S/fresh-public-health-native-publication-actual-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "CI38179636553+exact97a live readback after actualstatechange"
+    },
+    {
+      "id": "V1:c78-native-guard-diagnosis",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "334971737b79fa17063cc08647137ff637a936991aaee0d24aca89d6662d1e29",
+      "historical_status": "PREFIX_OBSERVED_NEXT_SOURCE_VALIDATION_READY",
+      "historical_acceptance": "Same immutableoriginalguards/source/control/512MiB60s1MiB no plan/activation; identifyfirstfailedscalarstage",
+      "historical_artifact": "S/current_native_diagnostic_26eeb036ec124279859f099e3c30be2d/outer.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Nextoriginalrawsource validation source/fixture review thenfreshdrygrant"
+    },
+    {
+      "id": "V1:instrument-original-guards-diagnostic",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "29c40264f8e09d983fb979f10c7057370ccc569963909fa1724c9073e6eea016",
+      "historical_status": "TESTED_OBSERVED_INDEPENDENT_PASS_DIAGNOSTIC_ONLY",
+      "historical_acceptance": "Independentunchangedf79source,8purePASS,45actualevents100passall4guard/no businessoutput/reaped512MiB60s. OriginalpreparestillparkedcauseUNKNOWN.",
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\current-native-instrument-guard-fixtures-and-actual-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Staticconcretehypothesis only; no inventedmorestages."
+    },
+    {
+      "id": "V1:fresh-public-health-assets-observation",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "855c9f67379be5c951063157518f5da626934678fc547d6ee4b3b20520b951c6",
+      "historical_status": "INTEGRATED_OPERATIONALLY_OBSERVED_STRICT_CANARY_FALSE",
+      "historical_acceptance": "Exactnative2asset97a/CI38179636553bothPASS/existingRailwayservice97asuccess/82rowspublicreadbacknativegeneration/health_alarm1.",
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\new-beta-release\\after-20261011T224708Z-21b84f88\\receipt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Independentreadbackdisposition; keep formalFALSE/existingalarmsvisible."
+    },
+    {
+      "id": "V1:current-native-streamed-source-new-hypothesis",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "fe1128b0a0383f97214e1c61da7ed386d5f49ebf222a1c43736709aedaef6a8d",
+      "historical_status": "PARKED_ACTUAL_RSS_CAP_PRESERVED_NO_QUALIFIED_PLAN",
+      "historical_acceptance": "Exactunmodifiedadapter/math/calendar/eligibility/sourcebindings; same512MiB60s/STOP/IIF/directPID/retainedhandle/reap/outputcaps. Release verifiedunusednativeaggregate/bookkeeping; fixedenumguard/phasefailurereceipt. Source+purefixtures+reviewbeforeanyactual.",
+      "historical_artifact": "current-native-streamed-serialization-actual-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No further prepare retry or limit increase. Existing ordinal draft and legacy policies continue separately; qualification remains incomplete software/resource proof, not cash."
+    },
+    {
+      "id": "V1:reader-late-bounded-storage-observation",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "edcadfb0eea1f5f60c06174ddef2a2b0ea57acc5b7e5a5c7680c7acb195dafe4",
+      "historical_status": "STORED_RECORD_NOVELTY_OBSERVED_NO_ARTICLE_OR_CONSUMER_PROOF",
+      "historical_acceptance": "306metadataentries/latest20\u2264240485B;17newURLtextpairsDISCOVERY12front3stock_text5search/0articleinsubset; no globalabsenceor20producerIDproof.",
+      "historical_artifact": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-build-sprint-20261011\\restored-reader-late-storage-inventory-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No morebroadsoak/polling; nextauthenticarticle-to-validinterpretationwitness separate."
+    },
+    {
+      "id": "V1:deepseek-bounded-quality-r2",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "68d3a3e6ce1a42bae1c89a589b9ce194f2b1dbf2e5b8fa438813124c37ef2ceb",
+      "historical_status": "ONE_ACTUAL_REFUSED_PRESERVED_PROSPECTIVE_SOURCE68PASS_ONLY",
+      "historical_acceptance": null,
+      "historical_artifact": "deepseek-quality-r2/actual-independent-quality-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No second call or retrospective qualification; future source requires new reviewed bridge"
+    },
+    {
+      "id": "V1:default-qwen-late-idle-lifecycle",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "dc551b1c9a6d20561e207df1407e7c5b826b7d7cdf5575c3a4a9bd1aa499dcf8",
+      "historical_status": "NORMAL_IDLE_STOP_OBSERVED_NOT_CRASH",
+      "historical_acceptance": null,
+      "historical_artifact": "default-qwen-owned-stop-ledger-witness-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "On-demand lifecycle retained; no resident running claim or blind restart."
+    },
+    {
+      "id": "V1:beta-draft-current-analyst-display",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "3510c90e4e4fc7465b36016b8acdcd79872d6159aaae6ac73ebfab5a6f6a502e",
+      "historical_status": "10_DATED_DISPLAY_ROWS_INDEPENDENTLY_REVIEWED_NO_RANK_CHANGE",
+      "historical_acceptance": null,
+      "historical_artifact": "beta-draft-analyst-display-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Keep private display-context addendum separate from frozen portfolio and historicalPIT"
+    },
+    {
+      "id": "V1:current-native-selective-copy-hypothesis",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "2cbac9607f57bb2552ab019df1484a90f186a554cea427ca4f60d6448d86fb7e",
+      "historical_status": "PARKED_ONE_ACTUAL_RSS_CAP_NO_CONSUME",
+      "historical_acceptance": null,
+      "historical_artifact": "current-native-selective-copy-actual-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No repeat or cap raise; legacy policies unaffected"
+    },
+    {
+      "id": "V1:final-astra-operational-addendum",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "1d50f372a8e74683877da23c6aff9d9935671f63cca829284b38163debbdd6c7",
+      "historical_status": "DONE_RESEARCH7_AUTONOMOUS5_5_NOT_CERTIFIED",
+      "historical_acceptance": null,
+      "historical_artifact": "astra-beta-operational-addendum-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Integrate sanitized review summary and existing V1 vsV2 priorities"
+    },
+    {
+      "id": "V1:final-current-docs-integration",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "66d91490c58f7e188bf1a4c32f8f01b2598b19af1d641d6942514b0d97ea291e",
+      "historical_status": "8_DOCS_PR32_MERGED099_LOCALROOT_ADDITIVE_NOTE_RETRIEVED",
+      "historical_acceptance": null,
+      "historical_artifact": "final-root-release-observation-pickup-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Use latest dated note; preserve original frozen results and old failures."
+    },
+    {
+      "id": "V1:arena-weekend-alert-inventory",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "38279043b8f0ff290d4884dc8f9d90d7a2911c2d7acb538d42322af7049b8431",
+      "historical_status": "DONE_SOURCE_PROVEN_SAMPLE_SCHEDULE_MISMATCH_ALL50_UNKNOWN",
+      "historical_acceptance": null,
+      "historical_artifact": "arena-weekend-alert-source-inventory-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No forced weekendtrigger; scopealarmrepair below preservesrawcounts/calendarUNKNOWN"
+    },
+    {
+      "id": "V1:arena-grading-observability-repair",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "87ac977fc9ea9a22cd0f68f6fb7ffdcaf25da5342a38fc8a38689a260f39944b",
+      "historical_status": "TESTED_MERGED_DEPLOYED_FIELDS_OBSERVED_GRADER_EXECUTION_UNKNOWN",
+      "historical_acceptance": null,
+      "historical_artifact": "arena-release-diagnostic-after-d2543b52d9014d28828e35df542b8704/receipt.json",
+      "historical_dependencies": [],
+      "historical_next_step": "Observe actual scheduled grading receipt after native opportunity; retain all50due and unknowncoverage."
+    },
+    {
+      "id": "V1:private-paper-activity-attribution",
+      "v2_mapping": "unresolved",
+      "current_acceptance": "inherited-unverified",
+      "historical_record_sha256": "c634424815903fb561ff4ffc620268e57339a8578a51089197188357b9cfe179",
+      "historical_status": "SOURCE_REPAIRED_ACTUAL_PARTIAL_UNQUALIFIED_PARKED",
+      "historical_acceptance": null,
+      "historical_artifact": "paper-activity-r4/actual-independent-r1.json",
+      "historical_dependencies": [],
+      "historical_next_step": "No more repair cycles now; later separately reviewed bounded history continuation."
+    }
+  ],
+  "archived_source": "C:\\Users\\mrthn\\aegis-recovery-evidence\\beta-v2-owner-20261025\\sources\\V1_dependency_queue_snapshot.json",
+  "archived_source_sha256": "9d7b023dc6da2255b497f313505a9f39ce6011c6162fc3f33c6d3872575e81ae"
+}

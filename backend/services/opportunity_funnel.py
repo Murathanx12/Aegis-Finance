@@ -677,6 +677,19 @@ def stage4(cands: list[Candidate], *, keep: int = STAGE4_KEEP) -> list[Candidate
 
 # ─────────────────────────────── the funnel ─────────────────────────────────
 
+def stage_price_coverage(*, universe: dict, provider: Any, limits: Any,
+                         start_date: str, end_date: str, min_rows: int) -> Any:
+    """Explicit offline/injected coverage only; never called by run() or CLI.
+
+    Returns a coverage receipt, not ranked candidates. Writing requires the
+    separate create-only funnel_staging.write_price_coverage API.
+    """
+    from backend.services.funnel_staging import collect_price_coverage
+
+    return collect_price_coverage(universe=universe, provider=provider, limits=limits,
+                                  start_date=start_date, end_date=end_date, min_rows=min_rows)
+
+
 def run(*, extra: list[str] | None = None, force_universe: bool = False,
         stage1_keep: int = STAGE1_KEEP, stage2_keep: int = STAGE2_KEEP,
         stage3_keep: int = STAGE3_KEEP, stage4_keep: int = STAGE4_KEEP,

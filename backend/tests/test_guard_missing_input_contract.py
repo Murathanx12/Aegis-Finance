@@ -179,6 +179,128 @@ def _case_charter():
 
 
 
+def _case_global_price_admission():
+    from unittest.mock import Mock, patch
+
+    from backend.services import global_price_admission as admission
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing admission reached file I/O"))
+        publish = Mock(side_effect=AssertionError("missing admission published prices"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch.object(admission, "publish_admission", publish)):
+                return admission.prepare_admission()
+        finally:
+            assert file_access.call_count == 0, "missing admission reached file I/O"
+            assert publish.call_count == 0, "missing admission published prices"
+
+    return (call, admission.AdmissionError,
+            "price admission without staged OHLCV, receipt, targets or owner context")
+
+
+def _case_funnel_eligibility_staging():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_eligibility_staging as eligibility
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing eligibility inputs reached file I/O"))
+        launch = Mock(side_effect=AssertionError("missing eligibility inputs launched a worker"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch("subprocess.Popen", launch)):
+                return eligibility.stage_original_eligibility(manifest={}, artifacts={})
+        finally:
+            assert file_access.call_count == 0, "missing eligibility inputs reached file I/O"
+            assert launch.call_count == 0, "missing eligibility inputs launched a worker"
+
+    return (call, eligibility.EligibilityRefused,
+            "original eligibility without admitted domain, price artifacts or calendar manifest")
+
+
+def _case_funnel_price_bridge():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_price_bridge as bridge
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing bridge manifest reached file I/O"))
+        launch = Mock(side_effect=AssertionError("missing bridge manifest launched a worker"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch("subprocess.Popen", launch)):
+                return bridge.validate_manifest({})
+        finally:
+            assert file_access.call_count == 0, "missing bridge manifest reached file I/O"
+            assert launch.call_count == 0, "missing bridge manifest launched a worker"
+
+    return (call, bridge.PriceBridgeRefused,
+            "price bridge without an explicit admitted domain, source or calendar manifest")
+
+
+def _case_funnel_acquisition():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_acquisition as acquisition
+
+    def call():
+        file_access = Mock(side_effect=AssertionError("missing plan reached file I/O"))
+        launch = Mock(side_effect=AssertionError("missing plan launched a worker"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch("subprocess.Popen", launch)):
+                return acquisition.validate_request({}, finnhub_key=None)
+        finally:
+            assert file_access.call_count == 0, "missing plan reached file I/O"
+            assert launch.call_count == 0, "missing plan launched a worker"
+
+    return (call, acquisition.AcquisitionRefused,
+            "acquisition with no explicit domain, source, entitlement or limits")
+
+
+def _case_funnel_staging():
+    from unittest.mock import Mock, patch
+
+    from backend.services import funnel_staging as staging
+
+    def call():
+        provider = Mock(side_effect=AssertionError("provider must not be called"))
+        writer = Mock(side_effect=AssertionError("writer must not be called"))
+        file_access = Mock(side_effect=AssertionError("file I/O must not be called"))
+        try:
+            with (patch("builtins.open", file_access),
+                  patch("io.open", file_access),
+                  patch("os.open", file_access),
+                  patch("pathlib.Path.open", file_access),
+                  patch.object(staging, "write_price_coverage", writer)):
+                return staging.collect_price_coverage(
+                    universe={}, provider=provider,
+                    limits=staging.Limits(batch_size=1, max_logical_calls=1,
+                                          max_batches=1, max_symbols=1),
+                    start_date="2026-10-22", end_date="2026-10-23", min_rows=2)
+        finally:
+            # A caught provider error converted to CoverageRefused cannot mask a call.
+            assert provider.call_count == 0, "missing universe reached provider"
+            assert writer.call_count == 0, "missing universe reached writer"
+            assert file_access.call_count == 0, "missing universe reached file I/O"
+
+    return (call, staging.CoverageRefused,
+            "price coverage with no admitted universe or provenance")
+
+
 def _case_investment_committee():
     import json, tempfile
     from pathlib import Path as _P
@@ -1888,6 +2010,11 @@ def _case_issuer_ir_probability_v0():
 
 
 CASES = {
+    "funnel_eligibility_staging": _case_funnel_eligibility_staging,
+    "funnel_price_bridge": _case_funnel_price_bridge,
+    "global_price_admission": _case_global_price_admission,
+    "funnel_acquisition": _case_funnel_acquisition,
+    "funnel_staging": _case_funnel_staging,
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
     "pc_sleeves": _case_pc_sleeves,

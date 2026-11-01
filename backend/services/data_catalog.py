@@ -295,7 +295,8 @@ def inspect_parquet(path: Path) -> dict:
                   or pa.types.is_temporal(f.type))]
     order = sorted(set(temporal) | set(named),
                    key=lambda n: (n not in temporal,
-                                  DATE_NAMES.index(n.lower()) if n.lower() in DATE_NAMES else 99))
+                                  DATE_NAMES.index(n.lower()) if n.lower() in DATE_NAMES else 99,
+                                  n))  # Total name order for equal-priority candidates, not PIT semantics.
     paths = {md.schema.column(j).path: j for j in range(md.num_columns)}
     for col in order:
         j = paths.get(col)
