@@ -1,0 +1,6 @@
+# Runtime state uses AEGIS_DATA_DIR=/data in the existing Railway service.
+# Keep immutable backend/data YAMLs, static assets and frozen trial sources.
+/backend/data/optimus/*
+!/backend/data/optimus/predictions.jsonl
+# Generated build identity is ignored by Git, but must ship in CLI uploads.
+!/backend/_build_source.json
