@@ -73,7 +73,7 @@ def get_earnings_summary(ticker: str) -> dict:
                     eps_estimate = row.get("epsEstimate")
                     if eps_actual is not None and eps_estimate is not None and eps_estimate != 0:
                         surprise_pct = (eps_actual - eps_estimate) / abs(eps_estimate) * 100
-                        beat = eps_actual > eps_estimate
+                        beat = bool(eps_actual > eps_estimate)
                         if beat:
                             beat_count += 1
                         else:
