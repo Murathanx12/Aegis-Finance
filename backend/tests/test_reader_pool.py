@@ -50,6 +50,46 @@ class Clock:
         self.t += timedelta(seconds=max(0.0, s))
 
 
+class ResourceFixture:
+    """Explicit healthy CPU, physical and commit samples on a paired fake clock.
+
+    Re-reading one timestamp retains its sequence; it cannot manufacture the
+    three distinct samples or thirty seconds required to grow the governor.
+    """
+
+    def __init__(self, clock=None):
+        self._external_clock = clock
+        self._time = 0.0
+        self._observed = None
+        self._sequence = 0
+        self.values = dict(status="OK", cpu_busy_percent=25.0,
+                           physical_total_bytes=32 * 1024 ** 3,
+                           physical_available_bytes=16 * 1024 ** 3,
+                           pagefile_total_bytes=64 * 1024 ** 3,
+                           pagefile_available_bytes=48 * 1024 ** 3)
+
+    def clock(self):
+        return self._external_clock() if self._external_clock else self._time
+
+    def advance(self, seconds, **changes):
+        assert self._external_clock is None
+        self._time += seconds
+        self.values.update(changes)
+
+    def sample(self):
+        now = self.clock()
+        if now != self._observed:
+            self._sequence += 1
+            self._observed = now
+        return dict(self.values, sequence=self._sequence, observed_monotonic=now)
+
+
+def healthy_governor(clock, *, max_tabs=4, target=4):
+    resources = ResourceFixture(clock=lambda: clock.now().timestamp())
+    return RS.TabGovernor(max_tabs=max_tabs, target=target,
+                          resource_fn=resources.sample, clock=resources.clock)
+
+
 def _thr(tmp_path, clock, **kw) -> WR.Throttle:
     base = dict(path=tmp_path / "_throttle.log", now_fn=clock.now, sleep_fn=clock.sleep,
                 seed=7, per_host_mode=True, max_per_hour=1000, max_per_day=10000,
@@ -153,27 +193,54 @@ def test_the_old_global_mode_is_unchanged_by_default(tmp_path):
 # ───────────────────────────── 2. the tab governor ───────────────────────────
 
 def test_the_governor_grows_to_the_max_with_memory_and_shrinks_below_the_floor():
-    mem = {"gb": 9.0}
-    g = RS.TabGovernor(max_tabs=6, floor_gb=2.0, grow_gb=2.6, mem_fn=lambda: mem["gb"])
+    resources = ResourceFixture()
+    g = RS.TabGovernor(max_tabs=6, resource_fn=resources.sample, clock=resources.clock)
     for _ in range(10):
         g.update()
-    assert g.target == 6 and "holding at 6" in g.reason
-    mem["gb"] = 1.5
-    for _ in range(10):
-        g.update()
-    assert g.target == 1 and "floor" in g.reason          # never below one tab
-    assert g.may_open(0) is True                           # the reader never stops entirely
-    assert g.may_open(1) is False and "no new tab" in g.reason
-    mem["gb"] = 2.3                                        # between floor and grow: hold
+    assert g.target == 1                 # one cached sample cannot authorize growth
+    resources.advance(10)
     g.update()
-    assert g.target == 1 and "holding" in g.reason
+    resources.advance(10)
+    g.update()
+    assert g.target == 1                 # three samples, but only twenty seconds
+    resources.advance(10)
+    g.update()
+    assert g.target == 2 and g.reason == "READY"
+    for _ in range(12):
+        resources.advance(10)
+        g.update()
+    assert g.target == 6
+    resources.advance(2, physical_available_bytes=256 * 1024 ** 2)
+    g.update()
+    assert g.target == 5 and g.reason == "PHYSICAL_HEADROOM"
+    for _ in range(10):
+        g.update()
+    assert g.target == 5                 # one deficient sample shrinks only once
+    for _ in range(8):
+        resources.advance(2)
+        g.update()
+    assert g.target == 1 and g.may_open(0) is False
+    resources.advance(2, physical_available_bytes=16 * 1024 ** 3, cpu_busy_percent=82.0)
+    g.update()
+    assert g.target == 1 and g.may_open(0) is True
+    assert g.snapshot()["verdict"]["can_grow"] is False
+    assert g.snapshot()["forced_closes"] == 0
     assert [h["to"] for h in g.history][:1] == [2]
 
 
 def test_the_governor_holds_when_memory_cannot_be_read():
-    g = RS.TabGovernor(max_tabs=6, mem_fn=lambda: None, target=3)
+    resources = ResourceFixture()
+    resources.values.update(status="RESOURCE_UNKNOWN", cpu_busy_percent=None)
+    g = RS.TabGovernor(max_tabs=6, mem_fn=lambda: 99.0, target=3,
+                       resource_fn=resources.sample, clock=resources.clock)
     g.update()
-    assert g.target == 3 and "unreadable" in g.reason
+    assert g.target == 2 and g.reason == "RESOURCE_UNKNOWN"
+    assert g.may_open(0) is False        # generous physical-only legacy probe is no authority
+    assert g.target == 2                # cached unknown does not repeatedly shrink
+    resources.advance(2)
+    g.update()
+    assert g.target == 1 and g.may_open(0) is False
+    assert g.snapshot()["forced_closes"] == 0
 
 
 # ─────────────────────── 3. section fronts on a schedule ─────────────────────
@@ -521,11 +588,11 @@ def ledger(tmp_path, monkeypatch):
 
 
 def _pool(ledger, driver, *, fronts=None, stock_pages=(), names=("NVDA",), social=False,
-          max_pages=None, mem=9.0, **kw):
+          max_pages=None, **kw):
     c = Clock()
     thr = _thr(ledger, c, host_gap_s={"wsj.com": (10.0, 45.0), "barrons.com": (10.0, 45.0)},
                wait_on_hour_cap=True)
-    gov = RS.TabGovernor(max_tabs=4, mem_fn=lambda: mem, target=4)
+    gov = healthy_governor(c)
     return RP.Pool(driver=driver, throttle=thr, names=list(names), books={"NVDA"}, fresh=set(),
                    fronts=[f for f in RS.SECTION_FRONTS if RS.front_key(f) == "wsj:home"]
                    if fronts is None else fronts, social=social, stock_pages=stock_pages,
@@ -557,6 +624,52 @@ def _stored(ledger) -> dict[str, dict]:
             continue
         out[r["url"]] = r
     return out
+
+
+@pytest.mark.parametrize("admission", ["healthy", "unknown", "iif_quiet"])
+def test_whole_pool_run_respects_resource_and_iif_admission(ledger, monkeypatch, admission):
+    """Exercise real run/worker/finalization code, not just an extracted verdict."""
+    class RunClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            value = datetime.now(tz)
+            return value.replace(hour=16 if admission == "iif_quiet" else 10,
+                                 minute=50 if admission == "iif_quiet" else 0)
+
+    monkeypatch.setattr(RP, "datetime", RunClock)
+    driver = FakeDriver(_pages())
+    pool, clock = _pool(ledger, driver, fronts=[], names=(), max_pages=1, persist=False)
+    resources = ResourceFixture(clock=lambda: clock.now().timestamp())
+    if admission == "unknown":
+        resources.values.update(status="RESOURCE_UNKNOWN", cpu_busy_percent=None)
+    pool.gov = RS.TabGovernor(max_tabs=1, target=1,
+                              resource_fn=resources.sample, clock=resources.clock)
+    pool._add({"kind": "article", "site": "wsj", "host": "wsj.com", "lane": "fixture",
+               "url": ART1, "key": "fixture:article", "depth": 1})
+    # Bounds only this synthetic instance, without bypassing either admission gate.
+    watchdog = threading.Timer(2.0 if admission == "healthy" else 0.05,
+                               lambda: pool.stop("SYNTHETIC_TEST_BOUND"))
+    watchdog.start()
+    try:
+        receipt = pool.run(status_path=ledger / "run_status.json",
+                           receipt_path=ledger / "run_receipt.json", status_every_s=0.01)
+    finally:
+        watchdog.cancel()
+        watchdog.join()
+    assert pool.finalization_status == "FINALIZED"
+    assert receipt["open_tabs_now"] == [] and not pool.open_tabs
+    assert json.loads((ledger / "run_receipt.json").read_text())["pages"] == receipt["pages"]
+    if admission == "healthy":
+        assert receipt["pages"] == 1
+        assert receipt["classes"]["wsj.com"]["OK"] == 1
+        assert ART1 in _stored(ledger)
+        assert receipt["stop_reason"].startswith("BUDGET_SPENT")
+    else:
+        assert receipt["pages"] == 0
+        assert not any(verb == "open" for verb, _ in driver.actions)
+        assert _stored(ledger) == {}
+        if admission == "unknown":
+            assert pool.gov.reason == "RESOURCE_UNKNOWN"
 
 
 def test_the_pool_reads_a_front_its_news_media_and_related_to_depth_one(ledger):
@@ -653,13 +766,13 @@ def test_a_stock_page_s_news_is_read_and_the_page_is_not_reread_inside_its_windo
 
 def test_the_governor_bounds_the_tabs_the_pool_holds(ledger):
     d = FakeDriver(_pages())
-    pool, _ = _pool(ledger, d, mem=1.0)                        # below the floor
+    pool, _ = _pool(ledger, d)
     pool.gov.target = 1
     pool.refill()
     it = pool.take(0)
     assert it is not None
     assert pool.take(1) is None                                # slot 1 is above the target
-    assert pool.take(0) is None                                # one in flight, below the floor
+    assert pool.take(0) is None                                # one in flight at the target
     pool.release(it)
 
 
@@ -777,7 +890,8 @@ def test_the_reading_report_counts_what_was_read(ledger):
 def test_the_supervisor_launches_the_pool_and_finds_its_pid_by_command_line():
     from scripts import night_reader_supervisor as S
     txt = S.pool_cmd_text(until="08:00", py="python.exe", day=NOW.date().isoformat())
-    assert "-m scripts.reader_pool --handoff --profile muratclaw --until 08:00" in txt
+    assert (f"-m scripts.reader_pool --handoff --profile muratclaw "
+            f"--max-tabs {_config.READER_MAX_TABS} --until 08:00") in txt
     assert ">> backend\\data\\optimus\\dowjones\\reader_pool_" in txt
     assert "reader_pool" in S.READER_CMDLINE and "dowjones_pull" in S.READER_CMDLINE
     assert S.decide(kind="QUEUE_DONE", probe={"healthy": True}, restarts=0, since_launch_s=None,

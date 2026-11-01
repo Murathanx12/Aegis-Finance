@@ -25,7 +25,7 @@ from backend import config as _config
 from backend.services import reader_report as RR
 from backend.services import reader_scheduler as RS
 from backend.services import web_reader as WR
-from backend.tests.test_reader_pool import Clock, FakeDriver, _snap, _thr
+from backend.tests.test_reader_pool import Clock, FakeDriver, _snap, _thr, healthy_governor
 from scripts import night_reader_supervisor as S
 from scripts import reader_pool as RP
 
@@ -84,7 +84,7 @@ def _pool(ledger, driver, *, fronts, clock=None, **kw):
     # these tests whenever the suite reached them > 5 min after collection
     c = clock or Clock(datetime.now(timezone.utc).replace(microsecond=0))
     thr = _thr(ledger, c, wait_on_hour_cap=True)
-    gov = RS.TabGovernor(max_tabs=4, mem_fn=lambda: 9.0, target=4)
+    gov = healthy_governor(c)
     return RP.Pool(driver=driver, throttle=thr, names=[], books=set(), fresh=set(),
                    fronts=fronts, social=False, stock_pages=(), governor=gov,
                    cooling=RS.HostCooling(path=ledger / "cool.json"), stored={},

@@ -330,21 +330,36 @@ def test_healthy_browser_stays_up_by_default_but_memory_still_recovers(monkeypat
 # ───────────────────────── 5. the governor adapts ────────────────────────────
 
 def test_the_tab_maximum_adapts_to_the_headroom():
-    free = {"gb": 2.9}
-    g = RS.TabGovernor(max_tabs=6, floor_gb=2.0, grow_gb=2.6, tab_gb=0.5,
-                       mem_fn=lambda: free["gb"], target=3)
-    assert g.effective_max(2.9) == 4               # 3 held + one 0.5 GB tab above the floor
+    from backend.tests.test_reader_pool import ResourceFixture
+
+    resources = ResourceFixture()
+    g = RS.TabGovernor(max_tabs=6, resource_fn=resources.sample,
+                       clock=resources.clock, target=3)
+    assert g.effective_max(2.9) == 6               # envelope is configured, not physical-only
+    g.update(open_tabs=3)
+    resources.advance(15)
+    g.update(open_tabs=3)
+    assert g.target == 3                           # fewer than three healthy samples
+    resources.advance(15)
     g.update(open_tabs=3)
     assert g.target == 4
-    g.update(open_tabs=3)
-    assert g.target == 4                           # no headroom for a fifth
-    free["gb"] = 1.2                               # deep deficit: sheds two
+    resources.advance(2, cpu_busy_percent=95.0)
     g.update(open_tabs=4)
-    assert g.target == 2
-    free["gb"] = 9.0
-    for _ in range(10):
-        g.update(open_tabs=2)
-    assert g.target == 6                           # never above the configured max
+    assert g.target == 3 and g.reason == "CPU_PRESSURE"
+    assert g.may_open(0) is False
+    resources.advance(2, cpu_busy_percent=25.0, pagefile_available_bytes=2 * 1024 ** 3)
+    g.update(open_tabs=3)
+    assert g.target == 2 and g.reason == "COMMIT_HEADROOM"
+    resources.advance(2, status="RESOURCE_UNKNOWN")
+    g.update(open_tabs=2)
+    assert g.target == 1 and g.may_open(0) is False
+    resources.advance(2, status="OK", pagefile_available_bytes=48 * 1024 ** 3)
+    for _ in range(15):
+        resources.advance(10)
+        g.update(open_tabs=0)
+    assert g.target == 6                           # bounded by the configured envelope
+    assert g.effective_max(None) == 6
+    assert g.snapshot()["forced_closes"] == 0
 
 
 # ───────────────── 6. no host waits behind another host's cap ───────────────
