@@ -1016,16 +1016,6 @@ _MONTHS = ("jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|februar
 DATE_RE = re.compile(
     rf"\b(?:updated\s+|published\s+)?((?:{_MONTHS})\.?\s+\d{{1,2}},\s+\d{{4}})"
     rf"(?:,?\s+(?:at\s+)?(\d{{1,2}}:\d{{2}})\s*([ap])\.?m\.?\s*(ET|EDT|EST)?)?", re.I)
-# Yahoo displays a viewer-local GMT offset in the article header. Treat that
-# explicit clock as the publication timestamp before considering an issuer's
-# date-only dateline in the body.
-YAHOO_HEADER_LINE = re.compile(
-    r"^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+(\d{1,2}\s+"
-    r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
-    r"\s+\d{4})\s+at\s+(\d{1,2}):(\d{2})\s*([ap])\.?m\.?\s+GMT(\S+)", re.I)
-YAHOO_HEADER_CANDIDATE = re.compile(
-    r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+\d{1,2}\s+\w+\s+\d{4}\s+at\s+.*\bGMT", re.I)
-GMT_OFFSET = re.compile(r"^([+-])(\d{1,2})(?::?(\d{2}))?(?=\s|$)")
 BYLINE_RE = re.compile(r"^By\s+[A-Z][\w.'\-]+(\s|$)")
 
 
@@ -1057,6 +1047,14 @@ def clean_text(text: str, title: str | None = None) -> str:
             break
     return "\n".join(kept)
 
+
+YAHOO_HEADER_LINE = re.compile(
+    r"^(Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+(\d{1,2}\s+"
+    r"(?:January|February|March|April|May|June|July|August|September|October|November|December)"
+    r"\s+\d{4})\s+at\s+(\d{1,2}):(\d{2})\s*([ap])\.?m\.?\s+GMT(\S+)", re.I)
+YAHOO_HEADER_CANDIDATE = re.compile(
+    r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+\d{1,2}\s+\w+\s+\d{4}\s+at\s+.*\bGMT", re.I)
+GMT_OFFSET = re.compile(r"^([+-])(\d{1,2})(?::?(\d{2}))?(?=\s|$)")
 
 def parse_published(text: str) -> str | None:
     """Parse an explicit Yahoo GMT-offset header or a timed Dow Jones dateline.
@@ -1187,20 +1185,99 @@ def norm_url(url: str) -> str:
     return f"{(sp.hostname or '').lower().removeprefix('www.')}{sp.path.rstrip('/')}".lower()
 
 
-def stored_urls(root: Path | None = None) -> dict[str, set[str]]:
-    """`{norm_url: {first_seen day, ...}}` over every stored article, so a
-    resumed run skips what it already holds (the text sha dedupes as well;
-    this skips the PAGE LOAD, which is what the site sees)."""
+def stored_urls(root: Path | None = None, *, cache_path=None, progress=None, stop=None) -> dict[str, set[str]]:
+    """Exact URL/day projection; optional derived cache revalidates each file stat.
+
+    Enumerates the same article paths on every run. New/changed/unindexed files
+    are parsed normally; missing/invalid cache falls back to the complete scan.
+    Fingerprints accelerate trusted local append-only storage, not cryptographic
+    attestation against an adversary able to restore all filesystem metadata.
+    """
     root = Path(root) if root else corpus_root()
-    out: dict[str, set[str]] = {}
-    for p in root.glob("*/*/*.json"):
+    cached, entries, out = {}, {}, {}
+    scanned = hits = reads = errors = 0
+    cache_state = "DISABLED" if cache_path is None else "COLD"
+    root_key = str(root.resolve())
+    if cache_path is not None:
         try:
-            rec = json.loads(p.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        u = rec.get("url")
-        if u:
-            out.setdefault(norm_url(u), set()).add(str(rec.get("first_seen_utc") or "")[:10])
+            with Path(cache_path).open('rb') as stream:
+                raw = stream.read(16 * 1024 * 1024 + 1)
+            if len(raw) > 16 * 1024 * 1024:
+                raise ValueError("CACHE_TOO_LARGE")
+            value = json.loads(raw)
+            if (value.get("schema") != "stored_urls_stat_index/1" or value.get("root") != root_key
+                    or not isinstance(value.get("entries"), dict)):
+                raise ValueError("CACHE_SCHEMA_OR_ROOT")
+            cached = value["entries"]
+            cache_state = "VALIDATED_PER_FILE"
+        except (OSError, ValueError, TypeError, AttributeError):
+            cached = {}
+            cache_state = "FALLBACK_SCAN"
+
+    def report():
+        if progress is not None:
+            progress({"scanned_files": scanned, "cache_hits": hits, "article_reads": reads,
+                      "read_errors": errors, "cache_status": cache_state})
+
+    def check_stop():
+        if stop is not None and stop():
+            raise ReaderRefused("REFUSED_STARTUP_STOP")
+
+    last_report = time.monotonic()
+    report()
+    for p in root.glob("*/*/*.json"):
+        check_stop()
+        scanned += 1
+        key = p.relative_to(root).as_posix()
+        fingerprint = None
+        if cache_path is not None:
+            try:
+                st = p.stat()
+                fingerprint = [st.st_size, st.st_mtime_ns, st.st_ctime_ns]
+            except OSError:
+                pass
+        entry = cached.get(key)
+        if (fingerprint is not None and isinstance(entry, dict)
+                and entry.get("fingerprint") == fingerprint
+                and isinstance(entry.get("url"), str) and bool(entry["url"])
+                and norm_url(entry["url"]) == entry["url"]
+                and isinstance(entry.get("day"), str) and len(entry["day"]) <= 10):
+            url, day = entry["url"], entry["day"]
+            hits += 1
+        else:
+            try:
+                reads += 1
+                rec = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                errors += 1
+                rec = {}
+            url = norm_url(rec.get("url")) if rec.get("url") else None
+            day = str(rec.get("first_seen_utc") or "")[:10]
+            if fingerprint is not None:
+                try:
+                    st = p.stat()
+                    if [st.st_size, st.st_mtime_ns, st.st_ctime_ns] != fingerprint:
+                        fingerprint = None  # concurrent change: never cache it
+                except OSError:
+                    fingerprint = None
+        if url:
+            out.setdefault(url, set()).add(day)
+            if fingerprint is not None:
+                entries[key] = {"fingerprint": fingerprint, "url": url, "day": day}
+        if scanned % 64 == 0 or time.monotonic() - last_report >= 2:
+            report()
+            last_report = time.monotonic()
+    check_stop()
+    if cache_path is not None:
+        try:
+            DG.atomic_write_json(Path(cache_path), {"schema": "stored_urls_stat_index/1",
+                                 "root": root_key, "entries": entries})
+            cache_state = "PUBLISHED"
+        except Exception:
+            # Cache is advisory. Complete authoritative projection is already
+            # available; surface failure and preserve the old atomic cache.
+            cache_state = "WRITE_FAILED"
+    report()
     return out
 
 

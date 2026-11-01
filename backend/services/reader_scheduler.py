@@ -15,7 +15,7 @@ work and shouldnt be standing idle."
 * `priority_key` -- THE ordering rule (below).
 * `choose` -- which host a free tab serves next (a host free now beats a
   host that would make the tab wait).
-* `TabGovernor` -- the memory governor.
+* `TabGovernor` -- bounded tab concurrency with memory telemetry.
 * `HostCooling` -- a host that showed a challenge / block / login wall / rate
   limit is not opened again until its cooling period ends.
 * `may_follow_related` -- the depth-1 "related / read next" rule.
@@ -23,6 +23,9 @@ work and shouldnt be standing idle."
 from __future__ import annotations
 
 import json
+import threading
+import time
+from backend.services.reader_resources import ResourceSampler, resource_verdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -288,84 +291,118 @@ def may_follow_related(parent: dict, link_url: str, *, universe: set[str],
 
 @dataclass
 class TabGovernor:
-    """How many tabs the pool may hold at once, from free system memory.
+    """Bounded resource admission; existing pages drain without forced closes.
 
-    * below `floor_gb` free: no new tab; the target falls by one per update,
-      never below 1 (tabs are closed after each read, so an idle tab never
-      exists -- the slots above the target simply stop opening);
-    * at or above `grow_gb` free: the target rises by one per update, up to
-      `max_tabs` (the gap between the two is hysteresis, so it does not flap);
-    * memory unreadable: the target holds, and says so.
-    `reason` is what the status file prints."""
+    Windows retains paging control. Reserves are protective estimates, not a
+    RAM utilization goal. Legacy floor/grow/mem_fn fields remain readable for
+    receipt/caller compatibility; physical-free-only probes cannot authorize work.
+    """
     max_tabs: int = field(default_factory=lambda: int(_cfg("READER_MAX_TABS", 6)))
     floor_gb: float = field(default_factory=lambda: float(_cfg("READER_MIN_FREE_GB", 2.0)))
     grow_gb: float = field(default_factory=lambda: float(_cfg("READER_GROW_FREE_GB", 2.6)))
-    #: what one more tab is assumed to cost; growth needs this much headroom
-    #: ABOVE the floor (2026-09-29)
     tab_gb: float = field(default_factory=lambda: float(_cfg("READER_TAB_GB", 0.5)))
     mem_fn: Callable[[], float | None] | None = None
+    resource_fn: Callable[[], dict] | None = None
+    clock: Callable[[], float] = time.monotonic
+    growth_interval_s: float = 30.0
+    healthy_samples_required: int = 3
     target: int = 1
-    reason: str = "starting at 1 tab"
+    reason: str = "RESOURCE_WARMUP_UNKNOWN"
     free_gb: float | None = None
     history: list[dict] = field(default_factory=list)
 
-    def _free(self) -> float | None:
-        if self.mem_fn is None:
-            from backend.services import web_reader as WR
-            return WR.free_memory_gb()
+    def __post_init__(self):
+        if type(self.max_tabs) is not int or not 1 <= self.max_tabs <= 12:
+            raise ValueError('CAPACITY_ENVELOPE_MUST_BE_1_TO_12')
+        if not 1 <= self.target <= self.max_tabs:
+            raise ValueError('TARGET_OUTSIDE_CAPACITY_ENVELOPE')
+        if not (self.growth_interval_s >= 1 and type(self.healthy_samples_required) is int
+                and self.healthy_samples_required >= 2):
+            raise ValueError('BOUNDED_GROWTH_POLICY_REQUIRED')
+        self._lock = threading.RLock()
+        if self.resource_fn is None:
+            self.resource_fn = ResourceSampler(clock=self.clock).sample
+        self._sequence = None
+        self._recent_admissions = 0
+        self._healthy = 0
+        self._last_growth = self.clock()
+        self._row = {}
+        self._verdict = {'ok': False, 'can_grow': False, 'reason': 'RESOURCE_WARMUP_UNKNOWN'}
+        self._checks = self._denied = 0
+
+    def _evaluate(self, in_flight, actually_open):
+        now = self.clock()
         try:
-            return self.mem_fn()
-        except Exception:  # noqa: BLE001 -- unreadable
-            return None
-
-    def update(self, open_tabs: int | None = None) -> int:
-        """`open_tabs`: tabs actually open now (their memory is already in
-        `free`); the adaptive maximum counts headroom above THEM."""
-        free = self._free()
-        self._open = self.target if open_tabs is None else int(open_tabs)
-        self.free_gb = free
+            row = self.resource_fn()
+            if not isinstance(row, dict) or type(row.get('sequence')) is not int:
+                row = {}
+        except (OSError, ValueError, TypeError, KeyError):
+            row = {}
+        if row.get('sequence') != self._sequence:
+            self._recent_admissions = 0
+        verdict = resource_verdict(row, now=now, in_flight=in_flight,
+                                   actually_open=actually_open, recent_admissions=self._recent_admissions,
+                                   estimated_tab_gib=self.tab_gb)
+        self._row = {k: row.get(k) for k in ('sequence', 'observed_monotonic', 'status',
+            'physical_total_bytes', 'physical_available_bytes', 'pagefile_total_bytes',
+            'pagefile_available_bytes', 'cpu_busy_percent')}
+        self._verdict = verdict
+        free = row.get('physical_available_bytes')
+        self.free_gb = free / 1e9 if type(free) is int and free >= 0 else None
         old = self.target
-        if free is None:
-            self.reason = f"free memory unreadable: holding at {self.target}"
-        elif free < self.floor_gb:
-            # a deep deficit (more than a tab's worth under the floor) sheds two
-            step = 2 if free < self.floor_gb - self.tab_gb else 1
-            self.target = max(1, self.target - step)
-            self.reason = (f"free memory {free:.1f} GB < floor {self.floor_gb:.1f} GB: "
-                           f"no new tab, target {self.target}")
-        elif (free >= self.grow_gb and self.target < self.effective_max(free)):
-            self.target += 1
-            self.reason = (f"free memory {free:.1f} GB >= {self.grow_gb:.1f} GB: "
-                           f"grew to {self.target} of {self.effective_max(free)} "
-                           f"(max {self.max_tabs})")
-        else:
-            self.reason = (f"free memory {free:.1f} GB: holding at {self.target} of "
-                           f"{self.effective_max(free)} (max {self.max_tabs})")
-        if self.target != old:
-            self.history.append({"t": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                                 "from": old, "to": self.target, "free_gb": free})
-        return self.target
+        sequence = row.get('sequence')
+        if sequence != self._sequence or not verdict['ok']:
+            distinct = sequence != self._sequence
+            self._sequence = sequence
+            if not verdict['can_grow']:
+                self._healthy = 0
+                if distinct and not verdict['ok']:
+                    self.target = max(1, self.target - 1)
+            elif distinct:
+                self._healthy += 1
+                if (self._healthy >= self.healthy_samples_required
+                        and now - self._last_growth >= self.growth_interval_s):
+                    self.target = min(self.max_tabs, self.target + 1)
+                    self._last_growth = now
+                    self._healthy = 0
+        self.reason = verdict['reason']
+        if old != self.target:
+            self.history.append({'t': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                                 'from': old, 'to': self.target, 'reason': self.reason})
+            self.history = self.history[-200:]
+        return verdict
 
-    def effective_max(self, free: float | None) -> int:
-        """The ADAPTIVE maximum: the tabs held now plus as many more as fit
-        above the floor at `tab_gb` each, never above `max_tabs`, never below 1."""
-        base = getattr(self, "_open", None)
-        base = self.target if base is None else base
-        if free is None:
-            return max(1, min(self.max_tabs, self.target))
-        headroom = int(max(0.0, free - self.floor_gb) // max(self.tab_gb, 0.05))
-        return max(1, min(self.max_tabs, base + headroom))
+    def update(self, open_tabs: int = 0, in_flight: int | None = None) -> int:
+        with self._lock:
+            self._evaluate(open_tabs if in_flight is None else in_flight, open_tabs)
+            return self.target
 
-    def may_open(self, open_tabs: int) -> bool:
-        """Before a tab is opened: memory re-read; below the floor only the
-        very first tab may open (the reader never stops entirely)."""
-        free = self._free()
-        self.free_gb = free
-        if free is not None and free < self.floor_gb and open_tabs >= 1:
-            self.reason = (f"free memory {free:.1f} GB < floor {self.floor_gb:.1f} GB: "
-                           f"no new tab while {open_tabs} open")
-            return False
-        return open_tabs < self.target
+    def effective_max(self, free: float | None = None) -> int:
+        """Configured envelope, never inferred from a physical-free-only probe."""
+        return self.max_tabs
+
+    def may_open(self, in_flight: int, actually_open: int | None = None) -> bool:
+        # Called under the pool's admission lock, including during reports.
+        with self._lock:
+            verdict = self._evaluate(in_flight, in_flight if actually_open is None else actually_open)
+            self._checks += 1
+            allowed = verdict['ok'] and in_flight < self.target
+            self._denied += not allowed
+            return allowed
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return {'sample': dict(self._row), 'verdict': dict(self._verdict),
+                    'admission_checks': self._checks, 'denied_checks': self._denied,
+                    'admitted_since_sample': self._recent_admissions,
+                    'healthy_distinct_samples': self._healthy,
+                    'growth_interval_s': self.growth_interval_s,
+                    'legacy_floor_active': False, 'forced_closes': 0}
+
+    def admitted(self):
+        """Pool calls only after selecting/reserving an actual item under its lock."""
+        with self._lock:
+            self._recent_admissions += 1
 
 
 # ────────────────────────────── host cooling ─────────────────────────────────

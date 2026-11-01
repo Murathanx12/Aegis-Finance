@@ -1886,7 +1886,8 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
                spend_fn: Any = None, ledger_path: Path | None = None,
                claims_path: Path | None = None, root: Path | None = None,
                done_path: Path | None = None, since: str | None = None,
-               structured_dir: Path | None = None) -> dict:
+               structured_dir: Path | None = None, stop_path: Path | None = None,
+               max_run_s: float | None = None) -> dict:
     """Each stored article not yet extracted -> one DeepSeek call -> forecasts.
 
     Two columns are STRUCTURED, not claims (Chunk J2): a MarketWatch analyst
@@ -1899,6 +1900,22 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
     purpose, since this run started) plus a per-call estimate for the call
     about to be made; an unreadable ledger REFUSES (spend unknown is not zero).
     """
+    if max_run_s is not None and (type(max_run_s) not in (int, float) or not 0 < max_run_s <= 1500):
+        raise ValueError("BOUNDED_CLAIMS_ADMISSION_WINDOW_REQUIRED")
+    admitted = time.monotonic()
+
+    def halt_reason() -> str | None:
+        # Stop only at safe boundaries, never between extraction and its writes.
+        if stop_path is not None:
+            try:
+                if Path(stop_path).exists():
+                    return "STOP_REQUESTED"
+            except OSError:
+                return "REFUSED_STOP_STATE_UNKNOWN"
+        if max_run_s is not None and time.monotonic() - admitted >= max_run_s:
+            return "ADMISSION_WINDOW_EXHAUSTED"
+        return None
+
     day = day or _today()
     cap = float(cap_usd if cap_usd is not None else _config.DOWJONES_CLAIMS_CAP_USD)
     est = float(_config.DOWJONES_CLAIMS_EST_USD_PER_ARTICLE)
@@ -1919,10 +1936,18 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
         d0, d1 = date.fromisoformat(since), date.fromisoformat(_today())
         days = [(d0 + timedelta(days=i)).isoformat() for i in range((d1 - d0).days + 1)]
     sd = Path(structured_dir) if structured_dir else None
-    arts = [a for d in days for a in stored_articles(d, root)]
     per, n_calls, stop = [], 0, None
+    arts = []
+    for d in days:
+        stop = halt_reason()
+        if stop:
+            break
+        arts.extend(stored_articles(d, root))
     structured: dict[str, Any] = {"mw_analyst_snapshot": [], "barrons_big_money_poll": []}
     for art in arts:
+        stop = halt_reason()
+        if stop:
+            break
         if art.get("sha") in done:
             continue
         # 2026-09-29: the browse lane stores section-front headline lists and
@@ -1948,6 +1973,9 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
             break
         if sp + est > cap:
             stop = f"CAP: spent ${sp:.4f} + est ${est:.4f} > cap ${cap:.2f}"
+            break
+        stop = halt_reason()
+        if stop:
             break
         ex = DC.extract_claims(art, llm_fn=llm_fn)
         n_calls += ex["status"] not in ("SKIPPED_TOO_SHORT",)
@@ -2192,6 +2220,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="required for any browser read; refuses unless HANDOFF_PC exists")
     ap.add_argument("--archive", default="")
     ap.add_argument("--claims", action="store_true")
+    ap.add_argument("--claims-stop-file", type=Path, default=None,
+                    help="cooperative stop between claim articles; never interrupts writes")
+    ap.add_argument("--claims-max-run-seconds", type=float, default=None,
+                    help="bounded article admission window, at most 1500 seconds")
     ap.add_argument("--claims-day", default="")
     ap.add_argument("--claims-since", default="",
                     help="claims over every day from this date to today")
@@ -2458,7 +2490,8 @@ def main(argv: list[str] | None = None) -> int:
                         "refusals": r["refusals"]}
         rc = 0 if r["n_articles"] else 2
     if a.claims:
-        r = run_claims(a.claims_day or None, since=a.claims_since or None)
+        r = run_claims(a.claims_day or None, since=a.claims_since or None,
+                       stop_path=a.claims_stop_file, max_run_s=a.claims_max_run_seconds)
         p = _write(r, f"claims_{a.claims_day or day}_{datetime.now(timezone.utc):%H%M%S}.json")
         out["claims"] = {"receipt": str(p), "n_articles": r["n_articles"],
                          "n_claims": r["n_claims"], "spent_usd": r["spent_usd"],
