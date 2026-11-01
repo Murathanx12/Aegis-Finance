@@ -29,6 +29,25 @@ logger = logging.getLogger(__name__)
 from backend.services.job_receipts import note, receipted   # noqa: F401
 
 
+def _note_forecast_metadata(kind, result):
+    """Annotate only; metadata failure must never change the financial pass."""
+    try:
+        from backend.services.forecast_receipt_metadata import forecast_metadata
+        meta = forecast_metadata(kind, result)
+        note(writes={"forecast_records": meta["written"], "count_scope": meta["count_scope"]},
+             forecast_accrual=meta)
+    except Exception:
+        _note_forecast_receipt_error("METADATA_ADAPTER_UNAVAILABLE")
+
+
+def _note_forecast_receipt_error(reason="PRODUCER_EXCEPTION"):
+    # Never overwrite known counts after a later logging/formatting failure.
+    try:
+        note(forecast_receipt_error_class=reason)
+    except Exception:
+        pass
+
+
 def _gated(fn):
     """Run this job behind the process-wide heavy-work gate (heavy_work.py).
 
@@ -1453,6 +1472,7 @@ async def _why_moved_nightly():
             wm.run_why_moved, wm.book_positions(),
             str(datetime.now().date()),
             with_hypotheses=True, write_ledger=True, skip_if_minted=True)
+        _note_forecast_metadata("why_moved", result)
         if result.get("status") == "already_written":
             # A catch-up slot on a day whose first pass already minted; the
             # quiet INFO is correct here — the loud path is reserved for a
@@ -1487,6 +1507,7 @@ async def _why_moved_nightly():
         else:
             logger.info(msg, *args)
     except Exception as e:
+        _note_forecast_receipt_error()
         logger.error("Nightly WHY-MOVED failed: %s", e, exc_info=True)
 
 
@@ -1592,6 +1613,7 @@ async def _arena_daily_pass() -> bool:
         from backend.services.arena import engine as arena_engine
 
         summary = await asyncio.to_thread(arena_engine.run_daily)
+        _note_forecast_metadata("arena", summary)
         receipts = summary.get("receipts", [])
         errors = [r for r in receipts if r.get("status") == "error"]
         grading_report = summary.get("perception_grading")
@@ -1621,6 +1643,7 @@ async def _arena_daily_pass() -> bool:
         # human — this fixes the unambiguous half and says so.
         return True
     except Exception as e:
+        _note_forecast_receipt_error()
         logger.error("ARENA daily pass failed: %s", e, exc_info=True)
         return False
 
