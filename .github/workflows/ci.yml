@@ -16,8 +16,54 @@ on:
   pull_request:
     branches: [main]
 
+# Only superseded runs of the SAME PR are cancelled. Main pushes stay independent.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  changes:
+    name: classify generated receipt push
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      receipts_only: ${{ steps.diff.outputs.receipts_only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Classify complete push diff (unknown means full CI)
+        id: diff
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          from pathlib import Path
+
+          before = os.environ.get("BEFORE", "")
+          receipts_only = False
+          if len(before) == 40 and before != "0" * 40:
+              diff = subprocess.run(
+                  ["git", "diff", "--no-renames", "--name-only", "-z", before, "HEAD"],
+                  capture_output=True,
+              )
+              paths = diff.stdout.split(b"\0")[:-1]
+              receipts_only = diff.returncode == 0 and bool(paths) and all(
+                  path.startswith(b"backend/data/public_receipts/") for path in paths
+              )
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              output.write(f"receipts_only={str(receipts_only).lower()}\n")
+          print(f"Proven receipt-only push: {receipts_only}")
+          PY
+
   backend:
+    needs: changes
+    # PRs and classifier failures run full checks; skipped jobs still report checks.
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.receipts_only != 'true') }}
     name: backend (pytest offline + ruff + pip-audit)
     runs-on: ubuntu-latest
     steps:
@@ -59,6 +105,9 @@ jobs:
         run: python -m pytest backend/tests/ -m "not slow" -q -rf -p pytest_github_actions_annotate_failures
 
   frontend:
+    needs: changes
+    # PRs and classifier failures run full checks; skipped jobs still report checks.
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.receipts_only != 'true') }}
     name: frontend (next build)
     runs-on: ubuntu-latest
     steps:
