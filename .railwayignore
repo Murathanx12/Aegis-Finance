@@ -1,0 +1,3 @@
+# Runtime state uses AEGIS_DATA_DIR=/data in the existing Railway service.
+# Keep immutable backend/data YAMLs, static assets and frozen trial sources.
+/backend/data/optimus/
