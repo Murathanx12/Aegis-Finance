@@ -343,12 +343,14 @@ def test_a_state_is_carried_forward_until_the_next_one_and_no_further():
 
 
 def test_to_quarterly_COMPOUNDS_and_keeps_the_floor_comparable():
-    months = _months(6)
+    # Six rolling months can straddle partial quarters; use two closed ones.
+    quarter_end = (pd.Period(pd.Timestamp.today(), freq="Q") - 1).asfreq("M")
+    months = [quarter_end - i for i in range(5, -1, -1)]
     rows = [{"permno": 1, "ym": ym, "ret_m": 0.10, "price": 20.0,
              "dv": 5_000_000.0, "turnover_m": 0.02} for ym in months]
     q = HI.to_quarterly(pd.DataFrame(rows))
     assert len(q) == 2
-    assert q["ret_m"].iloc[0] == pytest.approx(1.10 ** 3 - 1.0)
+    assert q["ret_m"].tolist() == pytest.approx([1.10 ** 3 - 1.0] * 2)
     assert q["dv"].iloc[0] == 5_000_000.0, (
         "dollar volume is the MEDIAN of the quarter's months, so the floor "
         "means the same thing it means monthly")

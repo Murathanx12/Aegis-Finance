@@ -1887,6 +1887,12 @@ def _case_issuer_ir_probability_v0():
             "no admitted typed issuer event or sentiment")
 
 
+def _case_campaign_ledger_startup():
+    from backend.services.campaign_ledger_startup import Refused, history
+    # Absent durable spend history cannot establish a zero-cost campaign.
+    return (lambda: history(b""), Refused, "durable campaign spend history absent")
+
+
 CASES = {
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
@@ -2017,6 +2023,7 @@ CASES = {
     "fleet_eod_audit": _case_fleet_eod_audit,
     "research_instruments": _case_research_instruments,
     "forecast_ledger": _case_forecast_ledger,
+    "campaign_ledger_startup": _case_campaign_ledger_startup,
 }
 
 

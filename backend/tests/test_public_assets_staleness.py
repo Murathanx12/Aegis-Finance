@@ -65,15 +65,38 @@ def test_pinned_run_id_reads_the_real_committed_file():
     assert PAS.pinned_run_id() == RPA.RESULTS_RUN_ID
 
 
-def test_registered_in_system_health_and_runs_through_run_probes():
+def test_registered_in_system_health_and_runs_through_run_probes(tmp_path, monkeypatch):
     assert any(p.name == "public_assets" for p in SH.PROBES)
     now = datetime.now(timezone.utc)
-    # ctx.repo defaults to the real repo (ProbeCtx's own default), so this reads the real pin
-    ctx = SH.ProbeCtx(optimus_dir=SH.REPO, now=now, allow_proc=False)
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    rid = (now - timedelta(days=1)).strftime("%Y-%m-%dT%H%M%SZ")
+    (scripts / "render_public_assets.py").write_text(
+        f'RESULTS_RUN_ID = "{rid}"\n', encoding="utf-8")
+    monkeypatch.setattr(SH, "on_railway", lambda: False)
+    ctx = SH.ProbeCtx(optimus_dir=tmp_path, now=now, repo=tmp_path, allow_proc=False)
     rows = SH.run_probes(ctx, only={"public_assets"})
     assert len(rows) == 1
-    assert rows[0]["verdict"] in ("ALIVE", "STALE", "UNKNOWN")
+    assert rows[0]["verdict"] == "ALIVE"
     assert rows[0]["proof"]
+    assert rows[0]["alarm"]["light"] == "GREEN"
+
+
+def test_registered_stale_pin_keeps_failed_public_diagnostics_redacted(tmp_path, monkeypatch):
+    now = datetime.now(timezone.utc)
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    rid = (now - timedelta(days=40)).strftime("%Y-%m-%dT%H%M%SZ")
+    (scripts / "render_public_assets.py").write_text(
+        f'RESULTS_RUN_ID = "{rid}"\n', encoding="utf-8")
+    monkeypatch.setattr(SH, "on_railway", lambda: False)
+    ctx = SH.ProbeCtx(optimus_dir=tmp_path, now=now, repo=tmp_path, allow_proc=False)
+    row = SH.run_probes(ctx, only={"public_assets"})[0]
+    assert row["verdict"] == "STALE"
+    assert row["alarm"]["light"] == "RED"
+    assert row["proof"] == ""
+    assert row["public_view"] == SH.PUBLIC_FAILURE_VIEW
+    assert rid not in row["detail"]
 
 
 def test_an_empty_ctx_repo_reports_unknown_not_alive(tmp_path):
