@@ -15,6 +15,9 @@ import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
+from backend.services.campaign_ledger_startup import enforce_production
+enforce_production()  # Verify preserved accounting before any application/router imports.
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
