@@ -38,8 +38,9 @@ logger = logging.getLogger(__name__)
 install_log_buffer()
 
 _PROCESS_START = datetime.now(timezone.utc)
-# Railway injects the deployed commit; locally falls back to "unknown".
-_DEPLOY_COMMIT = os.getenv("RAILWAY_GIT_COMMIT_SHA", "unknown")
+# Prefer Railway Git identity; CLI uploads carry generated build metadata.
+from backend.source_identity import source_commit
+_DEPLOY_COMMIT = source_commit()
 
 
 async def _prewarm_cache():
