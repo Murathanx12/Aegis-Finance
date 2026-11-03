@@ -1,5 +1,7 @@
 # docs/INDEX.md — what to read, in what order (2026-09-04)
 
+Current event-to-owner warning acceptance: [3 November trace](beta_v2/OWNER_WARNING_GATE_2026-11-03.md). This records a manual fallback delivery and the broken local digest handoff; it does not replace the active roadmap.
+
 Hundreds of markdown files live here; many are roadmaps or handoffs. A new session must
 NOT read them all. Tiers below; Optimus should embed TIER 2 and ARCHIVE for
 retrieval and load TIER 0 + the current TIER 1 verbatim.

@@ -485,6 +485,52 @@ def r_hyp_lab(ctx, task) -> Reading:
 
 def r_world_digest(ctx, task) -> Reading:
     p, d = _newest(ctx.optimus_dir / "digest", "world_digest_*.json")
+    # Budget refusals live outside the normal digest directory. Read only this
+    # public receipt family, never the private shared-budget envelope.
+    reasons = {"SHARED_ENVELOPE_BLOCKED", "SHARED_ENVELOPE_INVALID",
+               "SHARED_ENVELOPE_EXHAUSTED", "SHARED_ENVELOPE_UNAVAILABLE"}
+    latest = None
+    try:
+        failures = sorted((ctx.optimus_dir / "news_digest" / "receipts").glob(
+            "budget_refused_*.json"))
+    except OSError:
+        return Reading(status="DEAD", reason="budget failure receipts unreadable",
+                       delegated="DEAD", detail="budget failure receipts unreadable")
+    for fp in failures:
+        proof = f"news_digest/receipts/{fp.name} observed_at"
+        failure = _read(fp)
+        try:
+            match = re.fullmatch(r"budget_refused_(\d{8}T\d{6}Z)_[0-9a-f]{32}\.json", fp.name)
+            observed = failure.get("observed_at") if isinstance(failure, dict) else None
+            clock = datetime.fromisoformat(observed.replace("Z", "+00:00"))
+            compact = parse_stamp(failure.get("stamp"))
+            valid = (match is not None and clock.tzinfo is not None
+                     and clock.utcoffset() == timedelta(0)
+                     and clock <= ctx.now
+                     and compact == clock.replace(microsecond=0)
+                     and failure.get("stamp") == match.group(1)
+                     and failure.get("state") == "BUDGET_REFUSED"
+                     and failure.get("stage") == "shared_budget_preflight"
+                     and failure.get("written") is False
+                     and failure.get("reason") in reasons)
+        except (ValueError, TypeError, AttributeError, OverflowError):
+            valid = False
+        if not valid:
+            # An undateable failure cannot safely be ordered behind an OK run.
+            # Do not echo arbitrary receipt text or exception messages.
+            return Reading(status="DEAD", reason="malformed or future budget failure receipt",
+                           delegated="DEAD", detail="malformed or future budget failure receipt",
+                           proof=proof)
+        if latest is None or clock > latest[0]:
+            latest = (clock, failure["reason"], proof)
+    if latest is not None:
+        try:
+            digest_clock = parse_stamp(d.get("stamp")) if isinstance(d, dict) else None
+        except (ValueError, TypeError, OverflowError):
+            digest_clock = None
+        if digest_clock is None or digest_clock > ctx.now or latest[0] >= digest_clock:
+            return Reading(stamp=latest[0], status="DEGRADED", reason=latest[1],
+                           proof=latest[2], detail="world digest shared budget preflight refused")
     if not isinstance(d, dict):
         return _none("digest/world_digest_*.json")
     st, why = receipt_status(d, fields=("status",))

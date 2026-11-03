@@ -66,11 +66,27 @@ def _beta_news_runtime_missing():
             'no reviewed SDK/transport code pins')
 
 
+def _provider_budget_missing():
+    from tempfile import TemporaryDirectory
+    from pathlib import Path
+    from backend.services import provider_budget as b
+
+    def invoke():
+        # The reserve path must refuse an absent host envelope before any paid call.
+        with TemporaryDirectory() as directory:
+            b.reserve("system", "user", 8, model="deepseek-chat",
+                      base_url="https://api.deepseek.com", purpose="missing-input-contract",
+                      budget_path=Path(directory) / "absent.json")
+
+    return invoke, b.BudgetRefused, "no explicitly initialized shared envelope"
+
+
 BETA_INPUT_GUARD_CASES = {
     "beta_v1_decision_projection": _beta_projection_missing,
     "beta_v1_numerical": _beta_numerical_missing,
     "beta_v1_replay": _beta_replay_missing,
     "beta_v1_news_runtime": _beta_news_runtime_missing,
+    "provider_budget": _provider_budget_missing,
 }
 
 #: WHY THE NAME SUFFIX WAS NOT ENOUGH, AND THE RULE IS NOW THE BASE CLASS.

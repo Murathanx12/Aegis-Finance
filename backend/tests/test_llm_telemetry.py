@@ -413,8 +413,14 @@ def test_a_batch_whose_forecasts_were_all_refused_reads_as_zero_yield(monkeypatc
     assert tel.summary(path=led)["zero_gradeable_output"]["n_calls"] == 1
 
 
+@pytest.fixture
+def cloud_analyzer(monkeypatch):
+    from backend.services import provider_budget as pb
+    monkeypatch.setattr(pb, "host_envelope_required", lambda: False)
+
+
 def test_the_analyzer_records_its_purpose_and_schema_verdict(monkeypatch,
-                                                             tmp_path):
+                                                             tmp_path, cloud_analyzer):
     """`schema_valid` follows the CALLER's contract: the two-sided card needs
     BULL and BEAR, so loose prose is spend that bought nothing."""
     from backend.services import llm_analyzer as la
@@ -437,7 +443,7 @@ def test_the_analyzer_records_its_purpose_and_schema_verdict(monkeypatch,
     assert tel.summary(path=led)["zero_gradeable_output"]["n_calls"] == 1
 
 
-def test_a_failed_provider_call_is_ledgered_with_its_error(monkeypatch, tmp_path):
+def test_a_failed_provider_call_is_ledgered_with_its_error(monkeypatch, tmp_path, cloud_analyzer):
     from backend.services import llm_analyzer as la
 
     led = tmp_path / "calls.jsonl"

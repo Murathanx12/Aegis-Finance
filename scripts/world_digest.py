@@ -107,6 +107,54 @@ def previous_titles() -> list[str]:
     return []
 
 
+def _shared_budget_refusal() -> str | None:
+    """Read once, without reserving/resetting funds; never expose envelope text.
+
+    This is a start-of-run check, not a reservation: per-call guards remain
+    authoritative if another process spends or blocks the envelope later.
+    """
+    try:
+        from backend.services import provider_budget as PB
+        s = PB.snapshot()
+        if s.get("blocked"):
+            return "SHARED_ENVELOPE_BLOCKED"
+        amounts = [s["cap_units"], s["opening_units"]]
+        amounts.extend(r["held_units"] for r in s["calls"].values())
+        if any(type(v) is not int or v < 0 for v in amounts) or amounts[0] <= 0:
+            return "SHARED_ENVELOPE_INVALID"
+        if sum(amounts[1:]) >= amounts[0]:
+            return "SHARED_ENVELOPE_EXHAUSTED"
+    except Exception:                                                # noqa: BLE001
+        # Import, lock, load and schema failures all fail closed. Exception
+        # strings and the snapshot may contain private paths or evidence.
+        return "SHARED_ENVELOPE_UNAVAILABLE"
+    return None
+
+
+def _host_budget_required() -> bool:
+    """Match the provider's PC enforcement without changing cloud runs."""
+    try:
+        from backend.services import provider_budget as PB
+        return PB.host_envelope_required()
+    except Exception:
+        # A missing provider guard must never permit a Windows paid run.
+        return sys.platform == "win32" or os.getenv("AEGIS_DEEPSEEK_HOST_ENVELOPE") == "1"
+
+
+def _budget_failure_receipt(reason: str) -> None:
+    """Exclusive dated file: never replace a previous run or failure receipt."""
+    import uuid
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y%m%dT%H%M%SZ")
+    directory = WD.work_dir() / "receipts"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"budget_refused_{stamp}_{uuid.uuid4().hex}.json"
+    with path.open("x", encoding="utf-8") as fh:
+        json.dump({"state": "BUDGET_REFUSED", "reason": reason,
+                   "stamp": stamp, "observed_at": now.isoformat(),
+                   "stage": "shared_budget_preflight", "written": False}, fh)
+
+
 def run(a: argparse.Namespace) -> int:
     from backend.services import belief_state as B
     from backend.services import disk_guard as DG
@@ -117,6 +165,17 @@ def run(a: argparse.Namespace) -> int:
                              {"state": "STOPPED: STOP file present", "stamp": stamp})
         _p("STOPPED: STOP file present")
         return 0
+    if not a.dry_run and _host_budget_required():
+        refusal = _shared_budget_refusal()
+        if refusal:
+            _p(f"REFUSED: shared budget preflight: {refusal}")
+            try:
+                _budget_failure_receipt(refusal)
+            except Exception:                                        # noqa: BLE001
+                # Still red when receipt storage itself fails; no secret text
+                # or fallback overwrite through main's generic crash handler.
+                _p("REFUSED: shared budget failure receipt could not be persisted")
+            return 2
     DG.require_free(_cfg.DISK_FREE_DEAD_GB + 1, "world_digest", path=_cfg.OPTIMUS_LEDGER_DIR)
     t0 = time.perf_counter()
     bal0 = {} if a.dry_run else _balance(f"world_digest_{stamp}_start")
@@ -240,8 +299,9 @@ def run(a: argparse.Namespace) -> int:
             return out
 
         da, di = diff(actual), diff(illus)
-        txt = lambda dd: ("nothing: identical to the base book" if not dd else "; ".join(
-            f"{x['ticker']} {x['base']:.3f} -> {x['news']:.3f}" for x in dd[:10]))
+        def txt(dd):
+            return ("nothing: identical to the base book" if not dd else "; ".join(
+                f"{x['ticker']} {x['base']:.3f} -> {x['news']:.3f}" for x in dd[:10]))
         overlap = sorted(set(base) & set(sig))
         shadow = {"contract_hash": contract["contract_hash"], "base_book_id": _cfg.WORLD_DIGEST_SHADOW_BASE_BOOK,
                   "base_found": rec is not None, "base_weights": base,
@@ -350,11 +410,19 @@ def run(a: argparse.Namespace) -> int:
         md += f"\n\n## World state (C17)\n\n- not rendered: {type(exc).__name__}: {exc}"[:400]
     DG.atomic_write_text(od / f"world_digest_{stamp}.md", md)
     DG.atomic_write_text(od / f"world_digest_{stamp}.short.txt", WD.render_short(d))
+    # A later per-call refusal can follow useful deterministic work and valid
+    # appended rows. Preserve those artifacts, but never report full success.
+    budget_refused = meter.statuses.get("BUDGET_REFUSED", 0) > 0
+    if budget_refused:
+        d["status"] = "DEGRADED_MODEL_BUDGET"
     DG.atomic_write_json(od / f"world_digest_{stamp}.json", d)
     _p(f"spend ${spend['spent_usd']:.4f} of ${spend['budget_usd']:.2f}; calls {spend['calls']} "
        f"(failed {spend['failed']}); models {spend['served_models']}; balance "
        f"{d['balance']['before']} -> {d['balance']['after']}")
     _p(f"-> {od / f'world_digest_{stamp}.md'}")
+    if budget_refused:
+        _p("DEGRADED_MODEL_BUDGET: partial artifacts preserved; model budget refused")
+        return 2
     return 0
 
 
