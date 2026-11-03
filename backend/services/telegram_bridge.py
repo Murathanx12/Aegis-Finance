@@ -332,16 +332,30 @@ def _set_offset(v: int) -> None:
     OFFSET_PATH.write_text(json.dumps({"offset": v, "at": _now()}), encoding="utf-8")
 
 
-def updates(*, timeout: int = 0) -> list[dict]:
-    """New messages since the last read. Advances the offset so none repeat."""
+def updates(*, timeout: int = 0, advance: bool = True) -> list[dict]:
+    """Fetch updates; dispatchers defer acknowledgment until processing returns."""
     off = _offset()
     res = _call("getUpdates",
                 {"offset": off + 1 if off else None, "timeout": timeout,
                  "allowed_updates": ["message", "callback_query"]},
                 timeout=timeout + 25) or []
-    if res:
+    if res and advance:
         _set_offset(max(u["update_id"] for u in res))
     return res
+
+
+def _dispatch_updates():
+    """Acknowledge each update only after the consumer finishes it.
+
+    An interrupted admission must remain fetchable after restart. This is
+    at-least-once processing: handlers must deduplicate durable admissions;
+    a crash after a side effect but before acknowledgment can replay it.
+    Never acknowledge in finally, which also runs on failed admission.
+    """
+    for update in updates(advance=False):
+        yield update
+        if "update_id" in update:
+            _set_offset(update["update_id"])
 
 
 def claim_owner() -> dict:
@@ -498,7 +512,7 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
     global STRANGERS_DROPPED
     owner = owner_chat_id()
     acted = []
-    for u in updates():
+    for u in _dispatch_updates():
         if u.get("callback_query"):
             r = _poll_callback(u["callback_query"], owner, callback_handler)
             if r:
@@ -523,6 +537,9 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
             if text_handler is not None and text:
                 try:
                     reply = text_handler(text, msg)
+                except OSError:
+                    # Durable chat admission failed; leave this update retryable.
+                    raise
                 except Exception as exc:                           # noqa: BLE001
                     reply = f"reply failed: `{type(exc).__name__}: {redact(exc)}`"
                     logger.exception("telegram text handler failed")
