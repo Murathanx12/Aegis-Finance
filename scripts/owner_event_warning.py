@@ -156,11 +156,12 @@ def qualify_send(review_path, adoption_path, journal, *, now, artifacts=()):
             if artifact['event_key'] != record['event_key']:
                 continue
             if (artifact['source_row_sha256'] != record['corpus_line_sha256']
-                    or artifact['snapshot_sha256'] != record['snapshot_sha256']
                     or artifact['source_url'] != record['source_url']
-                    or adapter._utc(artifact['captured_at']) != adapter._utc(record['source_first_seen_utc'])
-                    or adapter._utc(artifact['snapshot_as_of']) != adapter._utc(record['snapshot_clock'])):
+                    or adapter._utc(artifact['captured_at']) != adapter._utc(record['source_first_seen_utc'])):
                 raise Refused('MANUAL_CORPUS_BINDING_MISMATCH')
+            # The original snapshot is proved by the manual ACK record above.
+            # A later PC-PAPER refresh must not turn the same SEC event into a
+            # duplicate alert or block other held-name events.
             suppressed.add(artifact['event_key'])
     adapter._journal_identity(journal)
     return suppressed

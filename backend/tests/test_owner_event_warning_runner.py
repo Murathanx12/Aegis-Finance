@@ -245,6 +245,24 @@ def test_manual_schema_success_suppresses_without_adapter_or_transport(case, mon
     assert not kwargs['journal'].exists()
 
 
+def test_manual_suppression_survives_a_later_paper_snapshot(case, monkeypatch):
+    kwargs, _, _, snap = case
+    review, adoption, _, _, _, original = manual_gate(case, monkeypatch)
+    snap['positions'][0]['market_value'] = 2100
+    snap['positions'][0]['current_price'] = 105
+    snap['long_market_value'] = 2100
+    snap['cash'] = 7900
+    kwargs['snapshot'].write_text(json.dumps(snap))
+    refreshed = runner.adapter.build_saved_warning(
+        source_jsonl_path=case[2], pc_paper_snapshot_path=kwargs['snapshot'],
+        ticker='ACME', now=kwargs['now'])
+    assert refreshed['snapshot_sha256'] != original['snapshot_sha256']
+    monkeypatch.setattr(runner.adapter, 'warn_saved',
+                        lambda **kw: pytest.fail('duplicate adapter send reached'))
+    code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
+    assert code == 0 and receipts[0]['delivery'] == 'SUPPRESSED_MANUAL'
+
+
 @pytest.mark.parametrize('field,value', [
     ('manual_source_row_sha256', '0' * 64), ('snapshot_sha256', '0' * 64),
     ('corpus_line_sha256', '0' * 64), ('source_hashes_differ', False),
