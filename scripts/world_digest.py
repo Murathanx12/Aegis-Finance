@@ -156,38 +156,60 @@ def _budget_failure_receipt(reason: str) -> None:
 
 
 def _calendar_risk_preview(a: argparse.Namespace) -> bool:
-    """Explicit saved-input preview only; refusal precedes any digest work.
-
-    No defaults from environment, automatic capture, review or send authority.
-    Report separately so the model envelope cannot hide this result.
-    """
+    """Persist an opt-in saved-input preview privately; never control digest status."""
     import re
+    import uuid
 
-    output = {"status": "REFUSED", "reason": "PRIVATE_INPUTS_REQUIRED",
-              "delivery": "NOT_SENT"}
+    receipt_id = None
+    status = "REFUSED_OUTPUT_UNAVAILABLE"
     try:
-        paths = [getattr(a, "calendar_risk_" + name, None)
-                 for name in ("receipt_dir", "journal_dir", "ledger_dir")]
-        pin = getattr(a, "calendar_risk_account_sha256", None)
-        if (all(isinstance(p, Path) and p.is_absolute() and p.is_dir() for p in paths)
-                and isinstance(pin, str) and re.fullmatch(r"[0-9a-f]{64}", pin)):
-            from scripts import pre_event_owner_warning_discover as discovery
-            code, output = discovery.run(
-                receipt_dir=paths[0], journal_dir=paths[1], ledger_dir=paths[2],
-                expected_account_sha256=pin, send=False)
-            if code != 0 or output.get("delivery") != "PREVIEW":
-                output = {**output, "status": "REFUSED", "delivery": "NOT_SENT"}
+        from backend.services import earnings_calendar_capture as capture
+        directory = getattr(a, "calendar_risk_output_dir", None)
+        if not isinstance(directory, Path) or not directory.is_absolute() or not directory.is_dir():
+            raise ValueError("PRIVATE_OUTPUT_REQUIRED")
+        identity = capture._private_identity(directory)
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        candidate_id = f"calendar-risk-preview-{stamp}-{uuid.uuid4().hex}"
+        # Reserve exclusively before reading private inputs. Never fall back to shared storage.
+        with (directory / (candidate_id + ".json")).open("x", encoding="utf-8") as fh:
+            output = {"status": "REFUSED", "reason": "PRIVATE_INPUTS_REQUIRED",
+                      "delivery": "NOT_SENT"}
+            try:
+                if capture._private_identity(directory) != identity:
+                    raise ValueError("PRIVATE_ROOT_CHANGED")
+                paths = [getattr(a, "calendar_risk_" + name, None)
+                         for name in ("receipt_dir", "journal_dir", "ledger_dir")]
+                pin = getattr(a, "calendar_risk_account_sha256", None)
+                if (all(isinstance(p, Path) and p.is_absolute() and p.is_dir() for p in paths)
+                        and isinstance(pin, str) and re.fullmatch(r"[0-9a-f]{64}", pin)):
+                    from scripts import pre_event_owner_warning_discover as discovery
+                    code, output = discovery.run(
+                        receipt_dir=paths[0], journal_dir=paths[1], ledger_dir=paths[2],
+                        expected_account_sha256=pin, send=False)
+                    if code != 0 or output.get("delivery") != "PREVIEW":
+                        output = {**output, "status": "REFUSED", "delivery": "NOT_SENT"}
+            except Exception:                                        # noqa: BLE001
+                output = {"status": "REFUSED", "reason": "CALENDAR_RISK_PREVIEW_FAILED",
+                          "delivery": "NOT_SENT"}
+            succeeded = output.get("delivery") == "PREVIEW" and output.get("status") != "REFUSED"
+            result_status = "PREVIEW" if succeeded else "REFUSED"
+            json.dump({"receipt_id": candidate_id, "stamp": stamp,
+                       "status": result_status, "result": output}, fh, sort_keys=True)
+            fh.flush()
+            os.fsync(fh.fileno())
+            if capture._private_identity(directory) != identity:
+                raise ValueError("PRIVATE_ROOT_CHANGED")
+        receipt_id = candidate_id
+        status = result_status
     except Exception:                                                # noqa: BLE001
-        # Never print exception text containing private paths or input bytes.
-        output = {"status": "REFUSED", "reason": "CALENDAR_RISK_PREVIEW_FAILED",
-                  "delivery": "NOT_SENT"}
-    _p("CALENDAR_RISK_PREVIEW " + json.dumps(output, sort_keys=True))
-    return output.get("delivery") == "PREVIEW" and output.get("status") != "REFUSED"
+        # No exception text, input identifiers, amounts or private paths in the shared log.
+        pass
+    _p("CALENDAR_RISK_PREVIEW " + json.dumps(
+        {"status": status, "receipt_id": receipt_id}, sort_keys=True))
+    return status == "PREVIEW"
 
 
 def run(a: argparse.Namespace) -> int:
-    if getattr(a, "calendar_risk_preview", False) and not _calendar_risk_preview(a):
-        return 2
     from backend.services import belief_state as B
     from backend.services import disk_guard as DG
     now = datetime.now(timezone.utc)
@@ -197,6 +219,8 @@ def run(a: argparse.Namespace) -> int:
                              {"state": "STOPPED: STOP file present", "stamp": stamp})
         _p("STOPPED: STOP file present")
         return 0
+    if getattr(a, "calendar_risk_preview", False):
+        _calendar_risk_preview(a)
     if not a.dry_run and _host_budget_required():
         refusal = _shared_budget_refusal()
         if refusal:
@@ -672,7 +696,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dry-run", action="store_true", help="cached extractions only; no call, no rows")
     ap.add_argument("--calendar-risk-preview", action="store_true",
                     help="preview saved calendar receipts before digest/model preflight; never send")
-    for name in ("receipt-dir", "journal-dir", "ledger-dir"):
+    for name in ("receipt-dir", "journal-dir", "ledger-dir", "output-dir"):
         ap.add_argument("--calendar-risk-" + name, type=Path,
                         help="caller-provided absolute private directory; no default")
     ap.add_argument("--calendar-risk-account-sha256", help="expected account SHA256 pin")
