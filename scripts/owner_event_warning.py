@@ -40,7 +40,9 @@ from backend.services import owner_event_warning as adapter
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PATHS = ('backend/services/owner_event_warning.py',
-                'scripts/owner_event_warning.py', 'backend/services/telegram_bridge.py')
+                'scripts/owner_event_warning.py', 'backend/services/telegram_bridge.py',
+                'backend/services/saved_sec_event_path.py',
+                'backend/services/saved_sec_forecast_input.py')
 
 # Public-safe byte identities of the original manual evidence, read-only from R.
 KNOWN_MANUAL_PROOFS = {
@@ -391,11 +393,13 @@ def run(*, ledger, snapshot=None, journal, now, send=False, review=None, adoptio
             for line, path in unique.items():
                 line_sha = sha(line)
                 check()
-                artifact = adapter.build_saved_warning_bytes(source_bytes=line,
+                artifact = adapter.build_lineage_warning_bytes(source_bytes=line,
                     snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
                     source_row_sha256=line_sha)
                 receipt = {k: artifact[k] for k in ('event_key', 'source_row_sha256',
-                    'snapshot_sha256', 'status', 'reason') if k in artifact}
+                    'snapshot_sha256', 'status', 'reason', 'forecast_input_id',
+                    'provisional_decision_id', 'evidence_packet_sha256',
+                    'forecast_status', 'new_allocation_usd') if k in artifact}
                 receipt['at'] = now.isoformat()
                 receipt['delivery'] = 'PREVIEW'
                 receipts.append(receipt)

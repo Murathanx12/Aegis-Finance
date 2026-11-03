@@ -178,6 +178,16 @@ def test_refreshed_apple_suppression_with_other_event_fake_sender(case, approved
     review.write_text(json.dumps(payload))
     monkeypatch.setattr(runner, 'KNOWN_MANUAL_PROOFS', {
         record['event_id']: (record['attempt_sha256'], record['result_sha256'], 'AAPL')})
+    # A refreshed Apple-only snapshot remains suppressed without any transport.
+    snap['positions'][0].update(market_value=2050, current_price=102.5)
+    snap.update(long_market_value=2050, cash=7950)
+    dated.write_text(json.dumps(snap))
+    monkeypatch.setattr(telegram_bridge, 'owner_chat_id',
+                        lambda: pytest.fail('suppressed Apple requested transport'))
+    code, only_apple = runner.run(**kwargs, send=True, review=review, adoption=adoption)
+    assert code == 0 and only_apple[0]['delivery'] == 'SUPPRESSED_MANUAL'
+    assert only_apple[0]['provisional_decision_id'].startswith('saved-sec-decision:')
+    assert not kwargs['journal'].exists()
     # Refresh exposure AND add a second event that must still be sent once.
     snap['positions'][0].update(market_value=2100, current_price=105)
     snap['positions'].append(dict(symbol='BETA', qty=10, market_value=1000, current_price=100))
@@ -323,6 +333,14 @@ def test_frozen_bytes_reach_fake_sender_after_file_replacement(case, approved, m
                            if not p.name.endswith('.result.json')).read_text())
     assert saved['artifact']['snapshot_sha256'] == runner.sha(frozen_snapshot)
     assert saved['artifact']['source_row_sha256'] == runner.sha(frozen_source)
+    from backend.services.saved_sec_event_path import build_saved_sec_event_path
+    expected = build_saved_sec_event_path(event_bytes=frozen_source,
+        snapshot_bytes=frozen_snapshot, ticker='ACME',
+        cutoff_utc=kwargs['now'].isoformat(), decision_utc=kwargs['now'].isoformat())
+    assert saved['artifact']['forecast_input_id'] == expected['forecast_input_id']
+    assert saved['artifact']['provisional_decision_id'] == expected['decision_id']
+    assert expected['decision_id'] in sent[0]
+
 
 
 def test_malformed_numeric_holdings_are_sanitized(approved):
