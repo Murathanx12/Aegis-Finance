@@ -167,7 +167,39 @@ def _budget_failure_receipt(reason: str) -> None:
                    "stage": "shared_budget_preflight", "written": False}, fh)
 
 
+def _calendar_risk_preview(a: argparse.Namespace) -> bool:
+    """Explicit saved-input preview only; refusal precedes any digest work.
+
+    No defaults from environment, automatic capture, review or send authority.
+    Report separately so the model envelope cannot hide this result.
+    """
+    import re
+
+    output = {"status": "REFUSED", "reason": "PRIVATE_INPUTS_REQUIRED",
+              "delivery": "NOT_SENT"}
+    try:
+        paths = [getattr(a, "calendar_risk_" + name, None)
+                 for name in ("receipt_dir", "journal_dir", "ledger_dir")]
+        pin = getattr(a, "calendar_risk_account_sha256", None)
+        if (all(isinstance(p, Path) and p.is_absolute() and p.is_dir() for p in paths)
+                and isinstance(pin, str) and re.fullmatch(r"[0-9a-f]{64}", pin)):
+            from scripts import pre_event_owner_warning_discover as discovery
+            code, output = discovery.run(
+                receipt_dir=paths[0], journal_dir=paths[1], ledger_dir=paths[2],
+                expected_account_sha256=pin, send=False)
+            if code != 0 or output.get("delivery") != "PREVIEW":
+                output = {**output, "status": "REFUSED", "delivery": "NOT_SENT"}
+    except Exception:                                                # noqa: BLE001
+        # Never print exception text containing private paths or input bytes.
+        output = {"status": "REFUSED", "reason": "CALENDAR_RISK_PREVIEW_FAILED",
+                  "delivery": "NOT_SENT"}
+    _p("CALENDAR_RISK_PREVIEW " + json.dumps(output, sort_keys=True))
+    return output.get("delivery") == "PREVIEW" and output.get("status") != "REFUSED"
+
+
 def run(a: argparse.Namespace) -> int:
+    if getattr(a, "calendar_risk_preview", False) and not _calendar_risk_preview(a):
+        return 2
     from backend.services import belief_state as B
     from backend.services import disk_guard as DG
     now = datetime.now(timezone.utc)
@@ -650,6 +682,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--hours", type=float, default=float(_cfg.WORLD_DIGEST_HOURS))
     ap.add_argument("--budget", type=float, default=float(_cfg.WORLD_DIGEST_BUDGET_USD))
     ap.add_argument("--dry-run", action="store_true", help="cached extractions only; no call, no rows")
+    ap.add_argument("--calendar-risk-preview", action="store_true",
+                    help="preview saved calendar receipts before digest/model preflight; never send")
+    for name in ("receipt-dir", "journal-dir", "ledger-dir"):
+        ap.add_argument("--calendar-risk-" + name, type=Path,
+                        help="caller-provided absolute private directory; no default")
+    ap.add_argument("--calendar-risk-account-sha256", help="expected account SHA256 pin")
     ap.add_argument("--no-write", action="store_true", help="pay and render, but write no forecast rows")
     ap.add_argument("--no-sections", action="store_true",
                     help="skip the official-source sections (insiders, policy, positioning)")
