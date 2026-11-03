@@ -6,10 +6,13 @@ Candidate only: no upload, registration, push, merge, deployment or paid calls.
 
 ## Behavior
 
-`IC_FUNNEL_PATH = DATA_DIR / "funnel_night10.json"`. With no `AEGIS_DATA_DIR`,
-the local default remains `backend/data/funnel_night10.json`. Cloud `/data`
-never falls back to the packaged image. Existing `ic_health()` reports missing
-volume data as DEGRADED (covered by an actual-loader test).
+`IC_FUNNEL_PATH` remains the original, policy-pinned
+`backend/data/funnel_night10.json` in Python. The Railway Docker image replaces
+the packaged file at that path with a symlink to `/data/funnel_night10.json`
+after copying the backend source. Local development still reads its normal
+file. Cloud `/data` never falls back to the packaged image. Existing
+`ic_health()` reports missing volume data as DEGRADED. The frozen prepared PC
+policy epoch source check passes without modifying its contract or hashes.
 
 Run locally, without network or writes:
 
@@ -177,7 +180,12 @@ the existing IC `_compute_funnel_state` against the volume path on Railway
 returned `available=True`, `gate=CLEAN`, 25 recommendations. These are
 read-only verification results after the one upload, not proof that the live
 application reads the volume yet. The currently deployed `cac7f219` code still
-reads its packaged image path until this change passes CI and deploys.
+reads its packaged image file until the Docker binding passes CI and deploys.
+
+The first hosted CI run failed one frozen prepared PC policy test because a
+prior version changed `backend/config.py`. That source change was reverted;
+the Docker binding preserves the policy-pinned Python bytes. The corrected
+local focused suite (transfer plus prepared policy) passed 119 tests.
 
 No scheduled transfer exists. The PC's next funnel refresh will require a
 separate reviewed sync mechanism to keep the volume artifact current.

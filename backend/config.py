@@ -1680,11 +1680,10 @@ SIGNAL_UNIVERSE_BANDS: dict = {
 
 #: Funnel run the IC page reads. Missing file degrades to pure benchmark core
 #: with degradation_reason "no funnel run available" — never a 500.
-#: Runtime artifact under DATA_DIR: defaults to backend/data locally; cloud
-#: AEGIS_DATA_DIR=/data selects the mounted volume. The packaged backend/data
-#: copy is not a fallback when the volume artifact is missing. Never use docs/:
-#: .dockerignore excludes it (NIGHT-13 audit F1).
-IC_FUNNEL_PATH = DATA_DIR / "funnel_night10.json"
+#: Lives under backend/data (NOT docs/): .dockerignore excludes docs, so a
+#: docs path would make the IC permanently degraded in every prod image while
+#: green locally — the insider-collector failure shape (NIGHT-13 audit F1).
+IC_FUNNEL_PATH = BACKEND_DIR / "data" / "funnel_night10.json"
 
 #: TTL for the funnel-derived state (gate + ranking + archetype books). The
 #: funnel is a nightly artifact; composition itself is computed per request.

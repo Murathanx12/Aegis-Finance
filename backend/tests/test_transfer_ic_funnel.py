@@ -50,7 +50,7 @@ def fake_ssh(target, before=None):
         call = tree.body[-1].value
         assert call.func.id == 'remote_entry'
         encoded, expected, apply = [ast.literal_eval(arg) for arg in call.args]
-        raw = base64.b64decode(encoded)
+        assert base64.b64decode(encoded)
         assert encoded not in ' '.join(argv)
         if before:
             before()
@@ -178,13 +178,14 @@ def test_timeout_sanitized():
                    expected='ABSENT', apply=True, run=timeout)
 
 
-def test_config_path_cloud_local_and_no_fallback(tmp_path):
+def test_config_path_remains_policy_pinned_with_cloud_data_dir(tmp_path):
     # Evaluate the real config in a fresh process with dotenv disabled: no local
-    # .env or module reload can contaminate the result. No runtime modules imported.
+    # .env or module reload can contaminate the result. The Docker image binds
+    # this path to the Railway volume without changing the frozen Python source.
     root = Path(__file__).resolve().parents[2]
     code = ('import runpy,sys,types; sys.modules["dotenv"]=types.SimpleNamespace(load_dotenv=lambda *a,**k:None); '
             'c=runpy.run_path("backend/config.py"); '
-            'assert c["IC_FUNNEL_PATH"] == c["DATA_DIR"] / "funnel_night10.json"; '
+            'assert c["IC_FUNNEL_PATH"] == c["BACKEND_DIR"] / "data/funnel_night10.json"; '
             'print(c["IC_FUNNEL_PATH"])')
     env = os.environ.copy()
     env.pop('AEGIS_REPO_ROOT', None)
@@ -195,8 +196,7 @@ def test_config_path_cloud_local_and_no_fallback(tmp_path):
     env['AEGIS_DATA_DIR'] = str(tmp_path)
     cloud = subprocess.run([sys.executable, '-c', code], cwd=root, env=env, capture_output=True, text=True)
     assert cloud.returncode == 0, cloud.stderr
-    assert Path(cloud.stdout.strip()) == tmp_path / 'funnel_night10.json'
-    assert not Path(cloud.stdout.strip()).exists()
+    assert Path(cloud.stdout.strip()) == root / 'backend/data/funnel_night10.json'
 
 
 def test_mount_missing_never_writes(remote, monkeypatch):
