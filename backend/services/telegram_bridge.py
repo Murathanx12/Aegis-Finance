@@ -53,6 +53,7 @@ carries the answer back.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -63,10 +64,9 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
+from backend import config as _cfg
 
 logger = logging.getLogger(__name__)
-
-from backend import config as _cfg
 
 STATE_DIR = _cfg.OPTIMUS_LEDGER_DIR / "telegram"
 OFFSET_PATH = STATE_DIR / "update_offset.json"
@@ -217,6 +217,63 @@ def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
     return out
 
 
+def send_owner_once(text: str, *, tag: str = "codex-result", expected_owner: str | None = None,
+                    until: float | None = None, clock=None) -> dict:
+    """One bounded send; native acknowledgement hashes bind recipient/ID, tag and text.
+
+    Caller checkpoints SENDING first. Ambiguous transport is never retried here.
+    No raw recipient or native message ID leaves this helper or enters its outbox.
+    """
+    import time
+    clock = clock or time.time
+    target = owner_chat_id()
+    if not target or not re.fullmatch(r"[1-9][0-9]*", target):
+        raise TelegramRefused("NUMERIC_PRIVATE_OWNER_REQUIRED")
+    if expected_owner is not None and target != str(expected_owner):
+        raise TelegramRefused("OWNER_CHANGED_BEFORE_RESULT_DELIVERY")
+    if not isinstance(tag, str) or not re.fullmatch(r"[A-Za-z0-9:_./-]{1,128}", tag):
+        raise TelegramRefused("OPAQUE_DELIVERY_TAG_REQUIRED")
+    text = redact(text)
+    if not text or len(text) > MAX_LEN:
+        raise TelegramRefused("SINGLE_RESULT_MESSAGE_LENGTH_INVALID")
+    if until is not None and clock() >= until:
+        raise TelegramRefused("OWNER_DELIVERY_HELD_HARD_DEADLINE")
+    timeout = min(30.0, until - clock()) if until is not None else 30.0
+    if timeout <= 0:
+        raise TelegramRefused("OWNER_DELIVERY_HELD_HARD_DEADLINE")
+    try:
+        result = _call("sendMessage", {"chat_id": target, "text": text,
+                                      "disable_web_page_preview": True},
+                       timeout=timeout)
+    except Exception:
+        raise TelegramRefused("OWNER_DELIVERY_UNKNOWN_RECONCILE_REQUIRED") from None
+    chat = result.get("chat") if isinstance(result, dict) else None
+    mid = result.get("message_id") if isinstance(result, dict) else None
+    if (type(mid) is not int or mid <= 0 or not isinstance(chat, dict)
+            or type(chat.get("id")) is not int or str(chat["id"]) != target
+            or chat.get("type") != "private"):
+        raise TelegramRefused("OWNER_DELIVERY_ACK_UNVERIFIED")
+    if until is not None and clock() >= until:
+        raise TelegramRefused("OWNER_DELIVERY_ACK_AFTER_DEADLINE_RECONCILE_REQUIRED")
+    def digest(value):
+        return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    ack = {"state": "SENT", "messages": 1,
+           "native_ack_sha256": digest({"schema": "telegram-native-ack/1", "owner": target, "message_id": mid}),
+           "tag_sha256": digest({"tag": tag}), "text_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()}
+    ack["delivery_binding_sha256"] = digest({k: ack[k] for k in ("native_ack_sha256", "tag_sha256", "text_sha256")})
+    try:
+        row = {"t": _now(), "chat": "owner", "chars": len(text), **ack}
+        OUTBOX_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with OUTBOX_PATH.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row) + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+    except Exception:
+        raise TelegramRefused("OWNER_DELIVERY_RECEIPT_PERSISTENCE_UNKNOWN") from None
+    return ack
+
+
+
 #: Sends that are the phone's front page: the probes' DEAD/STALE rows go FIRST.
 BRIEF_TAGS = ("brief", "cmd:brief")
 
@@ -239,8 +296,10 @@ def _split(text: str) -> list[str]:
     n = 0
     for line in text.splitlines(keepends=True):
         if n + len(line) > MAX_LEN and cur:
-            parts.append("".join(cur)); cur, n = [], 0
-        cur.append(line); n += len(line)
+            parts.append("".join(cur))
+            cur, n = [], 0
+        cur.append(line)
+        n += len(line)
     if cur:
         parts.append("".join(cur))
     return parts
@@ -317,7 +376,8 @@ def _persist_owner(cid: str) -> None:
         out, found = [], False
         for ln in lines:
             if ln.startswith(f"{OWNER_ENV}="):
-                out.append(f"{OWNER_ENV}={cid}"); found = True
+                out.append(f"{OWNER_ENV}={cid}")
+                found = True
             else:
                 out.append(ln)
         if not found:
