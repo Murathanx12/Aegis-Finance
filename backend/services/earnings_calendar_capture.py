@@ -30,11 +30,12 @@ _URL = "https://finnhub.io/api/v1/calendar/earnings"
 _TICKER = re.compile(r"[A-Z]{1,5}(?:[.-][A-Z])?")
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _UTC = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)")
-_SCHEMA = "earnings-calendar-capture/3"
+_SCHEMA = "earnings-calendar-capture/4"
 _SOURCE = "finnhub/calendar/earnings"
 _FINAL_NAME = re.compile(r"earnings-calendar-[0-9a-f]{32}\.json")
 _RECEIPT_KEYS = frozenset({
-    "schema", "source", "ticker", "from", "to", "observed_utc", "cutoff_utc",
+    "schema", "source", "ticker", "from", "to", "request_utc",
+    "observed_utc", "cutoff_utc",
     "response_sha256", "response_bytes_b64", "input_id", "receipt_id",
 })
 _MAX_RECEIPT_BYTES = 4 * ((MAX_BYTES + 2) // 3) + 2048
@@ -65,16 +66,20 @@ def _date(value: str) -> date:
     return parsed
 
 
-def _cutoff(value: str) -> date:
+def _utc_datetime(value: str) -> datetime:
     if not isinstance(value, str) or not _UTC.fullmatch(value):
         _refuse("CUTOFF_UTC_INVALID")
     try:
-        result = _new_york_date(datetime.fromisoformat(value.replace("Z", "+00:00")))
+        result = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except (ValueError, OverflowError):
         result = None
     if result is None:
         _refuse("CUTOFF_UTC_INVALID")
     return result
+
+
+def _cutoff(value: str) -> date:
+    return _new_york_date(_utc_datetime(value))
 
 
 def _private_identity(directory: Path) -> tuple[int, int]:
@@ -172,15 +177,20 @@ def _valid_receipt(receipt: dict, raw: bytes) -> bool:
         return False
     try:
         first, last = _date(receipt["from"]), _date(receipt["to"])
-        decision = _cutoff(receipt["cutoff_utc"])
+        request = _utc_datetime(receipt["request_utc"])
+        observed = _utc_datetime(receipt["observed_utc"])
+        decision = _new_york_date(request)
         if not (1 <= (first - decision).days <= (last - decision).days <= 7):
+            return False
+        if (request > observed or _new_york_date(observed) != decision
+                or receipt["cutoff_utc"] != receipt["observed_utc"]):
             return False
         return receipt["receipt_id"] == _seal(receipt)
     except (CaptureRefused, ValueError, TypeError, OverflowError):
         return False
 
 
-def _receipt_bytes(*, ticker: str, start: str, end: str, observed: str, cutoff: str,
+def _receipt_bytes(*, ticker: str, start: str, end: str, request: str, observed: str,
                    raw: bytes, packet: dict) -> bytes:
     receipt = {
         "schema": _SCHEMA,
@@ -188,8 +198,9 @@ def _receipt_bytes(*, ticker: str, start: str, end: str, observed: str, cutoff: 
         "ticker": ticker,
         "from": start,
         "to": end,
+        "request_utc": request,
         "observed_utc": observed,
-        "cutoff_utc": cutoff,
+        "cutoff_utc": observed,
         "response_sha256": hashlib.sha256(raw).hexdigest(),
         "response_bytes_b64": base64.b64encode(raw).decode("ascii"),
         "input_id": packet["input_id"],
@@ -277,7 +288,10 @@ def capture_earnings_calendar(
     """Fetch once on explicit invocation; persist only a successful capture.
 
     Transport has the requests.get shape and must honor ``stream=True``.
+    ``cutoff_utc`` is the caller's pre-request boundary for the ET date range.
     Observation time is sampled immediately after the full body arrives. The
+    initial adapter cutoff equals that observation; later decisions must replay
+    with their own cutoff. An ET midnight crossing refuses the capture. The
     deadline is checked after each step; a blocking custom transport must honor
     the supplied connect/read timeouts itself.
     """
@@ -343,9 +357,13 @@ def capture_earnings_calendar(
             pass
     if not raw:
         _refuse("RESPONSE_BYTES_INVALID")
+    if _utc_datetime(cutoff_utc) > _utc_datetime(observed):
+        _refuse("REQUEST_AFTER_OBSERVATION")
+    if _cutoff(observed) != decision:
+        _refuse("ET_DATE_CHANGED_DURING_CAPTURE")
     _elapsed(monotonic, start_time)
     packet = build_saved_earnings_calendar_input(
-        raw, ticker=ticker, observed_utc=observed, cutoff_utc=cutoff_utc,
+        raw, ticker=ticker, observed_utc=observed, cutoff_utc=observed,
     )
     _elapsed(monotonic, start_time)
     if packet["status"] != "EVIDENCE_ONLY":
@@ -358,7 +376,7 @@ def capture_earnings_calendar(
     if _private_identity(directory) != identity:
         _refuse("PRIVATE_DIRECTORY_CHANGED")
     receipt = _receipt_bytes(ticker=ticker, start=start, end=end,
-                             observed=observed, cutoff=cutoff_utc, raw=raw, packet=packet)
+                             request=cutoff_utc, observed=observed, raw=raw, packet=packet)
     _elapsed(monotonic, start_time)
     path = _write_new(directory, receipt, identity, monotonic, start_time)
     return {"packet": packet, "receipt_path": path}
