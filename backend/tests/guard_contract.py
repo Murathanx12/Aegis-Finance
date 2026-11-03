@@ -111,6 +111,24 @@ EXCEPTION_BASES = {"RuntimeError", "Exception", "ValueError", "LookupError",
 #: each says why in one line so that "exempt" costs a sentence instead of
 #: nothing. A new module lands in neither table and fails the enrolment test.
 NOT_INPUT_GUARDS: dict[str, str] = {
+    "earnings_calendar_capture": (
+        "CaptureRefused is an explicit offline fetch, private-directory and "
+        "response-integrity refusal. No provider failure is converted to an "
+        "empty calendar or a decision. Missing key, failed fetch, invalid "
+        "response and replay refusal are exercised directly in "
+        "test_earnings_calendar_capture.py; no runtime caller is installed."),
+    "pre_event_owner_warning": (
+        "_Refused is internal to a pure saved-byte assessor. Its public "
+        "build_pre_event_warning_bytes returns REFUSED for missing calendar, "
+        "unapproved or stale PC-PAPER snapshot, and post-event presentation; "
+        "these are asserted in test_pre_event_owner_warning.py. No delivery "
+        "or trading authority is supplied by this module."),
+    "saved_earnings_calendar_input": (
+        "_Refused is an internal validation branch; the public offline adapter "
+        "returns an explicit REFUSED artifact for missing bytes, stale or "
+        "future observation, and absent or ambiguous upcoming events. These "
+        "cases are exercised directly in test_saved_earnings_calendar_input.py. "
+        "No runtime caller or trading authority is supplied."),
     "saved_sec_forecast_input": (
         "_Refused is an internal parser branch; the public byte adapter returns "
         "an explicit REFUSED artifact rather than raising. Missing bytes, "
