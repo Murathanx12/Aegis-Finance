@@ -75,6 +75,95 @@ def send(raw, target, expected='ABSENT', **kw):
                       expected=expected, apply=True, run=fake_ssh(target, **kw))
 
 
+@pytest.mark.parametrize('hour,minute,second', [
+    (16, 29, 0), (16, 30, 0), (16, 45, 0), (17, 5, 0)])
+def test_opt_in_remote_precommit_deadline_refuses_no_write(remote, hour, minute, second):
+    old = payload(days=1)
+    remote.write_bytes(old)
+    now = datetime.now(timezone.utc).astimezone(T.SGT)
+    deadline = now.replace(hour=16, minute=29, second=0, microsecond=0).astimezone(timezone.utc).isoformat()
+    commit_time = now.replace(hour=hour, minute=minute, second=second, microsecond=0)
+    with pytest.raises(T.Refused, match='iif_protection_clock'):
+        T.receive(payload(), T.digest(old), target=remote, apply=True,
+                  commit_deadline=deadline, clock=lambda: commit_time)
+    assert remote.read_bytes() == old
+    assert not list(remote.parent.glob('.funnel-transfer-*'))
+
+
+def test_opt_in_remote_process_delayed_past_absolute_deadline(remote):
+    old = payload(days=1)
+    remote.write_bytes(old)
+    now = datetime.now(timezone.utc).astimezone(T.SGT)
+    deadline = now.replace(hour=16, minute=29, second=0, microsecond=0).astimezone(timezone.utc).isoformat()
+    next_day = now + timedelta(days=1)
+    with pytest.raises(T.Refused, match='iif_protection_clock'):
+        T.receive(payload(), T.digest(old), target=remote, apply=True,
+                  commit_deadline=deadline, clock=lambda: next_day)
+    assert remote.read_bytes() == old
+
+
+def test_manual_receive_has_no_opt_in_deadline(remote):
+    raw = payload()
+    assert T.receive(raw, 'ABSENT', target=remote, apply=True)['wrote'] is True
+    assert remote.read_bytes() == raw
+
+
+def test_guarded_ssh_wire_carries_deadline_and_refuses_late_commit(remote, monkeypatch):
+    old = payload(days=1)
+    remote.write_bytes(old)
+    local = datetime.now(timezone.utc).astimezone(T.SGT).replace(
+        hour=16, minute=26, second=0, microsecond=0)
+    blocked = local.replace(hour=16, minute=30)
+    deadline = local.replace(hour=16, minute=29).astimezone(timezone.utc).isoformat()
+    def run(argv, **kw):
+        assert kw['timeout'] == 60 and kw['shell'] is False
+        assert len(kw['input']) > len(old) and old not in ' '.join(argv).encode()
+        tree = ast.parse(kw['input'].decode())
+        call = tree.body[-1].value
+        assert call.func.id == 'remote_entry' and len(call.args) == 4
+        assert ast.literal_eval(call.args[3]) == deadline
+        namespace = {'__name__': 'fake_remote'}
+        exec(compile(ast.Module(body=tree.body[:-1], type_ignores=[]), '<wire>', 'exec'), namespace)
+        namespace['receive'].__kwdefaults__['target'] = remote
+        def delayed_guard(value, **_):
+            try:
+                T.guard_commit_deadline(value, now=blocked)
+            except T.Refused as exc:
+                raise namespace['Refused'](str(exc)) from None
+        namespace['guard_commit_deadline'] = delayed_guard
+        monkeypatch.setattr(os.path, 'ismount', lambda p: p == '/data')
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            with pytest.raises(SystemExit) as exit_info:
+                exec(compile(ast.Module(body=[tree.body[-1]], type_ignores=[]), '<wire>', 'exec'), namespace)
+        assert exit_info.value.code == 2
+        assert 'iif_protection_clock' in output.getvalue()
+        return subprocess.CompletedProcess(argv, 2, output.getvalue().encode(), b'private')
+    with pytest.raises(T.Refused, match='remote_refused_or_unconfirmed'):
+        T.transfer(payload(), project='8105f1ef-f39d-4a82-971e-e5d02db5ac8c',
+                   environment='c36ec00c-9250-494d-ae1c-3d07c2bcf60a',
+                   service='05e102b9-b7ee-479d-9257-a506f74730d5',
+                   expected=T.digest(old), apply=True, run=run,
+                   commit_deadline=deadline, clock=lambda: local)
+    assert remote.read_bytes() == old
+    assert not list(remote.parent.glob('.funnel-transfer-*'))
+
+
+def test_guarded_transfer_rechecks_clock_at_ssh_launch():
+    local = datetime.now(timezone.utc).astimezone(T.SGT).replace(
+        hour=16, minute=26, second=0, microsecond=0)
+    late = local.replace(hour=16, minute=30)
+    deadline = local.replace(hour=16, minute=29).astimezone(timezone.utc).isoformat()
+    def forbidden(*args, **kwargs):
+        pytest.fail('network launched')
+    with pytest.raises(T.Refused, match='iif_protection_clock'):
+        T.transfer(payload(), project='8105f1ef-f39d-4a82-971e-e5d02db5ac8c',
+                   environment='c36ec00c-9250-494d-ae1c-3d07c2bcf60a',
+                   service='05e102b9-b7ee-479d-9257-a506f74730d5',
+                   expected='ABSENT', apply=True, run=forbidden,
+                   commit_deadline=deadline, clock=lambda: late)
+
+
 def test_default_dry_run_never_spawns_or_writes(tmp_path):
     def forbidden(*a, **k):
         pytest.fail('dry run spawned SSH')
