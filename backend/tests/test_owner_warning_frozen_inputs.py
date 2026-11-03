@@ -1,5 +1,5 @@
 """Adversarial selector tests: fixtures only, no real transport or ledger."""
-from datetime import timedelta
+from datetime import datetime, time, timedelta, timezone
 import json
 from pathlib import Path
 
@@ -55,6 +55,47 @@ def test_newest_frozen_preview_no_writes(case, approved, monkeypatch):
     assert seen[0]['source_bytes'] == case[2].read_bytes()
     assert before == {p: p.read_bytes() for p in kwargs['ledger'].rglob('*') if p.is_file()}
     assert not kwargs['journal'].exists()
+
+
+def test_overnight_session_snapshot_keeps_start_day_folder(case, approved):
+    kwargs, dated, top = approved
+    # A session started on the prior SGT date writes after midnight there.
+    overnight = datetime.combine(kwargs['now'].date(), time(18, 20), timezone.utc)
+    kwargs['now'] = overnight
+    prior_day = overnight.astimezone(runner.PC_ZONE).date() - timedelta(days=1)
+    old_folder = dated.parent.parent / str(prior_day)
+    old_folder.mkdir()
+    session_snapshot = old_folder / 'state_latest.json'
+    snap = json.loads(dated.read_text())
+    snap['t'] = overnight.isoformat()
+    session_snapshot.write_text(json.dumps(snap))
+    dated.unlink()
+    top.write_text(json.dumps(dict(snap, t=(overnight - timedelta(minutes=1)).isoformat())))
+    row = case[1]
+    row['first_seen_utc'] = overnight.isoformat()
+    row['published_utc'] = (overnight - timedelta(hours=1)).isoformat()
+    case[2].write_text(json.dumps(row) + '\n')
+    code, receipts = runner.run(**kwargs)
+    assert code == 0 and receipts[0]['delivery'] == 'NOT_SENT'
+    assert receipts[0]['snapshot_sha256'] == runner.sha(session_snapshot.read_bytes())
+
+
+def test_older_folder_is_outside_fixed_candidate_paths(case, approved, monkeypatch):
+    kwargs, dated, top = approved
+    older = (dated.parent.parent / str(kwargs['now'].astimezone(runner.PC_ZONE).date()
+             - timedelta(days=2)))
+    older.mkdir()
+    (older / 'state_latest.json').write_bytes(dated.read_bytes())
+    dated.unlink()
+    top.unlink()
+    seen = []
+    original = runner.frozen_read
+    def observe(path):
+        seen.append(Path(path))
+        return original(path)
+    monkeypatch.setattr(runner, 'frozen_read', observe)
+    assert runner.run(**kwargs)[0] == 2
+    assert older / 'state_latest.json' not in seen
 
 
 @pytest.mark.parametrize('mode', ['total_swap', 'mixed_account', 'missing_account',

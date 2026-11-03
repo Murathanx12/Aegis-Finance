@@ -175,8 +175,11 @@ def select_snapshot(ledger, *, now, expected_account_sha256, check):
         if accounts != {expected_account_sha256}:
             raise Refused('ACCOUNT_MISMATCH')
         stamp = adapter._utc(snap['t'])
+        # sim_run fixes the PC-local folder date when a session starts, then
+        # continues writing snapshots there after Singapore midnight.
         if stamp > now or (folder_day is not None
-                and stamp.astimezone(PC_ZONE).date() != folder_day):
+                and stamp.astimezone(PC_ZONE).date()
+                not in (folder_day, folder_day + timedelta(days=1))):
             raise Refused('SNAPSHOT_PROVENANCE_OR_FUTURE')
         if stamp in clocks and clocks[stamp] != raw:
             raise Refused('EQUAL_CLOCK_CONFLICT')

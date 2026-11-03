@@ -3,7 +3,7 @@
 Base: `cac7f219e3074c3ef0f3ff51ce2b4d96fcc5788f`.
 Worktree: `C:/Users/mrthn/aegis-owner-warning-frozen`.
 Branch: `codex/owner-warning-frozen-20261104`.
-This is an uncommitted source candidate. No live adoption, task changes,
+This is a local source candidate. No live adoption, task changes,
 remote operations, trade/NAV writes, or actual message delivery were performed.
 Local `main` had advanced to `4a1cd669` at setup; the owner's explicit base was
 retained. This note makes no claim about current production health.
@@ -18,10 +18,11 @@ retained. This note makes no claim about current production health.
 - Selection reads only `pc_book/state_latest.json`, yesterday's and today's
   Singapore-calendar `pc_book/YYYY-MM-DD/state_latest.json`. There is no glob,
   recursive scan, history/NAV read, IIF input, or broker lookup. Native producer
-  `sim_run._run_loop` uses the PC local date; this candidate explicitly contracts
-  that calendar to UTC+08:00. Other producer calendar/session conventions refuse
-  rather than being guessed. A dated candidate's embedded UTC timestamp must
-  map to its folder date. The top-level file has no date-folder attestation.
+  `sim_run._run_loop` fixes the PC local date once at session start and can keep
+  writing into that folder after Singapore midnight. A dated candidate's
+  embedded UTC timestamp must map to the folder's Singapore date or the next
+  Singapore date. The selector still reads only today's and yesterday's folders;
+  older folders are not probed. The top-level file has no date-folder attestation.
 - Every present candidate must carry the same externally pinned account. Missing,
   malformed, foreign-account, future, non-UTC, wrong-folder, or equal-clock / unequal
   byte candidates refuse. Stale candidates do not win. Exact-byte duplicates at
@@ -86,7 +87,7 @@ contract tests are included. No real sender or live account is used.
 Validation command:
 `AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/test_owner_warning_frozen_inputs.py backend/tests/test_owner_event_warning_runner.py backend/tests/test_owner_event_warning.py backend/tests/test_owner_event_warning_bridge_contract.py backend/tests/test_telegram_owner_once.py -q --disable-warnings`
 
-Result: **191 passed, 1 skipped** (5.71 seconds). `git diff --check` passed.
+Original candidate result: **191 passed, 1 skipped** (5.71 seconds).
 Only these focused suites were run, not the entire backend suite. The new test
 file has 25 passing cases; the pre-existing platform skip is in the adapter suite.
 
@@ -102,7 +103,27 @@ by the builder. This is candidate review only, not live-adoption approval.
 After review, only test-clock determinism and this note changed. The 25 new
 selector/frozen-input cases passed again (2.37 seconds).
 
-Reviewed candidate source byte identities (not an adoption/gate receipt):
+Original reviewed candidate source byte identities (not an adoption/gate receipt):
 
 - `scripts/owner_event_warning.py`: `8842df152b7f759009755f607c8ac7689071ee3e3651f62f2a2f405b7b8d5d67`
 - `backend/services/owner_event_warning.py`: `880acd0ddd761211a2708259e1587b2ca9b0e4a766f609ff2d4ab19ae9dcff4d`
+
+## Session-folder provenance correction, 2026-11-04
+
+The owner reported a preview refusal on saved R data: `pc_book/2026-11-03/state_latest.json`
+carried `t=2026-11-03T18:20:00Z`, which is 2026-11-04 02:20 Singapore time.
+That is consistent with `sim_run._run_loop` taking the folder date once at
+session start and continuing to write there overnight. This is a supplied
+observation; this worktree did not open R or run a preview against it.
+
+The selector now allows a dated snapshot's Singapore calendar date to equal
+its folder date or the following date. A separate regression proves a two-day-old
+folder is never probed. Existing future, stale, account, wrong-folder and
+equal-clock refusals remain covered by the focused suite.
+
+The five warning-related test files above returned **193 passed, 1 skipped**
+(5.55 seconds); the new test file alone returned **27 passed** (2.47 seconds).
+Ruff passed on all touched Python files. The repository-wide `ruff check backend engine` reported 1,310 findings outside those touched files and did not pass.
+`git diff --check` passed. No live adoption or actual warning send was attempted.
+
+Updated runner source SHA256: `a74ba5c88b0c358d6a413f0e5012c07206721d7c5bab3a8e2a59446a4fbfad57`.
