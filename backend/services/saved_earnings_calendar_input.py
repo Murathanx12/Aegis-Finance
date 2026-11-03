@@ -24,6 +24,7 @@ MAX_DAYS_AHEAD = 7
 _ROW_KEYS = frozenset({
     "symbol", "date", "hour", "quarter", "year", "epsEstimate", "revenueEstimate",
 })
+_ACTUAL_KEYS = frozenset({"epsActual", "revenueActual"})
 _UTC_PATTERN = re.compile(
     r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)"
 )
@@ -108,7 +109,7 @@ def _parse(raw: bytes) -> list[dict]:
 def _event_date(row: dict, ticker: str) -> date | None:
     if row.get("symbol") != ticker:
         return None
-    if set(row) != _ROW_KEYS:
+    if not _ROW_KEYS <= row.keys() or row.keys() - _ROW_KEYS - _ACTUAL_KEYS:
         raise _Refused("ROW_FIELDS_INVALID")
     value = row["date"]
     if not isinstance(value, str) or _DATE_PATTERN.fullmatch(value) is None:
@@ -198,6 +199,8 @@ def build_saved_earnings_calendar_input(
         if len(eligible) != 1:
             raise _Refused("AMBIGUOUS_EVENT")
         event = eligible[0]
+        if any(event.get(key) is not None for key in _ACTUAL_KEYS):
+            raise _Refused("FUTURE_ACTUAL_PRESENT")
         packet = {
             "schema": SCHEMA, "status": "EVIDENCE_ONLY", "source": SOURCE,
             "ticker": ticker, "observed_utc": observed.isoformat(),

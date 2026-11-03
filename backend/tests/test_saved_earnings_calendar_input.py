@@ -22,7 +22,8 @@ def event(**changes):
     row = {
         "symbol": "AAPL", "date": "2026-11-06", "hour": "amc",
         "quarter": 4, "year": 2026, "epsEstimate": 1.5,
-        "revenueEstimate": 100000000000,
+        "epsActual": None, "revenueEstimate": 100000000000,
+        "revenueActual": None,
     }
     row.update(changes)
     return row
@@ -53,6 +54,7 @@ def test_exact_bytes_identity_and_no_prediction():
     assert packet["forecast_status"] == "NOT_GENERATED"
     assert packet["runtime_authority"] == "NONE"
     assert packet["response_sha256"] == hashlib.sha256(raw).hexdigest()
+    assert "epsActual" not in packet and "revenueActual" not in packet
     import base64
 
     assert base64.b64decode(packet["response_bytes_b64"]) == raw
@@ -120,6 +122,49 @@ def test_duplicate_conflicting_and_multiple_future_rows_refuse():
     assert build(response(event(symbol="MSFT"), same))["status"] == "EVIDENCE_ONLY"
 
 
+def test_sample_shaped_null_actuals_and_optional_absence():
+    # Same field set and ordering as the saved Finnhub DKNG probe at line 112.
+    future = event(symbol="DKNG", date="2026-11-06", quarter=3, year=2026,
+                   epsEstimate=0.0171, epsActual=None,
+                   revenueEstimate=1542885619, revenueActual=None)
+    raw = response(future)
+    packet = build(raw, ticker="DKNG")
+    assert packet["status"] == "EVIDENCE_ONLY"
+    assert packet["event_time_status"] == "UNKNOWN"
+    assert "epsActual" not in packet and "revenueActual" not in packet
+    without_actuals = {k: v for k, v in future.items()
+                       if k not in ("epsActual", "revenueActual")}
+    assert build(response(without_actuals), ticker="DKNG")["status"] == (
+        "EVIDENCE_ONLY"
+    )
+
+
+@pytest.mark.parametrize("changes", [
+    {"epsActual": -0.14}, {"revenueActual": 1443235000},
+    {"epsActual": 0.0, "revenueActual": 0},
+])
+def test_future_actual_values_refuse_without_beat_miss_inference(changes):
+    refused = build(response(event(**changes)))
+    assert refused["status"] == "REFUSED"
+    assert refused["reason"] == "FUTURE_ACTUAL_PRESENT"
+    assert "epsActual" not in refused and "revenueActual" not in refused
+
+
+def test_historical_sample_actuals_do_not_block_future_event():
+    # Values from the saved DKNG sample are already historical at this cutoff.
+    historical = event(symbol="DKNG", date="2026-08-06", quarter=2, year=2026,
+                       epsEstimate=0.0171, epsActual=-0.14,
+                       revenueEstimate=1542885619, revenueActual=1443235000)
+    future = event(symbol="DKNG", date="2026-11-06", quarter=3, year=2026)
+    packet = build(response(historical, future), ticker="DKNG")
+    assert packet["status"] == "EVIDENCE_ONLY"
+    assert packet["event_date_et"] == "2026-11-06"
+    assert "epsActual" not in packet and "revenueActual" not in packet
+    assert build(response(historical), ticker="DKNG")["reason"] == (
+        "NO_FUTURE_EVENT_IN_WINDOW"
+    )
+
+
 def test_later_revision_isolated_by_original_observation():
     old_raw = response(event(date="2026-11-06"))
     revised_raw = response(event(date="2026-11-07"))
@@ -144,7 +189,7 @@ def test_later_revision_isolated_by_original_observation():
     (b'{"earningsCalendar":[{"x":NaN}]}', "JSON_INVALID"),
     (b'{"earningsCalendar":[{"x":1e999}]}', "JSON_INVALID"),
     (b'{"earningsCalendar":null}', "CALENDAR_SHAPE_INVALID"),
-    (response(event(epsActual=2.0)), "ROW_FIELDS_INVALID"),
+    (response(event(unexpected=2.0)), "ROW_FIELDS_INVALID"),
     (response(event(date="2026-02-30")), "EVENT_DATE_INVALID"),
     (response(event(quarter=True)), "FISCAL_PERIOD_INVALID"),
 ])
