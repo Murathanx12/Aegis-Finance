@@ -201,6 +201,8 @@ def test_output_failure_safe_and_digest_continues(case, guarded, monkeypatch, ca
         'status': 'REFUSED_OUTPUT_UNAVAILABLE', 'receipt_id': None}
     assert 'shared budget preflight' in lines[1]
     assert 'PRIVATE_PATH' not in '\n'.join(lines)
+    if a.calendar_risk_output_dir is not None and a.calendar_risk_output_dir.is_dir():
+        assert not list(a.calendar_risk_output_dir.iterdir())
 
 
 def test_preview_receipts_are_exclusive_and_logs_are_safe(case, guarded, monkeypatch, capsys):
@@ -221,3 +223,129 @@ def test_preview_receipts_are_exclusive_and_logs_are_safe(case, guarded, monkeyp
     log = capsys.readouterr().out
     for secret in ('1234567', 'PRIVATE_PATH', 'PRIVATE_EVENT', str(a.calendar_risk_output_dir)):
         assert secret not in log
+
+
+@pytest.mark.parametrize('name', ['receipt_dir', 'journal_dir', 'ledger_dir'])
+@pytest.mark.parametrize('kind', ['same', 'child', 'parent', 'alias', 'symlink'])
+def test_output_cannot_overlap_inputs(case, guarded, monkeypatch, capsys, name, kind):
+    kwargs, _ = case
+    a = args(kwargs)
+    root = kwargs[name]
+    if kind == 'same':
+        output = root
+    elif kind == 'child':
+        output = root / 'preview'
+        output.mkdir()
+    elif kind == 'parent':
+        output = root.parent
+    elif kind == 'alias':
+        output = root / '..' / root.name
+    else:
+        output = root.parent / 'alias-output'
+        try:
+            output.symlink_to(root, target_is_directory=True)
+        except OSError:
+            pytest.skip('directory symlinks unavailable')
+    a.calendar_risk_output_dir = output
+    before = set(root.parent.rglob('*'))
+    discover = Mock(side_effect=AssertionError('discovery reached'))
+    monkeypatch.setattr(discovery, 'run', discover)
+    assert S.run(a) == 2
+    discover.assert_not_called()
+    assert set(root.parent.rglob('*')) - before <= {
+        S.WD.work_dir(), *S.WD.work_dir().rglob('*')}
+    safe = json.loads(capsys.readouterr().out.splitlines()[0].split(' ', 1)[1])
+    assert safe == {'status': 'REFUSED_OUTPUT_UNAVAILABLE', 'receipt_id': None}
+
+
+@pytest.mark.parametrize('failure', ['partial', 'fsync', 'root', 'publish'])
+def test_failed_persistence_never_publishes(case, guarded, monkeypatch, capsys, failure):
+    kwargs, _ = case
+    a = args(kwargs)
+    monkeypatch.setattr(discovery, 'run', Mock(return_value=(0, {
+        'status': 'PROVISIONAL', 'delivery': 'PREVIEW'})))
+    if failure == 'partial':
+        original = S.json.dump
+        def partial(value, stream, **options):
+            if str(stream.name).endswith('.pending'):
+                stream.write('{"partial":')
+                raise OSError('PRIVATE_PATH')
+            return original(value, stream, **options)
+        monkeypatch.setattr(S.json, 'dump', partial)
+    elif failure == 'fsync':
+        monkeypatch.setattr(S.os, 'fsync', Mock(side_effect=OSError('PRIVATE_PATH')))
+    elif failure == 'root':
+        original = discovery.once.capture._private_identity
+        calls = 0
+        def changed(path):
+            nonlocal calls
+            result = original(path)
+            if path == a.calendar_risk_output_dir:
+                calls += 1
+                if calls >= 3:
+                    return (-1, -1)
+            return result
+        monkeypatch.setattr(discovery.once.capture, '_private_identity', changed)
+    else:
+        monkeypatch.setattr(S.os, 'link', Mock(side_effect=OSError('PRIVATE_PATH')))
+    assert S.run(a) == 2
+    assert not list(a.calendar_risk_output_dir.iterdir())
+    log = capsys.readouterr().out
+    assert 'PRIVATE_PATH' not in log
+    assert 'REFUSED_OUTPUT_UNAVAILABLE' in log
+    assert 'shared budget preflight' in log
+
+
+def test_uuid_collision_preserves_existing_receipt(case, guarded, monkeypatch, capsys):
+    import uuid
+    kwargs, _ = case
+    a = args(kwargs)
+    monkeypatch.setattr(uuid, 'uuid4', lambda: SimpleNamespace(hex='fixed'))
+    monkeypatch.setattr(discovery, 'run', Mock(return_value=(0, {
+        'status': 'PROVISIONAL', 'delivery': 'PREVIEW'})))
+    # Freeze the receipt timestamp as well as the UUID.
+    real_datetime = S.datetime
+    frozen = real_datetime.now(S.timezone.utc)
+    monkeypatch.setattr(S, 'datetime', SimpleNamespace(now=lambda tz: frozen))
+    assert S.run(a) == 2
+    receipt, = a.calendar_risk_output_dir.iterdir()
+    original = receipt.read_bytes()
+    assert S.run(a) == 2
+    assert receipt.read_bytes() == original
+    assert list(a.calendar_risk_output_dir.iterdir()) == [receipt]
+    assert 'REFUSED_OUTPUT_UNAVAILABLE' in capsys.readouterr().out
+
+
+def test_replaced_root_after_fsync_has_no_final_receipt(case, guarded, monkeypatch, capsys):
+    kwargs, _ = case
+    a = args(kwargs)
+    moved = a.calendar_risk_output_dir.with_name('moved-preview')
+    original = S.os.fsync
+    def replace_root(fd):
+        original(fd)
+        a.calendar_risk_output_dir.rename(moved)
+        a.calendar_risk_output_dir.mkdir()
+    monkeypatch.setattr(S.os, 'fsync', replace_root)
+    monkeypatch.setattr(discovery, 'run', Mock(return_value=(0, {
+        'status': 'PROVISIONAL', 'delivery': 'PREVIEW'})))
+    assert S.run(a) == 2
+    assert not list(a.calendar_risk_output_dir.iterdir())
+    assert not list(moved.glob('*.json'))
+    assert 'REFUSED_OUTPUT_UNAVAILABLE' in capsys.readouterr().out
+
+
+def test_output_failure_reaches_normal_digest_collection(case, guarded, monkeypatch):
+    from backend.services import disk_guard
+    kwargs, _ = case
+    a = args(kwargs)
+    a.calendar_risk_output_dir = kwargs['receipt_dir']
+    a.dry_run = True
+    a.hours = 24
+    monkeypatch.setattr(disk_guard, 'require_free', Mock())
+    class CollectionReached(Exception):
+        pass
+    collect = Mock(side_effect=CollectionReached)
+    monkeypatch.setattr(S.WD, 'collect', collect)
+    with pytest.raises(CollectionReached):
+        S.run(a)
+    collect.assert_called_once()
