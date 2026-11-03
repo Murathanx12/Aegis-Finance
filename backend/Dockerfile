@@ -26,6 +26,11 @@ COPY docs/TRIALS/POPULATION-1000-SOURCES.json docs/TRIALS/POPULATION-1000-SPECIF
 # The public-assets health probe reads this committed pin at /app/scripts/.
 COPY scripts/render_public_assets.py scripts/render_public_assets.py
 
+# The IC reader's path is source-pinned by the prepared PC policy epoch. In
+# Railway, bind that path to the already provisioned /data volume instead of
+# changing policy-pinned Python. A missing volume file stays missing.
+RUN ln -sfn /data/funnel_night10.json /app/backend/data/funnel_night10.json
+
 # Port from env (Railway sets PORT)
 ENV PORT=8000
 

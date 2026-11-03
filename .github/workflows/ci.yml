@@ -102,7 +102,13 @@ jobs:
         # pre-registration cannot spend money against it.
         env:
           AEGIS_IIF1_PREREG_ABSENT_OK: "1"
-        run: python -m pytest backend/tests/ -m "not slow" -q -rf -p pytest_github_actions_annotate_failures
+        # Beta replay checks process peak RSS against a 1.5 GiB safety cap.
+        # A long shared pytest process can cross that cap in unrelated tests
+        # before replay starts. Give replay its own fresh process, preserving
+        # the production cap and running every offline test exactly once.
+        run: |
+          python -m pytest backend/tests/test_beta_v1_replay.py backend/tests/test_beta_v1_consumers.py -m "not slow" -q -rf -p pytest_github_actions_annotate_failures
+          python -m pytest backend/tests/ -m "not slow" -q -rf -p pytest_github_actions_annotate_failures --ignore=backend/tests/test_beta_v1_replay.py --ignore=backend/tests/test_beta_v1_consumers.py
 
   frontend:
     needs: changes
