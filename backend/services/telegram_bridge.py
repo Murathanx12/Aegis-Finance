@@ -365,49 +365,56 @@ def _ack_update(update: dict) -> None:
 
 
 def _admit_owner(row: dict, update: dict) -> bool:
-    """One durable inbox/quota admission per pending owner update.
+    """Idempotent inbox admission for the single ordered consumer.
 
-    A single metadata-only marker survives handler failure/restart. Bind the
-    entire update so a mismatched retry fails closed. A prior acknowledged
-    marker can be replaced, but never bypass an unacknowledged different one.
+    A failed cursor publication stops the batch, so its admitted row remains
+    the inbox tail. Recover that row directly: no second marker publication can
+    fail between the append and its identity. A torn/oversized tail fails closed.
+    This assumes one inbox writer/consumer; it is not a concurrent queue.
     """
-    marker = OFFSET_PATH.with_suffix(".admission.json")
-    identity = None
-    if "update_id" in update:
-        identity = {"update_id": update["update_id"], "payload_sha256": hashlib.sha256(
-            json.dumps(update, sort_keys=True, separators=(",", ":")).encode()).hexdigest()}
-        try:
-            pending = json.loads(marker.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            pending = None
-        except (ValueError, UnicodeError):
-            raise TelegramRefused("INBOUND_ADMISSION_INVALID_REVIEW_REQUIRED") from None
-        if pending is not None:
-            if (not isinstance(pending, dict) or set(pending) != {"update_id", "payload_sha256"}
-                    or type(pending["update_id"]) is not int):
-                raise TelegramRefused("INBOUND_ADMISSION_INVALID_REVIEW_REQUIRED")
-            if pending["update_id"] > _offset():
-                if pending != identity:
-                    raise TelegramRefused("INBOUND_ADMISSION_MISMATCH_REVIEW_REQUIRED")
-                return True
+    if "update_id" in update and INBOX_PATH.exists():
+        with INBOX_PATH.open("r+b") as stream:
+            stream.seek(0, os.SEEK_END)
+            size = stream.tell()
+            stream.seek(max(0, size - 65536))
+            tail = stream.read()
+            if tail:
+                try:
+                    if not tail.endswith(b"\n"):
+                        raise ValueError
+                    previous = json.loads(tail.splitlines()[-1])
+                    if not isinstance(previous, dict):
+                        raise ValueError
+                except (ValueError, UnicodeError, IndexError):
+                    raise TelegramRefused("INBOUND_TAIL_INVALID_REVIEW_REQUIRED") from None
+                if previous.get("update_id") == update["update_id"]:
+                    if any(previous.get(key) != row.get(key) for key in (
+                            "payload_sha256", "message_id", "chat_id", "callback_query_id")):
+                        raise TelegramRefused("INBOUND_ADMISSION_MISMATCH_REVIEW_REQUIRED")
+                    # A previous append may have raised during fsync. Re-sync
+                    # the recovered bytes before allowing cursor publication.
+                    os.fsync(stream.fileno())
+                    return True
     previous_times = _INBOUND_TIMES["owner"]
     if not _inbound_allowed("owner"):
         return False
     try:
         _append(INBOX_PATH, row)
-        if identity is not None:
-            _atomic_json(marker, identity)
     except BaseException:
-        # Reserve quota only for successful inbox admission. A failed handler
-        # reuses the marker above instead of writing/counting another inbox row.
         if _INBOUND_TIMES["owner"] is not previous_times and _INBOUND_TIMES["owner"]:
             _INBOUND_TIMES["owner"].pop()
         raise
     return True
 
 
+def _inbox_identity(update: dict, message: dict) -> dict:
+    return {"update_id": update.get("update_id"), "message_id": message.get("message_id"),
+            "payload_sha256": hashlib.sha256(json.dumps(
+                update, sort_keys=True, separators=(",", ":")).encode()).hexdigest()}
+
+
 def updates(*, timeout: int = 0, advance: bool = True) -> list[dict]:
-    """Fetch updates; dispatchers defer acknowledgment until processing returns."""
+    """Fetch updates; poll defers the cursor until durable inbox admission."""
     off = _offset()
     res = _call("getUpdates",
                 {"offset": off + 1 if off else None, "timeout": timeout,
@@ -522,7 +529,9 @@ def _poll_callback(cq: dict, owner: str | None,
     cid = str(((cq.get("message") or {}).get("chat") or {}).get("id"))
     who = str((cq.get("from") or {}).get("id"))
     data = str(cq.get("data") or "")[:64]
-    row = {"t": _now(), "chat_id": cid, "callback": data,
+    row = {**_inbox_identity(update, cq.get("message") or {}),
+           "callback_query_id": cq.get("id"),
+           "t": _now(), "chat_id": cid, "callback": data,
            "from": (cq.get("from") or {}).get("username")}
     if not owner or cid != owner or who != owner:
         row["refused"] = "not the owner chat" if owner else "no owner configured"
@@ -575,14 +584,14 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
 
     `text_handler` (2026-09-28, `alerts_replies.respond`) answers the owner's
     plain-text messages ("stock NVDA", "report") and any slash command the
-    fixed `handlers` dict does not name. It reads files only; its reply goes
-    through `send()` like every other, so redaction still applies.
+    fixed `handlers` dict does not name. These handlers can write queues;
+    their replies go through `send()` so redaction still applies.
 
-    Owner plain text: retry I/O admission failures, then persist the cursor
-    before replying. Retried handlers must deduplicate durable message IDs.
-    Slash commands/callbacks: persist inbox + cursor BEFORE handler dispatch,
-    retaining legacy at-most-once behavior. A guarded handler failure is surfaced
-    for review, never automatically retried. Reply delivery is not admission.
+    Every generic handler is at-most-once: durable inbox admission, then an
+    atomic cursor publication, then dispatch. Handler/reply failure never causes
+    automatic replay. A crash after cursor publication can leave a handler
+    uncalled; inbox admission is not proof of Codex chat acceptance/completion.
+    A chat requiring stronger delivery needs its own reviewed durable protocol.
     """
     global STRANGERS_DROPPED
     owner = owner_chat_id()
@@ -596,7 +605,8 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
         msg = u.get("message") or {}
         cid = str((msg.get("chat") or {}).get("id"))
         text = (msg.get("text") or "").strip()
-        row = {"t": _now(), "chat_id": cid, "text": text[:400],
+        row = {**_inbox_identity(u, msg),
+               "t": _now(), "chat_id": cid, "text": text[:400],
                "from": (msg.get("from") or {}).get("username")}
         if not owner or cid != owner:
             row["refused"] = "not the owner chat" if owner else "no owner configured"
@@ -608,30 +618,24 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
         if not _admit_owner(row, u):
             _ack_update(u)  # Explicit rate-limit rejection, not a failed retry.
             continue
-        # All slash commands (including unknown commands routed to text) retain
-        # legacy at-most-once dispatch. Ambiguous effects require manual review.
-        if text.startswith("/"):
-            _ack_update(u)
+        # Generic plain text can also have side effects (ask/digest/task routes).
+        # Never assume handler idempotency: guard every dispatch with the cursor.
+        _ack_update(u)
         if not text.startswith("/") or (handlers or {}).get(
                 text.split()[0].lstrip("/").split("@")[0].lower()) is None:
             if text_handler is not None and text:
                 try:
                     reply = text_handler(text, msg)
                 except OSError:
-                    # Plain text retries its durable admission. Slash fallback
-                    # already has an at-most-once dispatch guard, like commands.
-                    logger.error("telegram text admission IO failure; review dispatch guard before retry")
+                    logger.error("telegram text IO failure after durable dispatch guard; review required")
                     raise
                 except Exception as exc:                           # noqa: BLE001
                     reply = f"reply failed: `{type(exc).__name__}: {redact(exc)}`"
                     logger.exception("telegram text handler failed")
-                if not text.startswith("/"):
-                    _ack_update(u)  # Admission succeeded; reply transport is separate.
                 _send_reply(reply, markdown=False, tag="reply")
                 acted.append({"cmd": "text", "args": []})
                 continue
             if not text.startswith("/"):
-                _ack_update(u)
                 continue
         parts = text.split()
         cmd = parts[0].lstrip("/").split("@")[0].lower()
