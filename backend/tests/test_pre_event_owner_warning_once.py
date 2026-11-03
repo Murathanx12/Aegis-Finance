@@ -357,7 +357,8 @@ def test_expiry_crossing_after_reservation_never_starts_transport(case, monkeypa
     gate = review(tmp_path)
     code, result = runner.run(**kwargs, send=True, review=gate)
     assert code == 2 and result["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
-    assert json.loads(next(private.glob("*.json")).read_text())["state"] == "SENDING"
+    sending = private / f"{result['event_id']}.json"
+    assert json.loads(sending.read_text())["state"] == "SENDING"
     kwargs["wall_clock"] = lambda: before
     code, result = runner.run(**kwargs, send=True, review=gate)
     assert code == 2 and result["delivery"] == "DUPLICATE_RECONCILE_REQUIRED"
