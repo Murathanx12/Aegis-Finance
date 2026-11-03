@@ -24,45 +24,31 @@ concurrency:
 jobs:
   changes:
     name: classify generated receipt push
-    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
       receipts_only: ${{ steps.diff.outputs.receipts_only }}
+      frontend_unaffected: ${{ steps.diff.outputs.frontend_unaffected }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
-      - name: Classify complete push diff (unknown means full CI)
+          # Bounded history: missing merge base/before SHA falls back to full CI.
+          fetch-depth: ${{ github.event_name == 'pull_request' && 64 || 2 }}
+      - name: Classifier regressions (stdlib only)
+        run: python -m unittest discover -s tests/ci -v
+      - name: Classify complete diff (unknown means full CI)
         id: diff
         env:
+          EVENT: ${{ github.event_name }}
           BEFORE: ${{ github.event.before }}
-        run: |
-          python - <<'PY'
-          import os
-          import subprocess
-          from pathlib import Path
-
-          before = os.environ.get("BEFORE", "")
-          receipts_only = False
-          if len(before) == 40 and before != "0" * 40:
-              diff = subprocess.run(
-                  ["git", "diff", "--no-renames", "--name-only", "-z", before, "HEAD"],
-                  capture_output=True,
-              )
-              paths = diff.stdout.split(b"\0")[:-1]
-              receipts_only = diff.returncode == 0 and bool(paths) and all(
-                  path.startswith(b"backend/data/public_receipts/") for path in paths
-              )
-          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
-              output.write(f"receipts_only={str(receipts_only).lower()}\n")
-          print(f"Proven receipt-only push: {receipts_only}")
-          PY
+          BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python scripts/ci_diff_classifier.py
 
   backend:
     needs: changes
-    # PRs and classifier failures run full checks; skipped jobs still report checks.
+    # Classifier failures run full checks; skipped jobs still report checks.
     if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.receipts_only != 'true') }}
     name: backend (pytest offline + ruff + pip-audit)
     runs-on: ubuntu-latest
@@ -112,8 +98,8 @@ jobs:
 
   frontend:
     needs: changes
-    # PRs and classifier failures run full checks; skipped jobs still report checks.
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.receipts_only != 'true') }}
+    # Classifier failures run full checks; skipped jobs still report checks.
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.frontend_unaffected != 'true') }}
     name: frontend (next build)
     runs-on: ubuntu-latest
     steps:
