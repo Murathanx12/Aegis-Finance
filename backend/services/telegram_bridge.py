@@ -58,6 +58,7 @@ import json
 import logging
 import os
 import re
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -313,33 +314,113 @@ def _append(path: Path, row: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(row, default=str) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
 
 
 # ──────────────────────────────── inbound ───────────────────────────────────
 
+def _atomic_json(path: Path, row: dict) -> None:
+    """Publish fully flushed bytes with same-directory atomic replacement.
+
+    Single existing consumer only. fsync covers file contents; Python's Windows
+    API does not provide a portable parent-directory fsync/power-loss guarantee.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(row, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def _offset() -> int:
-    d = None
-    if OFFSET_PATH.exists():
-        try:
-            d = json.loads(OFFSET_PATH.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            d = None
-    return int((d or {}).get("offset", 0))
+    try:
+        raw = OFFSET_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return 0
+    try:
+        row = json.loads(raw)
+        value = row["offset"]
+        if type(value) is not int or value < 0:
+            raise ValueError
+    except (ValueError, KeyError, TypeError):
+        raise TelegramRefused("OFFSET_INVALID_REVIEW_REQUIRED") from None
+    return value
 
 
 def _set_offset(v: int) -> None:
-    OFFSET_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OFFSET_PATH.write_text(json.dumps({"offset": v, "at": _now()}), encoding="utf-8")
+    _atomic_json(OFFSET_PATH, {"offset": v, "at": _now()})
 
 
-def updates(*, timeout: int = 0) -> list[dict]:
-    """New messages since the last read. Advances the offset so none repeat."""
+def _ack_update(update: dict) -> None:
+    # Legacy unit callers can omit Telegram's update envelope ID.
+    if "update_id" in update:
+        _set_offset(update["update_id"])
+
+
+def _admit_owner(row: dict, update: dict) -> bool:
+    """Idempotent inbox admission for the single ordered consumer.
+
+    A failed cursor publication stops the batch, so its admitted row remains
+    the inbox tail. Recover that row directly: no second marker publication can
+    fail between the append and its identity. A torn/oversized tail fails closed.
+    This assumes one inbox writer/consumer; it is not a concurrent queue.
+    """
+    if "update_id" in update and INBOX_PATH.exists():
+        with INBOX_PATH.open("r+b") as stream:
+            stream.seek(0, os.SEEK_END)
+            size = stream.tell()
+            stream.seek(max(0, size - 65536))
+            tail = stream.read()
+            if tail:
+                try:
+                    if not tail.endswith(b"\n"):
+                        raise ValueError
+                    previous = json.loads(tail.splitlines()[-1])
+                    if not isinstance(previous, dict):
+                        raise ValueError
+                except (ValueError, UnicodeError, IndexError):
+                    raise TelegramRefused("INBOUND_TAIL_INVALID_REVIEW_REQUIRED") from None
+                if previous.get("update_id") == update["update_id"]:
+                    if any(previous.get(key) != row.get(key) for key in (
+                            "payload_sha256", "message_id", "chat_id", "callback_query_id")):
+                        raise TelegramRefused("INBOUND_ADMISSION_MISMATCH_REVIEW_REQUIRED")
+                    # A previous append may have raised during fsync. Re-sync
+                    # the recovered bytes before allowing cursor publication.
+                    os.fsync(stream.fileno())
+                    return True
+    previous_times = _INBOUND_TIMES["owner"]
+    if not _inbound_allowed("owner"):
+        return False
+    try:
+        _append(INBOX_PATH, row)
+    except BaseException:
+        if _INBOUND_TIMES["owner"] is not previous_times and _INBOUND_TIMES["owner"]:
+            _INBOUND_TIMES["owner"].pop()
+        raise
+    return True
+
+
+def _inbox_identity(update: dict, message: dict) -> dict:
+    return {"update_id": update.get("update_id"), "message_id": message.get("message_id"),
+            "payload_sha256": hashlib.sha256(json.dumps(
+                update, sort_keys=True, separators=(",", ":")).encode()).hexdigest()}
+
+
+def updates(*, timeout: int = 0, advance: bool = True) -> list[dict]:
+    """Fetch updates; poll defers the cursor until durable inbox admission."""
     off = _offset()
     res = _call("getUpdates",
                 {"offset": off + 1 if off else None, "timeout": timeout,
                  "allowed_updates": ["message", "callback_query"]},
                 timeout=timeout + 25) or []
-    if res:
+    if res and advance:
         _set_offset(max(u["update_id"] for u in res))
     return res
 
@@ -439,22 +520,28 @@ CALLBACKS_DROPPED = 0
 
 
 def _poll_callback(cq: dict, owner: str | None,
-                   callback_handler: Callable[[str, dict], Any] | None) -> dict | None:
+                   callback_handler: Callable[[str, dict], Any] | None,
+                   *, update: dict | None = None) -> dict | None:
     """One inline-button tap (C6). Owner chat AND owner sender, or nothing:
     a stranger's tap is not answered, not even with `answerCallbackQuery`."""
     global CALLBACKS_DROPPED
+    update = update or {}
     cid = str(((cq.get("message") or {}).get("chat") or {}).get("id"))
     who = str((cq.get("from") or {}).get("id"))
     data = str(cq.get("data") or "")[:64]
-    row = {"t": _now(), "chat_id": cid, "callback": data,
+    row = {**_inbox_identity(update, cq.get("message") or {}),
+           "callback_query_id": cq.get("id"),
+           "t": _now(), "chat_id": cid, "callback": data,
            "from": (cq.get("from") or {}).get("username")}
     if not owner or cid != owner or who != owner:
         row["refused"] = "not the owner chat" if owner else "no owner configured"
         if _inbound_allowed("stranger"):
             _append(INBOX_PATH, row)
         CALLBACKS_DROPPED += 1
+        _ack_update(update)
         return None
-    if not _inbound_allowed("owner"):
+    if not _admit_owner(row, update):
+        _ack_update(update)
         # (review C6 F6) the OWNER's tap is always answered, so the spinner
         # stops and the reason shows as a toast; nothing else runs
         try:
@@ -464,7 +551,9 @@ def _poll_callback(cq: dict, owner: str | None,
         except Exception as exc:                                   # noqa: BLE001
             logger.warning("answerCallbackQuery failed: %s", redact(exc))
         return {"cmd": "callback", "args": [data], "handled": False, "rate_limited": True}
-    _append(INBOX_PATH, row)
+    # Legacy callbacks are at-most-once. No callback runs unless the durable
+    # inbox and cursor are published. Reply failure must never replay an effect.
+    _ack_update(update)
     try:                                      # stops the button's spinner; not a message
         _call("answerCallbackQuery", {"callback_query_id": cq.get("id")})
     except Exception as exc:                                       # noqa: BLE001
@@ -473,6 +562,9 @@ def _poll_callback(cq: dict, owner: str | None,
         return {"cmd": "callback", "args": [data], "handled": False}
     try:
         reply = callback_handler(data, cq)
+    except OSError:
+        logger.error("telegram callback IO failure after durable dispatch guard; review required")
+        raise
     except Exception as exc:                                       # noqa: BLE001
         reply = f"button failed: `{type(exc).__name__}: {redact(exc)}`"
         logger.exception("telegram callback handler failed")
@@ -492,37 +584,51 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
 
     `text_handler` (2026-09-28, `alerts_replies.respond`) answers the owner's
     plain-text messages ("stock NVDA", "report") and any slash command the
-    fixed `handlers` dict does not name. It reads files only; its reply goes
-    through `send()` like every other, so redaction still applies.
+    fixed `handlers` dict does not name. These handlers can write queues;
+    their replies go through `send()` so redaction still applies.
+
+    Every generic handler is at-most-once: durable inbox admission, then an
+    atomic cursor publication, then dispatch. Handler/reply failure never causes
+    automatic replay. A crash after cursor publication can leave a handler
+    uncalled; inbox admission is not proof of Codex chat acceptance/completion.
+    A chat requiring stronger delivery needs its own reviewed durable protocol.
     """
     global STRANGERS_DROPPED
     owner = owner_chat_id()
     acted = []
-    for u in updates():
+    for u in updates(advance=False):
         if u.get("callback_query"):
-            r = _poll_callback(u["callback_query"], owner, callback_handler)
+            r = _poll_callback(u["callback_query"], owner, callback_handler, update=u)
             if r:
                 acted.append(r)
             continue
         msg = u.get("message") or {}
         cid = str((msg.get("chat") or {}).get("id"))
         text = (msg.get("text") or "").strip()
-        row = {"t": _now(), "chat_id": cid, "text": text[:400],
+        row = {**_inbox_identity(u, msg),
+               "t": _now(), "chat_id": cid, "text": text[:400],
                "from": (msg.get("from") or {}).get("username")}
         if not owner or cid != owner:
             row["refused"] = "not the owner chat" if owner else "no owner configured"
             if _inbound_allowed("stranger"):
                 _append(INBOX_PATH, row)
             STRANGERS_DROPPED += 1
+            _ack_update(u)
             continue
-        if not _inbound_allowed("owner"):
+        if not _admit_owner(row, u):
+            _ack_update(u)  # Explicit rate-limit rejection, not a failed retry.
             continue
-        _append(INBOX_PATH, row)
+        # Generic plain text can also have side effects (ask/digest/task routes).
+        # Never assume handler idempotency: guard every dispatch with the cursor.
+        _ack_update(u)
         if not text.startswith("/") or (handlers or {}).get(
                 text.split()[0].lstrip("/").split("@")[0].lower()) is None:
             if text_handler is not None and text:
                 try:
                     reply = text_handler(text, msg)
+                except OSError:
+                    logger.error("telegram text IO failure after durable dispatch guard; review required")
+                    raise
                 except Exception as exc:                           # noqa: BLE001
                     reply = f"reply failed: `{type(exc).__name__}: {redact(exc)}`"
                     logger.exception("telegram text handler failed")
@@ -539,6 +645,9 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
             continue
         try:
             reply = fn(parts[1:], msg)
+        except OSError:
+            logger.error("telegram command IO failure after durable dispatch guard; review required")
+            raise
         except Exception as exc:                                   # noqa: BLE001
             reply = f"`/{cmd}` failed: `{type(exc).__name__}: {redact(exc)}`"
             logger.exception("telegram command %s failed", cmd)
