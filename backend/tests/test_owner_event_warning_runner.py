@@ -61,7 +61,7 @@ def test_refusal_before_delivery(case, monkeypatch, mode):
     if mode == 'bad_exposure':
         snap['cash'] = -1
     kwargs['snapshot'].write_text(json.dumps(snap))
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **k: pytest.fail('delivery reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **k: pytest.fail('delivery reached'))
     code, receipts = runner.run(**kwargs)
     assert code == 2
     assert 'PRIVATE_OWNER' not in json.dumps(receipts)
@@ -71,7 +71,7 @@ def test_expired_source_is_dated_and_skipped_without_delivery(case, monkeypatch)
     kwargs, row, source, _ = case
     row['published_utc'] = (kwargs['now'] - timedelta(hours=25)).isoformat()
     source.write_text(json.dumps(row) + '\n')
-    monkeypatch.setattr(runner.adapter, 'warn_saved',
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes',
                         lambda **kw: pytest.fail('expired source reached delivery'))
     code, receipts = runner.run(**kwargs)
     assert code == 0
@@ -129,7 +129,7 @@ def test_only_two_dates_and_only_held(case):
 
 def test_missing_gates_block_opt_in(case, monkeypatch):
     kwargs, _, _, _ = case
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **k: pytest.fail('delivery reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **k: pytest.fail('delivery reached'))
     assert runner.run(**kwargs, send=True)[0] == 2
 
 
@@ -167,13 +167,13 @@ def test_review_exact_hashes_and_manual_adoption(case, monkeypatch):
 def test_pending_unknown_no_retry(case, monkeypatch, delivery):
     kwargs, _, _, _ = case
     calls = []
-    original = runner.adapter.warn_saved
+    original = runner.adapter.warn_saved_bytes
     def stub(**kw):
         calls.append(kw)
         result = original(**kw)
         result['delivery'] = delivery
         return result
-    monkeypatch.setattr(runner.adapter, 'warn_saved', stub)
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', stub)
     assert runner.run(**kwargs)[0] == 2
     assert len(calls) == 1
 
@@ -212,7 +212,7 @@ def test_opt_in_binds_owner_deadline_and_single_attempt(case, monkeypatch):
         kw['sender']('synthetic', tag='owner-event-warning:test')
         return {'artifact': {'status': 'PROVISIONAL'},
                 'delivery': 'UNKNOWN_RECONCILE_REQUIRED'}
-    monkeypatch.setattr(runner.adapter, 'warn_saved', fake_adapter)
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', fake_adapter)
     assert runner.run(**kwargs, send=True, review=review, adoption=adoption)[0] == 2
     assert len(sent) == 1
 
@@ -223,7 +223,7 @@ def test_private_journal_gate_failure(case, monkeypatch):
     def fail(path):
         raise OSError('PRIVATE_OWNER')
     monkeypatch.setattr(runner.adapter, '_journal_identity', fail)
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **kw: pytest.fail('send reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **kw: pytest.fail('send reached'))
     code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
     assert code == 2 and 'PRIVATE_OWNER' not in json.dumps(receipts)
 
@@ -290,7 +290,7 @@ def manual_gate(case, monkeypatch):
 def test_manual_schema_success_suppresses_without_adapter_or_transport(case, monkeypatch):
     kwargs, _, _, _ = case
     review, adoption, _, _, _, _ = manual_gate(case, monkeypatch)
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **kw: pytest.fail('adapter send reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **kw: pytest.fail('adapter send reached'))
     code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
     assert code == 0 and receipts[0]['delivery'] == 'SUPPRESSED_MANUAL'
     assert not kwargs['journal'].exists()
@@ -308,7 +308,7 @@ def test_manual_suppression_survives_a_later_paper_snapshot(case, monkeypatch):
         source_jsonl_path=case[2], pc_paper_snapshot_path=kwargs['snapshot'],
         ticker='ACME', now=kwargs['now'])
     assert refreshed['snapshot_sha256'] != original['snapshot_sha256']
-    monkeypatch.setattr(runner.adapter, 'warn_saved',
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes',
                         lambda **kw: pytest.fail('duplicate adapter send reached'))
     code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
     assert code == 0 and receipts[0]['delivery'] == 'SUPPRESSED_MANUAL'

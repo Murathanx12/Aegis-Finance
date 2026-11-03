@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timedelta, timezone
+from decimal import InvalidOperation
 import hashlib
 import json
 import os
@@ -64,6 +65,130 @@ def read(path):
     return path.read_bytes()
 
 
+# Selector contract: Singapore PC calendar; no directory enumeration or IIF data.
+PC_ZONE = timezone(timedelta(hours=8))
+SELECTOR_MAX_BYTES = 2 * 1024 * 1024
+
+
+def frozen_read(path):
+    """Read once through pinned nonredirected handles; local regular files only.
+
+    Windows ancestors deny delete/write sharing until the final file is closed.
+    POSIX traversal uses dir_fd + O_NOFOLLOW at every component.
+    No fallback to a path-based read on platforms without these primitives.
+    """
+    path = Path(path).absolute()
+    if '..' in path.parts or str(path).startswith(('\\\\', '//')):
+        raise Refused('LOCAL_CANONICAL_PATH_REQUIRED')
+    handles = []
+    fd = None
+    try:
+        if os.name == 'nt':
+            import ctypes
+            from ctypes import wintypes
+            import msvcrt
+            kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+            kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD,
+                wintypes.DWORD, ctypes.c_void_p, wintypes.DWORD,
+                wintypes.DWORD, wintypes.HANDLE]
+            kernel.CreateFileW.restype = wintypes.HANDLE
+            kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+            kernel.GetFileInformationByHandleEx.argtypes = [wintypes.HANDLE,
+                ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+            class AttributeTag(ctypes.Structure):
+                _fields_ = [('attributes', wintypes.DWORD), ('tag', wintypes.DWORD)]
+            components = list(reversed(path.parents)) + [path]
+            for component in components:
+                final = component == path
+                # OPEN_REPARSE_POINT means inspect the link itself, never follow.
+                h = kernel.CreateFileW(str(component), 0x80000000 if final else 0x80,
+                    1, None, 3, 0x00200000 | 0x02000000, None)
+                if h == wintypes.HANDLE(-1).value:
+                    raise ctypes.WinError(ctypes.get_last_error())
+                handles.append(h)
+                info = AttributeTag()
+                if (not kernel.GetFileInformationByHandleEx(h, 9,
+                        ctypes.byref(info), ctypes.sizeof(info))
+                        or info.attributes & 0x400
+                        or bool(info.attributes & 0x10) == final):
+                    raise Refused('REDIRECTED_OR_NONREGULAR_INPUT')
+            fd = msvcrt.open_osfhandle(handles.pop(), os.O_RDONLY | os.O_BINARY)
+        else:
+            flags = os.O_RDONLY | os.O_NOFOLLOW
+            directory = os.open(path.anchor, flags | os.O_DIRECTORY)
+            handles.append(directory)
+            for part in path.parts[1:-1]:
+                directory = os.open(part, flags | os.O_DIRECTORY, dir_fd=directory)
+                handles.append(directory)
+            fd = os.open(path.name, flags | os.O_NONBLOCK, dir_fd=directory)
+        before = os.fstat(fd)
+        if not stat.S_ISREG(before.st_mode) or before.st_size > SELECTOR_MAX_BYTES:
+            raise Refused('INPUT_NOT_BOUNDED_FILE')
+        with os.fdopen(fd, 'rb') as file:
+            fd = None
+            data = file.read(SELECTOR_MAX_BYTES + 1)
+            after = os.fstat(file.fileno())
+        if (len(data) > SELECTOR_MAX_BYTES or len(data) != before.st_size
+                or (before.st_size, before.st_mtime_ns, before.st_ctime_ns)
+                   != (after.st_size, after.st_mtime_ns, after.st_ctime_ns)):
+            raise Refused('INPUT_CHANGED_DURING_READ')
+        return data
+    finally:
+        if fd is not None:
+            os.close(fd)
+        for handle in reversed(handles):
+            if os.name == 'nt':
+                kernel.CloseHandle(handle)
+            else:
+                os.close(handle)
+
+
+def select_snapshot(ledger, *, now, expected_account_sha256, check):
+    """Return approved frozen bytes, never a mutable selected pathname.
+
+    Approval is restricted to these three PC-PAPER locations AND an external
+    SHA256 of the exact UTF-8 account_number (no JSON encoding/normalization).
+    Every present candidate must have that same account; invalid/future clocks
+    and inconsistent dated-folder provenance refuse even if another file is good.
+    Stale candidates may coexist with a fresh candidate but cannot win.
+    """
+    if not isinstance(expected_account_sha256, str) or not re.fullmatch(
+            '[0-9a-f]{64}', expected_account_sha256):
+        raise Refused('EXPECTED_ACCOUNT_HASH_REQUIRED')
+    root = Path(ledger) / 'pc_book'
+    today = now.astimezone(PC_ZONE).date()
+    paths = [(root / 'state_latest.json', None)] + [
+        (root / str(today - timedelta(days=n)) / 'state_latest.json',
+         today - timedelta(days=n)) for n in (1, 0)]
+    candidates, accounts, clocks = [], set(), {}
+    for path, folder_day in paths:
+        check()
+        try:
+            raw = frozen_read(path)
+        except FileNotFoundError:
+            continue
+        snap = adapter._object(raw.decode('utf-8'))
+        account = snap['account_number']
+        if not isinstance(account, str) or not account or account != account.strip():
+            raise Refused('ACCOUNT_REQUIRED')
+        accounts.add(sha(account.encode('utf-8')))
+        if accounts != {expected_account_sha256}:
+            raise Refused('ACCOUNT_MISMATCH')
+        stamp = adapter._utc(snap['t'])
+        if stamp > now or (folder_day is not None
+                and stamp.astimezone(PC_ZONE).date() != folder_day):
+            raise Refused('SNAPSHOT_PROVENANCE_OR_FUTURE')
+        if stamp in clocks and clocks[stamp] != raw:
+            raise Refused('EQUAL_CLOCK_CONFLICT')
+        clocks[stamp] = raw
+        if now - stamp <= adapter.SNAPSHOT_MAX_AGE:
+            candidates.append((stamp, raw))
+    check()
+    if not candidates:
+        raise Refused('NO_FRESH_APPROVED_SNAPSHOT')
+    return max(candidates, key=lambda item: item[0])[1]
+
+
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -81,12 +206,15 @@ def private_read(path):
     return data
 
 
-def suppression_record(ref, *, now):
+def suppression_record(ref, *, now, check=lambda: None):
+    check()
     raw = private_read(ref['path'])
     if sha(raw) != ref['sha256']:
         raise Refused('SUPPRESSION_HASH_MISMATCH')
     record = adapter._object(raw.decode('utf-8'))
+    check()
     attempt_raw = private_read(record['attempt_path'])
+    check()
     result_raw = private_read(record['result_path'])
     if (sha(attempt_raw) != record['attempt_sha256']
             or sha(result_raw) != record['result_sha256']):
@@ -131,20 +259,31 @@ def suppression_record(ref, *, now):
     return record
 
 
-def qualify_send(review_path, adoption_path, journal, *, now, artifacts=()):
+def qualify_send(review_path, adoption_path, journal, *, now, artifacts=(), check=None):
+    bounded = check is not None
+    check = check or (lambda: None)
+    check()
     review = adapter._object(read(review_path).decode('utf-8'))
+    check()
     adoption_bytes = read(adoption_path)
     adoption = adapter._object(adoption_bytes.decode('utf-8'))
+    source_hashes = {}
+    for path in SOURCE_PATHS:
+        check()
+        source_hashes[path] = sha(read(ROOT / path))
     if (review.get('schema') != 'owner-warning-review/1'
             or review.get('independent_exact_source_review') is not True
             or not isinstance(review.get('reviewer'), str) or not review['reviewer'].strip()
-            or review.get('sha256') != {p: sha(read(ROOT / p)) for p in SOURCE_PATHS}
+            or review.get('sha256') != source_hashes
             or review.get('adoption_sha256') != sha(adoption_bytes)
             or adoption.get('schema') != 'owner-warning-adoption/3'
             or adoption.get('all_manual_deliveries_covered') is not True
             or not isinstance(adoption.get('suppressions'), list)):
         raise Refused('REVIEW_OR_MANUAL_ADOPTION_REQUIRED')
-    records = [suppression_record(ref, now=now) for ref in adoption['suppressions']]
+    if bounded and len(adoption['suppressions']) > 64:
+        raise Refused('MANUAL_PROOF_COUNT_EXCEEDED')
+    records = [suppression_record(ref, now=now, check=check)
+               for ref in adoption['suppressions']]
     ids = [r['event_id'] for r in records]
     keys = [r['event_key'] for r in records]
     if (not set(KNOWN_MANUAL_PROOFS).issubset(ids)
@@ -152,6 +291,7 @@ def qualify_send(review_path, adoption_path, journal, *, now, artifacts=()):
         raise Refused('MANUAL_SUPPRESSION_MISSING_OR_AMBIGUOUS')
     suppressed = set()
     for artifact in artifacts:
+        check()
         for record in records:
             if artifact['event_key'] != record['event_key']:
                 continue
@@ -167,13 +307,33 @@ def qualify_send(review_path, adoption_path, journal, *, now, artifacts=()):
     return suppressed
 
 
-def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=None):
+def run(*, ledger, snapshot=None, journal, now, send=False, review=None, adoption=None,
+        newest_approved=False, expected_account_sha256=None):
     """Return (exit code, sanitized receipts); all selection precedes sending."""
     receipts = []
     try:
         if now.utcoffset() != timedelta(0):
             raise Refused('UTC_REQUIRED')
-        snapshot_bytes = read(snapshot)
+        # The opt-in path has fixed file/byte counts and a cooperative 5s budget.
+        # Leave 35s before IIF for the existing <=30s transport deadline.
+        started = time.monotonic()
+        def check():
+            if newest_approved:
+                wall = datetime.now(timezone.utc).astimezone(PC_ZONE)
+                seconds = wall.hour * 3600 + wall.minute * 60 + wall.second
+                if (time.monotonic() - started > 5
+                        or 16 * 3600 + 44 * 60 + 25 <= seconds < 17 * 3600 + 5 * 60):
+                    raise Refused('RUN_BUDGET_OR_IIF_WINDOW')
+        check()
+        if newest_approved:
+            if snapshot is not None:
+                raise Refused('EXCLUSIVE_SNAPSHOT_MODE_REQUIRED')
+            snapshot_bytes = select_snapshot(ledger, now=now,
+                expected_account_sha256=expected_account_sha256, check=check)
+        else:
+            if expected_account_sha256 is not None:
+                raise Refused('SELECTOR_MODE_REQUIRED')
+            snapshot_bytes = read(snapshot)
         snap = adapter._object(snapshot_bytes.decode('utf-8'))
         stamp = adapter._utc(snap['t'])
         if not timedelta(0) <= now - stamp <= adapter.SNAPSHOT_MAX_AGE:
@@ -183,6 +343,7 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
             raise Refused('NO_UNAMBIGUOUS_HOLDINGS')
         held = []
         for pos in positions:
+            check()
             ticker = pos['symbol']
             if (not isinstance(ticker, str)
                     or not re.fullmatch(r'[A-Z]{1,5}(?:[.-][A-Z])?', ticker)
@@ -195,11 +356,14 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
         originals = {}
         for day in (now.date() - timedelta(days=1), now.date()):
             path = base / f'{day.isoformat()}.jsonl'
-            if not path.exists():
+            check()
+            try:
+                data = frozen_read(path) if newest_approved else read(path)
+            except FileNotFoundError:
                 continue
-            data = read(path)
             originals[path] = data
             for line in data.splitlines(keepends=True):
+                check()
                 if not line.strip():
                     continue
                 row = adapter._object(line.decode('utf-8'))
@@ -223,8 +387,9 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
             eligible = []
             for line, path in unique.items():
                 line_sha = sha(line)
-                artifact = adapter.build_saved_warning(source_jsonl_path=path,
-                    pc_paper_snapshot_path=snapshot, ticker=ticker, now=now,
+                check()
+                artifact = adapter.build_saved_warning_bytes(source_bytes=line,
+                    snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
                     source_row_sha256=line_sha)
                 receipt = {k: artifact[k] for k in ('event_key', 'source_row_sha256',
                     'snapshot_sha256', 'status', 'reason') if k in artifact}
@@ -241,14 +406,17 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
                 raise Refused('AMBIGUOUS_HELD_EVENT')
             if eligible:
                 artifact, path, receipt, line_sha = eligible[0]
-                selected.append((ticker, path, receipt, line_sha))
+                selected.append((ticker, path, receipt, line_sha, next(
+                    line for line in unique if sha(line) == line_sha)))
                 artifacts.append(artifact)
         if send:
-            suppressed = qualify_send(review, adoption, journal, now=now, artifacts=artifacts)
-            for _, _, receipt, _ in selected:
+            suppressed = qualify_send(review, adoption, journal, now=now, artifacts=artifacts,
+                check=check if newest_approved else None)
+            for _, _, receipt, _, _ in selected:
                 if receipt['event_key'] in suppressed:
                     receipt['delivery'] = 'SUPPRESSED_MANUAL'
-            if all(receipt['delivery'] == 'SUPPRESSED_MANUAL' for _, _, receipt, _ in selected):
+            if all(receipt['delivery'] == 'SUPPRESSED_MANUAL' for _, _, receipt, _, _ in selected):
+                check()
                 return 0, receipts
             # Import transport only after independent source/adoption qualification.
             from backend.services import telegram_bridge
@@ -257,28 +425,33 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
                 raise Refused('PRIVATE_OWNER_REQUIRED')
             until = time.time() + 30
             def sender(text, *, tag):
+                check()
                 return telegram_bridge.send_owner_once(text, tag=tag,
                     expected_owner=owner, until=until)
         else:
             sender = None
-        for ticker, path, receipt, line_sha in selected:
-            if read(snapshot) != snapshot_bytes or read(path) != originals[path]:
+        for ticker, path, receipt, line_sha, source_bytes in selected:
+            check()
+            if not newest_approved and (read(snapshot) != snapshot_bytes or read(path) != originals[path]):
                 raise Refused('INPUT_CHANGED')
             if send:
-                suppressed = qualify_send(review, adoption, journal, now=now, artifacts=artifacts)
+                suppressed = qualify_send(review, adoption, journal, now=now, artifacts=artifacts,
+                check=check if newest_approved else None)
             if send and receipt['event_key'] in suppressed:
                 receipt['delivery'] = 'SUPPRESSED_MANUAL'
                 continue
-            result = adapter.warn_saved(source_jsonl_path=path,
-                pc_paper_snapshot_path=snapshot, ticker=ticker, now=now,
+            check()
+            result = adapter.warn_saved_bytes(source_bytes=source_bytes,
+                snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
                 journal_dir=journal, sender=sender, source_row_sha256=line_sha)
             if result['artifact']['status'] != 'PROVISIONAL':
                 raise Refused('MATERIAL_INPUT_REFUSED')
             receipt['delivery'] = result['delivery']
             if result['delivery'] not in ('NOT_SENT', 'SENT', 'ALREADY_SENT'):
                 raise Refused('DELIVERY_RECONCILIATION_REQUIRED')
+        check()
         return 0, receipts
-    except (OSError, ValueError, TypeError, KeyError, AttributeError, UnicodeError):
+    except (OSError, ValueError, TypeError, KeyError, AttributeError, UnicodeError, InvalidOperation):
         # Never print paths, raw input, exception text, account IDs or transport errors.
         receipts.append({'at': now.isoformat(), 'status': 'REFUSED',
                          'reason': 'RUN_REFUSED_REVIEW_INPUTS_AND_GATES'})
@@ -287,7 +460,10 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--pc-paper-snapshot', type=Path, required=True,
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument('--newest-approved-pc-paper', action='store_true')
+    parser.add_argument('--expected-account-sha256', help='Externally approved SHA256 of exact UTF-8 account_number')
+    mode.add_argument('--pc-paper-snapshot', type=Path,
                         help='Explicit caller-attested PC-PAPER saved snapshot')
     parser.add_argument('--journal-dir', type=Path, required=True,
                         help='Existing private persistent adapter journal; never auto-created')
@@ -299,7 +475,8 @@ def main(argv=None):
     code, receipts = run(ledger=config.OPTIMUS_LEDGER_DIR,
         snapshot=args.pc_paper_snapshot, journal=args.journal_dir,
         now=datetime.now(timezone.utc), send=args.send, review=args.review,
-        adoption=args.adoption)
+        adoption=args.adoption, newest_approved=args.newest_approved_pc_paper,
+        expected_account_sha256=args.expected_account_sha256)
     for receipt in receipts:
         print(json.dumps(receipt, sort_keys=True))
     return code

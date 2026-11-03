@@ -435,6 +435,22 @@ def build_saved_warning(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path
     Hashes bind exact source line bytes (including newline) and snapshot bytes.
     Paths, arbitrary title/body, account fields and exceptions never leave here.
     """
+    snapshot_bytes = b''
+    try:
+        snapshot_bytes = Path(pc_paper_snapshot_path).read_bytes()
+        source_bytes = Path(source_jsonl_path).read_bytes()
+    except (OSError, ValueError, TypeError):
+        # Preserve sanitized legacy I/O refusal, including the snapshot digest.
+        source_bytes = b''
+    return build_saved_warning_bytes(source_bytes=source_bytes,
+        snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
+        source_row_sha256=source_row_sha256)
+
+
+def build_saved_warning_bytes(*, source_bytes: bytes, snapshot_bytes: bytes,
+                              ticker: str, now: datetime,
+                              source_row_sha256: str | None = None) -> dict:
+    """Assess frozen native UTF-8 bytes. No input path is opened here."""
     if not isinstance(now, datetime) or now.utcoffset() != timedelta(0):
         raise ValueError('now must be aware UTC')
     artifact = {'schema': 'owner-event-warning/1', 'at': now.isoformat(),
@@ -445,21 +461,19 @@ def build_saved_warning(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path
     try:
         if not isinstance(ticker, str) or not re.fullmatch(r'[A-Z]{1,5}(?:[.-][A-Z])?', ticker):
             raise ValueError()
-        snapshot_bytes = Path(pc_paper_snapshot_path).read_bytes()
         artifact['snapshot_sha256'] = hashlib.sha256(snapshot_bytes).hexdigest()
         snap = _object(snapshot_bytes.decode('utf-8'))
         if source_row_sha256 is not None and not re.fullmatch('[0-9a-f]{64}', source_row_sha256):
             raise ValueError()
         matches = {}
-        with Path(source_jsonl_path).open('rb') as file:
-            for line in file:
-                if not line.strip():
-                    continue
-                row = _object(line.decode('utf-8'))
-                if (ticker in row.get('tickers', [])
-                        and (source_row_sha256 is None
-                             or hashlib.sha256(line).hexdigest() == source_row_sha256)):
-                    matches[line] = row
+        for line in source_bytes.splitlines(keepends=True):
+            if not line.strip():
+                continue
+            row = _object(line.decode('utf-8'))
+            if (ticker in row.get('tickers', [])
+                    and (source_row_sha256 is None
+                         or hashlib.sha256(line).hexdigest() == source_row_sha256)):
+                matches[line] = row
         reason = 'SOURCE_SELECTION_AMBIGUOUS'
         if len(matches) != 1:
             raise ValueError()
@@ -548,4 +562,14 @@ def warn_saved(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path, ticker:
                                   pc_paper_snapshot_path=pc_paper_snapshot_path,
                                   ticker=ticker, now=now,
                                   source_row_sha256=source_row_sha256)
+    return _deliver(artifact, journal_dir=journal_dir, sender=sender)
+
+
+def warn_saved_bytes(*, source_bytes: bytes, snapshot_bytes: bytes, ticker: str,
+                     now: datetime, journal_dir: Path, sender=None,
+                     source_row_sha256: str | None = None) -> dict:
+    """Frozen-input entry point; preserves the existing private journal/ACK path."""
+    artifact = build_saved_warning_bytes(source_bytes=source_bytes,
+        snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
+        source_row_sha256=source_row_sha256)
     return _deliver(artifact, journal_dir=journal_dir, sender=sender)
