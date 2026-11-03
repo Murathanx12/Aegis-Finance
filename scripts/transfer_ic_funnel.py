@@ -30,6 +30,7 @@ CONSUMER_OPTIONAL_NUMBERS = (
     'earnings_surprise', 'rating_drift_3m',
 )
 TARGET = Path('/data/funnel_night10.json')
+SGT = timezone(timedelta(hours=8))
 
 
 class Refused(ValueError):
@@ -154,7 +155,27 @@ def read_bounded(path):
         return stream.read(MAX_BYTES + 1)
 
 
-def receive(raw, expected, *, target=TARGET, apply=False):
+def guard_commit_deadline(deadline, *, seconds=0, now=None):
+    """Opt-in IIF guard; deadline is an absolute UTC instant, not a duration."""
+    if deadline is None:
+        return
+    try:
+        cutoff = datetime.fromisoformat(deadline)
+        if cutoff.utcoffset() != timedelta(0):
+            raise ValueError
+    except (TypeError, ValueError, AttributeError):
+        raise Refused('invalid_commit_deadline') from None
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None or current.utcoffset() is None:
+        raise Refused('invalid_clock')
+    local = current.astimezone(SGT)
+    protected_start = local.replace(hour=16, minute=30, second=0, microsecond=0)
+    protected_end = local.replace(hour=17, minute=5, second=0, microsecond=0)
+    if protected_start <= local <= protected_end or current + timedelta(seconds=seconds) >= cutoff:
+        raise Refused('iif_protection_clock')
+
+
+def receive(raw, expected, *, target=TARGET, apply=False, commit_deadline=None, clock=None):
     """Remote transaction. Test target injection is not exposed through the CLI."""
     import fcntl  # Linux remote only; Windows local does not import it.
     incoming = validate(raw)
@@ -195,6 +216,8 @@ def receive(raw, expected, *, target=TARGET, apply=False):
         if digest(read_bounded(Path(temp))) != incoming['sha256']:
             raise Refused('staging_hash')
         # Last-good stays untouched until this one atomic commit point.
+        if commit_deadline is not None:
+            guard_commit_deadline(commit_deadline, now=clock() if clock else None)
         os.replace(temp, target)
         temp = None
         os.fsync(directory)
@@ -205,11 +228,12 @@ def receive(raw, expected, *, target=TARGET, apply=False):
         os.close(directory)
 
 
-def remote_entry(encoded, expected, apply):
+def remote_entry(encoded, expected, apply, commit_deadline=None):
     try:
         if not os.path.ismount('/data'):
             raise Refused('volume_not_mounted')
-        result = receive(base64.b64decode(encoded, validate=True), expected, apply=apply)
+        result = receive(base64.b64decode(encoded, validate=True), expected,
+                         apply=apply, commit_deadline=commit_deadline)
         print(json.dumps(result, sort_keys=True))
     except Exception as exc:
         # No exception text from the OS, Railway or payload is ever printed.
@@ -231,7 +255,8 @@ def resolve_railway():
     raise Refused('railway_executable_missing')
 
 
-def transfer(raw, *, project, environment, service, expected, apply=False, run=subprocess.run):
+def transfer(raw, *, project, environment, service, expected, apply=False,
+             run=subprocess.run, commit_deadline=None, clock=None):
     meta = validate(raw)
     if not apply:
         return dict(meta, status='local_dry_run', wrote=False)
@@ -241,10 +266,16 @@ def transfer(raw, *, project, environment, service, expected, apply=False, run=s
     if not isinstance(expected, str) or not re.fullmatch(r'ABSENT|[0-9a-f]{64}', expected):
         raise Refused('expected_remote_required')
     source = Path(__file__).read_text(encoding='utf-8').split("\nif __name__ == '__main__':")[0]
-    wire = source + '\nremote_entry(' + repr(base64.b64encode(raw).decode('ascii')) + ', ' + repr(expected) + ', True)\n'
+    wire = source + '\nremote_entry(' + repr(base64.b64encode(raw).decode('ascii')) + ', ' + repr(expected) + ', True'
+    if commit_deadline is not None:
+        guard_commit_deadline(commit_deadline, seconds=75, now=clock() if clock else None)
+        wire += ', ' + repr(commit_deadline)
+    wire += ')\n'
     command = [resolve_railway(), 'ssh', '--project', project, '--environment', environment,
                '--service', service, '--', 'python3', '-']
     try:
+        if commit_deadline is not None:
+            guard_commit_deadline(commit_deadline, seconds=75, now=clock() if clock else None)
         result = run(command, input=wire.encode('utf-8'), stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE, timeout=60, shell=False)
     except (OSError, subprocess.TimeoutExpired):
