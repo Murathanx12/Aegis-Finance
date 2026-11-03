@@ -110,16 +110,54 @@ def test_date_only_new_york_boundary_and_seven_calendar_days():
                  cutoff_utc="2027-03-14T00:30:00Z")["days_ahead"] == 1
 
 
-def test_duplicate_conflicting_and_multiple_future_rows_refuse():
+def test_exact_duplicate_rows_collapse_but_revisions_refuse():
     same = event()
-    assert build(response(same, same))["reason"] == "AMBIGUOUS_EVENT"
-    assert build(response(same, event(date="2026-11-07")))["reason"] == (
-        "AMBIGUOUS_EVENT"
-    )
+    assert build(response(same, same))["status"] == "EVIDENCE_ONLY"
+    assert build(response(same, same))["event_date_et"] == "2026-11-06"
+    for changed in (event(date="2026-11-03"),
+                    event(date="2026-11-07"),
+                    event(date="2026-11-11"),
+                    event(hour="bmo"),
+                    event(epsEstimate=1.6)):
+        assert build(response(same, changed))["reason"] == "CONFLICTING_FISCAL_PERIOD"
+        assert build(response(changed, same))["reason"] == "CONFLICTING_FISCAL_PERIOD"
+
+
+def test_distinct_periods_outside_window_ignored_inside_window_ambiguous():
+    same = event()
     assert build(response(same, event(quarter=1, year=2027)))["reason"] == (
         "AMBIGUOUS_EVENT"
     )
+    assert build(response(same, event(date="2026-11-03", quarter=3)))["status"] == (
+        "EVIDENCE_ONLY"
+    )
+    assert build(response(same, event(date="2026-11-11", quarter=1,
+                                      year=2027)))["status"] == "EVIDENCE_ONLY"
     assert build(response(event(symbol="MSFT"), same))["status"] == "EVIDENCE_ONLY"
+
+
+def test_verify_rejects_json_type_equivalents_and_malformed_packet():
+    raw = response(event())
+    packet = build(raw)
+
+    def verify(candidate):
+        return S.verify_saved_earnings_calendar_input(
+            candidate, raw, ticker="AAPL", observed_utc=OBSERVED, cutoff_utc=CUTOFF,
+        )
+
+    assert verify(packet)
+    for key, value in (("days_ahead", 3.0), ("fiscal_year", 2026.0),
+                       ("fiscal_quarter", 4.0)):
+        changed = deepcopy(packet)
+        changed[key] = value
+        assert changed == packet  # Python equality masks the type change.
+        assert not verify(changed)
+    assert not verify(None)
+    assert not verify({**packet, "days_ahead": float("nan")})
+    assert not verify({**packet, "unexpected": object()})
+    circular = deepcopy(packet)
+    circular["cycle"] = circular
+    assert not verify(circular)
 
 
 def test_sample_shaped_null_actuals_and_optional_absence():
@@ -235,3 +273,6 @@ def test_no_io_on_import_and_calls():
             raw, ticker="AAPL", observed_utc=OBSERVED, cutoff_utc=CUTOFF,
         ) == expected
         assert build(raw) == expected
+        assert S.verify_saved_earnings_calendar_input(
+            expected, raw, ticker="AAPL", observed_utc=OBSERVED, cutoff_utc=CUTOFF,
+        )

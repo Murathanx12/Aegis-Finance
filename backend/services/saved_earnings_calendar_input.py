@@ -186,11 +186,20 @@ def build_saved_earnings_calendar_input(
         decision_date = _new_york_date(cutoff)
         eligible: list[dict] = []
         matching = False
+        period_rows: dict[tuple[int, int], bytes] = {}
         for row in rows:
             event_date = _event_date(row, ticker)
             if event_date is None:
                 continue
             matching = True
+            period = (row["year"], row["quarter"])
+            row_bytes = _canonical(row)
+            previous = period_rows.get(period)
+            if previous is not None:
+                if previous != row_bytes:
+                    raise _Refused("CONFLICTING_FISCAL_PERIOD")
+                continue
+            period_rows[period] = row_bytes
             days_ahead = (event_date - decision_date).days
             if 1 <= days_ahead <= MAX_DAYS_AHEAD:
                 eligible.append(row)
@@ -227,8 +236,13 @@ def verify_saved_earnings_calendar_input(
     packet: dict, response_bytes: bytes | None, *, ticker: str,
     observed_utc: str, cutoff_utc: str,
 ) -> bool:
-    """Rebuild and compare exactly; this checks integrity, not authenticity."""
+    """Compare canonical JSON bytes; malformed packets fail closed."""
     rebuilt = build_saved_earnings_calendar_input(
         response_bytes, ticker=ticker, observed_utc=observed_utc, cutoff_utc=cutoff_utc,
     )
-    return rebuilt["status"] == "EVIDENCE_ONLY" and packet == rebuilt
+    if rebuilt["status"] != "EVIDENCE_ONLY" or type(packet) is not dict:
+        return False
+    try:
+        return _canonical(packet) == _canonical(rebuilt)
+    except (TypeError, ValueError, OverflowError, RecursionError, UnicodeError):
+        return False
