@@ -64,6 +64,7 @@ def case(tmp_path, monkeypatch):
               "expected_account_sha256": runner.selector.sha(ACCOUNT.encode()),
               "journal_dir": private, "now": NOW}
     kwargs["wall_clock"] = lambda: kwargs["now"]
+    kwargs["epoch_clock"] = lambda: kwargs["now"].timestamp()
     return kwargs, write_receipt, row, snapshot_path, private
 
 
@@ -232,7 +233,7 @@ def test_single_attempt_and_refreshed_snapshot_duplicate(case, monkeypatch, tmp_
 
     def sender(text, *, tag, expected_owner, until):
         calls.append(text)
-        assert expected_owner == "123456" and until > runner.time.time()
+        assert expected_owner == "123456" and until > kwargs["epoch_clock"]()
         pending = json.loads(next(private.glob("*.json")).read_text())
         assert pending["state"] == "SENDING" and pending["tag_sha256"] == journal._digest({"tag": tag})
         receipt = json.loads(kwargs["receipt_path"].read_text())
@@ -346,11 +347,11 @@ def test_expiry_crossing_after_reservation_never_starts_transport(case, monkeypa
     kwargs, write_receipt, row, _, private = case
     row["date"] = "2026-11-04"
     write_receipt(rows=[row])
-    before = datetime(2026, 11, 4, 4, 59, 59, tzinfo=timezone.utc)
+    before = datetime(2026, 11, 4, 4, 59, 57, tzinfo=timezone.utc)
     after = datetime(2026, 11, 4, 5, tzinfo=timezone.utc)
     clocks = iter((before, after))
     kwargs["wall_clock"] = lambda: next(clocks)
-    monkeypatch.setattr(runner.time, "time", before.timestamp)
+    kwargs["epoch_clock"] = before.timestamp
     monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
     monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
     gate = review(tmp_path)
@@ -366,10 +367,10 @@ def test_send_deadline_is_no_later_than_et_event_start(case, monkeypatch, tmp_pa
     kwargs, write_receipt, row, _, _ = case
     row["date"] = "2026-11-04"
     write_receipt(rows=[row])
-    before = datetime(2026, 11, 4, 4, 59, 59, tzinfo=timezone.utc)
+    before = datetime(2026, 11, 4, 4, 59, 57, tzinfo=timezone.utc)
     deadline = datetime(2026, 11, 4, 5, tzinfo=timezone.utc)
     kwargs["wall_clock"] = lambda: before
-    monkeypatch.setattr(runner.time, "time", before.timestamp)
+    kwargs["epoch_clock"] = before.timestamp
     monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
     seen = []
 
@@ -381,6 +382,62 @@ def test_send_deadline_is_no_later_than_et_event_start(case, monkeypatch, tmp_pa
     code, result = runner.run(**kwargs, send=True, review=review(tmp_path))
     assert code == 2 and result["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
     assert seen == [deadline.timestamp()]
+
+
+def test_tenth_second_before_iif_refuses_without_transport(case, monkeypatch, tmp_path):
+    kwargs, _, _, _, private = case
+    near = datetime(2026, 11, 4, 8, 29, 59, 900000, tzinfo=timezone.utc)
+    boundary = datetime(2026, 11, 4, 8, 30, tzinfo=timezone.utc)
+    assert runner._iif_deadline(near) == boundary
+    kwargs.update(now=near, wall_clock=lambda: near, epoch_clock=near.timestamp)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    code, result = runner.run(**kwargs, send=True, review=review(tmp_path))
+    assert code == 2 and result["status"] == "REFUSED"
+    assert not list(private.iterdir())
+
+
+def test_iif_until_is_absolute_and_crossing_blocks_transport(case, monkeypatch, tmp_path):
+    kwargs, _, _, _, private = case
+    before = datetime(2026, 11, 4, 8, 29, 57, tzinfo=timezone.utc)
+    boundary = datetime(2026, 11, 4, 8, 30, tzinfo=timezone.utc)
+    kwargs.update(now=before, wall_clock=lambda: before, epoch_clock=before.timestamp)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    seen = []
+
+    def sender(_text, *, until, **_kwargs):
+        seen.append(until)
+        return {"state": "UNKNOWN"}
+
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", sender)
+    gate = review(tmp_path)
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
+    assert seen == [boundary.timestamp()]
+
+    # A fresh event/journal permits a second scenario: IIF starts after the
+    # reservation but before the sender callback. Nothing reaches transport.
+    for path in private.iterdir():
+        path.unlink()
+    clocks = iter((before, boundary))
+    kwargs["wall_clock"] = lambda: next(clocks)
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
+    assert json.loads(next(private.glob("*.json")).read_text())["state"] == "SENDING"
+
+
+def test_tenth_second_before_et_midnight_refuses_without_transport(case, monkeypatch, tmp_path):
+    kwargs, write_receipt, row, _, private = case
+    row["date"] = "2026-11-04"
+    write_receipt(rows=[row])
+    near = datetime(2026, 11, 4, 4, 59, 59, 900000, tzinfo=timezone.utc)
+    kwargs.update(wall_clock=lambda: near, epoch_clock=near.timestamp)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    code, result = runner.run(**kwargs, send=True, review=review(tmp_path))
+    assert code == 2 and result["status"] == "REFUSED"
+    assert not list(private.iterdir())
 
 
 def test_expired_at_pre_send_check_never_reserves(case, monkeypatch, tmp_path):
@@ -414,7 +471,7 @@ def test_et_midnight_deadline_across_dst(event_date, expected_hour):
 ])
 def test_iif_boundary(clock, allowed):
     if allowed:
-        assert runner._check_window(clock) > 0
+        assert runner._iif_deadline(clock) > clock
     else:
         with pytest.raises(runner.Refused, match="IIF_WINDOW_DEFER"):
-            runner._check_window(clock)
+            runner._iif_deadline(clock)

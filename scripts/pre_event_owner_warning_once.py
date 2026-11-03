@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import argparse
 import base64
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time as civil_time, timedelta, timezone
 from decimal import InvalidOperation
 import json
 import os
@@ -51,14 +51,16 @@ class Refused(ValueError):
     """Only fixed refusal codes may leave the runner."""
 
 
-def _check_window(now: datetime) -> int:
+def _iif_deadline(now: datetime) -> datetime:
+    """Absolute UTC start of the next protected IIF interval."""
     local = now.astimezone(SGT)
-    seconds = local.hour * 3600 + local.minute * 60 + local.second
-    start = 16 * 3600 + 30 * 60
-    end = 17 * 3600 + 5 * 60
-    if start <= seconds < end:
+    start = datetime.combine(local.date(), civil_time(16, 30), SGT)
+    end = datetime.combine(local.date(), civil_time(17, 5), SGT)
+    if start <= local < end:
         raise Refused("IIF_WINDOW_DEFER")
-    return start - seconds if seconds < start else 24 * 3600 + start - seconds
+    if local >= end:
+        start += timedelta(days=1)
+    return start.astimezone(timezone.utc)
 
 
 def _event_date_deadline(event_date_et: str) -> datetime:
@@ -123,15 +125,16 @@ def _preview(artifact: dict, delivery_state: str) -> dict:
 
 def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         journal_dir: Path, send: bool = False, review: Path | None = None,
-        now: datetime | None = None, wall_clock=None) -> tuple[int, dict]:
+        now: datetime | None = None, wall_clock=None, epoch_clock=None) -> tuple[int, dict]:
     """Preview by default. The CLI never accepts a caller-provided clock."""
     actual_now = now or datetime.now(timezone.utc)
+    epoch = epoch_clock or time.time
     started = time.monotonic()
 
     def check() -> None:
         if time.monotonic() - started > 5:
             raise Refused("PRE_SEND_BUDGET_EXCEEDED")
-        _check_window(now or datetime.now(timezone.utc))
+        _iif_deadline(now or datetime.now(timezone.utc))
 
     try:
         if actual_now.utcoffset() != timedelta(0):
@@ -187,19 +190,23 @@ def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         check()
         deadline = _event_date_deadline(artifact["event_date_et"])
 
-        def fresh_before_event() -> None:
+        def fresh_before_event() -> datetime:
             fresh = wall_clock() if wall_clock is not None else datetime.now(timezone.utc)
             if fresh.utcoffset() != timedelta(0) or fresh >= deadline:
                 raise Refused("EVENT_DATE_STARTED_ET")
+            return _iif_deadline(fresh)
 
-        fresh_before_event()
-        send_started = time.time()
-        until = min(send_started + 30, deadline.timestamp(),
-                    send_started + _check_window(now or datetime.now(timezone.utc)))
+        iif_deadline = fresh_before_event()
+        send_started = epoch()
+        until = min(send_started + 30, deadline.timestamp(), iif_deadline.timestamp())
+        if until - send_started < 2:
+            raise Refused("SEND_WINDOW_TOO_SHORT")
 
         def sender(text: str, *, tag: str) -> dict:
             check()
             fresh_before_event()
+            if epoch() >= until:
+                raise Refused("SEND_DEADLINE_PASSED")
             return telegram_bridge.send_owner_once(
                 text, tag=tag, expected_owner=owner, until=until)
 
