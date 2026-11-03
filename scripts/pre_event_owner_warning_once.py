@@ -42,6 +42,7 @@ SOURCE_PATHS = (
     "scripts/owner_event_warning.py",
     "scripts/__init__.py",
     "scripts/pre_event_owner_warning_once.py",
+    "scripts/pre_event_owner_warning_discover.py",
 )
 ABSENT_NAMESPACE_INITIALIZER = "ABSENT_NAMESPACE_PACKAGE_INITIALIZER"
 SGT = timezone(timedelta(hours=8))
@@ -125,13 +126,20 @@ def _preview(artifact: dict, delivery_state: str) -> dict:
 
 def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         journal_dir: Path, send: bool = False, review: Path | None = None,
-        now: datetime | None = None, wall_clock=None, epoch_clock=None) -> tuple[int, dict]:
-    """Preview by default. The CLI never accepts a caller-provided clock."""
+        now: datetime | None = None, wall_clock=None, epoch_clock=None,
+        pre_send_check=None) -> tuple[int, dict]:
+    """Preview by default. The CLI never accepts a caller-provided clock.
+
+    pre_send_check adds caller constraints to every existing send checkpoint;
+    it cannot replace the runner's own time, review or delivery guards.
+    """
     actual_now = now or datetime.now(timezone.utc)
     epoch = epoch_clock or time.time
     started = time.monotonic()
 
     def check() -> None:
+        if pre_send_check is not None:
+            pre_send_check()
         if time.monotonic() - started > 5:
             raise Refused("PRE_SEND_BUDGET_EXCEEDED")
         _iif_deadline(now or datetime.now(timezone.utc))

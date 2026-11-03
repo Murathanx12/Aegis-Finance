@@ -1,7 +1,7 @@
 """Bounded saved-receipt discovery candidate; no scheduler or transport authority.
 
-Only preview is exposed pending separately reviewed local adoption of this new
-source in the installed launcher's exact-source policy. No send flag exists.
+Preview is default. Send requires an independent exact-source review including
+this module; protected local task adoption is separate and is not performed here.
 """
 from __future__ import annotations
 
@@ -23,7 +23,8 @@ _ERRORS = (OSError, ValueError, KeyError, TypeError, AttributeError, UnicodeErro
 
 
 def run(*, receipt_dir: Path, ledger_dir: Path, expected_account_sha256: str,
-        journal_dir: Path, now: datetime | None = None) -> tuple[int, dict]:
+        journal_dir: Path, send: bool = False, review: Path | None = None,
+        now: datetime | None = None) -> tuple[int, dict]:
     """Select earliest eligible ET event, then newest observation, then filename.
 
     Rescan saved receipts each invocation; mtime and a mutable cursor confer no
@@ -50,6 +51,11 @@ def run(*, receipt_dir: Path, ledger_dir: Path, expected_account_sha256: str,
                 r"[0-9a-f]{64}", expected_account_sha256):
             raise ValueError("ACCOUNT_PIN_REQUIRED")
         check()
+        if send:
+            if review is None:
+                raise ValueError("INDEPENDENT_EXACT_SOURCE_REVIEW_REQUIRED")
+            once._review(review)
+            check()
         directory = Path(receipt_dir).absolute()
         journal = Path(journal_dir).absolute()
         identity = once.capture._private_identity(directory)
@@ -108,11 +114,20 @@ def run(*, receipt_dir: Path, ledger_dir: Path, expected_account_sha256: str,
         if once.selector.frozen_read(selected) != encoded:
             raise ValueError("RECEIPT_CHANGED")
         check()
-        # Exactly one invocation. Revalidates seal, account, snapshot and private
-        # journal; never passes send/review or caller clocks into a send path.
+        def selected_check():
+            check()
+            if (once.capture._private_identity(directory) != identity
+                    or once.private_journal._journal_identity(journal) != journal_identity
+                    or once.selector.frozen_read(selected) != encoded):
+                raise ValueError("SELECTED_INPUT_CHANGED")
+            check()
+
+        # The callback only adds constraints: discovery's original five-second
+        # budget and frozen selection remain binding throughout once's send.
         return once.run(receipt_path=selected, ledger_dir=ledger_dir,
                         expected_account_sha256=expected_account_sha256,
-                        journal_dir=journal, now=now)
+                        journal_dir=journal, now=now, send=send, review=review,
+                        pre_send_check=selected_check if send else None)
     except _ERRORS:
         return 2, result("REFUSED", "DISCOVERY_REFUSED_REVIEW_INPUTS_AND_GATES")
 
@@ -123,10 +138,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pc-paper-ledger", type=Path, required=True)
     parser.add_argument("--expected-account-sha256", required=True)
     parser.add_argument("--journal-dir", type=Path, required=True)
+    parser.add_argument("--send", action="store_true")
+    parser.add_argument("--review", type=Path)
     args = parser.parse_args(argv)
+    if args.send and args.review is None:
+        parser.error("--send requires --review (independent exact-source review)")
     code, output = run(receipt_dir=args.receipt_dir, ledger_dir=args.pc_paper_ledger,
                        expected_account_sha256=args.expected_account_sha256,
-                       journal_dir=args.journal_dir)
+                       journal_dir=args.journal_dir, send=args.send, review=args.review)
     print(json.dumps(output, sort_keys=True))
     return code
 

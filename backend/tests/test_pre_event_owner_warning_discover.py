@@ -83,7 +83,7 @@ def test_multiple_selects_one_earliest_event_and_no_transport(case, monkeypatch)
     code, output = discovery.run(**kwargs)
     assert code == 0 and output["ticker"] == "BBB" and output["delivery"] == "PREVIEW"
     assert len(calls) == 1 and calls[0]["receipt_path"] == selected
-    assert "send" not in calls[0] and not list(kwargs["journal_dir"].iterdir())
+    assert calls[0]["send"] is False and not list(kwargs["journal_dir"].iterdir())
 
 
 def test_corrupt_only_and_corrupt_plus_valid(case):
@@ -132,7 +132,7 @@ def test_iif_and_bad_account_refused(case):
     assert discovery.run(**kwargs)[0] == 2
 
 
-def test_send_cli_not_available(tmp_path, capsys):
+def test_send_cli_requires_review(tmp_path, capsys):
     with pytest.raises(SystemExit) as exc:
         discovery.main([
             "--receipt-dir", str(tmp_path / "receipts"),
@@ -142,7 +142,7 @@ def test_send_cli_not_available(tmp_path, capsys):
             "--send",
         ])
     assert exc.value.code == 2
-    assert "unrecognized arguments: --send" in capsys.readouterr().err
+    assert "--send requires --review" in capsys.readouterr().err
 
 
 
@@ -212,3 +212,197 @@ def test_budget_refused(case, monkeypatch):
     ticks = iter([0, discovery.MAX_SECONDS + 1])
     monkeypatch.setattr(discovery.time, "monotonic", lambda: next(ticks))
     assert discovery.run(**kwargs)[0] == 2
+
+
+def review_file(tmp_path):
+    """Synthetic attestation only; never an independent adoption approval."""
+    path = tmp_path / "test-review.json"
+    path.write_text(json.dumps({
+        "schema": "pre-event-warning-review/1",
+        "independent_exact_source_review": True, "reviewer": "synthetic-test-only",
+        "sha256": discovery.once._source_hashes(),
+    }))
+    return path
+
+
+def synthetic_sender(monkeypatch, kwargs, *, wall_now=None):
+    """Real once/durable journal, synthetic clocks and ACK; no native transport."""
+    calls = []
+    original = discovery.once.run
+
+    def delegate(**options):
+        return original(**options, wall_clock=lambda: wall_now or kwargs["now"],
+                        epoch_clock=lambda: kwargs["now"].timestamp())
+
+    def stub(text, *, tag, expected_owner, until):
+        calls.append(text)
+        assert len(calls) == 1 and expected_owner == "123456"
+        assert kwargs["now"].timestamp() < until <= kwargs["now"].timestamp() + 30
+        pending = json.loads(next(kwargs["journal_dir"].glob("*.json")).read_text())
+        assert pending["state"] == "SENDING"
+        journal = discovery.once.private_journal
+        ack = {"state": "SENT", "messages": 1, "native_ack_sha256": "f" * 64,
+               "tag_sha256": journal._digest({"tag": tag}),
+               "text_sha256": journal._hash(text)}
+        ack["delivery_binding_sha256"] = journal._digest({
+            key: ack[key] for key in journal._ACK_HASH_KEYS})
+        return ack
+
+    monkeypatch.setattr(discovery.once, "run", delegate)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", stub)
+    return calls
+
+
+@pytest.mark.parametrize("bad", ["missing", "wrong", "omitted_discovery", "wrong_hash"])
+def test_send_requires_exact_review(case, tmp_path, bad):
+    kwargs, save = case
+    save()
+    gate = review_file(tmp_path)
+    document = json.loads(gate.read_text())
+    name = "scripts/pre_event_owner_warning_discover.py"
+    assert name in discovery.once.SOURCE_PATHS
+    if bad == "missing":
+        gate = None
+    else:
+        if bad == "wrong":
+            document["independent_exact_source_review"] = False
+        elif bad == "omitted_discovery":
+            del document["sha256"][name]
+        else:
+            document["sha256"][name] = "0" * 64
+        gate.write_text(json.dumps(document))
+    code, output = discovery.run(**kwargs, send=True, review=gate)
+    assert code == 2 and output["status"] == "REFUSED"
+    assert not list(kwargs["journal_dir"].iterdir())
+
+
+def test_changed_discovery_source_invalidates_review(case, tmp_path, monkeypatch):
+    kwargs, save = case
+    save()
+    gate = review_file(tmp_path)
+    root = tmp_path / "sources"
+    for name in discovery.once.SOURCE_PATHS:
+        source = discovery.once.ROOT / name
+        if source.is_file():
+            target = root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read_bytes())
+    changed = root / "scripts/pre_event_owner_warning_discover.py"
+    changed.write_bytes(changed.read_bytes() + b"\n# synthetic mutation\n")
+    monkeypatch.setattr(discovery.once, "ROOT", root)
+    assert discovery.run(**kwargs, send=True, review=gate)[0] == 2
+    assert not list(kwargs["journal_dir"].iterdir())
+
+
+def test_send_one_selected_event_and_suppress_confirmed_duplicate(case, tmp_path, monkeypatch):
+    kwargs, save = case
+    save(1, "AAA", 3)
+    save(2, "BBB", 2)
+    calls = synthetic_sender(monkeypatch, kwargs)
+    gate = review_file(tmp_path)
+    code, output = discovery.run(**kwargs, send=True, review=gate)
+    assert code == 0 and output["ticker"] == "BBB" and output["delivery"] == "SENT"
+    assert len(calls) == 1
+    # Retain only the already-sent receipt, not a different eligible event.
+    (kwargs["receipt_dir"] / f"earnings-calendar-{1:032x}.json").unlink()
+    code, output = discovery.run(**kwargs, send=True, review=gate)
+    assert code == 0 and output["reason"] == "DUPLICATE_EVENTS_SUPPRESSED"
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize("suffix", [".json", ".result.json", ".result.pending.json"])
+def test_send_suppresses_ambiguous_journal(case, tmp_path, suffix):
+    kwargs, save = case
+    save()
+    _, preview = discovery.run(**kwargs)
+    (kwargs["journal_dir"] / (preview["event_id"] + suffix)).write_text("uncertain")
+    code, output = discovery.run(**kwargs, send=True, review=review_file(tmp_path))
+    assert code == 0 and output["reason"] == "DUPLICATE_EVENTS_SUPPRESSED"
+
+
+def test_duplicate_created_after_selection_hits_durable_guard(case, tmp_path, monkeypatch):
+    kwargs, save = case
+    save()
+    _, preview = discovery.run(**kwargs)
+    original = discovery.once.run
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+
+    def competing_attempt(**options):
+        pending = kwargs["journal_dir"] / (preview["event_id"] + ".result.pending.json")
+        pending.write_text("uncertain competing attempt")
+        return original(**options, wall_clock=lambda: kwargs["now"],
+                        epoch_clock=lambda: kwargs["now"].timestamp())
+
+    monkeypatch.setattr(discovery.once, "run", competing_attempt)
+    code, output = discovery.run(**kwargs, send=True, review=review_file(tmp_path))
+    assert code == 2 and output["delivery"] == "DUPLICATE_RECONCILE_REQUIRED"
+    assert len(list(kwargs["journal_dir"].iterdir())) == 1
+
+
+def test_expired_at_send_wall_clock_refused(case, tmp_path, monkeypatch):
+    kwargs, save = case
+    save(days=1)
+    calls = synthetic_sender(monkeypatch, kwargs, wall_now=kwargs["now"] + timedelta(days=1))
+    code, output = discovery.run(**kwargs, send=True, review=review_file(tmp_path))
+    assert code == 2 and output["status"] == "REFUSED" and not calls
+    assert not list(kwargs["journal_dir"].iterdir())
+
+
+def test_iif_at_send_wall_clock_refused(case, tmp_path, monkeypatch):
+    kwargs, save = case
+    save(days=2)
+    protected = (kwargs["now"] + timedelta(days=1)).replace(hour=9)
+    calls = synthetic_sender(monkeypatch, kwargs, wall_now=protected)
+    code, output = discovery.run(**kwargs, send=True, review=review_file(tmp_path))
+    assert code == 2 and output["status"] == "REFUSED" and not calls
+    assert not list(kwargs["journal_dir"].iterdir())
+
+
+@pytest.mark.parametrize("send", [False, True])
+def test_cli_explicit_send_and_review_forwarding(tmp_path, monkeypatch, send):
+    options = ["--receipt-dir", str(tmp_path / "receipts"),
+               "--pc-paper-ledger", str(tmp_path / "ledger"),
+               "--expected-account-sha256", "0" * 64,
+               "--journal-dir", str(tmp_path / "journal")]
+    gate = tmp_path / "review.json"
+    if send:
+        options += ["--send", "--review", str(gate)]
+    calls = []
+
+    def stub(**kwargs):
+        calls.append(kwargs)
+        return 2, {"status": "REFUSED", "delivery": "NOT_SENT"}
+
+    monkeypatch.setattr(discovery, "run", stub)
+    assert discovery.main(options) == 2
+    assert len(calls) == 1 and calls[0]["send"] is send
+    assert calls[0]["review"] == (gate if send else None)
+
+
+@pytest.mark.parametrize("mutation", ["budget", "receipt", "review"])
+def test_discovery_constraints_remain_binding_inside_once(case, tmp_path, monkeypatch, mutation):
+    kwargs, save = case
+    path = save()
+    gate = review_file(tmp_path)
+    clock = [0.0]
+    monkeypatch.setattr(discovery.time, "monotonic", lambda: clock[0])
+    original = discovery.once._review
+    checks = 0
+
+    def mutate(review):
+        nonlocal checks
+        checks += 1
+        if checks == 2:
+            if mutation == "budget":
+                clock[0] = discovery.MAX_SECONDS + 1
+            elif mutation == "receipt":
+                path.write_bytes(path.read_bytes() + b"\n")
+            else:
+                gate.write_text("{}")
+        original(review)
+
+    monkeypatch.setattr(discovery.once, "_review", mutate)
+    code, output = discovery.run(**kwargs, send=True, review=gate)
+    assert checks == 2 and code == 2 and output["status"] == "REFUSED"
+    assert not list(kwargs["journal_dir"].iterdir())
