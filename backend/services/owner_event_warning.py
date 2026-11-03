@@ -421,7 +421,8 @@ def _deliver(artifact, *, journal_dir, sender):
 
 
 def build_saved_warning(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path,
-                        ticker: str, now: datetime) -> dict:
+                        ticker: str, now: datetime,
+                        source_row_sha256: str | None = None) -> dict:
     """Read ONLY injected saved files; caller explicitly attests PC-PAPER path.
 
     Native corpus proof: exact source id, single-ticker binding, 8-K/EX-99 title,
@@ -447,13 +448,17 @@ def build_saved_warning(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path
         snapshot_bytes = Path(pc_paper_snapshot_path).read_bytes()
         artifact['snapshot_sha256'] = hashlib.sha256(snapshot_bytes).hexdigest()
         snap = _object(snapshot_bytes.decode('utf-8'))
+        if source_row_sha256 is not None and not re.fullmatch('[0-9a-f]{64}', source_row_sha256):
+            raise ValueError()
         matches = {}
         with Path(source_jsonl_path).open('rb') as file:
             for line in file:
                 if not line.strip():
                     continue
                 row = _object(line.decode('utf-8'))
-                if ticker in row.get('tickers', []):
+                if (ticker in row.get('tickers', [])
+                        and (source_row_sha256 is None
+                             or hashlib.sha256(line).hexdigest() == source_row_sha256)):
                     matches[line] = row
         reason = 'SOURCE_SELECTION_AMBIGUOUS'
         if len(matches) != 1:
@@ -536,9 +541,11 @@ def build_saved_warning(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path
 
 
 def warn_saved(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path, ticker: str,
-               now: datetime, journal_dir: Path, sender=None) -> dict:
+               now: datetime, journal_dir: Path, sender=None,
+               source_row_sha256: str | None = None) -> dict:
     """Native saved-file entry point; same journal/ACK contract as warn."""
     artifact = build_saved_warning(source_jsonl_path=source_jsonl_path,
                                   pc_paper_snapshot_path=pc_paper_snapshot_path,
-                                  ticker=ticker, now=now)
+                                  ticker=ticker, now=now,
+                                  source_row_sha256=source_row_sha256)
     return _deliver(artifact, journal_dir=journal_dir, sender=sender)

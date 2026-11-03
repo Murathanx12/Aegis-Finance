@@ -220,26 +220,35 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
             unique = {line: path for path, line in matches}
             if not unique:
                 continue
-            if len(unique) != 1:
+            eligible = []
+            for line, path in unique.items():
+                line_sha = sha(line)
+                artifact = adapter.build_saved_warning(source_jsonl_path=path,
+                    pc_paper_snapshot_path=snapshot, ticker=ticker, now=now,
+                    source_row_sha256=line_sha)
+                receipt = {k: artifact[k] for k in ('event_key', 'source_row_sha256',
+                    'snapshot_sha256', 'status', 'reason') if k in artifact}
+                receipt['at'] = now.isoformat()
+                receipt['delivery'] = 'PREVIEW'
+                receipts.append(receipt)
+                if artifact['reason'] == 'SOURCE_STALE':
+                    receipt['delivery'] = 'EXPIRED_SOURCE_SKIPPED'
+                    continue
+                if artifact['status'] != 'PROVISIONAL':
+                    raise Refused('MATERIAL_INPUT_REFUSED')
+                eligible.append((artifact, path, receipt, line_sha))
+            if len(eligible) > 1:
                 raise Refused('AMBIGUOUS_HELD_EVENT')
-            line, path = next(iter(unique.items()))
-            artifact = adapter.build_saved_warning(source_jsonl_path=path,
-                pc_paper_snapshot_path=snapshot, ticker=ticker, now=now)
-            receipt = {k: artifact[k] for k in ('event_key', 'source_row_sha256',
-                'snapshot_sha256', 'status', 'reason') if k in artifact}
-            receipt['at'] = now.isoformat()
-            receipt['delivery'] = 'PREVIEW'
-            receipts.append(receipt)
-            if artifact['status'] != 'PROVISIONAL':
-                raise Refused('MATERIAL_INPUT_REFUSED')
-            selected.append((ticker, path, receipt))
-            artifacts.append(artifact)
+            if eligible:
+                artifact, path, receipt, line_sha = eligible[0]
+                selected.append((ticker, path, receipt, line_sha))
+                artifacts.append(artifact)
         if send:
             suppressed = qualify_send(review, adoption, journal, now=now, artifacts=artifacts)
-            for _, _, receipt in selected:
+            for _, _, receipt, _ in selected:
                 if receipt['event_key'] in suppressed:
                     receipt['delivery'] = 'SUPPRESSED_MANUAL'
-            if all(receipt['delivery'] == 'SUPPRESSED_MANUAL' for _, _, receipt in selected):
+            if all(receipt['delivery'] == 'SUPPRESSED_MANUAL' for _, _, receipt, _ in selected):
                 return 0, receipts
             # Import transport only after independent source/adoption qualification.
             from backend.services import telegram_bridge
@@ -252,7 +261,7 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
                     expected_owner=owner, until=until)
         else:
             sender = None
-        for ticker, path, receipt in selected:
+        for ticker, path, receipt, line_sha in selected:
             if read(snapshot) != snapshot_bytes or read(path) != originals[path]:
                 raise Refused('INPUT_CHANGED')
             if send:
@@ -262,7 +271,7 @@ def run(*, ledger, snapshot, journal, now, send=False, review=None, adoption=Non
                 continue
             result = adapter.warn_saved(source_jsonl_path=path,
                 pc_paper_snapshot_path=snapshot, ticker=ticker, now=now,
-                journal_dir=journal, sender=sender)
+                journal_dir=journal, sender=sender, source_row_sha256=line_sha)
             if result['artifact']['status'] != 'PROVISIONAL':
                 raise Refused('MATERIAL_INPUT_REFUSED')
             receipt['delivery'] = result['delivery']

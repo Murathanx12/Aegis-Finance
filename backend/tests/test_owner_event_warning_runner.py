@@ -42,12 +42,10 @@ def test_preview_no_writes_or_transport(case, monkeypatch):
     assert before == {p: p.read_bytes() for p in kwargs['ledger'].rglob('*') if p.is_file()}
 
 
-@pytest.mark.parametrize('mode', ['stale', 'ambiguous', 'malformed', 'duplicate_hold',
+@pytest.mark.parametrize('mode', ['ambiguous', 'malformed', 'duplicate_hold',
                                   'bad_exposure', 'multi_ticker', 'future'])
 def test_refusal_before_delivery(case, monkeypatch, mode):
     kwargs, row, source, snap = case
-    if mode == 'stale':
-        row['published_utc'] = (kwargs['now'] - timedelta(hours=25)).isoformat()
     if mode == 'future':
         row['first_seen_utc'] = (kwargs['now'] + timedelta(hours=1)).isoformat()
     if mode == 'multi_ticker':
@@ -67,6 +65,59 @@ def test_refusal_before_delivery(case, monkeypatch, mode):
     code, receipts = runner.run(**kwargs)
     assert code == 2
     assert 'PRIVATE_OWNER' not in json.dumps(receipts)
+
+
+def test_expired_source_is_dated_and_skipped_without_delivery(case, monkeypatch):
+    kwargs, row, source, _ = case
+    row['published_utc'] = (kwargs['now'] - timedelta(hours=25)).isoformat()
+    source.write_text(json.dumps(row) + '\n')
+    monkeypatch.setattr(runner.adapter, 'warn_saved',
+                        lambda **kw: pytest.fail('expired source reached delivery'))
+    code, receipts = runner.run(**kwargs)
+    assert code == 0
+    assert receipts[0]['reason'] == 'SOURCE_STALE'
+    assert receipts[0]['delivery'] == 'EXPIRED_SOURCE_SKIPPED'
+
+
+def test_fresh_held_event_survives_expired_row_in_same_file(case):
+    kwargs, row, source, _ = case
+    old = dict(row, published_utc=(kwargs['now'] - timedelta(hours=25)).isoformat())
+    fresh = dict(row, raw_id='0000000001-26-000002:results.htm',
+                 url='https://www.sec.gov/Archives/edgar/data/1/000000000126000002/results.htm',
+                 body='New financial results')
+    source.write_text(json.dumps(old) + '\n' + json.dumps(fresh) + '\n')
+    code, receipts = runner.run(**kwargs)
+    assert code == 0
+    assert [(x['reason'], x['delivery']) for x in receipts] == [
+        ('SOURCE_STALE', 'EXPIRED_SOURCE_SKIPPED'),
+        ('SAVED_EVIDENCE_ONLY', 'NOT_SENT')]
+
+
+def test_fresh_other_holding_survives_expired_apple_like_row(case):
+    kwargs, row, source, snap = case
+    old = dict(row, published_utc=(kwargs['now'] - timedelta(hours=25)).isoformat())
+    fresh = dict(row, tickers=['BETA'], raw_id='0000000001-26-000002:results.htm',
+                 url='https://www.sec.gov/Archives/edgar/data/1/000000000126000002/results.htm',
+                 body='Beta financial results')
+    snap['positions'].append(dict(symbol='BETA', qty=20, market_value=2000, current_price=100))
+    snap['n_positions'] = 2
+    snap['long_market_value'] = 4000
+    snap['cash'] = 6000
+    kwargs['snapshot'].write_text(json.dumps(snap))
+    source.write_text(json.dumps(old) + '\n' + json.dumps(fresh) + '\n')
+    code, receipts = runner.run(**kwargs)
+    assert code == 0
+    assert [(x['reason'], x['delivery']) for x in receipts] == [
+        ('SOURCE_STALE', 'EXPIRED_SOURCE_SKIPPED'),
+        ('SAVED_EVIDENCE_ONLY', 'NOT_SENT')]
+
+
+def test_expired_row_with_bad_sec_identity_still_refuses(case):
+    kwargs, row, source, _ = case
+    row['published_utc'] = (kwargs['now'] - timedelta(hours=25)).isoformat()
+    row['url'] = 'https://example.com/results.htm'
+    source.write_text(json.dumps(row) + '\n')
+    assert runner.run(**kwargs)[0] == 2
 
 
 def test_only_two_dates_and_only_held(case):
