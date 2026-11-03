@@ -132,9 +132,17 @@ def test_iif_and_bad_account_refused(case):
     assert discovery.run(**kwargs)[0] == 2
 
 
-def test_send_cli_not_available():
-    with pytest.raises(SystemExit):
-        discovery.main(["--send"])
+def test_send_cli_not_available(tmp_path, capsys):
+    with pytest.raises(SystemExit) as exc:
+        discovery.main([
+            "--receipt-dir", str(tmp_path / "receipts"),
+            "--pc-paper-ledger", str(tmp_path / "ledger"),
+            "--expected-account-sha256", "0" * 64,
+            "--journal-dir", str(tmp_path / "journal"),
+            "--send",
+        ])
+    assert exc.value.code == 2
+    assert "unrecognized arguments: --send" in capsys.readouterr().err
 
 
 
