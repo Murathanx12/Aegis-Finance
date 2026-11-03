@@ -30,7 +30,13 @@ _URL = "https://finnhub.io/api/v1/calendar/earnings"
 _TICKER = re.compile(r"[A-Z]{1,5}(?:[.-][A-Z])?")
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _UTC = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)")
-_SCHEMA = "earnings-calendar-capture/2"
+_SCHEMA = "earnings-calendar-capture/3"
+_SOURCE = "finnhub/calendar/earnings"
+_FINAL_NAME = re.compile(r"earnings-calendar-[0-9a-f]{32}\.json")
+_RECEIPT_KEYS = frozenset({
+    "schema", "source", "ticker", "from", "to", "observed_utc", "cutoff_utc",
+    "response_sha256", "response_bytes_b64", "input_id", "receipt_id",
+})
 _MAX_RECEIPT_BYTES = 4 * ((MAX_BYTES + 2) // 3) + 2048
 _TOTAL_SECONDS = 15
 
@@ -148,11 +154,37 @@ def _echoes_token(raw: bytes, key: str) -> bool:
     return False
 
 
+def _seal(receipt: dict) -> str:
+    unsigned = {key: value for key, value in receipt.items() if key != "receipt_id"}
+    canonical = json.dumps(unsigned, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=True, allow_nan=False).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
+
+
+def _valid_receipt(receipt: dict, raw: bytes) -> bool:
+    if (type(receipt) is not dict or set(receipt) != _RECEIPT_KEYS
+            or any(type(value) is not str for value in receipt.values())
+            or receipt["schema"] != _SCHEMA or receipt["source"] != _SOURCE
+            or _TICKER.fullmatch(receipt["ticker"]) is None
+            or type(raw) is not bytes or not raw or len(raw) > MAX_BYTES
+            or receipt["response_sha256"] != hashlib.sha256(raw).hexdigest()
+            or receipt["response_bytes_b64"] != base64.b64encode(raw).decode("ascii")):
+        return False
+    try:
+        first, last = _date(receipt["from"]), _date(receipt["to"])
+        decision = _cutoff(receipt["cutoff_utc"])
+        if not (1 <= (first - decision).days <= (last - decision).days <= 7):
+            return False
+        return receipt["receipt_id"] == _seal(receipt)
+    except (CaptureRefused, ValueError, TypeError, OverflowError):
+        return False
+
+
 def _receipt_bytes(*, ticker: str, start: str, end: str, observed: str, cutoff: str,
                    raw: bytes, packet: dict) -> bytes:
     receipt = {
         "schema": _SCHEMA,
-        "source": "finnhub/calendar/earnings",
+        "source": _SOURCE,
         "ticker": ticker,
         "from": start,
         "to": end,
@@ -162,10 +194,12 @@ def _receipt_bytes(*, ticker: str, start: str, end: str, observed: str, cutoff: 
         "response_bytes_b64": base64.b64encode(raw).decode("ascii"),
         "input_id": packet["input_id"],
     }
+    receipt["receipt_id"] = _seal(receipt)
     return (json.dumps(receipt, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
 
-def _write_new(directory: Path, raw: bytes, identity: tuple[int, int]) -> Path:
+def _write_new(directory: Path, raw: bytes, identity: tuple[int, int],
+               monotonic, start_time: float) -> Path:
     """Write/fsync a temp file, then publish via atomic no-overwrite link."""
     nonce = uuid.uuid4().hex
     path = directory / f"earnings-calendar-{nonce}.json"
@@ -183,14 +217,19 @@ def _write_new(directory: Path, raw: bytes, identity: tuple[int, int]) -> Path:
             stream.write(raw)
             stream.flush()
             os.fsync(stream.fileno())
+        _elapsed(monotonic, start_time)
         if _private_identity(directory) != identity:
             failure = "PRIVATE_DIRECTORY_CHANGED"
         else:
+            _elapsed(monotonic, start_time)
             os.link(temp, path)
             published = True
+            _elapsed(monotonic, start_time)
     except FileExistsError:
         failure = "RECEIPT_EXISTS"
-    except (OSError, CaptureRefused):
+    except CaptureRefused as exc:
+        failure = str(exc)
+    except OSError:
         failure = failure or "RECEIPT_WRITE_FAILED"
     finally:
         if fd is not None:
@@ -217,6 +256,16 @@ def _write_new(directory: Path, raw: bytes, identity: tuple[int, int]) -> Path:
         except OSError:
             pass
         _refuse("PRIVATE_DIRECTORY_CHANGED")
+    try:
+        _elapsed(monotonic, start_time)
+    except CaptureRefused as exc:
+        failure = str(exc)
+    if failure:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        _refuse(failure)
     return path
 
 
@@ -294,33 +343,30 @@ def capture_earnings_calendar(
             pass
     if not raw:
         _refuse("RESPONSE_BYTES_INVALID")
+    _elapsed(monotonic, start_time)
     packet = build_saved_earnings_calendar_input(
         raw, ticker=ticker, observed_utc=observed, cutoff_utc=cutoff_utc,
     )
+    _elapsed(monotonic, start_time)
     if packet["status"] != "EVIDENCE_ONLY":
         _refuse(packet["reason"])
     # Exact byte preservation and token exclusion cannot both hold if the
     # provider echoes the token. Refuse such a response before persistence.
     if _echoes_token(raw, key):
         _refuse("TOKEN_IN_RESPONSE")
+    _elapsed(monotonic, start_time)
     if _private_identity(directory) != identity:
         _refuse("PRIVATE_DIRECTORY_CHANGED")
     receipt = _receipt_bytes(ticker=ticker, start=start, end=end,
                              observed=observed, cutoff=cutoff_utc, raw=raw, packet=packet)
-    path = _write_new(directory, receipt, identity)
+    _elapsed(monotonic, start_time)
+    path = _write_new(directory, receipt, identity, monotonic, start_time)
     return {"packet": packet, "receipt_path": path}
 
 
 def evaluate_saved_capture(receipt: dict, response_bytes: bytes, *, cutoff_utc: str) -> dict:
     """Re-evaluate exact saved bytes with the original observation clock."""
-    if (type(receipt) is not dict or receipt.get("schema") != _SCHEMA
-            or type(response_bytes) is not bytes or not response_bytes
-            or len(response_bytes) > MAX_BYTES
-            or receipt.get("response_sha256") != hashlib.sha256(response_bytes).hexdigest()
-            or not isinstance(receipt.get("ticker"), str)
-            or not isinstance(receipt.get("observed_utc"), str)
-            or not isinstance(receipt.get("cutoff_utc"), str)
-            or not isinstance(receipt.get("input_id"), str)):
+    if not _valid_receipt(receipt, response_bytes):
         _refuse("SAVED_CAPTURE_INVALID")
     original = build_saved_earnings_calendar_input(
         response_bytes, ticker=receipt["ticker"],
@@ -338,6 +384,8 @@ def replay_earnings_calendar(receipt_path: Path, *, cutoff_utc: str) -> dict:
     """Replay after process exit from a bounded private on-disk envelope."""
     try:
         path = Path(receipt_path)
+        if _FINAL_NAME.fullmatch(path.name) is None:
+            _refuse("SAVED_CAPTURE_INVALID")
         identity = _private_identity(path.parent)
         info = path.lstat()
         if not stat.S_ISREG(info.st_mode) or info.st_size > _MAX_RECEIPT_BYTES:

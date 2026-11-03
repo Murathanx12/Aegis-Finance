@@ -282,3 +282,85 @@ def test_observation_follows_last_body_byte_and_stream_error_is_sanitized(tmp_pa
     assert error.value.__context__ is None
     assert TOKEN not in "".join(traceback.format_exception(error.value))
     assert len(list(directory.glob("*.json"))) == 1
+
+
+@pytest.mark.parametrize("field,value", [
+    ("source", "other/calendar/earnings"),
+    ("from", "2026-11-05"),  # Still inside the allowed window.
+    ("to", "2026-11-09"),
+])
+def test_replay_rejects_metadata_tampering(tmp_path, field, value):
+    directory = private_dir(tmp_path)
+    path = capture(directory, lambda *_a, **_k: Response())["receipt_path"]
+    receipt = json.loads(path.read_bytes())
+    receipt[field] = value
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(C.CaptureRefused, match="^SAVED_CAPTURE_INVALID$"):
+        C.replay_earnings_calendar(path, cutoff_utc="2026-11-03T21:00:00Z")
+
+
+@pytest.mark.parametrize("field,value", [
+    ("source", "other/calendar/earnings"),
+    ("from", "2026-11-03"),  # Same-day ET is outside the allowed range.
+    ("to", "2026-11-11"),
+])
+def test_replay_enforces_source_and_range_even_with_recomputed_seal(
+    tmp_path, field, value,
+):
+    directory = private_dir(tmp_path)
+    path = capture(directory, lambda *_a, **_k: Response())["receipt_path"]
+    receipt = json.loads(path.read_bytes())
+    receipt[field] = value
+    receipt["receipt_id"] = C._seal(receipt)
+    path.write_text(json.dumps(receipt))
+    with pytest.raises(C.CaptureRefused, match="^SAVED_CAPTURE_INVALID$"):
+        C.replay_earnings_calendar(path, cutoff_utc="2026-11-03T21:00:00Z")
+
+
+def test_complete_unpublished_temp_is_not_replayable(tmp_path):
+    directory = private_dir(tmp_path)
+    path = capture(directory, lambda *_a, **_k: Response())["receipt_path"]
+    temp = directory / path.name.replace("earnings-calendar-", ".earnings-calendar-")
+    temp = temp.with_suffix(".tmp")
+    temp.write_bytes(path.read_bytes())
+    with pytest.raises(C.CaptureRefused, match="^SAVED_CAPTURE_INVALID$"):
+        C.replay_earnings_calendar(temp, cutoff_utc="2026-11-03T21:00:00Z")
+    assert C.replay_earnings_calendar(path, cutoff_utc="2026-11-03T21:00:00Z")["status"] == (
+        "EVIDENCE_ONLY"
+    )
+
+
+@pytest.mark.parametrize("stage", ["adapter", "fsync", "publish"])
+def test_deadline_during_validation_or_write_never_leaves_receipt(
+    tmp_path, monkeypatch, stage,
+):
+    directory = private_dir(tmp_path)
+    elapsed = [0.0]
+    if stage == "adapter":
+        original = C.build_saved_earnings_calendar_input
+
+        def late_adapter(*args, **kwargs):
+            result = original(*args, **kwargs)
+            elapsed[0] = 16.0
+            return result
+
+        monkeypatch.setattr(C, "build_saved_earnings_calendar_input", late_adapter)
+    elif stage == "fsync":
+        original = C.os.fsync
+
+        def late_fsync(fd):
+            original(fd)
+            elapsed[0] = 16.0
+
+        monkeypatch.setattr(C.os, "fsync", late_fsync)
+    else:
+        original = C.os.link
+
+        def late_link(source, target):
+            original(source, target)
+            elapsed[0] = 16.0
+
+        monkeypatch.setattr(C.os, "link", late_link)
+    with pytest.raises(C.CaptureRefused, match="^TOTAL_DEADLINE_EXCEEDED$"):
+        capture(directory, lambda *_a, **_k: Response(), monotonic=lambda: elapsed[0])
+    assert list(directory.iterdir()) == []
