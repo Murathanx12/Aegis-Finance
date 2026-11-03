@@ -58,6 +58,7 @@ import json
 import logging
 import os
 import re
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -313,23 +314,96 @@ def _append(path: Path, row: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(row, default=str) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
 
 
 # ──────────────────────────────── inbound ───────────────────────────────────
 
+def _atomic_json(path: Path, row: dict) -> None:
+    """Publish fully flushed bytes with same-directory atomic replacement.
+
+    Single existing consumer only. fsync covers file contents; Python's Windows
+    API does not provide a portable parent-directory fsync/power-loss guarantee.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(row, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def _offset() -> int:
-    d = None
-    if OFFSET_PATH.exists():
-        try:
-            d = json.loads(OFFSET_PATH.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            d = None
-    return int((d or {}).get("offset", 0))
+    try:
+        raw = OFFSET_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return 0
+    try:
+        row = json.loads(raw)
+        value = row["offset"]
+        if type(value) is not int or value < 0:
+            raise ValueError
+    except (ValueError, KeyError, TypeError):
+        raise TelegramRefused("OFFSET_INVALID_REVIEW_REQUIRED") from None
+    return value
 
 
 def _set_offset(v: int) -> None:
-    OFFSET_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OFFSET_PATH.write_text(json.dumps({"offset": v, "at": _now()}), encoding="utf-8")
+    _atomic_json(OFFSET_PATH, {"offset": v, "at": _now()})
+
+
+def _ack_update(update: dict) -> None:
+    # Legacy unit callers can omit Telegram's update envelope ID.
+    if "update_id" in update:
+        _set_offset(update["update_id"])
+
+
+def _admit_owner(row: dict, update: dict) -> bool:
+    """One durable inbox/quota admission per pending owner update.
+
+    A single metadata-only marker survives handler failure/restart. Bind the
+    entire update so a mismatched retry fails closed. A prior acknowledged
+    marker can be replaced, but never bypass an unacknowledged different one.
+    """
+    marker = OFFSET_PATH.with_suffix(".admission.json")
+    identity = None
+    if "update_id" in update:
+        identity = {"update_id": update["update_id"], "payload_sha256": hashlib.sha256(
+            json.dumps(update, sort_keys=True, separators=(",", ":")).encode()).hexdigest()}
+        try:
+            pending = json.loads(marker.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            pending = None
+        except (ValueError, UnicodeError):
+            raise TelegramRefused("INBOUND_ADMISSION_INVALID_REVIEW_REQUIRED") from None
+        if pending is not None:
+            if (not isinstance(pending, dict) or set(pending) != {"update_id", "payload_sha256"}
+                    or type(pending["update_id"]) is not int):
+                raise TelegramRefused("INBOUND_ADMISSION_INVALID_REVIEW_REQUIRED")
+            if pending["update_id"] > _offset():
+                if pending != identity:
+                    raise TelegramRefused("INBOUND_ADMISSION_MISMATCH_REVIEW_REQUIRED")
+                return True
+    previous_times = _INBOUND_TIMES["owner"]
+    if not _inbound_allowed("owner"):
+        return False
+    try:
+        _append(INBOX_PATH, row)
+        if identity is not None:
+            _atomic_json(marker, identity)
+    except BaseException:
+        # Reserve quota only for successful inbox admission. A failed handler
+        # reuses the marker above instead of writing/counting another inbox row.
+        if _INBOUND_TIMES["owner"] is not previous_times and _INBOUND_TIMES["owner"]:
+            _INBOUND_TIMES["owner"].pop()
+        raise
+    return True
 
 
 def updates(*, timeout: int = 0, advance: bool = True) -> list[dict]:
@@ -342,20 +416,6 @@ def updates(*, timeout: int = 0, advance: bool = True) -> list[dict]:
     if res and advance:
         _set_offset(max(u["update_id"] for u in res))
     return res
-
-
-def _dispatch_updates():
-    """Acknowledge each update only after the consumer finishes it.
-
-    An interrupted admission must remain fetchable after restart. This is
-    at-least-once processing: handlers must deduplicate durable admissions;
-    a crash after a side effect but before acknowledgment can replay it.
-    Never acknowledge in finally, which also runs on failed admission.
-    """
-    for update in updates(advance=False):
-        yield update
-        if "update_id" in update:
-            _set_offset(update["update_id"])
 
 
 def claim_owner() -> dict:
@@ -453,10 +513,12 @@ CALLBACKS_DROPPED = 0
 
 
 def _poll_callback(cq: dict, owner: str | None,
-                   callback_handler: Callable[[str, dict], Any] | None) -> dict | None:
+                   callback_handler: Callable[[str, dict], Any] | None,
+                   *, update: dict | None = None) -> dict | None:
     """One inline-button tap (C6). Owner chat AND owner sender, or nothing:
     a stranger's tap is not answered, not even with `answerCallbackQuery`."""
     global CALLBACKS_DROPPED
+    update = update or {}
     cid = str(((cq.get("message") or {}).get("chat") or {}).get("id"))
     who = str((cq.get("from") or {}).get("id"))
     data = str(cq.get("data") or "")[:64]
@@ -467,8 +529,10 @@ def _poll_callback(cq: dict, owner: str | None,
         if _inbound_allowed("stranger"):
             _append(INBOX_PATH, row)
         CALLBACKS_DROPPED += 1
+        _ack_update(update)
         return None
-    if not _inbound_allowed("owner"):
+    if not _admit_owner(row, update):
+        _ack_update(update)
         # (review C6 F6) the OWNER's tap is always answered, so the spinner
         # stops and the reason shows as a toast; nothing else runs
         try:
@@ -478,7 +542,9 @@ def _poll_callback(cq: dict, owner: str | None,
         except Exception as exc:                                   # noqa: BLE001
             logger.warning("answerCallbackQuery failed: %s", redact(exc))
         return {"cmd": "callback", "args": [data], "handled": False, "rate_limited": True}
-    _append(INBOX_PATH, row)
+    # Legacy callbacks are at-most-once. No callback runs unless the durable
+    # inbox and cursor are published. Reply failure must never replay an effect.
+    _ack_update(update)
     try:                                      # stops the button's spinner; not a message
         _call("answerCallbackQuery", {"callback_query_id": cq.get("id")})
     except Exception as exc:                                       # noqa: BLE001
@@ -487,6 +553,9 @@ def _poll_callback(cq: dict, owner: str | None,
         return {"cmd": "callback", "args": [data], "handled": False}
     try:
         reply = callback_handler(data, cq)
+    except OSError:
+        logger.error("telegram callback IO failure after durable dispatch guard; review required")
+        raise
     except Exception as exc:                                       # noqa: BLE001
         reply = f"button failed: `{type(exc).__name__}: {redact(exc)}`"
         logger.exception("telegram callback handler failed")
@@ -508,13 +577,19 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
     plain-text messages ("stock NVDA", "report") and any slash command the
     fixed `handlers` dict does not name. It reads files only; its reply goes
     through `send()` like every other, so redaction still applies.
+
+    Owner plain text: retry I/O admission failures, then persist the cursor
+    before replying. Retried handlers must deduplicate durable message IDs.
+    Slash commands/callbacks: persist inbox + cursor BEFORE handler dispatch,
+    retaining legacy at-most-once behavior. A guarded handler failure is surfaced
+    for review, never automatically retried. Reply delivery is not admission.
     """
     global STRANGERS_DROPPED
     owner = owner_chat_id()
     acted = []
-    for u in _dispatch_updates():
+    for u in updates(advance=False):
         if u.get("callback_query"):
-            r = _poll_callback(u["callback_query"], owner, callback_handler)
+            r = _poll_callback(u["callback_query"], owner, callback_handler, update=u)
             if r:
                 acted.append(r)
             continue
@@ -528,25 +603,35 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
             if _inbound_allowed("stranger"):
                 _append(INBOX_PATH, row)
             STRANGERS_DROPPED += 1
+            _ack_update(u)
             continue
-        if not _inbound_allowed("owner"):
+        if not _admit_owner(row, u):
+            _ack_update(u)  # Explicit rate-limit rejection, not a failed retry.
             continue
-        _append(INBOX_PATH, row)
+        # All slash commands (including unknown commands routed to text) retain
+        # legacy at-most-once dispatch. Ambiguous effects require manual review.
+        if text.startswith("/"):
+            _ack_update(u)
         if not text.startswith("/") or (handlers or {}).get(
                 text.split()[0].lstrip("/").split("@")[0].lower()) is None:
             if text_handler is not None and text:
                 try:
                     reply = text_handler(text, msg)
                 except OSError:
-                    # Durable chat admission failed; leave this update retryable.
+                    # Plain text retries its durable admission. Slash fallback
+                    # already has an at-most-once dispatch guard, like commands.
+                    logger.error("telegram text admission IO failure; review dispatch guard before retry")
                     raise
                 except Exception as exc:                           # noqa: BLE001
                     reply = f"reply failed: `{type(exc).__name__}: {redact(exc)}`"
                     logger.exception("telegram text handler failed")
+                if not text.startswith("/"):
+                    _ack_update(u)  # Admission succeeded; reply transport is separate.
                 _send_reply(reply, markdown=False, tag="reply")
                 acted.append({"cmd": "text", "args": []})
                 continue
             if not text.startswith("/"):
+                _ack_update(u)
                 continue
         parts = text.split()
         cmd = parts[0].lstrip("/").split("@")[0].lower()
@@ -556,6 +641,9 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None, *,
             continue
         try:
             reply = fn(parts[1:], msg)
+        except OSError:
+            logger.error("telegram command IO failure after durable dispatch guard; review required")
+            raise
         except Exception as exc:                                   # noqa: BLE001
             reply = f"`/{cmd}` failed: `{type(exc).__name__}: {redact(exc)}`"
             logger.exception("telegram command %s failed", cmd)
