@@ -1,5 +1,6 @@
 ﻿"""Synthetic inputs and fake callbacks only; never imports the Telegram bridge."""
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -209,7 +210,10 @@ def saved_run(saved, sender=None):
     source.write_bytes((json.dumps(row) + '\r\n').encode())
     snapshot.write_bytes(json.dumps(pc).encode())
     if sender is not None:
-        (source.parent / 'journal').mkdir(exist_ok=True)
+        journal = source.parent / 'journal'
+        journal.mkdir(exist_ok=True)
+        if os.name != 'nt':
+            journal.chmod(0o700)
     return warning.warn_saved(source_jsonl_path=source, pc_paper_snapshot_path=snapshot,
         ticker='ACME', now=now, journal_dir=source.parent / 'journal', sender=sender)
 
