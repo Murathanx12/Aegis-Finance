@@ -160,6 +160,11 @@ def build_warning(source_row: str, snapshot_json: str, *, now: datetime) -> dict
 
 
 def _message(artifact):
+    lineage = ''
+    if 'forecast_input_id' in artifact:
+        lineage = (f"Forecast input: {artifact['forecast_input_id']}\n"
+                   f"Provisional decision: {artifact['provisional_decision_id']}\n"
+                   "New allocation USD: 0; no numerical event forecast.\n")
     return (f"PROVISIONAL PC-PAPER {artifact['ticker']} | {artifact['at']}\n"
             f"Evidence: {artifact['source_url']} | published {artifact['published_at']}\n"
             f"Snapshot: {artifact['snapshot_as_of']} | weight {artifact['exposure_weight']}\n"
@@ -168,6 +173,7 @@ def _message(artifact):
             f"{artifact.get('reconciliation_note', '')}\n"
             f"Conditional dollar loss: {json.dumps(artifact['conditional_loss_usd'], sort_keys=True)}\n"
             f"Forecast: {artifact['forecast_status']}; conditional stresses only.\n"
+            f"{lineage}"
             f"{artifact['stress_basis']}\n"
             "HOLD_EXISTING / NO_NEW_BET / REVIEW_NEW_EVIDENCE (paper only).\n"
             "Missing consensus/current quote; owner loss budget UNKNOWN. No beat/miss or direction inferred.\n"
@@ -435,6 +441,22 @@ def build_saved_warning(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path
     Hashes bind exact source line bytes (including newline) and snapshot bytes.
     Paths, arbitrary title/body, account fields and exceptions never leave here.
     """
+    snapshot_bytes = b''
+    try:
+        snapshot_bytes = Path(pc_paper_snapshot_path).read_bytes()
+        source_bytes = Path(source_jsonl_path).read_bytes()
+    except (OSError, ValueError, TypeError):
+        # Preserve sanitized legacy I/O refusal, including the snapshot digest.
+        source_bytes = b''
+    return build_saved_warning_bytes(source_bytes=source_bytes,
+        snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
+        source_row_sha256=source_row_sha256)
+
+
+def build_saved_warning_bytes(*, source_bytes: bytes, snapshot_bytes: bytes,
+                              ticker: str, now: datetime,
+                              source_row_sha256: str | None = None) -> dict:
+    """Assess frozen native UTF-8 bytes. No input path is opened here."""
     if not isinstance(now, datetime) or now.utcoffset() != timedelta(0):
         raise ValueError('now must be aware UTC')
     artifact = {'schema': 'owner-event-warning/1', 'at': now.isoformat(),
@@ -445,21 +467,19 @@ def build_saved_warning(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path
     try:
         if not isinstance(ticker, str) or not re.fullmatch(r'[A-Z]{1,5}(?:[.-][A-Z])?', ticker):
             raise ValueError()
-        snapshot_bytes = Path(pc_paper_snapshot_path).read_bytes()
         artifact['snapshot_sha256'] = hashlib.sha256(snapshot_bytes).hexdigest()
         snap = _object(snapshot_bytes.decode('utf-8'))
         if source_row_sha256 is not None and not re.fullmatch('[0-9a-f]{64}', source_row_sha256):
             raise ValueError()
         matches = {}
-        with Path(source_jsonl_path).open('rb') as file:
-            for line in file:
-                if not line.strip():
-                    continue
-                row = _object(line.decode('utf-8'))
-                if (ticker in row.get('tickers', [])
-                        and (source_row_sha256 is None
-                             or hashlib.sha256(line).hexdigest() == source_row_sha256)):
-                    matches[line] = row
+        for line in source_bytes.splitlines(keepends=True):
+            if not line.strip():
+                continue
+            row = _object(line.decode('utf-8'))
+            if (ticker in row.get('tickers', [])
+                    and (source_row_sha256 is None
+                         or hashlib.sha256(line).hexdigest() == source_row_sha256)):
+                matches[line] = row
         reason = 'SOURCE_SELECTION_AMBIGUOUS'
         if len(matches) != 1:
             raise ValueError()
@@ -548,4 +568,43 @@ def warn_saved(*, source_jsonl_path: Path, pc_paper_snapshot_path: Path, ticker:
                                   pc_paper_snapshot_path=pc_paper_snapshot_path,
                                   ticker=ticker, now=now,
                                   source_row_sha256=source_row_sha256)
+    return _deliver(artifact, journal_dir=journal_dir, sender=sender)
+
+
+def build_lineage_warning_bytes(*, source_bytes: bytes, snapshot_bytes: bytes,
+                                ticker: str, now: datetime,
+                                source_row_sha256: str | None = None) -> dict:
+    """Bind the reviewed pure connector before any journal reservation.
+
+    The legacy builder remains pure and unmodified for connector use, avoiding
+    recursive enrichment. Cutoff and decision are the caller's frozen run clock.
+    Refusals retain the original dated warning contract (including expiry).
+    """
+    artifact = build_saved_warning_bytes(source_bytes=source_bytes,
+        snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
+        source_row_sha256=source_row_sha256)
+    if artifact['status'] != 'PROVISIONAL':
+        return artifact
+    # Lazy import: the reviewed connector itself consumes the legacy builder.
+    from backend.services.saved_sec_event_path import build_saved_sec_event_path
+    lineage = build_saved_sec_event_path(event_bytes=source_bytes,
+        snapshot_bytes=snapshot_bytes, ticker=ticker,
+        cutoff_utc=now.isoformat(), decision_utc=now.isoformat())
+    if (lineage['status'] != 'PROVISIONAL'
+            or lineage['decision_artifact'] != artifact):
+        return {**artifact, 'status': 'REFUSED', 'reason': 'LINEAGE_BINDING_REFUSED'}
+    return {**artifact, 'forecast_input_id': lineage['forecast_input_id'],
+            'provisional_decision_id': lineage['decision_id'],
+            'evidence_packet_sha256': lineage['evidence_packet_sha256'],
+            'forecast_id': None, 'new_allocation_usd': '0',
+            'lineage_schema': lineage['schema']}
+
+
+def warn_saved_bytes(*, source_bytes: bytes, snapshot_bytes: bytes, ticker: str,
+                     now: datetime, journal_dir: Path, sender=None,
+                     source_row_sha256: str | None = None) -> dict:
+    """Frozen-input entry point; preserves the existing private journal/ACK path."""
+    artifact = build_lineage_warning_bytes(source_bytes=source_bytes,
+        snapshot_bytes=snapshot_bytes, ticker=ticker, now=now,
+        source_row_sha256=source_row_sha256)
     return _deliver(artifact, journal_dir=journal_dir, sender=sender)

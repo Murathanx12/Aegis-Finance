@@ -61,7 +61,7 @@ def test_refusal_before_delivery(case, monkeypatch, mode):
     if mode == 'bad_exposure':
         snap['cash'] = -1
     kwargs['snapshot'].write_text(json.dumps(snap))
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **k: pytest.fail('delivery reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **k: pytest.fail('delivery reached'))
     code, receipts = runner.run(**kwargs)
     assert code == 2
     assert 'PRIVATE_OWNER' not in json.dumps(receipts)
@@ -71,7 +71,7 @@ def test_expired_source_is_dated_and_skipped_without_delivery(case, monkeypatch)
     kwargs, row, source, _ = case
     row['published_utc'] = (kwargs['now'] - timedelta(hours=25)).isoformat()
     source.write_text(json.dumps(row) + '\n')
-    monkeypatch.setattr(runner.adapter, 'warn_saved',
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes',
                         lambda **kw: pytest.fail('expired source reached delivery'))
     code, receipts = runner.run(**kwargs)
     assert code == 0
@@ -129,7 +129,7 @@ def test_only_two_dates_and_only_held(case):
 
 def test_missing_gates_block_opt_in(case, monkeypatch):
     kwargs, _, _, _ = case
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **k: pytest.fail('delivery reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **k: pytest.fail('delivery reached'))
     assert runner.run(**kwargs, send=True)[0] == 2
 
 
@@ -167,13 +167,13 @@ def test_review_exact_hashes_and_manual_adoption(case, monkeypatch):
 def test_pending_unknown_no_retry(case, monkeypatch, delivery):
     kwargs, _, _, _ = case
     calls = []
-    original = runner.adapter.warn_saved
+    original = runner.adapter.warn_saved_bytes
     def stub(**kw):
         calls.append(kw)
         result = original(**kw)
         result['delivery'] = delivery
         return result
-    monkeypatch.setattr(runner.adapter, 'warn_saved', stub)
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', stub)
     assert runner.run(**kwargs)[0] == 2
     assert len(calls) == 1
 
@@ -212,7 +212,7 @@ def test_opt_in_binds_owner_deadline_and_single_attempt(case, monkeypatch):
         kw['sender']('synthetic', tag='owner-event-warning:test')
         return {'artifact': {'status': 'PROVISIONAL'},
                 'delivery': 'UNKNOWN_RECONCILE_REQUIRED'}
-    monkeypatch.setattr(runner.adapter, 'warn_saved', fake_adapter)
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', fake_adapter)
     assert runner.run(**kwargs, send=True, review=review, adoption=adoption)[0] == 2
     assert len(sent) == 1
 
@@ -223,7 +223,7 @@ def test_private_journal_gate_failure(case, monkeypatch):
     def fail(path):
         raise OSError('PRIVATE_OWNER')
     monkeypatch.setattr(runner.adapter, '_journal_identity', fail)
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **kw: pytest.fail('send reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **kw: pytest.fail('send reached'))
     code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
     assert code == 2 and 'PRIVATE_OWNER' not in json.dumps(receipts)
 
@@ -290,7 +290,7 @@ def manual_gate(case, monkeypatch):
 def test_manual_schema_success_suppresses_without_adapter_or_transport(case, monkeypatch):
     kwargs, _, _, _ = case
     review, adoption, _, _, _, _ = manual_gate(case, monkeypatch)
-    monkeypatch.setattr(runner.adapter, 'warn_saved', lambda **kw: pytest.fail('adapter send reached'))
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes', lambda **kw: pytest.fail('adapter send reached'))
     code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
     assert code == 0 and receipts[0]['delivery'] == 'SUPPRESSED_MANUAL'
     assert not kwargs['journal'].exists()
@@ -308,7 +308,7 @@ def test_manual_suppression_survives_a_later_paper_snapshot(case, monkeypatch):
         source_jsonl_path=case[2], pc_paper_snapshot_path=kwargs['snapshot'],
         ticker='ACME', now=kwargs['now'])
     assert refreshed['snapshot_sha256'] != original['snapshot_sha256']
-    monkeypatch.setattr(runner.adapter, 'warn_saved',
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes',
                         lambda **kw: pytest.fail('duplicate adapter send reached'))
     code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
     assert code == 0 and receipts[0]['delivery'] == 'SUPPRESSED_MANUAL'
@@ -398,3 +398,88 @@ def test_no_equal_manual_and_corpus_hash_claim(case, monkeypatch):
     payload['adoption_sha256'] = runner.sha(adoption.read_bytes())
     review.write_text(json.dumps(payload))
     assert runner.run(**kwargs, send=True, review=review, adoption=adoption)[0] == 2
+
+
+@pytest.mark.parametrize('failure', [None, 'timeout', 'ambiguous', 'crash'])
+def test_lineage_caller_bound_ack_and_replay(case, monkeypatch, failure):
+    from backend.services import telegram_bridge
+    from backend.services.saved_sec_event_path import build_saved_sec_event_path
+    kwargs, _, source, _ = case
+    review, adoption, _ = gates(kwargs['ledger'])
+    kwargs['journal'].mkdir()
+    monkeypatch.setattr(runner.adapter, '_journal_identity', lambda p: (1, 1))
+    monkeypatch.setattr(telegram_bridge, 'owner_chat_id', lambda: '123456')
+    expected = build_saved_sec_event_path(event_bytes=source.read_bytes(),
+        snapshot_bytes=kwargs['snapshot'].read_bytes(), ticker='ACME',
+        cutoff_utc=kwargs['now'].isoformat(), decision_utc=kwargs['now'].isoformat())
+    calls = []
+    def send(text, **kw):
+        calls.append(text)
+        # SENDING already contains the same bound lineage before the callback.
+        saved = json.loads(next(kwargs['journal'].glob('*.json')).read_text())
+        artifact = saved['artifact']
+        assert artifact['forecast_input_id'] == expected['forecast_input_id']
+        assert artifact['provisional_decision_id'] == expected['decision_id']
+        assert artifact['forecast_id'] is None and artifact['new_allocation_usd'] == '0'
+        assert artifact['forecast_status'] == 'NO_CALIBRATED_EVENT_FORECAST'
+        assert artifact['forecast_input_id'] in text
+        assert artifact['provisional_decision_id'] in text
+        if failure == 'timeout':
+            raise TimeoutError('synthetic timeout')
+        if failure == 'crash':
+            raise KeyboardInterrupt('synthetic process interruption')
+        ack = dict(state='SENT', messages=1, native_ack_sha256='f' * 64,
+            tag_sha256=runner.adapter._digest({'tag': kw['tag']}),
+            text_sha256=runner.adapter._hash(text))
+        ack['delivery_binding_sha256'] = runner.adapter._digest({
+            k: ack[k] for k in runner.adapter._ACK_HASH_KEYS})
+        if failure == 'ambiguous':
+            ack['text_sha256'] = '0' * 64
+        return ack
+    monkeypatch.setattr(telegram_bridge, 'send_owner_once', send)
+    if failure == 'crash':
+        with pytest.raises(KeyboardInterrupt):
+            runner.run(**kwargs, send=True, review=review, adoption=adoption)
+    else:
+        code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
+        assert code == (2 if failure else 0)
+        assert receipts[0]['delivery'] == ('UNKNOWN_RECONCILE_REQUIRED' if failure else 'SENT')
+    # A new run clock and refreshed snapshot do not create a second attempt.
+    snap = json.loads(kwargs['snapshot'].read_text())
+    snap['t'] = (kwargs['now'] + timedelta(seconds=1)).isoformat()
+    kwargs['snapshot'].write_text(json.dumps(snap))
+    kwargs['now'] += timedelta(seconds=1)
+    code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
+    assert code == (2 if failure else 0)
+    assert receipts[0]['delivery'] == ('DUPLICATE_RECONCILE_REQUIRED' if failure else 'ALREADY_SENT')
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize('dependency', [
+    'backend/services/saved_sec_event_path.py',
+    'backend/services/saved_sec_forecast_input.py',
+])
+def test_changed_lineage_executable_dependency_refuses_review(case, monkeypatch, dependency):
+    kwargs, _, _, _ = case
+    assert dependency in runner.SOURCE_PATHS
+    review, adoption, _ = gates(kwargs['ledger'])
+    root = kwargs['ledger'] / 'synthetic_sources'
+    for name in runner.SOURCE_PATHS:
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((runner.ROOT / name).read_bytes())
+    monkeypatch.setattr(runner, 'ROOT', root)
+    (root / dependency).write_bytes((root / dependency).read_bytes() + b'\n# replaced executable\n')
+    with pytest.raises(runner.Refused, match='REVIEW_OR_MANUAL_ADOPTION_REQUIRED'):
+        runner.qualify_send(review, adoption, kwargs['journal'], now=kwargs['now'])
+
+
+def test_connector_refusal_precedes_reservation(case, monkeypatch):
+    from backend.services import saved_sec_event_path
+    kwargs, _, _, _ = case
+    monkeypatch.setattr(saved_sec_event_path, 'build_saved_sec_event_path',
+                        lambda **kw: {'status': 'REFUSED'})
+    monkeypatch.setattr(runner.adapter, '_deliver', lambda *a, **k: pytest.fail('reservation reached'))
+    code, receipts = runner.run(**kwargs)
+    assert code == 2 and receipts[0]['reason'] == 'LINEAGE_BINDING_REFUSED'
+    assert not kwargs['journal'].exists()

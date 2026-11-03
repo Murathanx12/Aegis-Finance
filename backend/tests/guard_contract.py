@@ -111,6 +111,12 @@ EXCEPTION_BASES = {"RuntimeError", "Exception", "ValueError", "LookupError",
 #: each says why in one line so that "exempt" costs a sentence instead of
 #: nothing. A new module lands in neither table and fails the enrolment test.
 NOT_INPUT_GUARDS: dict[str, str] = {
+    "saved_sec_forecast_input": (
+        "_Refused is an internal parser branch; the public byte adapter returns "
+        "an explicit REFUSED artifact rather than raising. Missing bytes, "
+        "missing event, missing body and invalid cutoff are asserted directly "
+        "in test_saved_sec_forecast_input.py. The caller rejects every "
+        "non-EVIDENCE_ONLY artifact before creating a decision."),
     "policy_state": ("PolicyRefused — raised on an UNDECLARED KEY, an "
                      "out-of-range value or a change with no evidence, none of "
                      "which is a missing input. The missing input here is the "
