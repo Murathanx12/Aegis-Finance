@@ -7,6 +7,7 @@ import pytest
 
 from backend.services import llm_analyzer as LA
 from backend.services import llm_telemetry as LT
+from backend.services import provider_budget as PB
 
 
 class FakeClient:
@@ -34,6 +35,8 @@ def response(text='{"fact":"public source witness"}', *, vendor_id="vendor-retur
 
 @pytest.fixture
 def setup(monkeypatch, tmp_path):
+    # These existing receipts exercise the cloud contract; PC coverage is separate.
+    monkeypatch.setattr(PB, "host_envelope_required", lambda: False)
     client = FakeClient(response())
     monkeypatch.setattr(LA, "_DEEPSEEK_API_KEY", "fixture-only-not-a-key")
     monkeypatch.setattr(LA, "_get_openai_client", lambda: client)
@@ -153,7 +156,7 @@ def test_daily_budget_still_refuses_before_request(setup, monkeypatch):
     assert not client.requests
 
 
-def test_default_contract_has_no_timeout_clone_or_evidence_and_telemetry_stays_best_effort(setup, monkeypatch):
+def test_default_cloud_contract_has_no_timeout_clone_or_evidence_and_telemetry_stays_best_effort(setup, monkeypatch):
     client, _ = setup
     recorded = []
     monkeypatch.setattr(LT, "record_call", lambda **kw: recorded.append(kw))

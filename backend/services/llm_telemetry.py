@@ -498,7 +498,11 @@ def record_call(**kwargs: Any) -> None:
     """
     path = kwargs.pop("path", None)
     try:
-        append([build_call(**kwargs)], path=path)
+        override = kwargs.pop("cost_override", ...)
+        row = build_call(**kwargs)
+        if override is not ...:
+            row.cost_usd = override
+        append([row], path=path)
     except Exception as exc:                              # noqa: BLE001
         logger.warning("llm_telemetry: failed to record a %s call (%s: %s) — "
                        "the call itself is unaffected, but this spend is now "
@@ -514,7 +518,10 @@ def record_call_evidence(**kwargs: Any) -> dict:
     The existing row schema is retained; returned-call pins live in `meta`.
     """
     path = kwargs.pop("path", None)
+    override = kwargs.pop("cost_override", ...)
     row = build_call(**kwargs)
+    if override is not ...:
+        row.cost_usd = override
     if row.meta.get("usage_status") == "UNKNOWN" or row.meta.get("cost_status") == "UNKNOWN":
         # Legacy integer counters remain placeholders in the unchanged schema;
         # explicit unknown usage/cost metadata prevents treating them as measured.

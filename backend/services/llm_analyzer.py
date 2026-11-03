@@ -387,7 +387,7 @@ def _get_openai_client():
 def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
             resp=None, text: Optional[str] = None, t0: float,
             validate=None, error: Optional[Exception] = None,
-            evidence_meta: dict | None = None) -> dict | None:
+            evidence_meta: dict | None = None, accounting=None) -> dict | None:
     """Write one telemetry row. Never raises — see llm_telemetry.record_call.
 
     `schema_valid` is answered by the CALLER's contract, not by "the HTTP call
@@ -417,10 +417,35 @@ def _record(provider: str, model: str, purpose: str, *, system: str, user: str,
                                 if error else None),
         **usage,
     )
+    if accounting is not None:
+        kwargs["cost_override"] = accounting["cost_usd"]
+        if evidence_meta is not None:
+            evidence_meta = {**evidence_meta, "shared_budget": accounting,
+                             "budget_scope": "shared_host_envelope"}
+        if evidence_meta is None:
+            kwargs["meta"] = {"shared_budget": accounting,
+                              "cost_basis": accounting.get("cost_basis"),
+                              "price_as_of": accounting.get("price_as_of")}
+        model_returned = getattr(resp, "model", None)
+        kwargs["model"] = model_returned or model
     if evidence_meta is not None:
         return _tel.record_call_evidence(**kwargs, meta=evidence_meta)
     _tel.record_call(**kwargs)
     return None
+
+
+def _budgeted_deepseek_create(client, *, purpose, production_budget, **kw):
+    """One SDK attempt. PC reserves durably; cloud retains existing caps."""
+    from backend.services import provider_budget as PB
+
+    if not PB.host_envelope_required():
+        # Preserve cloud SDK defaults, or the evidence caller's explicit clone.
+        return client.chat.completions.create(**kw), None
+    # Preserve evidence-mode timeouts while disabling retries per reservation.
+    transport = client.with_options(max_retries=0)
+    return PB.attempt(kw, base_url=str(getattr(client, "base_url", _DEEPSEEK_BASE_URL)),
+                      purpose=purpose, production_cap=_DAILY_CAP if production_budget else None,
+                      send=lambda: transport.chat.completions.create(**kw))
 
 
 def _refuse_non_english(provider: str, purpose: str, text: str) -> bool:
@@ -498,8 +523,10 @@ def _call_llm(
         client = _get_openai_client()
         if client:
             t0 = time.perf_counter()
+            accounting = None
             try:
-                response = client.chat.completions.create(
+                response, accounting = _budgeted_deepseek_create(
+                    client, purpose=purpose, production_budget=True,
                     model=_DEEPSEEK_MODEL,
                     messages=[
                         {"role": "system",
@@ -512,14 +539,16 @@ def _call_llm(
                 text = response.choices[0].message.content.strip()
                 _record("deepseek", _DEEPSEEK_MODEL, purpose,
                         system=system_prompt, user=user_prompt, resp=response,
-                        text=text, t0=t0, validate=validate)
+                        text=text, t0=t0, validate=validate, accounting=accounting)
                 if _refuse_non_english("deepseek", purpose, text):
                     return None
                 return text
             except Exception as e:
                 logger.warning("DeepSeek API call failed: %s", e)
-                _record("deepseek", _DEEPSEEK_MODEL, purpose,
-                        system=system_prompt, user=user_prompt, t0=t0, error=e)
+                if not getattr(e, "no_wire", False):
+                    _record("deepseek", _DEEPSEEK_MODEL, purpose,
+                            system=system_prompt, user=user_prompt, t0=t0, error=e,
+                            accounting=getattr(e, "shared_budget_accounting", accounting))
                 if _is_billing_error(e):
                     _trip_breaker(e)
 
@@ -770,22 +799,36 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                            else float(temperature)))
     if non_thinking:
         kw["extra_body"] = {"thinking": {"type": "disabled"}}
+    accounting = None
     try:
         if provider == "nvidia":
             response, out["n_429"] = _create_with_429_retry(client, provider, **kw)
+        elif provider == "deepseek":
+            response, accounting = _budgeted_deepseek_create(
+                client, purpose=purpose, production_budget=production_budget, **kw)
+            if accounting is not None:
+                out.update(accounting)
         else:
             response = client.chat.completions.create(**kw)
         text = _reply_text(response)
     except Exception as e:                                     # noqa: BLE001
+        if getattr(e, "no_wire", False):
+            return {**out, "status": "BUDGET_REFUSED", "budget_charge_usd": 0.0,
+                    "error": "shared host envelope refused before dispatch"}
+        accounting = getattr(e, "shared_budget_accounting", accounting)
+        if accounting is not None:
+            out.update(accounting)
         if evidence_mode:
             try:
                 _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
                         t0=t0, error=RuntimeError(type(e).__name__),
-                        evidence_meta={"status": "ERROR", "usage_status": "UNKNOWN", "cost_status": "UNKNOWN"})
+                        evidence_meta={"status": "ERROR", "usage_status": "UNKNOWN", "cost_status": "UNKNOWN"},
+                        accounting=accounting)
             except Exception:
                 pass  # no evidence is admitted; actual attempted cost stays unknown
         else:
-            _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt, t0=t0, error=e)
+            _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt, t0=t0, error=e,
+                    accounting=accounting)
         if provider == "deepseek" and _is_billing_error(e):
             _trip_breaker(RuntimeError("evidence provider billing refusal") if evidence_mode else e)
         return {**out, **({"cost_status": "UNKNOWN"} if evidence_mode else {}),
@@ -809,7 +852,7 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                         resp=response, text=text, t0=t0, validate=validate,
                         evidence_meta={"status": "REFUSED_IDENTITY",
                                        "usage_status": "UNKNOWN" if identity_usage is None else "MEASURED",
-                                       "cost_status": "UNKNOWN"})
+                                       "cost_status": "UNKNOWN"}, accounting=accounting)
             except Exception:
                 pass
             return {**out, "cost_status": "UNKNOWN", "status": "REFUSED_EVIDENCE_IDENTITY",
@@ -838,14 +881,17 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
             "prepared_http_body_bound": False,
             "request_timeout_s": float(request_timeout_s), "sdk_max_retries": 0,
             "usage_status": "MEASURED" if evidence_usage is not None else "UNKNOWN",
-            "cost_status": cost_status(served_model) if evidence_usage is not None else "UNKNOWN",
+            "cost_status": (accounting["billing_status"] if accounting is not None
+                            else cost_status(served_model)) if evidence_usage is not None else "UNKNOWN",
             "status": ("REFUSED_USAGE" if evidence_usage is None
-                       else "OK" if reply_ok else "REFUSED_REPLY"), "budget_scope": "process_local",
+                       else "OK" if reply_ok else "REFUSED_REPLY"),
+            "budget_scope": "shared_host_envelope" if accounting is not None else "process_local",
+            **({"shared_budget": accounting} if accounting is not None else {}),
         }
         try:
             row = _record(tel_provider, served_model, purpose, system=system_prompt, user=user_prompt,
                           resp=response, text=text, t0=t0, validate=lambda _: reply_ok,
-                          evidence_meta=evidence_receipt)
+                          evidence_meta=evidence_receipt, accounting=accounting)
             if not isinstance(row, dict) or not row.get("call_id") or row.get("meta") != evidence_receipt:
                 raise ValueError("missing persisted telemetry binding")
             evidence_receipt = {**evidence_receipt, "telemetry_call_id": row["call_id"],
@@ -863,7 +909,7 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                     "error": "reply failed content/schema/language admission"}
     else:
         _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
-                resp=response, text=text, t0=t0, validate=validate)
+                resp=response, text=text, t0=t0, validate=validate, accounting=accounting)
     usage = evidence_usage if evidence_mode else _tel.extract_usage(response, tel_provider)
     out.update(usage)
     out["latency_s"] = latency
@@ -876,6 +922,9 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
     out["cost_status"] = cost_status(price_model)
     out["cost_usd"] = _tel.price_call(price_model, usage["tokens_in"], usage["tokens_out"],
                                       usage["cached_tokens"])
+    if accounting is not None:
+        out.update(accounting)
+        out["cost_status"] = accounting["billing_status"]
     if provider == "local":
         from backend.services import llama_server as _ls
         _ls.touch(ensure_reason or purpose)

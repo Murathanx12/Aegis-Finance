@@ -717,12 +717,12 @@ def type_current_row(raw: Any, item: Item) -> dict:
         raise NV.SourceValidationError("current_invalid_enum")
     # Validate model-controlled shapes before the deliberately permissive legacy
     # typer. Malformed JSON values are a whole-result refusal, never coercions.
-    for field in ("topic", "summary"):
-        if field in raw and not isinstance(raw[field], str):
+    for key in ("topic", "summary"):
+        if key in raw and not isinstance(raw[key], str):
             raise NV.SourceValidationError("current_invalid_scalar_schema")
-    for field in ("tickers", "sectors", "countries", "macro"):
-        if field in raw and (not isinstance(raw[field], list)
-                             or any(not isinstance(value, str) for value in raw[field])):
+    for key in ("tickers", "sectors", "countries", "macro"):
+        if key in raw and (not isinstance(raw[key], list)
+                           or any(not isinstance(value, str) for value in raw[key])):
             raise NV.SourceValidationError("current_invalid_collection_schema")
     if raw.get("event_date") is not None or raw.get("estimated_dates"):
         raise NV.SourceValidationError("unsupported_operative_event_day")
@@ -745,8 +745,8 @@ def type_current_row(raw: Any, item: Item) -> dict:
                 or claim.get("horizon") not in {"days", "weeks", "months"}
                 or claim.get("modality") != "prediction"):
             raise NV.SourceValidationError("current_unsupported_claim_contract")
-        for field in ("subject", "speaker", "witness"):
-            if not isinstance(claim.get(field), str) or not claim[field].strip():
+        for key in ("subject", "speaker", "witness"):
+            if not isinstance(claim.get(key), str) or not claim[key].strip():
                 raise NV.SourceValidationError("current_missing_claim_witness")
         if (claim["witness"] not in source or claim["speaker"] not in claim["witness"]
                 or claim["subject"] not in claim["witness"]):
@@ -898,8 +898,10 @@ class BudgetExceeded(RuntimeError):
 
 
 class Meter:
-    """Sums the per-call price `call_named` returns. A call it cannot price is
-    charged at the dearest DeepSeek list price for its tokens (never $0)."""
+    """Sum provider charges, including retained shared reservations on unknown billing.
+
+    Older cloud responses without shared accounting retain the token-price fallback.
+    """
 
     def __init__(self, budget_usd: float, *, llm: Optional[Callable[..., dict]] = None):
         # no declared budget, no paid call: a NaN budget compared False against
@@ -946,15 +948,24 @@ class Meter:
                                 temperature=0.2)
         self._tl.model = "deepseek:" + str(res.get("served_model") or res.get("model") or "unknown")
         cost = res.get("cost_usd")
-        if cost is None:
+        unpriced = False
+        if "budget_charge_usd" in res:
+            # The PC envelope holds this amount even when billable usage is unknown.
+            # A missing/invalid charge must not turn a dispatched call into $0.
+            charge = res["budget_charge_usd"]
+            if type(charge) not in (int, float) or not math.isfinite(charge) or charge < 0:
+                raise BudgetExceeded("invalid shared budget charge")
+            unpriced = charge > 0 and (cost is None or res.get("billing_status") != "SETTLED_PEAK_ESTIMATE")
+            cost = charge
+        elif cost is None:
             ti, to = int(res.get("tokens_in") or 0), int(res.get("tokens_out") or 0)
             cost = (ti * 0.53 + to * 1.29) / 1e6
-            if ti or to:
-                self.unpriced += 1
+            unpriced = bool(ti or to)
         with self._lock:
             self.calls += 1
             self.spent += float(cost)
             self.by_stage[stage] += float(cost)
+            self.unpriced += int(unpriced)
             self.statuses[str(res.get("status"))] += 1
             if res.get("served_model") or res.get("model"):
                 self.models[str(res.get("served_model") or res.get("model"))] += 1
