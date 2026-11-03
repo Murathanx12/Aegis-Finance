@@ -111,6 +111,12 @@ EXCEPTION_BASES = {"RuntimeError", "Exception", "ValueError", "LookupError",
 #: each says why in one line so that "exempt" costs a sentence instead of
 #: nothing. A new module lands in neither table and fails the enrolment test.
 NOT_INPUT_GUARDS: dict[str, str] = {
+    "saved_earnings_calendar_input": (
+        "_Refused is an internal validation branch; the public offline adapter "
+        "returns an explicit REFUSED artifact for missing bytes, stale or "
+        "future observation, and absent or ambiguous upcoming events. These "
+        "cases are exercised directly in test_saved_earnings_calendar_input.py. "
+        "No runtime caller or trading authority is supplied."),
     "saved_sec_forecast_input": (
         "_Refused is an internal parser branch; the public byte adapter returns "
         "an explicit REFUSED artifact rather than raising. Missing bytes, "
