@@ -124,6 +124,18 @@ def test_entry_limit_refuses_even_if_valid(case):
     assert discovery.run(**kwargs)[1]["reason"] == "DISCOVERY_ENTRY_LIMIT"
 
 
+def test_exactly_64_directory_entries_allowed(case):
+    kwargs, save = case
+    save()
+    assert discovery.MAX_ENTRIES == 64
+    for index in range(63):
+        (kwargs["receipt_dir"] / f"unrelated-{index}").touch()
+    assert len(list(kwargs["receipt_dir"].iterdir())) == 64
+    code, output = discovery.run(**kwargs)
+    assert code == 0 and output["ticker"] == "AAA" and output["delivery"] == "PREVIEW"
+    assert not list(kwargs["journal_dir"].iterdir())
+
+
 def test_iif_and_bad_account_refused(case):
     kwargs, save = case
     save()
@@ -338,6 +350,69 @@ def test_duplicate_created_after_selection_hits_durable_guard(case, tmp_path, mo
     code, output = discovery.run(**kwargs, send=True, review=review_file(tmp_path))
     assert code == 2 and output["delivery"] == "DUPLICATE_RECONCILE_REQUIRED"
     assert len(list(kwargs["journal_dir"].iterdir())) == 1
+
+
+@pytest.mark.parametrize("root", ["capture", "journal"])
+def test_root_replaced_at_final_pretransport_checkpoint(case, tmp_path, monkeypatch, root):
+    kwargs, save = case
+    save()
+    # Exercise real temporary-directory replacement identities. The fixture's
+    # ACL qualification remains synthetic; this makes no authentication claim.
+    def identity(path):
+        info = path.stat()
+        return info.st_dev, info.st_ino
+
+    monkeypatch.setattr(discovery.once.capture, "_private_identity", identity)
+    monkeypatch.setattr(discovery.once.private_journal, "_journal_identity", identity)
+    original_run = discovery.once.run
+    original_deliver = discovery.once.delivery.deliver
+    replaced = []
+    transport = []
+    retained = tmp_path / "retained-root"
+
+    def forbidden_transport(*_args, **_kwargs):
+        transport.append(True)
+        pytest.fail("transport reached after root replacement")
+
+    def delegate(**options):
+        return original_run(**options, wall_clock=lambda: kwargs["now"],
+                            epoch_clock=lambda: kwargs["now"].timestamp())
+
+    def deliver(artifact, *, journal_dir, sender):
+        def replace_then_check(text, *, tag):
+            # The real delivery adapter has already fsynced SENDING and checked
+            # its journal identity; the real sender's final check is next.
+            record = journal_dir / (artifact["event_id"] + ".json")
+            assert json.loads(record.read_text())["state"] == "SENDING"
+            directory = kwargs["receipt_dir"] if root == "capture" else journal_dir
+            before = identity(directory)
+            directory.rename(retained)
+            directory.mkdir()
+            assert identity(directory) != before
+            replaced.append(artifact["event_id"])
+            return sender(text, tag=tag)
+
+        return original_deliver(artifact, journal_dir=journal_dir, sender=replace_then_check)
+
+    monkeypatch.setattr(discovery.once, "run", delegate)
+    monkeypatch.setattr(discovery.once.delivery, "deliver", deliver)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", forbidden_transport)
+    gate = review_file(tmp_path)
+    code, output = discovery.run(**kwargs, send=True, review=gate)
+    assert code == 2 and output["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
+    assert replaced == [output["event_id"]] and transport == []
+    event = output["event_id"]
+    record_root = retained if root == "journal" else kwargs["journal_dir"]
+    assert json.loads((record_root / (event + ".json")).read_text())["state"] == "SENDING"
+    result = json.loads((kwargs["journal_dir"] / (event + ".result.json")).read_text())
+    assert result["state"] == "UNKNOWN_RECONCILE_REQUIRED" and result["ack"] is None
+    assert not (kwargs["journal_dir"] / (event + ".result.pending.json")).exists()
+    if root == "journal":
+        # The result alone in the replacement root still prevents a retry.
+        code, output = discovery.run(**kwargs, send=True, review=gate)
+        assert code == 0 and output["reason"] == "DUPLICATE_EVENTS_SUPPRESSED"
+        assert len(replaced) == 1 and transport == []
 
 
 def test_expired_at_send_wall_clock_refused(case, tmp_path, monkeypatch):
