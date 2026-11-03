@@ -172,6 +172,7 @@ def _calendar_risk_preview(a: argparse.Namespace) -> bool:
     import re
     import uuid
 
+    pending = None
     receipt_id = None
     status = "REFUSED_OUTPUT_UNAVAILABLE"
     try:
@@ -179,18 +180,37 @@ def _calendar_risk_preview(a: argparse.Namespace) -> bool:
         directory = getattr(a, "calendar_risk_output_dir", None)
         if not isinstance(directory, Path) or not directory.is_absolute() or not directory.is_dir():
             raise ValueError("PRIVATE_OUTPUT_REQUIRED")
-        identity = capture._private_identity(directory)
+        paths = [getattr(a, "calendar_risk_" + name, None)
+                 for name in ("receipt_dir", "journal_dir", "ledger_dir")]
+
+        def validate_root():
+            identity = capture._private_identity(directory)
+            resolved = directory.resolve(strict=True)
+            for root in paths:
+                if isinstance(root, Path):
+                    protected = root.resolve()
+                    if (resolved == protected or resolved in protected.parents
+                            or protected in resolved.parents):
+                        raise ValueError("PRIVATE_OUTPUT_OVERLAPS_INPUT")
+                    if root.exists() and directory.samefile(root):
+                        raise ValueError("PRIVATE_OUTPUT_ALIASES_INPUT")
+            return identity, resolved
+
+        identity = validate_root()
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         candidate_id = f"calendar-risk-preview-{stamp}-{uuid.uuid4().hex}"
-        # Reserve exclusively before reading private inputs. Never fall back to shared storage.
-        with (directory / (candidate_id + ".json")).open("x", encoding="utf-8") as fh:
+        final = directory / (candidate_id + ".json")
+        # Never expose a final receipt until every byte is durable and the root
+        # has been checked again. Hard-link publication is atomic and refuses
+        # existing destinations on both Windows and POSIX (rename may overwrite).
+        candidate_pending = directory / (candidate_id + ".pending")
+        with candidate_pending.open("x", encoding="utf-8") as fh:
+            pending = candidate_pending
             output = {"status": "REFUSED", "reason": "PRIVATE_INPUTS_REQUIRED",
                       "delivery": "NOT_SENT"}
             try:
-                if capture._private_identity(directory) != identity:
+                if validate_root() != identity:
                     raise ValueError("PRIVATE_ROOT_CHANGED")
-                paths = [getattr(a, "calendar_risk_" + name, None)
-                         for name in ("receipt_dir", "journal_dir", "ledger_dir")]
                 pin = getattr(a, "calendar_risk_account_sha256", None)
                 if (all(isinstance(p, Path) and p.is_absolute() and p.is_dir() for p in paths)
                         and isinstance(pin, str) and re.fullmatch(r"[0-9a-f]{64}", pin)):
@@ -209,13 +229,22 @@ def _calendar_risk_preview(a: argparse.Namespace) -> bool:
                        "status": result_status, "result": output}, fh, sort_keys=True)
             fh.flush()
             os.fsync(fh.fileno())
-            if capture._private_identity(directory) != identity:
+            if validate_root() != identity:
                 raise ValueError("PRIVATE_ROOT_CHANGED")
+        if validate_root() != identity:
+            raise ValueError("PRIVATE_ROOT_CHANGED")
+        os.link(pending, final)
         receipt_id = candidate_id
         status = result_status
     except Exception:                                                # noqa: BLE001
         # No exception text, input identifiers, amounts or private paths in the shared log.
         pass
+    finally:
+        if pending is not None:
+            try:
+                pending.unlink()
+            except OSError:
+                pass
     _p("CALENDAR_RISK_PREVIEW " + json.dumps(
         {"status": status, "receipt_id": receipt_id}, sort_keys=True))
     return status == "PREVIEW"
