@@ -4,6 +4,9 @@ Invoke with python -m scripts.pre_event_owner_warning_once. No provider access.
 --send additionally needs an independently authored exact-source review JSON:
 {schema: pre-event-warning-review/1, independent_exact_source_review: true,
  reviewer: nonempty string, sha256: {each SOURCE_PATHS entry: exact byte hash}}.
+`scripts/__init__.py` is absent in this namespace package; its required value
+is ABSENT_NAMESPACE_PACKAGE_INITIALIZER until that file exists. This review
+vetoes send after imports; it does not isolate import side effects.
 There is no bundled review or automatic enrollment.
 """
 
@@ -11,9 +14,10 @@ from __future__ import annotations
 
 import argparse
 import base64
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import InvalidOperation
 import json
+import os
 from pathlib import Path
 import re
 import time
@@ -26,7 +30,9 @@ from scripts import owner_event_warning as selector
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PATHS = (
+    "backend/__init__.py",
     "backend/config.py",
+    "backend/services/__init__.py",
     "backend/services/saved_earnings_calendar_input.py",
     "backend/services/earnings_calendar_capture.py",
     "backend/services/pre_event_owner_warning.py",
@@ -34,8 +40,10 @@ SOURCE_PATHS = (
     "backend/services/owner_event_warning.py",
     "backend/services/telegram_bridge.py",
     "scripts/owner_event_warning.py",
+    "scripts/__init__.py",
     "scripts/pre_event_owner_warning_once.py",
 )
+ABSENT_NAMESPACE_INITIALIZER = "ABSENT_NAMESPACE_PACKAGE_INITIALIZER"
 SGT = timezone(timedelta(hours=8))
 
 
@@ -53,10 +61,31 @@ def _check_window(now: datetime) -> int:
     return start - seconds if seconds < start else 24 * 3600 + start - seconds
 
 
+def _event_date_deadline(event_date_et: str) -> datetime:
+    """First UTC instant on the scheduled ET date, including DST transitions."""
+    event_date = date.fromisoformat(event_date_et)
+    four_utc = datetime(event_date.year, event_date.month, event_date.day,
+                        4, tzinfo=timezone.utc)
+    return (four_utc if warning._et_date(four_utc) == event_date
+            else four_utc + timedelta(hours=1))
+
+
+def _source_hashes() -> dict[str, str]:
+    hashes = {}
+    for name in SOURCE_PATHS:
+        source = ROOT / name
+        if name == "scripts/__init__.py" and not os.path.lexists(source):
+            # `scripts` is a namespace package in this worktree. A newly
+            # introduced executable initializer invalidates this attestation.
+            hashes[name] = ABSENT_NAMESPACE_INITIALIZER
+        else:
+            hashes[name] = selector.sha(selector.frozen_read(source))
+    return hashes
+
+
 def _review(path: Path) -> None:
     document = private_journal._object(selector.frozen_read(path).decode("utf-8"))
-    hashes = {name: selector.sha(selector.frozen_read(ROOT / name))
-              for name in SOURCE_PATHS}
+    hashes = _source_hashes()
     if (set(document) != {"schema", "independent_exact_source_review", "reviewer", "sha256"}
             or document["schema"] != "pre-event-warning-review/1"
             or document["independent_exact_source_review"] is not True
@@ -94,7 +123,7 @@ def _preview(artifact: dict, delivery_state: str) -> dict:
 
 def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         journal_dir: Path, send: bool = False, review: Path | None = None,
-        now: datetime | None = None) -> tuple[int, dict]:
+        now: datetime | None = None, wall_clock=None) -> tuple[int, dict]:
     """Preview by default. The CLI never accepts a caller-provided clock."""
     actual_now = now or datetime.now(timezone.utc)
     started = time.monotonic()
@@ -156,15 +185,27 @@ def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         check()
         _review(review)
         check()
-        until = time.time() + min(30, _check_window(now or datetime.now(timezone.utc)))
+        deadline = _event_date_deadline(artifact["event_date_et"])
+
+        def fresh_before_event() -> None:
+            fresh = wall_clock() if wall_clock is not None else datetime.now(timezone.utc)
+            if fresh.utcoffset() != timedelta(0) or fresh >= deadline:
+                raise Refused("EVENT_DATE_STARTED_ET")
+
+        fresh_before_event()
+        send_started = time.time()
+        until = min(send_started + 30, deadline.timestamp(),
+                    send_started + _check_window(now or datetime.now(timezone.utc)))
 
         def sender(text: str, *, tag: str) -> dict:
             check()
+            fresh_before_event()
             return telegram_bridge.send_owner_once(
                 text, tag=tag, expected_owner=owner, until=until)
 
-        state = delivery.deliver(artifact, journal_dir=journal_dir, sender=sender)
-        result = _preview(artifact, state)
+        state, reported_artifact = delivery.deliver(
+            artifact, journal_dir=journal_dir, sender=sender)
+        result = _preview(reported_artifact, state)
         return (0 if state in ("SENT", "ALREADY_SENT") else 2), result
     except (OSError, ValueError, KeyError, TypeError, AttributeError, UnicodeError,
             InvalidOperation, OverflowError, RecursionError):

@@ -47,17 +47,17 @@ def _regular(path: Path) -> bool:
     return stat.S_ISREG(info.st_mode) and not getattr(info, "st_file_attributes", 0) & 0x400
 
 
-def _confirmed(path: Path, result_path: Path, pending: Path, event_id: str) -> bool:
+def _confirmed(path: Path, result_path: Path, pending: Path, event_id: str) -> dict | None:
     try:
         if os.path.lexists(pending) or not _regular(path) or not _regular(result_path):
-            return False
+            return None
         if path.stat().st_size > 16_384 or result_path.stat().st_size > 4_096:
-            return False
+            return None
         record = journal._object(path.read_text(encoding="utf-8"))
         result = journal._object(result_path.read_text(encoding="utf-8"))
         artifact = record["artifact"]
         tag = "pre-event-warning:" + event_id
-        return (
+        valid = (
             record["state"] == "SENDING"
             and artifact["event_id"] == event_id
             and record["artifact_sha256"] == journal._digest(artifact)
@@ -67,11 +67,12 @@ def _confirmed(path: Path, result_path: Path, pending: Path, event_id: str) -> b
             and result["at"] == artifact["at_utc"]
             and journal._valid_ack(result["ack"], record)
         )
+        return artifact if valid else None
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
-        return False
+        return None
 
 
-def deliver(artifact: dict, *, journal_dir: Path, sender) -> str:
+def deliver(artifact: dict, *, journal_dir: Path, sender) -> tuple[str, dict]:
     """Durably reserve an event before one transport call; never retry ambiguity."""
     text = message(artifact)
     event_id = artifact["event_id"]
@@ -86,27 +87,28 @@ def deliver(artifact: dict, *, journal_dir: Path, sender) -> str:
     try:
         identity = journal._journal_identity(directory)
     except (OSError, ValueError):
-        return "REFUSED_JOURNAL_UNQUALIFIED"
+        return "REFUSED_JOURNAL_UNQUALIFIED", artifact
     path = directory / (event_id + ".json")
     result_path = path.with_suffix(".result.json")
     pending = path.with_suffix(".result.pending.json")
     if any(os.path.lexists(candidate) for candidate in (path, result_path, pending)):
-        return ("ALREADY_SENT" if _confirmed(path, result_path, pending, event_id)
-                else "DUPLICATE_RECONCILE_REQUIRED")
+        acknowledged = _confirmed(path, result_path, pending, event_id)
+        return (("ALREADY_SENT", acknowledged) if acknowledged is not None
+                else ("DUPLICATE_RECONCILE_REQUIRED", artifact))
     try:
         with path.open("x", encoding="utf-8") as stream:
             json.dump(record, stream, sort_keys=True, allow_nan=False)
             stream.flush()
             os.fsync(stream.fileno())
     except FileExistsError:
-        return "DUPLICATE_RECONCILE_REQUIRED"
+        return "DUPLICATE_RECONCILE_REQUIRED", artifact
     except OSError:
-        return "UNKNOWN_RECONCILE_REQUIRED"
+        return "UNKNOWN_RECONCILE_REQUIRED", artifact
     try:
         if journal._journal_identity(directory) != identity:
-            return "UNKNOWN_RECONCILE_REQUIRED"
+            return "UNKNOWN_RECONCILE_REQUIRED", artifact
     except (OSError, ValueError):
-        return "UNKNOWN_RECONCILE_REQUIRED"
+        return "UNKNOWN_RECONCILE_REQUIRED", artifact
     state = "UNKNOWN_RECONCILE_REQUIRED"
     ack = None
     try:
@@ -128,4 +130,4 @@ def deliver(artifact: dict, *, journal_dir: Path, sender) -> str:
         pending.unlink()
     except (OSError, TypeError, ValueError):
         state = "UNKNOWN_RECONCILE_REQUIRED"
-    return state
+    return state, artifact

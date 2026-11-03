@@ -63,6 +63,7 @@ def case(tmp_path, monkeypatch):
     kwargs = {"receipt_path": receipt_path, "ledger_dir": ledger,
               "expected_account_sha256": runner.selector.sha(ACCOUNT.encode()),
               "journal_dir": private, "now": NOW}
+    kwargs["wall_clock"] = lambda: kwargs["now"]
     return kwargs, write_receipt, row, snapshot_path, private
 
 
@@ -71,8 +72,7 @@ def review(tmp_path):
     path.write_text(json.dumps({
         "schema": "pre-event-warning-review/1",
         "independent_exact_source_review": True, "reviewer": "independent-test-reviewer",
-        "sha256": {name: runner.selector.sha(runner.selector.frozen_read(runner.ROOT / name))
-                   for name in runner.SOURCE_PATHS},
+        "sha256": runner._source_hashes(),
     }))
     return path
 
@@ -136,6 +136,46 @@ def test_review_must_pin_imported_config(case, monkeypatch, tmp_path):
     document = json.loads(gate.read_text())
     del document["sha256"]["backend/config.py"]
     gate.write_text(json.dumps(document))
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["status"] == "REFUSED"
+    assert not list(private.iterdir())
+
+
+@pytest.mark.parametrize("name", ["backend/__init__.py", "backend/services/__init__.py",
+                                  "scripts/__init__.py"])
+def test_review_requires_package_initializer_entry(case, monkeypatch, tmp_path, name):
+    kwargs, _, _, _, private = case
+    gate = review(tmp_path)
+    document = json.loads(gate.read_text())
+    assert name in document["sha256"]
+    if name == "scripts/__init__.py":
+        assert document["sha256"][name] == runner.ABSENT_NAMESPACE_INITIALIZER
+    del document["sha256"][name]
+    gate.write_text(json.dumps(document))
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["status"] == "REFUSED"
+    assert not list(private.iterdir())
+
+
+@pytest.mark.parametrize("name", ["backend/__init__.py", "backend/services/__init__.py",
+                                  "scripts/__init__.py"])
+def test_changed_or_new_initializer_vetoes_review(case, monkeypatch, tmp_path, name):
+    kwargs, _, _, _, private = case
+    gate = review(tmp_path)
+    root = tmp_path / "synthetic_sources"
+    for source_name in runner.SOURCE_PATHS:
+        original = runner.ROOT / source_name
+        if original.is_file():
+            target = root / source_name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(original.read_bytes())
+    changed = root / name
+    changed.parent.mkdir(parents=True, exist_ok=True)
+    changed.write_bytes(changed.read_bytes() + b"\n# changed initializer\n"
+                        if changed.exists() else b"# new initializer\n")
+    monkeypatch.setattr(runner, "ROOT", root)
     monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
     code, result = runner.run(**kwargs, send=True, review=gate)
     assert code == 2 and result["status"] == "REFUSED"
@@ -264,6 +304,106 @@ def test_journal_receipt_identity_tamper_blocks_confirmed_replay(case, monkeypat
     code, result = runner.run(**kwargs, send=True, review=gate)
     assert code == 2 and result["delivery"] == "DUPLICATE_RECONCILE_REQUIRED"
     assert len(calls) == 1
+
+
+def test_already_sent_reports_original_ack_lineage_for_new_receipt(case, monkeypatch, tmp_path):
+    kwargs, write_receipt, _, snapshot_path, _ = case
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    sends = []
+
+    def sender(text, *, tag, **_kwargs):
+        sends.append(text)
+        ack = {"state": "SENT", "messages": 1, "native_ack_sha256": "f" * 64,
+               "tag_sha256": journal._digest({"tag": tag}),
+               "text_sha256": journal._hash(text)}
+        ack["delivery_binding_sha256"] = journal._digest({
+            key: ack[key] for key in journal._ACK_HASH_KEYS})
+        return ack
+
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", sender)
+    gate = review(tmp_path)
+    first_code, first = runner.run(**kwargs, send=True, review=gate)
+    assert first_code == 0 and first["delivery"] == "SENT"
+    write_receipt(observed="2026-11-03T20:30:00+00:00")
+    snapshot = json.loads(snapshot_path.read_text())
+    snapshot["t"] = "2026-11-03T20:56:00Z"
+    snapshot_path.write_text(json.dumps(snapshot))
+    kwargs["now"] += timedelta(minutes=1)
+    preview_code, candidate = runner.run(**kwargs)
+    assert preview_code == 0 and candidate["event_id"] == first["event_id"]
+    assert candidate["decision_id"] != first["decision_id"]
+    assert candidate["receipt_id"] != first["receipt_id"]
+    code, replay = runner.run(**kwargs, send=True, review=gate)
+    assert code == 0 and replay["delivery"] == "ALREADY_SENT"
+    for key in ("at_utc", "snapshot_as_of_utc", "decision_id", "input_id",
+                "receipt_id", "capture_input_id", "receipt_sha256"):
+        assert replay[key] == first[key]
+        assert replay[key] != candidate[key]
+    assert len(sends) == 1
+
+
+def test_expiry_crossing_after_reservation_never_starts_transport(case, monkeypatch, tmp_path):
+    kwargs, write_receipt, row, _, private = case
+    row["date"] = "2026-11-04"
+    write_receipt(rows=[row])
+    before = datetime(2026, 11, 4, 4, 59, 59, tzinfo=timezone.utc)
+    after = datetime(2026, 11, 4, 5, tzinfo=timezone.utc)
+    clocks = iter((before, after))
+    kwargs["wall_clock"] = lambda: next(clocks)
+    monkeypatch.setattr(runner.time, "time", before.timestamp)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    gate = review(tmp_path)
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
+    assert json.loads(next(private.glob("*.json")).read_text())["state"] == "SENDING"
+    kwargs["wall_clock"] = lambda: before
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["delivery"] == "DUPLICATE_RECONCILE_REQUIRED"
+
+
+def test_send_deadline_is_no_later_than_et_event_start(case, monkeypatch, tmp_path):
+    kwargs, write_receipt, row, _, _ = case
+    row["date"] = "2026-11-04"
+    write_receipt(rows=[row])
+    before = datetime(2026, 11, 4, 4, 59, 59, tzinfo=timezone.utc)
+    deadline = datetime(2026, 11, 4, 5, tzinfo=timezone.utc)
+    kwargs["wall_clock"] = lambda: before
+    monkeypatch.setattr(runner.time, "time", before.timestamp)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    seen = []
+
+    def sender(_text, *, until, **_kwargs):
+        seen.append(until)
+        return {"state": "UNKNOWN"}
+
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", sender)
+    code, result = runner.run(**kwargs, send=True, review=review(tmp_path))
+    assert code == 2 and result["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
+    assert seen == [deadline.timestamp()]
+
+
+def test_expired_at_pre_send_check_never_reserves(case, monkeypatch, tmp_path):
+    kwargs, write_receipt, row, _, private = case
+    row["date"] = "2026-11-04"
+    write_receipt(rows=[row])
+    kwargs["wall_clock"] = lambda: datetime(2026, 11, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    code, result = runner.run(**kwargs, send=True, review=review(tmp_path))
+    assert code == 2 and result["status"] == "REFUSED"
+    assert not list(private.iterdir())
+
+
+@pytest.mark.parametrize("event_date,expected_hour", [
+    ("2026-03-08", 5), ("2026-03-09", 4),
+    ("2026-11-01", 4), ("2026-11-02", 5),
+])
+def test_et_midnight_deadline_across_dst(event_date, expected_hour):
+    deadline = runner._event_date_deadline(event_date)
+    assert deadline.hour == expected_hour
+    assert runner.warning._et_date(deadline - timedelta(microseconds=1)).isoformat() < event_date
+    assert runner.warning._et_date(deadline).isoformat() == event_date
 
 
 @pytest.mark.parametrize("clock,allowed", [
