@@ -481,3 +481,117 @@ def test_discovery_constraints_remain_binding_inside_once(case, tmp_path, monkey
     code, output = discovery.run(**kwargs, send=True, review=gate)
     assert checks == 2 and code == 2 and output["status"] == "REFUSED"
     assert not list(kwargs["journal_dir"].iterdir())
+
+
+@pytest.mark.parametrize("stage", ["delegate", "receipt", "snapshot", "return"])
+@pytest.mark.parametrize("change", ["receipt", "capture_root", "journal_root", "iif", "budget"])
+def test_preview_inherits_discovery_guards(case, tmp_path, monkeypatch, stage, change):
+    kwargs, save = case
+    selected = save(1, "AAA", 2)
+    replacement = save(2, "BBB", 3).read_bytes()
+    once = discovery.once
+    # A fully valid competing receipt must still fail the exact-byte pin.
+    assert once._receipt(selected)[0]["ticker"] == "AAA"
+    other = kwargs["receipt_dir"] / f"earnings-calendar-{2:032x}.json"
+    assert once._receipt(other)[0]["ticker"] == "BBB"
+    other.unlink()
+
+    def identity(path):
+        info = path.stat()
+        return info.st_dev, info.st_ino
+
+    monkeypatch.setattr(once.capture, "_private_identity", identity)
+    monkeypatch.setattr(once.private_journal, "_journal_identity", identity)
+    monkeypatch.setattr(once, "_review", lambda *_a: pytest.fail("preview review"))
+    monkeypatch.setattr(once.delivery, "deliver", lambda *_a, **_k: pytest.fail("delivery"))
+    ticks = [0.0]
+    monkeypatch.setattr(discovery.time, "monotonic", lambda: ticks[0])
+    before = kwargs["now"].replace(hour=8, minute=29, second=59)
+    boundary = before + timedelta(seconds=1)
+    clock = [before]
+    original_iif = once._iif_deadline
+    monkeypatch.setattr(once, "_iif_deadline", lambda _now: original_iif(clock[0]))
+    attacked = []
+
+    def attack():
+        assert not attacked
+        attacked.append(change)
+        if change == "receipt":
+            selected.write_bytes(replacement)
+        elif change.endswith("_root"):
+            directory = kwargs["receipt_dir"] if change == "capture_root" else kwargs["journal_dir"]
+            retained = tmp_path / "retained-preview-root"
+            directory.rename(retained)
+            directory.mkdir()
+            # Preserve valid bytes: refusal must detect root identity itself.
+            for path in retained.iterdir():
+                (directory / path.name).write_bytes(path.read_bytes())
+            assert identity(directory) != identity(retained)
+        elif change == "iif":
+            clock[0] = boundary
+        else:
+            ticks[0] = 5.1
+
+    original_run = once.run
+    original_receipt = once._receipt
+    original_select = once.selector.select_snapshot
+    original_preview = once._preview
+    delegated = [False]
+
+    def delegate(**options):
+        delegated[0] = True
+        ticks[0] = 4.0  # Discovery has already spent four of its five seconds.
+        if stage == "delegate":
+            attack()
+        return original_run(**options)
+
+    def receipt(*args):
+        result = original_receipt(*args)
+        if delegated[0] and stage == "receipt":
+            attack()
+        return result
+
+    def select(*args, **options):
+        if delegated[0] and stage == "snapshot":
+            inherited_check = options["check"]
+            reads = 0
+
+            def during_rereads():
+                nonlocal reads
+                reads += 1
+                if reads == 2:
+                    # The real selector has read its first candidate.
+                    attack()
+                inherited_check()
+
+            options["check"] = during_rereads
+        return original_select(*args, **options)
+
+    def preview(*args):
+        result = original_preview(*args)
+        if stage == "return":
+            attack()
+        return result
+
+    monkeypatch.setattr(once, "run", delegate)
+    monkeypatch.setattr(once, "_receipt", receipt)
+    monkeypatch.setattr(once.selector, "select_snapshot", select)
+    monkeypatch.setattr(once, "_preview", preview)
+    code, output = discovery.run(**kwargs)
+    assert attacked == [change]
+    assert code == 2 and output["status"] == "REFUSED"
+    assert output["delivery"] == "NOT_SENT"
+    assert not list(kwargs["journal_dir"].iterdir())
+
+
+def test_preview_needs_neither_review_nor_delivery(case, monkeypatch):
+    kwargs, save = case
+    selected = save()
+    once = discovery.once
+    monkeypatch.setattr(once, "_review", lambda *_a: pytest.fail("preview review"))
+    monkeypatch.setattr(once.delivery, "deliver", lambda *_a, **_k: pytest.fail("delivery"))
+    code, output = discovery.run(**kwargs)
+    assert code == 0 and output["status"] == "PROVISIONAL"
+    assert output["delivery"] == "PREVIEW" and output["ticker"] == "AAA"
+    assert output["receipt_sha256"] == once.selector.sha(selected.read_bytes())
+    assert not list(kwargs["journal_dir"].iterdir())

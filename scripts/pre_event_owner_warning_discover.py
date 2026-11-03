@@ -123,11 +123,11 @@ def run(*, receipt_dir: Path, ledger_dir: Path, expected_account_sha256: str,
             check()
 
         # The callback only adds constraints: discovery's original five-second
-        # budget and frozen selection remain binding throughout once's send.
+        # budget and frozen selection remain binding throughout delegated reads.
         return once.run(receipt_path=selected, ledger_dir=ledger_dir,
                         expected_account_sha256=expected_account_sha256,
                         journal_dir=journal, now=now, send=send, review=review,
-                        pre_send_check=selected_check if send else None)
+                        pre_send_check=selected_check)
     except _ERRORS:
         return 2, result("REFUSED", "DISCOVERY_REFUSED_REVIEW_INPUTS_AND_GATES")
 
