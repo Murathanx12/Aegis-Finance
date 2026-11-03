@@ -163,3 +163,21 @@ volatility. A read-only test on the Oct26 PC artifact validates it at its own
 stamp and exercises the actual IC reader through its CLEAN gate and all 25
 recommendations. The PC artifact remains untouched. A CLI dry-run was also
 performed separately; its receipt is local validation only.
+
+## Attended transfer observation — November 4, 2026
+
+After independent source review passed, the reviewed script was committed as
+`88342446`. An explicit-ID `--apply` call used `ABSENT` as the expected remote
+state and transferred the local October 26 snapshot to the existing Railway
+production volume. The sanitized receipt reported `transferred`, 31,876 bytes,
+25 candidates and SHA256
+`1470feb6969905fb84e7f3f8097447ea60329438102f834a473efa71e6b6f53b`.
+An independent remote `sha256sum` matched; the target was mode 0600. Running
+the existing IC `_compute_funnel_state` against the volume path on Railway
+returned `available=True`, `gate=CLEAN`, 25 recommendations. These are
+read-only verification results after the one upload, not proof that the live
+application reads the volume yet. The currently deployed `cac7f219` code still
+reads its packaged image path until this change passes CI and deploys.
+
+No scheduled transfer exists. The PC's next funnel refresh will require a
+separate reviewed sync mechanism to keep the volume artifact current.
