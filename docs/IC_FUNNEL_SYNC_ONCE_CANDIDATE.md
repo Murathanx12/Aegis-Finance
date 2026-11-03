@@ -1,26 +1,26 @@
-## Local integration receipt - 2026-11-04
+## Current integration status - 2026-11-04
 
 Integrated in `C:/Users/mrthn/aegis-funnel-sync-integrated` on branch
-`codex/funnel-sync-integrated-20261104`, with HEAD/base
-`5753a07a2c2aef800ee8280806c2f10711859d73` (corrected PR #63).
-The source is the five uncommitted allowlisted files from
+`codex/funnel-sync-integrated-20261104`. The candidate was committed as
+`c1500df3` and rebased as `2462812c` onto merged PR #63
+`dae9f2219ddd9399569f63641c6bf787c3f66172`.
+The source is the five originally uncommitted allowlisted files from
 `C:/Users/mrthn/aegis-funnel-sync-once-candidate`, whose HEAD is
 `866943a3671d7d9c11a1dda555bb1d6b4c97ad51`.
 
-Owner handoff reports independent review completed with 108 tests PASS.
-The historical candidate note below predates that handoff and still records
-its earlier failed-review/re-review state; it is retained as provenance,
-not the current review verdict. No new independent integration review was
-performed in this session, and the review artifact was not independently
-retrieved. The source HEAD alone does not identify its uncommitted candidate.
+The original candidate passed independent Banach Sol re-review with 108 tests.
+The integrated source separately passed independent Poincare Sol review with
+161 tests and no P1/P2 findings. The historical candidate note below retains
+its earlier failed-review state as provenance, not the current verdict.
 
 Integration differences from the supplied files: retain the corrected base's
 frozen-policy config-path test and decoded-payload assertion, remove one
 unused `Path` import from the new sync tests for Ruff, and add this receipt.
 `backend/Dockerfile` and `backend/config.py` remain identical to the base.
-Only the five owner-allowlisted files are changed; the integration is uncommitted.
+Only the five owner-allowlisted files changed in the integrated commit.
 
-Validation: transfer + sync + `test_pc_policy_epoch_prepared.py`: **161 passed**.
+Validation after rebase: transfer + sync + `test_pc_policy_epoch_prepared.py`:
+**161 passed**.
 Targeted Ruff and `git diff --check` passed after the unused-import removal.
 Tests use temporary state and mocked transports; there was no native Railway
 inspection/write, deployment, task registration, push or PR operation.
@@ -30,7 +30,7 @@ unproven. The clock/pause, HOLD recovery and advisory-lock caveats below remain.
 
 ---
 
-# Guarded one-pass funnel sync candidate
+# Original guarded one-pass funnel sync candidate (historical state)
 
 Base: PR #63 head `866943a3`. This is a local candidate, inactive after an
 independent review FAIL; it is not deployed, registered, merged, pushed or
