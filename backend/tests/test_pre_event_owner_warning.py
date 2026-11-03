@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import base64
+from datetime import date
 import hashlib
 import json
 
@@ -35,12 +36,14 @@ def row(**changes):
 def freeze(rows=None, *, observed=OBSERVED, cutoff=CUTOFF):
     rows = [row()] if rows is None else rows
     response = _canonical({"earningsCalendar": rows})
+    decision_date = date.fromisoformat(cutoff[:10])
     packet = {
         "schema": warning.SCHEMA, "status": "EVIDENCE_ONLY", "source": warning.SOURCE,
         "ticker": "AAPL", "observed_utc": observed.replace("Z", "+00:00"),
         "cutoff_utc": cutoff.replace("Z", "+00:00"),
-        "decision_date_et": "2026-11-03", "event_date_et": rows[0]["date"],
-        "days_ahead": 3, "fiscal_year": rows[0]["year"],
+        "decision_date_et": decision_date.isoformat(), "event_date_et": rows[0]["date"],
+        "days_ahead": (date.fromisoformat(rows[0]["date"]) - decision_date).days,
+        "fiscal_year": rows[0]["year"],
         "fiscal_quarter": rows[0]["quarter"], "event_time_status": "UNKNOWN",
         "response_sha256": _sha(response),
         "response_bytes_b64": base64.b64encode(response).decode("ascii"),
@@ -56,7 +59,8 @@ def snapshot(*, held=True):
                    "current_price": 100}] if held else
                  [{"symbol": "MSFT", "qty": 10, "market_value": 1000,
                    "current_price": 100}])
-    return {"t": "2026-11-03T20:00:00Z", "tag": "sim_owner", "equity": 2000,
+    return {"t": "2026-11-03T20:00:00Z", "tag": "sim_owner",
+            "account_number": "APPROVED_PC_PAPER_ACCOUNT", "equity": 2000,
             "cash": 1000, "long_market_value": 1000, "short_market_value": 0,
             "n_positions": 1, "positions": positions}
 
@@ -68,7 +72,9 @@ def build(packet=None, response=None, account=None, **changes):
     account = snapshot() if account is None else account
     account_bytes = _canonical(account) if type(account) is dict else account
     args = {"packet": packet, "response_bytes": response,
-            "snapshot_bytes": account_bytes, "expected_account_sha256": _sha(account_bytes),
+            "snapshot_bytes": account_bytes,
+            "expected_snapshot_sha256": _sha(account_bytes),
+            "expected_account_sha256": _sha(b"APPROVED_PC_PAPER_ACCOUNT"),
             "cutoff_utc": CUTOFF, "now_utc": NOW}
     args.update(changes)
     return warning.build_pre_event_warning_bytes(**args)
@@ -116,7 +122,7 @@ def test_packet_recomputation_and_exact_response_binding():
 ])
 def test_observation_clock_boundaries(observed, cutoff, expected):
     packet, response = freeze(observed=observed, cutoff=cutoff)
-    result = build(packet=packet, response=response)
+    result = build(packet=packet, response=response, now_utc=cutoff)
     assert result["status"] == expected or result["reason"] == expected
 
 
@@ -127,6 +133,28 @@ def test_cutoff_now_and_et_window():
     assert build(packet=packet, response=response)["reason"] == "EVENT_OUTSIDE_WINDOW"
     packet, response = freeze([row(date="2026-11-11")])
     assert build(packet=packet, response=response)["reason"] == "EVENT_OUTSIDE_WINDOW"
+
+
+def test_presentation_freshness_and_et_event_start():
+    packet, response = freeze(observed="2026-11-02T21:00:00Z")
+    assert build(packet=packet, response=response)["reason"] == "OBSERVATION_STALE_AT_NOW"
+    account = snapshot()
+    account["t"] = "2026-11-02T21:00:00Z"
+    assert build(account=account)["reason"] == "SNAPSHOT_STALE_AT_NOW"
+
+    # Crossing the cutoff's ET civil date is allowed while inputs remain fresh.
+    assert build(now_utc="2026-11-04T04:59:59Z")["status"] == "PROVISIONAL"
+    assert build(now_utc="2026-11-04T05:00:00Z")["status"] == "PROVISIONAL"
+
+    later_cutoff = "2026-11-05T21:00:00Z"
+    packet, response = freeze(observed="2026-11-05T20:00:00Z", cutoff=later_cutoff)
+    account = snapshot()
+    account["t"] = "2026-11-05T20:00:00Z"
+    assert build(packet=packet, response=response, account=account,
+                 cutoff_utc=later_cutoff, now_utc="2026-11-06T04:59:59Z")["status"] == "PROVISIONAL"
+    assert build(packet=packet, response=response, account=account,
+                 cutoff_utc=later_cutoff, now_utc="2026-11-06T05:00:00Z")["reason"] == "EVENT_DATE_STARTED_ET"
+    assert build(now_utc="2026-11-07T12:00:00Z")["status"] == "REFUSED"
 
 
 @pytest.mark.parametrize("rows", [
@@ -164,6 +192,24 @@ def test_bad_account_or_snapshot_refused(mutation):
 
 
 def test_external_pin_is_required_and_binding():
-    assert build(expected_account_sha256="0" * 64)["reason"] == "SNAPSHOT_SHA256_MISMATCH"
-    assert build(expected_account_sha256=None)["status"] == "REFUSED"
-    assert build(snapshot_bytes=b"not json", expected_account_sha256=_sha(b"not json"))["status"] == "REFUSED"
+    assert build(expected_snapshot_sha256="0" * 64)["reason"] == "SNAPSHOT_SHA256_MISMATCH"
+    assert build(expected_account_sha256=None)["reason"] == "EXPECTED_ACCOUNT_HASH_REQUIRED"
+    assert build(expected_account_sha256="0" * 64)["reason"] == "ACCOUNT_MISMATCH"
+    account = snapshot()
+    account["account_number"] = "OTHER_ACCOUNT"
+    result = build(account=account)
+    assert result["reason"] == "ACCOUNT_MISMATCH"
+    assert "OTHER_ACCOUNT" not in json.dumps(result)
+    account.pop("account_number")
+    assert build(account=account)["reason"] == "ACCOUNT_REQUIRED"
+    result = build()
+    assert "APPROVED_PC_PAPER_ACCOUNT" not in json.dumps(result)
+    assert "account_pin_sha256" not in result
+    assert build(snapshot_bytes=b"not json", expected_snapshot_sha256=_sha(b"not json"))["status"] == "REFUSED"
+
+
+def test_account_pin_hashes_exact_utf8_identity():
+    account = snapshot()
+    account["account_number"] = "PC-É"
+    assert build(account=account, expected_account_sha256=_sha("PC-É".encode("utf-8")))["status"] == "PROVISIONAL"
+    assert build(account=account, expected_account_sha256=_sha(_canonical("PC-É")))["reason"] == "ACCOUNT_MISMATCH"

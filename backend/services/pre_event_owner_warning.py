@@ -110,7 +110,8 @@ def _number(value: object) -> Decimal:
     return result
 
 
-def _calendar(packet: dict, response: bytes, cutoff: datetime) -> tuple[str, date]:
+def _calendar(packet: dict, response: bytes, cutoff: datetime,
+              now: datetime) -> tuple[str, date]:
     """Rebuild the producer packet from raw response; compare exact canonical bytes."""
     if type(packet) is not dict or type(response) is not bytes or not 0 < len(response) <= 256 * 1024:
         raise _Refused("PACKET_OR_RESPONSE_INVALID")
@@ -125,6 +126,8 @@ def _calendar(packet: dict, response: bytes, cutoff: datetime) -> tuple[str, dat
         raise _Refused("OBSERVATION_AFTER_CUTOFF")
     if cutoff - observed > MAX_AGE:
         raise _Refused("OBSERVATION_STALE")
+    if now - observed > MAX_AGE:
+        raise _Refused("OBSERVATION_STALE_AT_NOW")
     payload = _object(response)
     _bounded_depth(payload)
     if set(payload) != {"earningsCalendar"} or type(payload["earningsCalendar"]) is not list:
@@ -150,6 +153,8 @@ def _calendar(packet: dict, response: bytes, cutoff: datetime) -> tuple[str, dat
     days = (event_date - decision_date).days
     if not 1 <= days <= 7:
         raise _Refused("EVENT_OUTSIDE_WINDOW")
+    if _et_date(now) >= event_date:
+        raise _Refused("EVENT_DATE_STARTED_ET")
     if any(row.get(key) is not None for key in ACTUAL_KEYS):
         raise _Refused("FUTURE_ACTUAL_PRESENT")
     if (type(row["year"]) is not int or not 2000 <= row["year"] <= 9999
@@ -175,18 +180,29 @@ def _calendar(packet: dict, response: bytes, cutoff: datetime) -> tuple[str, dat
     return ticker, event_date
 
 
-def _exposure(snapshot_bytes: bytes, expected_sha256: str, ticker: str,
-              cutoff: datetime) -> tuple[Decimal, Decimal, datetime, Decimal, Decimal]:
-    if (type(snapshot_bytes) is not bytes or type(expected_sha256) is not str
-            or re.fullmatch(r"[0-9a-f]{64}", expected_sha256) is None
-            or _sha(snapshot_bytes) != expected_sha256):
+def _exposure(snapshot_bytes: bytes, expected_snapshot_sha256: str,
+              expected_account_sha256: str, ticker: str, cutoff: datetime,
+              now: datetime) -> tuple[Decimal, Decimal, datetime, Decimal, Decimal]:
+    if (type(snapshot_bytes) is not bytes or type(expected_snapshot_sha256) is not str
+            or re.fullmatch(r"[0-9a-f]{64}", expected_snapshot_sha256) is None
+            or _sha(snapshot_bytes) != expected_snapshot_sha256):
         raise _Refused("SNAPSHOT_SHA256_MISMATCH")
+    if (type(expected_account_sha256) is not str
+            or re.fullmatch(r"[0-9a-f]{64}", expected_account_sha256) is None):
+        raise _Refused("EXPECTED_ACCOUNT_HASH_REQUIRED")
     snap = _object(snapshot_bytes)
+    account = snap.get("account_number")
+    if type(account) is not str or not account or account != account.strip():
+        raise _Refused("ACCOUNT_REQUIRED")
+    if _sha(account.encode("utf-8")) != expected_account_sha256:
+        raise _Refused("ACCOUNT_MISMATCH")
     as_of = _utc(snap.get("t"))
     if as_of > cutoff:
         raise _Refused("SNAPSHOT_AFTER_CUTOFF")
     if cutoff - as_of > MAX_AGE:
         raise _Refused("SNAPSHOT_STALE")
+    if now - as_of > MAX_AGE:
+        raise _Refused("SNAPSHOT_STALE_AT_NOW")
     positions = snap.get("positions")
     if type(positions) is not list or type(snap.get("n_positions")) is not int:
         raise _Refused("BAD_EQUITY_OR_EXPOSURE")
@@ -234,7 +250,8 @@ def _exposure(snapshot_bytes: bytes, expected_sha256: str, ticker: str,
 
 
 def build_pre_event_warning_bytes(*, packet: dict, response_bytes: bytes,
-                                  snapshot_bytes: bytes, expected_account_sha256: str,
+                                  snapshot_bytes: bytes, expected_snapshot_sha256: str,
+                                  expected_account_sha256: str,
                                   cutoff_utc: str, now_utc: str) -> dict:
     """Build a dated, deterministic candidate from caller-frozen bytes only."""
     artifact = {"schema": "pre-event-owner-warning/1", "status": "REFUSED",
@@ -245,15 +262,17 @@ def build_pre_event_warning_bytes(*, packet: dict, response_bytes: bytes,
         artifact["at_utc"] = now.isoformat()
         if now < cutoff:
             raise _Refused("NOW_BEFORE_CUTOFF")
-        ticker, event_date = _calendar(packet, response_bytes, cutoff)
+        ticker, event_date = _calendar(packet, response_bytes, cutoff, now)
         held, equity, as_of, residual, mark_residual = _exposure(
-            snapshot_bytes, expected_account_sha256, ticker, cutoff)
+            snapshot_bytes, expected_snapshot_sha256, expected_account_sha256,
+            ticker, cutoff, now)
         event_id = _sha(_canonical({"source": SOURCE, "ticker": ticker,
                                    "event_date_et": event_date.isoformat(),
                                    "fiscal_year": packet["fiscal_year"],
                                    "fiscal_quarter": packet["fiscal_quarter"]}))
         decision_id = _sha(_canonical({"event_id": event_id, "input_id": packet["input_id"],
-                                      "account_sha256": expected_account_sha256,
+                                      "snapshot_sha256": expected_snapshot_sha256,
+                                      "account_pin_sha256": expected_account_sha256,
                                       "cutoff_utc": cutoff.isoformat()}))
         artifact.update({
             "status": "PROVISIONAL", "reason": "SAVED_EVIDENCE_ONLY", "ticker": ticker,
@@ -261,7 +280,7 @@ def build_pre_event_warning_bytes(*, packet: dict, response_bytes: bytes,
             "event_date_et": event_date.isoformat(), "days_ahead_et": packet["days_ahead"],
             "event_time_status": "UNKNOWN", "observed_utc": packet["observed_utc"],
             "snapshot_as_of_utc": as_of.isoformat(), "response_sha256": packet["response_sha256"],
-            "account_sha256": expected_account_sha256, "input_id": packet["input_id"],
+            "snapshot_sha256": expected_snapshot_sha256, "input_id": packet["input_id"],
             "event_id": event_id, "decision_id": decision_id,
             "saved_exposure_usd": str(held), "equity_usd": str(equity),
             "exposure_weight": str(held / equity),
