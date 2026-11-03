@@ -50,7 +50,8 @@ def case(tmp_path, monkeypatch):
     root = ledger / "pc_book"
     root.mkdir(parents=True)
     snapshot_path = root / "state_latest.json"
-    snapshot = {"t": "2026-11-03T19:30:00Z", "tag": "sim_owner",
+    # Approved snapshot is newer than the sealed 20:00 capture, as in DDOG.
+    snapshot = {"t": "2026-11-03T20:55:00Z", "tag": "sim_owner",
                 "account_number": ACCOUNT, "equity": 2000, "cash": 1000,
                 "long_market_value": 1000, "short_market_value": 0,
                 "n_positions": 1, "positions": [{"symbol": "DDOG", "qty": 10,
@@ -77,7 +78,7 @@ def review(tmp_path):
 
 
 def test_real_style_preview_has_no_transport_or_private_input(case, monkeypatch):
-    kwargs, _, _, _, private = case
+    kwargs, _, _, snapshot_path, private = case
     monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
     code, result = runner.run(**kwargs)
     assert code == 0 and result["status"] == "PROVISIONAL"
@@ -85,6 +86,12 @@ def test_real_style_preview_has_no_transport_or_private_input(case, monkeypatch)
     assert result["ticker"] == "DDOG" and result["event_time_status"] == "UNKNOWN"
     assert result["conditional_loss_usd"]["10_percent_decline"] == "100.00"
     assert result["forecast_status"] == "NO_CALIBRATED_EVENT_FORECAST"
+    assert json.loads(snapshot_path.read_text())["t"] > "2026-11-03T20:00:00Z"
+    original = json.loads(kwargs["receipt_path"].read_text())
+    assert result["receipt_id"] == original["receipt_id"]
+    assert result["capture_input_id"] == original["input_id"]
+    assert result["receipt_sha256"] == runner.selector.sha(kwargs["receipt_path"].read_bytes())
+    assert result["input_id"] != result["capture_input_id"]
     assert not list(private.iterdir())
     output = json.dumps(result)
     assert ACCOUNT not in output and "response_bytes_b64" not in output
@@ -122,6 +129,43 @@ def test_review_mismatch_blocks_sender(case, monkeypatch, tmp_path):
     assert not list(private.iterdir())
 
 
+def test_review_must_pin_imported_config(case, monkeypatch, tmp_path):
+    kwargs, _, _, _, private = case
+    assert "backend/config.py" in runner.SOURCE_PATHS
+    gate = review(tmp_path)
+    document = json.loads(gate.read_text())
+    del document["sha256"]["backend/config.py"]
+    gate.write_text(json.dumps(document))
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["status"] == "REFUSED"
+    assert not list(private.iterdir())
+
+
+@pytest.mark.parametrize("field", ["receipt_id", "input_id"])
+def test_tampered_sealed_receipt_refused(case, field):
+    kwargs, _, _, _, private = case
+    path = kwargs["receipt_path"]
+    receipt = json.loads(path.read_text())
+    receipt[field] = "0" * 64
+    path.write_text(json.dumps(receipt))
+    code, result = runner.run(**kwargs)
+    assert code == 2 and result["status"] == "REFUSED"
+    assert "receipt_id" not in result and not list(private.iterdir())
+
+
+def test_exact_receipt_file_hash_follows_valid_reencoding(case):
+    kwargs, _, _, _, _ = case
+    first_code, first = runner.run(**kwargs)
+    path = kwargs["receipt_path"]
+    path.write_text(path.read_text() + "\n")
+    second_code, second = runner.run(**kwargs)
+    assert first_code == second_code == 0
+    assert first["receipt_id"] == second["receipt_id"]
+    assert first["capture_input_id"] == second["capture_input_id"]
+    assert first["receipt_sha256"] != second["receipt_sha256"]
+
+
 def test_no_independent_review_blocks_send(case, monkeypatch):
     kwargs, _, _, _, private = case
     monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
@@ -151,6 +195,14 @@ def test_single_attempt_and_refreshed_snapshot_duplicate(case, monkeypatch, tmp_
         assert expected_owner == "123456" and until > runner.time.time()
         pending = json.loads(next(private.glob("*.json")).read_text())
         assert pending["state"] == "SENDING" and pending["tag_sha256"] == journal._digest({"tag": tag})
+        receipt = json.loads(kwargs["receipt_path"].read_text())
+        artifact = pending["artifact"]
+        assert artifact["receipt_id"] == receipt["receipt_id"]
+        assert artifact["capture_input_id"] == receipt["input_id"]
+        assert artifact["receipt_sha256"] == runner.selector.sha(kwargs["receipt_path"].read_bytes())
+        assert artifact["input_id"] != artifact["capture_input_id"]
+        for key in ("receipt_id", "capture_input_id", "receipt_sha256", "input_id"):
+            assert artifact[key] in text
         assert "Finnhub earnings calendar OBSERVED" in text
         assert "scheduled ET date" in text and "event time UNKNOWN" in text
         assert "No calibrated forecast, price direction, probability, or new allocation" in text
@@ -178,13 +230,39 @@ def test_single_attempt_and_refreshed_snapshot_duplicate(case, monkeypatch, tmp_
         assert result["delivery"] == ("SENT" if outcome == "sent"
                                       else "UNKNOWN_RECONCILE_REQUIRED")
     snapshot = json.loads(snapshot_path.read_text())
-    snapshot["t"] = "2026-11-03T19:45:00Z"
+    snapshot["t"] = "2026-11-03T20:56:00Z"
     snapshot_path.write_text(json.dumps(snapshot))
     kwargs["now"] += timedelta(minutes=1)
     code, result = runner.run(**kwargs, send=True, review=gate)
     assert code == (0 if outcome == "sent" else 2)
     assert result["delivery"] == ("ALREADY_SENT" if outcome == "sent"
                                   else "DUPLICATE_RECONCILE_REQUIRED")
+    assert len(calls) == 1
+
+
+def test_journal_receipt_identity_tamper_blocks_confirmed_replay(case, monkeypatch, tmp_path):
+    kwargs, _, _, _, private = case
+    monkeypatch.setattr(telegram_bridge, "owner_chat_id", lambda: "123456")
+    calls = []
+
+    def sender(text, *, tag, **_kwargs):
+        calls.append(text)
+        ack = {"state": "SENT", "messages": 1, "native_ack_sha256": "f" * 64,
+               "tag_sha256": journal._digest({"tag": tag}),
+               "text_sha256": journal._hash(text)}
+        ack["delivery_binding_sha256"] = journal._digest({
+            key: ack[key] for key in journal._ACK_HASH_KEYS})
+        return ack
+
+    monkeypatch.setattr(telegram_bridge, "send_owner_once", sender)
+    gate = review(tmp_path)
+    assert runner.run(**kwargs, send=True, review=gate)[1]["delivery"] == "SENT"
+    path = next(path for path in private.glob("*.json") if not path.name.endswith(".result.json"))
+    record = json.loads(path.read_text())
+    record["artifact"]["receipt_id"] = "0" * 64
+    path.write_text(json.dumps(record))
+    code, result = runner.run(**kwargs, send=True, review=gate)
+    assert code == 2 and result["delivery"] == "DUPLICATE_RECONCILE_REQUIRED"
     assert len(calls) == 1
 
 

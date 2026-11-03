@@ -26,6 +26,7 @@ from scripts import owner_event_warning as selector
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PATHS = (
+    "backend/config.py",
     "backend/services/saved_earnings_calendar_input.py",
     "backend/services/earnings_calendar_capture.py",
     "backend/services/pre_event_owner_warning.py",
@@ -85,7 +86,8 @@ def _preview(artifact: dict, delivery_state: str) -> dict:
             "event_date_et", "event_time_status", "snapshot_as_of_utc",
             "saved_exposure_usd", "equity_usd", "exposure_weight",
             "conditional_loss_usd", "forecast_status", "paper_decision",
-            "event_id", "decision_id", "input_id")
+            "event_id", "decision_id", "input_id", "receipt_id",
+            "capture_input_id", "receipt_sha256")
     return {**{key: artifact[key] for key in keys if key in artifact},
             "delivery": delivery_state}
 
@@ -115,7 +117,7 @@ def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         if send:
             check()
         packet = capture.evaluate_saved_capture(
-            receipt, response, cutoff_utc=receipt["cutoff_utc"])
+            receipt, response, cutoff_utc=actual_now.isoformat())
         if packet.get("status") != "EVIDENCE_ONLY":
             raise Refused("CALENDAR_REPLAY_REFUSED")
         if send:
@@ -128,9 +130,14 @@ def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
             packet=packet, response_bytes=response, snapshot_bytes=snapshot,
             expected_snapshot_sha256=selector.sha(snapshot),
             expected_account_sha256=expected_account_sha256,
-            cutoff_utc=receipt["cutoff_utc"], now_utc=actual_now.isoformat())
+            cutoff_utc=actual_now.isoformat(), now_utc=actual_now.isoformat())
         if artifact["status"] != "PROVISIONAL":
             return 2, _preview(artifact, "NOT_SENT")
+        # The capture seal proves the original observation; the replay input_id
+        # is decision-time specific. Keep both identities and exact file bytes.
+        artifact.update(receipt_id=receipt["receipt_id"],
+                        capture_input_id=receipt["input_id"],
+                        receipt_sha256=selector.sha(encoded))
         if not send:
             return 0, _preview(artifact, "PREVIEW")
         if review is None:

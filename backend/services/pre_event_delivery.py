@@ -16,7 +16,10 @@ def message(artifact: dict) -> str:
     if (artifact.get("schema") != "pre-event-owner-warning/1"
             or artifact.get("status") != "PROVISIONAL"
             or not re.fullmatch(r"[A-Z]{1,5}(?:[.-][A-Z])?", artifact.get("ticker", ""))
-            or not re.fullmatch(r"[0-9a-f]{64}", artifact.get("event_id", ""))):
+            or any(not isinstance(artifact.get(key), str)
+                   or not re.fullmatch(r"[0-9a-f]{64}", artifact[key])
+                   for key in ("event_id", "input_id", "receipt_id",
+                               "capture_input_id", "receipt_sha256"))):
         raise ValueError("PROVISIONAL_WARNING_REQUIRED")
     return (
         f"PROVISIONAL PC-PAPER pre-event warning: {artifact['ticker']}\n"
@@ -31,7 +34,11 @@ def message(artifact: dict) -> str:
         "Saved receipt only; provider authenticity unverified. "
         "No calibrated forecast, price direction, probability, or new allocation. "
         "HOLD_EXISTING / NO_NEW_BET / REVIEW_NEW_EVIDENCE (paper only).\n"
-        f"Event ID {artifact['event_id']}"
+        f"Event ID {artifact['event_id']}\n"
+        f"Sealed receipt ID {artifact['receipt_id']}; "
+        f"capture input ID {artifact['capture_input_id']}; "
+        f"receipt file SHA256 {artifact['receipt_sha256']}; "
+        f"decision replay input ID {artifact['input_id']}"
     )
 
 
