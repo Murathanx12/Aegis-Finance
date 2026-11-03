@@ -1,9 +1,13 @@
 """All transport responses are synthetic; no test contacts Finnhub."""
 
+import base64
 from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
+import traceback
 
 import pytest
 
@@ -21,9 +25,17 @@ NOW = datetime(2026, 11, 3, 20, tzinfo=timezone.utc)
 
 class Response:
     def __init__(self, raw=RAW, status=200, content_type="application/json"):
-        self.content = raw
+        self.raw = raw
         self.status_code = status
         self.headers = {"Content-Type": content_type}
+        self.closed = False
+
+    def iter_content(self, chunk_size):
+        for start in range(0, len(self.raw), chunk_size):
+            yield self.raw[start:start + chunk_size]
+
+    def close(self):
+        self.closed = True
 
 
 def private_dir(tmp_path):
@@ -33,7 +45,7 @@ def private_dir(tmp_path):
 
 
 def capture(directory, transport, clock=lambda: NOW, **changes):
-    arguments = dict(ticker="AAPL", start="2026-11-03", end="2026-11-10",
+    arguments = dict(ticker="AAPL", start="2026-11-04", end="2026-11-10",
                      cutoff_utc="2026-11-03T21:00:00Z", private_dir=directory,
                      transport=transport, clock=clock, api_key=TOKEN)
     arguments.update(changes)
@@ -45,8 +57,8 @@ def test_only_explicit_call_fetches_once_and_freezes_receipt(tmp_path, caplog):
     calls = []
     sequence = []
 
-    def transport(url, *, params, timeout):
-        calls.append((url, params, timeout))
+    def transport(url, *, params, timeout, stream):
+        calls.append((url, params, timeout, stream))
         sequence.append("response")
         return Response()
 
@@ -58,8 +70,8 @@ def test_only_explicit_call_fetches_once_and_freezes_receipt(tmp_path, caplog):
     result = capture(directory, transport, clock)
     assert len(calls) == 1
     assert calls[0] == ("https://finnhub.io/api/v1/calendar/earnings",
-                        {"symbol": "AAPL", "from": "2026-11-03",
-                         "to": "2026-11-10", "token": TOKEN}, 10)
+                        {"symbol": "AAPL", "from": "2026-11-04",
+                         "to": "2026-11-10", "token": TOKEN}, (3, 5), True)
     assert sequence == ["response", "clock"]
     packet = result["packet"]
     receipt = json.loads(result["receipt_path"].read_bytes())
@@ -67,8 +79,8 @@ def test_only_explicit_call_fetches_once_and_freezes_receipt(tmp_path, caplog):
     assert receipt["observed_utc"] == packet["observed_utc"] == NOW.isoformat()
     assert receipt["response_sha256"] == hashlib.sha256(RAW).hexdigest()
     assert receipt["input_id"] == packet["input_id"]
+    assert base64.b64decode(receipt["response_bytes_b64"]) == RAW
     assert TOKEN not in result["receipt_path"].read_text()
-    assert RAW not in result["receipt_path"].read_bytes()
     assert TOKEN not in caplog.text
 
     # A later read uses the same original clock; no network or clock is involved.
@@ -77,6 +89,9 @@ def test_only_explicit_call_fetches_once_and_freezes_receipt(tmp_path, caplog):
     assert cached["reason"] == "OBSERVATION_STALE"
     assert receipt["observed_utc"] == NOW.isoformat()
     assert len(calls) == 1
+    assert C.replay_earnings_calendar(
+        result["receipt_path"], cutoff_utc="2026-11-04T21:00:01Z",
+    )["reason"] == "OBSERVATION_STALE"
 
 
 @pytest.mark.parametrize("response,reason", [
@@ -118,7 +133,9 @@ def test_key_directory_and_transport_fail_closed_without_secret(tmp_path, caplog
     with pytest.raises(C.CaptureRefused) as error:
         capture(directory, transport)
     assert str(error.value) == "FETCH_FAILED"
-    assert TOKEN not in str(error.value) + caplog.text
+    assert error.value.__context__ is None
+    formatted = "".join(traceback.format_exception(error.value))
+    assert TOKEN not in str(error.value) + caplog.text + formatted
     assert list(directory.iterdir()) == []
 
 
@@ -160,3 +177,108 @@ def test_saved_bytes_cannot_be_substituted(tmp_path):
     receipt["observed_utc"] = "2026-11-03T20:59:59+00:00"
     with pytest.raises(C.CaptureRefused, match="^SAVED_CAPTURE_INVALID$"):
         C.evaluate_saved_capture(receipt, RAW, cutoff_utc="2026-11-03T21:00:00Z")
+
+
+@pytest.mark.parametrize("start,end,cutoff", [
+    ("2026-11-03", "2026-11-10", "2026-11-03T21:00:00Z"),
+    ("2026-11-04", "2026-11-11", "2026-11-03T21:00:00Z"),
+    ("2026-11-04", "2026-11-10", "2026-11-04T05:00:00Z"),
+])
+def test_date_window_refuses_before_network(tmp_path, start, end, cutoff):
+    directory = private_dir(tmp_path)
+    calls = []
+    with pytest.raises(C.CaptureRefused, match="^DATE_RANGE_INVALID$"):
+        capture(directory, lambda *_a, **_k: calls.append(1),
+                start=start, end=end, cutoff_utc=cutoff)
+    assert not calls and not list(directory.iterdir())
+
+
+def test_stream_deadline_and_oversize_leave_no_receipt(tmp_path):
+    directory = private_dir(tmp_path)
+    ticks = iter((0, 16))
+    with pytest.raises(C.CaptureRefused, match="^TOTAL_DEADLINE_EXCEEDED$"):
+        capture(directory, lambda *_a, **_k: Response(), monotonic=lambda: next(ticks))
+    assert list(directory.iterdir()) == []
+    with pytest.raises(C.CaptureRefused, match="^RESPONSE_BYTES_INVALID$"):
+        capture(directory, lambda *_a, **_k: Response(raw=b"x" * (MAX_BYTES + 8192)))
+    assert list(directory.iterdir()) == []
+
+
+def test_partial_write_is_removed_before_publish(tmp_path, monkeypatch):
+    directory = private_dir(tmp_path)
+
+    def fail_fsync(_fd):
+        raise OSError("disk failed")
+
+    monkeypatch.setattr(C.os, "fsync", fail_fsync)
+    with pytest.raises(C.CaptureRefused, match="^RECEIPT_WRITE_FAILED$"):
+        capture(directory, lambda *_a, **_k: Response())
+    assert list(directory.iterdir()) == []
+
+
+def test_observed_private_dir_swap_refuses_before_publish(tmp_path, monkeypatch):
+    directory = private_dir(tmp_path)
+    original = C._private_identity
+    checks = 0
+
+    def swapped(path):
+        nonlocal checks
+        checks += 1
+        identity = original(path)
+        return identity if checks < 3 else (identity[0], identity[1] + 1)
+
+    monkeypatch.setattr(C, "_private_identity", swapped)
+    with pytest.raises(C.CaptureRefused, match="^PRIVATE_DIRECTORY_CHANGED$"):
+        capture(directory, lambda *_a, **_k: Response())
+    assert checks >= 3
+    assert list(directory.iterdir()) == []
+
+
+def test_replay_in_fresh_process_needs_only_receipt_path(tmp_path):
+    directory = private_dir(tmp_path)
+    path = capture(directory, lambda *_a, **_k: Response())["receipt_path"]
+    script = ("import sys; from backend.services.earnings_calendar_capture "
+              "import replay_earnings_calendar; "
+              "print(replay_earnings_calendar(sys.argv[1], "
+              "cutoff_utc='2026-11-04T21:00:01Z')['reason'])")
+    result = subprocess.run([sys.executable, "-c", script, str(path)],
+                            capture_output=True, text=True, check=True)
+    assert result.stdout.strip() == "OBSERVATION_STALE"
+
+
+def test_token_echo_is_refused_without_receipt(tmp_path):
+    directory = private_dir(tmp_path)
+    payload = json.loads(RAW)
+    payload["earningsCalendar"].append({"symbol": "MSFT", "note": TOKEN})
+    raw = json.dumps(payload).encode()
+    with pytest.raises(C.CaptureRefused, match="^TOKEN_IN_RESPONSE$"):
+        capture(directory, lambda *_a, **_k: Response(raw=raw))
+    assert list(directory.iterdir()) == []
+
+
+def test_observation_follows_last_body_byte_and_stream_error_is_sanitized(tmp_path):
+    directory = private_dir(tmp_path)
+    order = []
+
+    class TracedResponse(Response):
+        def iter_content(self, chunk_size):
+            yield from super().iter_content(chunk_size)
+            order.append("body_complete")
+
+    def clock():
+        order.append("observed")
+        return NOW
+
+    capture(directory, lambda *_a, **_k: TracedResponse(), clock=clock)
+    assert order == ["body_complete", "observed"]
+
+    class FailingResponse(Response):
+        def iter_content(self, chunk_size):
+            yield b"{"
+            raise RuntimeError(f"URL ?token={TOKEN} stream broke")
+
+    with pytest.raises(C.CaptureRefused) as error:
+        capture(directory, lambda *_a, **_k: FailingResponse())
+    assert error.value.__context__ is None
+    assert TOKEN not in "".join(traceback.format_exception(error.value))
+    assert len(list(directory.glob("*.json"))) == 1
