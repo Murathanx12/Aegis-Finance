@@ -12,7 +12,8 @@ def git(*args):
 def classify(paths, event):
     if not paths:
         return False, False
-    receipt = lambda p: p.startswith("backend/data/public_receipts/")
+    def receipt(p):
+        return p.startswith("backend/data/public_receipts/")
 
     def independent(p):
         # Explicit non-build inputs only. Root/shared/config/new categories run CI.
