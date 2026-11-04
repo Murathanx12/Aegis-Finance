@@ -99,7 +99,7 @@ def ensure_inbox(d: Path | None = None) -> Path:
 
 # ───────────────────────────────── parsing ──────────────────────────────────
 
-def parse_header(h: str) -> dict:
+def parse_header(h: str, *, ingest_utc: str | None = None) -> dict:
     out: dict[str, Any] = {}
     for tok in [t.strip() for t in (h or "").split("|")]:
         if not tok:
@@ -122,12 +122,14 @@ def parse_header(h: str) -> dict:
             out["source"] = tok
         else:
             from backend.services import web_reader as WR
-            if WR.parse_published(tok):
-                out["date"] = WR.parse_published(tok)
+            parsed = WR.parse_published(tok, first_seen_utc=ingest_utc)
+            if parsed:
+                out["date"] = parsed
     return out
 
 
-def split_entries(text: str, *, header_zone: bool) -> list[tuple[dict, str]]:
+def split_entries(text: str, *, header_zone: bool,
+                  ingest_utc: str | None = None) -> list[tuple[dict, str]]:
     """[(header, body)]. `header_zone`: text before the first `===` is
     instructions (DIGEST.md) rather than an entry (a saved page)."""
     entries: list[tuple[dict, list[str]]] = []
@@ -139,7 +141,7 @@ def split_entries(text: str, *, header_zone: bool) -> list[tuple[dict, str]]:
         if m:
             if seen_sep or (not header_zone and "".join(cur).strip()):
                 entries.append((cur_h or {}, cur))
-            cur_h, cur, seen_sep = parse_header(m.group(1)), [], True
+            cur_h, cur, seen_sep = parse_header(m.group(1), ingest_utc=ingest_utc), [], True
             continue
         cur.append(line)
     if seen_sep or not header_zone:
@@ -174,7 +176,7 @@ def to_article(header: dict, body: str, *, ingest_utc: str) -> dict:
     if header.get("date"):
         hd = header["date"]
         published = hd if "T" in hd else f"{hd}T00:00:00+00:00"
-    published = published or WR.parse_published(text)
+    published = published or WR.parse_published(text, first_seen_utc=ingest_utc)
     # Publisher and column from the RAW paste: the lines above the headline
     # ("Heard on the Street", "The Wall Street Journal") are exactly what
     # `clean_text` cuts, and exactly what names the column.
@@ -206,7 +208,8 @@ def ingest(d: Path | None = None, *, now_utc: str | None = None,
         if f.name.lower() in SKIP_FILES or f.name.lower().startswith(SKIP_PREFIXES):
             continue
         raw = f.read_text(encoding="utf-8", errors="replace")
-        for h, body in split_entries(raw, header_zone=(f.name.lower() == "digest.md")):
+        for h, body in split_entries(raw, header_zone=(f.name.lower() == "digest.md"),
+                                     ingest_utc=now):
             art = to_article(h, body, ingest_utc=now)
             if len(art["text"]) < 200:
                 n_short += 1
