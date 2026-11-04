@@ -115,7 +115,12 @@ def _shared_budget_refusal() -> str | None:
     """
     try:
         from backend.services import provider_budget as PB
-        s = PB.snapshot()
+        read_snapshot = PB.preflight_snapshot
+        refused_type = PB.BudgetRefused
+    except Exception:                                                # noqa: BLE001
+        return "SHARED_ENVELOPE_IMPORT_FAILED"
+    try:
+        s = read_snapshot()
         if s.get("blocked"):
             return "SHARED_ENVELOPE_BLOCKED"
         amounts = [s["cap_units"], s["opening_units"]]
@@ -124,9 +129,16 @@ def _shared_budget_refusal() -> str | None:
             return "SHARED_ENVELOPE_INVALID"
         if sum(amounts[1:]) >= amounts[0]:
             return "SHARED_ENVELOPE_EXHAUSTED"
-    except Exception:                                                # noqa: BLE001
-        # Import, lock, load and schema failures all fail closed. Exception
-        # strings and the snapshot may contain private paths or evidence.
+    except Exception as exc:                                         # noqa: BLE001
+        # _load wraps failures for paid callers; inspect its cause by type only.
+        cause = exc.__cause__ if isinstance(exc, refused_type) else exc
+        if isinstance(cause, FileNotFoundError):
+            return "SHARED_ENVELOPE_MISSING"
+        if isinstance(cause, (OSError, TimeoutError)):
+            return "SHARED_ENVELOPE_LOCK_UNREADABLE"
+        if isinstance(cause, (ValueError, KeyError, TypeError, AttributeError)):
+            return "SHARED_ENVELOPE_MALFORMED"
+        # Only exception types cross this boundary, never messages or payloads.
         return "SHARED_ENVELOPE_UNAVAILABLE"
     return None
 
