@@ -184,3 +184,16 @@ def test_argument_errors_do_not_echo_private_values(capsys):
     output = capsys.readouterr()
     assert json.loads(output.out) == {"status": "REFUSED", "reason": "INVALID_ARGUMENTS"}
     assert output.err == "" and "private" not in output.out
+
+
+def test_deep_receipt_refuses_without_traceback(tmp_path, capsys):
+    pair = archive(tmp_path, "2026-10-22", [("US", "A")])
+    raw = pair[1].read_text(encoding="utf-8")
+    pair[1].write_text(raw[:-1] + ',"unused":' + '[' * 5000 + '0'
+                       + ']' * 5000 + '}', encoding="utf-8")
+    argv = ["--old-parquet", str(pair[0]), "--old-receipt", str(pair[1]),
+            "--new-parquet", str(pair[0]), "--new-receipt", str(pair[1])]
+    assert D.main(argv) == 2
+    output = capsys.readouterr()
+    assert json.loads(output.out) == {"status": "REFUSED", "reason": "UNREADABLE_INPUT"}
+    assert output.err == "" and str(tmp_path) not in output.out

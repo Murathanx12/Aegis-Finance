@@ -188,7 +188,7 @@ def main(argv=None):
         result = compare(args.old_parquet, args.old_receipt, args.new_parquet, args.new_receipt)
     except SnapshotRefused as exc:
         result = {"status": "REFUSED", "reason": str(exc)}
-    except (OSError, ValueError, TypeError, KeyError, pa.ArrowException):
+    except (OSError, ValueError, TypeError, KeyError, RecursionError, pa.ArrowException):
         result = {"status": "REFUSED", "reason": "UNREADABLE_INPUT"}
     print(json.dumps(result, sort_keys=True, ensure_ascii=True, allow_nan=False))
     return 2 if result["status"] == "REFUSED" else 0
