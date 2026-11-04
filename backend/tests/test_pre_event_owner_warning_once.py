@@ -425,7 +425,9 @@ def test_iif_until_is_absolute_and_crossing_blocks_transport(case, monkeypatch, 
     monkeypatch.setattr(telegram_bridge, "send_owner_once", lambda *_a, **_k: pytest.fail("sent"))
     code, result = runner.run(**kwargs, send=True, review=gate)
     assert code == 2 and result["delivery"] == "UNKNOWN_RECONCILE_REQUIRED"
-    assert json.loads(next(private.glob("*.json")).read_text())["state"] == "SENDING"
+    claim = next(path for path in private.glob("*.json")
+                 if not path.name.endswith(".result.json"))
+    assert json.loads(claim.read_text())["state"] == "SENDING"
 
 
 def test_tenth_second_before_et_midnight_refuses_without_transport(case, monkeypatch, tmp_path):
