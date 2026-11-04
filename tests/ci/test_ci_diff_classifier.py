@@ -45,7 +45,7 @@ class ClassifierTests(unittest.TestCase):
             output = Path(temp) / 'output'
             env = dict(os.environ, EVENT='unknown', GITHUB_OUTPUT=str(output))
             subprocess.run([sys.executable, str(Path(c.__file__).resolve())], env=env, check=True, capture_output=True)
-            self.assertEqual(output.read_text(), 'receipts_only=false\nfrontend_unaffected=false\n')
+            self.assertEqual(output.read_text(), 'receipts_only=false\nfrontend_unaffected=false\ndocs_only=false\nneed_backend=true\n')
 
 
 class GitTests(unittest.TestCase):
@@ -116,6 +116,100 @@ class GitTests(unittest.TestCase):
         self.git('checkout', 'main')
         self.git('merge', '--no-ff', 'pr', '-m', 'synthetic merge')
         self.assertEqual(c.classify_event('pull_request', base=self.base, head=head), (False, True))
+
+
+class DocsOnlyTests(GitTests):
+    def test_docs_only_push_and_pr_cli(self):
+        self.git('checkout', '-b', 'docs-pr')
+        self.write('docs/nested/note.md', '# note')
+        self.commit()
+        head = self.git('rev-parse', 'HEAD')
+        self.assertTrue(c.docs_only_event('push', self.base))
+        self.git('checkout', 'main')
+        self.git('merge', '--no-ff', 'docs-pr', '-m', 'merge docs')
+        self.assertTrue(c.docs_only_event('pull_request', base=self.base, head=head))
+        for event in ('push', 'pull_request'):
+            with tempfile.TemporaryDirectory() as temp:
+                output = Path(temp) / 'output'
+                env = dict(os.environ, EVENT=event, BEFORE=self.base,
+                           BASE=self.base, PR_HEAD=head, GITHUB_OUTPUT=str(output))
+                subprocess.run([sys.executable, str(Path(c.__file__).resolve())],
+                               env=env, check=True, capture_output=True)
+                self.assertIn('docs_only=true\nneed_backend=false\n', output.read_text())
+        self.write('docs/nested/note.md', '# edited')
+        self.commit()
+        self.assertTrue(c.docs_only_event('push', head))
+
+    def test_mixed_and_this_changeset_force_full_checks(self):
+        self.write('docs/note.md', '# docs')
+        for path in ('backend/services/a.py', 'README.md', 'shared/new.md',
+                     '.github/workflows/ci.yml', 'scripts/ci_diff_classifier.py',
+                     'tests/ci/test_ci_diff_classifier.py', 'docs/config.json'):
+            with self.subTest(path=path):
+                self.write(path, '# changed')
+                self.commit()
+                self.assertFalse(c.docs_only_event('push', self.base))
+                self.assertEqual(c.classify_event('push', self.base), (False, False)
+                                 if path != 'backend/services/a.py' else (False, True))
+
+    def test_docs_rename_delete_and_type_change_run_backend(self):
+        self.write('docs/original.md', '# docs')
+        self.commit()
+        before = self.git('rev-parse', 'HEAD')
+        self.git('mv', 'docs/original.md', 'docs/renamed.md')
+        self.commit()
+        self.assertFalse(c.docs_only_event('push', before))
+        before = self.git('rev-parse', 'HEAD')
+        self.git('rm', 'docs/renamed.md')
+        self.commit()
+        self.assertFalse(c.docs_only_event('push', before))
+        self.git('update-index', '--add', '--cacheinfo',
+                 '120000,' + self.git('rev-parse', 'HEAD:backend/services/a.py') + ',docs/link.md')
+        self.git('commit', '-m', 'symlink fixture')
+        self.assertFalse(c.docs_only_event('push', before))
+
+    def test_docs_pr_base_drift_and_missing_refs(self):
+        self.git('checkout', '-b', 'docs-pr')
+        self.write('docs/note.md', '# PR docs')
+        self.commit()
+        head = self.git('rev-parse', 'HEAD')
+        self.git('checkout', 'main')
+        self.write('backend/services/a.py', '# base drift')
+        self.commit()
+        base = self.git('rev-parse', 'HEAD')
+        self.git('merge', '--no-ff', 'docs-pr', '-m', 'merge')
+        self.assertFalse(c.docs_only_event('pull_request', base=base, head=head))
+        self.assertFalse(c.docs_only_event('pull_request', base=base, head='a' * 40))
+        self.assertFalse(c.docs_only_event('push', 'a' * 40))
+        self.assertFalse(c.docs_only_event('push', self.git('rev-parse', 'HEAD')))
+
+    def test_docs_unknown_errors_and_path_evasion(self):
+        for event, kwargs in [('push', {}), ('push', {'before': '0' * 40}),
+                              ('push', {'before': '--help'}), ('workflow_dispatch', {}),
+                              ('pull_request', {'base': 'a' * 40})]:
+            self.assertFalse(c.docs_only_event(event, **kwargs))
+        for error in (OSError(), subprocess.CalledProcessError(1, 'git'), UnicodeError()):
+            with patch.object(c, 'git', side_effect=error):
+                self.assertFalse(c.docs_only_event('push', 'a' * 40))
+        metadata = b':100644 100644 abc def M\0'
+        for path in (b'docs/../code.md', b'docs//a.md', b'/docs/a.md',
+                     b'docs/./a.md', b'docs\\a.md', b'docs/a.MD', b'docs/a.md/evil',
+                     b'docs/a.md\n', b'docs/\xff.md', b'docs.md', b'Docs/a.md'):
+            with self.subTest(path=path), patch.object(c, 'git', return_value=metadata + path + b'\0'):
+                self.assertFalse(c.docs_only_event('push', 'a' * 40))
+        for raw in (b'', b'broken', b'broken\0', b':100644 100755 abc def M\0docs/a.md\0',
+                    b':120000 100644 abc def T\0docs/a.md\0'):
+            with patch.object(c, 'git', return_value=raw):
+                self.assertFalse(c.docs_only_event('push', 'a' * 40))
+
+
+class WorkflowTests(unittest.TestCase):
+    def test_backend_safe_default_and_frontend_preserved(self):
+        workflow = (Path(c.__file__).resolve().parents[1] / '.github/workflows/ci.yml').read_text()
+        self.assertIn("needs.changes.result != 'success' || needs.changes.outputs.need_backend != 'false'", workflow)
+        self.assertIn("needs.changes.result != 'success' || needs.changes.outputs.frontend_unaffected != 'true'", workflow)
+        self.assertIn('need_backend: ${{ steps.diff.outputs.need_backend }}', workflow)
+        self.assertIn('docs_only: ${{ steps.diff.outputs.docs_only }}', workflow)
 
 
 if __name__ == '__main__':

@@ -23,13 +23,15 @@ concurrency:
 
 jobs:
   changes:
-    name: classify generated receipt push
+    name: classify complete CI diff
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
       receipts_only: ${{ steps.diff.outputs.receipts_only }}
       frontend_unaffected: ${{ steps.diff.outputs.frontend_unaffected }}
+      docs_only: ${{ steps.diff.outputs.docs_only }}
+      need_backend: ${{ steps.diff.outputs.need_backend }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +51,7 @@ jobs:
   backend:
     needs: changes
     # Classifier failures run full checks; skipped jobs still report checks.
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.receipts_only != 'true') }}
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.need_backend != 'false') }}
     name: backend (pytest offline + ruff + pip-audit)
     runs-on: ubuntu-latest
     steps:
