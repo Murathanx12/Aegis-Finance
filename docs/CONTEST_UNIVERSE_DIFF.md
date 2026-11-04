@@ -81,23 +81,26 @@ python -m pytest backend/tests/test_contest_universe_diff.py -q -p no:cacheprovi
 The tests cover exact keys, missing markets, invalid receipts/clocks/schema,
 duplicate keys across batches, counts, empty archives, separate screening dates,
 sanitization, source immutability, input limits and nested unrelated columns.
-The copied real pair is a one-time acceptance replay, not part of the test suite.
+The copied real pair is an explicit acceptance replay, not part of the test suite.
 
 ### Local acceptance receipt
 
 Base: `1d2319a87c2959bd044fc1b52a37b1a10472ac18`. Focused suite:
 **29 passed**. Copies live outside Git at
 `C:/Users/mrthn/aegis-recovery-evidence/universe-diff-build-20261105-r1`.
-The CLI ran on these real copies **once**, returned 0, and its JSON parsed.
+At initial acceptance, the CLI ran on these real copies **once**, returned 0,
+and its JSON parsed.
 This validates both receipt reconciliations, uniqueness and dates. The wrapper's
 resident peak assertion passed (<256 MiB for the whole CLI child process), but
 its subsequent private-commit assertion failed (>=256 MiB). Private committed
 memory therefore does **not** satisfy a 256 MiB ceiling. Exact memory numbers
 and the parsed payload were lost because the wrapper saved them after those
 assertions. The expected numerical comparison assertion was never reached.
-No second real invocation was made. `validation.json` records these limits;
-the failed wrapper is retained for inspection. This is a resident-memory pass,
-not an unqualified memory-budget or complete acceptance pass.
+At that point no second real invocation had been made. The original receipt
+and failed wrapper are now preserved as `validation.initial.json` and
+`validate_real.initial.py`. That initial run was a resident-memory pass,
+not an unqualified memory-budget or complete acceptance pass. The focused
+follow-up below resolves the missing persisted evidence.
 
 Source and copy SHA-256 digests agree after execution:
 
@@ -108,7 +111,44 @@ Source and copy SHA-256 digests agree after execution:
 | universe_2026-11-01.parquet | `86a58cc34b44682113f0830c431a1ecb7475025cf6ae57ba08528d1dd727d27d` |
 | universe_2026-11-01_receipt.json | `eacfdaec821cb6560b52a9f68c18c3230af552ff8801750a23b1dba37c042596` |
 
-The initial supplied replay reports 17,060 repeated / 347 old-only / 201 new-only
-keys; these are retained as historical expected values, not represented here as
-preserved output from the candidate CLI. No certified inclusion or historical
-availability conclusion follows.
+### Focused acceptance follow-up: 2026-11-05 local
+
+The owner authorized one additional invocation on the exact frozen copies.
+Candidate source commit remains
+`0b2044f93176c1b9ec787d6f8ca345c884b52a5c`; no CLI or test source was edited.
+Only the external `validate_real.py` wrapper changed. It now uses
+`check=False`, parses sanitized stdout and memory measurements, then writes and
+flushes `real_result.json` and `validation.json` **before** evaluating any
+acceptance limits or count comparisons. Nonzero child exits are retained too;
+raw stderr and exception payloads are not copied into the receipt.
+
+The additional invocation returned **0**, with persisted JSON and exact memory
+measurements. `validation.json` records **PASS_LOCAL_RESIDENT_BOUND**:
+
+| Observation | Result |
+|---|---:|
+| Old / new rows | 17,407 / 17,261 |
+| Persisted exact keys | 17,060 |
+| Old-only / new-only | 347 / 201 |
+| Peak resident working set, whole CLI child | 51,412,992 bytes (49.03125 MiB) |
+| Peak private committed memory | 707,887,104 bytes (675.09375 MiB) |
+| Resident baseline before candidate import | 14,831,616 bytes |
+
+Counts match the initial supplied replay's **17060 / 347 / 201**, and every
+market is present in both snapshots. Source/copy SHA-256 digests above still
+match; the candidate source hash is unchanged. This follow-up invoked the
+candidate once (two real invocations total across initial build and follow-up).
+No broad tests were rerun; the 29-test result above belongs to the initial build.
+
+The same reader-pool PIDs **14136 / 61968** and supervisor PIDs **13572 / 6984**,
+with unchanged process creation times, were observed before and after the run.
+These process observations are saved in `reader_before.json`,
+`reader_after.json` and the validation receipt. They establish process continuity,
+not reader throughput or health. No reader process was stopped or reconfigured.
+
+Resident RAM is the acceptance bound for this local run and passed below
+256 MiB, including the child's interpreter/import footprint. Private commit is
+reported separately and exceeds 256 MiB. This measurement is **not an
+unconditional 256 MiB guarantee** for other files, machines, concurrent loads or
+allocator behavior. No certified inclusion or historical availability conclusion
+follows. No push, adoption or deployment occurred.
