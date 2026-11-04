@@ -495,9 +495,12 @@ def build_saved_warning_bytes(*, source_bytes: bytes, snapshot_bytes: bytes,
             raise ValueError()
         accession, filename = row['raw_id'].split(':')
         title_cik = re.search(r'\((\d{10})\)', row['title']).group(1)
+        # SEC: accession's first ten digits are the login CIK, possibly a filing
+        # agent's, not the subject CIK. Bind the subject via title/URL instead.
+        # https://www.sec.gov/submit-filings/filer-support-resources/how-do-i-guides/understand-select-set-default-login-cik
         if (not re.fullmatch(r'\d{10}-\d{2}-\d{6}', accession)
                 or accession.replace('-', '') != match[2] or filename != match[3]
-                or int(title_cik) != int(match[1]) or accession[:10] != title_cik):
+                or int(title_cik) != int(match[1])):
             raise ValueError()
         normalized_row = dict(ticker=ticker, form='8-K', exhibit='EX-99.1' if row['title'].endswith('EX-99.1') else 'EX-99',
                               event_type='earnings_results', accession=accession,
