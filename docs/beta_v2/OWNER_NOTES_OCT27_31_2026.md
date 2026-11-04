@@ -3,9 +3,21 @@
 Prepared 2026-11-04 against `origin/main` at `6dc083fff6a00b2edaaa7d18d6df36c3dccd394b`.
 **Result improvement: none; documentation only.** This reconciles seven topics supplied in the owner's document-builder request; the original Oct 27–31 note text was not located in the inspected sources. Dates identify the requested note window, not verified note authorship or runtime freshness. No new roadmap, experiment registration, activation or market-performance claim follows.
 
+The only available source for the note wording is the owner's dated chat excerpt in this Codex conversation. The original note files or message exports remain unverified. Each excerpt is mapped below so the topic coverage can be checked without treating these summaries as a verbatim recovery of the original notes.
+
+| Supplied chat timestamp (owner local) | Supplied phrase | Section |
+|---|---|---|
+| 2026-10-27 15:14 | Feedback loop diagram | [1](#1-feedback-loop) |
+| 2026-10-27 15:18 | Layered technical architecture | [2](#2-layered-technical-architecture) |
+| 2026-10-27 15:18 | Object relationship | [3](#3-object-relationships) |
+| 2026-10-29 15:12 | business model canvas | [4](#4-business-model-canvas) |
+| 2026-10-29 18:23 | Inclusion data | [5](#5-inclusion-data) |
+| 2026-10-31 10:29 | Word2vec to convert words into numerical vectors | [6](#6-word2vec-and-numerical-vectors) |
+| 2026-10-31 12:29 | Optimus as RAG | [7](#7-optimus-as-rag) |
+
 Source baseline: [AGENTS](../../AGENTS.md), [CLAUDE](../../CLAUDE.md), [canon](../CANON.md), [negative results](../../NEGATIVE_RESULTS.md), [existing pipeline](../AEGIS_V1_BETA_2026-10-07.md), [module architecture](../assets/architecture_pipeline.svg), [Optimus objective](../OPTIMUS_OBJECTIVE.md), and [MCP query surface](../OPTIMUS_MCP_SURFACE.md). These are design and dated implementation evidence, not proof of current operation.
 
-The [owner-review reconciliation](../../../aegis-worktrees/beta-v2-owner-20261025/docs/beta_v2/OWNER_REVIEW_RECONCILIATION_2026-10-26.md) is an existing **local sibling-worktree source**, absent from this base commit; its link works in this workspace but is not portable to a standalone clone. It maps requests to C00–C15/B01 and R001–R146. Mapped does not mean implemented. Owners below are responsible **roles proposed for answering existing questions**, not claims that named people accepted assignments.
+The [owner-review reconciliation](../../../aegis-worktrees/beta-v2-owner-20261025/docs/beta_v2/OWNER_REVIEW_RECONCILIATION_2026-10-26.md) is an existing **local sibling-worktree source**, absent from this base commit; its link works in this workspace but is not portable to a standalone clone. The inspected copy is pinned by SHA-256 `3ec02a03207b93988f0d87744084562a88a3029e9d83b1178331f3643f27d84b`; recheck that hash before relying on the C/R mapping. It maps requests to C00–C15/B01 and R001–R146. Mapped does not mean implemented. Owners below are responsible **roles proposed for answering existing questions**, not claims that named people accepted assignments.
 
 ## 1. Feedback loop
 
