@@ -75,8 +75,10 @@ def _evidence(row: dict, raw: bytes, ticker: str) -> tuple[dict, datetime, datet
         f"{accession.replace('-', '')}/{filename}"
     )
     parsed = urlsplit(url)
-    if (url != expected_url or parsed.hostname != "www.sec.gov"
-            or accession[:10] != cik):
+    # Accession prefix is the login CIK (possibly an agent), not the issuer.
+    # Keep title issuer == URL subject and the full accession/filename binding.
+    # https://www.sec.gov/submit-filings/filer-support-resources/how-do-i-guides/understand-select-set-default-login-cik
+    if url != expected_url or parsed.hostname != "www.sec.gov":
         raise _Refused("SEC_IDENTITY_INVALID")
     body = row.get("body")
     if not isinstance(body, str) or not body.strip():

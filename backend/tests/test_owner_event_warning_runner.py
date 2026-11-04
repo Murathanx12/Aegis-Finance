@@ -483,3 +483,79 @@ def test_connector_refusal_precedes_reservation(case, monkeypatch):
     code, receipts = runner.run(**kwargs)
     assert code == 2 and receipts[0]['reason'] == 'LINEAGE_BINDING_REFUSED'
     assert not kwargs['journal'].exists()
+
+
+@pytest.fixture
+def agent_filing_case(case):
+    # Entirely synthetic saved bytes; issuer 1, submitting login 1193125.
+    kwargs, row, source, _ = case
+    row['raw_id'] = '0001193125-26-000001:results.htm'
+    row['url'] = 'https://www.sec.gov/Archives/edgar/data/1/000119312526000001/results.htm'
+    row['body'] = 'Synthetic financial results for testing only.'
+    source.write_text(json.dumps(row) + '\n', encoding='utf-8')
+    return case
+
+
+def test_agent_filing_runner_preview_end_to_end(agent_filing_case):
+    kwargs, _, _, _ = agent_filing_case
+    before = {p: p.read_bytes() for p in kwargs['ledger'].rglob('*') if p.is_file()}
+    code, receipts = runner.run(**kwargs)
+    assert code == 0 and len(receipts) == 1
+    receipt = receipts[0]
+    assert receipt['status'] == 'PROVISIONAL'
+    assert receipt['reason'] == 'SAVED_EVIDENCE_ONLY'
+    assert receipt['delivery'] == 'NOT_SENT'
+    assert receipt['forecast_status'] == 'NO_CALIBRATED_EVENT_FORECAST'
+    assert receipt['new_allocation_usd'] == '0'
+    for key in ('forecast_input_id', 'provisional_decision_id', 'evidence_packet_sha256'):
+        assert receipt[key]
+    assert before == {p: p.read_bytes() for p in kwargs['ledger'].rglob('*') if p.is_file()}
+    assert not kwargs['journal'].exists()
+
+
+@pytest.mark.parametrize('mutation', ['title_subject', 'url_subject', 'accession_directory',
+                                     'filename', 'ticker'])
+def test_agent_filing_runner_hostile_mutations_refuse_all(agent_filing_case, monkeypatch, mutation):
+    kwargs, row, source, snap = agent_filing_case
+    # A valid second holding must not reach delivery if any held row refuses.
+    valid = dict(row, tickers=['BETA'])
+    snap['positions'].append(dict(symbol='BETA', qty=20, market_value=2000, current_price=100))
+    snap.update(n_positions=2, long_market_value=4000, cash=6000)
+    kwargs['snapshot'].write_text(json.dumps(snap))
+    if mutation == 'title_subject':
+        row['title'] = row['title'].replace('0000000001', '0000000002')
+    elif mutation == 'url_subject':
+        row['url'] = row['url'].replace('/data/1/', '/data/2/')
+    elif mutation == 'accession_directory':
+        row['url'] = row['url'].replace('000119312526000001', '000119312526000002')
+    elif mutation == 'filename':
+        row['raw_id'] = row['raw_id'].replace('results.htm', 'other.htm')
+    else:
+        row['tickers'] = ['ACME', 'OTHER']
+    source.write_text(json.dumps(valid) + '\n' + json.dumps(row) + '\n')
+    monkeypatch.setattr(runner.adapter, 'warn_saved_bytes',
+                        lambda **kw: pytest.fail('all-or-none refusal reached delivery'))
+    code, receipts = runner.run(**kwargs)
+    assert code == 2 and receipts[-1]['status'] == 'REFUSED'
+    assert not kwargs['journal'].exists()
+
+
+def test_coordinated_subject_spoof_is_unverified_trust_boundary(agent_filing_case):
+    # Pin the limitation: coherent attacker-controlled metadata is not authenticity.
+    kwargs, row, source, _ = agent_filing_case
+    row['title'] = row['title'].replace('0000000001', '0000000002')
+    row['url'] = row['url'].replace('/data/1/', '/data/2/')
+    source.write_text(json.dumps(row) + '\n')
+    code, receipts = runner.run(**kwargs)
+    assert code == 0 and receipts[0]['status'] == 'PROVISIONAL'
+    assert receipts[0]['delivery'] == 'NOT_SENT'
+    assert receipts[0]['forecast_status'] == 'NO_CALIBRATED_EVENT_FORECAST'
+
+
+def test_agent_filing_manual_proof_uses_reviewed_url_not_login(agent_filing_case, monkeypatch):
+    kwargs, _, _, _ = agent_filing_case
+    _, _, _, path, _, _ = manual_gate(agent_filing_case, monkeypatch)
+    ref = dict(path=str(path), sha256=runner.sha(path.read_bytes()))
+    record = runner.suppression_record(ref, now=kwargs['now'])
+    assert record['accession'] == '0001193125-26-000001'
+    assert '/data/1/' in record['source_url']

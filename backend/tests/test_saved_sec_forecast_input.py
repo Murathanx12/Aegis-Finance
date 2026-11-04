@@ -181,3 +181,22 @@ def test_module_import_has_no_side_effects():
           patch.object(subprocess, "Popen", denied)):
         exec(code, namespace)
     assert namespace["build_saved_sec_input"](row(), ticker="AAPL", cutoff_utc=CUTOFF) == build()
+
+
+@pytest.mark.parametrize('mutation', [None, 'title', 'subject', 'directory', 'filename', 'ticker'])
+def test_distinct_login_issuer_identity_contract(mutation):
+    value = json.loads(row())
+    value['raw_id'] = value['raw_id'].replace('0000320193-26', '0001193125-26')
+    value['url'] = value['url'].replace('000032019326', '000119312526')
+    if mutation == 'title':
+        value['title'] = value['title'].replace('0000320193', '0000000002')
+    elif mutation == 'subject':
+        value['url'] = value['url'].replace('/320193/', '/2/')
+    elif mutation == 'directory':
+        value['url'] = value['url'].replace('26000024/', '26000025/')
+    elif mutation == 'filename':
+        value['raw_id'] = value['raw_id'].split(':')[0] + ':other.htm'
+    elif mutation == 'ticker':
+        value['tickers'] = ['AAPL', 'OTHER']
+    packet = build((json.dumps(value) + '\n').encode())
+    assert packet['status'] == ('EVIDENCE_ONLY' if mutation is None else 'REFUSED')
