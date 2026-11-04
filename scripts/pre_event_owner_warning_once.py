@@ -42,6 +42,7 @@ SOURCE_PATHS = (
     "scripts/owner_event_warning.py",
     "scripts/__init__.py",
     "scripts/pre_event_owner_warning_once.py",
+    "scripts/pre_event_owner_warning_discover.py",
 )
 ABSENT_NAMESPACE_INITIALIZER = "ABSENT_NAMESPACE_PACKAGE_INITIALIZER"
 SGT = timezone(timedelta(hours=8))
@@ -125,13 +126,20 @@ def _preview(artifact: dict, delivery_state: str) -> dict:
 
 def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         journal_dir: Path, send: bool = False, review: Path | None = None,
-        now: datetime | None = None, wall_clock=None, epoch_clock=None) -> tuple[int, dict]:
-    """Preview by default. The CLI never accepts a caller-provided clock."""
+        now: datetime | None = None, wall_clock=None, epoch_clock=None,
+        pre_send_check=None) -> tuple[int, dict]:
+    """Preview by default. The CLI never accepts a caller-provided clock.
+
+    pre_send_check adds caller constraints to preview and send checkpoints;
+    it cannot replace the runner's own time, review or delivery guards.
+    """
     actual_now = now or datetime.now(timezone.utc)
     epoch = epoch_clock or time.time
     started = time.monotonic()
 
     def check() -> None:
+        if pre_send_check is not None:
+            pre_send_check()
         if time.monotonic() - started > 5:
             raise Refused("PRE_SEND_BUDGET_EXCEEDED")
         _iif_deadline(now or datetime.now(timezone.utc))
@@ -142,36 +150,38 @@ def run(*, receipt_path: Path, ledger_dir: Path, expected_account_sha256: str,
         if (not isinstance(expected_account_sha256, str)
                 or re.fullmatch(r"[0-9a-f]{64}", expected_account_sha256) is None):
             raise Refused("ACCOUNT_PIN_REQUIRED")
-        if send:
-            check()
+        check()
         private_journal._journal_identity(journal_dir)
         receipt, response, encoded = _receipt(Path(receipt_path))
-        if send:
-            check()
+        check()
         packet = capture.evaluate_saved_capture(
             receipt, response, cutoff_utc=actual_now.isoformat())
         if packet.get("status") != "EVIDENCE_ONLY":
             raise Refused("CALENDAR_REPLAY_REFUSED")
-        if send:
-            check()
+        check()
         snapshot = selector.select_snapshot(
             ledger_dir, now=actual_now,
             expected_account_sha256=expected_account_sha256,
-            check=check if send else lambda: None)
+            check=check)
         artifact = warning.build_pre_event_warning_bytes(
             packet=packet, response_bytes=response, snapshot_bytes=snapshot,
             expected_snapshot_sha256=selector.sha(snapshot),
             expected_account_sha256=expected_account_sha256,
             cutoff_utc=actual_now.isoformat(), now_utc=actual_now.isoformat())
+        check()
         if artifact["status"] != "PROVISIONAL":
-            return 2, _preview(artifact, "NOT_SENT")
+            result = _preview(artifact, "NOT_SENT")
+            check()
+            return 2, result
         # The capture seal proves the original observation; the replay input_id
         # is decision-time specific. Keep both identities and exact file bytes.
         artifact.update(receipt_id=receipt["receipt_id"],
                         capture_input_id=receipt["input_id"],
                         receipt_sha256=selector.sha(encoded))
         if not send:
-            return 0, _preview(artifact, "PREVIEW")
+            result = _preview(artifact, "PREVIEW")
+            check()
+            return 0, result
         if review is None:
             raise Refused("INDEPENDENT_EXACT_SOURCE_REVIEW_REQUIRED")
         check()
