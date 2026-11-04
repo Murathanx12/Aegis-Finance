@@ -186,6 +186,15 @@ def snapshot(*, budget_path=None):
         return s
 
 
+def preflight_snapshot():
+    """Read-only advisory check; atomic envelope replacements need no sidecar.
+
+    Never creates directories/locks or writes accounting. Reservations still
+    re-read under the authoritative lock before any provider dispatch.
+    """
+    return _load(path())
+
+
 def attempt(body, *, base_url, purpose, send, production_cap=None):
     """Reserve/settle one existing transport invocation; no retries or routing.
 

@@ -239,7 +239,10 @@ def suppression_record(ref, *, now, check=lambda: None):
         raise Refused('INVALID_MANUAL_IDENTITY')
     url = re.fullmatch(r'https://www\.sec\.gov/Archives/edgar/data/(\d+)/(\d{18})/[A-Za-z0-9_-]+\.html?',
                        record['source_url'])
-    if (not url or url[2] != accession.replace('-', '') or int(url[1]) != int(accession[:10])
+    # The accession prefix identifies the login, not the URL's subject issuer.
+    # Exact reviewed URL/row hashes below and corpus matching in qualify_send
+    # remain required; this proof schema has no independent issuer identity.
+    if (not url or url[2] != accession.replace('-', '')
             or record['event_key'] != adapter._digest({'ticker': ticker, 'accession': accession})
             or record['schema'] != 'owner-warning-manual-suppression/1'
             or attempt['schema'] != 'owner-warning-manual-fallback/1'

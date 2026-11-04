@@ -230,6 +230,58 @@ def test_saved_success_no_item_and_original_hashes(saved):
     assert not (saved[3].parent / 'journal').exists()
 
 
+@pytest.fixture
+def agent_filed_saved(saved):
+    # Synthetic filing: SEC says accession prefixes are login CIKs, including agents.
+    # https://www.sec.gov/submit-filings/filer-support-resources/how-do-i-guides/understand-select-set-default-login-cik
+    row = saved[1]
+    row['raw_id'] = '0001193125-26-000001:results.htm'
+    row['url'] = 'https://www.sec.gov/Archives/edgar/data/1/000119312526000001/results.htm'
+    return saved
+
+
+def test_saved_distinct_login_and_subject_cik(agent_filed_saved):
+    result = saved_run(agent_filed_saved)
+    artifact = result['artifact']
+    assert artifact['status'] == 'PROVISIONAL'
+    assert artifact['reason'] == 'SAVED_EVIDENCE_ONLY'
+    assert result['delivery'] == 'NOT_SENT'
+    assert artifact['source_url'] == agent_filed_saved[1]['url']
+    assert artifact['source_row_sha256'] == warning.hashlib.sha256(
+        agent_filed_saved[3].read_bytes()).hexdigest()
+    assert artifact['event_key'] == warning._digest(
+        {'ticker': 'ACME', 'accession': '0001193125-26-000001'})
+
+
+@pytest.mark.parametrize('key,value', [
+    ('title', '8-K - Other (0000000002) (Filer) — EX-99.1'),
+    ('url', 'https://www.sec.gov/Archives/edgar/data/2/000119312526000001/results.htm'),
+    ('url', 'https://www.sec.gov/Archives/edgar/data/1/000119312526000002/results.htm'),
+    ('raw_id', '0001193125-26-000002:results.htm'),
+    ('raw_id', '0001193125-26-000001:other.htm'),
+    ('raw_id', '1193125-26-000001:results.htm'),
+    ('tickers', ['ACME', 'OTHER']), ('tickers', ['OTHER']),
+    ('url', 'http://www.sec.gov/Archives/edgar/data/1/000119312526000001/results.htm'),
+    ('url', 'https://example.com/Archives/edgar/data/1/000119312526000001/results.htm'),
+    ('url', 'https://www.sec.gov/Archives/edgar/data/1/000119312526000001/results.htm?x=1'),
+    ('url', 'https://www.sec.gov/Archives/edgar/data/1/000119312526000001/results.htm#x'),
+    ('source', 'other'), ('body', 'Appointment of director'),
+    ('title', '8-K - Acme (0000000001) (Filer) — EX-99.2'),
+])
+def test_saved_agent_filing_identity_mismatches_refuse(agent_filed_saved, key, value):
+    agent_filed_saved[1][key] = value
+    result = saved_run(agent_filed_saved)
+    assert result['artifact']['status'] == 'REFUSED'
+    assert result['delivery'] == 'NOT_SENT'
+    assert 'conditional_loss_usd' not in result['artifact']
+
+
+@pytest.mark.parametrize('key', ['published_utc', 'first_seen_utc', 't'])
+@pytest.mark.parametrize('mode', ['future', 'stale', 'naive'])
+def test_saved_agent_filing_clocks_refuse(agent_filed_saved, key, mode):
+    test_saved_clocks(agent_filed_saved, key, mode)
+
+
 @pytest.mark.parametrize('key,value', [
     ('source', 'other'), ('raw_id', '0000000001-26-000002:results.htm'),
     ('raw_id', '0000000001-26-000001:other.htm'), ('title', '8-K - Acme EX-99.1'),

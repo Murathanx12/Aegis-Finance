@@ -115,7 +115,12 @@ def _shared_budget_refusal() -> str | None:
     """
     try:
         from backend.services import provider_budget as PB
-        s = PB.snapshot()
+        read_snapshot = PB.preflight_snapshot
+        refused_type = PB.BudgetRefused
+    except Exception:                                                # noqa: BLE001
+        return "SHARED_ENVELOPE_IMPORT_FAILED"
+    try:
+        s = read_snapshot()
         if s.get("blocked"):
             return "SHARED_ENVELOPE_BLOCKED"
         amounts = [s["cap_units"], s["opening_units"]]
@@ -124,9 +129,16 @@ def _shared_budget_refusal() -> str | None:
             return "SHARED_ENVELOPE_INVALID"
         if sum(amounts[1:]) >= amounts[0]:
             return "SHARED_ENVELOPE_EXHAUSTED"
-    except Exception:                                                # noqa: BLE001
-        # Import, lock, load and schema failures all fail closed. Exception
-        # strings and the snapshot may contain private paths or evidence.
+    except Exception as exc:                                         # noqa: BLE001
+        # _load wraps failures for paid callers; inspect its cause by type only.
+        cause = exc.__cause__ if isinstance(exc, refused_type) else exc
+        if isinstance(cause, FileNotFoundError):
+            return "SHARED_ENVELOPE_MISSING"
+        if isinstance(cause, (OSError, TimeoutError)):
+            return "SHARED_ENVELOPE_LOCK_UNREADABLE"
+        if isinstance(cause, (ValueError, KeyError, TypeError, AttributeError)):
+            return "SHARED_ENVELOPE_MALFORMED"
+        # Only exception types cross this boundary, never messages or payloads.
         return "SHARED_ENVELOPE_UNAVAILABLE"
     return None
 
@@ -155,6 +167,89 @@ def _budget_failure_receipt(reason: str) -> None:
                    "stage": "shared_budget_preflight", "written": False}, fh)
 
 
+def _calendar_risk_preview(a: argparse.Namespace) -> bool:
+    """Persist an opt-in saved-input preview privately; never control digest status."""
+    import re
+    import uuid
+
+    pending = None
+    receipt_id = None
+    status = "REFUSED_OUTPUT_UNAVAILABLE"
+    try:
+        from backend.services import earnings_calendar_capture as capture
+        directory = getattr(a, "calendar_risk_output_dir", None)
+        if not isinstance(directory, Path) or not directory.is_absolute() or not directory.is_dir():
+            raise ValueError("PRIVATE_OUTPUT_REQUIRED")
+        paths = [getattr(a, "calendar_risk_" + name, None)
+                 for name in ("receipt_dir", "journal_dir", "ledger_dir")]
+
+        def validate_root():
+            identity = capture._private_identity(directory)
+            resolved = directory.resolve(strict=True)
+            for root in paths:
+                if isinstance(root, Path):
+                    protected = root.resolve()
+                    if (resolved == protected or resolved in protected.parents
+                            or protected in resolved.parents):
+                        raise ValueError("PRIVATE_OUTPUT_OVERLAPS_INPUT")
+                    if root.exists() and directory.samefile(root):
+                        raise ValueError("PRIVATE_OUTPUT_ALIASES_INPUT")
+            return identity, resolved
+
+        identity = validate_root()
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        candidate_id = f"calendar-risk-preview-{stamp}-{uuid.uuid4().hex}"
+        final = directory / (candidate_id + ".json")
+        # Never expose a final receipt until every byte is durable and the root
+        # has been checked again. Hard-link publication is atomic and refuses
+        # existing destinations on both Windows and POSIX (rename may overwrite).
+        candidate_pending = directory / (candidate_id + ".pending")
+        with candidate_pending.open("x", encoding="utf-8") as fh:
+            pending = candidate_pending
+            output = {"status": "REFUSED", "reason": "PRIVATE_INPUTS_REQUIRED",
+                      "delivery": "NOT_SENT"}
+            try:
+                if validate_root() != identity:
+                    raise ValueError("PRIVATE_ROOT_CHANGED")
+                pin = getattr(a, "calendar_risk_account_sha256", None)
+                if (all(isinstance(p, Path) and p.is_absolute() and p.is_dir() for p in paths)
+                        and isinstance(pin, str) and re.fullmatch(r"[0-9a-f]{64}", pin)):
+                    from scripts import pre_event_owner_warning_discover as discovery
+                    code, output = discovery.run(
+                        receipt_dir=paths[0], journal_dir=paths[1], ledger_dir=paths[2],
+                        expected_account_sha256=pin, send=False)
+                    if code != 0 or output.get("delivery") != "PREVIEW":
+                        output = {**output, "status": "REFUSED", "delivery": "NOT_SENT"}
+            except Exception:                                        # noqa: BLE001
+                output = {"status": "REFUSED", "reason": "CALENDAR_RISK_PREVIEW_FAILED",
+                          "delivery": "NOT_SENT"}
+            succeeded = output.get("delivery") == "PREVIEW" and output.get("status") != "REFUSED"
+            result_status = "PREVIEW" if succeeded else "REFUSED"
+            json.dump({"receipt_id": candidate_id, "stamp": stamp,
+                       "status": result_status, "result": output}, fh, sort_keys=True)
+            fh.flush()
+            os.fsync(fh.fileno())
+            if validate_root() != identity:
+                raise ValueError("PRIVATE_ROOT_CHANGED")
+        if validate_root() != identity:
+            raise ValueError("PRIVATE_ROOT_CHANGED")
+        os.link(pending, final)
+        receipt_id = candidate_id
+        status = result_status
+    except Exception:                                                # noqa: BLE001
+        # No exception text, input identifiers, amounts or private paths in the shared log.
+        pass
+    finally:
+        if pending is not None:
+            try:
+                pending.unlink()
+            except OSError:
+                pass
+    _p("CALENDAR_RISK_PREVIEW " + json.dumps(
+        {"status": status, "receipt_id": receipt_id}, sort_keys=True))
+    return status == "PREVIEW"
+
+
 def run(a: argparse.Namespace) -> int:
     from backend.services import belief_state as B
     from backend.services import disk_guard as DG
@@ -165,6 +260,8 @@ def run(a: argparse.Namespace) -> int:
                              {"state": "STOPPED: STOP file present", "stamp": stamp})
         _p("STOPPED: STOP file present")
         return 0
+    if getattr(a, "calendar_risk_preview", False):
+        _calendar_risk_preview(a)
     if not a.dry_run and _host_budget_required():
         refusal = _shared_budget_refusal()
         if refusal:
@@ -638,6 +735,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--hours", type=float, default=float(_cfg.WORLD_DIGEST_HOURS))
     ap.add_argument("--budget", type=float, default=float(_cfg.WORLD_DIGEST_BUDGET_USD))
     ap.add_argument("--dry-run", action="store_true", help="cached extractions only; no call, no rows")
+    ap.add_argument("--calendar-risk-preview", action="store_true",
+                    help="preview saved calendar receipts before digest/model preflight; never send")
+    for name in ("receipt-dir", "journal-dir", "ledger-dir", "output-dir"):
+        ap.add_argument("--calendar-risk-" + name, type=Path,
+                        help="caller-provided absolute private directory; no default")
+    ap.add_argument("--calendar-risk-account-sha256", help="expected account SHA256 pin")
     ap.add_argument("--no-write", action="store_true", help="pay and render, but write no forecast rows")
     ap.add_argument("--no-sections", action="store_true",
                     help="skip the official-source sections (insiders, policy, positioning)")

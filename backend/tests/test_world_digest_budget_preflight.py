@@ -8,6 +8,7 @@ from unittest.mock import Mock
 import pytest
 
 from scripts import world_digest as S
+from backend.services import provider_budget as REAL_PB
 
 
 @pytest.fixture
@@ -30,7 +31,7 @@ def isolated(tmp_path, monkeypatch):
         guards.append(guard)
     snap = Mock(return_value={'cap_units': 100, 'opening_units': 0,
                               'calls': {}, 'blocked': None})
-    fake_budget = SimpleNamespace(snapshot=snap)
+    fake_budget = SimpleNamespace(preflight_snapshot=snap, BudgetRefused=RuntimeError)
     from backend import services as service_package
     monkeypatch.setattr(service_package, 'provider_budget', fake_budget, raising=False)
     monkeypatch.setitem(sys.modules, 'backend.services.provider_budget', fake_budget)
@@ -192,3 +193,79 @@ def test_completed_run_preserves_partial_work_and_reports_budget_status(isolated
     else:
         assert 'status' not in digest  # preserve the healthy output contract
     assert not (root / 'run.lock').exists()
+
+
+@pytest.mark.parametrize("mode,expected", [
+    ("missing", "MISSING"),
+    ("json", "MALFORMED"),
+    ("schema", "MALFORMED"),
+    ("encoding", "MALFORMED"),
+    ("unreadable", "LOCK_UNREADABLE"),
+    ("lock", "LOCK_UNREADABLE"),
+    ("import", "IMPORT_FAILED"),
+    ("unexpected", "UNAVAILABLE"),
+])
+def test_real_preflight_reasons_are_read_only_and_fail_closed(
+        isolated, monkeypatch, capsys, mode, expected):
+    from pathlib import Path
+    from backend import services
+    from backend.services import belief_state as B, disk_guard as DG
+
+    root, _, downstream = isolated
+    p = root / "private-envelope.json"
+    monkeypatch.setenv("AEGIS_DEEPSEEK_BUDGET_PATH", str(p))
+    monkeypatch.setattr(services, "provider_budget", REAL_PB)
+    monkeypatch.setitem(sys.modules, "backend.services.provider_budget", REAL_PB)
+    if mode == "json":
+        p.write_text("SECRET_TOKEN invalid json", encoding="utf-8")
+    elif mode == "schema":
+        p.write_text('{"schema": "SECRET_TOKEN"}', encoding="utf-8")
+    elif mode == "encoding":
+        p.write_bytes(b"\xff")
+    elif mode in ("unreadable", "lock", "unexpected"):
+        error = {"unreadable": PermissionError, "lock": DG.FileLockTimeout,
+                 "unexpected": RuntimeError}[mode]
+        monkeypatch.setattr(Path, "read_text", Mock(side_effect=error("SECRET_TOKEN")))
+    elif mode == "import":
+        monkeypatch.delattr(services, "provider_budget")
+        monkeypatch.setitem(sys.modules, "backend.services.provider_budget", None)
+    before = {f.name: f.read_bytes() for f in root.iterdir() if f.is_file()}
+    guards = []
+    for obj, name in [(REAL_PB, "_lock"), (REAL_PB, "reserve"),
+                      (REAL_PB, "settle"), (REAL_PB, "initialize"),
+                      (REAL_PB, "attempt"), (DG, "atomic_write_json"), (B, "append")]:
+        guard = Mock(side_effect=AssertionError("write/provider reached"))
+        monkeypatch.setattr(obj, name, guard)
+        guards.append(guard)
+    reason = "SHARED_ENVELOPE_" + expected
+    # The preflight itself has no writes, including lock/directory creation.
+    assert S._shared_budget_refusal() == reason
+    assert {f.name: f.read_bytes() for f in root.iterdir() if f.is_file()} == before
+    assert sorted(f.name for f in root.iterdir()) == sorted(before)
+    # Run directly: production main's run lock and diagnostic receipt are outside
+    # the read-only preflight. Mock only that explicitly allowed receipt here.
+    receipt = Mock()
+    monkeypatch.setattr(S, "_budget_failure_receipt", receipt)
+    assert S.run(SimpleNamespace(dry_run=False)) == 2
+    receipt.assert_called_once_with(reason)
+    assert capsys.readouterr().out == f"REFUSED: shared budget preflight: {reason}\n"
+    for guard in guards + downstream:
+        guard.assert_not_called()
+    assert {f.name: f.read_bytes() for f in root.iterdir() if f.is_file()} == before
+
+
+def test_real_healthy_preflight_needs_no_lock_or_write(tmp_path, monkeypatch):
+    from backend import services
+    p = tmp_path / "envelope.json"
+    p.write_text(json.dumps({"schema": REAL_PB.SCHEMA, "session_id": "fixture",
+        "cap_units": 100, "opening_units": 0, "opening_evidence": "fixture",
+        "calls": {}, "daily": {}, "blocked": None}), encoding="utf-8")
+    before = p.read_bytes()
+    monkeypatch.setenv("AEGIS_DEEPSEEK_BUDGET_PATH", str(p))
+    monkeypatch.setattr(services, "provider_budget", REAL_PB)
+    lock = Mock(side_effect=AssertionError("lock reached"))
+    monkeypatch.setattr(REAL_PB, "_lock", lock)
+    assert S._shared_budget_refusal() is None
+    lock.assert_not_called()
+    assert p.read_bytes() == before
+    assert list(tmp_path.iterdir()) == [p]

@@ -6,9 +6,7 @@ from pathlib import Path
 import pytest
 
 from scripts import owner_event_warning as runner
-from backend.tests.test_owner_event_warning_runner import manual_gate
-
-pytest_plugins = ("backend.tests.test_owner_event_warning_runner",)
+from backend.tests.test_owner_event_warning_runner import case, manual_gate
 
 
 @pytest.fixture
@@ -64,12 +62,16 @@ def test_overnight_session_snapshot_keeps_start_day_folder(case, approved):
     kwargs['now'] = overnight
     prior_day = overnight.astimezone(runner.PC_ZONE).date() - timedelta(days=1)
     old_folder = dated.parent.parent / str(prior_day)
-    old_folder.mkdir()
+    # The fixture's current SGT date can already be the overnight session's
+    # start date. Reuse that directory in this case instead of assuming the
+    # test always runs before Singapore midnight.
+    old_folder.mkdir(exist_ok=True)
     session_snapshot = old_folder / 'state_latest.json'
     snap = json.loads(dated.read_text())
     snap['t'] = overnight.isoformat()
     session_snapshot.write_text(json.dumps(snap))
-    dated.unlink()
+    if dated != session_snapshot:
+        dated.unlink()
     top.write_text(json.dumps(dict(snap, t=(overnight - timedelta(minutes=1)).isoformat())))
     row = case[1]
     row['first_seen_utc'] = overnight.isoformat()
