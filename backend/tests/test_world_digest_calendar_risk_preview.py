@@ -7,7 +7,7 @@ import pytest
 
 from scripts import world_digest as S
 from scripts import pre_event_owner_warning_discover as discovery
-pytest_plugins = ["backend.tests.test_pre_event_owner_warning_discover"]
+from backend.tests.test_pre_event_owner_warning_discover import case as calendar_case
 
 
 @pytest.fixture
@@ -45,8 +45,8 @@ def test_default_off_unchanged(guarded, monkeypatch, capsys):
     assert 'CALENDAR_RISK_PREVIEW' not in capsys.readouterr().out
 
 
-def test_budget_refusal_keeps_real_preview_and_ids(case, guarded, capsys, monkeypatch):
-    kwargs, save = case
+def test_budget_refusal_keeps_real_preview_and_ids(calendar_case, guarded, capsys, monkeypatch):
+    kwargs, save = calendar_case
     save()
     original = discovery.run
     monkeypatch.setattr(discovery, 'run', lambda **options: original(**options, now=kwargs['now']))
@@ -73,8 +73,8 @@ def test_budget_refusal_keeps_real_preview_and_ids(case, guarded, capsys, monkey
 
 
 @pytest.mark.parametrize('bad', ['missing', 'relative', 'pin', 'nonexistent'])
-def test_private_inputs_refuse_before_discovery(case, guarded, monkeypatch, capsys, bad):
-    kwargs, _ = case
+def test_private_inputs_refuse_before_discovery(calendar_case, guarded, monkeypatch, capsys, bad):
+    kwargs, _ = calendar_case
     a = args(kwargs)
     if bad == 'missing':
         a.calendar_risk_receipt_dir = None
@@ -98,8 +98,8 @@ def test_private_inputs_refuse_before_discovery(case, guarded, monkeypatch, caps
         guard.assert_not_called()
 
 
-def test_no_candidate_is_refusal(case, guarded, capsys):
-    kwargs, _ = case
+def test_no_candidate_is_refusal(calendar_case, guarded, capsys):
+    kwargs, _ = calendar_case
     assert S.run(args(kwargs)) == 2
     result = json.loads(capsys.readouterr().out.splitlines()[0].split(' ', 1)[1])
     assert result['status'] == 'REFUSED'
@@ -109,8 +109,8 @@ def test_no_candidate_is_refusal(case, guarded, capsys):
         guard.assert_not_called()
 
 
-def test_send_authority_cannot_be_forwarded(case, guarded, monkeypatch):
-    kwargs, _ = case
+def test_send_authority_cannot_be_forwarded(calendar_case, guarded, monkeypatch):
+    kwargs, _ = calendar_case
     a = args(kwargs)
     a.send = True
     a.review = 'untrusted'
@@ -121,8 +121,8 @@ def test_send_authority_cannot_be_forwarded(case, guarded, monkeypatch):
     assert 'review' not in run.call_args.kwargs
 
 
-def test_unexpected_error_is_nonsecret_refusal(case, guarded, monkeypatch, capsys):
-    kwargs, _ = case
+def test_unexpected_error_is_nonsecret_refusal(calendar_case, guarded, monkeypatch, capsys):
+    kwargs, _ = calendar_case
     monkeypatch.setattr(discovery, 'run', Mock(side_effect=RuntimeError('PRIVATE_PATH')))
     assert S.run(args(kwargs)) == 2
     output = capsys.readouterr().out
@@ -133,8 +133,8 @@ def test_unexpected_error_is_nonsecret_refusal(case, guarded, monkeypatch, capsy
     assert 'shared budget preflight' in output
 
 
-def test_cli_opt_in_and_private_inputs(case, guarded, monkeypatch):
-    kwargs, _ = case
+def test_cli_opt_in_and_private_inputs(calendar_case, guarded, monkeypatch):
+    kwargs, _ = calendar_case
     monkeypatch.setattr(S, '_ensure_streams', lambda: None)
     run = Mock(return_value=0)
     monkeypatch.setattr(S, 'run', run)
@@ -150,8 +150,8 @@ def test_cli_opt_in_and_private_inputs(case, guarded, monkeypatch):
     assert parsed.calendar_risk_account_sha256 == kwargs['expected_account_sha256']
 
 
-def test_stop_precedes_preview(case, guarded, monkeypatch, capsys):
-    kwargs, _ = case
+def test_stop_precedes_preview(calendar_case, guarded, monkeypatch, capsys):
+    kwargs, _ = calendar_case
     S.WD.stop_file().touch()
     preview = Mock(side_effect=AssertionError('preview reached'))
     budget = Mock(side_effect=AssertionError('budget reached'))
@@ -169,8 +169,8 @@ def test_stop_precedes_preview(case, guarded, monkeypatch, capsys):
 
 
 @pytest.mark.parametrize('bad', ['missing', 'relative', 'file', 'validation', 'write', 'flush'])
-def test_output_failure_safe_and_digest_continues(case, guarded, monkeypatch, capsys, bad):
-    kwargs, _ = case
+def test_output_failure_safe_and_digest_continues(calendar_case, guarded, monkeypatch, capsys, bad):
+    kwargs, _ = calendar_case
     a = args(kwargs)
     if bad == 'missing':
         a.calendar_risk_output_dir = None
@@ -205,8 +205,8 @@ def test_output_failure_safe_and_digest_continues(case, guarded, monkeypatch, ca
         assert not list(a.calendar_risk_output_dir.iterdir())
 
 
-def test_preview_receipts_are_exclusive_and_logs_are_safe(case, guarded, monkeypatch, capsys):
-    kwargs, _ = case
+def test_preview_receipts_are_exclusive_and_logs_are_safe(calendar_case, guarded, monkeypatch, capsys):
+    kwargs, _ = calendar_case
     output = {'status': 'PROVISIONAL', 'delivery': 'PREVIEW',
               'equity': 1234567, 'path': 'PRIVATE_PATH', 'event_id': 'PRIVATE_EVENT'}
     monkeypatch.setattr(discovery, 'run', Mock(return_value=(0, output)))
@@ -227,8 +227,8 @@ def test_preview_receipts_are_exclusive_and_logs_are_safe(case, guarded, monkeyp
 
 @pytest.mark.parametrize('name', ['receipt_dir', 'journal_dir', 'ledger_dir'])
 @pytest.mark.parametrize('kind', ['same', 'child', 'parent', 'alias', 'symlink'])
-def test_output_cannot_overlap_inputs(case, guarded, monkeypatch, capsys, name, kind):
-    kwargs, _ = case
+def test_output_cannot_overlap_inputs(calendar_case, guarded, monkeypatch, capsys, name, kind):
+    kwargs, _ = calendar_case
     a = args(kwargs)
     root = kwargs[name]
     if kind == 'same':
@@ -259,8 +259,8 @@ def test_output_cannot_overlap_inputs(case, guarded, monkeypatch, capsys, name, 
 
 
 @pytest.mark.parametrize('failure', ['partial', 'fsync', 'root', 'publish'])
-def test_failed_persistence_never_publishes(case, guarded, monkeypatch, capsys, failure):
-    kwargs, _ = case
+def test_failed_persistence_never_publishes(calendar_case, guarded, monkeypatch, capsys, failure):
+    kwargs, _ = calendar_case
     a = args(kwargs)
     monkeypatch.setattr(discovery, 'run', Mock(return_value=(0, {
         'status': 'PROVISIONAL', 'delivery': 'PREVIEW'})))
@@ -296,9 +296,9 @@ def test_failed_persistence_never_publishes(case, guarded, monkeypatch, capsys, 
     assert 'shared budget preflight' in log
 
 
-def test_uuid_collision_preserves_existing_receipt(case, guarded, monkeypatch, capsys):
+def test_uuid_collision_preserves_existing_receipt(calendar_case, guarded, monkeypatch, capsys):
     import uuid
-    kwargs, _ = case
+    kwargs, _ = calendar_case
     a = args(kwargs)
     monkeypatch.setattr(uuid, 'uuid4', lambda: SimpleNamespace(hex='fixed'))
     monkeypatch.setattr(discovery, 'run', Mock(return_value=(0, {
@@ -316,8 +316,8 @@ def test_uuid_collision_preserves_existing_receipt(case, guarded, monkeypatch, c
     assert 'REFUSED_OUTPUT_UNAVAILABLE' in capsys.readouterr().out
 
 
-def test_replaced_root_after_fsync_has_no_final_receipt(case, guarded, monkeypatch, capsys):
-    kwargs, _ = case
+def test_replaced_root_after_fsync_has_no_final_receipt(calendar_case, guarded, monkeypatch, capsys):
+    kwargs, _ = calendar_case
     a = args(kwargs)
     moved = a.calendar_risk_output_dir.with_name('moved-preview')
     original = S.os.fsync
@@ -334,9 +334,9 @@ def test_replaced_root_after_fsync_has_no_final_receipt(case, guarded, monkeypat
     assert 'REFUSED_OUTPUT_UNAVAILABLE' in capsys.readouterr().out
 
 
-def test_output_failure_reaches_normal_digest_collection(case, guarded, monkeypatch):
+def test_output_failure_reaches_normal_digest_collection(calendar_case, guarded, monkeypatch):
     from backend.services import disk_guard
-    kwargs, _ = case
+    kwargs, _ = calendar_case
     a = args(kwargs)
     a.calendar_risk_output_dir = kwargs['receipt_dir']
     a.dry_run = True

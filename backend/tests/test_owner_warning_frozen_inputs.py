@@ -6,9 +6,7 @@ from pathlib import Path
 import pytest
 
 from scripts import owner_event_warning as runner
-from backend.tests.test_owner_event_warning_runner import manual_gate
-
-pytest_plugins = ("backend.tests.test_owner_event_warning_runner",)
+from backend.tests.test_owner_event_warning_runner import case, manual_gate
 
 
 @pytest.fixture
