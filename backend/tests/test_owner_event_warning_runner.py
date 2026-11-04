@@ -449,10 +449,33 @@ def test_lineage_caller_bound_ack_and_replay(case, monkeypatch, failure):
     snap['t'] = (kwargs['now'] + timedelta(seconds=1)).isoformat()
     kwargs['snapshot'].write_text(json.dumps(snap))
     kwargs['now'] += timedelta(seconds=1)
+    journal_before = {p: p.read_bytes() for p in kwargs['journal'].iterdir()}
     code, receipts = runner.run(**kwargs, send=True, review=review, adoption=adoption)
     assert code == (2 if failure else 0)
     assert receipts[0]['delivery'] == ('DUPLICATE_RECONCILE_REQUIRED' if failure else 'ALREADY_SENT')
     assert len(calls) == 1
+    assert journal_before == {p: p.read_bytes() for p in kwargs['journal'].iterdir()}
+    if not failure:
+        saved = json.loads((kwargs['journal'] / (receipts[0]['event_key'] + '.json')).read_text())
+        result = json.loads((kwargs['journal'] / (receipts[0]['event_key'] + '.result.json')).read_text())
+        original = saved['artifact']
+        current = runner.adapter.build_lineage_warning_bytes(source_bytes=source.read_bytes(),
+            snapshot_bytes=kwargs['snapshot'].read_bytes(), ticker='ACME', now=kwargs['now'])
+        assert current['forecast_input_id'] != original['forecast_input_id']
+        assert current['provisional_decision_id'] != original['provisional_decision_id']
+        for key in ('at', 'snapshot_sha256', 'forecast_input_id',
+                    'provisional_decision_id', 'evidence_packet_sha256'):
+            assert receipts[0][key] == original[key]
+        assert receipts[0]['at'] != kwargs['now'].isoformat()
+        assert receipts[0]['forecast_input_id'] in calls[0]
+        assert receipts[0]['provisional_decision_id'] in calls[0]
+        assert runner.adapter._message(original) == calls[0]
+        assert saved['artifact_sha256'] == runner.adapter._digest(original)
+        assert result['at'] == receipts[0]['at']
+        assert result['ack']['text_sha256'] == saved['text_sha256'] == runner.adapter._hash(calls[0])
+        assert result['ack']['tag_sha256'] == saved['tag_sha256'] == runner.adapter._digest({
+            'tag': 'owner-event-warning:' + receipts[0]['event_key']})
+        assert runner.adapter._valid_ack(result['ack'], saved)
 
 
 @pytest.mark.parametrize('dependency', [

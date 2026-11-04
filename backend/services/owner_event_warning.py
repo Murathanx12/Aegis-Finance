@@ -337,7 +337,7 @@ def _valid_ack(ack, record):
 
 
 def _confirmed_replay(path, result_path, pending_path, event_key):
-    """Only a complete original SENDING/ACK pair can certify a prior attempt."""
+    """Return the original artifact only for a complete SENDING/ACK pair."""
     try:
         if os.path.lexists(pending_path) or not path.is_file() or not result_path.is_file():
             return False
@@ -358,7 +358,7 @@ def _confirmed_replay(path, result_path, pending_path, event_key):
                 or result['state'] != 'SENT' or result['at'] != saved['at']
                 or not _valid_ack(result['ack'], record)):
             return False
-        return True
+        return saved
     except (OSError, UnicodeError, ValueError, KeyError, TypeError,
             AttributeError, OverflowError):
         return False
@@ -382,8 +382,9 @@ def _deliver(artifact, *, journal_dir, sender):
     result_path = path.with_suffix('.result.json')
     pending_path = path.with_suffix('.result.pending.json')
     if any(os.path.lexists(candidate) for candidate in (path, result_path, pending_path)):
-        if _confirmed_replay(path, result_path, pending_path, artifact['event_key']):
-            return {'artifact': artifact, 'delivery': 'ALREADY_SENT'}
+        acknowledged = _confirmed_replay(path, result_path, pending_path, artifact['event_key'])
+        if acknowledged:
+            return {'artifact': acknowledged, 'delivery': 'ALREADY_SENT'}
         return {'artifact': artifact, 'delivery': 'DUPLICATE_RECONCILE_REQUIRED'}
     if sender is None:
         return {'artifact': artifact, 'delivery': 'NOT_SENT'}
