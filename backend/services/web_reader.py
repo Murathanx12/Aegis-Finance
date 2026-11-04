@@ -1016,6 +1016,10 @@ _MONTHS = ("jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|februar
 DATE_RE = re.compile(
     rf"\b(?:updated\s+|published\s+)?((?:{_MONTHS})\.?\s+\d{{1,2}},\s+\d{{4}})"
     rf"(?:,?\s+(?:at\s+)?(\d{{1,2}}:\d{{2}})\s*([ap])\.?m\.?\s*(ET|EDT|EST)?)?", re.I)
+# Broad on purpose: a malformed standalone date still competes with a valid
+# dateline. This is a candidate detector, never evidence of publication.
+DATE_LINE_CANDIDATE_RE = re.compile(
+    rf"^(?:(?:updated|published)\s+)?(?:{_MONTHS})\.?\s*\d{{1,2}},?\s+\d{{4}}\b", re.I)
 BYLINE_RE = re.compile(r"^By\s+[A-Z][\w.'\-]+(\s|$)")
 
 
@@ -1056,11 +1060,12 @@ YAHOO_HEADER_CANDIDATE = re.compile(
     r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+\d{1,2}\s+\w+\s+\d{4}\s+at\s+.*\bGMT", re.I)
 GMT_OFFSET = re.compile(r"^([+-])(\d{1,2})(?::?(\d{2}))?(?=\s|$)")
 
-def parse_published(text: str) -> str | None:
+def parse_published(text: str, *, first_seen_utc: str | None = None) -> str | None:
     """Parse an explicit Yahoo GMT-offset header or a timed Dow Jones dateline.
 
-    A date alone has no publication instant; malformed or conflicting Yahoo
-    headers fail closed instead of falling through to a body dateline.
+    A date alone has no publication instant. A unique old Updated timestamp is
+    usable only as an upper bound to prove archive age against first_seen_utc;
+    a recent update does not prove when the article was published.
     """
     from zoneinfo import ZoneInfo
     yahoo_headers = [ln.strip() for ln in (text or "").splitlines()
@@ -1089,8 +1094,20 @@ def parse_published(text: str) -> str | None:
             local = day.replace(hour=hour, minute=mm, tzinfo=timezone(timedelta(seconds=seconds)))
             instants.add(local.astimezone(timezone.utc).isoformat(timespec="seconds"))
         return next(iter(instants)) if len(instants) == 1 else None
-    m = DATE_RE.search(text or "")
-    if not m or not m.group(2):
+    # Identify competing header-shaped dates BEFORE checking their syntax.
+    # Otherwise a malformed old line can disappear beside a valid new one.
+    datelines = {ln.strip() for ln in (text or "").splitlines()[:40]
+                 if DATE_LINE_CANDIDATE_RE.match(ln.strip())}
+    if len(datelines) != 1:
+        return None
+    dateline = next(iter(datelines))
+    # Some plain-text Dow Jones headers omit the space after the month dot or
+    # the comma before the year. Normalize only the isolated candidate.
+    normalized = re.sub(r"(?i)^((?:updated|published)\s+)?([a-z]+)\.(\d)",
+                        r"\1\2. \3", dateline)
+    normalized = re.sub(r"(\d{1,2})\s+(\d{4})(?=\b)", r"\1, \2", normalized, count=1)
+    m = DATE_RE.fullmatch(normalized)
+    if not m or not m.group(2) or not m.group(4):
         return None
     d = m.group(1).replace(".", "").replace("Sept ", "Sep ")
     for fmt in ("%b %d, %Y", "%B %d, %Y"):
@@ -1114,7 +1131,20 @@ def parse_published(text: str) -> str | None:
         return None
     if local.astimezone(timezone.utc).astimezone(eastern).replace(tzinfo=None) != wall:
         return None
-    return local.astimezone(timezone.utc).isoformat(timespec="seconds")
+    instant = local.astimezone(timezone.utc)
+    if dateline.lower().startswith("updated"):
+        if first_seen_utc is None:
+            return None
+        try:
+            seen = datetime.fromisoformat(first_seen_utc.replace("Z", "+00:00"))
+        except ValueError:
+            return None
+        if seen.tzinfo is None:
+            return None
+        from backend.services import news_registry as NR
+        if seen.astimezone(timezone.utc) - instant <= timedelta(days=NR.ARCHIVE_LAG_DAYS):
+            return None
+    return instant.isoformat(timespec="seconds")
 
 
 def definitely_old_date_only(text: str, seen: datetime, max_age_days: float,
@@ -2062,10 +2092,11 @@ class Reader:
                                     f"block page; this lane stops (nothing is done to pass it)")
             raise ReaderRefused(f"PAGE_{cls}: {final_url!r} ({len(text)} chars) not stored")
         pub = DC.publisher_of(final_url, text)
+        first_seen_utc = DC.now_iso()
         art = {"url": final_url, "title": title, "byline": parse_byline(text),
                "page_class": cls,
-               "published_utc": parse_published(text), "text": text,
-               "first_seen_utc": DC.now_iso(), "chars": len(text), "raw_chars": len(raw),
+               "published_utc": parse_published(text, first_seen_utc=first_seen_utc), "text": text,
+               "first_seen_utc": first_seen_utc, "chars": len(text), "raw_chars": len(raw),
                "publisher": pub, "origin": origin, "tab": self.tab, "profile": self.profile,
                "attached_to": got.get("attached_to"),
                "paywall_suspected": bool(re.search(r"subscribe to continue|to keep reading|"
