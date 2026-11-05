@@ -22,6 +22,7 @@ COPY .dockerignore .dockerignore
 
 # Frozen population registration package; no operating task starts in the API.
 COPY scripts/branch_population.py scripts/local_branching.py scripts/local_branching_task.py scripts/local_branching_grade_child.py scripts/beta_v1_news_capture.py scripts/
+COPY scripts/world_digest_provisional.py scripts/world_digest_provisional.py
 COPY docs/TRIALS/POPULATION-1000-SOURCES.json docs/TRIALS/POPULATION-1000-SPECIFICATIONS.json docs/TRIALS/TRIAL-POPULATION-1000-20261015.md docs/TRIALS/
 # The public-assets health probe reads this committed pin at /app/scripts/.
 COPY scripts/render_public_assets.py scripts/render_public_assets.py
