@@ -285,6 +285,57 @@ def test_cli_rejection_and_malformed_json_fail_loud_safely(synthetic_files, caps
     assert json.loads(capture.err)["error"] == "UNREADABLE_OR_INVALID_SAVED_INPUT"
 
 
+@pytest.mark.parametrize("missing", [
+    "corpus_paths", "master_path", "master_meta_path", "proxy_path", "proxy_receipt_path",
+    "provenance_manifest_path",
+])
+def test_cli_missing_saved_input_refuses_without_output_or_writes(synthetic_files, tmp_path, capsys, missing):
+    paths = dict(synthetic_files)
+    supplied = [paths["corpus_paths"][0], *[p for p in paths.values() if isinstance(p, Path)]]
+    before = [p.read_bytes() for p in supplied]
+    absent = tmp_path / "MISSING_PRIVATE_PATH_SENTINEL"
+    assert not absent.exists()
+    if missing == "provenance_manifest_path":
+        args = cli_args(paths) + ["--provenance-manifest", str(absent),
+                                  "--provenance-manifest-sha256", "0" * 64]
+    else:
+        paths[missing] = [absent] if missing == "corpus_paths" else absent
+        args = cli_args(paths)
+    assert main(args) == 2
+    capture = capsys.readouterr()
+    assert capture.out == ""
+    assert json.loads(capture.err) == {"error": "UNREADABLE_OR_INVALID_SAVED_INPUT"}
+    assert "SENTINEL" not in capture.err and str(tmp_path) not in capture.err
+    assert [p.read_bytes() for p in supplied] == before
+    assert not absent.exists()
+
+
+@pytest.mark.parametrize("untrusted,reason", [
+    ("no_pin", "INVALID_PROVENANCE_MANIFEST_OPTIONS"),
+    ("wrong_pin", "PROVENANCE_MANIFEST_HASH_MISMATCH"),
+    ("replacement_master", "PROVENANCE_CONTENT_MISMATCH"),
+])
+def test_cli_untrusted_provenance_refuses_without_audit_output(synthetic_files, tmp_path, capsys, untrusted, reason):
+    paths = synthetic_files
+    provenance = pinned_manifest(paths, tmp_path)
+    args = cli_args(paths) + ["--provenance-manifest", str(provenance["provenance_manifest_path"])]
+    if untrusted == "wrong_pin":
+        args += ["--provenance-manifest-sha256", "0" * 64]
+    elif untrusted == "replacement_master":
+        args += ["--provenance-manifest-sha256", provenance["provenance_manifest_sha256"]]
+        content = json.loads(paths["master_path"].read_text())
+        content["0"]["ticker"] = "NEWALIAS"
+        paths["master_path"].write_text(json.dumps(content))
+    inputs = [paths["corpus_paths"][0], *[p for p in paths.values() if isinstance(p, Path)],
+              provenance["provenance_manifest_path"]]
+    before = [p.read_bytes() for p in inputs]
+    assert main(args) == 2
+    capture = capsys.readouterr()
+    assert capture.out == ""
+    assert json.loads(capture.err) == {"error": reason}
+    assert [p.read_bytes() for p in inputs] == before
+
+
 def test_cli_detects_input_race_and_mismatched_receipt(synthetic_files, monkeypatch):
     from scripts import news_cik_mapping_audit as cli
 
