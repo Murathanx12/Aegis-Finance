@@ -130,6 +130,7 @@ def build_sample(*, root: Path, review_time: datetime, cutoff: datetime,
                     continue
                 seen.add((source_key, sha))
                 kind = ("FILING" if path.parent.name.startswith("sec_edgar_") else
+                        "REFERENCE_PAGE" if "analyst estimates" in title.casefold() else
                         "ARTICLE" if len(body) >= 400 else "REFERENCE_PAGE")
                 clock = first.isoformat()
                 candidate = P.SourceItem(

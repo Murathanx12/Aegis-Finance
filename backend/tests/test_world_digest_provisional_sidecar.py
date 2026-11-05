@@ -149,6 +149,23 @@ def test_malformed_publication_clock_is_not_silently_treated_as_undated(sealed):
     assert sources == [] and status == "PARTIAL_ALLOWLIST"
 
 
+def test_recurring_analyst_estimates_page_is_reference_only(sealed):
+    root = sealed
+    _row(root / "news_corpus/dj_reader_marketwatch/2026-11-05.jsonl",
+         title="Example Company Analyst Estimates page",
+         seen="2026-11-05T04:00:00+00:00", published="2026-11-05T03:00:00+00:00",
+         url="https://example.test/estimates", body="Recurring estimates page. " * 30,
+         tickers=["TGT"])
+    cutoff = datetime(2026, 11, 5, 5, tzinfo=timezone.utc)
+    sources, _ = PS.build_sample(root=root, review_time=cutoff, cutoff=cutoff, hours=36)
+    assert len(sources) == 1 and sources[0].kind == "REFERENCE_PAGE"
+    receipt = P.build_review(sources=sources, issuer_edges=[], holdings=None,
+                             review_time_utc=cutoff.isoformat(), source_cutoff_utc=cutoff.isoformat(),
+                             input_complete=False, upstream_state="BUDGET_REFUSED", upstream_exit_code=2)
+    assert receipt["groups"][0]["reason_codes"] == ["REFERENCE_ONLY"]
+    assert receipt["groups"][0]["edges"] == []
+
+
 def test_oversized_source_refuses_without_collection_or_sidecar(sealed):
     root = sealed
     path = root / "news_corpus/dj_reader_barrons/2026-11-03.jsonl"
