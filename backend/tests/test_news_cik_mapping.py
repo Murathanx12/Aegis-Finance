@@ -10,6 +10,7 @@ import copy
 import hashlib
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -24,6 +25,7 @@ from scripts.news_cik_mapping_audit import audit_files, main
 EARLY = "2026-11-05T00:15:28+00:00"
 LATE = "2026-11-05T05:02:18+00:00"
 CUTOFF = "2026-11-05T06:00:00Z"
+OBSERVED = "2026-11-05T05:30:00+00:00"
 MASTER = [
     {"cik_str": 1365135, "ticker": "WU"},
     {"cik_str": 1835830, "ticker": "KVYO"},
@@ -238,7 +240,8 @@ def cli_args(paths, cutoff=CUTOFF):
 
 
 @pytest.fixture
-def synthetic_files(tmp_path):
+def synthetic_files(tmp_path, monkeypatch):
+    monkeypatch.setattr("scripts.news_cik_mapping_audit._observation_clock", lambda: OBSERVED)
     pd = pytest.importorskip("pandas")
     pytest.importorskip("pyarrow")
     paths = saved_paths(tmp_path)
@@ -261,7 +264,10 @@ def test_cli_reads_only_saved_files_and_prints_safe_json(synthetic_files, capsys
     output = json.loads(captured.out)
     assert output["counts"]["documents"] == 1
     assert output["input_sha256"]["corpus"] == [hashlib.sha256(before[0]).hexdigest()]
-    assert output["proxy_snapshot"]["known_at_utc"] == "2026-11-01T04:16:35+00:00"
+    assert output["proxy_snapshot"]["known_at_utc"] == OBSERVED
+    assert output["proxy_snapshot"]["declared_at_utc"] == "2026-11-01T04:16:35+00:00"
+    assert output["master_snapshot"]["known_at_utc"] == OBSERVED
+    assert output["master_snapshot"]["clock_basis"] == "CURRENT_OBSERVATION_NO_VERIFIED_VINTAGE"
     assert "SENTINEL" not in captured.out and str(paths["master_path"]) not in captured.out
     assert [p.read_bytes() for p in flat] == before
 
@@ -300,16 +306,178 @@ def test_cli_detects_input_race_and_mismatched_receipt(synthetic_files, monkeypa
         audit_files(**paths, as_of_utc=CUTOFF)
 
 
+def pinned_manifest(paths, tmp_path):
+    """Synthetic independently verified provenance; pin before any substitutions."""
+    receipt = json.loads(paths["proxy_receipt_path"].read_text())
+    entries = {}
+    for kind, data_key, meta_key in [("master", "master_path", "master_meta_path"),
+                                      ("proxy", "proxy_path", "proxy_receipt_path")]:
+        entries[kind] = {
+            "data_sha256": hashlib.sha256(paths[data_key].read_bytes()).hexdigest(),
+            "metadata_sha256": hashlib.sha256(paths[meta_key].read_bytes()).hexdigest(),
+            "known_at_utc": EARLY,
+        }
+    if "path" in receipt:
+        entries["proxy"]["source_path"] = receipt["path"]
+    manifest = tmp_path / "verified-provenance.json"
+    manifest.write_text(json.dumps({"schema_version": 1, "snapshots": entries}))
+    return dict(provenance_manifest_path=manifest,
+                provenance_manifest_sha256=hashlib.sha256(manifest.read_bytes()).hexdigest())
+
+
+def test_same_count_master_replacement_never_inherits_legacy_date(synthetic_files):
+    paths = synthetic_files
+    master = json.loads(paths["master_path"].read_text())
+    master["0"]["ticker"] = "NEWALIAS"
+    paths["master_path"].write_text(json.dumps(master))  # same count, unchanged old metadata
+    old = audit_files(**paths, as_of_utc="2026-11-05T01:00:00Z")
+    assert old["documents"][0]["candidates"] == []
+    assert old["master_snapshot"]["known_at_utc"] == OBSERVED
+    assert old["master_snapshot"]["declared_at_utc"] == EARLY
+    assert old["master_snapshot"]["availability"] == "AFTER_CUTOFF"
+    current = audit_files(**paths, as_of_utc=CUTOFF)
+    assert symbols(current["documents"][0]) == ["NEWALIAS"]
+    assert current["master_snapshot"]["clock_basis"] == "CURRENT_OBSERVATION_NO_VERIFIED_VINTAGE"
+
+
+def test_proxy_receipt_path_contradiction_rejected_by_cli(synthetic_files, tmp_path, capsys):
+    import pandas as pd
+
+    paths = synthetic_files
+    receipt = json.loads(paths["proxy_receipt_path"].read_text())
+    receipt["path"] = str(paths["proxy_path"])
+    paths["proxy_receipt_path"].write_text(json.dumps(receipt))
+    replacement = tmp_path / "replacement.parquet"
+    changed = [{**p, "exchange": "FUTURE"} for p in PROXY]
+    pd.DataFrame(changed).to_parquet(replacement, index=False)
+    assert main(cli_args({**paths, "proxy_path": replacement})) == 2
+    capture = capsys.readouterr()
+    assert capture.out == ""
+    assert json.loads(capture.err) == {"error": "PROXY_RECEIPT_PATH_CONTRADICTION"}
+
+
+def test_same_path_proxy_replacement_is_current_observation_only(synthetic_files, tmp_path):
+    import pandas as pd
+
+    paths = synthetic_files
+    provenance = pinned_manifest(paths, tmp_path)
+    # Verify the master independently so this checks the proxy gate specifically.
+    manifest = provenance["provenance_manifest_path"]
+    content = json.loads(manifest.read_text())
+    del content["snapshots"]["proxy"]
+    manifest.write_text(json.dumps(content))
+    provenance["provenance_manifest_sha256"] = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    pd.DataFrame([{**p, "exchange": "FUTURE"} for p in PROXY]).to_parquet(paths["proxy_path"], index=False)
+    result = audit_files(**paths, **provenance, as_of_utc="2026-11-05T01:00:00Z")
+    assert symbols(result["documents"][0]) == ["WU"]
+    assert result["documents"][0]["candidates"][0]["listing_candidates"] == []
+    assert result["proxy_snapshot"]["known_at_utc"] == OBSERVED
+    assert result["proxy_snapshot"]["availability"] == "AFTER_CUTOFF"
+
+
+def test_verified_content_provenance_allows_copies_without_backdating_arbitrary_bytes(
+        synthetic_files, tmp_path, capsys):
+    paths = synthetic_files
+    receipt = json.loads(paths["proxy_receipt_path"].read_text())
+    receipt["path"] = str(paths["proxy_path"])
+    paths["proxy_receipt_path"].write_text(json.dumps(receipt))
+    provenance = pinned_manifest(paths, tmp_path)
+    copies = dict(paths)
+    for key in ("master_path", "master_meta_path", "proxy_path", "proxy_receipt_path"):
+        copied = tmp_path / ("copied-" + paths[key].name)
+        copied.write_bytes(paths[key].read_bytes())
+        copies[key] = copied
+    args = cli_args(copies, cutoff="2026-11-05T01:00:00Z") + [
+        "--provenance-manifest", str(provenance["provenance_manifest_path"]),
+        "--provenance-manifest-sha256", provenance["provenance_manifest_sha256"]]
+    assert main(args) == 0
+    capture = capsys.readouterr()
+    result = json.loads(capture.out)
+    assert symbols(result["documents"][0]) == ["WU"]
+    assert result["documents"][0]["candidates"][0]["listing_candidates"]
+    for kind in ("master", "proxy"):
+        assert result[f"{kind}_snapshot"]["known_at_utc"] == EARLY
+        assert result[f"{kind}_snapshot"]["clock_basis"] == "PINNED_CONTENT_PROVENANCE"
+    assert result["input_sha256"]["provenance_manifest"] == provenance["provenance_manifest_sha256"]
+    assert str(tmp_path) not in capture.out and "SENTINEL" not in capture.out
+
+
+@pytest.mark.parametrize("target", ["master_path", "proxy_path", "master_meta_path", "proxy_receipt_path"])
+def test_pinned_provenance_rejects_replacement_data_or_metadata(synthetic_files, tmp_path, target):
+    import pandas as pd
+
+    paths = synthetic_files
+    provenance = pinned_manifest(paths, tmp_path)
+    path = paths[target]
+    if target == "master_path":
+        content = json.loads(path.read_text())
+        content["0"]["ticker"] = "NEWALIAS"
+        path.write_text(json.dumps(content))
+    elif target == "proxy_path":
+        pd.DataFrame([{**p, "exchange": "FUTURE"} for p in PROXY]).to_parquet(path, index=False)
+    else:
+        path.write_text(path.read_text() + " ")  # counts/clock unchanged, receipt bytes differ
+    with pytest.raises(MappingError, match="PROVENANCE_CONTENT_MISMATCH"):
+        audit_files(**paths, **provenance, as_of_utc=CUTOFF)
+
+
+@pytest.mark.parametrize("mode,reason", [
+    ("no_pin", "INVALID_PROVENANCE_MANIFEST_OPTIONS"),
+    ("wrong_pin", "PROVENANCE_MANIFEST_HASH_MISMATCH"),
+    ("bad_clock", "INVALID_CANONICAL_UTC"),
+    ("null_entry", "INVALID_PROVENANCE_MANIFEST"),
+])
+def test_manifest_requires_external_pin_valid_schema_and_clock(synthetic_files, tmp_path, mode, reason):
+    provenance = pinned_manifest(synthetic_files, tmp_path)
+    path = provenance["provenance_manifest_path"]
+    if mode == "no_pin":
+        provenance["provenance_manifest_sha256"] = None
+    elif mode == "wrong_pin":
+        provenance["provenance_manifest_sha256"] = "0" * 64
+    else:
+        content = json.loads(path.read_text())
+        if mode == "bad_clock":
+            content["snapshots"]["master"]["known_at_utc"] = "2026-09-03"
+        else:
+            content["snapshots"]["master"] = None
+        path.write_text(json.dumps(content))
+        provenance["provenance_manifest_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    with pytest.raises(MappingError, match=reason):
+        audit_files(**synthetic_files, **provenance, as_of_utc=CUTOFF)
+
+
+def test_manifest_cannot_override_a_different_receipt_path(synthetic_files, tmp_path):
+    paths = synthetic_files
+    receipt = json.loads(paths["proxy_receipt_path"].read_text())
+    receipt["path"] = str(tmp_path / "unrelated-original.parquet")
+    paths["proxy_receipt_path"].write_text(json.dumps(receipt))
+    provenance = pinned_manifest(paths, tmp_path)
+    manifest = provenance["provenance_manifest_path"]
+    content = json.loads(manifest.read_text())
+    content["snapshots"]["proxy"]["source_path"] = str(tmp_path / "different-original.parquet")
+    manifest.write_text(json.dumps(content))
+    provenance["provenance_manifest_sha256"] = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    with pytest.raises(MappingError, match="PROXY_RECEIPT_PATH_CONTRADICTION"):
+        audit_files(**paths, **provenance, as_of_utc=CUTOFF)
+
+
 @pytest.mark.skipif(not os.environ.get("AEGIS_NEWS_CIK_SMOKE_ROOT"), reason="explicit saved-input root required")
 def test_actual_saved_nov5_smoke():
     paths = saved_paths(os.environ["AEGIS_NEWS_CIK_SMOKE_ROOT"])
-    result = audit_files(**paths, as_of_utc=CUTOFF)
+    # Legacy bytes have no verified historical clock. A current observation can
+    # support a current descriptive audit only, never the old book's replay.
+    current_cutoff = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
+    result = audit_files(**paths, as_of_utc=current_cutoff)
     assert result["input_sha256"]["corpus"] == ["2897cb67b3457193f3c3c357017fa8c8adae3e529f729a2d23b87c2ee66186dc"]
     assert result["input_sha256"]["master"] == "69aad87bc3a80196a0340263f4213c8242c1eb9a846bdba861240994bf5e03d5"
     assert result["input_sha256"]["proxy"] == "86a58cc34b44682113f0830c431a1ecb7475025cf6ae57ba08528d1dd727d27d"
     assert result["counts"] == {"input_rows": 21, "excluded_after_cutoff": 0,
         "rejected_rows": 0, "eligible_rows": 21, "duplicate_rows": 0,
         "documents": 21, "filings": 18, "issuer_groups": 17}
+    for kind in ("master", "proxy"):
+        snapshot = result[f"{kind}_snapshot"]
+        assert snapshot["known_at_utc"] == result["observed_at_utc"]
+        assert snapshot["clock_basis"] == "CURRENT_OBSERVATION_NO_VERIFIED_VINTAGE"
     groups = {g["issuer_cik"]: g for g in result["issuer_groups"]}
     for cik, symbol in [("1365135", "WU"), ("1835830", "KVYO")]:
         assert [c["symbol"] for c in groups[cik]["candidates"]] == [symbol]
@@ -323,13 +491,15 @@ def test_actual_saved_nov5_smoke():
     early = audit_files(**paths, as_of_utc=EARLY)
     assert early["counts"]["documents"] == 8
     assert "1835830" not in {g["issuer_cik"] for g in early["issuer_groups"]}
+    assert all(d["candidates"] == [] for d in early["documents"])
+    assert early["master_snapshot"]["availability"] == "AFTER_CUTOFF"
     actual_master = json.loads(paths["master_path"].read_text())
     import pandas as pd
     actual_mapper = CandidateMapper(actual_master.values(), pd.read_parquet(
         paths["proxy_path"], columns=["market", "symbol", "exchange"]).to_dict("records"),
         master_snapshot=Snapshot(result["input_sha256"]["master"], result["master_snapshot"]["known_at_utc"]),
         proxy_snapshot=Snapshot(result["input_sha256"]["proxy"], result["proxy_snapshot"]["known_at_utc"]))
-    ambiguity = actual_mapper.audit([row(cik) for cik in [884394, 1046179, 1652044]], as_of_utc=CUTOFF)
+    ambiguity = actual_mapper.audit([row(cik) for cik in [884394, 1046179, 1652044]], as_of_utc=current_cutoff)
     docs = {d["issuer_cik"]: d for d in ambiguity["documents"]}
     assert symbols(docs["884394"]) == ["SPY"]
     assert docs["884394"]["candidates"][0]["listing_candidates"] == []
