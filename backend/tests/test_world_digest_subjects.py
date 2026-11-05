@@ -83,10 +83,9 @@ def test_ambiguous_or_non_event_sources_abstain(title, tickers, kind):
     assert set(row["tickers_unverified"]) == set(tickers)
 
 
-def test_headline_tags_must_pass_subject_admission_even_when_model_omits_tickers():
+def test_headline_model_abstention_is_not_overridden_by_upstream_tags():
     row = WD.type_row(reply([]), item(kind="headline", tickers_named=["PSNL", "QCOM"]))
-    assert row["tickers"] == ["QCOM"]
-    assert row["tickers_unverified"] == ["PSNL"]
+    assert row["tickers"] == [] and row["tickers_unverified"] == []
 
 
 def test_strict_current_contract_refuses_whole_reply_without_repair():
@@ -151,10 +150,11 @@ def sec_item(ticker="WU", cik="1365135", name="Western Union", **changes):
 
 @pytest.mark.parametrize("ticker,cik,name", [("WU", "1365135", "Western Union"),
                                             ("KVYO", "1835830", "Klaviyo")])
-def test_dated_sec_issuer_header_and_exchange_preserve_tagless_primary(ticker, cik, name):
+def test_dated_sec_header_is_candidate_only_without_owner_security_edge(ticker, cik, name):
     source = sec_item(ticker, cik, name)
     row = WD.type_row(reply([ticker]), source)
-    assert row["tickers"] == [ticker]
+    assert row["tickers"] == [] and row["tickers_unverified"] == [ticker]
+    assert row["security_authorization"] == "UNAVAILABLE"
     assert row["published_utc"] == source.published_utc
     # Filing-agent accession 1193125 is deliberately different from issuer CIK.
     assert "0001193125" in source.url
@@ -173,10 +173,11 @@ def test_unqualified_sec_or_counterparty_witness_abstains(changes):
     assert row["tickers"] == [] and row["tickers_unverified"] == ["WU"]
 
 
-def test_primary_issuer_title_is_not_erased_by_unrelated_body_mentions():
+def test_primary_issuer_title_cannot_replace_missing_owner_security_evidence():
     source = item(title="Apple reports quarterly results", source="issuer_release",
                   url="https://www.apple.com/newsroom/synthetic-results", tickers_named=["QCOM"])
-    assert WD.type_row(reply(["AAPL", "QCOM"]), source)["tickers"] == ["AAPL"]
+    row = WD.type_row(reply(["AAPL", "QCOM"]), source)
+    assert row["tickers"] == [] and row["tickers_unverified"] == ["AAPL", "QCOM"]
 
 
 @pytest.mark.parametrize("kind", ["article", "headline"])
@@ -203,12 +204,12 @@ def test_fresh_extraction_and_written_cache_share_subject_gate(kind, tmp_path):
     assert persisted["first_seen_utc"] == source.first_seen_utc
 
 
-def test_primary_exchange_witness_disambiguates_share_class():
+def test_primary_exchange_witness_is_not_a_dated_security_edge():
     source = sec_item("GOOGL", "1652044", "Alphabet",
         text="Exhibit 99.1\nAlphabet Reports Quarterly Results\n"
              "November 4, 2026 - Alphabet (NASDAQ: GOOGL) reported results.")
     row = WD.type_row(reply(["GOOGL", "GOOG"]), source)
-    assert row["tickers"] == ["GOOGL"] and row["tickers_unverified"] == ["GOOG"]
+    assert row["tickers"] == [] and row["tickers_unverified"] == ["GOOG", "GOOGL"]
 
 
 def test_missing_name_catalog_abstains_instead_of_using_page_mentions(monkeypatch):
@@ -217,11 +218,12 @@ def test_missing_name_catalog_abstains_instead_of_using_page_mentions(monkeypatc
     assert row["tickers"] == [] and row["tickers_unverified"] == ["AAPL", "QCOM"]
 
 
-def test_primary_delivers_results_heading_is_an_issuer_act():
+def test_primary_results_heading_still_needs_owner_security_edge():
     source = sec_item("KVYO", "1835830", "Klaviyo",
         text="Exhibit 99.1\nKlaviyo Delivers Solid Q3 with Enterprise Growth\n"
              "November 4, 2026 - Klaviyo (NYSE: KVYO) announced quarterly results.")
-    assert WD.type_row(reply(["KVYO"]), source)["tickers"] == ["KVYO"]
+    row = WD.type_row(reply(["KVYO"]), source)
+    assert row["tickers"] == [] and row["tickers_unverified"] == ["KVYO"]
 
 
 def test_collect_full_page_keeps_mentions_separate_from_discovery_tags(tmp_path):
