@@ -1759,6 +1759,18 @@ def _case_news_source_validation():
             SourceValidationError, "a cached interpretation with no source first-seen clock")
 
 
+def _case_news_cik_mapping():
+    from backend.services.news_cik_mapping import CandidateMapper, MappingError, Snapshot
+
+    # All other inputs are valid; removing the empty-master guard must return
+    # a mapper and fail this contract, rather than hit another refusal.
+    return (lambda: CandidateMapper(
+        [], [{"market": "US", "symbol": "WU", "exchange": "NYQ"}],
+        master_snapshot=Snapshot("a" * 64, "2026-11-05T00:00:00Z"),
+        proxy_snapshot=Snapshot("b" * 64, "2026-11-05T00:00:00Z")),
+        MappingError, "no saved SEC master rows to derive issuer candidates")
+
+
 def test_news_source_validation_clock_fixture_positive_control():
     from backend.services.news_source_validation import validate_cached
 
@@ -1904,6 +1916,7 @@ CASES = {
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
     "news_source_validation": _case_news_source_validation,
+    "news_cik_mapping": _case_news_cik_mapping,
     "world_state": _case_world_state,
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
