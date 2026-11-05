@@ -207,11 +207,12 @@ def _edge(raw: IssuerEdge, supplied: dict[tuple[str, str], datetime],
     if (not isinstance(raw.relation, str) or len(raw.relation) > 32
             or not isinstance(raw.basis, str) or len(raw.basis) > 32):
         _refuse("INVALID_EDGE_QUALIFICATION")
-    allowed = {"DIRECT_ISSUER": {"FULL_ISSUER_SUBJECT"},
-               "INDIRECT_CANDIDATE": {"REVIEWED_MECHANISM"},
+    allowed = {"INDIRECT_CANDIDATE": {"CALLER_DESCRIBED_MECHANISM"},
                "DISCOVERY_CONTEXT": {"QUEUE_CONTEXT", "TICKER_ONLY"},
-               "ISSUER_CANDIDATE": {"SEC_CIK"}}
-    if raw.relation == "DIRECT_ISSUER" and raw.basis not in allowed["DIRECT_ISSUER"]:
+               "ISSUER_CANDIDATE": {"SEC_CIK", "FULL_ISSUER_SUBJECT"}}
+    # Neither a CIK nor a caller-asserted full-name/title match verifies the
+    # dated issuer-to-security and held-identity chain needed for DIRECT.
+    if raw.relation == "DIRECT_ISSUER":
         _refuse("UNQUALIFIED_DIRECT_EDGE")
     if raw.relation not in allowed or raw.basis not in allowed[raw.relation]:
         _refuse("INVALID_EDGE_QUALIFICATION")
@@ -220,7 +221,7 @@ def _edge(raw: IssuerEdge, supplied: dict[tuple[str, str], datetime],
         # asserted ticker alongside it must not become a held-symbol join.
         if raw.symbol is not None:
             _refuse("UNQUALIFIED_ISSUER_CANDIDATE")
-        if not _CIK.fullmatch(raw.issuer_id):
+        if raw.basis == "SEC_CIK" and not _CIK.fullmatch(raw.issuer_id):
             _refuse("INVALID_EDGE_QUALIFICATION")
         symbol = None
     else:
@@ -234,7 +235,8 @@ def _holdings(raw: HoldingsSnapshot | None, review: datetime,
               cutoff: datetime) -> tuple[dict[str, Any], set[str] | None]:
     if raw is None:
         return {"status": "UNKNOWN", "as_of_utc": None, "known_at_utc": None,
-                "evidence_sha256": None, "symbol_count": None}, None
+                "evidence_sha256": None, "symbol_count": None,
+                "authority": "CALLER_SUPPLIED_NOT_VERIFIED"}, None
     if not isinstance(raw, HoldingsSnapshot):
         _refuse("INVALID_HOLDINGS")
     if type(raw.complete) is not bool:
@@ -249,7 +251,8 @@ def _holdings(raw: HoldingsSnapshot | None, review: datetime,
         _refuse("INVALID_HOLDINGS_TIMELINE")
     status = "HOLDINGS_AFTER_CUTOFF" if known > cutoff else ("COMPLETE" if raw.complete else "PARTIAL")
     return {"status": status, "as_of_utc": _iso(as_of), "known_at_utc": _iso(known),
-            "evidence_sha256": evidence, "symbol_count": len(normalized)}, (
+            "evidence_sha256": evidence, "symbol_count": len(normalized),
+            "authority": "CALLER_SUPPLIED_NOT_VERIFIED"}, (
                 normalized if known <= cutoff else None)
 
 
@@ -258,7 +261,7 @@ def _reason_codes(positive: bool, reference: bool, issuer_only: bool,
     if reference:
         return ["REFERENCE_ONLY"]
     if positive:
-        return ["QUALIFIED_HELD_EDGE_FOR_REVIEW"]
+        return ["CALLER_INDIRECT_SYMBOL_MATCH_FOR_REVIEW"]
     unresolved = []
     if issuer_only:
         unresolved.append("ISSUER_SECURITY_UNRESOLVED")
@@ -270,7 +273,7 @@ def _reason_codes(positive: bool, reference: bool, issuer_only: bool,
         unresolved.append("PARTIAL_HOLDINGS_UNKNOWN")
     if coverage_partial:
         unresolved.append("PARTIAL_INPUT_COVERAGE_UNKNOWN")
-    return unresolved or ["NO_QUALIFIED_HELD_EDGE"]
+    return unresolved or ["NO_CALLER_INDIRECT_SYMBOL_MATCH"]
 
 
 def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
@@ -372,7 +375,7 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
 
     joined: dict[str, list[dict[str, Any]]] = {key: [] for key in grouped}
     seen_edges = set()
-    direct_issuers: dict[str, str] = {}
+    candidate_issuers: dict[str, str] = {}
     edges_not_joined = 0
     for edge in edges:
         identity = (edge["source_key"], edge["source_sha256"])
@@ -387,11 +390,11 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
         if token in seen_edges:
             continue
         seen_edges.add(token)
-        if edge["relation"] == "DIRECT_ISSUER":
-            previous = direct_issuers.setdefault(edge["symbol"], edge["issuer_id"])
+        if edge["relation"] == "INDIRECT_CANDIDATE":
+            previous = candidate_issuers.setdefault(edge["symbol"], edge["issuer_id"])
             if previous != edge["issuer_id"]:
                 _refuse("SYMBOL_ISSUER_COLLISION")
-        match = ("UNKNOWN" if edge["relation"] == "ISSUER_CANDIDATE" or held is None
+        match = ("UNKNOWN" if edge["relation"] in ("ISSUER_CANDIDATE", "DISCOVERY_CONTEXT") or held is None
                  or (held_meta["status"] == "PARTIAL" and edge["symbol"] not in held)
                  else edge["symbol"] in held)
         joined[event_key].append({"source_id": source_id, "source_sha256": edge["source_sha256"],
@@ -399,7 +402,7 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
                                   "relation": edge["relation"], "basis": edge["basis"],
                                   "known_at_utc": _iso(edge["known"]),
                                   "evidence_sha256": edge["evidence_sha256"],
-                                  "held_snapshot_match": match})
+                                  "caller_snapshot_symbol_match": match})
 
     coverage_partial = not input_complete or omitted > 0
     coverage = {"status": "PARTIAL" if coverage_partial else "COMPLETE",
@@ -415,16 +418,13 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
             item["source_id"], item["symbol"] or "", item["issuer_id"], item["relation"],
             item["basis"], item["known_at_utc"], item["evidence_sha256"]))
         reference = all(source["kind"] == "REFERENCE_PAGE" for source in sources_out)
-        direct = sorted({edge["symbol"] for edge in edges_out if edge["relation"] == "DIRECT_ISSUER"
-                         and edge["held_snapshot_match"] is True and not reference})
         indirect = sorted({edge["symbol"] for edge in edges_out if edge["relation"] == "INDIRECT_CANDIDATE"
-                           and edge["held_snapshot_match"] is True and not reference})
-        positive = bool(direct or indirect)
+                           and edge["caller_snapshot_symbol_match"] is True and not reference})
+        positive = bool(indirect)
         issuer_only = any(edge["relation"] == "ISSUER_CANDIDATE" for edge in edges_out)
         groups.append({"event_id": _id("event", event_key, registry), "event_key": event_key,
                        "sources": sources_out, "edges": edges_out,
-                       "qualified_direct_held": direct,
-                       "provisional_indirect_held_candidates": indirect,
+                       "caller_supplied_indirect_symbol_matches": indirect,
                        "decision": "REVIEW_EXPOSURE" if positive else "NO_CHANGE_WITH_REASON",
                        "reason_codes": _reason_codes(positive, reference, issuer_only,
                                                       held_meta["status"], coverage_partial),
@@ -465,10 +465,10 @@ def _only_fields(value: Any, names: str) -> None:
 
 
 def _safe_reason_codes(value: Any) -> None:
-    allowed = {"REFERENCE_ONLY", "QUALIFIED_HELD_EDGE_FOR_REVIEW",
+    allowed = {"REFERENCE_ONLY", "CALLER_INDIRECT_SYMBOL_MATCH_FOR_REVIEW",
                "ISSUER_SECURITY_UNRESOLVED", "HOLDINGS_UNKNOWN",
                "HOLDINGS_AFTER_CUTOFF", "PARTIAL_HOLDINGS_UNKNOWN",
-               "PARTIAL_INPUT_COVERAGE_UNKNOWN", "NO_QUALIFIED_HELD_EDGE",
+               "PARTIAL_INPUT_COVERAGE_UNKNOWN", "NO_CALLER_INDIRECT_SYMBOL_MATCH",
                "NO_SOURCES_AT_CUTOFF"}
     if not isinstance(value, list) or not value or len(value) > 4 or any(
             not isinstance(code, str) or code not in allowed for code in value):
@@ -502,7 +502,9 @@ def _validate_receipt_schema(receipt: dict[str, Any], cutoff: datetime) -> None:
                                       or coverage["sources_omitted_by_cap"] else "COMPLETE")):
         _refuse("RECEIPT_INTEGRITY")
     held = receipt["holdings"]
-    _only_fields(held, "status as_of_utc known_at_utc evidence_sha256 symbol_count")
+    _only_fields(held, "status as_of_utc known_at_utc evidence_sha256 symbol_count authority")
+    if held["authority"] != "CALLER_SUPPLIED_NOT_VERIFIED":
+        _refuse("RECEIPT_INTEGRITY")
     if held["status"] == "UNKNOWN":
         if any(held[name] is not None for name in (
                 "as_of_utc", "known_at_utc", "evidence_sha256", "symbol_count")):
@@ -522,8 +524,8 @@ def _validate_receipt_schema(receipt: dict[str, Any], cutoff: datetime) -> None:
     total_sources = 0
     root_issuer_only = False
     for group in groups:
-        _only_fields(group, "event_id event_key sources edges qualified_direct_held "
-                     "provisional_indirect_held_candidates decision reason_codes contradiction falsifier")
+        _only_fields(group, "event_id event_key sources edges caller_supplied_indirect_symbol_matches "
+                     "decision reason_codes contradiction falsifier")
         event_key = _key(group["event_key"])
         if group["event_id"] != _stable_id("event", event_key):
             _refuse("RECEIPT_INTEGRITY")
@@ -565,46 +567,45 @@ def _validate_receipt_schema(receipt: dict[str, Any], cutoff: datetime) -> None:
                 _hash(old_sha)
             selected[(sid, sha)] = known
         reference = all(source["kind"] == "REFERENCE_PAGE" for source in sources)
-        direct, indirect = set(), set()
+        indirect = set()
         issuer_only = False
         for edge in edges:
             _only_fields(edge, "source_id source_sha256 issuer_id symbol relation basis known_at_utc "
-                         "evidence_sha256 held_snapshot_match")
+                         "evidence_sha256 caller_snapshot_symbol_match")
             identity = (_hash(edge["source_id"]), _hash(edge["source_sha256"]))
             if identity not in selected or not selected[identity] <= _clock(edge["known_at_utc"]) <= cutoff:
                 _refuse("RECEIPT_INTEGRITY")
             _issuer(edge["issuer_id"])
             _hash(edge["evidence_sha256"])
             relation, basis = edge["relation"], edge["basis"]
-            allowed = {"DIRECT_ISSUER": "FULL_ISSUER_SUBJECT",
-                       "INDIRECT_CANDIDATE": "REVIEWED_MECHANISM",
-                       "ISSUER_CANDIDATE": "SEC_CIK"}
+            allowed = {"INDIRECT_CANDIDATE": "CALLER_DESCRIBED_MECHANISM"}
             if relation == "ISSUER_CANDIDATE":
                 issuer_only = True
                 root_issuer_only = True
-                if (basis != "SEC_CIK" or not _CIK.fullmatch(edge["issuer_id"])
-                        or edge["symbol"] is not None or edge["held_snapshot_match"] != "UNKNOWN"):
+                if (basis not in ("SEC_CIK", "FULL_ISSUER_SUBJECT")
+                        or (basis == "SEC_CIK" and not _CIK.fullmatch(edge["issuer_id"]))
+                        or edge["symbol"] is not None
+                        or edge["caller_snapshot_symbol_match"] != "UNKNOWN"):
                     _refuse("RECEIPT_INTEGRITY")
             else:
                 _symbol(edge["symbol"])
                 if relation == "DISCOVERY_CONTEXT":
                     if basis not in ("QUEUE_CONTEXT", "TICKER_ONLY"):
                         _refuse("RECEIPT_INTEGRITY")
+                    if edge["caller_snapshot_symbol_match"] != "UNKNOWN":
+                        _refuse("RECEIPT_INTEGRITY")
                 elif allowed.get(relation) != basis:
                     _refuse("RECEIPT_INTEGRITY")
-                if edge["held_snapshot_match"] not in (True, False, "UNKNOWN"):
+                match = edge["caller_snapshot_symbol_match"]
+                if type(match) is not bool and match != "UNKNOWN":
                     _refuse("RECEIPT_INTEGRITY")
-                if held["status"] in ("UNKNOWN", "HOLDINGS_AFTER_CUTOFF") and edge["held_snapshot_match"] != "UNKNOWN":
+                if held["status"] in ("UNKNOWN", "HOLDINGS_AFTER_CUTOFF") and match != "UNKNOWN":
                     _refuse("RECEIPT_INTEGRITY")
-                if edge["held_snapshot_match"] is True and not reference:
-                    if relation == "DIRECT_ISSUER":
-                        direct.add(edge["symbol"])
-                    elif relation == "INDIRECT_CANDIDATE":
-                        indirect.add(edge["symbol"])
-        if (group["qualified_direct_held"] != sorted(direct)
-                or group["provisional_indirect_held_candidates"] != sorted(indirect)
-                or group["decision"] != ("REVIEW_EXPOSURE" if direct or indirect else "NO_CHANGE_WITH_REASON")
-                or group["reason_codes"] != _reason_codes(bool(direct or indirect), reference,
+                if match is True and not reference and relation == "INDIRECT_CANDIDATE":
+                    indirect.add(edge["symbol"])
+        if (group["caller_supplied_indirect_symbol_matches"] != sorted(indirect)
+                or group["decision"] != ("REVIEW_EXPOSURE" if indirect else "NO_CHANGE_WITH_REASON")
+                or group["reason_codes"] != _reason_codes(bool(indirect), reference,
                                                            issuer_only, held["status"],
                                                            coverage["status"] == "PARTIAL")):
             _refuse("RECEIPT_INTEGRITY")

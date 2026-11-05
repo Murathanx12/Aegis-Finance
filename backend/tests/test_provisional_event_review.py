@@ -28,7 +28,7 @@ def source(key="article:a", event="policy:ballot", seen=EARLY, body="LICENSED_BO
 
 
 def edge(item, *, symbol="US:NVDA", issuer="cik:1045810", relation="INDIRECT_CANDIDATE",
-         basis="REVIEWED_MECHANISM", known=EARLY):
+         basis="CALLER_DESCRIBED_MECHANISM", known=EARLY):
     return P.IssuerEdge(item.source_key, item.provenance.source_sha256, issuer, symbol,
                         relation, basis, known, PROOF)
 
@@ -99,20 +99,37 @@ def test_false_queue_tag_is_context_and_cannot_trigger_direct_review():
     r = build([a], [edge(a, symbol="US:META", issuer="cik:1326801",
                          relation="DISCOVERY_CONTEXT", basis="QUEUE_CONTEXT")], holdings(("US:META",)))
     assert r["decision"] == "NO_CHANGE_WITH_REASON"
-    assert r["groups"][0]["qualified_direct_held"] == []
+    assert r["groups"][0]["caller_supplied_indirect_symbol_matches"] == []
     assert r["groups"][0]["edges"][0]["relation"] == "DISCOVERY_CONTEXT"
+    assert r["groups"][0]["edges"][0]["caller_snapshot_symbol_match"] == "UNKNOWN"
     with pytest.raises(P.ReviewRefused, match="UNQUALIFIED_DIRECT_EDGE"):
         build([a], [edge(a, relation="DIRECT_ISSUER", basis="QUEUE_CONTEXT")], holdings())
 
 
-def test_qualified_direct_edge_and_indirect_edge_remain_separate():
+def test_full_name_claim_stays_descriptive_without_security_or_held_witness():
     a = source()
-    r = build([a], [edge(a, relation="DIRECT_ISSUER", basis="FULL_ISSUER_SUBJECT")], holdings())
+    with pytest.raises(P.ReviewRefused, match="UNQUALIFIED_DIRECT_EDGE"):
+        build([a], [edge(a, relation="DIRECT_ISSUER",
+                         basis="FULL_ISSUER_SUBJECT")], holdings())
+    r = build([a], [edge(a, symbol=None, relation="ISSUER_CANDIDATE",
+                         basis="FULL_ISSUER_SUBJECT")], holdings())
     g = r["groups"][0]
-    assert g["qualified_direct_held"] == ["US:NVDA"]
-    assert g["provisional_indirect_held_candidates"] == []
-    assert r["decision"] == "REVIEW_EXPOSURE"
+    assert g["caller_supplied_indirect_symbol_matches"] == []
+    assert g["edges"][0]["caller_snapshot_symbol_match"] == "UNKNOWN"
+    assert r["reason_codes"] == ["ISSUER_SECURITY_UNRESOLVED"]
+    assert r["decision"] == "NO_CHANGE_WITH_REASON"
     assert g["contradiction"] and g["falsifier"]
+
+
+def test_caller_indirect_match_is_only_a_manual_review_candidate():
+    a = source()
+    r = build([a], [edge(a)], holdings())
+    assert r["decision"] == "REVIEW_EXPOSURE"
+    assert r["groups"][0]["caller_supplied_indirect_symbol_matches"] == ["US:NVDA"]
+    assert r["groups"][0]["edges"][0]["caller_snapshot_symbol_match"] is True
+    assert r["holdings"]["authority"] == "CALLER_SUPPLIED_NOT_VERIFIED"
+    assert r["provenance_authority"] == "CALLER_SUPPLIED_NOT_INDEPENDENTLY_VERIFIED"
+    assert not r["natural_warning"]
 
 
 def test_sec_cik_without_security_witness_cannot_name_a_held_symbol():
@@ -128,9 +145,9 @@ def test_sec_cik_without_security_witness_cannot_name_a_held_symbol():
     r = build([a], [candidate], holdings(("US:NVDA", "US:AAPL")))
     assert r["decision"] == "NO_CHANGE_WITH_REASON"
     assert r["reason_codes"] == ["ISSUER_SECURITY_UNRESOLVED"]
-    assert r["groups"][0]["qualified_direct_held"] == []
+    assert r["groups"][0]["caller_supplied_indirect_symbol_matches"] == []
     assert r["groups"][0]["edges"][0]["symbol"] is None
-    assert r["groups"][0]["edges"][0]["held_snapshot_match"] == "UNKNOWN"
+    assert r["groups"][0]["edges"][0]["caller_snapshot_symbol_match"] == "UNKNOWN"
     late = replace(candidate, known_at_utc=LATE)
     excluded = build([a], [late], holdings(("US:NVDA",)))
     assert excluded["coverage"]["future_edges_excluded"] == 1
@@ -150,14 +167,14 @@ def test_missing_or_later_holdings_are_unknown_not_no_exposure(held, reason):
     r = build([a], [edge(a)], held)
     assert r["decision"] == "NO_CHANGE_WITH_REASON"
     assert reason in r["reason_codes"]
-    assert r["groups"][0]["edges"][0]["held_snapshot_match"] == "UNKNOWN"
+    assert r["groups"][0]["edges"][0]["caller_snapshot_symbol_match"] == "UNKNOWN"
 
 
 def test_empty_complete_snapshot_supports_only_bounded_no_match():
     a = source()
     r = build([a], [edge(a)], holdings(()))
     assert r["decision"] == "NO_CHANGE_WITH_REASON"
-    assert "NO_QUALIFIED_HELD_EDGE" in r["reason_codes"]
+    assert "NO_CALLER_INDIRECT_SYMBOL_MATCH" in r["reason_codes"]
 
 
 def test_partial_cap_does_not_claim_an_unexamined_book_is_clear():
@@ -173,7 +190,7 @@ def test_partial_cap_does_not_claim_an_unexamined_book_is_clear():
 
 def test_reference_page_is_not_an_event_review_even_with_held_match():
     a = source(kind="REFERENCE_PAGE")
-    r = build([a], [edge(a, relation="DIRECT_ISSUER", basis="FULL_ISSUER_SUBJECT")], holdings())
+    r = build([a], [edge(a)], holdings())
     assert r["decision"] == "NO_CHANGE_WITH_REASON"
     assert "REFERENCE_ONLY" in r["groups"][0]["reason_codes"]
 
@@ -212,9 +229,7 @@ def test_identity_and_version_collisions_refuse():
     with pytest.raises(P.ReviewRefused, match="SOURCE_VERSION_CLOCK_COLLISION"):
         build([a, source(body="CONFLICTING_BYTES")])
     with pytest.raises(P.ReviewRefused, match="SYMBOL_ISSUER_COLLISION"):
-        build([a], [edge(a, relation="DIRECT_ISSUER", basis="FULL_ISSUER_SUBJECT"),
-                    edge(a, issuer="cik:0001326801", relation="DIRECT_ISSUER",
-                         basis="FULL_ISSUER_SUBJECT")], holdings())
+        build([a], [edge(a), edge(a, issuer="cik:0001326801")], holdings())
 
 
 @pytest.mark.parametrize("kind", ["source", "event"])
