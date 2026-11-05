@@ -52,7 +52,7 @@ def test_reported_false_discovery_tags_never_direct(universe, tag, title):
 
 
 def test_positive_title_issuer_witness_and_scope(universe):
-    c = by_symbol(classify(universe, row()), "QCOM")
+    c = by_symbol(classify(universe, row("QUALCOMM Incorporated announces results")), "QCOM")
     assert c["evidence_class"] == "DIRECT"
     assert c["evidence_scope"] == "ISSUER_IDENTIFICATION_ONLY"
     assert c["security_event_relation"] == "REVIEW_REQUIRED"
@@ -196,7 +196,7 @@ def test_held_symbol_outside_proxy_survives_and_ownership_is_unknown(tmp_path, u
 @pytest.mark.parametrize("field,value", [("first_seen_utc", None), ("first_seen_utc", "2026-01-01"),
                                        ("published_utc", "2099-01-01T00:00:00Z")])
 def test_unknown_or_inconsistent_source_clocks_do_not_promote(universe, field, value):
-    r = row()
+    r = row("QUALCOMM Incorporated announces results")
     r[field] = value
     result = classify(universe, r)
     assert result["clock_issues"]
@@ -260,12 +260,12 @@ def test_both_real_sec_cache_schemas_and_collision_preservation(tmp_path):
     p = tmp_path / "cache.json"
     p.write_text(json.dumps({"t": NOW, "map": {"0001365135": "WU"}}))
     mapping, meta = A.load_sec_cache(p, A.Budget(A.Limits()))
-    assert mapping == {"1365135": {"WU"}} and meta["cache_utc"] == NOW
+    assert mapping == {"1365135": {"WU"}} and meta["reported_cache_utc"] == NOW
     p.write_text(json.dumps({"0": {"cik_str": 1, "ticker": "GOOG", "title": "Alphabet"},
                              "1": {"cik_str": 1, "ticker": "GOOGL", "title": "Alphabet"}}))
     mapping, meta = A.load_sec_cache(p, A.Budget(A.Limits()))
     assert mapping == {"1": {"GOOG", "GOOGL"}}
-    assert meta["cache_utc"] is None and not meta["point_in_time_certified"]
+    assert meta["reported_cache_utc"] is None and not meta["point_in_time_certified"]
 
 
 def test_safe_list_refuses_identity_objects(tmp_path):
@@ -281,3 +281,126 @@ def test_cli_sanitized_nonzero_refusal(tmp_path, capsys):
     output = capsys.readouterr().out
     assert code == 2 and json.loads(output)["status"] == "REFUSED"
     assert "PRIVATE_FILENAME" not in output and str(tmp_path) not in output
+
+
+@pytest.mark.parametrize("title,expected", [
+    ("Partners announce satellite service expansion", "REVIEW_REQUIRED"),
+    ("Partners Group Holding AG announces results", "DIRECT"),
+])
+def test_c1_real_proxy_name_shortening_cannot_prove_issuer(title, expected):
+    universe = A.Universe([dict(market="EU", symbol="PGHN.SW",
+                               name="Partners Group Holding AG", membership=A.MEMBERSHIP)])
+    c = by_symbol(classify(universe, row(title)), "PGHN.SW")
+    assert c["evidence_class"] == expected
+    assert c["title_name_candidate"]
+    assert c["title_issuer_witness"] == (expected == "DIRECT")
+    if expected != "DIRECT":
+        assert c["reason"] == "NORMALIZED_NAME_REQUIRES_FULL_ISSUER_WITNESS"
+
+
+@pytest.mark.parametrize("title", ["QUALCOMM announces results", "Western Union announces results"])
+def test_c1_shortened_names_are_candidates_even_when_unique(universe, title):
+    result = classify(universe, row(title))
+    assert result["candidates"]
+    assert all(c["evidence_class"] == "REVIEW_REQUIRED" for c in result["candidates"])
+
+
+@pytest.mark.parametrize("schema", ["master", "official"])
+@pytest.mark.parametrize("other_cik", ["1835830", "0001835830"])
+def test_c2_inverse_cik_symbol_conflicts_refuse(tmp_path, schema, other_cik):
+    p = tmp_path / "cache.json"
+    payload = ({"t": NOW, "map": {"0001365135": "WU", other_cik: "WU"}}
+               if schema == "official" else
+               {"0": {"cik_str": "0001365135", "ticker": "WU", "title": "Western Union Company"},
+                "1": {"cik_str": other_cik, "ticker": "WU", "title": "Klaviyo Inc."}})
+    p.write_text(json.dumps(payload))
+    with pytest.raises(A.Refused, match="SEC_CACHE_SYMBOL_CIK_CONFLICT"):
+        A.load_sec_cache(p, A.Budget(A.Limits()))
+
+
+def test_c2_same_normalized_cik_is_not_an_inverse_conflict(tmp_path):
+    p = tmp_path / "cache.json"
+    p.write_text(json.dumps({"t": NOW, "map": {"1365135": "WU", "0001365135": "WU"}}))
+    mapping, _ = A.load_sec_cache(p, A.Budget(A.Limits()))
+    assert mapping == {"1365135": {"WU"}}
+
+
+def test_c3_sec_clock_does_not_certify_unrelated_proxy_title_mapping(tmp_path, universe):
+    write_rows(tmp_path, [row("QUALCOMM Incorporated announces results")])
+    proxy = {"sha256": "proxy-observation", "archive_date": None,
+             "historical_availability_utc": None}
+    cache = {"provided": True, "sha256": "sec-observation",
+             "reported_cache_utc": "2000-01-01T00:00:00+00:00", "cache_utc": "2000-01-01T00:00:00+00:00"}
+    r = A.audit(tmp_path, DAY, universe, proxy, sec_cache={"1365135": {"WU"}}, sec_meta=cache)
+    assert r["rows"][0]["mapping_known_at_first_seen"] is None
+    c = by_symbol(r["rows"][0], "QCOM")
+    assert c["mapping_source_refs"] == ["universe"]
+    assert c["mapping_known_at_first_seen"] is None
+    assert c["evidence_class"] == "DIRECT"
+
+
+@pytest.fixture
+def unbound_proxy(tmp_path):
+    """Same accepted count/basename/vintage fields do not bind historical bytes."""
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    p = tmp_path / "alternate" / "universe_2026-11-01.parquet"
+    p.parent.mkdir()
+    records = [dict(market="US", symbol="QCOM", name="Novel Quantum Circuits Incorporated",
+                    membership=A.MEMBERSHIP, screened_on="2026-10-31")]
+    records += [dict(market="US", symbol=f"F{i:05}", name=f"Filler Issuer {i} Incorporated",
+                     membership=A.MEMBERSHIP, screened_on="2026-10-31") for i in range(17260)]
+    pq.write_table(pa.Table.from_pylist(records), p)
+    (p.parent / "universe_2026-11-01_receipt.json").write_text(json.dumps({
+        "written_utc": "20991101T000000Z", "path": "unrelated-original.parquet", "rows_after": 17261}))
+    return p
+
+
+@pytest.mark.parametrize("reported_clock", [None, "2000-01-01T00:00:00+00:00", "2099-01-01T00:00:00+00:00"])
+def test_c3_cli_same_count_alternate_proxy_is_an_unverified_observation(tmp_path, unbound_proxy, capsys, reported_clock):
+    source_root = tmp_path / "corpus"
+    source_root.mkdir()
+    write_rows(source_root, [row("Novel Quantum Circuits Incorporated announces results")])
+    args = ["--corpus-root", str(source_root), "--date", DAY, "--universe", str(unbound_proxy)]
+    if reported_clock:
+        cache = tmp_path / "cache.json"
+        cache.write_text(json.dumps({"t": reported_clock, "map": {"1365135": "WU"}}))
+        args += ["--sec-tickers", str(cache)]
+    assert A.main(args) == 0
+    output = json.loads(capsys.readouterr().out)
+    proxy = output["universe"]
+    assert proxy["rows"] == 17261 and proxy["archive_date"] is None
+    assert proxy["expected_archive_date"] == "2026-11-01"
+    assert proxy["reported_screened_on"] == {"min": "2026-10-31", "max": "2026-10-31"}
+    assert proxy["provenance_status"] == "OBSERVED_BYTES_UNVERIFIED_VINTAGE"
+    assert proxy["historical_availability_utc"] is None
+    assert not proxy["point_in_time_certified"]
+    assert output["rows"][0]["mapping_known_at_first_seen"] is None
+    c = by_symbol(output["rows"][0], "QCOM")
+    assert c["evidence_class"] == "DIRECT"
+    assert c["mapping_source_refs"] == ["universe"]
+    if reported_clock:
+        assert output["sec_cache"]["reported_cache_utc"] == reported_clock
+        assert output["sec_cache"]["historical_availability_utc"] is None
+
+
+def test_c3_sec_mapping_uses_both_inputs_without_unbound_availability(tmp_path, unbound_proxy, capsys):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    table = pq.read_table(unbound_proxy).to_pylist()
+    table[0]["symbol"] = "REVTEST"
+    pq.write_table(pa.Table.from_pylist(table), unbound_proxy)
+    cache = tmp_path / "cache.json"
+    cache.write_text(json.dumps({"t": "2000-01-01T00:00:00Z", "map": {"1365135": "REVTEST"}}))
+    source_root = tmp_path / "corpus"
+    source_root.mkdir()
+    write_rows(source_root, [sec_row()], "sec_edgar_8k_ex99_body")
+    assert A.main(["--corpus-root", str(source_root), "--date", DAY, "--universe", str(unbound_proxy),
+                   "--sec-tickers", str(cache)]) == 0
+    output = json.loads(capsys.readouterr().out)
+    c = by_symbol(output["rows"][0], "REVTEST")
+    assert c["mapping_source_refs"] == ["universe", "sec_cache"]
+    assert c["mapping_known_at_first_seen"] is None
+    assert output["rows"][0]["mapping_known_at_first_seen"] is None
+    assert output["universe"]["archive_date"] is None
+    assert output["sec_cache"]["historical_availability_utc"] is None

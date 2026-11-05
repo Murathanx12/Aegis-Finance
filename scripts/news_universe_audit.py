@@ -105,17 +105,21 @@ class Universe:
                 if (not phrase or (len(phrase) == 1 and
                                    (len(phrase[0]) < 8 or phrase[0] in GENERIC))):
                     continue
-                self.name_index[phrase[0]].append((phrase, key))
+                # A reduced name is a candidate, not proof that an ordinary
+                # word identifies this issuer. Even uniqueness in this index
+                # does not make "Partners" a witness for Partners Group.
+                full_witness = phrase == full and len(full) > 1
+                self.name_index[phrase[0]].append((phrase, key, full_witness))
 
-    def title_keys(self, title, budget):
+    def title_matches(self, title, budget):
         words = tokens(title)
-        found = set()
+        found = {}
         for i, word in enumerate(words):
-            for j, (phrase, key) in enumerate(self.name_index.get(word, ())):
+            for j, (phrase, key, full_witness) in enumerate(self.name_index.get(word, ())):
                 if j % 256 == 0:
                     budget.check()
                 if words[i:i + len(phrase)] == phrase:
-                    found.add(key)
+                    found[key] = found.get(key, False) or full_witness
         return found
 
 
@@ -148,7 +152,16 @@ def load_universe(path, budget, *, expected_rows=17261):
                 raise Refused("UNIVERSE_VINTAGE")
             records.append(row)
     universe = Universe(records)
-    return universe, {"archive_date": ARCHIVE_DATE, "rows": len(records),
+    screened_dates = [row["screened_on"] for row in records]
+    # Count, filename and embedded dates constrain input shape; none binds
+    # these bytes to a historical vintage. Legacy sibling receipts are not
+    # verified manifests and are deliberately not used to date this input.
+    return universe, {"archive_date": None, "expected_archive_date": ARCHIVE_DATE,
+                      "reported_screened_on": {"min": min(screened_dates), "max": max(screened_dates)},
+                      "observed_at_utc": datetime.now(timezone.utc).isoformat(),
+                      "provenance_status": "OBSERVED_BYTES_UNVERIFIED_VINTAGE",
+                      "historical_availability_utc": None, "point_in_time_certified": False,
+                      "rows": len(records),
                       "sha256": digest.hexdigest(), "membership": MEMBERSHIP,
                       "membership_confirmed": False}
 
@@ -177,13 +190,20 @@ def load_sec_cache(path, budget):
             pairs.append((str(row["cik_str"]), row["ticker"]))
         basis = "SEC_MASTER_SNAPSHOT_NOT_ALIAS_HISTORY"
     out = defaultdict(set)
+    symbol_ciks = {}
     for cik, symbol in pairs:
         if (not re.fullmatch(r"[0-9]{1,10}", cik) or int(cik) == 0
                 or not isinstance(symbol, str) or not SYMBOL.fullmatch(symbol)):
             raise Refused("SEC_CACHE_SCHEMA")
         normalized = str(int(cik))
+        if symbol in symbol_ciks and symbol_ciks[symbol] != normalized:
+            raise Refused("SEC_CACHE_SYMBOL_CIK_CONFLICT")
+        symbol_ciks[symbol] = normalized
         out[normalized].add(symbol)
-    return dict(out), {"provided": True, "sha256": sha, "cache_utc": cache_clock,
+    return dict(out), {"provided": True, "sha256": sha, "reported_cache_utc": cache_clock,
+                      "observed_at_utc": datetime.now(timezone.utc).isoformat(),
+                      "provenance_status": "OBSERVED_BYTES_UNVERIFIED_VINTAGE",
+                      "historical_availability_utc": None,
                       "basis": basis, "point_in_time_certified": False}
 
 
@@ -252,7 +272,9 @@ def audit_row(row, *, source, universe, sec_cache, held, budget):
     if first and published and published > first:
         clocks.append("PUBLICATION_AFTER_FIRST_SEEN")
     title = row["title"]
-    title_keys = universe.title_keys(title, budget)
+    title_matches = universe.title_matches(title, budget)
+    title_keys = set(title_matches)
+    full_title_keys = {key for key, full in title_matches.items() if full}
     # Existing tickers_named (if present) is deliberately NOT issuer evidence:
     # full-page text can contain sidebar stocks. Bodies are never inspected.
     symbols = set(tags)
@@ -281,7 +303,7 @@ def audit_row(row, *, source, universe, sec_cache, held, budget):
         market, symbol = key.split(":", 1)
         evidence, reason = "REVIEW_REQUIRED", "SYMBOL_ONLY_OR_UNVERIFIED_TAG"
         if key not in universe.by_key:
-            evidence, reason = "REJECTED", "NOT_IN_ARCHIVED_PROXY_UNIVERSE"
+            evidence, reason = "REJECTED", "NOT_IN_SUPPLIED_PROXY_UNIVERSE"
         elif recurring:
             reason = "RECURRING_REFERENCE_NOT_EVENT"
         elif sec is not None:
@@ -289,8 +311,10 @@ def audit_row(row, *, source, universe, sec_cache, held, budget):
                 evidence, reason = "DIRECT", "SEC_URL_TAG_CIK_CACHE_AGREE"
             else:
                 reason = "SEC_IDENTITY_UNRESOLVED_OR_CONFLICT"
-        elif key in title_keys and len(title_keys) == 1 and len(universe.by_symbol[symbol]) == 1:
+        elif key in full_title_keys and len(title_keys) == 1 and len(universe.by_symbol[symbol]) == 1:
             evidence, reason = "DIRECT", "UNIQUE_TITLE_ISSUER_NAME_WITNESS"
+        elif key in title_keys and key not in full_title_keys:
+            reason = "NORMALIZED_NAME_REQUIRES_FULL_ISSUER_WITNESS"
         elif key in title_keys:
             reason = "MULTIPLE_ISSUERS_OR_MARKETS_IN_TITLE"
         elif symbol in tags:
@@ -302,11 +326,19 @@ def audit_row(row, *, source, universe, sec_cache, held, budget):
         if evidence == "DIRECT" and (not first or "PUBLICATION_AFTER_FIRST_SEEN" in clocks):
             evidence, reason = "REVIEW_REQUIRED", "SOURCE_CLOCK_REVIEW"
         held_status = None if held is None else (key in held or symbol in held)
+        # References identify the sources actually consulted for a candidate's
+        # mapping. Their reported clocks are not verified availability.
+        mapping_sources = ["universe"]  # includes negative proxy-membership lookups
+        if key in sec_keys:
+            mapping_sources.append("sec_cache")
         results.append({"market": market, "symbol": symbol, "evidence_class": evidence,
                         "evidence_scope": "ISSUER_IDENTIFICATION_ONLY",
                         "security_event_relation": "REVIEW_REQUIRED",
                         "reason": reason, "tagged_in_source": symbol in tags,
-                        "title_issuer_witness": key in title_keys,
+                        "title_name_candidate": key in title_keys,
+                        "title_issuer_witness": key in full_title_keys,
+                        "mapping_source_refs": mapping_sources,
+                        "mapping_known_at_first_seen": None,
                         "held_safe_list_match": held_status,
                         "held_match_basis": "SYMBOL_ONLY_MARKET_UNRESOLVED" if held and symbol in held
                         else "MARKET_SYMBOL" if held_status else None,
@@ -366,10 +398,12 @@ def audit(corpus_root, day, universe, universe_meta, *, sec_cache=None, sec_meta
                                    sec_cache=sec_cache or {}, held=held, budget=budget)
                 result.update(source_file=f"{path.parent.name}/{day}.jsonl", source_line=line_no,
                               row_sha256=row_hash)
-                cache_clock = (sec_meta or {}).get("cache_utc")
-                result["mapping_known_at_first_seen"] = (
-                    None if not cache_clock or not result["first_seen_utc"]
-                    else cache_clock <= result["first_seen_utc"])
+                # This CLI has no verified content/availability manifest
+                # input. Neither a cache clock nor screened_on can establish
+                # when supplied mapping bytes were historically available.
+                result["mapping_known_at_first_seen"] = None
+                result["mapping_source_refs"] = [ref for ref in ("universe", "sec_cache")
+                    if any(ref in c["mapping_source_refs"] for c in result["candidates"])]
                 sec = result["sec_identity"]
                 group_key = f"SEC:{sec['cik']}:{sec['accession']}" if sec and sec["verified"] else f"ROW:{row_hash}"
                 result["event_candidate_group"] = group_key
@@ -399,7 +433,7 @@ def audit(corpus_root, day, universe, universe_meta, *, sec_cache=None, sec_meta
         held_coverage.append({"safe_list_entry": entry, "proxy_keys": keys,
                               "status": "IN_PROXY" if keys else "OUTSIDE_PROXY_PRESERVED"})
     budget.check()
-    return {"schema": "news_universe_audit_v1", "status": "AUDIT_COMPLETE",
+    return {"schema": "news_universe_audit_v2", "status": "AUDIT_COMPLETE",
             "audited_at_utc": datetime.now(timezone.utc).isoformat(),
             "scope": "LOCAL_DESCRIPTIVE_MAPPING_ONLY", "selected_date": day,
             "digest_ran": False, "decision_ran": False, "spend_units": 0,
@@ -419,7 +453,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--corpus-root", type=Path, required=True)
     parser.add_argument("--date", required=True, help="Explicit local corpus date; never auto-selects 'latest'")
-    parser.add_argument("--universe", type=Path, required=True, help="Archived 2026-11-01 parquet")
+    parser.add_argument("--universe", type=Path, required=True,
+                        help="2026-11-01 proxy parquet; observed bytes, historical vintage unverified")
     parser.add_argument("--sec-tickers", type=Path, help="Local edgar_8k SEC master (preferred) or official cache")
     parser.add_argument("--held-safe-list", type=Path)
     parser.add_argument("--held-as-of", help="Optional supplied safe-list snapshot clock, with timezone")
