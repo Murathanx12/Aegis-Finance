@@ -20,7 +20,7 @@ import sys
 import time
 from urllib.parse import urlsplit
 
-ADAPTER = "sec-current-atom-station/1"
+ADAPTER = "sec-current-atom-station/2"
 SOURCE = "sec_edgar_8k_current_atom"
 MAX_IO = 1_048_576
 MAX_OUTPUT = 1_048_576
@@ -416,6 +416,18 @@ def commit_cursor(output: Path, cursor: dict, fault=None) -> None:
     os.replace(temporary, target)
 
 
+def validate_before_cursor(
+    *, source: Path, manifest_path: Path, manifest_data: bytes, manifest: dict, budget: Budget
+) -> None:
+    """Identical bounded commit-time evidence gate for cold and recovered passes."""
+    final = snapshot(source, budget)
+    if final["sha256"] != manifest["sha256"] or final["bytes"] != manifest["bytes"]:
+        fail("SOURCE_CHANGED_BEFORE_CURSOR")
+    if budget.read(manifest_path, 4096) != manifest_data:
+        fail("MANIFEST_CHANGED_BEFORE_CURSOR")
+    budget.check()
+
+
 def validate_cursor(cursor: dict) -> None:
     keys(
         cursor,
@@ -519,7 +531,8 @@ def _run(
         datetime.strptime(relative.split("/")[1], "%Y-%m-%d.jsonl")
     except ValueError:
         fail("INVALID_SOURCE_PATH")
-    if utc(manifest["observed_at_utc"]) > observed:
+    snapshot_observed = utc(manifest["observed_at_utc"])
+    if snapshot_observed > observed:
         fail("FUTURE_MANIFEST")
     sha(manifest["sha256"])
     if type(manifest["bytes"]) is not int or not 0 <= manifest["bytes"] <= MAX_IO // 2:
@@ -564,7 +577,13 @@ def _run(
                 fail("RECOVERY_CURSOR_CONFLICT")
             if fault:
                 fault("before_cursor")
-            budget.check()
+            validate_before_cursor(
+                source=source,
+                manifest_path=manifest_path,
+                manifest_data=manifest_data,
+                manifest=manifest,
+                budget=budget,
+            )
             commit_cursor(output, after, fault)
             return dict(execution="RECOVERED_COMMIT", receipt=bundle["receipt"])
         if cursor is None:
@@ -659,6 +678,11 @@ def _run(
                 try:
                     row = parse(raw)
                     metadata = project(row, observed)
+                    if (
+                        utc(row["published_utc"]) > snapshot_observed
+                        or utc(row["first_seen_utc"]) > snapshot_observed
+                    ):
+                        fail("ROW_CLOCK_AFTER_SNAPSHOT_OBSERVATION")
                 except StationRefused as exc:
                     reason = str(exc)
                     reasons[reason] += 1
@@ -826,12 +850,13 @@ def _run(
         after = dict(after, last_bundle_sha256=digest(data))
         if fault:
             fault("before_cursor")
-        final = snapshot(source, budget)
-        if final["sha256"] != manifest["sha256"] or final["bytes"] != manifest["bytes"]:
-            fail("SOURCE_CHANGED_BEFORE_CURSOR")
-        if budget.read(manifest_path, 4096) != manifest_data:
-            fail("MANIFEST_CHANGED_BEFORE_CURSOR")
-        budget.check()
+        validate_before_cursor(
+            source=source,
+            manifest_path=manifest_path,
+            manifest_data=manifest_data,
+            manifest=manifest,
+            budget=budget,
+        )
         commit_cursor(output, after, fault)
         if fault:
             fault("after_cursor")

@@ -531,3 +531,91 @@ def test_identifiers_require_ascii_digits_and_forged_authority_is_ignored():
         and "cause" not in projected
         and "forecast" not in projected
     )
+
+
+@pytest.mark.parametrize("target", ["source", "manifest"])
+@pytest.mark.parametrize("prior_committed", [False, True])
+def test_recovery_uses_cold_commit_evidence_gate(tmp_path, target, prior_committed):
+    kw, source = setup(tmp_path, [row(), row(accession="0009999999-26-000002")])
+    start = 0
+    if prior_committed:
+        S.run_pass(**kw, line_limit=1)
+        start = 1
+    cursor = kw["output_dir"] / "cursor.json"
+    previous = cursor.read_bytes() if cursor.exists() else None
+
+    def crash(stage):
+        if stage == "after_bundle":
+            raise RuntimeError("crash")
+
+    with pytest.raises(RuntimeError):
+        S.run_pass(**kw, start_line=start, line_limit=1, _fault=crash)
+
+    def mutate(stage):
+        if stage == "before_cursor":
+            if target == "source":
+                with source.open("ab") as stream:
+                    stream.write(b"\n")
+            else:
+                kw["manifest_path"].write_bytes(b"{}")
+
+    reason = (
+        "SOURCE_CHANGED_BEFORE_CURSOR" if target == "source" else "MANIFEST_CHANGED_BEFORE_CURSOR"
+    )
+    with pytest.raises(S.StationRefused, match=reason):
+        S.run_pass(**kw, start_line=start, line_limit=1, _fault=mutate)
+    assert (cursor.read_bytes() if cursor.exists() else None) == previous
+
+
+@pytest.mark.parametrize("stamp", ["2026-01-01T00:00:00Z", "2026-11-04T22:44:41Z"])
+def test_snapshot_clock_cannot_predate_contained_row(tmp_path, stamp):
+    kw, _ = setup(tmp_path, [row()])
+    manifest = S.parse(kw["manifest_path"].read_bytes())
+    manifest["observed_at_utc"] = stamp
+    kw["manifest_path"].write_bytes(S.canonical(manifest))
+    kw["manifest_sha256"] = S.digest(kw["manifest_path"].read_bytes())
+    result = S.run_pass(**kw)
+    assert result["receipt"]["counts"]["projected_new"] == 0
+    assert result["receipt"]["counts"]["quarantined"] == 1
+    assert result["receipt"]["reason_counts"] == {"ROW_CLOCK_AFTER_SNAPSHOT_OBSERVATION": 1}
+    assert result["receipt"]["manifest_observed_at_utc"] == stamp
+    assert bundles(kw)[0]["quarantines"][0]["clock_evidence"]["first_seen_utc"]["raw"] == SEEN
+
+
+def test_snapshot_clock_equal_first_seen_is_allowed(tmp_path):
+    kw, _ = setup(tmp_path, [row()])
+    manifest = S.parse(kw["manifest_path"].read_bytes())
+    manifest["observed_at_utc"] = SEEN
+    kw["manifest_path"].write_bytes(S.canonical(manifest))
+    kw["manifest_sha256"] = S.digest(kw["manifest_path"].read_bytes())
+    assert S.run_pass(**kw)["receipt"]["counts"]["projected_new"] == 1
+
+
+def test_recovery_revalidation_is_charged_and_cannot_advance_on_exhaustion(tmp_path, monkeypatch):
+    kw, source = setup(tmp_path, [row()])
+
+    def crash(stage):
+        if stage == "after_bundle":
+            raise RuntimeError("crash")
+
+    with pytest.raises(RuntimeError):
+        S.run_pass(**kw, _fault=crash)
+    (bundle,) = kw["output_dir"].glob("pass-*/bundle.json")
+    initial_reads = (
+        kw["manifest_path"].stat().st_size + bundle.stat().st_size + source.stat().st_size
+    )
+    monkeypatch.setattr(S, "MAX_IO", initial_reads + source.stat().st_size - 1)
+    with pytest.raises(S.StationRefused, match="INPUT_IO_LIMIT"):
+        S.run_pass(**kw)
+    assert not (kw["output_dir"] / "cursor.json").exists()
+
+
+def test_previous_parser_version_manifest_is_refused(tmp_path):
+    kw, _ = setup(tmp_path, [row()])
+    manifest = S.parse(kw["manifest_path"].read_bytes())
+    manifest["adapter"] = "sec-current-atom-station/1"
+    kw["manifest_path"].write_bytes(S.canonical(manifest))
+    kw["manifest_sha256"] = S.digest(kw["manifest_path"].read_bytes())
+    with pytest.raises(S.StationRefused, match="MANIFEST_SCHEMA"):
+        S.run_pass(**kw)
+    assert not (kw["output_dir"] / "cursor.json").exists()

@@ -11,7 +11,7 @@ source tree. Supply a trusted SHA-256 pin for a small explicit snapshot manifest
 ```json
 {
   "schema": "sec-atom-snapshot/1",
-  "adapter": "sec-current-atom-station/1",
+  "adapter": "sec-current-atom-station/2",
   "source": "sec_edgar_8k_current_atom",
   "relative_path": "sec_edgar_8k_current_atom/2026-11-04.jsonl",
   "sha256": "<whole-file SHA-256>",
@@ -54,7 +54,9 @@ CIK are descriptive registry metadata, not E1 subject/security qualification.
 
 Raw publication and first-seen claims retain separate parsed UTC values.
 Publication is ATOM_UPDATED_AS_PUBLISHED, never acceptance time. Missing, naive,
-invalid, future and contradictory clocks quarantine. Safe clock-shaped raw values
+invalid, future and contradictory clocks quarantine. Valid supported row clock
+claims must also be no later than the pinned snapshot observation; later values
+quarantine as ROW_CLOCK_AFTER_SNAPSHOT_OBSERVATION. Invocation is not substituted. Safe clock-shaped raw values
 can survive quarantine; arbitrary invalid clock strings become UNKNOWN plus a
 hash. Acceptance, filing/event dates and unproven amendment parent stay UNKNOWN.
 Projection and snapshot-observation clocks are later real invocation observations.
@@ -74,7 +76,9 @@ Hard byte/row bounds: one file, <=100 attempted lines, 32 KiB per complete line,
 1 MiB aggregate committed bundle/cursor, 256 KiB cursor. All evidence reads are
 charged; oversized snapshots refuse before interpretation. Whole snapshot hashes
 are checked before interpretation, after projection and just before cursor
-commit. Manifest bytes are rechecked before cursor commit. A 30-second monotonic
+commit. A shared source/manifest revalidation gate runs after before_cursor for
+both cold and recovered commits. Its reads/deadline are charged in both paths.
+Manifest bytes are rechecked before cursor commit. A 30-second monotonic
 processing deadline is checked throughout; it cannot preempt a blocking OS file
 operation. No external/network operation exists in this module.
 
@@ -115,3 +119,8 @@ replay and appended snapshots. The external evidence packet contains the exact
 network/application/write-denying harness and the saved first-100 pilot. No full
 backend suite, external terms verification, production scheduler, owner send or
 independent review is claimed.
+
+
+Version 2 changes the parser admission contract for snapshot-relative chronology.
+Version-1 manifests/cursors/bundles are not silently reused or migrated. Review and
+run in a fresh dedicated external station; original saved source bytes stay intact.
