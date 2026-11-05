@@ -153,7 +153,7 @@ def _host_budget_required() -> bool:
         return sys.platform == "win32" or os.getenv("AEGIS_DEEPSEEK_HOST_ENVELOPE") == "1"
 
 
-def _budget_failure_receipt(reason: str) -> None:
+def _budget_failure_receipt(reason: str) -> Path:
     """Exclusive dated file: never replace a previous run or failure receipt."""
     import uuid
     now = datetime.now(timezone.utc)
@@ -165,6 +165,7 @@ def _budget_failure_receipt(reason: str) -> None:
         json.dump({"state": "BUDGET_REFUSED", "reason": reason,
                    "stamp": stamp, "observed_at": now.isoformat(),
                    "stage": "shared_budget_preflight", "written": False}, fh)
+    return path
 
 
 def _calendar_risk_preview(a: argparse.Namespace) -> bool:
@@ -266,12 +267,24 @@ def run(a: argparse.Namespace) -> int:
         refusal = _shared_budget_refusal()
         if refusal:
             _p(f"REFUSED: shared budget preflight: {refusal}")
+            budget_receipt_written = False
             try:
-                _budget_failure_receipt(refusal)
+                budget_path = _budget_failure_receipt(refusal)
+                budget_receipt_written = isinstance(budget_path, Path) and budget_path.is_file()
             except Exception:                                        # noqa: BLE001
                 # Still red when receipt storage itself fails; no secret text
                 # or fallback overwrite through main's generic crash handler.
                 _p("REFUSED: shared budget failure receipt could not be persisted")
+            if budget_receipt_written and not getattr(a, "no_provisional_review", False):
+                try:
+                    from scripts import world_digest_provisional as provisional
+                    result = provisional.write_budget_sidecar(
+                        root=WD.optimus(), directory=WD.work_dir() / "receipts",
+                        review_time=datetime.now(timezone.utc), cutoff=now,
+                        hours=float(a.hours))
+                    _p("PROVISIONAL_BUDGET_SIDECAR " + json.dumps(result, sort_keys=True))
+                except Exception as exc:  # noqa: BLE001 -- preserve original refusal and exit
+                    _p(f"PROVISIONAL_BUDGET_SIDECAR REFUSED: {type(exc).__name__}")
             return 2
     DG.require_free(_cfg.DISK_FREE_DEAD_GB + 1, "world_digest", path=_cfg.OPTIMUS_LEDGER_DIR)
     t0 = time.perf_counter()
@@ -735,6 +748,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--hours", type=float, default=float(_cfg.WORLD_DIGEST_HOURS))
     ap.add_argument("--budget", type=float, default=float(_cfg.WORLD_DIGEST_BUDGET_USD))
     ap.add_argument("--dry-run", action="store_true", help="cached extractions only; no call, no rows")
+    ap.add_argument("--no-provisional-review", action="store_true",
+                    help="skip the bounded local sidecar on shared-budget refusal")
     ap.add_argument("--calendar-risk-preview", action="store_true",
                     help="preview saved calendar receipts before digest/model preflight; never send")
     for name in ("receipt-dir", "journal-dir", "ledger-dir", "output-dir"):

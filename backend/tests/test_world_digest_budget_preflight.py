@@ -246,7 +246,9 @@ def test_real_preflight_reasons_are_read_only_and_fail_closed(
     # the read-only preflight. Mock only that explicitly allowed receipt here.
     receipt = Mock()
     monkeypatch.setattr(S, "_budget_failure_receipt", receipt)
-    assert S.run(SimpleNamespace(dry_run=False)) == 2
+    # This probe isolates the original budget diagnostic without the new
+    # independently tested, default-on local sidecar.
+    assert S.run(SimpleNamespace(dry_run=False, no_provisional_review=True)) == 2
     receipt.assert_called_once_with(reason)
     assert capsys.readouterr().out == f"REFUSED: shared budget preflight: {reason}\n"
     for guard in guards + downstream:
