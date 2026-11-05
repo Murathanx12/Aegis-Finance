@@ -11,6 +11,9 @@ from itertools import islice
 import json
 import math
 from pathlib import Path
+import re
+import stat
+from urllib.parse import urlsplit
 
 from backend.services import provisional_event_review as P
 from backend.services import world_digest as WD
@@ -24,6 +27,21 @@ MAX_LINES = 1_024
 MAX_SOURCES = 64
 SOURCES = ("dj_reader_barrons", "dj_reader_wsj", "sec_edgar_8k_ex99_body",
            "dj_reader_marketwatch", "google_news_rss_en_gb")
+
+
+def _unsafe_path(path: Path) -> bool:
+    """Refuse links and Windows reparse points at every existing component."""
+    for component in (*reversed(path.parents), path):
+        try:
+            info = component.lstat()
+        except FileNotFoundError:
+            continue
+        if (stat.S_ISLNK(info.st_mode)
+                or bool(getattr(info, "st_file_attributes", 0)
+                        & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0))
+                or getattr(component, "is_junction", lambda: False)()):
+            return True
+    return False
 
 
 def _utc(value: object) -> datetime | None:
@@ -44,7 +62,9 @@ def _files(root: Path, days: list[str]) -> list[Path]:
     for publisher in ("marketwatch", "wsj"):
         for day in days:
             folder = base / "dowjones" / publisher / day
-            if folder.is_dir() and not folder.is_symlink():
+            if _unsafe_path(folder):
+                raise ValueError("UNSAFE_SOURCE_PATH")
+            if folder.is_dir():
                 entries = list(islice(folder.glob("*.json"), MAX_DIR_ENTRIES + 1))
                 if len(entries) > MAX_DIR_ENTRIES:
                     raise ValueError("DIRECTORY_CAP")
@@ -52,16 +72,29 @@ def _files(root: Path, days: list[str]) -> list[Path]:
     return paths
 
 
-def _event_key(identity: str) -> str:
-    # One source identity, one provisional event. No semantic grouping from a
-    # body, sidebar or shared keyword without an independently reviewed edge.
-    return "event:" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:40]
+def _event_key(identity: str, *, filing: bool = False, raw_url: str = "") -> str:
+    # Group only an exact SEC archive accession; all other events stay at
+    # source identity. A sidebar or shared keyword cannot join groups.
+    key = identity
+    if filing:
+        try:
+            url = urlsplit(raw_url)
+            match = re.fullmatch(r"/Archives/edgar/data/([0-9]{1,10})/([0-9]{18})/[^/]+",
+                                 url.path, re.IGNORECASE)
+            if (url.scheme == "https" and url.hostname in {"sec.gov", "www.sec.gov"}
+                    and not url.username and not url.password and url.port in (None, 443)
+                    and match):
+                # CIK path protects against a same-accession cross-issuer join.
+                key = f"sec:{int(match[1])}:{match[2]}"
+        except ValueError:
+            pass
+    return "event:" + hashlib.sha256(key.encode("utf-8")).hexdigest()[:40]
 
 
 def build_sample(*, root: Path, review_time: datetime, cutoff: datetime,
                  hours: float) -> tuple[list[P.SourceItem], str]:
     """Return an explicitly partial, byte-bounded source sample and status."""
-    if (not isinstance(root, Path) or not root.is_absolute() or root.is_symlink()
+    if (not isinstance(root, Path) or not root.is_absolute() or _unsafe_path(root)
             or review_time.tzinfo is None or cutoff.tzinfo is None or review_time < cutoff
             or not math.isfinite(hours) or not 0 < hours <= 36):
         return [], "INVALID_SAMPLE_WINDOW"
@@ -70,16 +103,18 @@ def build_sample(*, root: Path, review_time: datetime, cutoff: datetime,
             for n in range((cutoff - since).days + 2)]
     try:
         paths = _files(root, days)
-    except ValueError:
-        return [], "DIRECTORY_CAP"
+    except ValueError as exc:
+        return [], str(exc)
     if len(paths) > MAX_FILES:
         return [], "FILE_CAP"
     files = []
     total = 0
     for path in paths:
+        if _unsafe_path(path):
+            return [], "UNSAFE_SOURCE_PATH"
         if not path.exists():
             continue
-        if path.is_symlink() or not path.is_file():
+        if not path.is_file():
             return [], "UNSAFE_SOURCE_PATH"
         size = path.stat().st_size
         total += size
@@ -130,11 +165,13 @@ def build_sample(*, root: Path, review_time: datetime, cutoff: datetime,
                     continue
                 seen.add((source_key, sha))
                 kind = ("FILING" if path.parent.name.startswith("sec_edgar_") else
+                        "HEADLINE" if path.parent.name == "google_news_rss_en_gb" else
                         "REFERENCE_PAGE" if "analyst estimates" in title.casefold() else
                         "ARTICLE" if len(body) >= 400 else "REFERENCE_PAGE")
                 clock = first.isoformat()
                 candidate = P.SourceItem(
-                    source_key=source_key, event_key=_event_key(identity),
+                    source_key=source_key,
+                    event_key=_event_key(identity, filing=kind == "FILING", raw_url=url),
                     payload=payload, first_seen_utc=clock, version_seen_utc=clock,
                     published_utc=published.isoformat() if published else None,
                     provenance=P.SourceProof(sha, clock, hashlib.sha256(raw).hexdigest()),

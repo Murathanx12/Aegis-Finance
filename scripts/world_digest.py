@@ -275,7 +275,7 @@ def run(a: argparse.Namespace) -> int:
                 # Still red when receipt storage itself fails; no secret text
                 # or fallback overwrite through main's generic crash handler.
                 _p("REFUSED: shared budget failure receipt could not be persisted")
-            if budget_receipt_written and not getattr(a, "no_provisional_review", False):
+            if budget_receipt_written and getattr(a, "provisional_review", False):
                 try:
                     from scripts import world_digest_provisional as provisional
                     result = provisional.write_budget_sidecar(
@@ -748,8 +748,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--hours", type=float, default=float(_cfg.WORLD_DIGEST_HOURS))
     ap.add_argument("--budget", type=float, default=float(_cfg.WORLD_DIGEST_BUDGET_USD))
     ap.add_argument("--dry-run", action="store_true", help="cached extractions only; no call, no rows")
-    ap.add_argument("--no-provisional-review", action="store_true",
-                    help="skip the bounded local sidecar on shared-budget refusal")
+    ap.add_argument("--provisional-review", action="store_true",
+                    help="explicitly enable bounded local sidecar on shared-budget refusal")
     ap.add_argument("--calendar-risk-preview", action="store_true",
                     help="preview saved calendar receipts before digest/model preflight; never send")
     for name in ("receipt-dir", "journal-dir", "ledger-dir", "output-dir"):

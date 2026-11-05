@@ -169,7 +169,7 @@ def _source(raw: SourceItem, review: datetime) -> dict[str, Any]:
     if not isinstance(raw, SourceItem):
         _refuse("INVALID_SOURCE")
     source_key, event_key = _key(raw.source_key), _key(raw.event_key)
-    if raw.kind not in ("ARTICLE", "FILING", "REFERENCE_PAGE"):
+    if raw.kind not in ("ARTICLE", "FILING", "HEADLINE", "REFERENCE_PAGE"):
         _refuse("INVALID_SOURCE_KIND")
     if not isinstance(raw.payload, bytes) or not raw.payload:
         _refuse("MISSING_SOURCE_BYTES")
@@ -550,7 +550,7 @@ def _validate_receipt_schema(receipt: dict[str, Any], cutoff: datetime) -> None:
                          "superseded_version_hashes")
             sid, sha = _hash(source["source_id"]), _hash(source["source_sha256"])
             if (source["version_id"] != _sha(f"version\0{sid}\0{sha}".encode())
-                    or source["kind"] not in ("ARTICLE", "FILING", "REFERENCE_PAGE")):
+                    or source["kind"] not in ("ARTICLE", "FILING", "HEADLINE", "REFERENCE_PAGE")):
                 _refuse("RECEIPT_INTEGRITY")
             first, version, known = (_clock(source["first_seen_utc"]),
                                      _clock(source["version_seen_utc"]),

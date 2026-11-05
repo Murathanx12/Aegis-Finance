@@ -1,8 +1,10 @@
 """Offline budget-refusal sidecar: bounded source samples, zero paid paths."""
 from datetime import datetime, timezone
 import json
+import subprocess
 from pathlib import Path
 import socket
+import sys
 
 import pytest
 
@@ -65,7 +67,7 @@ def test_refusal_keeps_exit_and_receipt_with_pre_election_cutoff(sealed):
          seen="2026-11-03T18:00:00+00:00", published="2026-11-04T00:50:00+00:00",
          url="https://example.test/ballot-premature", body=body)
 
-    assert S.main(["--hours", "36"]) == 2
+    assert S.main(["--hours", "36", "--provisional-review"]) == 2
     directory = root / "digest_work/receipts"
     budget, = directory.glob("budget_refused_*.json")
     sidecar, = directory.glob("provisional_review_*.json")
@@ -107,6 +109,8 @@ def test_ticker_tags_and_sidebar_cannot_create_direct_held_identity(sealed):
                    datetime(2026, 11, 5, 5, tzinfo=timezone.utc)):
         sources, _ = PS.build_sample(root=root, review_time=cutoff, cutoff=cutoff, hours=36)
         assert len(sources) == 1
+        if cutoff.day == 1:
+            assert sources[0].kind == "HEADLINE"
         receipt = P.build_review(
             sources=sources, issuer_edges=[], holdings=None,
             review_time_utc=cutoff.isoformat(), source_cutoff_utc=cutoff.isoformat(),
@@ -172,7 +176,7 @@ def test_oversized_source_refuses_without_collection_or_sidecar(sealed):
     path.parent.mkdir(parents=True)
     with path.open("wb") as stream:
         stream.truncate(PS.MAX_FILE_BYTES + 1)
-    assert S.main([]) == 2
+    assert S.main(["--provisional-review"]) == 2
     directory = root / "digest_work/receipts"
     assert len(list(directory.glob("budget_refused_*.json"))) == 1
     assert list(directory.glob("provisional_review_*.json")) == []
@@ -187,16 +191,16 @@ def test_budget_receipt_failure_cannot_orphan_a_component(sealed, monkeypatch):
 
     monkeypatch.setattr(S, "_budget_failure_receipt", failed_receipt)
     monkeypatch.setattr(PS, "write_budget_sidecar", forbidden_sidecar)
-    assert S.main([]) == 2
+    assert S.main(["--provisional-review"]) == 2
     assert list((sealed / "digest_work").glob("receipts/provisional_review_*.json")) == []
 
 
-def test_explicit_opt_out_keeps_original_refusal_only(sealed, monkeypatch):
+def test_default_keeps_original_refusal_only(sealed, monkeypatch):
     def forbidden_sidecar(**_kwargs):
-        pytest.fail("opt-out must skip sidecar")
+        pytest.fail("default must skip sidecar")
 
     monkeypatch.setattr(PS, "write_budget_sidecar", forbidden_sidecar)
-    assert S.main(["--no-provisional-review"]) == 2
+    assert S.main([]) == 2
     directory = sealed / "digest_work/receipts"
     assert len(list(directory.glob("budget_refused_*.json"))) == 1
     assert list(directory.glob("provisional_review_*.json")) == []
@@ -228,5 +232,66 @@ def test_binance_context_row_survives_selection_cap_without_identity_edge(sealed
     cutoff = datetime(2026, 11, 1, 5, tzinfo=timezone.utc)
     sources, status = PS.build_sample(root=root, review_time=cutoff, cutoff=cutoff, hours=36)
     assert status == "PARTIAL_CAP" and len(sources) == PS.MAX_SOURCES
-    assert any(source.kind == "REFERENCE_PAGE" and b'"TGT"' in source.payload
+    assert any(source.kind == "HEADLINE" and b'"TGT"' in source.payload
                for source in sources)
+
+
+def test_rss_long_body_is_still_headline_without_issuer_or_delivery(sealed):
+    root = sealed
+    _row(root / "news_corpus/google_news_rss_en_gb/2026-11-03.jsonl",
+         title="Binance hack reported by feed", seen="2026-11-03T18:00:00+00:00",
+         published="2026-11-03T17:00:00+00:00", url="https://example.test/binance-long",
+         body="Feed description, including reused page text. " * 30, tickers=["TGT"])
+    cutoff = datetime(2026, 11, 3, 21, tzinfo=timezone.utc)
+    sources, _ = PS.build_sample(root=root, review_time=cutoff, cutoff=cutoff, hours=36)
+    assert len(sources) == 1 and sources[0].kind == "HEADLINE"
+    receipt = P.build_review(sources=sources, issuer_edges=[], holdings=None,
+                             review_time_utc=cutoff.isoformat(), source_cutoff_utc=cutoff.isoformat(),
+                             input_complete=False, upstream_state="BUDGET_REFUSED", upstream_exit_code=2)
+    assert receipt["groups"][0]["edges"] == []
+    assert receipt["authority"]["delivery"] == "NOT_ATTEMPTED"
+    directory = root / "receipts"
+    directory.mkdir()
+    written = P.write_receipt(receipt, directory=directory)
+    assert json.loads(written.read_text())["groups"][0]["sources"][0]["kind"] == "HEADLINE"
+
+
+def test_sec_exhibits_group_by_exact_accession_only(sealed):
+    root = sealed
+    path = root / "news_corpus/sec_edgar_8k_ex99_body/2026-11-03.jsonl"
+    for accession, exhibit in (("000136513525000123", "ex99_1.htm"),
+                               ("000136513525000123", "ex99_2.htm"),
+                               ("000136513525000124", "ex99_1.htm")):
+        _row(path, title="Issuer reports a material update",
+             seen="2026-11-03T18:00:00+00:00", published="2026-11-03T17:00:00+00:00",
+             url=f"https://www.sec.gov/Archives/edgar/data/1365135/{accession}/{exhibit}",
+             body="Synthetic exhibit summary.")
+    cutoff = datetime(2026, 11, 3, 21, tzinfo=timezone.utc)
+    sources, _ = PS.build_sample(root=root, review_time=cutoff, cutoff=cutoff, hours=36)
+    assert len(sources) == 3 and len({s.event_key for s in sources}) == 2
+    receipt = P.build_review(sources=sources, issuer_edges=[], holdings=None,
+                             review_time_utc=cutoff.isoformat(), source_cutoff_utc=cutoff.isoformat(),
+                             input_complete=False, upstream_state="BUDGET_REFUSED", upstream_exit_code=2)
+    assert sorted(len(group["sources"]) for group in receipt["groups"]) == [1, 2]
+    assert all(group["edges"] == [] for group in receipt["groups"])
+
+
+def test_junction_or_symlink_parent_refuses_outside_bytes(sealed):
+    root = sealed
+    base = root / "news_corpus"
+    base.mkdir()
+    outside = root / "outside"
+    _row(outside / "2026-11-03.jsonl", title="Synthetic outside article",
+         seen="2026-11-03T18:00:00+00:00", published="2026-11-03T17:00:00+00:00",
+         url="https://example.test/outside", body="Outside bytes.")
+    link = base / "dj_reader_barrons"
+    if sys.platform == "win32":
+        result = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+                                capture_output=True, text=True, check=False)
+        if result.returncode:
+            pytest.skip("junction creation unavailable")
+    else:
+        link.symlink_to(outside, target_is_directory=True)
+    cutoff = datetime(2026, 11, 3, 21, tzinfo=timezone.utc)
+    sources, status = PS.build_sample(root=root, review_time=cutoff, cutoff=cutoff, hours=36)
+    assert sources == [] and status == "UNSAFE_SOURCE_PATH"
