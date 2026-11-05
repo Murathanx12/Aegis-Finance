@@ -97,6 +97,7 @@ jobs:
         run: |
           python -m pytest backend/tests/test_beta_v1_replay.py backend/tests/test_beta_v1_consumers.py -m "not slow" -q -rf -p pytest_github_actions_annotate_failures
           python -m pytest backend/tests/ -m "not slow" -q -rf -p pytest_github_actions_annotate_failures --ignore=backend/tests/test_beta_v1_replay.py --ignore=backend/tests/test_beta_v1_consumers.py
+          python -m pytest tests/test_sec_atom_station.py -q -rf -p pytest_github_actions_annotate_failures
 
   frontend:
     needs: changes
