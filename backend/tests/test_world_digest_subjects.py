@@ -88,11 +88,14 @@ def test_headline_model_abstention_is_not_overridden_by_upstream_tags():
     assert row["tickers"] == [] and row["tickers_unverified"] == []
 
 
-def test_strict_current_contract_refuses_whole_reply_without_repair():
+def test_frozen_current_v6_keeps_its_prior_ticker_contract():
     raw = reply(["QCOM", "AAPL"])
     before = deepcopy(raw)
-    with pytest.raises(NV.SourceValidationError, match="subject"):
-        WD.type_current_row(raw, item())
+    current = WD.type_current_row(raw, item())
+    strict = WD.type_row(raw, item())
+    assert current["tickers"] == ["AAPL", "QCOM"]
+    assert strict["tickers"] == ["QCOM"]
+    assert strict["tickers_unverified"] == ["AAPL"]
     assert raw == before
 
 
@@ -128,12 +131,12 @@ def test_old_disk_cache_cannot_restore_aapl_or_invent_source_clocks(tmp_path):
     assert row["published_utc"] == source.published_utc
 
 
-def test_subject_contract_versions_both_extraction_identities(monkeypatch):
+def test_subject_contract_versions_only_the_new_world_digest_identity(monkeypatch):
     source = item()
     old, current = WD.cache_key(source), WD.current_cache_key(source)
     monkeypatch.setattr(WD, "SUBJECT_ADMISSION_VERSION", "changed-subject-contract")
     assert WD.cache_key(source) != old
-    assert WD.current_cache_key(source) != current
+    assert WD.current_cache_key(source) == current  # frozen opt-in Beta v6
 
 
 def sec_item(ticker="WU", cik="1365135", name="Western Union", **changes):

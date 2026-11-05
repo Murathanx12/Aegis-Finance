@@ -53,9 +53,33 @@ def test_legacy_raw_instruction_and_claim_never_becomes_a_forecast(tmp_path):
                                   issuer_table=table)
     assert result["bound_cache_rows"] == 1
     assert result["forecast_candidates"] == 0
-    assert result["cases"][0]["canonical_us_tickers"] == ["FSBC"]
+    assert result["cases"][0]["canonical_us_tickers"] == []
+    assert "NO_CANONICAL_US_INSTRUMENT" in result["cases"][0]["reasons"]
     assert "NO_EXACT_PASSAGE_WITNESS" in result["cases"][0]["reasons"]
     assert "NO_SEPARATELY_DECLARED_AEGIS_HYPOTHESIS" in result["cases"][0]["reasons"]
+
+
+def test_current_e1_sec_source_does_not_promote_old_ticker_tag(tmp_path):
+    item, _, _, _ = legacy_fixture(tmp_path)
+    current = WD.type_row({"topic": "FSBC revenue", "summary": "Revenue was reported",
+                           "tickers": ["FSBC"], "novelty": "new_fact"}, item)
+    assert current["tickers"] == []
+    assert current["tickers_unverified"] == ["FSBC"]
+    assert current["security_authorization"] == "UNAVAILABLE"
+
+
+def test_historical_beta_ticker_cache_cannot_replay_as_current_e1(tmp_path):
+    item, row, cache, table = legacy_fixture(tmp_path)
+    old = WD.type_row({"topic": "FSBC revenue", "summary": "Revenue was reported",
+                       "tickers": ["FSBC"], "novelty": "new_fact"}, item,
+                      _legacy_current_v6=True)
+    cache[WD.cache_key(item)]["row"] = old
+    result = N.audit_legacy_batch(items=[item], typed_rows=[old], cache=cache,
+                                  cutoff_utc="2026-10-14T21:11:00+00:00",
+                                  issuer_table=table)
+    assert result["bound_cache_rows"] == 0
+    assert result["forecast_candidates"] == 0
+    assert "cached_type_or_source_metadata_drift" in result["cases"][0]["reasons"]
 
 
 def test_cross_item_cache_and_duplicate_ids_refuse(tmp_path):

@@ -739,25 +739,42 @@ def row_provenance(row: dict) -> dict:
     return {"provenance": p, "provenance_author": a, "provenance_basis": b}
 
 
-def type_row(raw: Any, item: Item) -> Optional[dict]:
+def type_row(raw: Any, item: Item, *, _legacy_current_v6: bool = False) -> Optional[dict]:
     """Validate one model reply into the typed row. None when the reply is not
     an object. Every enum is checked, every number clamped, every string capped
     and scrubbed; mentions without subject evidence go to `tickers_unverified`."""
     if not isinstance(raw, dict):
         return None
     from backend.services import news_source_validation as NV
-    try:
-        proposed = _bounded_ticker_field(raw, "tickers")
-        tick_bad = _bounded_ticker_field(raw, "tickers_unverified")
-    except NV.SourceValidationError:
-        return None
-    tick_ok = []
-    names, catalog_hash = _subject_catalog()
-    for t in proposed:
-        if _ticker_subject(t, item, names=names):
-            tick_ok.append(t)
-        else:
-            tick_bad.append(t)
+    if _legacy_current_v6:
+        # The opt-in Beta v6 extractor has a frozen source/cache contract and
+        # a separate instrument-identity review. Do not retrofit E1 into it.
+        tick_ok, tick_bad = [], []
+        for value in raw.get("tickers") or []:
+            t = str(value).strip().upper().lstrip("$")
+            if not _TICKER.match(t):
+                continue
+            if t in item.tickers_named or _ticker_in_text(t, item.text, item.title):
+                tick_ok.append(t)
+            else:
+                tick_bad.append(t)
+        for t in item.tickers_named:
+            if _TICKER.match(t) and t not in tick_ok and item.kind in ("headline", "social"):
+                tick_ok.append(t)
+        catalog_hash = None
+    else:
+        try:
+            proposed = _bounded_ticker_field(raw, "tickers")
+            tick_bad = _bounded_ticker_field(raw, "tickers_unverified")
+        except NV.SourceValidationError:
+            return None
+        tick_ok = []
+        names, catalog_hash = _subject_catalog()
+        for t in proposed:
+            if _ticker_subject(t, item, names=names):
+                tick_ok.append(t)
+            else:
+                tick_bad.append(t)
     claims = []
     for c in (raw.get("forward_claims") or [])[:3]:
         if not isinstance(c, dict):
@@ -780,11 +797,8 @@ def type_row(raw: Any, item: Item) -> Optional[dict]:
         "summary": _clean_str(raw.get("summary"), 320),
         "event_type": ev if ev in EVENT_TYPES else "other",
         "tickers": sorted(set(tick_ok))[:12],
-        "tickers_unverified": sorted(t for t in set(tick_bad) - set(tick_ok) if _TICKER.fullmatch(t))[:12],
-        "ticker_evidence_scope": "DESCRIPTIVE_ISSUER_SUBJECT_ONLY",
-        "security_authorization": "UNAVAILABLE",
-        "subject_catalog_sha256": catalog_hash,
-        "subject_admission_version": SUBJECT_ADMISSION_VERSION,
+        "tickers_unverified": (sorted(set(tick_bad))[:12] if _legacy_current_v6 else
+                               sorted(t for t in set(tick_bad) - set(tick_ok) if _TICKER.fullmatch(t))[:12]),
         "sectors": sorted({str(s).lower() for s in raw.get("sectors") or []} & set(SECTORS)),
         "countries": sorted({str(c).upper()[:2] for c in raw.get("countries") or []
                              if re.match(r"^[A-Za-z]{2}$", str(c))})[:8],
@@ -796,6 +810,11 @@ def type_row(raw: Any, item: Item) -> Optional[dict]:
         "novelty": nov if nov in NOVELTY else "recap",
         "forward_claims": claims,
     }
+    if not _legacy_current_v6:
+        out.update({"ticker_evidence_scope": "DESCRIPTIVE_ISSUER_SUBJECT_ONLY",
+                    "security_authorization": "UNAVAILABLE",
+                    "subject_catalog_sha256": catalog_hash,
+                    "subject_admission_version": SUBJECT_ADMISSION_VERSION})
     out.update(row_provenance(out))           # C17: derived, never asked of the model
     return out
 
@@ -863,8 +882,6 @@ CURRENT_EXTRACT_SYSTEM = EXTRACT_SYSTEM + (
 def current_extraction_identity() -> dict:
     import hashlib
     return {"version": CURRENT_EXTRACT_VERSION,
-            "subject_admission_version": SUBJECT_ADMISSION_VERSION,
-            "subject_names_sha256": _subject_catalog()[1],
             "system_sha256": hashlib.sha256(CURRENT_EXTRACT_SYSTEM.encode()).hexdigest()}
 
 
@@ -879,8 +896,6 @@ def type_current_row(raw: Any, item: Item) -> dict:
     from backend.services import news_source_validation as NV
     if not isinstance(raw, dict):
         raise NV.SourceValidationError("current_reply_requires_object")
-    proposed_tickers = _bounded_ticker_field(raw, "tickers")
-    _bounded_ticker_field(raw, "tickers_unverified")
     if (not isinstance(raw.get("event_type"), str) or raw["event_type"] not in EVENT_TYPES
             or not isinstance(raw.get("novelty"), str) or raw["novelty"] not in NOVELTY):
         raise NV.SourceValidationError("current_invalid_enum")
@@ -920,14 +935,7 @@ def type_current_row(raw: Any, item: Item) -> dict:
         if (claim["witness"] not in source or claim["speaker"] not in claim["witness"]
                 or claim["subject"] not in claim["witness"]):
             raise NV.SourceValidationError("current_detached_claim_witness")
-    row = type_row(raw, item)
-    if row is not None and any(str(t).strip().upper().lstrip("$") not in row["tickers"]
-                               for t in raw.get("tickers") or []):
-        raise NV.SourceValidationError("current_unsupported_subject")
-    if proposed_tickers:
-        # A source name/quote is not a dated issuer->security authorization.
-        # No such qualified edge is supplied by the current Item contract.
-        raise NV.SourceValidationError("current_security_authorization_unavailable")
+    row = type_row(raw, item, _legacy_current_v6=True)
     if row is None or len(row["forward_claims"]) != len(claims):
         raise NV.SourceValidationError("current_lossy_claim_typing")
     for typed, original in zip(row["forward_claims"], claims):
