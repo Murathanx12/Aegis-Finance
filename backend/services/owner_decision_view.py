@@ -18,6 +18,9 @@ from typing import Any
 from backend.services import provisional_event_review as e2
 
 
+MAX_MAP_BYTES = 1_048_576
+
+
 class ViewRefused(ValueError):
     """Sanitized refusal; never includes paths, bytes, or article content."""
 
@@ -204,7 +207,7 @@ def build_owner_decision_view(*, receipt_path: Path, receipt_sha256: str,
                 or type(station.label) is not str or not 1 <= len(station.label) <= 120
                 or any(ord(ch) < 32 or ord(ch) == 127 for ch in station.label)):
             _refuse("INVALID_STATION")
-        _read_pinned(station.map_path, station.map_sha256, e2.MAX_SOURCE_BYTES)
+        _read_pinned(station.map_path, station.map_sha256, MAX_MAP_BYTES)
         station_view = {"status": "CALLER_LABELED_HYPOTHESIS", "station_key": station.station_key,
                         "label": station.label, "map_sha256": station.map_sha256}
     source_view = [{key: source[key] for key in ("source_id", "version_id", "source_sha256",

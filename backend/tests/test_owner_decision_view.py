@@ -232,6 +232,32 @@ def test_optional_station_is_only_labeled_hypothesis(tmp_path):
         view(path, digest, pins, station=replace(station, map_sha256="0" * 64))
 
 
+@pytest.mark.parametrize("map_bytes", [300 * 1024, 1_048_576])
+def test_pinned_map_through_one_mib_is_accepted_without_body(tmp_path, map_bytes):
+    path, digest, pins, _ = fixture(tmp_path)
+    map_path = tmp_path / "station.map"
+    payload = b"MAP_BODY_SENTINEL" + b"M" * (map_bytes - len(b"MAP_BODY_SENTINEL"))
+    map_path.write_bytes(payload)
+    station = V.StationPin("macro:japan", map_path, sha(payload), "Japan financial stress")
+    candidate = view(path, digest, pins, station=station)
+    assert candidate["station"] == {"status": "CALLER_LABELED_HYPOTHESIS",
+                                     "station_key": "macro:japan",
+                                     "label": "Japan financial stress", "map_sha256": sha(payload)}
+    assert "MAP_BODY_SENTINEL" not in json.dumps(candidate)
+    assert map_path.read_bytes() == payload
+
+
+def test_pinned_map_above_one_mib_refuses_before_display(tmp_path):
+    path, digest, pins, _ = fixture(tmp_path)
+    map_path = tmp_path / "station.map"
+    payload = b"M" * (1_048_576 + 1)
+    map_path.write_bytes(payload)
+    station = V.StationPin("macro:japan", map_path, sha(payload), "Japan financial stress")
+    with pytest.raises(V.ViewRefused, match="BYTE_CAP"):
+        view(path, digest, pins, station=station)
+    assert map_path.read_bytes() == payload
+
+
 def test_read_only_file_access(tmp_path, monkeypatch):
     path, digest, pins, _ = fixture(tmp_path)
     before = {p.name: sha(p.read_bytes()) for p in tmp_path.iterdir()}
