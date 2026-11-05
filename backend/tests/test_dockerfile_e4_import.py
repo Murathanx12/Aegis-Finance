@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from fnmatch import fnmatchcase
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -15,6 +16,10 @@ ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = ROOT / "backend" / "Dockerfile"
 HELPER = "scripts/world_digest_provisional.py"
 EXACT_COPY = f"COPY {HELPER} {HELPER}"
+CONTEXT_SHA256 = {
+    ".dockerignore": "ef4422fb1de3110331dfb825bfa75f6fad2e2beb77ce71b749a1637328386192",
+    ".railwayignore": "284b5aa818abb51d6d160e535e21ab671cb0d88a6681e8c377abd5fd19967b35",
+}
 E4_BACKEND = (
     "backend/__init__.py",
     "backend/config.py",
@@ -54,9 +59,41 @@ def _context_includes(relative: str, ignore_file: Path) -> bool:
 
 
 def _required_context_file(relative: str) -> None:
-    assert not (ROOT / "backend/Dockerfile.dockerignore").exists()
     assert _context_includes(relative, ROOT / ".dockerignore"), relative
     assert _context_includes(relative, ROOT / ".railwayignore"), relative
+
+
+def _assert_context_policy_pinned(root: Path) -> None:
+    # The fixture models only this reviewed context. Even a benign ignore edit
+    # needs a new image-layout review before the regression can pass again.
+    assert not (root / "backend/Dockerfile.dockerignore").exists()
+    for relative, expected in CONTEXT_SHA256.items():
+        content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+        assert hashlib.sha256(content).hexdigest() == expected, relative
+
+
+@pytest.mark.parametrize("ignore_name", sorted(CONTEXT_SHA256))
+def test_context_policy_pin_refuses_edits(tmp_path: Path, ignore_name: str) -> None:
+    (tmp_path / "backend").mkdir()
+    for relative in CONTEXT_SHA256:
+        shutil.copyfile(ROOT / relative, tmp_path / relative)
+    _assert_context_policy_pinned(tmp_path)
+    with (tmp_path / ignore_name).open("ab") as target:
+        target.write(b"\nscripts/./world_digest_provisional.py\n")
+    with pytest.raises(AssertionError):
+        _assert_context_policy_pinned(tmp_path)
+    (tmp_path / ignore_name).unlink()
+    with pytest.raises(FileNotFoundError):
+        _assert_context_policy_pinned(tmp_path)
+
+
+def test_dockerfile_specific_ignore_requires_review(tmp_path: Path) -> None:
+    (tmp_path / "backend").mkdir()
+    for relative in CONTEXT_SHA256:
+        shutil.copyfile(ROOT / relative, tmp_path / relative)
+    (tmp_path / "backend/Dockerfile.dockerignore").write_text("scripts/\n", encoding="utf-8")
+    with pytest.raises(AssertionError):
+        _assert_context_policy_pinned(tmp_path)
 
 
 @pytest.mark.parametrize("ignore_name", [".dockerignore", ".railwayignore"])
@@ -78,6 +115,7 @@ def test_required_context_exclusions_refuse(
 
 
 def test_e4_imports_from_declared_docker_layout(tmp_path: Path) -> None:
+    _assert_context_policy_pinned(ROOT)
     dockerfile = DOCKERFILE.read_text(encoding="utf-8")
     assert "COPY backend/ backend/" in dockerfile
     assert "COPY engine/ engine/" in dockerfile
