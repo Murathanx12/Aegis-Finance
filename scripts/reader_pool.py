@@ -1262,8 +1262,11 @@ class Pool:
                     self.errors.append(f"outbound snapshot: {exc}"[:200])
         extra["outbound_links"] = snap_links
         try:
+            # Queue ticker is discovery context, even for stock_links and
+            # direct/stock-page reads. Related stories may concern another
+            # issuer. Preserve it in reached_by, never as article tickers;
+            # full-page tickers_named remains a separate mention heuristic.
             art = rd.finish_article(link, column=column,
-                                    tickers=[it["ticker"]] if it.get("ticker") else None,
                                     t0=time.time(), extra=extra,
                                     with_media=True, universe=self.universe)
         except WR.ReaderRefused as exc:
