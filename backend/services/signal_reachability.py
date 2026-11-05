@@ -123,6 +123,11 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           gap rather than quietly excused, because the whole point of this
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
+    "backend.services.pc_paper_collection": (
+        "DEVELOPMENT/INACTIVE -- bounded injected GET-only account/positions "
+        "observation candidate. No runtime collector, credential default, NAV/"
+        "ledger writer, warning, order or task caller is installed. Independent "
+        "review and explicit source adoption are required before collection."),
     "backend.services.issuer_ir_probability_v0": (
         "DEVELOPMENT/INACTIVE -- pure prospective measurement preview under "
         "MEASUREMENT_ASML_IR_CURRENT_1.md, exercised by offline fixtures only. "

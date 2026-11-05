@@ -45,6 +45,14 @@ def test_e6_is_tooling_only_and_has_no_native_sender_import():
     assert not any(isinstance(n, ast.Attribute) and n.attr == "send_owner_once" for n in ast.walk(tree))
 
 
+def test_clocked_pc_paper_collection_is_explicitly_inactive():
+    result = SR.audit()
+    entries = [r for r in result["orphans"] if r["module"] == "backend.services.pc_paper_collection"]
+    assert len(entries) == 1
+    assert entries[0]["reason"].startswith("DEVELOPMENT/INACTIVE")
+    assert "backend.services.pc_paper_collection" not in SR.reachable_set()
+
+
 def test_the_audit_can_actually_fail(tmp_path):
     """The guard on the guard (S47's lesson). If the scan found nothing, the
     contract above would pass forever while checking an empty set."""

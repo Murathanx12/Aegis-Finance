@@ -1945,6 +1945,13 @@ def _case_provisional_owner_notice():
             "an E6 assessment with no explicitly pinned manifest")
 
 
+def _case_pc_paper_collection():
+    from backend.services.pc_paper_collection import CollectionRefused, collect
+
+    return (lambda: collect(), CollectionRefused,
+            "clocked paper observation with no explicit read-only transport")
+
+
 CASES = {
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
@@ -1955,6 +1962,7 @@ CASES = {
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
+    "pc_paper_collection": _case_pc_paper_collection,
     "news_source_validation": _case_news_source_validation,
     "news_cik_mapping": _case_news_cik_mapping,
     "provisional_event_review": _case_provisional_event_review,
