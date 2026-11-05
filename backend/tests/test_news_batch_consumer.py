@@ -70,16 +70,33 @@ def test_current_e1_sec_source_does_not_promote_old_ticker_tag(tmp_path):
 
 def test_historical_beta_ticker_cache_cannot_replay_as_current_e1(tmp_path):
     item, row, cache, table = legacy_fixture(tmp_path)
-    old = WD.type_row({"topic": "FSBC revenue", "summary": "Revenue was reported",
-                       "tickers": ["FSBC"], "novelty": "new_fact"}, item,
-                      _legacy_current_v6=True)
+    # Literal old typed-row fixture: audit its issuer mapping while refusing
+    # to bind or forecast from it under today's stricter E1 cache contract.
+    old = {"item_id": item.item_id, "kind": "article", "source": item.source,
+           "source_kind": "news", "url": item.url,
+           "first_seen_utc": item.first_seen_utc,
+           "published_utc": item.published_utc,
+           "topic": "FSBC revenue", "summary": "Revenue was reported",
+           "event_type": "other", "tickers": ["FSBC"],
+           "tickers_unverified": [], "sectors": [], "countries": [], "macro": [],
+           "sentiment": None, "fear_greed": None, "mgmt_confidence": None,
+           "uncertainty": None, "novelty": "new_fact", "forward_claims": [],
+           "provenance": "UNCLASSIFIED", "provenance_author": "SOURCE",
+           "provenance_basis": "NO_POSITIVE_RULE_NEW_FACT"}
+    assert old != row
     cache[WD.cache_key(item)]["row"] = old
     result = N.audit_legacy_batch(items=[item], typed_rows=[old], cache=cache,
                                   cutoff_utc="2026-10-14T21:11:00+00:00",
                                   issuer_table=table)
     assert result["bound_cache_rows"] == 0
     assert result["forecast_candidates"] == 0
-    assert "cached_type_or_source_metadata_drift" in result["cases"][0]["reasons"]
+    case = result["cases"][0]
+    assert case["canonical_us_tickers"] == ["FSBC"]
+    assert case["source_fact_admitted"] is False
+    assert "cached_type_or_source_metadata_drift" in case["reasons"]
+    assert "NO_EXACT_PASSAGE_WITNESS" in case["reasons"]
+    assert "NO_INDEPENDENT_CONTEXT_REVIEW" in case["reasons"]
+    assert "NO_SEPARATELY_DECLARED_AEGIS_HYPOTHESIS" in case["reasons"]
 
 
 def test_cross_item_cache_and_duplicate_ids_refuse(tmp_path):

@@ -896,6 +896,10 @@ def type_current_row(raw: Any, item: Item) -> dict:
     from backend.services import news_source_validation as NV
     if not isinstance(raw, dict):
         raise NV.SourceValidationError("current_reply_requires_object")
+    # Keep v6's valid historical ticker semantics while refusing malformed or
+    # unbounded model-controlled arrays before its legacy normalizer runs.
+    _bounded_ticker_field(raw, "tickers")
+    _bounded_ticker_field(raw, "tickers_unverified")
     if (not isinstance(raw.get("event_type"), str) or raw["event_type"] not in EVENT_TYPES
             or not isinstance(raw.get("novelty"), str) or raw["novelty"] not in NOVELTY):
         raise NV.SourceValidationError("current_invalid_enum")

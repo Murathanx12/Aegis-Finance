@@ -125,6 +125,14 @@ def test_strict_invalid_unverified_field_has_named_whole_row_refusal(bad):
         WD.type_current_row(raw, item())
 
 
+@pytest.mark.parametrize("bad", [["QCOM"] * 13, ["QCOM!"], ["A" * 9], True],
+                         ids=["too-many", "bad-symbol", "long-symbol", "wrong-shape"])
+def test_frozen_v6_rejects_invalid_proposed_tickers_without_repair(bad):
+    raw = dict(reply([]), tickers=bad)
+    with pytest.raises(NV.SourceValidationError, match="ticker"):
+        WD.type_current_row(raw, item())
+
+
 def test_bounds_are_checked_before_element_iteration():
     class NoIteration(list):
         def __iter__(self):
@@ -161,7 +169,7 @@ def test_malformed_legacy_cache_does_not_trigger_model_retry(tmp_path):
     assert not (tmp_path / "never.jsonl").exists()
 
 
-def test_same_stat_catalog_replacement_binds_actual_bytes_and_both_keys(tmp_path, monkeypatch):
+def test_same_stat_catalog_replacement_changes_e1_key_not_frozen_v6(tmp_path, monkeypatch):
     path = tmp_path / "data/news_entities/issuers.csv"
     path.parent.mkdir(parents=True)
     first = b"symbol,primary_name,aliases,country,is_adr\nQCOM,Qualcomm Incorporated,,US,\n"
@@ -176,21 +184,24 @@ def test_same_stat_catalog_replacement_binds_actual_bytes_and_both_keys(tmp_path
     os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns))
     assert path.stat().st_size == stat.st_size and path.stat().st_mtime_ns == stat.st_mtime_ns
     assert WD._subject_catalog()[1] == hashlib.sha256(second).hexdigest()
-    assert WD.cache_key(source) != a and WD.current_cache_key(source) != ac
+    assert WD.cache_key(source) != a and WD.current_cache_key(source) == ac
     assert WD.type_row(reply(["QCOM"]), source)["tickers"] == []
 
 
-def test_strict_headline_preserves_model_abstention_over_upstream_tag():
+def test_e1_headline_preserves_model_abstention_over_upstream_tag():
     raw = reply([])
     source = item(kind="headline", title="Qualcomm reports quarterly results", tickers_named=["QCOM"])
     before = deepcopy(raw)
-    row = WD.type_current_row(raw, source)
+    row = WD.type_row(raw, source)
     assert row["tickers"] == [] and raw == before
     assert row["security_authorization"] == "UNAVAILABLE"
 
 
-def test_subject_candidate_does_not_authorize_current_security_assignment():
+def test_subject_candidate_does_not_authorize_security_assignment():
     source = item()
-    assert WD.type_row(reply(["QCOM"]), source)["tickers"] == ["QCOM"]
-    with pytest.raises(NV.SourceValidationError, match="security_authorization"):
-        WD.type_current_row(reply(["QCOM"]), source)
+    strict = WD.type_row(reply(["QCOM"]), source)
+    assert strict["tickers"] == ["QCOM"]
+    assert strict["security_authorization"] == "UNAVAILABLE"
+    frozen = WD.type_current_row(reply(["QCOM"]), source)
+    assert frozen["tickers"] == ["QCOM"]
+    assert "security_authorization" not in frozen

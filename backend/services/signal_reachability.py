@@ -124,7 +124,7 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
     "backend.services.owner_decision_view": (
-        "AWAITS -- E3 is a bounded, read-only candidate view exercised by offline "
+        "DEVELOPMENT/INACTIVE -- E3 is a bounded, read-only candidate view exercised by offline "
         "fixtures. No scheduled consumer, forecast authority, portfolio action, "
         "owner send or delivery is wired. Reclassify when a reviewed natural "
         "consumer is added; a manual view is not an owner warning."),
