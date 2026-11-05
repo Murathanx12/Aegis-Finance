@@ -25,6 +25,15 @@ def test_every_orphan_is_classified():
     SR.assert_no_unclassified_orphans()
 
 
+def test_e3_is_inactive_and_e2_is_tooling_only():
+    result = SR.audit()
+    owner_view = [entry for entry in result["orphans"]
+                  if entry["module"] == "backend.services.owner_decision_view"]
+    assert len(owner_view) == 1
+    assert owner_view[0]["reason"].startswith("DEVELOPMENT/INACTIVE")
+    assert "backend.services.provisional_event_review" in result["tooling_only"]
+
+
 def test_the_audit_can_actually_fail(tmp_path):
     """The guard on the guard (S47's lesson). If the scan found nothing, the
     contract above would pass forever while checking an empty set."""

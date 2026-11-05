@@ -66,6 +66,7 @@ LICENCE: PRODUCT_EXPERIMENT.
 """
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import math
@@ -75,6 +76,7 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
 
@@ -84,6 +86,9 @@ import pandas as pd
 from backend import config as _cfg
 
 LICENCE = "PRODUCT_EXPERIMENT"
+SUBJECT_ADMISSION_VERSION = "issuer-subject/2"
+MAX_TICKER_INPUTS = 12
+MAX_TICKER_INPUT_CHARS = 8
 SPECIALIST_PREFIX = "news_digest:"
 SPECIALIST = "news_digest:implication_v0"
 #: C17: the regime-classification rows (`world_state.regime_records`). Graded by
@@ -527,6 +532,160 @@ def _ticker_in_text(t: str, text: str, title: str = "") -> bool:
         f"${t}" in hay
 
 
+@lru_cache(maxsize=2)
+def _subject_catalog_read(data: bytes) -> tuple[dict, str]:
+    """Local name candidates, retaining collisions instead of first-writer wins.
+
+    Names establish article focus, not dated listing/portfolio eligibility.
+    The file's content hash participates in extraction/cache identity.
+    """
+    from backend.services.news_entities import _GENERIC_ALIASES
+    generic = _GENERIC_ALIASES | frozenset(
+        "stock shares revenue sales profit earnings guidance outlook results "
+        "quarter quarterly annual reports report solid strong record "
+        "first second third fourth fiscal".split())
+    names: dict[str, set[str]] = defaultdict(set)
+    short_names: dict[str, set[str]] = defaultdict(set)
+    for row in csv.DictReader(data.decode("utf-8-sig").splitlines()):
+        ticker = str(row.get("symbol") or "").strip().upper()
+        if not _TICKER.fullmatch(ticker):
+            continue
+        names[ticker].add(ticker)
+        for name in [row.get("primary_name") or "", *(row.get("aliases") or "").split("|")]:
+            name = " ".join(name.strip().split())
+            if not name or name.upper() == ticker:
+                continue
+            short = re.sub(r"[,\s]+(?:incorporated|inc\.?|corporation|corp\.?|company|co\.?|ltd\.?|limited)"
+                           r"(?:\s+\(the\))?(?:\s+series\s+[a-z])?$", "", name, flags=re.I)
+            short = re.sub(r"\s+a/s$", "", short, flags=re.I)
+            for alias in (name, short):
+                if len(alias) >= 5 and alias.lower() not in generic:
+                    names[alias.casefold()].add(ticker)
+            first = short.split()[0] if short else ""
+            if len(first) >= 5 and first.lower() not in generic:
+                short_names[first.casefold()].add(ticker)
+    for name, owners in short_names.items():
+        names.setdefault(name, owners)  # an explicit brand alias outranks a shortened name
+    return dict(names), hashlib.sha256(data).hexdigest()
+
+
+def _subject_catalog() -> tuple[dict, str]:
+    path = Path(_cfg.BACKEND_DIR) / "data" / "news_entities" / "issuers.csv"
+    try:
+        # Metadata equality cannot attest content. Parse memoization is keyed
+        # by these actual bytes, including same-size/restored-mtime replacement.
+        return _subject_catalog_read(path.read_bytes())
+    except (OSError, ValueError, UnicodeError):
+        return {}, "UNAVAILABLE"  # no name evidence: abstain, never trust body tags
+
+
+def _subject_act(tail: str) -> bool:
+    """Deliberately narrow issuer-focus grammar, not general role inference."""
+    tail = re.sub(r"^[\s'\u2019]+s\s+", "", tail).strip()
+    if re.search(r"\b(?:suppliers?|customers?|partners?|counterparty|counterparties)\b", tail, re.I):
+        return False
+    report = re.match(
+        r"^(?:reports?|announces?|posts?)\s+"
+        r"(?:(?:its|the|fiscal|first|second|third|fourth|quarter|quarterly|annual|q[1-4]|20\d{2})\s+){0,5}"
+        r"(?:results|earnings|revenue|sales|profit|guidance|dividend|buyback|leadership)\b",
+        tail, re.I)
+    if report:
+        rest = tail[report.end():]
+        if re.search(r"\bon\s+behalf\s+of\b", rest, re.I):
+            return False
+        # A reporter's financial object may belong to an unlisted company.
+        # Admit only conventional own-period complements after for/of.
+        period = (r"(?:(?:its|the)\s+)?(?:q[1-4]\b|"
+                  r"(?:first|second|third|fourth)\s+quarter\b|"
+                  r"fiscal\s+(?:q[1-4]|20\d{2})\b|20\d{2}\b|"
+                  r"(?:quarter|year|operations)\b)")
+        for relation in re.finditer(r"\b(?:for|of)\s+", rest, re.I):
+            if not re.match(period, rest[relation.end():], re.I):
+                return False
+        return True
+    return bool(re.match(
+        r"^(?:(?:raises?|cuts?)\s+(?:its\s+)?(?:guidance|outlook|forecast|dividend|prices|costs|jobs)\b|"
+        r"(?:beats?|misses?)\s+(?:on|estimates|expectations|earnings|revenue)\b|"
+        r"delivers?\s+(?:(?:solid|strong|record)\s+)?(?:q[1-4]|quarterly|results|revenue|growth)\b|"
+        r"(?:stock|shares|revenue|sales|profit|earnings|guidance|outlook|results)\s+"
+        r"(?:(?:is|are)\s+)?(?:falls?|rises?|jumps?|drops?|slides?|climbs?|beats?|misses?|grows?|surges?)\b)",
+        tail, re.I))
+
+
+def _primary_subject_source(item: Item) -> bool:
+    """Primary labeling cannot fall through into the generic title shortcut."""
+    from urllib.parse import urlsplit
+    source = item.source.casefold()
+    if source in {"sec", "issuer_release", "primary", "primary_release"} or source.startswith("sec_edgar_"):
+        return True
+    try:
+        return (urlsplit(item.url).hostname or "").casefold() in {"sec.gov", "www.sec.gov"}
+    except ValueError:
+        return True
+
+
+def _ticker_subject(ticker: str, item: Item, *, names: Optional[dict] = None) -> bool:
+    """A mention/quote chip/discovery tag alone never licenses a direct subject.
+
+    This is descriptive subject recognition, NOT dated security authorization.
+    No qualified historical owner/security edge is wired into this consumer.
+    Primary proposals therefore remain unverified; the separate CIK mapper
+    supplies candidates only and must not be upgraded by matching strings.
+    """
+    if item.kind not in ("article", "headline", "transcript"):
+        return False
+    if _primary_subject_source(item):
+        return False
+    if names is None:
+        names, _ = _subject_catalog()
+    if ticker not in names:
+        return False
+    title = re.sub(r"^(?:exclusive|update)\s*[:|]\s*", "", item.title.strip(), flags=re.I)
+    # A leading reporter/actor does not own every event in the title. Refuse
+    # other issuer roles rather than treating the first company as the subject.
+    lower = title.casefold()
+    for name, owners in names.items():
+        if ticker in owners:
+            continue
+        hay = title if name.isupper() else lower
+        if name in hay and re.search(r"(?<![A-Za-z0-9])" + re.escape(name) + r"(?![A-Za-z0-9])", hay):
+            return False
+    explicit = re.match(rf"^(?:\${re.escape(ticker)}|\({re.escape(ticker)}\)|{re.escape(ticker)})"
+                        r"(?![A-Za-z0-9])", title)
+    if explicit and _subject_act(title[explicit.end():]):
+        return True
+    aliases = [(name, owners) for name, owners in names.items()
+               if name != ticker and ticker in owners]
+    for name, owners in sorted(aliases, key=lambda pair: len(pair[0]), reverse=True):
+        match = re.match(re.escape(name) + r"(?![A-Za-z0-9])", title, re.I)
+        if not match:
+            continue
+        tail = title[match.end():].lstrip()
+        label = re.match(rf"^\((?:(?:NASDAQ|NYSE|NYSEAMERICAN)\s*:\s*)?{re.escape(ticker)}\)\s*", tail)
+        if label:
+            tail = tail[label.end():]
+        if (owners == {ticker} or label) and _subject_act(tail):
+            return True
+    return False
+
+
+def _bounded_ticker_field(raw: dict, key: str) -> list[str]:
+    """Validate before iteration/coercion/allocation; JSON arrays only."""
+    from backend.services import news_source_validation as NV
+    values = raw.get(key, [])
+    if type(values) is not list or len(values) > MAX_TICKER_INPUTS:
+        raise NV.SourceValidationError("invalid_or_oversized_ticker_field")
+    result = []
+    for value in values:
+        if not isinstance(value, str) or not 0 < len(value) <= MAX_TICKER_INPUT_CHARS:
+            raise NV.SourceValidationError("invalid_ticker_element")
+        ticker = value.strip().upper().lstrip("$")
+        if not _TICKER.fullmatch(ticker):
+            raise NV.SourceValidationError("invalid_ticker_element")
+        result.append(ticker)
+    return result
+
+
 def claim_provenance(claim: dict) -> str:
     """A forward claim's own kind: management's words are COMPANY_CLAIM, anyone
     else's forward view is FORECAST (ungraded)."""
@@ -580,24 +739,42 @@ def row_provenance(row: dict) -> dict:
     return {"provenance": p, "provenance_author": a, "provenance_basis": b}
 
 
-def type_row(raw: Any, item: Item) -> Optional[dict]:
+def type_row(raw: Any, item: Item, *, _legacy_current_v6: bool = False) -> Optional[dict]:
     """Validate one model reply into the typed row. None when the reply is not
     an object. Every enum is checked, every number clamped, every string capped
-    and scrubbed; tickers the item does not name go to `tickers_unverified`."""
+    and scrubbed; mentions without subject evidence go to `tickers_unverified`."""
     if not isinstance(raw, dict):
         return None
-    tick_ok, tick_bad = [], []
-    for t in raw.get("tickers") or []:
-        t = str(t).strip().upper().lstrip("$")
-        if not _TICKER.match(t):
-            continue
-        if t in item.tickers_named or _ticker_in_text(t, item.text, item.title):
-            tick_ok.append(t)
-        else:
-            tick_bad.append(t)
-    for t in item.tickers_named:
-        if _TICKER.match(t) and t not in tick_ok and item.kind in ("headline", "social"):
-            tick_ok.append(t)
+    from backend.services import news_source_validation as NV
+    if _legacy_current_v6:
+        # The opt-in Beta v6 extractor has a frozen source/cache contract and
+        # a separate instrument-identity review. Do not retrofit E1 into it.
+        tick_ok, tick_bad = [], []
+        for value in raw.get("tickers") or []:
+            t = str(value).strip().upper().lstrip("$")
+            if not _TICKER.match(t):
+                continue
+            if t in item.tickers_named or _ticker_in_text(t, item.text, item.title):
+                tick_ok.append(t)
+            else:
+                tick_bad.append(t)
+        for t in item.tickers_named:
+            if _TICKER.match(t) and t not in tick_ok and item.kind in ("headline", "social"):
+                tick_ok.append(t)
+        catalog_hash = None
+    else:
+        try:
+            proposed = _bounded_ticker_field(raw, "tickers")
+            tick_bad = _bounded_ticker_field(raw, "tickers_unverified")
+        except NV.SourceValidationError:
+            return None
+        tick_ok = []
+        names, catalog_hash = _subject_catalog()
+        for t in proposed:
+            if _ticker_subject(t, item, names=names):
+                tick_ok.append(t)
+            else:
+                tick_bad.append(t)
     claims = []
     for c in (raw.get("forward_claims") or [])[:3]:
         if not isinstance(c, dict):
@@ -620,7 +797,8 @@ def type_row(raw: Any, item: Item) -> Optional[dict]:
         "summary": _clean_str(raw.get("summary"), 320),
         "event_type": ev if ev in EVENT_TYPES else "other",
         "tickers": sorted(set(tick_ok))[:12],
-        "tickers_unverified": sorted(set(tick_bad))[:12],
+        "tickers_unverified": (sorted(set(tick_bad))[:12] if _legacy_current_v6 else
+                               sorted(t for t in set(tick_bad) - set(tick_ok) if _TICKER.fullmatch(t))[:12]),
         "sectors": sorted({str(s).lower() for s in raw.get("sectors") or []} & set(SECTORS)),
         "countries": sorted({str(c).upper()[:2] for c in raw.get("countries") or []
                              if re.match(r"^[A-Za-z]{2}$", str(c))})[:8],
@@ -632,13 +810,19 @@ def type_row(raw: Any, item: Item) -> Optional[dict]:
         "novelty": nov if nov in NOVELTY else "recap",
         "forward_claims": claims,
     }
+    if not _legacy_current_v6:
+        out.update({"ticker_evidence_scope": "DESCRIPTIVE_ISSUER_SUBJECT_ONLY",
+                    "security_authorization": "UNAVAILABLE",
+                    "subject_catalog_sha256": catalog_hash,
+                    "subject_admission_version": SUBJECT_ADMISSION_VERSION})
     out.update(row_provenance(out))           # C17: derived, never asked of the model
     return out
 
 
-def cache_key(item: Item) -> str:
+def cache_key(item: Item, *, _catalog_hash: Optional[str] = None) -> str:
     return _sha(norm_url(item.url) or item.item_id, _sha(item.title, item.text[:6000]),
-                _cfg.WORLD_DIGEST_PROMPT_VERSION)
+                _cfg.WORLD_DIGEST_PROMPT_VERSION, SUBJECT_ADMISSION_VERSION,
+                _subject_catalog()[1] if _catalog_hash is None else _catalog_hash)
 
 
 # Deliberately opt-in: these bytes do not alter the frozen v0 extractor/contract.
@@ -712,6 +896,10 @@ def type_current_row(raw: Any, item: Item) -> dict:
     from backend.services import news_source_validation as NV
     if not isinstance(raw, dict):
         raise NV.SourceValidationError("current_reply_requires_object")
+    # Keep v6's valid historical ticker semantics while refusing malformed or
+    # unbounded model-controlled arrays before its legacy normalizer runs.
+    _bounded_ticker_field(raw, "tickers")
+    _bounded_ticker_field(raw, "tickers_unverified")
     if (not isinstance(raw.get("event_type"), str) or raw["event_type"] not in EVENT_TYPES
             or not isinstance(raw.get("novelty"), str) or raw["novelty"] not in NOVELTY):
         raise NV.SourceValidationError("current_invalid_enum")
@@ -751,7 +939,7 @@ def type_current_row(raw: Any, item: Item) -> dict:
         if (claim["witness"] not in source or claim["speaker"] not in claim["witness"]
                 or claim["subject"] not in claim["witness"]):
             raise NV.SourceValidationError("current_detached_claim_witness")
-    row = type_row(raw, item)
+    row = type_row(raw, item, _legacy_current_v6=True)
     if row is None or len(row["forward_claims"]) != len(claims):
         raise NV.SourceValidationError("current_lossy_claim_typing")
     for typed, original in zip(row["forward_claims"], claims):
@@ -1066,11 +1254,18 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
     also carry the local student's `local_event` (see `local_event_stage`)."""
     rows: list[dict] = []
     todo: list[Item] = []
+    stats: Counter = Counter()
     hits = 0
     for it in items:
         c = cache.get(cache_key(it))
         if c and c.get("row"):
-            rows.append(c["row"])
+            # Recheck even a current-key hit; historical/tampered model rows
+            # must not restore mention-only subjects or override source clocks.
+            typed = type_row(c["row"], it)
+            if typed is None:
+                stats["cache_refused"] += 1
+                continue
+            rows.append({**c["row"], **typed})
             hits += 1
         else:
             todo.append(it)
@@ -1078,7 +1273,6 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
     heads = [i for i in todo if i.kind == "headline"]
     per = max(1, int(_cfg.WORLD_DIGEST_HEADLINES_PER_CALL))
     batches = [heads[k:k + per] for k in range(0, len(heads), per)]
-    stats: Counter = Counter()
     lock = threading.Lock()
     local = local_event_stage(singles, runner=local_runner)
 
@@ -1103,7 +1297,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
             row["injection_lines_removed"] = flagged
             stats["injection_items"] += int(flagged > 0)
             rows.append(row)
-            new = {"cache_key": cache_key(it), "row": row,
+            new = {"cache_key": cache_key(it, _catalog_hash=row["subject_catalog_sha256"]), "row": row,
                    "cached_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
             append_cache([new], cache_file)
             stats["extracted"] += 1
@@ -1145,7 +1339,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
                 row["injection_lines_removed"] = 0
                 row["extract_model"] = served
                 rows.append(row)
-                new_cache.append({"cache_key": cache_key(it), "row": row,
+                new_cache.append({"cache_key": cache_key(it, _catalog_hash=row["subject_catalog_sha256"]), "row": row,
                                   "cached_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")})
                 stats["extracted"] += 1
             stats["injection_items"] += int(flagged > 0)
