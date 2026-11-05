@@ -542,7 +542,8 @@ def _subject_catalog_read(data: bytes) -> tuple[dict, str]:
     from backend.services.news_entities import _GENERIC_ALIASES
     generic = _GENERIC_ALIASES | frozenset(
         "stock shares revenue sales profit earnings guidance outlook results "
-        "quarter quarterly annual reports report solid strong record".split())
+        "quarter quarterly annual reports report solid strong record "
+        "first second third fourth fiscal".split())
     names: dict[str, set[str]] = defaultdict(set)
     short_names: dict[str, set[str]] = defaultdict(set)
     for row in csv.DictReader(data.decode("utf-8-sig").splitlines()):
@@ -583,11 +584,27 @@ def _subject_act(tail: str) -> bool:
     tail = re.sub(r"^[\s'\u2019]+s\s+", "", tail).strip()
     if re.search(r"\b(?:suppliers?|customers?|partners?|counterparty|counterparties)\b", tail, re.I):
         return False
-    return bool(re.match(
-        r"^(?:(?:reports?|announces?|posts?)\s+"
+    report = re.match(
+        r"^(?:reports?|announces?|posts?)\s+"
         r"(?:(?:its|the|fiscal|first|second|third|fourth|quarter|quarterly|annual|q[1-4]|20\d{2})\s+){0,5}"
-        r"(?:results|earnings|revenue|sales|profit|guidance|dividend|buyback|leadership)\b|"
-        r"(?:raises?|cuts?)\s+(?:its\s+)?(?:guidance|outlook|forecast|dividend|prices|costs|jobs)\b|"
+        r"(?:results|earnings|revenue|sales|profit|guidance|dividend|buyback|leadership)\b",
+        tail, re.I)
+    if report:
+        rest = tail[report.end():]
+        if re.search(r"\bon\s+behalf\s+of\b", rest, re.I):
+            return False
+        # A reporter's financial object may belong to an unlisted company.
+        # Admit only conventional own-period complements after for/of.
+        period = (r"(?:(?:its|the)\s+)?(?:q[1-4]\b|"
+                  r"(?:first|second|third|fourth)\s+quarter\b|"
+                  r"fiscal\s+(?:q[1-4]|20\d{2})\b|20\d{2}\b|"
+                  r"(?:quarter|year|operations)\b)")
+        for relation in re.finditer(r"\b(?:for|of)\s+", rest, re.I):
+            if not re.match(period, rest[relation.end():], re.I):
+                return False
+        return True
+    return bool(re.match(
+        r"^(?:(?:raises?|cuts?)\s+(?:its\s+)?(?:guidance|outlook|forecast|dividend|prices|costs|jobs)\b|"
         r"(?:beats?|misses?)\s+(?:on|estimates|expectations|earnings|revenue)\b|"
         r"delivers?\s+(?:(?:solid|strong|record)\s+)?(?:q[1-4]|quarterly|results|revenue|growth)\b|"
         r"(?:stock|shares|revenue|sales|profit|earnings|guidance|outlook|results)\s+"

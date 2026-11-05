@@ -28,6 +28,54 @@ def test_reporter_or_partner_titles_do_not_identify_an_own_event(title):
     assert row["tickers_unverified"] == ["AAPL", "QCOM"]
 
 
+@pytest.mark.parametrize("title", [
+    "Apple reports earnings for SpaceX",
+    "Apple reports results of SpaceX",
+    "Apple reports quarterly results on behalf of SpaceX",
+    "Apple reports earnings of SpaceX",
+    "Apple announces results for an unlisted client",
+])
+def test_unlisted_event_owner_does_not_make_reporter_the_subject(title):
+    row = WD.type_row(reply(["AAPL"]), item(title=title))
+    assert row["tickers"] == []
+    assert row["tickers_unverified"] == ["AAPL"]
+
+
+@pytest.mark.parametrize("title", [
+    "Apple reports results for the third quarter",
+    "Apple reports results of fiscal 2026",
+    "Apple reports quarterly results",
+])
+def test_own_period_results_still_admit_issuer_subject(title):
+    assert WD.type_row(reply(["AAPL"]), item(title=title))["tickers"] == ["AAPL"]
+
+
+def test_unrelated_headline_tag_keeps_provenance_without_direct_ticker(tmp_path):
+    from datetime import datetime, timedelta
+
+    source = tmp_path / "news_corpus/google_news_rss_en_gb/2026-11-01.jsonl"
+    source.parent.mkdir(parents=True)
+    record = dict(raw_id="synthetic-feed-id", source="google_news_rss_en_gb",
+                  url="https://example.test/binance-breach", title="Binance breach reported - Example News",
+                  body="Short feed description.", tickers=["TGT"],
+                  entity_tags=["resolved:TGT=name"],
+                  published_utc="2026-11-01T02:41:00+00:00",
+                  first_seen_utc="2026-11-01T04:39:46+00:00")
+    source.write_text(json.dumps(record) + "\n", encoding="utf-8")
+    before = source.read_bytes()
+    seen = datetime.fromisoformat(record["first_seen_utc"])
+    collected, = WD.collect(seen - timedelta(minutes=1), seen, root=tmp_path)["items"]
+    assert collected.kind == "headline" and collected.source == "gn:example news"
+    assert collected.tickers_named == ["TGT"]
+    assert collected.published_utc == record["published_utc"]
+    assert collected.first_seen_utc == record["first_seen_utc"]
+    assert WD.type_row(reply(["TGT"]), collected)["tickers_unverified"] == ["TGT"]
+    assert WD.type_row(reply(["TGT"]), collected)["tickers"] == []
+    assert WD.type_row(reply([]), collected)["tickers"] == []
+    assert source.read_bytes() == before
+    assert json.loads(before)["entity_tags"] == ["resolved:TGT=name"]
+
+
 @pytest.mark.parametrize("ticker,cik,name", [("WU", "320193", "Western Union"),
     ("AAPL", "1418121", "Apple Hospitality REIT, Inc.")])
 def test_sec_string_agreement_is_not_owner_to_security_proof(ticker, cik, name):
