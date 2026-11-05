@@ -37,6 +37,16 @@ class ReviewRefused(ValueError):
     """A sanitized, fail-closed input or receipt refusal."""
 
 
+class _BuiltReceipt(dict):
+    """A builder result sealed to its original bytes for the write boundary."""
+
+    __slots__ = ("_sealed_bytes",)
+
+    def __init__(self, value: dict[str, Any]):
+        super().__init__(value)
+        self._sealed_bytes = _canonical(value)
+
+
 @dataclass(frozen=True)
 class SourceProof:
     source_sha256: str
@@ -61,7 +71,7 @@ class IssuerEdge:
     source_key: str
     source_sha256: str
     issuer_id: str
-    symbol: str
+    symbol: str | None
     relation: str
     basis: str
     known_at_utc: str
@@ -120,7 +130,7 @@ def _symbol(value: str) -> str:
 
 
 def _issuer(value: str) -> str:
-    if not isinstance(value, str):
+    if not isinstance(value, str) or len(value) > 128:
         _refuse("INVALID_ISSUER_ID")
     cik = _CIK.fullmatch(value)
     if cik:
@@ -189,18 +199,32 @@ def _edge(raw: IssuerEdge, supplied: dict[tuple[str, str], datetime],
     key, sha = _key(raw.source_key), _hash(raw.source_sha256)
     if (key, sha) not in supplied:
         _refuse("MISSING_EDGE_SOURCE")
-    issuer, symbol = _issuer(raw.issuer_id), _symbol(raw.symbol)
+    issuer = _issuer(raw.issuer_id)
     _hash(raw.evidence_sha256)
     known = _clock(raw.known_at_utc)
     if known < supplied[(key, sha)] or known > review:
         _refuse("INVALID_EDGE_TIMELINE")
-    allowed = {"DIRECT_ISSUER": {"FULL_ISSUER_SUBJECT", "SEC_CIK"},
+    if (not isinstance(raw.relation, str) or len(raw.relation) > 32
+            or not isinstance(raw.basis, str) or len(raw.basis) > 32):
+        _refuse("INVALID_EDGE_QUALIFICATION")
+    allowed = {"DIRECT_ISSUER": {"FULL_ISSUER_SUBJECT"},
                "INDIRECT_CANDIDATE": {"REVIEWED_MECHANISM"},
-               "DISCOVERY_CONTEXT": {"QUEUE_CONTEXT", "TICKER_ONLY"}}
+               "DISCOVERY_CONTEXT": {"QUEUE_CONTEXT", "TICKER_ONLY"},
+               "ISSUER_CANDIDATE": {"SEC_CIK"}}
     if raw.relation == "DIRECT_ISSUER" and raw.basis not in allowed["DIRECT_ISSUER"]:
         _refuse("UNQUALIFIED_DIRECT_EDGE")
     if raw.relation not in allowed or raw.basis not in allowed[raw.relation]:
         _refuse("INVALID_EDGE_QUALIFICATION")
+    if raw.relation == "ISSUER_CANDIDATE":
+        # A CIK names an issuer, not a dated listing or held security. Even an
+        # asserted ticker alongside it must not become a held-symbol join.
+        if raw.symbol is not None:
+            _refuse("UNQUALIFIED_ISSUER_CANDIDATE")
+        if not _CIK.fullmatch(raw.issuer_id):
+            _refuse("INVALID_EDGE_QUALIFICATION")
+        symbol = None
+    else:
+        symbol = _symbol(raw.symbol)
     return {"source_key": key, "source_sha256": sha, "issuer_id": issuer,
             "symbol": symbol, "relation": raw.relation, "basis": raw.basis,
             "known": known, "evidence_sha256": raw.evidence_sha256}
@@ -227,6 +251,26 @@ def _holdings(raw: HoldingsSnapshot | None, review: datetime,
     return {"status": status, "as_of_utc": _iso(as_of), "known_at_utc": _iso(known),
             "evidence_sha256": evidence, "symbol_count": len(normalized)}, (
                 normalized if known <= cutoff else None)
+
+
+def _reason_codes(positive: bool, reference: bool, issuer_only: bool,
+                  held_status: str, coverage_partial: bool) -> list[str]:
+    if reference:
+        return ["REFERENCE_ONLY"]
+    if positive:
+        return ["QUALIFIED_HELD_EDGE_FOR_REVIEW"]
+    unresolved = []
+    if issuer_only:
+        unresolved.append("ISSUER_SECURITY_UNRESOLVED")
+    if held_status == "UNKNOWN":
+        unresolved.append("HOLDINGS_UNKNOWN")
+    elif held_status == "HOLDINGS_AFTER_CUTOFF":
+        unresolved.append("HOLDINGS_AFTER_CUTOFF")
+    elif held_status == "PARTIAL":
+        unresolved.append("PARTIAL_HOLDINGS_UNKNOWN")
+    if coverage_partial:
+        unresolved.append("PARTIAL_INPUT_COVERAGE_UNKNOWN")
+    return unresolved or ["NO_QUALIFIED_HELD_EDGE"]
 
 
 def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
@@ -347,7 +391,9 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
             previous = direct_issuers.setdefault(edge["symbol"], edge["issuer_id"])
             if previous != edge["issuer_id"]:
                 _refuse("SYMBOL_ISSUER_COLLISION")
-        match = "UNKNOWN" if held is None or (held_meta["status"] == "PARTIAL" and edge["symbol"] not in held) else edge["symbol"] in held
+        match = ("UNKNOWN" if edge["relation"] == "ISSUER_CANDIDATE" or held is None
+                 or (held_meta["status"] == "PARTIAL" and edge["symbol"] not in held)
+                 else edge["symbol"] in held)
         joined[event_key].append({"source_id": source_id, "source_sha256": edge["source_sha256"],
                                   "issuer_id": edge["issuer_id"], "symbol": edge["symbol"],
                                   "relation": edge["relation"], "basis": edge["basis"],
@@ -362,26 +408,11 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
                 "future_edges_excluded": future_edges, "duplicate_versions": duplicate_versions,
                 "sources_omitted_by_cap": omitted, "edges_not_joined": edges_not_joined}
 
-    def reasons(positive: bool, reference: bool = False) -> list[str]:
-        if reference:
-            return ["REFERENCE_ONLY"]
-        if positive:
-            return ["QUALIFIED_HELD_EDGE_FOR_REVIEW"]
-        if held_meta["status"] == "UNKNOWN":
-            return ["HOLDINGS_UNKNOWN"]
-        if held_meta["status"] == "HOLDINGS_AFTER_CUTOFF":
-            return ["HOLDINGS_AFTER_CUTOFF"]
-        if held_meta["status"] == "PARTIAL":
-            return ["PARTIAL_HOLDINGS_UNKNOWN"]
-        if coverage_partial:
-            return ["PARTIAL_INPUT_COVERAGE_UNKNOWN"]
-        return ["NO_QUALIFIED_HELD_EDGE"]
-
     groups = []
     for event_key in sorted(grouped):
         sources_out = sorted(grouped[event_key], key=lambda item: item["source_id"])
         edges_out = sorted(joined[event_key], key=lambda item: (
-            item["source_id"], item["symbol"], item["issuer_id"], item["relation"],
+            item["source_id"], item["symbol"] or "", item["issuer_id"], item["relation"],
             item["basis"], item["known_at_utc"], item["evidence_sha256"]))
         reference = all(source["kind"] == "REFERENCE_PAGE" for source in sources_out)
         direct = sorted({edge["symbol"] for edge in edges_out if edge["relation"] == "DIRECT_ISSUER"
@@ -389,18 +420,24 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
         indirect = sorted({edge["symbol"] for edge in edges_out if edge["relation"] == "INDIRECT_CANDIDATE"
                            and edge["held_snapshot_match"] is True and not reference})
         positive = bool(direct or indirect)
+        issuer_only = any(edge["relation"] == "ISSUER_CANDIDATE" for edge in edges_out)
         groups.append({"event_id": _id("event", event_key, registry), "event_key": event_key,
                        "sources": sources_out, "edges": edges_out,
                        "qualified_direct_held": direct,
                        "provisional_indirect_held_candidates": indirect,
                        "decision": "REVIEW_EXPOSURE" if positive else "NO_CHANGE_WITH_REASON",
-                       "reason_codes": reasons(positive, reference),
+                       "reason_codes": _reason_codes(positive, reference, issuer_only,
+                                                      held_meta["status"], coverage_partial),
                        "contradiction": {"status": "UNKNOWN",
                                          "check": "Issuer or event subject differs from caller-qualified edge"},
                        "falsifier": {"status": "UNKNOWN",
                                      "check": "Underlying event, issuer link, or held snapshot fails independent review"}})
     positive = any(group["decision"] == "REVIEW_EXPOSURE" for group in groups)
-    root_reasons = reasons(positive) if groups else ["NO_SOURCES_AT_CUTOFF"]
+    root_issuer_only = any(any(edge["relation"] == "ISSUER_CANDIDATE" for edge in group["edges"])
+                           for group in groups)
+    root_reasons = (_reason_codes(positive, False, root_issuer_only,
+                                  held_meta["status"], coverage_partial)
+                    if groups else ["NO_SOURCES_AT_CUTOFF"])
     body = {"schema": "provisional-event-review/1", "status": "PROVISIONAL_REVIEW",
             "component_only": True, "natural_warning": False,
             "provenance_authority": "CALLER_SUPPLIED_NOT_INDEPENDENTLY_VERIFIED",
@@ -419,13 +456,182 @@ def build_review(*, sources: list[SourceItem] | tuple[SourceItem, ...],
     result = {**body, "receipt_id": receipt_id}
     if len(_canonical(result)) > MAX_RECEIPT_BYTES:
         _refuse("RECEIPT_BYTE_CAP")
-    return result
+    return _BuiltReceipt(result)
 
 
-def write_receipt(receipt: dict[str, Any], *, directory: Path) -> Path:
-    """Create one dated receipt exclusively; preserve any partial I/O failure."""
-    if not isinstance(receipt, dict):
+def _only_fields(value: Any, names: str) -> None:
+    if not isinstance(value, dict) or set(value) != set(names.split()):
         _refuse("RECEIPT_INTEGRITY")
+
+
+def _safe_reason_codes(value: Any) -> None:
+    allowed = {"REFERENCE_ONLY", "QUALIFIED_HELD_EDGE_FOR_REVIEW",
+               "ISSUER_SECURITY_UNRESOLVED", "HOLDINGS_UNKNOWN",
+               "HOLDINGS_AFTER_CUTOFF", "PARTIAL_HOLDINGS_UNKNOWN",
+               "PARTIAL_INPUT_COVERAGE_UNKNOWN", "NO_QUALIFIED_HELD_EDGE",
+               "NO_SOURCES_AT_CUTOFF"}
+    if not isinstance(value, list) or not value or len(value) > 4 or any(
+            not isinstance(code, str) or code not in allowed for code in value):
+        _refuse("RECEIPT_INTEGRITY")
+
+
+def _validate_receipt_schema(receipt: dict[str, Any], cutoff: datetime) -> None:
+    """Allow only builder fields and fixed non-action states at every level."""
+    _only_fields(receipt, "schema status component_only natural_warning provenance_authority "
+                 "review_time_utc source_cutoff_utc upstream_digest authority coverage "
+                 "holdings groups uncertainty decision reason_codes receipt_id")
+    upstream = receipt["upstream_digest"]
+    _only_fields(upstream, "state exit_code parse_status")
+    if upstream["parse_status"] != "UNKNOWN" or not (
+            (upstream["state"] == "UNKNOWN" and upstream["exit_code"] is None)
+            or (upstream["state"] == "BUDGET_REFUSED"
+                and type(upstream["exit_code"]) is int and upstream["exit_code"] > 0)):
+        _refuse("RECEIPT_INTEGRITY")
+    _only_fields(receipt["authority"], "forecast_writes portfolio_action delivery provider_calls")
+    _only_fields(receipt["uncertainty"], "probability direction magnitude expectations event_outcome")
+    coverage = receipt["coverage"]
+    _only_fields(coverage, "status caller_input_complete input_source_rows future_source_versions_excluded "
+                 "future_edges_excluded duplicate_versions sources_omitted_by_cap edges_not_joined")
+    if (type(coverage["caller_input_complete"]) is not bool
+            or type(coverage["input_source_rows"]) is not int
+            or not 1 <= coverage["input_source_rows"] <= MAX_INPUT_SOURCES
+            or any(type(coverage[name]) is not int or coverage[name] < 0 for name in (
+                "future_source_versions_excluded", "future_edges_excluded", "duplicate_versions",
+                "sources_omitted_by_cap", "edges_not_joined"))
+            or coverage["status"] != ("PARTIAL" if not coverage["caller_input_complete"]
+                                      or coverage["sources_omitted_by_cap"] else "COMPLETE")):
+        _refuse("RECEIPT_INTEGRITY")
+    held = receipt["holdings"]
+    _only_fields(held, "status as_of_utc known_at_utc evidence_sha256 symbol_count")
+    if held["status"] == "UNKNOWN":
+        if any(held[name] is not None for name in (
+                "as_of_utc", "known_at_utc", "evidence_sha256", "symbol_count")):
+            _refuse("RECEIPT_INTEGRITY")
+    elif held["status"] in ("COMPLETE", "PARTIAL", "HOLDINGS_AFTER_CUTOFF"):
+        if (type(held["symbol_count"]) is not int or not 0 <= held["symbol_count"] <= MAX_HOLDINGS
+                or _clock(held["as_of_utc"]) > _clock(held["known_at_utc"])):
+            _refuse("RECEIPT_INTEGRITY")
+        _hash(held["evidence_sha256"])
+        if (held["status"] == "HOLDINGS_AFTER_CUTOFF") != (_clock(held["known_at_utc"]) > cutoff):
+            _refuse("RECEIPT_INTEGRITY")
+    else:
+        _refuse("RECEIPT_INTEGRITY")
+    groups = receipt["groups"]
+    if not isinstance(groups, list) or len(groups) > MAX_SELECTED_SOURCES:
+        _refuse("RECEIPT_INTEGRITY")
+    total_sources = 0
+    root_issuer_only = False
+    for group in groups:
+        _only_fields(group, "event_id event_key sources edges qualified_direct_held "
+                     "provisional_indirect_held_candidates decision reason_codes contradiction falsifier")
+        event_key = _key(group["event_key"])
+        if group["event_id"] != _stable_id("event", event_key):
+            _refuse("RECEIPT_INTEGRITY")
+        _safe_reason_codes(group["reason_codes"])
+        for field, check in (("contradiction", "Issuer or event subject differs from caller-qualified edge"),
+                             ("falsifier", "Underlying event, issuer link, or held snapshot fails independent review")):
+            _only_fields(group[field], "status check")
+            if group[field] != {"status": "UNKNOWN", "check": check}:
+                _refuse("RECEIPT_INTEGRITY")
+        sources = group["sources"]
+        edges = group["edges"]
+        if (not isinstance(sources, list) or not 1 <= len(sources) <= MAX_SELECTED_SOURCES
+                or not isinstance(edges, list) or len(edges) > MAX_EDGES):
+            _refuse("RECEIPT_INTEGRITY")
+        total_sources += len(sources)
+        if total_sources > MAX_SELECTED_SOURCES:
+            _refuse("RECEIPT_INTEGRITY")
+        selected = {}
+        for source in sources:
+            _only_fields(source, "source_id version_id source_sha256 kind first_seen_utc "
+                         "version_seen_utc published_utc proof_known_at_utc proof_witness_sha256 "
+                         "superseded_version_hashes")
+            sid, sha = _hash(source["source_id"]), _hash(source["source_sha256"])
+            if (source["version_id"] != _sha(f"version\0{sid}\0{sha}".encode())
+                    or source["kind"] not in ("ARTICLE", "FILING", "REFERENCE_PAGE")):
+                _refuse("RECEIPT_INTEGRITY")
+            first, version, known = (_clock(source["first_seen_utc"]),
+                                     _clock(source["version_seen_utc"]),
+                                     _clock(source["proof_known_at_utc"]))
+            if first > version or version > known or known > cutoff:
+                _refuse("RECEIPT_INTEGRITY")
+            if source["published_utc"] is not None and _clock(source["published_utc"]) > version:
+                _refuse("RECEIPT_INTEGRITY")
+            _hash(source["proof_witness_sha256"])
+            old = source["superseded_version_hashes"]
+            if not isinstance(old, list) or len(old) > MAX_INPUT_SOURCES:
+                _refuse("RECEIPT_INTEGRITY")
+            for old_sha in old:
+                _hash(old_sha)
+            selected[(sid, sha)] = known
+        reference = all(source["kind"] == "REFERENCE_PAGE" for source in sources)
+        direct, indirect = set(), set()
+        issuer_only = False
+        for edge in edges:
+            _only_fields(edge, "source_id source_sha256 issuer_id symbol relation basis known_at_utc "
+                         "evidence_sha256 held_snapshot_match")
+            identity = (_hash(edge["source_id"]), _hash(edge["source_sha256"]))
+            if identity not in selected or not selected[identity] <= _clock(edge["known_at_utc"]) <= cutoff:
+                _refuse("RECEIPT_INTEGRITY")
+            _issuer(edge["issuer_id"])
+            _hash(edge["evidence_sha256"])
+            relation, basis = edge["relation"], edge["basis"]
+            allowed = {"DIRECT_ISSUER": "FULL_ISSUER_SUBJECT",
+                       "INDIRECT_CANDIDATE": "REVIEWED_MECHANISM",
+                       "ISSUER_CANDIDATE": "SEC_CIK"}
+            if relation == "ISSUER_CANDIDATE":
+                issuer_only = True
+                root_issuer_only = True
+                if (basis != "SEC_CIK" or not _CIK.fullmatch(edge["issuer_id"])
+                        or edge["symbol"] is not None or edge["held_snapshot_match"] != "UNKNOWN"):
+                    _refuse("RECEIPT_INTEGRITY")
+            else:
+                _symbol(edge["symbol"])
+                if relation == "DISCOVERY_CONTEXT":
+                    if basis not in ("QUEUE_CONTEXT", "TICKER_ONLY"):
+                        _refuse("RECEIPT_INTEGRITY")
+                elif allowed.get(relation) != basis:
+                    _refuse("RECEIPT_INTEGRITY")
+                if edge["held_snapshot_match"] not in (True, False, "UNKNOWN"):
+                    _refuse("RECEIPT_INTEGRITY")
+                if held["status"] in ("UNKNOWN", "HOLDINGS_AFTER_CUTOFF") and edge["held_snapshot_match"] != "UNKNOWN":
+                    _refuse("RECEIPT_INTEGRITY")
+                if edge["held_snapshot_match"] is True and not reference:
+                    if relation == "DIRECT_ISSUER":
+                        direct.add(edge["symbol"])
+                    elif relation == "INDIRECT_CANDIDATE":
+                        indirect.add(edge["symbol"])
+        if (group["qualified_direct_held"] != sorted(direct)
+                or group["provisional_indirect_held_candidates"] != sorted(indirect)
+                or group["decision"] != ("REVIEW_EXPOSURE" if direct or indirect else "NO_CHANGE_WITH_REASON")
+                or group["reason_codes"] != _reason_codes(bool(direct or indirect), reference,
+                                                           issuer_only, held["status"],
+                                                           coverage["status"] == "PARTIAL")):
+            _refuse("RECEIPT_INTEGRITY")
+    _safe_reason_codes(receipt["reason_codes"])
+    positive = any(group["decision"] == "REVIEW_EXPOSURE" for group in groups)
+    expected_reasons = (_reason_codes(positive, False, root_issuer_only, held["status"],
+                                      coverage["status"] == "PARTIAL")
+                        if groups else ["NO_SOURCES_AT_CUTOFF"])
+    if (receipt["decision"] != ("REVIEW_EXPOSURE" if positive else "NO_CHANGE_WITH_REASON")
+            or receipt["reason_codes"] != expected_reasons):
+        _refuse("RECEIPT_INTEGRITY")
+
+
+def write_receipt(receipt: _BuiltReceipt, *, directory: Path) -> Path:
+    """Persist an unmodified builder result; preserve any partial I/O failure."""
+    if type(receipt) is not _BuiltReceipt:
+        _refuse("RECEIPT_INTEGRITY")
+    # A caller-computed SHA proves only byte consistency. Persist exactly the
+    # unmodified builder result; reject added claims at any nesting depth.
+    try:
+        serialized = _canonical(receipt)
+    except (TypeError, ValueError, OverflowError):
+        _refuse("RECEIPT_INTEGRITY")
+    if serialized != receipt._sealed_bytes:
+        _refuse("RECEIPT_INTEGRITY")
+    if len(serialized) + 1 > MAX_RECEIPT_BYTES:
+        _refuse("RECEIPT_BYTE_CAP")
     body = {key: value for key, value in receipt.items() if key != "receipt_id"}
     try:
         valid = (receipt.get("receipt_id") == _sha(_canonical(body))
@@ -448,9 +654,11 @@ def write_receipt(receipt: dict[str, Any], *, directory: Path) -> Path:
     cutoff = _clock(receipt.get("source_cutoff_utc"))
     if review < cutoff:
         _refuse("RECEIPT_INTEGRITY")
-    data = _canonical(receipt) + b"\n"
-    if len(data) > MAX_RECEIPT_BYTES:
-        _refuse("RECEIPT_BYTE_CAP")
+    try:
+        _validate_receipt_schema(receipt, cutoff)
+    except (ReviewRefused, TypeError, ValueError, KeyError, OverflowError):
+        _refuse("RECEIPT_INTEGRITY")
+    data = serialized + b"\n"
     if (not isinstance(directory, Path) or not directory.is_absolute()
             or directory.drive.startswith("\\\\") or not directory.is_dir()
             or directory.is_symlink()):

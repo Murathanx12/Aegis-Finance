@@ -115,6 +115,31 @@ def test_qualified_direct_edge_and_indirect_edge_remain_separate():
     assert g["contradiction"] and g["falsifier"]
 
 
+def test_sec_cik_without_security_witness_cannot_name_a_held_symbol():
+    a = source(body="SYNTHETIC ISSUER cik:111111 ONLY")
+    with pytest.raises(P.ReviewRefused, match="UNQUALIFIED_DIRECT_EDGE"):
+        build([a], [edge(a, issuer="cik:222222", symbol="US:NVDA",
+                         relation="DIRECT_ISSUER", basis="SEC_CIK")], holdings())
+    with pytest.raises(P.ReviewRefused, match="UNQUALIFIED_ISSUER_CANDIDATE"):
+        build([a], [edge(a, symbol="US:AAPL", relation="ISSUER_CANDIDATE",
+                         basis="SEC_CIK")], holdings(("US:AAPL",)))
+    candidate = edge(a, symbol=None, issuer="cik:222222",
+                     relation="ISSUER_CANDIDATE", basis="SEC_CIK")
+    r = build([a], [candidate], holdings(("US:NVDA", "US:AAPL")))
+    assert r["decision"] == "NO_CHANGE_WITH_REASON"
+    assert r["reason_codes"] == ["ISSUER_SECURITY_UNRESOLVED"]
+    assert r["groups"][0]["qualified_direct_held"] == []
+    assert r["groups"][0]["edges"][0]["symbol"] is None
+    assert r["groups"][0]["edges"][0]["held_snapshot_match"] == "UNKNOWN"
+    late = replace(candidate, known_at_utc=LATE)
+    excluded = build([a], [late], holdings(("US:NVDA",)))
+    assert excluded["coverage"]["future_edges_excluded"] == 1
+    assert excluded["groups"][0]["edges"] == []
+    with pytest.raises(P.ReviewRefused, match="INVALID_EDGE_QUALIFICATION"):
+        build([a], [edge(a, symbol=None, issuer="issuer:" + "a" * 64,
+                         relation="ISSUER_CANDIDATE", basis="SEC_CIK")], holdings())
+
+
 @pytest.mark.parametrize("held,reason", [
     (None, "HOLDINGS_UNKNOWN"),
     (holdings(clock=LATE, known=LATE), "HOLDINGS_AFTER_CUTOFF"),
@@ -148,7 +173,7 @@ def test_partial_cap_does_not_claim_an_unexamined_book_is_clear():
 
 def test_reference_page_is_not_an_event_review_even_with_held_match():
     a = source(kind="REFERENCE_PAGE")
-    r = build([a], [edge(a, relation="DIRECT_ISSUER", basis="SEC_CIK")], holdings())
+    r = build([a], [edge(a, relation="DIRECT_ISSUER", basis="FULL_ISSUER_SUBJECT")], holdings())
     assert r["decision"] == "NO_CHANGE_WITH_REASON"
     assert "REFERENCE_ONLY" in r["groups"][0]["reason_codes"]
 
@@ -187,8 +212,9 @@ def test_identity_and_version_collisions_refuse():
     with pytest.raises(P.ReviewRefused, match="SOURCE_VERSION_CLOCK_COLLISION"):
         build([a, source(body="CONFLICTING_BYTES")])
     with pytest.raises(P.ReviewRefused, match="SYMBOL_ISSUER_COLLISION"):
-        build([a], [edge(a, relation="DIRECT_ISSUER", basis="SEC_CIK"),
-                    edge(a, issuer="cik:0001326801", relation="DIRECT_ISSUER", basis="SEC_CIK")], holdings())
+        build([a], [edge(a, relation="DIRECT_ISSUER", basis="FULL_ISSUER_SUBJECT"),
+                    edge(a, issuer="cik:0001326801", relation="DIRECT_ISSUER",
+                         basis="FULL_ISSUER_SUBJECT")], holdings())
 
 
 @pytest.mark.parametrize("kind", ["source", "event"])
@@ -259,6 +285,71 @@ def test_writer_refuses_tampering_before_open_and_preserves_partial_failure(tmp_
     with pytest.raises(P.ReviewRefused, match="RECEIPT_IO_INCOMPLETE"):
         P.write_receipt(r, directory=tmp_path)
     assert len(list(tmp_path.iterdir())) == 1  # no destructive cleanup or green retry
+
+
+@pytest.mark.parametrize("injection", ["delivery", "forecast", "approval", "pit",
+                                        "licensed_body", "paid_typing", "nested_body"])
+def test_writer_rejects_self_hashed_false_claims_before_open(tmp_path, injection):
+    r = build([source()])
+    if injection == "delivery":
+        r["delivery"] = "SENT_TO_OWNER"
+    elif injection == "forecast":
+        r["forecast_generated"] = True
+    elif injection == "approval":
+        r["owner_decision"] = "APPROVED"
+    elif injection == "pit":
+        r["listing_identity"] = "PIT_VERIFIED"
+    elif injection == "licensed_body":
+        r["licensed_body"] = "LICENSED_SENTINEL"
+    elif injection == "paid_typing":
+        r["upstream_digest"]["state"] = "OK"
+        r["upstream_digest"]["exit_code"] = 0
+        r["upstream_digest"]["parse_status"] = "TYPED"
+    else:
+        r["groups"][0]["licensed_body"] = "LICENSED_SENTINEL"
+    body = {k: v for k, v in r.items() if k != "receipt_id"}
+    r["receipt_id"] = hashlib.sha256(json.dumps(
+        body, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()).hexdigest()
+    with pytest.raises(P.ReviewRefused, match="RECEIPT_INTEGRITY"):
+        P.write_receipt(r, directory=tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_writer_accepts_only_original_builder_result_not_rehashed_copy(tmp_path):
+    raw = json.loads(json.dumps(build([source()])))
+    raw["owner_decision"] = "APPROVED"
+    body = {k: v for k, v in raw.items() if k != "receipt_id"}
+    raw["receipt_id"] = hashlib.sha256(json.dumps(
+        body, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()).hexdigest()
+    with pytest.raises(P.ReviewRefused, match="RECEIPT_INTEGRITY"):
+        P.write_receipt(raw, directory=tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_writer_refuses_non_json_extra_field_with_sanitized_error(tmp_path):
+    r = build([source()])
+    r["licensed_body"] = b"PRIVATE_BYTES"
+    with pytest.raises(P.ReviewRefused, match="RECEIPT_INTEGRITY"):
+        P.write_receipt(r, directory=tmp_path)
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("injection", ["top_delivery", "nested_typing", "nested_body"])
+def test_writer_schema_rejects_even_a_newly_sealed_forged_receipt(tmp_path, injection):
+    raw = json.loads(json.dumps(build([source()])))
+    if injection == "top_delivery":
+        raw["delivery"] = "SENT_TO_OWNER"
+    elif injection == "nested_typing":
+        raw["upstream_digest"] = {"state": "OK", "exit_code": 0,
+                                  "parse_status": "TYPED"}
+    else:
+        raw["groups"][0]["licensed_body"] = "LICENSED_SENTINEL"
+    body = {k: v for k, v in raw.items() if k != "receipt_id"}
+    raw["receipt_id"] = hashlib.sha256(json.dumps(
+        body, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()).hexdigest()
+    with pytest.raises(P.ReviewRefused, match="RECEIPT_INTEGRITY"):
+        P.write_receipt(P._BuiltReceipt(raw), directory=tmp_path)
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_writer_refuses_missing_directory_and_invalid_clock(tmp_path):
