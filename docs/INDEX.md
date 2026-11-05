@@ -2,6 +2,8 @@
 
 Current event-to-owner warning acceptance: [3 November trace](beta_v2/OWNER_WARNING_GATE_2026-11-03.md). This records a manual fallback delivery and the broken local digest handoff; it does not replace the active roadmap.
 
+Reviewed inactive macro stations map (5 Nov): [conditional analyst map](research_notes/2026-11-05/macro_stations_inactive.md). This is not a live station, forecast, or owner-delivery receipt.
+
 Hundreds of markdown files live here; many are roadmaps or handoffs. A new session must
 NOT read them all. Tiers below; Optimus should embed TIER 2 and ARCHIVE for
 retrieval and load TIER 0 + the current TIER 1 verbatim.
