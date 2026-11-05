@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import socket
+import subprocess
+import sys
 
 import pytest
 
@@ -13,7 +15,7 @@ NOW = datetime(2026, 11, 5, 9, 30, tzinfo=timezone.utc)
 
 @pytest.fixture
 def paths(tmp_path, monkeypatch):
-    source = tmp_path / "source/news_corpus/google_news_rss_en_gb/2026-11-01.jsonl"
+    source = tmp_path / "repo/backend/data/optimus/news_corpus/google_news_rss_en_gb/2026-11-01.jsonl"
     source.parent.mkdir(parents=True)
     evidence = tmp_path / "evidence"
 
@@ -137,7 +139,7 @@ def test_pass_bundle_replays_after_cursor_write_failure(paths, monkeypatch):
 def test_output_inside_source_root_is_refused(paths):
     source, _ = paths
     source.write_bytes(_raw())
-    with pytest.raises(ValueError, match="ACTIVE_LEDGER_OUTPUT_REFUSED"):
+    with pytest.raises(ValueError, match="REPOSITORY_OUTPUT_REFUSED"):
         N.project_file(source, source.parents[2] / "brain/station", now=NOW)
 
 
@@ -173,3 +175,156 @@ def test_truncation_and_malformed_clock_keep_previous_cursor(paths):
     assert blocked["reason"] == "MALFORMED_CLOCK"
     assert blocked["cursor_after"] == 0
     assert blocked["blocked_row_sha256"] == hashlib.sha256(bad).hexdigest()
+
+
+@pytest.mark.parametrize("field,value", [
+    ("issuer_edges", [{"issuer": "Target", "symbol": "TGT"}]),
+    ("owner_delivery", "DELIVERED"),
+])
+def test_pending_pass_replay_refuses_forged_authority(paths, monkeypatch, field, value):
+    source, evidence = paths
+    source.write_bytes(_raw(title="Binance reported", tickers=["TGT"]))
+    original = N._atomic_json
+
+    def fail_cursor(path, body):
+        if path.parent.name == "station_cursors":
+            raise OSError("interrupted after pass commit")
+        original(path, body)
+
+    monkeypatch.setattr(N, "_atomic_json", fail_cursor)
+    with pytest.raises(OSError):
+        N.project_file(source, evidence, now=NOW)
+    monkeypatch.setattr(N, "_atomic_json", original)
+    pass_path, = (evidence / "station_passes").glob("*.json")
+    forged = json.loads(pass_path.read_bytes())
+    forged["projections"][0][field] = value
+    pass_path.write_bytes(N._json(forged))
+    blocked = N.project_file(source, evidence, now=NOW)
+    assert blocked["coverage"] == "BLOCKED" and blocked["reason"] == "PASS_REPLAY_CONFLICT"
+    assert blocked["cursor_after"] == 0
+    assert list((evidence / "station_cursors").glob("*.json")) == []
+
+
+@pytest.mark.parametrize("forge", ["skip_to_eof", "line_only", "wrong_last_pass_id"])
+def test_cursor_must_match_linked_pass_offset_and_line(paths, forge):
+    source, evidence = paths
+    source.write_bytes(_raw(title="First") + _raw(title="Second"))
+    first = N.project_file(source, evidence, max_rows=1, now=NOW)
+    cursor_path, = (evidence / "station_cursors").glob("*.json")
+    cursor = json.loads(cursor_path.read_bytes())
+    if forge == "skip_to_eof":
+        cursor["byte_offset"] = source.stat().st_size
+        cursor["line_number"] = 2
+        cursor["prefix_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
+    elif forge == "line_only":
+        cursor["line_number"] = 101
+    else:
+        cursor["last_pass_id"] = "0" * 64
+    cursor_path.write_bytes(N._json(cursor))
+    blocked = N.project_file(source, evidence, max_rows=1, now=NOW)
+    assert blocked["coverage"] == "BLOCKED" and blocked["reason"] == "COMMITTED_PASS_INVALID"
+    assert blocked["projected_rows"] == 0
+    assert len(list((evidence / "station_passes").glob("*.json"))) == 2  # original + blocked
+    assert first["line_after"] == 1
+
+
+@pytest.mark.parametrize("tamper", ["authority", "extra_field", "bool_count"])
+def test_committed_receipt_allowlist_rejects_forgery_even_with_cursor_rehash(paths, tamper):
+    source, evidence = paths
+    source.write_bytes(_raw())
+    N.project_file(source, evidence, now=NOW)
+    pass_path, = (evidence / "station_passes").glob("*.json")
+    cursor_path, = (evidence / "station_cursors").glob("*.json")
+    forged = json.loads(pass_path.read_bytes())
+    if tamper == "authority":
+        forged["projections"][0]["owner_delivery"] = "DELIVERED"
+        forged["projections"][0]["issuer_edges"] = [{"symbol": "TGT"}]
+    elif tamper == "extra_field":
+        forged["owner_delivery"] = "DELIVERED"
+    else:
+        forged["denominator"]["eligible_rows"] = True  # True == 1 in Python
+    pass_path.write_bytes(N._json(forged))
+    cursor = json.loads(cursor_path.read_bytes())
+    cursor["last_pass_sha256"] = hashlib.sha256(pass_path.read_bytes()).hexdigest()
+    cursor_path.write_bytes(N._json(cursor))
+    blocked = N.project_file(source, evidence, now=NOW)
+    assert blocked["coverage"] == "BLOCKED" and blocked["reason"] == "COMMITTED_PASS_INVALID"
+    assert blocked["projected_rows"] == 0
+
+
+def test_entire_repo_and_sibling_worktree_output_roots_are_refused(paths):
+    source, evidence = paths
+    source.write_bytes(_raw())
+    repo = source.parents[5]
+    for output in (repo / "docs/station-evidence", repo / "scripts/station-evidence"):
+        with pytest.raises(ValueError, match="REPOSITORY_OUTPUT_REFUSED"):
+            N.project_file(source, output, now=NOW)
+        assert not output.exists()
+    other = evidence.parent / "other_worktree"
+    other.mkdir()
+    (other / ".git").write_text("gitdir: external", encoding="utf-8")
+    with pytest.raises(ValueError, match="REPOSITORY_OUTPUT_REFUSED"):
+        N.project_file(source, other / "docs/station-evidence", now=NOW)
+
+
+def test_output_junction_or_symlink_component_is_refused(paths):
+    source, evidence = paths
+    source.write_bytes(_raw())
+    target = source.parents[5] / "docs"
+    target.mkdir()
+    link = evidence.parent / "linked_docs"
+    if sys.platform == "win32":
+        result = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(target)],
+                                capture_output=True, text=True, check=False)
+        if result.returncode:
+            pytest.skip("junction creation unavailable")
+    else:
+        link.symlink_to(target, target_is_directory=True)
+    with pytest.raises(ValueError, match="REPOSITORY_OUTPUT_REFUSED"):
+        N.project_file(source, link / "station-evidence", now=NOW)
+    assert not (target / "station-evidence").exists()
+
+
+def test_older_pass_forgery_cannot_hide_behind_rehashed_chain(paths):
+    source, evidence = paths
+    source.write_bytes(_raw(title="First") + _raw(title="Second") + _raw(title="Third"))
+    for _ in range(3):
+        N.project_file(source, evidence, max_rows=1, now=NOW)
+    indexed = sorted((json.loads(p.read_bytes())["cursor_before"], p)
+                     for p in (evidence / "station_passes").glob("*.json"))
+    first, second, third = [p for _, p in indexed]
+    forged = json.loads(first.read_bytes())
+    forged["projections"][0]["owner_delivery"] = "DELIVERED"
+    first.write_bytes(N._json(forged))
+    middle = json.loads(second.read_bytes())
+    middle["previous_pass_sha256"] = hashlib.sha256(first.read_bytes()).hexdigest()
+    second.write_bytes(N._json(middle))
+    last = json.loads(third.read_bytes())
+    last["previous_pass_sha256"] = hashlib.sha256(second.read_bytes()).hexdigest()
+    third.write_bytes(N._json(last))
+    cursor_path, = (evidence / "station_cursors").glob("*.json")
+    cursor = json.loads(cursor_path.read_bytes())
+    cursor["last_pass_sha256"] = hashlib.sha256(third.read_bytes()).hexdigest()
+    cursor_path.write_bytes(N._json(cursor))
+    blocked = N.project_file(source, evidence, now=NOW)
+    assert blocked["coverage"] == "BLOCKED" and blocked["reason"] == "COMMITTED_PASS_INVALID"
+    assert blocked["projected_rows"] == 0
+
+
+def test_output_subdirectory_junction_cannot_write_into_repo(paths):
+    source, evidence = paths
+    source.write_bytes(_raw())
+    evidence.mkdir()
+    target = source.parents[5] / "docs"
+    target.mkdir()
+    link = evidence / "station_passes"
+    if sys.platform == "win32":
+        result = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(target)],
+                                capture_output=True, text=True, check=False)
+        if result.returncode:
+            pytest.skip("junction creation unavailable")
+    else:
+        link.symlink_to(target, target_is_directory=True)
+    with pytest.raises(ValueError, match="REPOSITORY_OUTPUT_REFUSED"):
+        N.project_file(source, evidence, now=NOW)
+    assert list(target.glob("*.json")) == []

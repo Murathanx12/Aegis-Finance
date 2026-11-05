@@ -18,12 +18,19 @@ import time
 from uuid import uuid4
 
 SOURCE = "google_news_rss_en_gb"
-ADAPTER = "google-news-rss-metadata/1"
+ADAPTER = "google-news-rss-metadata/2"
 MAX_ROWS = 512
 MAX_SOURCE_BYTES = 4 * 1024 * 1024
 MAX_ROW_BYTES = 256 * 1024
 MAX_SECONDS = 30
+MAX_PASS_RECEIPT_BYTES = 1_048_576
+MAX_CHAIN_RECEIPT_BYTES = 4_194_304
 EMPTY_SHA = hashlib.sha256(b"").hexdigest()
+PASS_FIELDS = set("schema pass_id coverage reason source_id source_file_key source_path "
+                  "source_file_sha256 file_bytes_at_pass cursor_before cursor_after line_before "
+                  "line_after attempted_rows projected_rows blocked_row_sha256 denominator "
+                  "projection_lag_seconds projected_at claims previous_pass_id "
+                  "previous_pass_sha256 projections".split())
 
 
 def _sha(data: bytes) -> str:
@@ -52,7 +59,11 @@ def _clock(value: object, *, required: bool) -> str | None:
 
 
 def _atomic_json(path: Path, body: dict) -> None:
+    if _has_reparse(path):
+        raise ValueError("OUTPUT_REPARSE_REFUSED")
     path.parent.mkdir(parents=True, exist_ok=True)
+    if _has_reparse(path):
+        raise ValueError("OUTPUT_REPARSE_REFUSED")
     temp = path.with_name(path.name + ".tmp-" + uuid4().hex)
     try:
         with temp.open("xb") as stream:
@@ -83,10 +94,13 @@ def _has_reparse(path: Path) -> bool:
 
 
 def _load_cursor(path: Path, source_id: str, file_key: str) -> dict:
+    if _has_reparse(path):
+        raise ValueError("CURSOR_INVALID")
     if not path.exists():
         return {"schema": ADAPTER, "source_id": source_id, "source_file_key": file_key,
                 "byte_offset": 0,
-                "line_number": 0, "prefix_sha256": EMPTY_SHA, "last_pass_id": None}
+                "line_number": 0, "prefix_sha256": EMPTY_SHA, "last_pass_id": None,
+                "last_pass_sha256": None}
     if path.stat().st_size > 4096:
         raise ValueError("CURSOR_INVALID")
     try:
@@ -95,16 +109,21 @@ def _load_cursor(path: Path, source_id: str, file_key: str) -> dict:
         raise ValueError("CURSOR_INVALID") from exc
     if (not isinstance(cursor, dict)
             or set(cursor) != {"schema", "source_id", "source_file_key", "byte_offset", "line_number",
-                                   "prefix_sha256", "last_pass_id"}
+                                   "prefix_sha256", "last_pass_id", "last_pass_sha256"}
             or cursor["schema"] != ADAPTER or cursor["source_id"] != source_id
             or cursor["source_file_key"] != file_key
             or type(cursor["byte_offset"]) is not int or cursor["byte_offset"] < 0
             or type(cursor["line_number"]) is not int or cursor["line_number"] < 0
             or not isinstance(cursor["prefix_sha256"], str)
             or not re.fullmatch(r"[0-9a-f]{64}", cursor["prefix_sha256"])
-            or (cursor["last_pass_id"] is not None
-                and (not isinstance(cursor["last_pass_id"], str)
-                     or not re.fullmatch(r"[0-9a-f]{64}", cursor["last_pass_id"])))):
+            or (cursor["byte_offset"] == 0 and (cursor["line_number"] != 0
+                or cursor["prefix_sha256"] != EMPTY_SHA or cursor["last_pass_id"] is not None
+                or cursor["last_pass_sha256"] is not None))
+            or (cursor["byte_offset"] > 0 and (cursor["line_number"] == 0
+                or not isinstance(cursor["last_pass_id"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", cursor["last_pass_id"])
+                or not isinstance(cursor["last_pass_sha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", cursor["last_pass_sha256"])))):
         raise ValueError("CURSOR_INVALID")
     return cursor
 
@@ -133,6 +152,116 @@ def _projection(raw: bytes, row: dict, *, source_id: str, file_key: str, line: i
             "held_edges": [], "forecast_authority": "NONE", "owner_delivery": "NOT_ATTEMPTED"}
 
 
+def _check_committed_pass(cursor: dict, source_file: Path, output: Path,
+                          source_id: str, file_key: str, now: str) -> None:
+    """Verify the complete pinned pass chain against one bounded source prefix."""
+    if cursor["byte_offset"] == 0:
+        return
+    try:
+        chain = []
+        pass_id, pass_sha = cursor["last_pass_id"], cursor["last_pass_sha256"]
+        total_receipt_bytes = 0
+        seen = set()
+        while pass_id is not None:
+            if pass_id in seen:
+                raise ValueError("pass cycle")
+            seen.add(pass_id)
+            path = output / "station_passes" / f"{pass_id}.json"
+            if (_has_reparse(path) or not path.is_file()
+                    or path.stat().st_size > MAX_PASS_RECEIPT_BYTES):
+                raise ValueError("missing or unsafe pass")
+            raw_receipt = path.read_bytes()
+            total_receipt_bytes += len(raw_receipt)
+            if total_receipt_bytes > MAX_CHAIN_RECEIPT_BYTES or _sha(raw_receipt) != pass_sha:
+                raise ValueError("pass bytes changed or chain cap")
+            receipt = json.loads(raw_receipt)
+            if (not isinstance(receipt, dict) or raw_receipt != _json(receipt)
+                    or set(receipt) != PASS_FIELDS or receipt["pass_id"] != pass_id):
+                raise ValueError("pass encoding or fields")
+            chain.append(receipt)
+            pass_id, pass_sha = receipt["previous_pass_id"], receipt["previous_pass_sha256"]
+            if (pass_id is None) != (pass_sha is None):
+                raise ValueError("broken chain link")
+            if pass_id is not None and (not isinstance(pass_id, str)
+                    or not re.fullmatch(r"[0-9a-f]{64}", pass_id)
+                    or not isinstance(pass_sha, str)
+                    or not re.fullmatch(r"[0-9a-f]{64}", pass_sha)):
+                raise ValueError("invalid chain link")
+        chain.reverse()
+        prefix = hashlib.sha256()
+        position, line = 0, 0
+        with source_file.open("rb") as stream:
+            for receipt in chain:
+                if (receipt["schema"] != ADAPTER or receipt["coverage"] != "PARTIAL"
+                        or receipt["claims"] != "SOURCE_METADATA_ONLY;NO_ISSUER_CAUSAL_HELD_FORECAST_OWNER"
+                        or receipt["source_id"] != source_id or receipt["source_file_key"] != file_key
+                        or receipt["source_path"] != str(source_file)
+                        or receipt["blocked_row_sha256"] is not None):
+                    raise ValueError("pass authority or source")
+                start, end = receipt["cursor_before"], receipt["cursor_after"]
+                line_start, line_end = receipt["line_before"], receipt["line_after"]
+                source_size = receipt["file_bytes_at_pass"]
+                rows = receipt["projections"]
+                if (any(type(v) is not int for v in (start, end, line_start, line_end, source_size,
+                        receipt["projected_rows"], receipt["attempted_rows"]))
+                        or start != position or line_start != line
+                        or not start < end <= source_size <= MAX_SOURCE_BYTES
+                        or not isinstance(rows, list) or not 1 <= len(rows) <= MAX_ROWS
+                        or line_end - line_start != len(rows)
+                        or receipt["projected_rows"] != len(rows)
+                        or receipt["attempted_rows"] != len(rows)):
+                    raise ValueError("pass range or count")
+                old_clock = _clock(receipt["projected_at"], required=True)
+                if old_clock != receipt["projected_at"] or old_clock > now:
+                    raise ValueError("pass clock")
+                chunk_hash = hashlib.sha256()
+                lags = []
+                for number, projected in enumerate(rows, line_start + 1):
+                    if (not isinstance(projected, dict) or type(projected.get("byte_start")) is not int
+                            or type(projected.get("byte_end")) is not int
+                            or projected["byte_start"] != position
+                            or not position < projected["byte_end"] <= end
+                            or projected["byte_end"] - position > MAX_ROW_BYTES):
+                        raise ValueError("projection range")
+                    raw = stream.read(projected["byte_end"] - position)
+                    if not raw.endswith(b"\n"):
+                        raise ValueError("projection framing")
+                    expected = _projection(raw, json.loads(raw), source_id=source_id,
+                                           file_key=file_key, line=number,
+                                           start=position, end=projected["byte_end"],
+                                           projected_at=old_clock)
+                    if _json(projected) != _json(expected):
+                        raise ValueError("projection fields")
+                    prefix.update(raw)
+                    chunk_hash.update(raw)
+                    position = projected["byte_end"]
+                    lags.append(int((datetime.fromisoformat(old_clock)
+                                     - datetime.fromisoformat(expected["first_seen_at"])).total_seconds()))
+                if position != end:
+                    raise ValueError("unaccounted bytes")
+                at_eof = end == source_size
+                expected_id = _sha(f"{file_key}\0{start}\0{end}\0{chunk_hash.hexdigest()}".encode())
+                expected_denominator = {"scope": "ONE_SOURCE_FILE", "exact": at_eof,
+                                        "eligible_rows": line_end if at_eof else None,
+                                        "rows_lower_bound": line_end,
+                                        "unread_bytes_at_snapshot": source_size - end}
+                if (receipt["pass_id"] != expected_id
+                        or receipt["reason"] != ("SOURCE_FILE_AT_SNAPSHOT_EOF" if at_eof else "PASS_CAP")
+                        or _json(receipt["denominator"]) != _json(expected_denominator)
+                        or _json(receipt["projection_lag_seconds"])
+                           != _json({"min": min(lags), "max": max(lags)})
+                        or (receipt["source_file_sha256"] != prefix.hexdigest() if at_eof
+                            else receipt["source_file_sha256"] is not None)):
+                    raise ValueError("pass summary")
+                line = line_end
+        if (position != cursor["byte_offset"] or line != cursor["line_number"]
+                or prefix.hexdigest() != cursor["prefix_sha256"]
+                or chain[-1]["pass_id"] != cursor["last_pass_id"]):
+            raise ValueError("cursor offset or line")
+    except (OSError, ValueError, TypeError, KeyError, OverflowError) as exc:
+        raise ValueError("COMMITTED_PASS_INVALID") from exc
+
+
 def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_ROWS,
                  max_source_bytes: int = MAX_SOURCE_BYTES,
                  max_row_bytes: int = MAX_ROW_BYTES,
@@ -140,6 +269,9 @@ def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_R
     """Project one file. Return the same bounded summary written in the pass receipt."""
     if (not source_file.is_absolute() or not evidence_dir.is_absolute()
             or source_file.parent.name != SOURCE
+            or source_file.parents[1].name != "news_corpus"
+            or [source_file.parents[n].name.casefold() for n in (2, 3, 4)]
+               != ["optimus", "data", "backend"]
             or not re.fullmatch(r"\d{4}-\d{2}-\d{2}\.jsonl", source_file.name)
             or _has_reparse(source_file) or not source_file.is_file()
             or max_rows < 1 or max_rows > MAX_ROWS
@@ -147,9 +279,12 @@ def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_R
             or max_row_bytes < 1 or max_row_bytes > MAX_ROW_BYTES):
         raise ValueError("INVALID_SOURCE_SCOPE")
     source_root = source_file.parents[2].resolve(strict=True)
+    repo_root = source_file.parents[5].resolve(strict=True)
     output = evidence_dir.resolve(strict=False)
-    if _is_within(output, source_root) or _is_within(output, source_file.parent):
-        raise ValueError("ACTIVE_LEDGER_OUTPUT_REFUSED")
+    if (_has_reparse(evidence_dir) or _has_reparse(output / "station_passes")
+            or _has_reparse(output / "station_cursors") or _is_within(output, repo_root)
+            or any((ancestor / ".git").exists() for ancestor in (output, *output.parents))):
+        raise ValueError("REPOSITORY_OUTPUT_REFUSED")
     stamp = now or datetime.now(timezone.utc)
     if stamp.tzinfo is None:
         raise ValueError("NAIVE_PROJECTION_CLOCK")
@@ -157,7 +292,13 @@ def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_R
     source_id = SOURCE + "/" + source_file.name
     file_key = _sha((str(source_root) + "\0" + source_id).encode("utf-8"))[:24]
     cursor_path = output / "station_cursors" / f"{file_key}.json"
-    cursor = _load_cursor(cursor_path, source_id, file_key)
+    cursor_invalid = False
+    try:
+        cursor = _load_cursor(cursor_path, source_id, file_key)
+    except ValueError:
+        cursor_invalid = True
+        cursor = {"byte_offset": None, "line_number": None,
+                  "prefix_sha256": None, "last_pass_id": None, "last_pass_sha256": None}
     before = cursor["byte_offset"]
     initial_stat = source_file.stat()
     size = initial_stat.st_size
@@ -175,7 +316,7 @@ def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_R
                    "denominator": {"scope": "ONE_SOURCE_FILE", "exact": False,
                                    "eligible_rows": None,
                                    "rows_lower_bound": cursor["line_number"],
-                                   "unread_bytes_at_snapshot": max(0, size - before)},
+                                   "unread_bytes_at_snapshot": max(0, size - before) if before is not None else size},
                    "projection_lag_seconds": None, "projected_at": projected_at,
                    "claims": "SOURCE_METADATA_ONLY;NO_ISSUER_CAUSAL_HELD_FORECAST_OWNER",
                    "projections": []}
@@ -183,6 +324,8 @@ def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_R
         _atomic_json(path, receipt)
         return {key: value for key, value in receipt.items() if key != "projections"} | {"receipt_path": str(path)}
 
+    if cursor_invalid:
+        return refused("CURSOR_INVALID")
     if size > max_source_bytes:
         return refused("SOURCE_FILE_CAP")
     if size < before:
@@ -198,6 +341,10 @@ def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_R
             left -= len(chunk)
         if prefix.hexdigest() != cursor["prefix_sha256"]:
             return refused("SOURCE_PREFIX_REWRITTEN")
+        try:
+            _check_committed_pass(cursor, source_file, output, source_id, file_key, projected_at)
+        except ValueError:
+            return refused("COMMITTED_PASS_INVALID")
         projections = []
         chunk_hash = hashlib.sha256()
         while stream.tell() < size and len(projections) < max_rows:
@@ -255,23 +402,45 @@ def project_file(source_file: Path, evidence_dir: Path, *, max_rows: int = MAX_R
                "projection_lag_seconds": {"min": min(lag), "max": max(lag)} if lag else None,
                "projected_at": projected_at,
                "claims": "SOURCE_METADATA_ONLY;NO_ISSUER_CAUSAL_HELD_FORECAST_OWNER",
-               "previous_pass_id": cursor["last_pass_id"], "projections": projections}
+               "previous_pass_id": cursor["last_pass_id"],
+               "previous_pass_sha256": cursor["last_pass_sha256"],
+               "projections": projections}
     path = output / "station_passes" / f"{pass_id}.json"
+    if _has_reparse(path):
+        return refused("PASS_REPLAY_CONFLICT")
     if path.exists():
-        old = json.loads(path.read_bytes())
-        if (old.get("pass_id") != pass_id or old.get("cursor_before") != before
-                or old.get("cursor_after") != after
-                or [(p["byte_start"], p["raw_row_sha256"]) for p in old["projections"]]
-                != [(p["byte_start"], p["raw_row_sha256"]) for p in projections]):
+        try:
+            if path.stat().st_size > MAX_PASS_RECEIPT_BYTES:
+                raise ValueError("PASS_REPLAY_CONFLICT")
+            old_bytes = path.read_bytes()
+            old = json.loads(old_bytes)
+            old_clock = _clock(old.get("projected_at"), required=True)
+            if (old_clock != old.get("projected_at") or old_clock > projected_at
+                    or any(old_clock < p["first_seen_at"] for p in projections)):
+                raise ValueError("PASS_REPLAY_CONFLICT")
+            expected = json.loads(_json(receipt))
+            expected["projected_at"] = old_clock
+            for p in expected["projections"]:
+                p["projected_at"] = old_clock
+            old_stamp = datetime.fromisoformat(old_clock)
+            old_lag = [int((old_stamp - datetime.fromisoformat(p["first_seen_at"])).total_seconds())
+                       for p in expected["projections"]]
+            expected["projection_lag_seconds"] = {"min": min(old_lag), "max": max(old_lag)} if old_lag else None
+            if _json(old) != _json(expected) or old_bytes != _json(old):
+                raise ValueError("PASS_REPLAY_CONFLICT")
+        except (OSError, ValueError, TypeError, AttributeError, KeyError):
             return refused("PASS_REPLAY_CONFLICT")
         receipt = old
     else:
+        if len(_json(receipt)) > MAX_PASS_RECEIPT_BYTES:
+            return refused("PASS_RECEIPT_CAP")
         _atomic_json(path, receipt)
     if after != before:
         _atomic_json(cursor_path, {"schema": ADAPTER, "source_id": source_id,
                                    "source_file_key": file_key,
                                    "byte_offset": after, "line_number": receipt["line_after"],
-                                   "prefix_sha256": prefix.hexdigest(), "last_pass_id": pass_id})
+                                   "prefix_sha256": prefix.hexdigest(), "last_pass_id": pass_id,
+                                   "last_pass_sha256": _sha(_json(receipt))})
     return {key: value for key, value in receipt.items() if key != "projections"} | {"receipt_path": str(path)}
 
 
