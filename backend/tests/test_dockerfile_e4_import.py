@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-import re
+from fnmatch import fnmatchcase
 import shutil
 import subprocess
 import sys
@@ -12,6 +12,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCKERFILE = ROOT / "backend" / "Dockerfile"
+HELPER = "scripts/world_digest_provisional.py"
+EXACT_COPY = f"COPY {HELPER} {HELPER}"
 E4_BACKEND = (
     "backend/__init__.py",
     "backend/config.py",
@@ -23,29 +25,44 @@ E4_BACKEND = (
 )
 
 
-def _script_copies(dockerfile: str) -> set[str]:
-    scripts: set[str] = set()
-    for line in dockerfile.splitlines():
-        if not line.startswith("COPY scripts/"):
+def _context_includes(relative: str, ignore_file: Path) -> bool:
+    """Conservatively check exclusions relevant to this one copied source."""
+    if not ignore_file.exists():
+        return True
+    parts = Path(relative).parts
+    targets = ["/".join(parts[:i]) for i in range(1, len(parts) + 1)]
+    for raw in ignore_file.read_text(encoding="utf-8").splitlines():
+        pattern = raw.strip().replace("\\", "/")
+        if not pattern or pattern.startswith("#"):
             continue
-        tokens = line.split()[1:-1]
-        for token in tokens:
-            if re.fullmatch(r"scripts/[A-Za-z0-9_]+\.py", token):
-                scripts.add(token)
-    return scripts
+        if pattern.startswith("!"):
+            continue
+        pattern = pattern.strip("/")
+        if not pattern:
+            continue
+        # Reject even if a later negation might reinclude it: a future context
+        # policy change needs a fresh image-layout review.
+        if any(fnmatchcase(target, pattern) or fnmatchcase(target, f"**/{pattern}")
+               for target in targets):
+            return False
+    return True
 
 
 def test_e4_imports_from_declared_docker_layout(tmp_path: Path) -> None:
     dockerfile = DOCKERFILE.read_text(encoding="utf-8")
     assert "COPY backend/ backend/" in dockerfile
     assert "COPY engine/ engine/" in dockerfile
-    scripts = _script_copies(dockerfile)
-    assert "scripts/world_digest_provisional.py" in scripts
-    assert "scripts/current_exposure_link.py" not in scripts
-    assert "scripts/news_station_rss.py" not in scripts
+    # This regression only supports the exact one-file COPY form. A changed
+    # destination or broader COPY must be reviewed instead of silently repaired
+    # by the test fixture.
+    helper_copy_lines = [line.strip() for line in dockerfile.splitlines()
+                         if line.lstrip().startswith("COPY ") and HELPER in line]
+    assert helper_copy_lines == [EXACT_COPY]
+    assert _context_includes(HELPER, ROOT / ".dockerignore")
+    assert _context_includes(HELPER, ROOT / ".railwayignore")
 
     image = tmp_path / "app"
-    for relative in (*E4_BACKEND, *sorted(scripts)):
+    for relative in (*E4_BACKEND, HELPER):
         source = ROOT / relative
         target = image / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -76,10 +93,14 @@ def test_e4_imports_from_declared_docker_layout(tmp_path: Path) -> None:
     probe = (
         "import backend.services.owner_decision_bridge as e4\n"
         "import scripts.world_digest_provisional as hook\n"
+        "import backend.config as config\n"
+        "import backend.services.provisional_event_review as e2\n"
+        "import backend.services.owner_decision_view as view\n"
+        "import backend.services.world_digest as digest\n"
         "from pathlib import Path\n"
         "root=Path.cwd().resolve()\n"
-        "assert Path(e4.__file__).resolve().is_relative_to(root)\n"
-        "assert Path(hook.__file__).resolve().is_relative_to(root)\n"
+        "for mod in (e4, hook, config, e2, view, digest):\n"
+        "    assert Path(mod.__file__).resolve().is_relative_to(root)\n"
         "assert e4.hook is hook\n"
     )
     child = subprocess.run(
@@ -87,3 +108,14 @@ def test_e4_imports_from_declared_docker_layout(tmp_path: Path) -> None:
         capture_output=True, text=True, timeout=30, check=False,
     )
     assert child.returncode == 0, child.stderr[-1000:]
+
+    # Reproduce the original production failure with the same import probe.
+    (image / HELPER).unlink()
+    missing = subprocess.run(
+        [sys.executable, "-B", "-c", probe], cwd=image, env=env,
+        capture_output=True, text=True, timeout=30, check=False,
+    )
+    assert missing.returncode != 0
+    assert "ImportError" in missing.stderr
+    assert "world_digest_provisional" in missing.stderr
+    assert "FORBIDDEN_IMPORT_SIDE_EFFECT" not in missing.stderr
