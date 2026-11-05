@@ -123,16 +123,6 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           gap rather than quietly excused, because the whole point of this
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
-    "backend.services.owner_decision_bridge": (
-        "AWAITS -- E4 selects one hash-pinned E2 group for a read-only owner "
-        "candidate view in offline replay. It has no scheduled consumer, "
-        "portfolio action, owner send, delivery or natural decision authority. "
-        "Reclassify only after a reviewed running consumer is wired."),
-    "backend.services.owner_decision_view": (
-        "DEVELOPMENT/INACTIVE -- E3 is a bounded, read-only candidate view exercised by offline "
-        "fixtures. No scheduled consumer, forecast authority, portfolio action, "
-        "owner send or delivery is wired. Reclassify when a reviewed natural "
-        "consumer is added; a manual view is not an owner warning."),
     "backend.services.issuer_ir_probability_v0": (
         "DEVELOPMENT/INACTIVE -- pure prospective measurement preview under "
         "MEASUREMENT_ASML_IR_CURRENT_1.md, exercised by offline fixtures only. "
