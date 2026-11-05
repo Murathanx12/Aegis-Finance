@@ -1781,6 +1781,16 @@ def _case_provisional_event_review():
         ReviewRefused, "provisional review without any source item")
 
 
+def _case_owner_decision_view():
+    from pathlib import Path
+    from backend.services.owner_decision_view import ViewRefused, build_owner_decision_view
+
+    missing = Path.cwd() / "__aegis_e3_missing_pinned_receipt__"
+    return (lambda: build_owner_decision_view(
+        receipt_path=missing, receipt_sha256="0" * 64, source_pins=[]),
+        ViewRefused, "an owner candidate without a pinned E2 receipt")
+
+
 def test_news_source_validation_clock_fixture_positive_control():
     from backend.services.news_source_validation import validate_cached
 
@@ -1928,6 +1938,7 @@ CASES = {
     "news_source_validation": _case_news_source_validation,
     "news_cik_mapping": _case_news_cik_mapping,
     "provisional_event_review": _case_provisional_event_review,
+    "owner_decision_view": _case_owner_decision_view,
     "world_state": _case_world_state,
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
