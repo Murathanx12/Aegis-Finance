@@ -1771,6 +1771,16 @@ def _case_news_cik_mapping():
         MappingError, "no saved SEC master rows to derive issuer candidates")
 
 
+def _case_provisional_event_review():
+    from backend.services.provisional_event_review import ReviewRefused, build_review
+
+    return (lambda: build_review(
+        sources=[], issuer_edges=[], holdings=None,
+        review_time_utc="2026-11-05T08:00:00Z",
+        source_cutoff_utc="2026-11-03T21:00:00Z", input_complete=True),
+        ReviewRefused, "provisional review without any source item")
+
+
 def test_news_source_validation_clock_fixture_positive_control():
     from backend.services.news_source_validation import validate_cached
 
@@ -1917,6 +1927,7 @@ CASES = {
     "world_digest": _case_world_digest,
     "news_source_validation": _case_news_source_validation,
     "news_cik_mapping": _case_news_cik_mapping,
+    "provisional_event_review": _case_provisional_event_review,
     "world_state": _case_world_state,
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
