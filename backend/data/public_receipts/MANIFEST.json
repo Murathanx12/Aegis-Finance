@@ -1,9 +1,9 @@
 {
  "schema": "public_receipts/1",
- "published_utc": "2026-11-05T01:02:15+00:00",
+ "published_utc": "2026-11-06T01:01:49+00:00",
  "status": "OK",
  "why": null,
- "total_bytes": 4523479,
+ "total_bytes": 4498320,
  "max_bytes": 5000000,
  "how_public": "this folder is TRACKED; a commit of backend/data/public_receipts/ to main and its push make the pages public (publish_receipts.commit_public_receipts, the last step of the AegisDataCatalog firing; it refuses off main). Routers serve whichever of the live receipts and this copy is newer by the receipts' own stamps.",
  "sanitiser": "backend/services/legibility_sanitise.py (deny-by-default, per-page allow-list) + publish_receipts.leak_scan; each copy is a fixed point of the sanitiser",
@@ -16,25 +16,25 @@
    "sources": [
     {
      "kind": "paper_accounts_roi",
-     "file": "optimus/paper_accounts/roi_2026-11-05T000502Z.json",
-     "sha256": "0de7d2c54173c860971f536f6207971d09b1f30ff19ea7bbd04bfa6977976699",
-     "stamp_utc": "2026-11-05T00:05:02+00:00",
+     "file": "optimus/paper_accounts/roi_2026-11-06T000431Z.json",
+     "sha256": "978b890d394e393761bfd203b37abf9fa6bdf98266eb20530da9ef5f15df0ee3",
+     "stamp_utc": "2026-11-06T00:04:31+00:00",
      "role": "every book row",
      "status": "FRESH"
     },
     {
      "kind": "book_dna",
-     "file": "optimus/paper_accounts/book_dna_2026-11-05T000502Z.json",
-     "sha256": "0e06c834a40d5af23811a3fa729cb363fad51dc2f0c94517645c80f275761412",
-     "stamp_utc": "2026-11-05T00:05:10+00:00",
+     "file": "optimus/paper_accounts/book_dna_2026-11-06T000431Z.json",
+     "sha256": "98931fd6e696f6a9da141b16522d23287c16064711fa5af975c5df753a17f147",
+     "stamp_utc": "2026-11-06T00:04:40+00:00",
      "role": "labels, clusters, ex-ante bets, losers",
      "status": "FRESH"
     }
    ],
-   "sha256": "4b2aea01dea79d582f53735a5df5b02cbc1aee7e850107b4a1b9c8d4bcf21a78",
-   "bytes": 641165,
+   "sha256": "329dc028fef2a4e33704d62472676a585ed118ea4c93e06e0f5046a03bc542b2",
+   "bytes": 640412,
    "payload_status": "FRESH",
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   },
   "arena_stories": {
    "page": "/arena (decision stories)",
@@ -45,32 +45,32 @@
     {
      "kind": "decision_story",
      "file": "optimus/decision_story/stories_2026-11.jsonl",
-     "sha256": "6daa19db40d830ec8c5cae0ea2fad9c49fa1369aa7c45445060882a78e933119",
-     "stamp_utc": "2026-11-04T21:48:17+00:00",
+     "sha256": "b4003d86787e1a63792c94517038ed187b2d44de8061db30704f3a7f186fc894",
+     "stamp_utc": "2026-11-05T23:39:44+00:00",
      "role": "stories",
      "status": "FRESH"
     },
     {
      "kind": "decision_story",
      "file": "optimus/decision_story/alternatives_2026-11.jsonl",
-     "sha256": "8433459a60266656309c4fdb3e39832ce97a30704217119c5f1c78269e61e01b",
-     "stamp_utc": "2026-11-04T21:48:17+00:00",
+     "sha256": "1bbdde4083b208cccb1d7e92c00d606c19b04cb664d625aff705da89b88022e7",
+     "stamp_utc": "2026-11-05T23:39:44+00:00",
      "role": "alternatives",
      "status": "FRESH"
     },
     {
      "kind": "regret",
-     "file": "optimus/decision_story/regret/regret_20261105T000220Z_cd3af2.json",
-     "sha256": "6b58d12e56820f1dc14cd24757cdb051bbd93ce2877822dc02fd3217463acf5f",
-     "stamp_utc": "2026-11-05T00:00:00+00:00",
+     "file": "optimus/decision_story/regret/regret_20261106T000149Z_7c4060.json",
+     "sha256": "058fb887ea26a52b6665af4120ba859204df4eada54ba5e08045543e94cfd619",
+     "stamp_utc": "2026-11-06T00:00:00+00:00",
      "role": "h5 regret table",
      "status": "FRESH"
     }
    ],
-   "sha256": "58a08744baa30840cdc51a23349e5b43368fd8c248819dfd19561d10f21a236b",
-   "bytes": 644649,
+   "sha256": "4e81bf0c435980cb25f8487e5a7a2cd842323809612494fd201113549377c9a6",
+   "bytes": 623785,
    "payload_status": "FRESH",
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   },
   "forecast_lab": {
    "page": "/forecast-lab",
@@ -88,25 +88,25 @@
     },
     {
      "kind": "learning_report",
-     "file": "optimus/learning_reports/report_2026-11-04.json",
-     "sha256": "2fac68468c07cb04d1c9cf7b70c3c34e73e99b71a549524c2da8301d24d16f79",
-     "stamp_utc": "2026-11-04T22:13:37+00:00",
+     "file": "optimus/learning_reports/report_2026-11-05.json",
+     "sha256": "ec29c9614647c55ede75ff790d116d27ed072b412aef465bc8e0f41adb3e5ff1",
+     "stamp_utc": "2026-11-05T23:45:03+00:00",
      "role": "sigma prior, closing lines",
      "status": "FRESH"
     },
     {
      "kind": "grade_forecasts",
-     "file": "optimus/night_factory_2026-11-05/grade_forecasts_2026-11-05.json",
-     "sha256": "c0d0b43702b01f1885b48fc6a01491f72d8e3aa9c8a2a7865c7175f9a11527c8",
-     "stamp_utc": "2026-11-05T00:02:19+00:00",
+     "file": "optimus/night_factory_2026-11-06/grade_forecasts_2026-11-06.json",
+     "sha256": "5200da6b4051ed95e08c6a83e5b4779ed4f4c36f995f49ab3dfce7e867bd2d84",
+     "stamp_utc": "2026-11-06T00:01:48+00:00",
      "role": "ledger headline",
      "status": "FRESH"
     },
     {
      "kind": "nn_lab_nightly",
-     "file": "optimus/nn_lab/receipts/nightly_20261105T003003Z.json",
-     "sha256": "95ed3c4c67104315ef2b96640be821dafd7434eb7fb790451c2dad7acf393050",
-     "stamp_utc": "2026-11-05T00:31:26+00:00",
+     "file": "optimus/nn_lab/receipts/nightly_20261106T003003Z.json",
+     "sha256": "efb5fb83b9df005f8e471fa6a698e14e867b53b9afd05bfc9e2ad172375fae75",
+     "stamp_utc": "2026-11-06T00:32:10+00:00",
      "role": "tournament rule, trust",
      "status": "FRESH"
     },
@@ -143,10 +143,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "a8f5033683cd4d733c9166b41f7c197a373dea4ece4ab7d26c83dc9fbb0d3947",
-   "bytes": 86292,
+   "sha256": "bd19868ed2042d19a4573dc1cdc6c90b52ad4dc1ee7e0a3cc2ac00cb0605d16c",
+   "bytes": 86339,
    "payload_status": "STALE",
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   },
   "theory_lab_sticky": {
    "page": "/theory-lab?board=sticky",
@@ -168,7 +168,7 @@
      "sha256": "f1ccc921409a9ea05312b37be806bf34b9f93b3212fc73661c1d9dfd9fad2466",
      "stamp_utc": "2026-10-06T19:05:33+00:00",
      "role": "sticky board summary",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -176,7 +176,7 @@
      "sha256": "2258b4189885d6a867361a1f88b033799c51c3f5ff06d5e5c3b3cf3bc7092cfb",
      "stamp_utc": "2026-10-06T19:05:33+00:00",
      "role": "sticky board rows",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -184,7 +184,7 @@
      "sha256": "4d353db04d86c897ffe49c2ebd3a78bb1469d5750c3b13358449c58abe9a1fe1",
      "stamp_utc": "2026-10-06T23:50:32+00:00",
      "role": "row supersessions",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -192,7 +192,7 @@
      "sha256": "1bd969e68990381baf6db2654ecfdab0a4a6d67bc6f7971c172b64fcebcce0e0",
      "stamp_utc": "2026-10-06T19:08:27+00:00",
      "role": "supplement STK_2026-10-07_3",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -200,7 +200,7 @@
      "sha256": "ec94eddb5250e60e562730120577a164a8acefe47750c3be847ebab2e8869350",
      "stamp_utc": "2026-10-06T18:27:53+00:00",
      "role": "basket board summary",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -208,7 +208,7 @@
      "sha256": "6a097b58a9d1d3e69b67b2e28723140833e604eaa5bd3a96dd5b5f43e927a3e5",
      "stamp_utc": "2026-10-06T18:27:53+00:00",
      "role": "basket board rows",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -216,7 +216,7 @@
      "sha256": "4d353db04d86c897ffe49c2ebd3a78bb1469d5750c3b13358449c58abe9a1fe1",
      "stamp_utc": "2026-10-06T23:50:32+00:00",
      "role": "row supersessions",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -224,7 +224,7 @@
      "sha256": "8cce0a3b38fdb1ff68ebe43e65b659bb3c750fae5d50739024a4eb44c9ae0db8",
      "stamp_utc": "2026-10-06T19:07:48+00:00",
      "role": "supplement FT_2026-10-07_2",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "handoff_doc",
@@ -235,10 +235,10 @@
      "status": "STALE"
     }
    ],
-   "sha256": "1698365b74ec492448e4e3dabcee1d8fbf4ae2975d96759e06c202b1fb2020f7",
-   "bytes": 657583,
+   "sha256": "26c9f594723c257f3bda2d0450e6131fb05b121caa5a20581c994feea003fc0a",
+   "bytes": 657657,
    "payload_status": "STALE",
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   },
   "theory_lab_basket": {
    "page": "/theory-lab?board=basket",
@@ -260,7 +260,7 @@
      "sha256": "f1ccc921409a9ea05312b37be806bf34b9f93b3212fc73661c1d9dfd9fad2466",
      "stamp_utc": "2026-10-06T19:05:33+00:00",
      "role": "sticky board summary",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -268,7 +268,7 @@
      "sha256": "2258b4189885d6a867361a1f88b033799c51c3f5ff06d5e5c3b3cf3bc7092cfb",
      "stamp_utc": "2026-10-06T19:05:33+00:00",
      "role": "sticky board rows",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -276,7 +276,7 @@
      "sha256": "4d353db04d86c897ffe49c2ebd3a78bb1469d5750c3b13358449c58abe9a1fe1",
      "stamp_utc": "2026-10-06T23:50:32+00:00",
      "role": "row supersessions",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -284,7 +284,7 @@
      "sha256": "1bd969e68990381baf6db2654ecfdab0a4a6d67bc6f7971c172b64fcebcce0e0",
      "stamp_utc": "2026-10-06T19:08:27+00:00",
      "role": "supplement STK_2026-10-07_3",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -292,7 +292,7 @@
      "sha256": "ec94eddb5250e60e562730120577a164a8acefe47750c3be847ebab2e8869350",
      "stamp_utc": "2026-10-06T18:27:53+00:00",
      "role": "basket board summary",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -300,7 +300,7 @@
      "sha256": "6a097b58a9d1d3e69b67b2e28723140833e604eaa5bd3a96dd5b5f43e927a3e5",
      "stamp_utc": "2026-10-06T18:27:53+00:00",
      "role": "basket board rows",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -308,7 +308,7 @@
      "sha256": "4d353db04d86c897ffe49c2ebd3a78bb1469d5750c3b13358449c58abe9a1fe1",
      "stamp_utc": "2026-10-06T23:50:32+00:00",
      "role": "row supersessions",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "twin_board",
@@ -316,7 +316,7 @@
      "sha256": "8cce0a3b38fdb1ff68ebe43e65b659bb3c750fae5d50739024a4eb44c9ae0db8",
      "stamp_utc": "2026-10-06T19:07:48+00:00",
      "role": "supplement FT_2026-10-07_2",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "handoff_doc",
@@ -327,10 +327,10 @@
      "status": "STALE"
     }
    ],
-   "sha256": "e288f2ba20c8965e654f6aa5d6d3e217112d8983e19fc11ba180890bc40bf92a",
-   "bytes": 659113,
+   "sha256": "ff47a8e3380cd0f209c56d527de30ccc8f312a4891012472fed4825ae5f1ae77",
+   "bytes": 659187,
    "payload_status": "STALE",
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   },
   "system_health": {
    "page": "/health",
@@ -340,17 +340,17 @@
    "sources": [
     {
      "kind": "system_health",
-     "file": "optimus/health/health_20261105T000537Z.json",
-     "sha256": "52dcc4f9511003b5bdd957fb103b956235b70039b2115a577964cc30e763fe1a",
-     "stamp_utc": "2026-11-05T00:05:37+00:00",
+     "file": "optimus/health/health_20261106T000503Z.json",
+     "sha256": "2622f8f1e8dbaa46d6d189552ff45dafbf77a803e69deef2dce02893ce1b33fa",
+     "stamp_utc": "2026-11-06T00:05:03+00:00",
      "role": "every row",
      "status": "FRESH"
     }
    ],
-   "sha256": "ecde2b32fa654a6db797441e6bf0294bc6e0e3494998b71ce54dcdad3f4e3ddf",
-   "bytes": 94046,
+   "sha256": "80016411db1140597ae70ed6bb7215dae09d83fdf89b6de5bc4a6a90b8d5ecf1",
+   "bytes": 93846,
    "payload_status": "FRESH",
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   },
   "opportunities": {
    "page": "/opportunities",
@@ -360,17 +360,17 @@
    "sources": [
     {
      "kind": "opportunities",
-     "file": "optimus/opportunities/opportunities_2026-11-05_20261105T010146Z.json",
-     "sha256": "fae7dcc568ecaba0cd8cba4aac0a7d1b468b94c19c56d7a8a716efac091f9bc9",
-     "stamp_utc": "2026-11-05T01:01:46+00:00",
+     "file": "optimus/opportunities/opportunities_2026-11-06_20261106T010125Z.json",
+     "sha256": "a4696bbce32d18441826578b25635883b199e170b798b9ef6336bf3f2a6405d7",
+     "stamp_utc": "2026-11-06T01:01:25+00:00",
      "role": "every row",
      "status": null
     }
    ],
-   "sha256": "0e71713660c4615abbc53217a355d3ce3fdd9507ac69302452d93d1b796040bb",
-   "bytes": 1698652,
+   "sha256": "c4282fa841d3b2082cbce5a505c16b0b7040fcf46ef001a717fa9e60f06986d3",
+   "bytes": 1695120,
    "payload_status": null,
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   },
   "brain": {
    "page": "/brain",
@@ -411,10 +411,10 @@
      "status": "STALE"
     }
    ],
-   "sha256": "b9d05d6d1bea2bb9a16aecd448092d62e639738840388df4070b952269e27b22",
-   "bytes": 41979,
+   "sha256": "dc6f09d076042c4b02ec1ca5175e1cff05f7be24e632de7a1f8e8aa79bc60686",
+   "bytes": 41974,
    "payload_status": "STALE",
-   "published_utc": "2026-11-05T01:02:15+00:00"
+   "published_utc": "2026-11-06T01:01:49+00:00"
   }
  },
  "published": [
