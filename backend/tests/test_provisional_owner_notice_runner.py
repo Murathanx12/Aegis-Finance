@@ -184,6 +184,8 @@ def test_missing_or_unsupported_real_send_grant_never_dispatches(delivery,field,
 
 def test_repository_or_corpus_journal_is_refused(delivery):
     delivery['journal']=delivery['kw']['corpus_root']
+    # Qualify journal privacy first so POSIX reaches the source-output guard.
+    delivery['journal'].chmod(0o700)
     before=list(delivery['journal'].rglob('*'))
     with pytest.raises(N.NoticeRefused,match='SOURCE_OUTPUT_REFUSED'):run(delivery)
     assert before==list(delivery['journal'].rglob('*'))
