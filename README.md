@@ -18,7 +18,7 @@
   <img alt="Python" src="https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="Next.js" src="https://img.shields.io/badge/next.js-16-000000?style=flat-square&logo=nextdotjs">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-backend-009688?style=flat-square&logo=fastapi&logoColor=white">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License: All rights reserved" src="https://img.shields.io/badge/license-all%20rights%20reserved-red?style=flat-square"></a>
 </p>
 
 <!-- results-panel:start -->
@@ -672,7 +672,7 @@ Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). One house rule
 
 ## License
 
-[MIT](LICENSE)
+**All rights reserved** — see [LICENSE](LICENSE). This repository is public for transparency and review only; it is not open source, and no copying, reuse, redistribution or model training is permitted without written permission. Versions published before this change were MIT-licensed.
 
 ---
 
