@@ -1,9 +1,9 @@
 {
  "schema": "public_receipts/1",
- "published_utc": "2026-11-07T06:13:01+00:00",
+ "published_utc": "2026-11-08T01:02:17+00:00",
  "status": "OK",
  "why": null,
- "total_bytes": 4492456,
+ "total_bytes": 4492724,
  "max_bytes": 5000000,
  "how_public": "this folder is TRACKED; a commit of backend/data/public_receipts/ to main and its push make the pages public (publish_receipts.commit_public_receipts, the last step of the AegisDataCatalog firing; it refuses off main). Routers serve whichever of the live receipts and this copy is newer by the receipts' own stamps.",
  "sanitiser": "backend/services/legibility_sanitise.py (deny-by-default, per-page allow-list) + publish_receipts.leak_scan; each copy is a fixed point of the sanitiser",
@@ -20,7 +20,7 @@
      "sha256": "978b890d394e393761bfd203b37abf9fa6bdf98266eb20530da9ef5f15df0ee3",
      "stamp_utc": "2026-11-06T00:04:31+00:00",
      "role": "every book row",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "book_dna",
@@ -28,13 +28,13 @@
      "sha256": "98931fd6e696f6a9da141b16522d23287c16064711fa5af975c5df753a17f147",
      "stamp_utc": "2026-11-06T00:04:40+00:00",
      "role": "labels, clusters, ex-ante bets, losers",
-     "status": "FRESH"
+     "status": "STALE"
     }
    ],
-   "sha256": "f8537a838fa38719cee84d7dc068c911d9f448ba715c12f91f8286b7e23fae72",
-   "bytes": 640414,
-   "payload_status": "FRESH",
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "sha256": "65aeebb6fa12e3fd829c3c61bf2f86efa540892560fc00781331061213fc3054",
+   "bytes": 640430,
+   "payload_status": "STALE",
+   "published_utc": "2026-11-08T01:02:17+00:00"
   },
   "arena_stories": {
    "page": "/arena (decision stories)",
@@ -48,7 +48,7 @@
      "sha256": "b4003d86787e1a63792c94517038ed187b2d44de8061db30704f3a7f186fc894",
      "stamp_utc": "2026-11-05T23:39:44+00:00",
      "role": "stories",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "decision_story",
@@ -56,7 +56,7 @@
      "sha256": "1bbdde4083b208cccb1d7e92c00d606c19b04cb664d625aff705da89b88022e7",
      "stamp_utc": "2026-11-05T23:39:44+00:00",
      "role": "alternatives",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "regret",
@@ -64,13 +64,13 @@
      "sha256": "058fb887ea26a52b6665af4120ba859204df4eada54ba5e08045543e94cfd619",
      "stamp_utc": "2026-11-06T00:00:00+00:00",
      "role": "h5 regret table",
-     "status": "FRESH"
+     "status": "STALE"
     }
    ],
-   "sha256": "5bae97aa49cfacbabe39f44497620781780207422d704f5f4c35dd2cb4ab2819",
-   "bytes": 623791,
-   "payload_status": "FRESH",
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "sha256": "e070502faed0b77fd33437592f4848f0a2d0273be81d6365d99d701a9243c0ae",
+   "bytes": 623815,
+   "payload_status": "STALE",
+   "published_utc": "2026-11-08T01:02:17+00:00"
   },
   "forecast_lab": {
    "page": "/forecast-lab",
@@ -92,7 +92,7 @@
      "sha256": "ec29c9614647c55ede75ff790d116d27ed072b412aef465bc8e0f41adb3e5ff1",
      "stamp_utc": "2026-11-05T23:45:03+00:00",
      "role": "sigma prior, closing lines",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "grade_forecasts",
@@ -100,13 +100,13 @@
      "sha256": "5200da6b4051ed95e08c6a83e5b4779ed4f4c36f995f49ab3dfce7e867bd2d84",
      "stamp_utc": "2026-11-06T00:01:48+00:00",
      "role": "ledger headline",
-     "status": "FRESH"
+     "status": "STALE"
     },
     {
      "kind": "nn_lab_nightly",
-     "file": "optimus/nn_lab/receipts/nightly_20261107T055740Z.json",
-     "sha256": "3a12e5d8b4d58cf246269ea7bc38e37e34dd86d781358c91bce952cc44c41c18",
-     "stamp_utc": "2026-11-07T06:02:20+00:00",
+     "file": "optimus/nn_lab/receipts/nightly_20261108T003004Z.json",
+     "sha256": "d4c2527a997fb78d0c75ce15d5bc0ea906905b4ef8fcdba3c7c913d4024711c2",
+     "stamp_utc": "2026-11-08T00:31:45+00:00",
      "role": "tournament rule, trust",
      "status": "FRESH"
     },
@@ -143,10 +143,10 @@
      "status": "FRESH"
     }
    ],
-   "sha256": "2fa6e25da4723db1f7366dd8a1cd34c9fcb4b671d47bff3f259d830c7e8e2851",
-   "bytes": 86300,
+   "sha256": "36a973329fb0f122d0b131f280cdba3541dc9b57b49b5851c1adf932d34cdc1a",
+   "bytes": 86318,
    "payload_status": "STALE",
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "published_utc": "2026-11-08T01:02:17+00:00"
   },
   "theory_lab_sticky": {
    "page": "/theory-lab?board=sticky",
@@ -235,10 +235,10 @@
      "status": "STALE"
     }
    ],
-   "sha256": "3aa42b968776c4cab7073f3fa65488dd68cf82ee49733b931626d1300b720206",
-   "bytes": 657657,
+   "sha256": "9d574b3e6ae3645ccc83c939ed180628bac999e6f260b9f287d2c4e057594cc8",
+   "bytes": 657655,
    "payload_status": "STALE",
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "published_utc": "2026-11-08T01:02:17+00:00"
   },
   "theory_lab_basket": {
    "page": "/theory-lab?board=basket",
@@ -327,10 +327,10 @@
      "status": "STALE"
     }
    ],
-   "sha256": "020630d01337d8ce16cd2dc440686db91bc25a52384e31581b6aa45517831c56",
-   "bytes": 659187,
+   "sha256": "b07f81c2740e51ec37efe7201bbb1ff2c1c367674248a0211e9c17c4ee50f6f5",
+   "bytes": 659185,
    "payload_status": "STALE",
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "published_utc": "2026-11-08T01:02:17+00:00"
   },
   "system_health": {
    "page": "/health",
@@ -347,10 +347,10 @@
      "status": "STALE"
     }
    ],
-   "sha256": "7847fa7081761d4b2c7dbabb9f4d8b1a7e2e7218460aa507e369a0ce6d79153b",
-   "bytes": 89713,
+   "sha256": "dc62c5b05a2bba5db9cf3ad78e903c0f0bde9eee5814e8b1838497f8c58068fd",
+   "bytes": 89712,
    "payload_status": "STALE",
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "published_utc": "2026-11-08T01:02:17+00:00"
   },
   "opportunities": {
    "page": "/opportunities",
@@ -360,17 +360,17 @@
    "sources": [
     {
      "kind": "opportunities",
-     "file": "optimus/opportunities/opportunities_2026-11-07_20261107T061125Z.json",
-     "sha256": "0139281f315a44405e127d9db1eafc3324db7beb9f725f106b9b9462c354e568",
-     "stamp_utc": "2026-11-07T06:11:25+00:00",
+     "file": "optimus/opportunities/opportunities_2026-11-08_20261108T010147Z.json",
+     "sha256": "e994953957281444be608d9a4148c8a8fbeeb44cdc96fc019ea9a7d323356fe5",
+     "stamp_utc": "2026-11-08T01:01:47+00:00",
      "role": "every row",
      "status": null
     }
    ],
-   "sha256": "6030fc4d9b15343abb3ae74524a47ce6c452aa5a5c626e705e18688c29266ddb",
-   "bytes": 1693419,
+   "sha256": "7f406cd650a9ad9283e528e34de7df650e348600e508919e3900664d6b3da667",
+   "bytes": 1693615,
    "payload_status": null,
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "published_utc": "2026-11-08T01:02:17+00:00"
   },
   "brain": {
    "page": "/brain",
@@ -411,10 +411,10 @@
      "status": "STALE"
     }
    ],
-   "sha256": "33fb0ad6aa6fdbd7fcf014e32275a9503a8cebf612bf38649937ed400acdeebe",
-   "bytes": 41975,
+   "sha256": "7aea29ad4930a8f20704077ab5d79528b9ce55cafe08cf37919ef70c2acac047",
+   "bytes": 41994,
    "payload_status": "STALE",
-   "published_utc": "2026-11-07T06:13:01+00:00"
+   "published_utc": "2026-11-08T01:02:17+00:00"
   }
  },
  "published": [
