@@ -78,8 +78,9 @@ The active roadmap remains the same §5c file; checkpoints are not completion.
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
 
-**Current (adopted 2026-11-09, session S63):**
-[ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md](ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md):
+**THE roadmap (single, living, modular, universe-centred; adopted 2026-11-09, S63):**
+[ROADMAP.md](ROADMAP.md). It is never replaced by a dated file, only amended in place
+(`backend/tests/test_single_roadmap.py` enforces it). Its first block is:
 restore what worked (learning system blocked by the budget guard since 10-15, runtime
 not a commit, books idle, reader down), then the truth pass, then the owner's
 most-repeated asks (news → universe → books, branching, six mandates, Asia-first universe,

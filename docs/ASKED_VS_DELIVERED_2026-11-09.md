@@ -634,4 +634,4 @@ Steps:
 
 ---
 
-The roadmap that acts on this audit is `ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md` (TIER 1).
+The roadmap that acts on this audit is `ROADMAP.md` (TIER 1).

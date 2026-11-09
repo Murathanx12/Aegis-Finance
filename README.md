@@ -5,7 +5,7 @@
 <h1 align="center">Aegis Finance</h1>
 
 <p align="center">
-  <b>Auditable AI investment intelligence</b> — open source, paper only, a receipt behind every headline number.<br>
+  <b>Auditable AI investment intelligence</b> — source-visible (all rights reserved), paper only, a receipt behind every headline number.<br>
   It writes down what it believes before an outcome exists, grades every belief against what then happens,
   and lets only graded beliefs change how paper capital is sized.
 </p>
@@ -28,7 +28,7 @@
 <p align="center"><sub>Every number on both pictures is read from a committed receipt (<code>docs/assets/public_results_2026-10-11T235329Z.json</code>) and every stage names the code that runs it; <code>backend/tests/test_public_assets.py</code> fails if either stops being true. The motion version is <a href="docs/design/aegis_front_page.html"><code>docs/design/aegis_front_page.html</code></a>; the design record is <a href="docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md"><code>docs/design/AEGIS_VISUAL_LANGUAGE_2026-10-07.md</code></a>.</sub></p>
 <!-- results-panel:end -->
 
-Aegis Finance is a free, open-source **self-improving investment intelligence
+Aegis Finance is a **self-improving investment intelligence
 system** that measures itself in public and tells you when it is wrong. Its
 objective is compound return under explicit survival constraints — not
 classification accuracy, not a pretty backtest — and it searches the *whole*

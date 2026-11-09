@@ -9,7 +9,8 @@
 > continual outcome feedback.
 
 Three deliverables from one system: Murat's own capital · a public, source-visible
-(**All Rights Reserved** since 2026-11-09, not open source) tool others can inspect · an HKU paper if a novel and
+(**All Rights Reserved** since 2026-11-09, not open source) tool others can USE (hosted); the source code and research stay protected, and the end state is a private
+source repo (OD-9) · an HKU paper if a novel and
 defensible result emerges.
 
 Five rules that follow, and that override habits formed before them:
@@ -38,7 +39,8 @@ verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
 
 ## STATE AT 2026-11-09 (S63) — READ THIS BLOCK FIRST
 
-- **TIER 1 is `docs/ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md`.** Evidence:
+- **There is ONE roadmap: `docs/ROADMAP.md`** (modules M0–M6 around the universe hub; amend it in
+  place, never create a dated roadmap/sprint/plan file; `test_single_roadmap.py` fails if you do). Evidence:
   `docs/ASKED_VS_DELIVERED_2026-11-09.md` (every owner message Sep 4 → Nov 8, statuses
   adversarially verified). Claim work in `docs/WORK_LEDGER.md` before editing; one writer per file.
 - **The owner switched Claude → Codex 10-08 and back on 11-08.** The Codex month produced

@@ -7,7 +7,7 @@ Machine-readable web surface: `frontend/public/llms.txt`.
 
 ## Read these before changing anything
 
-0. **`docs/ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md`** (the one TIER 1 roadmap) and
+0. **`docs/ROADMAP.md`** (THE single roadmap; amend it in place, never add a dated plan file) and
    **`docs/WORK_LEDGER.md`**: claim a chunk and its files there before editing; one writer per
    file across Claude, Codex and subagents. Owner rule (2026-11-08): **fix systems in place,
    never rebuild from the ground up**; at most 5 worktrees, each removed on merge; no PDF or

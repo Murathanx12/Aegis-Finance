@@ -23,8 +23,10 @@ to conclude that nothing works.
 
 1. **Murat's own capital** — genuinely useful for making money and managing a
    real portfolio, at an aggressive utility function of his choosing.
-2. **A public open-source system** other people can run on their own portfolios,
-   at their own utility function. His personality is not the product's default.
+2. **A public, accessible tool** other people can use on their own portfolios,
+   at their own utility function. *(Amended 2026-11-09: the tool is public and hosted;
+   the source code and research are protected, All Rights Reserved, because AI
+   replication is a real risk. See `ROADMAP.md` §1.)* His personality is not the product's default.
 3. **A research paper** through HKU, *if* the work produces a novel and
    defensible result. Not a reason to overclaim; a reason to aim high.
 
