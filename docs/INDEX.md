@@ -78,7 +78,17 @@ The active roadmap remains the same §5c file; checkpoints are not completion.
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
 
-**Current execution order (owner adopted October 11):**
+**Current (adopted 2026-11-09, session S63):**
+[ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md](ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md):
+restore what worked (learning system blocked by the budget guard since 10-15, runtime
+not a commit, books idle, reader down), then the truth pass, then the owner's
+most-repeated asks (news → universe → books, branching, six mandates, Asia-first universe,
+a short/hedge leg). Evidence: [ASKED_VS_DELIVERED_2026-11-09.md](ASKED_VS_DELIVERED_2026-11-09.md)
+(all 423 owner messages audited). Claims: [WORK_LEDGER.md](WORK_LEDGER.md) (one writer per file).
+The Codex 11-06 HTML plans (`Downloads/codex handoff/`) and the unmerged Beta V2 registry are
+inputs to it, not competing plans.
+
+**Superseded 2026-11-09 — previous execution order (owner adopted October 11):**
 [AEGIS_BETA_V1_BUILD_SPRINT_2026-10-11.md](AEGIS_BETA_V1_BUILD_SPRINT_2026-10-11.md).
 This 8–12 hour implementation sprint orders the existing Beta roadmap: intentional
 OpenClaw/local-inference pause, admissible weight consumers, measured replay, and a

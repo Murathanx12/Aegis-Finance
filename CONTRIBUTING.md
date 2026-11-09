@@ -1,6 +1,6 @@
 # Contributing to Aegis Finance
 
-Thanks for your interest in contributing! Aegis Finance is an open-source market intelligence platform — contributions of all kinds are welcome.
+Thanks for your interest. Aegis Finance is **source-visible, not open source**: since 2026-11-09 it is licensed All Rights Reserved (see [LICENSE](LICENSE)). Issues and suggestions are welcome; code contributions are accepted only by prior agreement with the owner, and by submitting one you agree it may be used under the repository's license.
 
 ## Getting Started
 

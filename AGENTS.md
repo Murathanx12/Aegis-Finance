@@ -7,6 +7,13 @@ Machine-readable web surface: `frontend/public/llms.txt`.
 
 ## Read these before changing anything
 
+0. **`docs/ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md`** (the one TIER 1 roadmap) and
+   **`docs/WORK_LEDGER.md`**: claim a chunk and its files there before editing; one writer per
+   file across Claude, Codex and subagents. Owner rule (2026-11-08): **fix systems in place,
+   never rebuild from the ground up**; at most 5 worktrees, each removed on merge; no PDF or
+   handoff per chunk; a new guard must cite the failure that requires it, and its refusal
+   must exit non-zero.
+
 1. **`CLAUDE.md`** — build/test commands, tech stack, repo layout, DO/DO-NOT
    rules. Applies to all agents, not just Claude.
 2. **`docs/CANON.md`** — the non-negotiable guardrails. The short version:
@@ -20,7 +27,7 @@ Machine-readable web surface: `frontend/public/llms.txt`.
 
 | You want | Go to |
 |---|---|
-| Web app (Next.js 14) | `frontend/` — deployed on Vercel |
+| Web app (Next.js 16, React 19) | `frontend/` — deployed on Vercel |
 | API (FastAPI, 130+ endpoints) | `backend/` — deployed on Railway |
 | Offline research/training | `engine/` |
 | Pre-registered trials | `docs/TRIALS/` + `docs/CANON.md` §6 |

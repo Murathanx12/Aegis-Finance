@@ -8,8 +8,8 @@
 > internet-scale information, observed expert behaviour, simulation, and
 > continual outcome feedback.
 
-Three deliverables from one system: Murat's own capital · a public open-source
-tool others run at *their* utility function · an HKU paper if a novel and
+Three deliverables from one system: Murat's own capital · a public, source-visible
+(**All Rights Reserved** since 2026-11-09, not open source) tool others can inspect · an HKU paper if a novel and
 defensible result emerges.
 
 Five rules that follow, and that override habits formed before them:
@@ -35,6 +35,32 @@ nonsense — not to conclude that nothing works. Correspondingly: a negative
 result requires evidence just as a positive one does, and **a global negative
 does not answer a conditional question that was never asked** (scope-aware
 verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
+
+## STATE AT 2026-11-09 (S63) — READ THIS BLOCK FIRST
+
+- **TIER 1 is `docs/ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md`.** Evidence:
+  `docs/ASKED_VS_DELIVERED_2026-11-09.md` (every owner message Sep 4 → Nov 8, statuses
+  adversarially verified). Claim work in `docs/WORK_LEDGER.md` before editing; one writer per file.
+- **The owner switched Claude → Codex 10-08 and back on 11-08.** The Codex month produced
+  ~205 commits with zero strategy/backtest subjects, 141 stranded commits and 121 worktrees.
+  The owner's rule since then: **restore what worked, never rebuild a system from the ground up;
+  one roadmap, chunked, executed by agents with adversarial review.**
+- **The learning system has been silently blocked since 10-15** by `provider_budget.py`
+  (on main: `7f8869a8`, `6b75aee6`): no envelope file → DeepSeek refused → world digest 0 typed
+  rows, IIF-1 VOID, hyp_lab BUDGET_REFUSED, learner 0 rules, while most tasks report rc 0.
+  Unblocking is owner decision OD-2 plus a code change. **A guard's refusal must be a red, non-zero exit.**
+- **A pause carries an expiry.** A 30-minute pause of always_on_lab (09-27) became a five-week
+  shutdown through a persistent `always_on_lab_OFF` marker that misattributes it to the owner.
+- **The runtime is not a commit.** Scheduled tasks run from this checkout on `wip/2026-10-07-day`
+  (255 behind main, ~4.4k dirty paths, imports untracked modules) and from `aegis-recovery-evidence/`.
+  Never reset/stash/checkout/clean it; `predictions.jsonl` (121 MB) is rewritten in place.
+  Write docs from a sparse worktree of origin/main (`git worktree add --no-checkout` +
+  `sparse-checkout`; in Git Bash set `MSYS_NO_PATHCONV=1` or `/` patterns become Windows paths).
+- **GitHub:** the repo was made private ~10-11 and the free 2,000 Actions minutes ran out
+  (backend CI ~20 min/run, Codex PR churn). It is **public again**. **License changed MIT → All Rights
+  Reserved** (`cd0b1d59`); vendored MIT code keeps its notices. Do not go private again without trimming CI.
+  A self-hosted runner on a public repo is refused (fork PRs would run on the key-holding PC).
+- **Contest ends 2026-11-13** (`scripts/contest_calendar.py`); the blocker is converting `wlsemb.pdf` to CSV (CH-00).
 
 ## READ `docs/INDEX.md` FIRST (2026-08-28) — and the VISION file
 
@@ -161,7 +187,7 @@ Commits move between repos only by hand. A hash quoted in a handoff belongs to
 the repo the handoff lives in. `docs/HANDOFF.md` does NOT exist here, on purpose.
 
 
-This repo is **Aegis-Finance** (`github.com/Murathanx12/Aegis-Finance`, public):
+This repo is **Aegis-Finance** (`github.com/Murathanx12/Aegis-Finance`, public, All Rights Reserved since 2026-11-09):
 the research programme, the farm, the website, the brain.
 
 The **Alpaca hackathon agent is a SEPARATE repo** — `aegis-alpha-terminal` locally,
@@ -356,6 +382,11 @@ execution drag · LLM spend and cost per gradeable output.
 failure shows it is necessary.
 
 ## THE LLM PROVIDER IS DEEPSEEK, AND IT IS THE ONLY ONE
+
+> **2026-11-09 amendment:** `.env` also carries OpenAI-style names (`GTP_TOKEN`, `AAT_OPENAI`),
+> NVIDIA NIM and Featherless keys. None is wired into a production path (NVIDIA timed out 11-06;
+> Featherless spent $0.0033). DeepSeek is still the only provider the code calls, and it has
+> been mostly *self-blocked* since 10-15 (see the STATE block). FRED is live (23 series).
 
 **There is no Anthropic key, no OpenAI key, no other provider. Do not plan
 around one, do not propose migrating to one, and do not read

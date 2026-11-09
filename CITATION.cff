@@ -7,7 +7,6 @@ authors:
 type: software
 repository-code: "https://github.com/Murathanx12/Aegis-Finance"
 url: "https://aegis-finance-six.vercel.app"
-license: MIT
 date-released: "2026-06-08"
 keywords:
   - quantitative finance
