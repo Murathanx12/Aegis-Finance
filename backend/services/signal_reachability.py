@@ -225,6 +225,12 @@ CLASSIFIED: dict[str, str] = {
         "winners'). The factory exists; no analysis path calls it."),
 
     # ---- AWAITS: built ahead of a consumer the roadmap names ----
+    "backend.services.licensed_data": (
+        "AWAITS — the reader for converted Bloomberg / broker-research tables "
+        "kept outside the repo (CH-00 / CH-32). Consumers the roadmap names: "
+        "WLS membership as the global universe slice (CH-19, CH-30 graph) and "
+        "analyst fields as ranker features (CH-32). Its own CLI reports the "
+        "inventory; it returns UNAVAILABLE, never an empty frame, without the files."),
     "backend.services.relative_value_labels": (
         "AWAITS — NEURAL-RELATIVE-VALUE-1's pairwise labels. Its consumer is "
         "RELATIVE_VALUE_NN_v1 (ROADMAP_2026-08-24 §3.2), which does not exist "
@@ -241,6 +247,12 @@ CLASSIFIED: dict[str, str] = {
         "the WHOLE-FILE config_hash, so adding a book first makes "
         "assert_config_current refuse to run AND refuse to migrate, for all "
         "ten. This is a SEQUENCING wait with a date, not a missing consumer."),
+    "backend.services.universe_graph": (
+        "AWAITS -- CH-30 universe graph v1 (ROADMAP §2a): typed nodes, measured "
+        "return_response edges, propagate(event) -> implications. Its consumers are "
+        "CH-31's wiring: funnel_candidates -> opportunity_funnel.run(extra=...), "
+        "holdings_exposure -> the CH-14b overlay, owner_warnings -> the owner "
+        "warning path. Built by its own CLI; no scheduled caller yet."),
     "backend.services.theme_baskets": (
         "AWAITS — point-in-time secular theme baskets; the narrative work "
         "that would consume them is LOGGED, not queued (roadmap §5)."),

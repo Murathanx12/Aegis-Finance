@@ -1486,6 +1486,18 @@ def _default_remote(prompt: str) -> tuple[str | None, dict]:
     return text, {"model": f"{LA._get_provider()}/{LA._DEEPSEEK_MODEL}"}
 
 
+def _budget_refusal_line() -> str | None:
+    """The DeepSeek envelope's line when it is refusing, else None. Never raises."""
+    try:
+        from backend.services import provider_budget as PB
+        if not PB.host_envelope_required():
+            return None
+        line = PB.status_line()
+    except Exception as exc:                                    # noqa: BLE001
+        return f"DEEPSEEK BUDGET status unavailable ({type(exc).__name__})"
+    return line if line.startswith("DEEPSEEK BUDGET REFUSED") else None
+
+
 def _default_spend(since: str) -> dict:
     from backend.services import llm_telemetry as T
     return T.spend(since=since, purpose=_cfg().LEARN_PURPOSE)
@@ -1845,6 +1857,12 @@ def distill_ledger(*, as_of: str | None = None, rows: Sequence[dict] | None = No
         else:
             reason = (f"model refused: local {local_status}; DeepSeek returned no "
                       f"valid rule ({len(receipt['refused_rules'])} refused)")
+            # 2026-11-10 (CH-04): `_call_llm` returns None for a budget refusal,
+            # so for 26 nights this line read like a model failure. Name the
+            # envelope when it is the thing refusing.
+            budget = _budget_refusal_line()
+            if budget:
+                reason = f"{budget}; {reason}"
         return _finish("LEARN_DEGRADED", reason, [])
     return _finish("LEARNED", None, new_rules)
 
