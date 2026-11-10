@@ -231,3 +231,20 @@ def test_unverified_typed_ticker_gives_direction_but_degrades(world):
     s = _stage(_run(world), "SENSE")
     assert s["data"]["direction"] == 1 and s["status"] == OE.DEGRADED
     assert "TYPED_TICKER_UNVERIFIED" in s["reason"]
+
+
+def test_unknown_direction_never_proposes_graph_candidates(world, monkeypatch):
+    called = []
+    g = types.SimpleNamespace(nodes={"company:HELD": 1}, as_of="2030-03-01")
+    fake = types.SimpleNamespace(
+        status=lambda d, now=None: {"status": "OK", "red": False, "dir": str(d)},
+        load_graph=lambda d: g, company_id=lambda s: f"company:{s}",
+        propagate=lambda graph, ev: [],
+        holdings_exposure=lambda graph, held, evs: [],
+        owner_warnings=lambda *a, **k: called.append("warn") or [],
+        funnel_candidates=lambda *a, **k: called.append("funnel") or [{"ticker": "X"}])
+    monkeypatch.setattr(OE, "_graph_module", lambda: (fake, None))
+    rec = _run(world, graph_dir=world["root"] / "universe_graph")
+    assert _stage(rec, "UNIVERSE")["data"]["direction_conditional"] is True
+    d = _stage(rec, "DECIDE")["data"]
+    assert d["funnel"]["graph_candidates"] == [] and called == []

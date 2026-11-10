@@ -476,10 +476,18 @@ def decide(ev: Optional[dict], row: Optional[dict], uni: Optional[dict], *, now:
             dec["graph_owner_warnings"] = [r.get("text") for r in UG.owner_warnings(
                 g, [h for h in held if h != t], gev)][:10] if not uni.get(
                 "direction_conditional") else []
-            dec["funnel"] = {"graph_candidates": [
-                {k: r.get(k) for k in ("ticker", "expected_direction", "expected_size",
-                                        "confidence_label", "path")}
-                for r in UG.funnel_candidates(g, gev, horizon=5, min_label="MEDIUM", top_k=10)]}
+            if uni.get("direction_conditional"):
+                # a sign computed for direction=+1 on an event of unknown sign is
+                # not a candidate reason; the exposure rows stay, labelled
+                dec["held_connected_conditional_on_direction"] = True
+                dec["funnel"] = {"graph_candidates": [],
+                                 "note": "skipped: event direction unknown"}
+            else:
+                dec["funnel"] = {"graph_candidates": [
+                    {k: r.get(k) for k in ("ticker", "expected_direction", "expected_size",
+                                            "confidence_label", "path")}
+                    for r in UG.funnel_candidates(g, gev, horizon=5, min_label="MEDIUM",
+                                                  top_k=10)]}
         except Exception as exc:                                     # noqa: BLE001
             reasons.append(f"GRAPH_CONSUMERS_FAILED: {type(exc).__name__}"[:120])
     # the decision itself: a reasoned row, never silence
