@@ -416,7 +416,7 @@ def _assign(handle, pid: int) -> dict:
         return {"bound": False, "reason": f"{type(exc).__name__}: {exc}"}
 
 
-def shell_argv(interp: str, page: str = "/desktop", extra: list[str] | None = None) -> list[str]:
+def shell_argv(interp: str, page: str = "/system-status", extra: list[str] | None = None) -> list[str]:
     return [interp, "-m", "desktop.aegis_desktop", "--page", page, *(extra or [])]
 
 
@@ -565,7 +565,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="skip git / pip / frontend and start the shell as it is")
     ap.add_argument("--headless", action="store_true",
                     help="start the shell serving, probe /api/health, print the receipt, stop")
-    ap.add_argument("--page", default="/desktop")
+    ap.add_argument("--page", default="/system-status")
     ap.add_argument("--port", type=int, default=0)
     a, passthrough = ap.parse_known_args(argv)
 

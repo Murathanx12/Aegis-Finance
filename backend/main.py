@@ -25,7 +25,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control, control_ask
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control, control_ask, system_status
 
 logging.basicConfig(
     level=logging.INFO,
@@ -643,6 +643,8 @@ app.include_router(control.router)
 # no outbound POST in the ask path. `control.py` spawns night jobs, so that proof
 # could never be made over it.
 app.include_router(control_ask.router)
+# CH-22a: the systems dashboard (reads one receipt; the desktop's first screen)
+app.include_router(system_status.router)
 
 
 def mount_desktop_frontend(application: "FastAPI") -> dict:
