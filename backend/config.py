@@ -114,6 +114,29 @@ def build1_path(name: str) -> Path:
 # (do not retrofit the live track record). See docs/TRIALS/TRIAL-001 note.
 DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
 
+#: WHICH `.env`: `PROJECT_ROOT / ".env"` unless `AEGIS_DOTENV_PATH` names one file
+#: explicitly (CH-05, 2026-11-11). The scheduled tasks are to move from the WIP
+#: checkout to a clean checkout of a tagged main commit, and the keys must not be
+#: copied, moved or duplicated to get there -- the 2026-08-24 lesson below. So the
+#: new checkout POINTS at the one existing file instead. A set variable that names
+#: no file REFUSES at import (a red, non-zero exit): falling back to the checkout's
+#: own `.env` would run a scheduled job keyless and quietly, which is exactly how
+#: the packaged app ran for weeks (`_repo_root` docstring).
+def _dotenv_path() -> Path:
+    explicit = os.getenv("AEGIS_DOTENV_PATH", "").strip()
+    if not explicit:
+        return PROJECT_ROOT / ".env"
+    path = Path(explicit).expanduser()
+    if not path.is_file():
+        raise RuntimeError(
+            f"AEGIS_DOTENV_PATH is set to {explicit!r}, which is not a file; refusing to "
+            "start without the declared keys (unset it to use PROJECT_ROOT/.env)")
+    return path.resolve()
+
+
+DOTENV_PATH = _dotenv_path()
+
+
 #: CI has no `.env`; this machine does, and that difference is load-bearing —
 #: eleven tests once passed locally BECAUSE a secrets file existed and failed in
 #: CI. The documented way to reproduce CI was to `mv .env .env.hidden` inside a
@@ -131,7 +154,7 @@ DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
 #: Read from the real environment rather than a config value, because config is
 #: what this decides.
 if os.getenv("AEGIS_IGNORE_DOTENV", "").strip().lower() not in ("1", "true", "yes"):
-    load_dotenv(PROJECT_ROOT / ".env")
+    load_dotenv(DOTENV_PATH)
 
 
 # ── US market calendar ────────────────────────────────────────────────────────
@@ -1683,7 +1706,13 @@ SIGNAL_UNIVERSE_BANDS: dict = {
 #: Lives under backend/data (NOT docs/): .dockerignore excludes docs, so a
 #: docs path would make the IC permanently degraded in every prod image while
 #: green locally — the insider-collector failure shape (NIGHT-13 audit F1).
-IC_FUNNEL_PATH = BACKEND_DIR / "data" / "funnel_night10.json"
+#: `AEGIS_IC_FUNNEL_PATH` overrides it (CH-05): the funnel is WRITTEN state (the
+#: sim's u_funnel rebuilds it; `funnel_history/` is archived beside it) yet it sits
+#: outside `optimus/`, so a second checkout would otherwise read its own tracked,
+#: weeks-old copy and every reader would refuse on staleness while the writer kept
+#: the real one fresh in the other checkout. Unset (Railway, CI, dev) = unchanged.
+IC_FUNNEL_PATH = Path(os.getenv("AEGIS_IC_FUNNEL_PATH", "").strip()
+                      or (BACKEND_DIR / "data" / "funnel_night10.json"))
 
 #: TTL for the funnel-derived state (gate + ranking + archetype books). The
 #: funnel is a nightly artifact; composition itself is computed per request.
