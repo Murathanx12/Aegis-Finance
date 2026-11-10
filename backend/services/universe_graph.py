@@ -1225,7 +1225,9 @@ def walk_forward_check(adj: pd.DataFrame, liquid_by_year: dict[int, list[str]],
 
 
 def _summ(r: dict, mask: Optional[list] = None) -> dict:
-    g = np.array(r["hits_g"]); c = np.array(r["hits_c"]); d = np.array(r["day"])
+    g = np.array(r["hits_g"])
+    c = np.array(r["hits_c"])
+    d = np.array(r["day"])
     if mask is not None:
         m = np.array(mask, dtype=bool)
         if len(m):
