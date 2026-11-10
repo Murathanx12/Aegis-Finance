@@ -2420,6 +2420,11 @@ def run_event_check(inp: dict, *, years: Iterable[int], horizons: Iterable[int],
     same = screen_cells([c for c in cells if c["h"] == 0], _cfg.UNIVERSE_GRAPH_EVENT_FDR_Q)
     for c in same:
         c["tradable"] = False
+        if c["edge"] == "self" and c["family"] not in CONTENT_SIGN_FAMILIES:
+            # direction IS the sign of this window's move: a 100% hit by construction
+            c["survives"] = False
+            c["note"] = "tautological: the direction is defined by this same window"
+            continue
         if c["survives"]:
             c["survives_as"] = "information transfer (same session, NOT tradable)"
             c["survives"] = False
