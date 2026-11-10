@@ -10,13 +10,15 @@ that receipt (held names) and the bars panel's last close (the rest), sigmas and
 history from the bars panels. It imports no submit path and calls no broker.
 
 Exit codes: 0 plan OK · 2 REFUSED (candidate file stale/empty/unreadable, broker
-receipt stale or another account) · 3 contract conflict (changed since freeze,
-or PC_BENCHMARK_CORE and PC_OWN_INDEX both on). A refusal never falls back to SPY.
+receipt stale or another account, or this checkout's pc_broker cannot confirm a
+fill) · 3 contract conflict (changed since freeze, or PC_BENCHMARK_CORE and
+PC_OWN_INDEX both on). A refusal never falls back to SPY and sells nothing.
 """
 
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import sys
 from datetime import datetime, timezone
@@ -58,6 +60,24 @@ def _last_closes(bars: Path, syms: list[str]) -> dict[str, float]:
         return {}
 
 
+def broker_fill_lookup(source: Optional[Path] = None) -> Optional[str]:
+    """Which fill lookup THIS checkout's pc_broker defines, read from its source
+    (the dry-run imports no submit path): `order_by_client_id` (main) or
+    `orders` (the runtime, wip/2026-10-07-day). None = the own index must not
+    activate here (review2 #89 B2), because a SPY sale could not be confirmed
+    before the index buys."""
+    src = Path(source or REPO / "backend" / "services" / "pc_broker.py")
+    try:
+        tree = ast.parse(src.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError):
+        return None
+    defs = {n.name for n in tree.body if isinstance(n, ast.FunctionDef)}
+    for name in ("order_by_client_id", "orders"):
+        if name in defs:
+            return name
+    return None
+
+
 def dry_run(args: argparse.Namespace) -> int:
     now = (datetime.fromisoformat(args.now) if args.now else datetime.now(timezone.utc))
     folder = _folder(args.folder)
@@ -69,6 +89,14 @@ def dry_run(args: argparse.Namespace) -> int:
         return RC_CONTRACT
     print(f"  config: PC_BENCHMARK_CORE={_config.PC_BENCHMARK_CORE} PC_OWN_INDEX={_config.PC_OWN_INDEX}"
           f" (the dry-run plans as if PC_OWN_INDEX were on)")
+    lookup = broker_fill_lookup(Path(args.broker_source) if getattr(args, "broker_source", None)
+                                else None)
+    if lookup is None:
+        print("REFUSED: this checkout's pc_broker defines neither order_by_client_id nor orders: "
+              "the index buys could never confirm the SPY sale's fill, so nothing may start")
+        return RC_REFUSED
+    print(f"  fill confirmation: pc_broker.{lookup} (index buys wait for every sell to be "
+          f"confirmed filled through it)")
     # ---- broker truth: the newest receipt, never a trading call --------------
     snap_path = Path(args.snapshot) if args.snapshot else pc_book / "state_latest.json"
     try:
@@ -161,7 +189,8 @@ def dry_run(args: argparse.Namespace) -> int:
     print("  CAVEAT (review #89 O5): this dry-run treats SPY as the index's and builds the other "
           "sleeves' claims from the last plan receipt (it ignores revision_flow holds); the "
           "first live session can differ. Live index buys also wait for every sell to be "
-          "confirmed filled and are sized from the broker's cash after the fills.")
+          "confirmed filled and are sized from the broker's cash after the fills. Any "
+          "refusal sells NOTHING: SPY is retired only in a plan that also buys the index.")
     if row.get("twin", {}).get("weights"):
         print(f"  random twin (seed {row['twin']['seed']}): {sorted(row['twin']['weights'])}")
     # ---- the orders it WOULD send --------------------------------------------
@@ -229,6 +258,8 @@ def main(argv: Optional[list] = None) -> int:
     d.add_argument("--snapshot"), d.add_argument("--plan-receipt"), d.add_argument("--funnel")
     d.add_argument("--folder"), d.add_argument("--bars"), d.add_argument("--now")
     d.add_argument("--out", help="also write the dry-run as JSON here")
+    d.add_argument("--broker-source", help="the pc_broker.py whose fill lookup to check "
+                                           "(default: this checkout's)")
     f = sub.add_parser("freeze")
     f.add_argument("--folder")
     m = sub.add_parser("measure")

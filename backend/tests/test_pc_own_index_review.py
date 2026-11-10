@@ -71,7 +71,10 @@ def _harness(tmp: Path, mp: pytest.MonkeyPatch, *, own: bool, core: bool,
              extra: list | None = None, spy_qty: float = 100.0, open_syms: list | None = None,
              fills: str = "filled", freeze: bool = True, invalidate: bool = False,
              members: list | None = None, cash: float | None = None,
-             fail_sells: bool = False):
+             fail_sells: bool = False, hist: dict | None = None,
+             funnel_age: float = 1.0, funnel_tickers: list | None = None,
+             previous: list | None = None, no_client_id_lookup: bool = False,
+             setup=None):
     from backend.services import investment_committee as IC
     from backend.tests import test_pc_plan_replay_owner_d14 as R
     from backend.tests.test_u_plan_probe import ASOF, _ranking
@@ -88,6 +91,10 @@ def _harness(tmp: Path, mp: pytest.MonkeyPatch, *, own: bool, core: bool,
     from backend.services import pc_sleeves as SL
 
     def _hist(names, *a, **k):
+        if callable(hist):
+            return hist(names)
+        if hist is not None:
+            return {"eligible": list(names), "short_history": [], **hist}
         return {"worst_window_return": -0.20, "worst_window_end": "2020-03-16",
                 "window_sessions": 21, "worst_day_return": -0.08, "worst_day": "2020-03-12",
                 "panel": "stub", "eligible": list(names), "short_history": []}
@@ -107,10 +114,20 @@ def _harness(tmp: Path, mp: pytest.MonkeyPatch, *, own: bool, core: bool,
                 "symbol": plan.symbol, "side": plan.side, "qty": plan.qty,
                 "notional": plan.notional, "reason": plan.reason}
     mp.setattr(PB, "submit", _submit)
-    mp.setattr(PB, "order_by_client_id", lambda coid: {
-        "client_order_id": coid, "status": fills, "symbol": sent_orders[coid].symbol,
-        "filled_qty": str(sent_orders[coid].qty if fills == "filled" else 0)})
-    mp.setattr(PB, "orders", lambda **kw: [{"symbol": s} for s in (open_syms or [])])
+    def _by_coid(coid):
+        return {"client_order_id": coid, "status": fills, "symbol": sent_orders[coid].symbol,
+                "filled_qty": str(sent_orders[coid].qty if fills == "filled" else 0)}
+    if no_client_id_lookup:
+        # the RUNTIME's pc_broker (wip/2026-10-07-day) has no order_by_client_id
+        mp.delattr(PB, "order_by_client_id", raising=False)
+    else:
+        mp.setattr(PB, "order_by_client_id", _by_coid)
+
+    def _orders(status: str = "all", limit: int = 100, after=None, **kw):
+        if status == "open":
+            return [{"symbol": s} for s in (open_syms or [])]
+        return [_by_coid(c) for c in reversed(list(sent_orders))][:limit]
+    mp.setattr(PB, "orders", _orders)
     eq = float(R.STATE["equity"])
 
     def _account():
@@ -128,11 +145,15 @@ def _harness(tmp: Path, mp: pytest.MonkeyPatch, *, own: bool, core: bool,
         folder.mkdir(parents=True, exist_ok=True)
         (folder / OI.MEMBERS_FILE).write_text(json.dumps({
             "schema": OI.MEMBERS_SCHEMA, "policy_hash": "x", "frozen_utc": NOW.isoformat(),
-            "members": members, "previous_members": []}), encoding="utf-8")
+            "members": members, "previous_members": list(previous or [])}),
+            encoding="utf-8")
     if invalidate:
         # any edit to config or code the contract covers: here a shared key
         mp.setattr(config, "PC_OWN_INDEX_N", int(config.PC_OWN_INDEX_N) + 1)
-    f = _funnel(tmp, R.HELD + ["IDX1", "IDX2", "SPY", "IDX3", "IDX4", "IDX5"])
+    f = _funnel(tmp, (R.HELD + ["IDX1", "IDX2", "SPY", "IDX3", "IDX4", "IDX5"]
+                      if funnel_tickers is None else funnel_tickers), age_days=funnel_age)
+    if setup is not None:
+        setup(mp)
     _ranking(tmp / "out", net=-0.2)
     err = None
     try:

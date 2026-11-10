@@ -1346,12 +1346,28 @@ def _own_index_requested() -> bool:
     return bool(getattr(_cfg_live, "PC_OWN_INDEX", False))
 
 
+def _own_index_broker_refusal() -> str | None:
+    """Review2 #89 B2: the index's buys wait for the session's sells to be
+    CONFIRMED filled. A pc_broker that cannot look an order up (neither
+    `order_by_client_id` nor `orders`) would send the SPY sale and then refuse
+    every buy, so the own index does not start on it."""
+    from backend.services import pc_broker as PB                   # noqa: PLC0415
+    from backend.services import pc_own_index as OI                 # noqa: PLC0415
+    if OI.fill_lookup_method(PB) is None:
+        return ("pc_broker cannot confirm a fill (no order_by_client_id, no orders): the "
+                "own index would sell SPY and refuse every buy")
+    return None
+
+
 def _own_index_startup_refusal(folder: Path | None = None) -> str | None:
     """Review #89 R2: with PC_OWN_INDEX on, a session whose frozen contract no
-    longer verifies does not start (rc 7). None when the flag is off or the
-    contract verifies."""
+    longer verifies does not start (rc 7); nor does one whose broker cannot
+    confirm a fill (review2 B2). None when the flag is off or both pass."""
     if not _own_index_requested():
         return None
+    broker_refusal = _own_index_broker_refusal()
+    if broker_refusal:
+        return broker_refusal
     from backend.services import pc_own_index as OI                 # noqa: PLC0415
     try:
         OI.load_frozen(Path(folder or _pc_plan_dir(None)) / OI.CONTRACT_FILE)
@@ -1389,10 +1405,17 @@ def _own_index_prepare(*, folder: Path, funnel_path: Path | None, held: dict, ta
         return {"on": False, "rollback_hold": hold} if hold else {"on": False}
     from backend.services import pc_own_index as OI                 # noqa: PLC0415
     if core_on:
+        # review2 #89 B1: a refusal sells nothing -- the index's held members
+        # HOLD (the SPY core plans as before; it is the core's again)
+        hold = {s_ for s_ in OI.held_index_names(folder, held, exclude=acting_claim,
+                                                 core_symbol=core_sym)
+                if str(s_).upper() not in tsyms_all}
         return {"on": False, "enabled": True, "applied": False,
                 "refused": "PC_BENCHMARK_CORE and PC_OWN_INDEX are both True",
+                **({"rollback_hold": hold} if hold else {}),
                 "line": ("own index: REFUSED -- PC_BENCHMARK_CORE and PC_OWN_INDEX are both "
-                         "True; the SPY core plans as before (OD-10 needs the core OFF)")}
+                         "True; the SPY core plans as before (OD-10 needs the core OFF); "
+                         f"{len(hold)} held member(s) HELD")}
     core_u = str(core_sym).upper()
     # the old core is the index's to retire, unless a sleeve targets that symbol this cycle
     core_claimed = any(str(t.symbol).upper() == core_u for t in targets)
@@ -1401,6 +1424,13 @@ def _own_index_prepare(*, folder: Path, funnel_path: Path | None, held: dict, ta
                  "yield": set(), "members": []}
     # R2: the index's held names are its own BEFORE the contract is read
     out["owned"] |= OI.held_index_names(folder, held, exclude=acting_claim, core_symbol=core_sym)
+    out["claimed"] = acting_claim
+    broker_refusal = _own_index_broker_refusal()
+    if broker_refusal:
+        # review2 #89 B2: all-or-nothing in intent -- no SPY sale unless the
+        # path that later buys can confirm its fills; OI.plan holds everything
+        out["refusal"] = broker_refusal
+        logger.warning("u_plan RED: own index: %s", broker_refusal)
     try:
         out["contract"] = OI.load_frozen(Path(folder) / OI.CONTRACT_FILE)
     except Exception as exc:                                       # noqa: BLE001
@@ -1417,7 +1447,7 @@ def _own_index_prepare(*, folder: Path, funnel_path: Path | None, held: dict, ta
             folder, contract=out["contract"], funnel_path=funnel_path,
             exclude=set(rf_w) | set(rf_hold), sigmas=sig)
     except Exception as exc:                                       # noqa: BLE001
-        out["refusal"] = f"{type(exc).__name__}: {exc}"[:300]
+        out["refusal"] = out["refusal"] or f"{type(exc).__name__}: {exc}"[:300]
         logger.warning("u_plan RED: own index membership: %s", out["refusal"])
         prev = OI._read_json(Path(folder) / OI.MEMBERS_FILE) or {}
         out["members_row"] = {"members": [], "previous_members": list(prev.get("members") or [])}
@@ -1474,9 +1504,13 @@ def _plan_own_index(oi: dict, *, equity: float, held: dict, prices: dict, target
             res["contract_refused"] = True
         return res
     except Exception as exc:                                       # noqa: BLE001
-        return {"enabled": True, "applied": False, "acting": False, "plans": [],
-                "state_of": {}, "weights": {}, "refused": f"{type(exc).__name__}: {exc}"[:300],
-                "line": f"own index: REFUSED {type(exc).__name__}: {exc}"[:300]}
+        from backend.services import pc_own_index as OI             # noqa: PLC0415
+        return {"enabled": True, "applied": False, "acting": False, "exit_acting": False,
+                "plans": [], "weights": {},
+                "state_of": {s_: OI.HOLD_STATE for s_ in (oi.get("owned") or set())},
+                "refused": f"{type(exc).__name__}: {exc}"[:300],
+                "line": (f"own index: REFUSED {type(exc).__name__}: {exc}; nothing is sold "
+                         f"or bought")[:300]}
 
 
 def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: list,
@@ -3331,6 +3365,15 @@ def run(session_id: str) -> int:
     lease_held = False
     lease = None
     if mode == "paper_profit":
+        oi_refusal = _own_index_startup_refusal()
+        if oi_refusal:
+            # review #89 R2 / review2 B2: a contract mismatch, or a broker that
+            # cannot confirm a fill, holds everything; no session. Checked
+            # BEFORE the lease, so this path calls no lease API (the runtime's
+            # pc_broker has a different close_lease signature).
+            logger.error("own index refused at session start: %s", oi_refusal)
+            SS.finish("STOPPED", f"REFUSED_OWN_INDEX_CONTRACT: {oi_refusal}"[:300])
+            return 7
         from backend.services import pc_broker as PB                # noqa: PLC0415
         try:
             lease = PB.open_lease(owner=f"sim_run {session_id}")
@@ -3339,16 +3382,6 @@ def run(session_id: str) -> int:
             logger.error("lease refused: %s", exc)
             SS.finish("STOPPED", f"REFUSED_LEASE: {type(exc).__name__}: {exc}"[:300])
             return 5
-        oi_refusal = _own_index_startup_refusal()
-        if oi_refusal:
-            # review #89 R2: a contract mismatch holds everything; no session
-            logger.error("own index contract refused: %s", oi_refusal)
-            SS.finish("STOPPED", f"REFUSED_OWN_INDEX_CONTRACT: {oi_refusal}"[:300])
-            try:
-                PB.close_lease(expected_nonce=(lease or {}).get("session_nonce"))
-            except Exception:                                      # noqa: BLE001
-                logger.warning("could not close the broker lease", exc_info=True)
-            return 7
     try:
         selected = os.environ.get("AEGIS_PC_EPOCH_CONTRACT")
         inherited_review = None

@@ -30,12 +30,15 @@ WHAT THE INDEX IS (nothing new is invented; every input already exists)
 * ONE SYMBOL, ONE SLEEVE: a member another sleeve holds or acts on this cycle is
   skipped (its slot stays cash). Held names that are members and that no other
   sleeve claims are ADOPTED (rebalanced to the index weight). A previous member
-  that left at a rebuild is sold (OWN_INDEX_EXIT).
-* THE OLD CORE: a held SPY is sold whole-share (CORE_EXIT) once a frozen,
-  matching contract exists -- even if today's candidate file is stale, because
-  cash is an allowed state and SPY is not. Without a valid contract nothing
-  moves: the held members are HELD (never an EXIT) and the session sends no
-  order at all (review #89 R2).
+  that left at a SUCCESSFUL rebuild is sold (OWN_INDEX_EXIT); a held member
+  excluded for short history is HELD, not sold.
+* THE OLD CORE: a held SPY is sold whole-share (CORE_EXIT) only in a plan that
+  also BUYS the index (a valid contract, a fresh membership and a gross both
+  bounds pass). Every refusal -- stale/empty candidates, no qualifying member,
+  an unknown or failing bound, no valid contract -- holds EVERYTHING: SPY, the
+  held members and any leaver; no sell intent leaves a refusal (review2 #89
+  B1). Without a valid contract the session sends no order at all (review #89
+  R2).
 * FUNDED BUYS ONLY: index buys go out only after every sell of the session is
   CONFIRMED filled, sized from the broker's cash read after those fills, with
   the book's gross checked against equity first (`gate_index_buys`, review #89
@@ -554,59 +557,63 @@ def plan(*, contract: Optional[dict], members_row: Optional[dict], refusal: Opti
                  "weights": {}, "plans": [], "state_of": {}}
     if contract is None:
         out["refused"] = refusal or "no valid frozen contract"
+        out["exit_acting"] = False
         out["line"] = f"own index: REFUSED -- {out['refused']}; nothing moves (SPY is not sold either)"
         return out
     cc = contract["content"]
     members = list((members_row or {}).get("members") or [])
     prev = list((members_row or {}).get("previous_members") or [])
     owned = {s for s in set(members) | set(prev) if s in held and s not in claimed and s != core}
-    # the old core: sold whole-share once a valid contract exists
     spy_qty = float(held.get(core, 0.0) or 0.0)
-    core_plans = []
-    if spy_qty >= 1:
-        px = float(prices.get(core) or 0.0)
-        q = int(math.floor(spy_qty))
-        core_plans.append(PB.PlannedOrder(
-            symbol=core, side="sell", qty=q if px > 0 else 0, notional=q * px,
-            reason=(f"CORE_EXIT (OD-10, owner 2026-11-10): the strategic {core} core is retired; "
-                    f"{core} is the benchmark only"),
-            refused=(None if px > 0 else f"no price for {core}; cannot size safely"),
-            current_qty=spy_qty, target_qty=spy_qty - q, price=px))
-        out["state_of"][core] = CORE_EXIT_STATE
     out["core_exit"] = {"symbol": core, "held_qty": spy_qty,
                         "sell_qty": int(math.floor(spy_qty)) if spy_qty >= 1 else 0,
                         "fractional_residual": spy_qty - math.floor(spy_qty) if spy_qty else 0.0}
-    if refusal is not None or not members:
-        out["refused"] = refusal or "membership empty"
+
+    def _refuse(why: str, **extra: Any) -> dict:
+        """Review2 #89 B1: a refusal of ANY kind holds EVERYTHING -- the held
+        members, the leavers and the old core. No sell intent leaves a refusal:
+        names leave only at a successful rebuild (members chosen AND sized),
+        and SPY is retired only in the same plan that buys the index."""
+        out.update(extra)
+        out.update({"refused": why, "plans": [], "applied": False, "acting": False,
+                    "exit_acting": False, "held_index_names": sorted(owned),
+                    "weights": {}, "targets": []})
+        out["core_exit"].update({"sell_qty": 0, "held_on_refusal": spy_qty > 0})
         for s in sorted(owned):
             out["state_of"][s] = HOLD_STATE
-        out["held_index_names"] = sorted(owned)
-        out["plans"] = core_plans
-        out["exit_acting"] = mode == "paper_profit"   # the CORE_EXIT only; held members HOLD
-        out["line"] = (f"own index: REFUSED -- {out['refused']}; no index buy, {core} is not a "
-                       f"filler; {len(owned)} held member(s) HELD"
-                       + (f"; {core} {out['core_exit']['sell_qty']} sh -> CORE_EXIT" if core_plans else ""))
+        if spy_qty > 0:
+            out["state_of"][core] = HOLD_STATE
+        out["line"] = (f"own index: REFUSED -- {why}; nothing is sold or bought: "
+                       f"{len(owned)} held member(s) HELD"
+                       + (f", {core} {spy_qty:g} sh HELD (retired only with a funded index)"
+                          if spy_qty > 0 else ""))
         return out
+
+    if refusal is not None or not members:
+        return _refuse(refusal or "membership empty")
     short = set((history or {}).get("short_history") or [])
     names = [m for m in members if m not in claimed and m not in short]
     skipped = [m for m in members if m in claimed]
     skipped_short = [m for m in members if m not in claimed and m in short]
     out["skipped_short_history"] = skipped_short
     if not names:
-        out.update({"refused": (f"no member qualifies: in another acting sleeve {skipped}, "
-                                f"short history {skipped_short}"),
-                    "members": members, "skipped_claimed": skipped, "plans": core_plans})
-        for s in sorted(owned):
-            out["state_of"][s] = HOLD_STATE
-        out["line"] = (f"own index: REFUSED -- {out['refused']}"
-                       + (f"; {core} {out['core_exit']['sell_qty']} sh -> CORE_EXIT" if core_plans else ""))
-        out["exit_acting"] = mode == "paper_profit"
-        return out
+        return _refuse(f"no member qualifies: in another acting sleeve {skipped}, "
+                       f"short history {skipped_short}",
+                       members=members, skipped_claimed=skipped)
+    # a held member that is still a member but cannot be sized (short history)
+    # is HELD, never sold: it has not left the index. Its weight counts against
+    # the room and the one-day bound.
+    held_short = sorted(owned & set(skipped_short))
+    leavers = sorted(owned - set(members))
     k = float(c.PROBE_WORST_CASE_SIGMA)
     buf = float(cc["construction"]["cash_buffer"])
     acting = {s: float(w) for s, w in acting_weights.items() if float(w) > 0}
     resid = {s: float(w) for s, w in held_residual.items()
              if s not in owned and s != core and float(w) > 0}
+    for s in held_short:
+        px_s = float(prices.get(s) or 0.0)
+        if px_s > 0 and float(equity) > 0:
+            resid[s] = float(held.get(s, 0.0)) * px_s / float(equity)
     room = max(0.0, 1.0 - sum(acting.values()) - sum(resid.values()) - buf)
     ww = (history or {}).get("worst_window_return")
     pick = choose_gross(names=names, n_declared=int(cc["construction"]["n_declared"]),
@@ -632,9 +639,26 @@ def plan(*, contract: Optional[dict], members_row: Optional[dict], refusal: Opti
                          median_dollar_vol=(float(adv[s]) if isinstance(adv.get(s), (int, float))
                                             else None))
                for s in names] if weights else []
-    plan_held = {s: float(held.get(s, 0.0)) for s in (set(names) | owned)}
-    idx_plans = (PB.plan_orders(targets, equity=equity, held=plan_held, prices=prices)
-                 if (targets or plan_held) else [])
+    if not weights:
+        return _refuse(f"worst case allows no index ({pick['binding']})",
+                       members=members, names=names, skipped_claimed=skipped, sizing=pick,
+                       worst_case=wc, worst_case_lines=wc["lines"])
+    # the old core: sold whole-share, only in a plan that also buys the index
+    core_plans = []
+    if spy_qty >= 1:
+        px = float(prices.get(core) or 0.0)
+        q = int(math.floor(spy_qty))
+        core_plans.append(PB.PlannedOrder(
+            symbol=core, side="sell", qty=q if px > 0 else 0, notional=q * px,
+            reason=(f"CORE_EXIT (OD-10, owner 2026-11-10): the strategic {core} core is retired; "
+                    f"{core} is the benchmark only"),
+            refused=(None if px > 0 else f"no price for {core}; cannot size safely"),
+            current_qty=spy_qty, target_qty=spy_qty - q, price=px))
+        out["state_of"][core] = CORE_EXIT_STATE
+    for s in held_short:
+        out["state_of"][s] = HOLD_STATE
+    plan_held = {s: float(held.get(s, 0.0)) for s in (set(names) | set(leavers))}
+    idx_plans = PB.plan_orders(targets, equity=equity, held=plan_held, prices=prices)
     for p in idx_plans:
         if p.symbol in weights:
             out["state_of"][p.symbol] = STATE
@@ -649,7 +673,8 @@ def plan(*, contract: Optional[dict], members_row: Optional[dict], refusal: Opti
         "applied": bool(weights), "acting": bool(weights) and mode == "paper_profit",
         "exit_acting": mode == "paper_profit",
         "members": members, "names": names, "skipped_claimed": skipped,
-        "adopted_held": sorted(owned & set(names)),
+        "adopted_held": sorted(owned & set(names)), "held_short_history": held_short,
+        "leavers": leavers,
         "weights": weights, "w_each": w, "gross": w * len(names),
         "n_declared": n_decl, "n_slots_cash": n_decl - len(names),
         "membership": {k_: v for k_, v in (members_row or {}).items()
@@ -663,10 +688,8 @@ def plan(*, contract: Optional[dict], members_row: Optional[dict], refusal: Opti
                    + (f"; excluded, short history: {skipped_short}" if skipped_short else "")
                    + (f"; {n_decl - len(names)} slot(s) cash" if n_decl > len(names) else "")
                    + (f"; {core} {out['core_exit']['sell_qty']} sh -> CORE_EXIT" if core_plans else "")
+                   + (f"; held, short history: {held_short}" if held_short else "")
                    + ("" if mode == "paper_profit" else f"; mode={mode}: not acting"))
-    if not weights:
-        out["refused"] = f"worst case allows no index ({pick['binding']})"
-        out["line"] += f"; REFUSED: {out['refused']}"
     return out
 
 
@@ -723,6 +746,43 @@ def _f(x: Any) -> Optional[float]:
     return v if math.isfinite(v) else None
 
 
+def fill_lookup_method(broker: Any) -> Optional[str]:
+    """How a broker module can confirm a fill by client order id (review2 #89
+    B2): main's pc_broker has `order_by_client_id`; the RUNTIME's
+    (wip/2026-10-07-day) has only `orders(status, limit, after)`. None means
+    neither: the own index must not start, because a SPY sale could go out with
+    no way to confirm it before the buys."""
+    if callable(getattr(broker, "order_by_client_id", None)):
+        return "order_by_client_id"
+    if callable(getattr(broker, "orders", None)):
+        return "orders"
+    return None
+
+
+#: orders(status="all") page size used to confirm fills on a broker without the
+#: by-client-id lookup (Alpaca's maximum); newest first, so a session's sells
+#: are on the first page.
+FILL_LOOKUP_PAGE = 500
+
+
+def _order_statuses(broker: Any, method: str, coids: list[str]) -> dict[str, str]:
+    if method == "order_by_client_id":
+        out = {}
+        for c in coids:
+            try:
+                out[c] = str((broker.order_by_client_id(c) or {}).get("status"))
+            except Exception as exc:                               # noqa: BLE001
+                out[c] = f"unreadable ({type(exc).__name__})"
+        return out
+    try:
+        rows = broker.orders(status="all", limit=FILL_LOOKUP_PAGE) or []
+    except Exception as exc:                                       # noqa: BLE001
+        return {c: f"unreadable ({type(exc).__name__})" for c in coids}
+    by = {str(r.get("client_order_id")): str(r.get("status")) for r in rows
+          if isinstance(r, dict)}
+    return {c: by.get(c, "not listed") for c in coids}
+
+
 def gate_index_buys(buys: list, *, sells: list, sent: list[dict], broker: Any,
                     cash_buffer: float, other_buys: list, wait_s: float, poll_s: float,
                     sleep: Optional[Callable[[float], None]] = None) -> dict:
@@ -731,7 +791,9 @@ def gate_index_buys(buys: list, *, sells: list, sent: list[dict], broker: Any,
     1. Every sell this session must have been SUBMITTED; a skipped or failed
        sell (an open order, a venue rejection) refuses every index buy.
     2. Every submitted sell must be confirmed FILLED by the broker within
-       `wait_s`; anything else refuses every index buy.
+       `wait_s`; anything else refuses every index buy. Confirmed through
+       `order_by_client_id` where the broker has it, else `orders(status=all)`
+       (the runtime's pc_broker); a broker with neither refuses at once.
     3. The broker's account is re-read AFTER the fills: budget = cash - buffer x
        equity - this session's other buys, and long market value + buys must
        stay <= (1 - buffer) x equity. Buys are cut, in order, to fit, each at
@@ -760,14 +822,15 @@ def gate_index_buys(buys: list, *, sells: list, sent: list[dict], broker: Any,
     pending = {c: s for s, c in coids}
     if None in pending:
         return _refuse(f"funding sell {pending[None]} has no client order id to confirm")
+    method = fill_lookup_method(broker)
+    out["fill_lookup"] = method
+    if pending and method is None:
+        return _refuse("the broker exposes no order lookup (neither order_by_client_id nor "
+                       "orders): no fill can be confirmed")
     deadline = time.monotonic() + max(0.0, float(wait_s))
     last: dict = {}
     while pending:
-        for c in list(pending):
-            try:
-                st = str((broker.order_by_client_id(c) or {}).get("status"))
-            except Exception as exc:                               # noqa: BLE001
-                st = f"unreadable ({type(exc).__name__})"
+        for c, st in _order_statuses(broker, method, list(pending)).items():
             last[pending[c]] = st
             if st == "filled":
                 pending.pop(c)

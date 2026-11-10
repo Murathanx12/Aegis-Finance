@@ -29,6 +29,17 @@ Not changed: O3 (there is still no whole-book 21-session bound; the index and
 revision_flow are each bounded at 10% separately, so a correlated month can cost
 ~19% plus the residual names).
 
+### Second review fixes (2026-11-11, `REVIEW2` of PR #89)
+
+| finding | what the code now does | pinned by |
+|---|---|---|
+| B1: a refused 21-session/one-day bound planned a full SELL of every held member (and of SPY) | a refusal of ANY kind holds EVERYTHING: no index sell, no leaver sell, no SPY sell. SPY is retired (`CORE_EXIT`) only in a plan that also BUYS the index; a leaver is sold only at a SUCCESSFUL rebuild (members chosen and sized); a held member excluded for short history is HELD. Both flags True: the held members HOLD (`own_index_rollback_hold`). `_plan_own_index` raising: the owned names HOLD | `test_pc_own_index_review2.py::test_no_refusal_of_any_kind_produces_a_sell_intent` (13 refusal paths through the real `u_plan`), `test_plan_refusal_plans_no_sell` (10 inputs to `plan()`), positive controls `test_a_leaver_is_sold_only_at_a_successful_rebuild`, `test_plan_success_retires_spy_and_sells_the_leaver` |
+| O3 (first review) / review2 O3: a stale funnel sold SPY into cash | resolved by B1: a stale, empty or unreadable candidate file holds SPY too; the account stays as it is until a membership can be built and sized | `...[candidate_file_stale]` |
+| R5: the 30% owner cap in `plan()` and `min(full, any)` were unpinned (mutants passed) | tests that fail under each mutation | `test_plan_caps_the_index_at_the_owner_approved_share`, `test_u_plan_never_sizes_the_index_above_the_owner_approved_share`, `test_the_bound_is_the_worse_of_full_and_any_coverage` |
+| B2: the RUNTIME's `pc_broker` has no `order_by_client_id`, so the buy gate stalled 60 s and refused the index buys after the SPY sale | the gate confirms fills with `order_by_client_id` where it exists, else with `orders(status="all", limit=500)` (both broker versions have it, newest first); a broker with neither refuses at once. All-or-nothing in intent: with no lookup, `u_plan` refuses (everything HOLDS, no SPY sale), the session start returns **rc 7**, and the dry-run returns rc 2. The startup refusal runs BEFORE the lease is opened, so the patched `run()` calls no lease API on that path (the runtime's `close_lease` takes no `expected_nonce`) | `test_gate_confirms_fills_through_orders_when_the_broker_has_no_client_id_lookup`, `test_u_plan_on_a_runtime_shaped_broker_still_buys_the_index_after_the_spy_sell`, `test_the_session_start_refuses_when_the_broker_cannot_confirm_a_fill`, `test_dry_run_reads_the_fill_lookup_from_the_broker_source` |
+
+Still open (owner/brain): O1 (one contract key halts every PC-PAPER sleeve with rc 7 -- loud, by design; see §5), O2 (REVISION_FLOW/PROBE/EXPLOIT buys are not funding-gated; pre-existing), O4 (the contract does not hash `scripts/sim_run.py`), N2-N6.
+
 ## 1. What runs today, and where
 
 | piece | where it runs | version |
@@ -71,11 +82,14 @@ never activated and is superseded by OD-10.
   cash). An unknown bound fails.
 * **One symbol, one sleeve:** a member that an *acting* sleeve holds is skipped.
   A member held by a non-acting sleeve is adopted and resized. A name that leaves
-  the index at a rebuild is sold (`OWN_INDEX_EXIT`).
-* **Refusals:** each one is red and never falls back to SPY. A stale, undateable,
-  empty or unreadable candidate file means no index buys and held members `HOLD`.
-  SPY is still retired in that case, because cash is allowed. With no valid frozen
-  contract, nothing moves, not even SPY. If `PC_BENCHMARK_CORE` and `PC_OWN_INDEX`
+  the index at a SUCCESSFUL rebuild is sold (`OWN_INDEX_EXIT`); a held member
+  excluded for short history is held.
+* **Refusals:** each one is red, never falls back to SPY, and **sells nothing**
+  (review2 B1). A stale, undateable, empty or unreadable candidate file, no
+  qualifying member, an unknown or failing bound, or a broker that cannot confirm
+  a fill: no index buy, held members `HOLD`, leavers `HOLD`, and SPY `HOLD`. SPY
+  is retired only in a plan that also buys the index. With no valid frozen
+  contract, nothing moves either. If `PC_BENCHMARK_CORE` and `PC_OWN_INDEX`
   are both True, the index is refused and the core plans as before. A contract
   that stops verifying holds EVERYTHING (no order of any sleeve; rc 7 at session
   start). The CLI exits 2 (stale/empty/receipt) or 3 (contract).
@@ -86,6 +100,13 @@ never activated and is superseded by OD-10.
 the runtime's files, read-only: broker receipt 2026-11-10T14:10Z, funnel
 generated 2026-11-05T19:18Z (4.9 d old, 25 candidates -> 24 issuers), deep panel
 2016-01-05..2026-11-09; no member was excluded for short history), equity $948,803:
+
+> Source of these numbers: the read-only dry-run of this branch re-run after the
+> second review's fixes at 2026-11-10T18:43Z (02:43 HKT 11-11) on the runtime's
+> files (rc 0; same broker receipt, funnel 5.0 d old, 24 issuers): every line
+> below reproduced, 3σ day **−$18,798**. The −$19,124 in the first fixer's report
+> came from an earlier dry-run that treated the funnel's 25 rows as 25 issuers
+> (no issuer map); the −$18,798 figure is the one kept.
 
 * **Largest admissible index:** min(20 × 3.00% = 60%, owner max 30%) = **30% gross**.
   No stop is declared, so n × notional × stop = 20 × 1.50% × 100% = **−$284,641**
@@ -130,8 +151,9 @@ and re-freezing. Neither can move on its own any more.
 
 Never reset, stash, checkout, clean or pull in the runtime checkout. Apply the
 change between sessions. The running sim imported its config at start, so a file
-edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
-(06:10 HKT). The next start window opens at 09:00 ET (14:00Z, 22:00 HKT).
+edit reaches the next session only. Read the current session and its
+`planned_end` from `backend\data\optimus\sim\session.json` (do not rely on a
+session id written here). The start window opens at 09:00 ET (14:00Z, 22:00 HKT).
 
 0. **Check:** `backend\data\optimus\sim\session.json` must not be `RUNNING`, or
    wait for its `planned_end`. Do not kill it. A STOP file finishes the cycle.
@@ -141,6 +163,10 @@ edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
    --porcelain -- scripts/sim_run.py backend/config.py`.
 2. **Copy the two new files** from the PR branch `s65/od10-own-index` into the
    runtime checkout: `backend/services/pc_own_index.py` and `scripts/pc_own_index.py`.
+   The runtime's `backend/services/pc_broker.py` is NOT changed: it has no
+   `order_by_client_id`, and the buy gate confirms fills with its `orders()`
+   instead (review2 B2). The dry-run in step 4 prints `fill confirmation:
+   pc_broker.orders` on the runtime; if it prints REFUSED, stop.
 3. **Patch the two edited files.** The runtime is not main, so apply the PR's hunks
    instead of copying main's files:
    ```
@@ -151,9 +177,10 @@ edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
    patch -p1 --binary --dry-run < od10_crlf.diff     # must report every hunk "succeeded"
    patch -p1 --binary < od10_crlf.diff
    ```
-   This was verified on 2026-11-10 against copies of the runtime files (10 hunks)
-   BEFORE the review fixes; the fixes add hunks to both files, so re-run the
-   `--dry-run` and stop at the first hunk that does not apply. After this step
+   Verified on 2026-11-11 AFTER the second review's fixes, against byte copies of
+   the runtime's `scripts/sim_run.py` and `backend/config.py` (see the
+   review2-fixes report for the hunk count and fuzz). Re-run the `--dry-run`
+   anyway and stop at the first hunk that does not apply. After this step
    `PC_BENCHMARK_CORE = True` and `PC_OWN_INDEX = False`: the runtime plans exactly
    as before (the core is ON), so this intermediate state changes nothing.
 4. **Dry-run.** The owner reads it:
@@ -178,8 +205,10 @@ edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
    core OFF alone HOLDS SPY (`benchmark_hold`), and both True refuses the index.
 7. **First session** (paper_profit, venue open): check `pc_book\<day>\intended_book.json`.
    `own_index_line` should show `20 of 20 declared x 1.50%`. `sent` should show
-   `CORE_EXIT` SPY and `OWN_INDEX` buys. `sendable_by_state` should carry
-   `CORE_EXIT: 1`. After the next snapshot, `pc_book\state_latest.json` should show
+   `CORE_EXIT` SPY and `OWN_INDEX` buys; `own_index.buy_gate.fill_lookup` should
+   read `orders` on the runtime. `sendable_by_state` should carry `CORE_EXIT: 1`.
+   If instead `own_index_line` says `REFUSED ... nothing is sold or bought`, SPY
+   is still held: that is the intended refusal, not a half-done transition. After the next snapshot, `pc_book\state_latest.json` should show
    no SPY and cash of about 35% (or about 5% under OD-10a = one-day only).
 8. **Watch** `decisions\pc_plan\own_index_members.json` (current membership +
    twin) and `own_index_members_history.jsonl` (every rebuild).
@@ -192,7 +221,18 @@ edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
   Selling them later is a separate attended decision.
 * **Undo OD-10 (owner only):** set `PC_BENCHMARK_CORE = True` and
   `PC_OWN_INDEX = False`. The D14 core buys SPY back to the residual on the next
-  session.
+  session. The held index members stay HELD and are owned by no sleeve until a
+  separate attended decision sells them (review2 N5: with EXPLOIT or PROBE acting,
+  the core's SPY target is then oversized on the receipt; the post-fill clip
+  still caps gross at 99%).
+* **A contract key changed (review2 O1):** with `PC_OWN_INDEX = True`, any edit to
+  `backend/services/pc_own_index.py` or to a config key the contract hashes
+  (`PC_OWN_INDEX_*`, `PROBE_WORST_CASE_SIGMA`, `FLEET_MANAGER_COST_BPS_PER_SIDE`,
+  `FLEET_MANAGER_SIGMA_WINDOW`, `PC_WORST_CASE_MAX_FRAC_OF_EQUITY`) stops EVERY
+  PC-PAPER sleeve: each session ends rc 7 (`REFUSED_OWN_INDEX_CONTRACT`) until
+  someone bumps `PC_OWN_INDEX_VERSION` and re-freezes, or sets
+  `PC_OWN_INDEX = False`. A CH-05 runtime merge that touches any of these must
+  re-freeze in the same attended step.
 * **Remove the code:** copy the two backed-up files back and delete the two new
   files. `own_index_contract.json` and the members files are inert without the
   code. Move them to `AEGIS_DOCUMENTS` and do not delete them; they are receipts.

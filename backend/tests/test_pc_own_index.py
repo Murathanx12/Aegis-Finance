@@ -194,13 +194,15 @@ def test_the_plan_sells_the_spy_core_whole_shares_and_never_buys_spy(tmp_path):
     assert res["worst_case_lines"][0].startswith("LARGEST ADMISSIBLE own index")
 
 
-def test_a_stale_candidate_set_buys_nothing_holds_members_and_still_retires_spy(tmp_path):
+def test_a_stale_candidate_set_buys_nothing_and_holds_everything_spy_included(tmp_path):
+    # review2 #89 B1/O3: SPY is retired only in a plan that also buys the index
     res = _plan(tmp_path, refusal="candidate file funnel.json is 11.0 days old: STALE")
     assert res["refused"].endswith("STALE") and not res["applied"]
-    assert [p.symbol for p in res["plans"]] == ["SPY"]
+    assert res["plans"] == []
     assert res["state_of"]["AAA"] == OI.HOLD_STATE and res["state_of"]["OLD"] == OI.HOLD_STATE
-    assert res["exit_acting"] is True
-    assert "not a filler" in res["line"]
+    assert res["state_of"]["SPY"] == OI.HOLD_STATE and res["core_exit"]["sell_qty"] == 0
+    assert res["exit_acting"] is False
+    assert "nothing is sold or bought" in res["line"]
 
 
 def test_no_valid_contract_moves_nothing_not_even_spy(tmp_path):
