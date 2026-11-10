@@ -375,3 +375,96 @@ def test_cli_grade_and_list_exit_red_on_nothing(world, tmp_path):
     assert CLI.main(["list", "--data-root", str(empty), "--now", WALL.isoformat()]) == 2
     assert CLI.main(["grade", "--data-root", str(empty), "--out", str(tmp_path / "none"),
                      "--now", WALL.isoformat()]) == 2
+
+
+# ── review 3 (S65): half-day sessions close at 13:00 ET, not 16:00 ──
+
+def _early_close_world(tmp_path: Path):
+    """Bars around an early-close session taken from the exchange calendar the
+    repo already uses (no literal date: the year is derived from today)."""
+    from backend.services import market_sessions as MS
+    year = date.today().year + 1
+    early = MS.early_close_sessions(year)
+    assert early, f"the XNYS calendar lists no early close in {year}"
+    e = early[0]
+    sess = [d for d in MS.sessions_in_year(year) if d >= e][:8]
+    before = [d for d in MS.sessions_in_year(year) if d < e][-5:]
+    root = tmp_path / "optimus"
+    (root / "prices_2025_26").mkdir(parents=True)
+    rows = []
+    for i, d in enumerate(before + sess):
+        rows += [{"symbol": "SPY", "date": pd.Timestamp(d), "close": 100.0 + i},
+                 {"symbol": "HELD", "date": pd.Timestamp(d), "close": 50.0 + 2 * i}]
+    pd.DataFrame(rows).to_parquet(root / "prices_2025_26" / "bars.parquet")
+    return root, e, MS.session_close_utc(e)
+
+
+def _rows_at(made: datetime, written: datetime) -> list[dict]:
+    ev = {"event_id": "ev_half", "primary_ticker": "HELD", "direction": 1,
+          "direction_source": "typed", "published_utc": (made - timedelta(hours=1)).isoformat()}
+    return OE.forecast_rows(ev, None, {"decision_id": "dc_half"}, made_at=made,
+                            written_at=written, horizons=(1,))
+
+
+def test_entry_session_uses_the_real_early_close(tmp_path):
+    root, e, close = _early_close_world(tmp_path)
+    assert close.astimezone(OE.NY).hour == 13          # the calendar's own early close
+    nxt = sorted(set(pd.read_parquet(root / "prices_2025_26" / "bars.parquet")["date"].dt.date))
+    nxt = nxt[nxt.index(e) + 1]
+    assert OE.entry_session(close - timedelta(minutes=5), [e, nxt]) == e
+    assert OE.entry_session(close + timedelta(minutes=90), [e, nxt]) == nxt
+
+
+def test_half_day_row_written_after_the_close_is_never_graded_from_it(tmp_path):
+    root, e, close = _early_close_world(tmp_path)
+    t = close + timedelta(minutes=90)                  # 14:30 ET on the half day
+    fpath = tmp_path / "out" / "forecasts.jsonl"
+    OE.append_forecasts(fpath, _rows_at(t, t))
+    res = OE.grade(fpath, data_root=root, now=t + timedelta(days=20))
+    assert all(g["entry_date"] != str(e) for g in res["new_grades"])
+    assert res["counts"]["graded"] == 1                # entered at the NEXT session's close
+
+
+def test_half_day_row_written_at_or_after_the_close_is_frozen_late(tmp_path):
+    root, e, close = _early_close_world(tmp_path)
+    made, written = close - timedelta(minutes=2), close + timedelta(minutes=2)   # within tolerance
+    fpath = tmp_path / "out" / "forecasts.jsonl"
+    rows = _rows_at(made, written)
+    assert rows[0]["replay"] is False
+    OE.append_forecasts(fpath, rows)
+    res = OE.grade(fpath, data_root=root, now=close + timedelta(days=20))
+    assert res["counts"]["graded"] == 0 and res["counts"]["frozen_late"] == 1
+    # exactly AT the close is refused too
+    fpath2 = tmp_path / "out2" / "forecasts.jsonl"
+    OE.append_forecasts(fpath2, _rows_at(close - timedelta(minutes=1), close))
+    assert OE.grade(fpath2, data_root=root, now=close + timedelta(days=20))["counts"]["frozen_late"] == 1
+
+
+def test_grader_refuses_a_row_edited_after_its_seal(tmp_path):
+    root, e, close = _early_close_world(tmp_path)
+    t = close - timedelta(hours=3)
+    fpath = tmp_path / "out" / "forecasts.jsonl"
+    rows = _rows_at(t, t)
+    rows[0]["predicted_direction"] = -1                # edited, seal not recomputed
+    OE.append_forecasts(fpath, rows)
+    res = OE.grade(fpath, data_root=root, now=close + timedelta(days=20))
+    assert res["counts"]["graded"] == 0 and res["counts"]["seal_mismatch"] == 1
+
+
+def test_decide_names_a_red_graph_its_consumers_ran_on(world, monkeypatch):
+    """UNIVERSE continues on a STALE graph; DECIDE must not then read SUCCESS."""
+    _typed(world, -0.6)
+    g = types.SimpleNamespace(nodes={"company:HELD": 1}, as_of="2030-01-01")
+    fake = types.SimpleNamespace(
+        status=lambda d, now=None: {"status": "STALE", "red": True, "as_of": "2030-01-01",
+                                    "age_days": 62, "dir": str(d), "line": "stale"},
+        load_graph=lambda d: g, company_id=lambda s: f"company:{s}",
+        propagate=lambda graph, ev: [],
+        holdings_exposure=lambda graph, held, evs: [],
+        owner_warnings=lambda graph, held, evs, min_label="MEDIUM": [],
+        funnel_candidates=lambda graph, evs, **kw: [])
+    monkeypatch.setattr(OE, "_graph_module", lambda: (fake, None))
+    rec = _run(world, graph_dir=world["root"] / "universe_graph")
+    d = _stage(rec, "DECIDE")
+    assert d["data"]["graph_consumers_ran"] is True
+    assert d["status"] == OE.DEGRADED and "GRAPH_STALE" in d["reason"]

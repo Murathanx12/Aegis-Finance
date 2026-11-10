@@ -50,7 +50,7 @@ import importlib
 import json
 import math
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, time as dtime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
 from zoneinfo import ZoneInfo
@@ -527,6 +527,10 @@ def decide(ev: Optional[dict], row: Optional[dict], uni: Optional[dict], *, now:
         reasons.append(f"GRAPH_CONSUMERS_NOT_RUN: UNIVERSE produced no graph event ({gst}), "
                        "so held connected names were NOT checked")
     dec["graph_consumers_ran"] = graph_ran
+    gstat = (uni or {}).get("graph") or {}
+    if graph_ran and gstat.get("red"):
+        # review 3: consumers that ran on a STALE (red) graph are not a clean SUCCESS
+        reasons.append(f"GRAPH_{gstat.get('status')}: consumers ran on a red graph")
     # the decision itself: a reasoned row, never silence
     acts, why = [], []
     if dec["owner_warning"] and dec["owner_warning"].get("status") == "PROVISIONAL":
@@ -597,11 +601,20 @@ def act(ev: Optional[dict], dec: Optional[dict]) -> tuple[Stage, Optional[dict]]
 
 # ─────────────────────────────────── LEARN ───────────────────────────────────
 
+def session_close(d: Any) -> Optional[datetime]:
+    """The exchange calendar's real close for session `d` (UTC), early closes
+    included (13:00 ET on half days); None when `d` is not a session. Raises
+    when the calendar cannot be read: a 16:00 guess is the bug it replaces."""
+    from backend.services import market_sessions as MS
+    return MS.session_close_utc(d)
+
+
 def entry_session(made_at: datetime, dates: list) -> Optional[Any]:
-    """The first session whose 16:00 New York close is at or after `made_at`."""
+    """The first session whose REAL close (exchange calendar, half days at
+    13:00 ET) is at or after `made_at`. A bar dated on a non-session is skipped."""
     for d in dates:
-        close = datetime.combine(d, dtime(16, 0), tzinfo=NY).astimezone(timezone.utc)
-        if close >= made_at:
+        close = session_close(d)
+        if close is not None and close >= made_at:
             return d
     return None
 
@@ -651,7 +664,7 @@ def forecast_rows(ev: dict, uni: Optional[dict], dec: dict, *, made_at: datetime
                  "written_utc": written_at.isoformat(timespec="seconds"), "replay": replay,
                  "evidence": "REPLAY" if replay else "FORWARD",
                  "event_published_utc": ev["published_utc"],
-                 "entry_rule": "close of the first session whose 16:00 NY close >= made_at",
+                 "entry_rule": "close of the first session whose real XNYS close >= made_at",
                  "observable": "log-free simple return over h sessions after entry minus SPY's",
                  "benchmark": "SPY", "predicted_direction": tg["predicted_direction"],
                  "direction_source": tg["direction_source"], "expected_size": tg["expected_size"],
@@ -712,8 +725,10 @@ def grade(forecasts_path: Path, *, data_root: Path, now: datetime,
     ticker or SPY has no bars. A grade row is written once per forecast id.
 
     Refused, never graded (review 2, S65, B1): NO_WRITE_TIME (no real
-    `written_utc`, so the freeze cannot be proven), REPLAY (a `--now` row), and
-    FROZEN_LATE (the entry close is not after the real write time).
+    `written_utc`, so the freeze cannot be proven), REPLAY (a `--now` row),
+    FROZEN_LATE (the entry close -- the calendar's real close, 13:00 ET on a
+    half day -- is not after the real write time) and SEAL_MISMATCH (the row
+    was edited after it was sealed; review 3).
     """
     rows = _jsonl(Path(forecasts_path))
     gp = Path(grades_path) if grades_path else Path(forecasts_path).with_name("grades.jsonl")
@@ -721,7 +736,8 @@ def grade(forecasts_path: Path, *, data_root: Path, now: datetime,
     px = load_closes(bar_paths(data_root), [r["ticker"] for r in rows]) if rows else None
     last_bar = None if px is None or px.empty else str(px.index[-1])
     counts = {"graded": 0, "pending": 0, "ungradeable": 0, "already": 0,
-              "no_write_time": 0, "replay_excluded": 0, "frozen_late": 0}
+              "no_write_time": 0, "replay_excluded": 0, "frozen_late": 0,
+              "seal_mismatch": 0}
     out = []
     for r in rows:
         if r["forecast_id"] in done:
@@ -745,8 +761,11 @@ def grade(forecasts_path: Path, *, data_root: Path, now: datetime,
         if e is None or dates.index(e) + h >= len(dates):
             counts["pending"] += 1
             continue
-        if datetime.combine(e, dtime(16, 0), tzinfo=NY).astimezone(timezone.utc) <= written:
+        if session_close(e) <= written:          # real close; 13:00 ET on a half day
             counts["frozen_late"] += 1
+            continue
+        if r.get("seal") != _sha({k: v for k, v in r.items() if k != "seal"}, n=24):
+            counts["seal_mismatch"] += 1        # hand-edited after freezing
             continue
         i = dates.index(e)
         x = dates[i + h]
