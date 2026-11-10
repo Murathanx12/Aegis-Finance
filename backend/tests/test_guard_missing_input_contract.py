@@ -1944,8 +1944,18 @@ def _case_analyst_report_rows():
             "analyst rows read with no as-of date")
 
 
+def _case_universe_graph():
+    import pandas as pd
+
+    from backend.services.universe_graph import GraphRefused, build_graph
+    # An empty return panel cannot produce a graph of measured weights.
+    return (lambda: build_graph(pd.DataFrame(), as_of="2026-01-01"), GraphRefused,
+            "empty return panel")
+
+
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
+    "universe_graph": _case_universe_graph,
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
     "pc_sleeves": _case_pc_sleeves,
