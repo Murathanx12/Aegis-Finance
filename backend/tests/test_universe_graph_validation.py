@@ -271,3 +271,14 @@ def test_event_check_cli_corrects_against_the_registry_and_marks_partial_runs(
     assert "validated" not in w.columns
     g = _graph(_panel(), as_of="2099-01-01")        # the CLI dates its weights today
     assert UG.attach_event_weights(g, None, tmp_path)["validated_cells"] == (3 if complete else 0)
+
+
+def test_a_newer_partial_run_does_not_displace_a_complete_one(tmp_path: Path):
+    _write_check(tmp_path, run_id="event_check_20210601T000000Z")
+    _write_check(tmp_path, run_id="event_check_20210601T010000Z",
+                 weights=_weights(w=-0.9), grid={**_full_grid(), "families": ["8k_results"]})
+    g = _graph(_panel())
+    row = UG.attach_event_weights(g, None, tmp_path)
+    assert row["families"]["8k_results"] == "event_check_20210601T000000Z_weights.parquet"
+    assert row["validated_cells"] == 3
+    assert (g.event_weights["w"] == -0.2).all()

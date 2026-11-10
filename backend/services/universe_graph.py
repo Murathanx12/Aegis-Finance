@@ -2723,7 +2723,8 @@ def attach_event_weights(g: UniverseGraph, path: Optional[Path], out_dir: Path) 
 
     With `path`, that one file. Without it, every `event_check_*_weights.parquet`
     under <out_dir>/event_response, keeping for each family the NEWEST run's rows
-    (a run over one family must not erase the others). Refuses weights fitted AFTER
+    (a run over one family must not erase the others) -- among runs whose receipt
+    validates first, so a newer partial run cannot displace a complete one. Refuses weights fitted AFTER
     the graph's as_of (they would contain its future). Without weights the row is
     MISSING and `propagate` answers context-only.
 
@@ -2737,8 +2738,14 @@ def attach_event_weights(g: UniverseGraph, path: Optional[Path], out_dir: Path) 
     if not paths:
         return {"input": "event_response weights", "status": "MISSING",
                 "note": "no event-check weights: propagate() returns context only (no direction)"}
+    ev_dir = Path(path).parent if path is not None else Path(out_dir) / "event_response"
+    if path is None:
+        # review2 #93: a run whose receipt validates (complete grid, matching hash)
+        # outranks any run that cannot, so a newer PARTIAL run fills only the
+        # families no complete run covers; within each group, newest last = wins
+        paths.sort(key=lambda p_: (derive_validation(p_, ev_dir)["status"] == "OK", p_.name))
     frames, used = {}, {}
-    for p in paths:                                   # sorted by run id = by time
+    for p in paths:                                   # last one wins per family
         w = pd.read_parquet(p)
         w_asof = str(w["as_of"].iloc[0]) if "as_of" in w.columns and len(w) else None
         if w_asof is None or w_asof > g.as_of:
@@ -2750,7 +2757,6 @@ def attach_event_weights(g: UniverseGraph, path: Optional[Path], out_dir: Path) 
             frames[fam] = wf
             used[fam] = p.name
     W = pd.concat(frames.values(), ignore_index=True)
-    ev_dir = Path(path).parent if path is not None else Path(out_dir) / "event_response"
     val = _validation_of(W, ev_dir)
     g.event_weights = W
     g.event_validation = val
