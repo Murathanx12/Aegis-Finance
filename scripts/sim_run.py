@@ -974,7 +974,8 @@ def _write_probe_decisions(rows: list[dict], *, asof: str, folder: Path,
 #: own policy ids and hypothesis ids keep them out of the PROBE grade and the
 #: E[r] blend grade.
 SLEEVE_POLICY_ID = {"REVISION_FLOW": "sim_run.u_plan.revision_flow",
-                    "CORE": "sim_run.u_plan.benchmark_core"}
+                    "CORE": "sim_run.u_plan.benchmark_core",
+                    "OWN_INDEX": "sim_run.u_plan.own_index"}
 SLEEVE_POLICY_VERSION = "owner-d14-2026-10-07"
 
 
@@ -1338,6 +1339,114 @@ def _plan_benchmark_core(targets: list, *, probe_syms: list, ex_syms: list,
     except Exception as exc:                                       # noqa: BLE001
         return ({"enabled": True, "applied": False, "symbol": "SPY",
                  "line": f"benchmark core: REFUSED {type(exc).__name__}: {exc}"[:200]}, [])
+
+
+def _own_index_requested() -> bool:
+    import backend.config as _cfg_live
+    return bool(getattr(_cfg_live, "PC_OWN_INDEX", False))
+
+
+def _own_index_prepare(*, folder: Path, funnel_path: Path | None, held: dict, targets: list,
+                       rf_w: dict, rf_hold: list, probe_syms: list, ex_syms: list,
+                       probe_acting: bool, exploit_acting: bool, rf_acting: bool,
+                       core_on: bool, core_sym: str, bars_paths: list | None,
+                       sandbox: bool) -> dict:
+    """OD-10 (owner 2026-11-10), BEFORE the sleeves' plan_orders: the frozen
+    contract, this cycle's membership, the held names the index owns (and the
+    old core), and the non-acting sleeve targets that yield their symbol to it.
+    {"on": False} when the flag is off; never raises into the plan."""
+    if not _own_index_requested():
+        return {"on": False}
+    from backend.services import pc_own_index as OI                 # noqa: PLC0415
+    if core_on:
+        return {"on": False, "enabled": True, "applied": False,
+                "refused": "PC_BENCHMARK_CORE and PC_OWN_INDEX are both True",
+                "line": ("own index: REFUSED -- PC_BENCHMARK_CORE and PC_OWN_INDEX are both "
+                         "True; the SPY core plans as before (OD-10 needs the core OFF)")}
+    core_u = str(core_sym).upper()
+    # the old core is the index's to retire, unless a sleeve targets that symbol this cycle
+    core_claimed = any(str(t.symbol).upper() == core_u for t in targets)
+    out: dict = {"on": True, "contract": None, "members_row": None, "refusal": None,
+                 "owned": set() if core_claimed else {core_u}, "core_claimed": core_claimed,
+                 "yield": set(), "members": []}
+    try:
+        out["contract"] = OI.load_frozen(Path(folder) / OI.CONTRACT_FILE)
+    except Exception as exc:                                       # noqa: BLE001
+        out["refusal"] = f"{type(exc).__name__}: {exc}"[:300]
+        out["contract_refusal"] = True
+        logger.warning("u_plan RED: own index contract: %s", out["refusal"])
+        return out
+    acting_claim = (set(rf_w) | set(rf_hold) | (set(probe_syms) if probe_acting else set())
+                    | (set(ex_syms) if exploit_acting else set()))
+    try:
+        from backend.services import pc_risk as PR                 # noqa: PLC0415
+        sig = (PR.panel_sigmas(Path(bars_paths[0])) if bars_paths else
+               ({} if sandbox else PR.panel_sigmas()))
+        out["members_row"] = OI.membership(
+            folder, contract=out["contract"], funnel_path=funnel_path,
+            exclude=set(rf_w) | set(rf_hold), sigmas=sig)
+    except Exception as exc:                                       # noqa: BLE001
+        out["refusal"] = f"{type(exc).__name__}: {exc}"[:300]
+        logger.warning("u_plan RED: own index membership: %s", out["refusal"])
+        prev = OI._read_json(Path(folder) / OI.MEMBERS_FILE) or {}
+        out["members_row"] = {"members": [], "previous_members": list(prev.get("members") or [])}
+    row = out["members_row"] or {}
+    members = list(row.get("members") or [])
+    out["members"] = members
+    idx_syms = set(members) | set(row.get("previous_members") or [])
+    out["owned"] |= {s for s in idx_syms if s in held and s not in acting_claim}
+    tsyms = {t.symbol for t in targets}
+    out["yield"] = {s for s in members if s in tsyms and s not in acting_claim}
+    out["claimed"] = acting_claim
+    return out
+
+
+def _plan_own_index(oi: dict, *, equity: float, held: dict, prices: dict, targets: list,
+                    probe_syms: list, ex_syms: list, probe_acting: bool, exploit_acting: bool,
+                    rf_syms: list, rf_acting: bool, rf_hold: list, mode: str,
+                    bars_paths: list | None, sandbox: bool) -> dict:
+    """OD-10, AFTER the sleeves' plan_orders (like the D14 core): size the index
+    on what the acting sleeves and the untraded held names leave, by the worst
+    case, in its own plan_orders call. Never raises into the plan."""
+    from backend.services import pc_own_index as OI                 # noqa: PLC0415
+    try:
+        from backend.services import pc_risk as PR                 # noqa: PLC0415
+        from backend.services import pc_sleeves as SL              # noqa: PLC0415
+        acting = {t.symbol: float(t.weight) for t in targets
+                  if (t.symbol in probe_syms and probe_acting)
+                  or (t.symbol in ex_syms and exploit_acting)
+                  or (t.symbol in (rf_syms or []) and rf_acting)}
+        owned = set(oi.get("owned") or set())
+
+        def _will_trade(sym: str) -> bool:
+            return sym in owned or sym in acting
+
+        resid = _held_residual(held, prices, equity, core_sym=str(_config.PC_BENCHMARK_CORE_SYMBOL),
+                               will_trade=_will_trade)
+        if bars_paths:
+            sig = PR.panel_sigmas(Path(bars_paths[0]))
+        else:
+            sig = {} if sandbox else PR.panel_sigmas()
+        fb, _fb_src = PR.fallback_sigma(PR.universe_stats(sig))
+        claimed = set(oi.get("claimed") or set())
+        names = [m for m in (oi.get("members") or []) if m not in claimed]
+        history = (SL.bound_history(names, Path(bars_paths[0]) if bars_paths else None)
+                   if names and oi.get("contract") and not oi.get("refusal") else None)
+        core_u = str(_config.PC_BENCHMARK_CORE_SYMBOL).upper()
+        held_oi = ({s_: q_ for s_, q_ in held.items() if str(s_).upper() != core_u}
+                   if oi.get("core_claimed") else held)
+        res = OI.plan(contract=oi.get("contract"), members_row=oi.get("members_row"),
+                      refusal=oi.get("refusal"), equity=equity, held=held_oi, prices=prices,
+                      acting_weights=acting, claimed=claimed, held_residual=resid,
+                      sigmas=sig, fallback_sigma=fb, history=history, mode=mode,
+                      core_symbol=str(_config.PC_BENCHMARK_CORE_SYMBOL))
+        if oi.get("contract_refusal"):
+            res["contract_refused"] = True
+        return res
+    except Exception as exc:                                       # noqa: BLE001
+        return {"enabled": True, "applied": False, "acting": False, "plans": [],
+                "state_of": {}, "weights": {}, "refused": f"{type(exc).__name__}: {exc}"[:300],
+                "line": f"own index: REFUSED {type(exc).__name__}: {exc}"[:300]}
 
 
 def _order_path_gate(targets: list, *, snap: dict, equity: float, probe_syms: list,
@@ -2344,12 +2453,26 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     # same with the flag on or off. Flag OFF: `core_on` is False, `plan_held`
     # is `held`, and the plan below is byte-identical (test_benchmark_core.py).
     core_on, core_sym = _benchmark_core_flag(targets)
+    # ---- OD-10 (owner 2026-11-10): the own index (config.PC_OWN_INDEX, default OFF) --
+    # Flag OFF: `oi` is {"on": False} and nothing below changes (pinned by test).
+    oi = _own_index_prepare(
+        folder=folder, funnel_path=funnel_path, held=held, targets=targets, rf_w=rf_w,
+        rf_hold=rf_hold, probe_syms=probe_syms, ex_syms=ex_syms, probe_acting=probe_acting,
+        exploit_acting=exploit_acting, rf_acting=rf_acting, core_on=core_on,
+        core_sym=core_sym, bars_paths=bars_paths, sandbox=sandbox)
+    if oi.get("on") and oi.get("yield"):
+        # a planned-but-not-acting PROBE/EXPLOIT target yields its symbol to the index
+        targets[:] = [t for t in targets if t.symbol not in oi["yield"]]
     plan_held = ({s_: q for s_, q in held.items() if s_ != core_sym} if core_on else held)
     if rf_hold:
         plan_held = {s_: q for s_, q in plan_held.items() if s_ not in rf_hold}
+    if oi.get("on"):
+        plan_held = {s_: q for s_, q in plan_held.items() if s_ not in oi["owned"]}
     syms = [t.symbol for t in targets] + list(held)
     if core_on and core_sym not in syms:
         syms.append(core_sym)
+    if oi.get("on"):
+        syms += [s_ for s_ in oi.get("members") or [] if s_ not in syms]
     prices = PB.last_prices(syms) if syms else {}
     plans = PB.plan_orders(targets, equity=equity, held=plan_held, prices=prices) if syms else []
     core: dict = {"enabled": False}
@@ -2382,6 +2505,20 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             held=held, prices=prices, bars_paths=bars_paths, sandbox=sandbox, **core_extra)
         plans = plans + core_plans
     core_syms = {core["symbol"]} if core.get("applied") else set()
+    own_index: dict = {"enabled": False}
+    if oi.get("on"):
+        own_index = _plan_own_index(
+            oi, equity=equity, held=held, prices=prices, targets=targets,
+            probe_syms=probe_syms, ex_syms=ex_syms, probe_acting=probe_acting,
+            exploit_acting=exploit_acting, rf_syms=rf_syms, rf_acting=rf_acting,
+            rf_hold=rf_hold, mode=mode, bars_paths=bars_paths, sandbox=sandbox)
+        plans = plans + list(own_index.get("plans") or [])
+        targets.extend(own_index.get("targets") or [])     # the receipt's book
+        if own_index.get("refused"):
+            logger.warning("u_plan RED: %s", str(own_index.get("line"))[:300])
+    elif oi.get("enabled"):
+        own_index = oi
+    oi_state: dict = dict(own_index.get("state_of") or {})
 
     # An EXIT the share-class collapse caused is a POLICY CHANGE, not a view
     # (review 2026-09-28 F5): pc_broker would stamp it "not in the ranked book:
@@ -2407,6 +2544,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     def _state(sym: str) -> str:
         if sym in core_syms:
             return "CORE"
+        if sym in oi_state:
+            return oi_state[sym]
         if sym in rf_w:
             return "REVISION_FLOW"
         if sym in rf_hold:
@@ -2422,7 +2561,21 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         return p.qty > 0 and ((st in ("PROBE", "PROBE_EXIT") and probe_acting)
                               or (st in ("EXPLOIT", "EXIT") and exploit_acting)
                               or (st == "CORE" and mode == "paper_profit")
-                              or (st == "REVISION_FLOW" and rf_acting))
+                              or (st == "REVISION_FLOW" and rf_acting)
+                              or (st == "OWN_INDEX" and bool(own_index.get("acting")))
+                              or (st in ("OWN_INDEX_EXIT", "CORE_EXIT")
+                                  and bool(own_index.get("exit_acting"))))
+
+    # ---- OD-10: the index's buys are clipped to the POST-FILL book too -------
+    if own_index.get("applied"):
+        from backend.services import pc_own_index as _OI           # noqa: PLC0415
+        _clip = _OI.clip_buys_to_post_fill_gross(
+            plans, held=held, prices=prices, equity=equity, sendable=_may_send,
+            cash_buffer=float(_config.PC_OWN_INDEX_CASH_BUFFER),
+            clip_syms={s_ for s_, st_ in oi_state.items() if st_ == "OWN_INDEX"})
+        if _clip:
+            own_index["clipped_to_post_fill_gross"] = _clip
+            own_index["line"] += "; " + _clip["line"]
 
     # ---- review 2026-10-07 fix 2: the core is clipped to the POST-FILL book ----
     # The core was sized on TARGET weights; a sleeve rebalance refused by the
@@ -2554,6 +2707,13 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             weights={core["symbol"]: float(core.get("weight_planned") or 0.0)},
             label="CORE", acting=(mode == "paper_profit"), by_sym=by_sym,
             extra={"core_status": core.get("status")})
+    if own_index.get("applied"):
+        sleeve_rows += _sleeve_decision_rows(
+            asof=asof, mode=mode, equity=equity, prices=prices,
+            weights=dict(own_index.get("weights") or {}), label="OWN_INDEX",
+            acting=bool(own_index.get("acting")), by_sym=by_sym,
+            extra={"own_index_policy_hash": own_index.get("contract_hash"),
+                   "own_index_version": _config.PC_OWN_INDEX_VERSION})
     sleeve_ledger = (_write_sleeve_decisions(sleeve_rows, asof=asof, folder=folder,
                                              ledger_path=ledger_path)
                      if sleeve_rows else None)
@@ -2700,6 +2860,17 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             1 for p in to_send if _state(p.symbol) == "REVISION_FLOW")
     if core.get("applied") and sleeve_ledger is not None:
         record["benchmark_core"]["decisions"] = sleeve_ledger
+    if own_index.get("enabled"):
+        # OD-10: only when PC_OWN_INDEX is ON, so the OFF receipt is unchanged
+        record["own_index"] = {k_: v_ for k_, v_ in own_index.items()
+                               if k_ not in ("plans", "targets", "contract", "members_row")}
+        record["own_index_line"] = own_index.get("line")
+        if own_index.get("worst_case_lines"):
+            record["own_index_worst_case_lines"] = own_index["worst_case_lines"]
+        for st_ in ("OWN_INDEX", "OWN_INDEX_EXIT", "CORE_EXIT"):
+            record["sendable_by_state"][st_] = sum(1 for p in to_send if _state(p.symbol) == st_)
+        if own_index.get("applied") and sleeve_ledger is not None:
+            record["own_index"]["decisions"] = sleeve_ledger
     if rf_hold:
         hold_w = {s_: float(held[s_]) * float(prices.get(s_) or 0.0) / float(equity)
                   for s_ in rf_hold if equity}
@@ -2737,6 +2908,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                            else f"EXPLOIT: ranking verdict {verdict}; no name with E[r_21] > 0")
             if not probe_acting:
                 why.append(f"PROBE: {shortlist_red or grade['why']}")
+            if own_index.get("refused"):
+                why.append(f"OWN_INDEX: {own_index['refused']}")
         record["why_not"] = "; ".join(why) or "nothing to trade"
     if shortlist_red:
         logger.warning("u_plan RED: %s", shortlist_red[:200])
@@ -2792,7 +2965,10 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             "turnover_usd": record["turnover_usd"],
             "worst_case_line": wc_admissible["line"],
             "decisions_new": ledger.get("new_rows", 0),
-            "top1": targets[0].symbol if targets else None}
+            "top1": targets[0].symbol if targets else None,
+            **({"own_index_line": own_index.get("line"),
+                "own_index_refused": own_index.get("refused")}
+               if own_index.get("enabled") else {})}
 
 
 def u_grade() -> dict:

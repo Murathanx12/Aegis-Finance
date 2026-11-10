@@ -164,10 +164,13 @@ def _plan(tmp: Path, mp: pytest.MonkeyPatch, *, funnel: Path | None = None,
 
 def test_the_shipped_owner_decision():
     from backend.tests.conftest import SHIPPED_OWNER_D14_FLAGS
-    assert SHIPPED_OWNER_D14_FLAGS == {"PC_BENCHMARK_CORE": True,
+    # OD-10 (owner 2026-11-10): the SPY core ships OFF; the own index ships OFF
+    # until the attended activation (docs/RUNBOOK_PC_OWN_INDEX_ACTIVATION.md).
+    assert SHIPPED_OWNER_D14_FLAGS == {"PC_BENCHMARK_CORE": False,
                                        "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP": True,
                                        "PC_SLEEVE_REVISION_FLOW": True,
-                                       "PC_CONTRACT_COUNTS_PLAN_SLEEVES": True}
+                                       "PC_CONTRACT_COUNTS_PLAN_SLEEVES": True,
+                                       "PC_OWN_INDEX": False}
     assert config.PC_SLEEVE_REVISION_FLOW_GROSS == pytest.approx(0.30)
     assert config.PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC == pytest.approx(0.10)
     assert config.PC_SLEEVE_REVISION_FLOW_BOOK_ID == "cb8d492bb8bf9ade"

@@ -5938,7 +5938,15 @@ RAILWAY_FLEET_STOPPED_REASON = ("Railway fleet loops stopped on purpose 2026-09-
 #: PC-PAPER had been ~80% cash since 2026-09-22 (equity $1,002,024, cash $800,653,
 #: +0.20% vs SPY +0.72%, receipt paper_accounts/roi_2026-10-06T235345Z.json).
 #: Every OFF path stays pinned byte-identical (test_pc_plan_replay_owner_d14.py).
-PC_BENCHMARK_CORE = True
+#:
+#: RESOLVED OFF, OWNER DECISION 2026-11-10 (OD-10, docs/ROADMAP.md §3): holding
+#: SPY is not the account's job ("it should go for specific stocks and make its
+#: own index"); SPY stays the BENCHMARK only. The replacement is
+#: `PC_OWN_INDEX` below (default False until the attended activation in
+#: docs/RUNBOOK_PC_OWN_INDEX_ACTIVATION.md). OFF on its own does NOT sell SPY:
+#: a held SPY with no owner is an EXIT that only an acting EXPLOIT sends, so the
+#: core's shares sit untouched until PC_OWN_INDEX retires them (CORE_EXIT).
+PC_BENCHMARK_CORE = False
 #: SPY is an ordinary listed equity order on the Alpaca paper venue (pc_broker
 #: already samples it in BENCHMARKS); no proxy ETF is needed.
 PC_BENCHMARK_CORE_SYMBOL = "SPY"
@@ -6011,6 +6019,46 @@ PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
 #: at these horizons (sessions), each name's excess over the core (SPY). 1 so a
 #: night's result is readable the next day; 5 and 21 match the book's horizon.
 PC_SLEEVE_GRADE_HORIZONS: tuple = (1, 5, 21)
+
+# ── OD-10 (owner 2026-11-10): PC-PAPER makes its OWN index; SPY is the benchmark only ──
+#: "it should go for specific stocks and make its own index". `backend/services/
+#: pc_own_index.py`, called from `sim_run.u_plan` where the SPY core used to be
+#: planned. Licence PRODUCT_EXPERIMENT: a frozen contract (policy hash over the
+#: values below + the module's source) must exist BEFORE the first decision
+#: (`python -m scripts.pc_own_index freeze`); a contract that no longer matches
+#: config or code REFUSES. Default False: activation is attended (dry-run first).
+#: Mutually exclusive with PC_BENCHMARK_CORE: both True REFUSES the index.
+PC_OWN_INDEX = False
+#: Bump when any value below changes; a changed contract under an old version
+#: is refused, never silently re-frozen.
+PC_OWN_INDEX_VERSION = "own_index_v1"
+#: Membership: the opportunity funnel's fresh candidates (IC_FUNNEL_PATH, the
+#: universe hub's 5,3xx -> 25 selection), one line per issuer, in funnel score
+#: order, minus the excluded symbols and the revision_flow sleeve's names, top N.
+PC_OWN_INDEX_N = 20
+#: The candidate file may be at most this old (its own `generated_at` stamp,
+#: never mtime) when a membership is frozen = investment_committee.FUNNEL_STALE_DAYS,
+#: the age at which the sim's u_funnel rebuilds it. Undateable = stale.
+PC_OWN_INDEX_MAX_SOURCE_AGE_DAYS = 10.0
+#: A frozen membership is reused for this many days, then rebuilt from a fresh
+#: candidate file (weekly). Between rebuilds only pc_broker's drift band rebalances.
+PC_OWN_INDEX_REBALANCE_DAYS = 7.0
+#: Equal weight, w = min(cap, G / N) with N the DECLARED count: when fewer than N
+#: names qualify, their slots stay CASH (never re-spread, never SPY).
+PC_OWN_INDEX_MAX_NAME_FRAC = 0.03
+#: G = the largest multiple of this step (<= N x cap, <= 1 - other sleeves - held
+#: names no sleeve trades this cycle - cash buffer) passing BOTH bounds below.
+PC_OWN_INDEX_GROSS_STEP = 0.05
+#: Bound 1, the whole book's one-day rho=1 k-sigma loss (k = PROBE_WORST_CASE_SIGMA)
+#: <= PC_WORST_CASE_MAX_FRAC_OF_EQUITY. Bound 2, the index's gross x |its basket's
+#: worst historical 21-session return, all names priced, longest panel| <= this
+#: (the same rule and number the revision_flow sleeve answers). On 2026-11-10 the
+#: retired SPY core (49% x SPY's worst 21 sessions -32.8%) would have read 16.1%.
+PC_OWN_INDEX_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
+#: Never a member: the benchmark and broad index ETFs (the point of OD-10).
+PC_OWN_INDEX_EXCLUDED: tuple = ("SPY", "VOO", "IVV", "QQQ", "IWM", "DIA", "VTI", "URTH")
+#: Fraction of equity left in cash so a fill above the planned price cannot margin.
+PC_OWN_INDEX_CASH_BUFFER = 0.01
 #: The six-role v3 fleet contracts are written HERE, never into
 #: `fleet_manager/contracts/`: no seed path reads this folder, and
 #: `fleet_manager.load_contract`/`freeze_contract` refuse a PREPARED body.

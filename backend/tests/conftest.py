@@ -494,7 +494,9 @@ def _frozen_iif1_night_receipts(monkeypatch, request):
 #: The values config SHIPS with, captured before any test patches them, so a
 #: test can pin what the owner decided (test_pc_plan_replay_owner_d14.py).
 OWNER_D14_FLAGS = ("PC_BENCHMARK_CORE", "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP",
-                   "PC_SLEEVE_REVISION_FLOW", "PC_CONTRACT_COUNTS_PLAN_SLEEVES")
+                   "PC_SLEEVE_REVISION_FLOW", "PC_CONTRACT_COUNTS_PLAN_SLEEVES",
+                   # OD-10 (owner 2026-11-10): the own index, pinned OFF like the others
+                   "PC_OWN_INDEX")
 
 
 def _shipped_owner_flags() -> dict:
