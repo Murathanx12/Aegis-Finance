@@ -239,3 +239,65 @@ def test_cli_build_writes_receipt_and_status_goes_red_when_stale(tmp_path: Path)
     assert stale["status"] == "STALE" and stale["red"]
     assert UG.status(tmp_path / "nowhere")["red"]
     assert UG.main(["status", "--out", str(tmp_path / "nowhere")]) == 1
+
+
+# ── staleness is the DATA's age, not the build's (review #87 R1) ────────────
+
+def _fake_build(out: Path, *, as_of: str, last_session) -> None:
+    """A minimal written build whose receipt carries a chosen panel_last_session."""
+    bid = f"ug_{as_of.replace('-', '')}_fake"
+    (out / bid).mkdir(parents=True)
+    rec = {"build_id": bid, "as_of": as_of, "built_utc": f"{as_of}T00:00:00+00:00",
+           "counts": {"n_edges": 1}}
+    if last_session is not None:
+        rec["panel_last_session"] = last_session
+    (out / bid / "receipt.json").write_text(json.dumps(rec), encoding="utf-8")
+    (out / "latest.json").write_text(json.dumps({"build_id": bid, "as_of": as_of}),
+                                     encoding="utf-8")
+
+
+def test_status_ages_the_newest_input_bar_not_the_build_date(tmp_path: Path):
+    today = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    stale_bar = str((today - pd.Timedelta(days=60)).date())
+    _fake_build(tmp_path, as_of=str(today.date()), last_session=stale_bar)
+    s = UG.status(tmp_path, now=today)
+    assert s["red"] and s["status"] == "STALE", s
+    assert s["age_days"] == 60 and s["panel_last_session"] == stale_bar
+
+
+def test_status_is_unknown_and_red_when_the_input_bar_date_is_absent(tmp_path: Path):
+    today = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    _fake_build(tmp_path, as_of=str(today.date()), last_session=None)
+    s = UG.status(tmp_path, now=today)
+    assert s["red"] and s["status"] == "UNKNOWN", s
+    _fake_build(tmp_path / "b", as_of=str(today.date()), last_session="not-a-date")
+    s = UG.status(tmp_path / "b", now=today)
+    assert s["red"] and s["status"] == "UNKNOWN", s
+
+
+def test_cli_build_refuses_when_the_bars_are_stale_relative_to_as_of(tmp_path: Path):
+    _write_root(tmp_path)                       # bars end 2021-08-11
+    out = tmp_path / "out"
+    rc = UG.main(["build", "--data-root", str(tmp_path), "--out", str(out),
+                  "--as-of", "2021-11-01"])     # 82 days after the last bar
+    assert rc == 2
+    assert not (out / "latest.json").exists()
+
+
+def test_check_returns_red_when_no_fold_is_ok():
+    assert UG._check_rc({"by_year": {"2021": {"status": "SKIPPED"},
+                                     "2022": {"status": "REFUSED"}}}) == 2
+    assert UG._check_rc({"by_year": {}}) == 2
+    assert UG._check_rc({"by_year": {"2021": {"status": "OK"},
+                                     "2022": {"status": "SKIPPED"}}}) == 0
+
+
+def test_trailing_sigma_at_t_excludes_day_t():
+    rng = np.random.default_rng(3)
+    X = rng.normal(0, 0.01, (80, 1))
+    base = UG.trailing_sigma(X, 20)
+    X2 = X.copy()
+    X2[60, 0] = 0.50                            # a huge same-day move
+    s2 = UG.trailing_sigma(X2, 20)
+    assert s2[60, 0] == pytest.approx(base[60, 0])     # sigma at t did not see day t
+    assert s2[61, 0] > base[61, 0]                     # ...and the next day does

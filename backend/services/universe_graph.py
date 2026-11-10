@@ -1097,7 +1097,13 @@ def load_graph(out_dir: Optional[Path] = None, build_id: Optional[str] = None) -
 
 def status(out_dir: Optional[Path] = None, *, now: Optional[Any] = None,
            stale_days: Optional[int] = None) -> dict:
-    """Green only when a graph exists, its as_of parses, and it is not stale."""
+    """Green only when a graph exists and its newest INPUT BAR is not stale.
+
+    Age is measured from the receipt's `panel_last_session` (the newest bar the
+    weights saw), not from the build's `as_of`: a nightly build on a panel that
+    stopped updating would otherwise read OK. A receipt without a parseable
+    `panel_last_session` is UNKNOWN and red, never fresh.
+    """
     out_dir = Path(out_dir or _cfg.UNIVERSE_GRAPH_DIR)
     limit = int(stale_days if stale_days is not None else _cfg.UNIVERSE_GRAPH_STALE_DAYS)
     now_ts = pd.Timestamp(now) if now is not None else pd.Timestamp.now(tz="UTC")
@@ -1114,12 +1120,24 @@ def status(out_dir: Optional[Path] = None, *, now: Optional[Any] = None,
     except Exception as e:
         return {"status": "UNKNOWN", "red": True, "dir": str(out_dir), "stale_after_days": limit,
                 "line": f"universe graph UNKNOWN: unreadable latest/receipt ({type(e).__name__})"}
-    age = int((now_ts.normalize() - as_of.normalize()).days)
+    try:
+        last_bar = pd.Timestamp(rec["panel_last_session"])
+        if pd.isna(last_bar):
+            raise ValueError("NaT")
+    except Exception:
+        return {"status": "UNKNOWN", "red": True, "dir": str(out_dir), "stale_after_days": limit,
+                "as_of": str(as_of.date()), "build_id": latest["build_id"],
+                "line": (f"universe graph UNKNOWN: build {latest['build_id']} does not record a "
+                         f"parseable panel_last_session, so the age of its data is unknown")}
+    dated = min(as_of.normalize(), last_bar.normalize())
+    age = int((now_ts.normalize() - dated).days)
     stale = age > limit
     return {"status": "STALE" if stale else "OK", "red": bool(stale), "as_of": str(as_of.date()),
+            "panel_last_session": str(last_bar.date()),
             "age_days": age, "stale_after_days": limit, "build_id": latest["build_id"],
             "counts": rec.get("counts"), "dir": str(out_dir),
-            "line": (f"universe graph {'STALE' if stale else 'OK'}: as_of {as_of.date()}, "
+            "line": (f"universe graph {'STALE' if stale else 'OK'}: newest bar "
+                     f"{last_bar.date()} (as_of {as_of.date()}), "
                      f"{age}d old (red after {limit}d), "
                      f"{(rec.get('counts') or {}).get('n_edges', '?')} edges")}
 
@@ -1333,12 +1351,19 @@ def cmd_build(args: argparse.Namespace) -> int:
     as_of_s = g.as_of
     built = _utc_now()
     last = pd.Timestamp(g.meta["panel_last_session"])
+    data_age = int((pd.Timestamp(as_of_s) - last).days)
+    if data_age > _cfg.UNIVERSE_GRAPH_STALE_DAYS:
+        print(f"REFUSED: newest bar {last.date()} is {data_age}d before as_of {as_of_s} "
+              f"(limit {_cfg.UNIVERSE_GRAPH_STALE_DAYS}d): the bars panel is stale; refresh it "
+              f"before building", file=sys.stderr)
+        return 2
     degraded = [r["input"] for r in inputs if r.get("status") not in ("OK", "NOT_USED")]
     receipt = {
         "schema": SCHEMA, "build_id": _build_id(as_of_s), "as_of": as_of_s, "built_utc": built,
         "status": "DEGRADED" if degraded else "OK", "degraded_inputs": degraded,
         "panel_last_session": g.meta["panel_last_session"],
         "panel_age_days_at_build": int((pd.Timestamp(built[:10]) - last).days),
+        "panel_age_days_at_as_of": data_age,
         "counts": counts, "meta": g.meta,
         "liquid_subset": {**liq_info, "limit_reason": "first build kept tractable on a PC with "
                                                       "~7 GB free RAM (CH-30 brief)"},
@@ -1382,6 +1407,12 @@ def cmd_propagate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _check_rc(res: dict) -> int:
+    """2 when no year produced an OK fold: a check that measured nothing is not a pass."""
+    ok = [r for r in (res.get("by_year") or {}).values() if r.get("status") == "OK"]
+    return 0 if ok else 2
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     from backend.services.disk_guard import atomic_write_json
     t0 = time.time()
@@ -1417,6 +1448,10 @@ def cmd_check(args: argparse.Namespace) -> int:
                "claim_boundary": "OBSERVATION ONLY. No skill claim; nothing promoted.",
                "liquid_by_year": liq_info, "survivorship": surv, "inputs": inputs,
                "params": asdict(GraphParams()), "limitations": LIMITATIONS,
+               "structure_look_ahead": True,
+               "structure_look_ahead_note": "candidate pairs, theme memberships and co_mention "
+                                            "support are loaded as of today for every fold; "
+                                            "a positive here is biased upward",
                "elapsed_s": round(time.time() - t0, 1), **res}
     out = Path(args.out) if args.out else _cfg.UNIVERSE_GRAPH_DIR
     atomic_write_json(out / f"{run_id}.json", receipt)
@@ -1426,7 +1461,10 @@ def cmd_check(args: argparse.Namespace) -> int:
                                                                     "n_events_propagated")}
                                   for y, r in res["by_year"].items()},
                       "elapsed_s": receipt["elapsed_s"]}, indent=1, default=str))
-    return 0
+    rc = _check_rc(res)
+    if rc:
+        print("REFUSED: no year produced an OK fold (pooled n = 0)", file=sys.stderr)
+    return rc
 
 
 def main(argv: Optional[list[str]] = None) -> int:
