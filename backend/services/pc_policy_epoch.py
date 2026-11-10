@@ -6,6 +6,7 @@ off until independent review. No import or helper here contacts the broker.
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 import math
@@ -18,7 +19,12 @@ from typing import Any
 
 
 ACTIVATION_ALLOWED = False
-EXPECTED_CONTENT_SHA256 = "6a93d267b8a8d0e5b485c4f20488d6d90ca060082869085e21ab3e408ddbf587"
+# 2026-11-10: re-pinned from 6a93d267... (never activated) with backend/config.py
+# pinned by the definitions the policy reads instead of the file's bytes; the
+# definitions were derived from exactly the bytes the 2026-10 identity pinned
+# (`config_definitions.derived_from_source_sha256`). Every other field and pin
+# is unchanged.
+EXPECTED_CONTENT_SHA256 = "1de378d86ef675c2692f0001ad423a8c27498f42f5af031a3467db542b266e5f"
 FROZEN_ACCOUNT_FINGERPRINT = "083ccc987a01685a7e5bb200ef6f5613d479c2bb72f02f234eec1e6d251f4898"
 EXPECTED_ACCOUNT_FINGERPRINT = FROZEN_ACCOUNT_FINGERPRINT
 EXPECTED_SOURCE_PATHS = frozenset({
@@ -79,6 +85,228 @@ def _source_sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
+# ── backend/config.py is pinned by the DEFINITIONS the policy reads ──────────
+# A byte hash of the whole shared config made every unrelated PR that added a
+# constant fail this epoch's verification (2026-11-10, PRs #86/#87). The epoch
+# needs tamper-evidence for the values its pinned sources read, not for the
+# file. The names are DERIVED from the pinned sources at verify time (which are
+# themselves byte-pinned), closed over the module-level names their
+# definitions reference, and each is hashed as a canonical AST of the
+# statements that bind it, so comments, layout and line moves do not matter.
+CONFIG_SOURCE = "backend/config.py"
+CONFIG_DEFINITION_BASIS = (
+    "pc_policy_epoch/config_definitions/v1: every name a pinned .py source "
+    "reads from backend.config (attribute, literal getattr/hasattr, "
+    "from-import, or a literal startswith prefix over dir()/vars()), closed "
+    "over the module-level names its binding statements reference; per name, "
+    "SHA-256 of the canonical AST of its binding statements; ABSENT when unbound")
+_CONFIG_MODULE = "backend.config"
+
+
+def _ast_canonical(node: Any) -> Any:
+    """Interpreter-stable AST form: node type plus non-empty fields, no positions."""
+    if isinstance(node, ast.AST):
+        out: dict = {"_": type(node).__name__}
+        for field in node._fields:
+            value = getattr(node, field, None)
+            if value is None or value == []:
+                continue
+            out[field] = _ast_canonical(value)
+        return out
+    if isinstance(node, list):
+        return [_ast_canonical(v) for v in node]
+    if isinstance(node, (str, int, float, bool, bytes, complex)) or node is Ellipsis:
+        return [type(node).__name__, repr(node)]
+    raise EpochRefused(f"config AST has an unserialisable value: {type(node).__name__}")
+
+
+def _config_reads(tree: ast.AST, rel: str) -> tuple[set[str], set[str]]:
+    """Names and literal prefixes one pinned source reads from backend.config.
+
+    An access the derivation cannot name (a non-literal getattr, the module
+    passed around, a star import) REFUSES rather than pinning too little.
+    """
+    aliases: set[str] = set()
+    names: set[str] = set()
+    prefixes: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.level == 0:
+            if node.module == "backend":
+                aliases |= {a.asname or a.name for a in node.names if a.name == "config"}
+            elif node.module == _CONFIG_MODULE:
+                for alias in node.names:
+                    if alias.name == "*":
+                        raise EpochRefused(f"policy config read is a star import: {rel}")
+                    names.add(alias.name)
+        elif isinstance(node, ast.ImportFrom) and node.level and node.module in (None, "config"):
+            if node.module == "config" or any(a.name == "config" for a in node.names):
+                raise EpochRefused(f"policy config read uses a relative import: {rel}")
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name == _CONFIG_MODULE and alias.asname:
+                    aliases.add(alias.asname)
+    parents: dict[int, ast.AST] = {}
+    for parent in ast.walk(tree):
+        for child in ast.iter_child_nodes(parent):
+            parents[id(child)] = parent
+    accounted: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute):
+            base = node.value
+            if isinstance(base, ast.Name) and base.id in aliases:
+                names.add(node.attr)
+                accounted.add(id(base))
+            elif (isinstance(base, ast.Attribute) and base.attr == "config"
+                  and isinstance(base.value, ast.Name) and base.value.id == "backend"):
+                names.add(node.attr)
+        elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+              and node.func.id in ("getattr", "hasattr") and node.args
+              and isinstance(node.args[0], ast.Name) and node.args[0].id in aliases):
+            if (len(node.args) > 1 and isinstance(node.args[1], ast.Constant)
+                    and isinstance(node.args[1].value, str)):
+                names.add(node.args[1].value)
+                accounted.add(id(node.args[0]))
+    for node in ast.walk(tree):
+        if (not isinstance(node, ast.Name) or node.id not in aliases
+                or id(node) in accounted or isinstance(node.ctx, ast.Store)):
+            continue
+        stmt: ast.AST = node
+        while not isinstance(stmt, ast.stmt) and id(stmt) in parents:
+            stmt = parents[id(stmt)]
+        found = {c.args[0].value for c in ast.walk(stmt)
+                 if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute)
+                 and c.func.attr == "startswith" and len(c.args) == 1
+                 and isinstance(c.args[0], ast.Constant)
+                 and isinstance(c.args[0].value, str) and c.args[0].value}
+        if not found:
+            raise EpochRefused(
+                f"policy config read cannot be named: {rel}:{getattr(node, 'lineno', '?')}")
+        prefixes |= found
+    return names, prefixes
+
+
+def _bound_names(stmt: ast.stmt) -> set[str]:
+    """Module-level names a top-level config statement binds or mutates."""
+    out: set[str] = set()
+
+    def target(t: ast.AST) -> None:
+        if isinstance(t, ast.Name):
+            out.add(t.id)
+        elif isinstance(t, (ast.Tuple, ast.List)):
+            for e in t.elts:
+                target(e)
+        elif isinstance(t, ast.Starred):
+            target(t.value)
+        elif isinstance(t, (ast.Subscript, ast.Attribute)):
+            base = t.value
+            while isinstance(base, (ast.Subscript, ast.Attribute)):
+                base = base.value
+            target(base)
+
+    if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        out.add(stmt.name)
+    elif isinstance(stmt, (ast.Import, ast.ImportFrom)):
+        for alias in stmt.names:
+            out.add(alias.asname or alias.name.split(".")[0])
+    elif isinstance(stmt, ast.Assign):
+        for t in stmt.targets:
+            target(t)
+    elif isinstance(stmt, (ast.AnnAssign, ast.AugAssign)):
+        target(stmt.target)
+    elif isinstance(stmt, ast.Delete):
+        for t in stmt.targets:
+            target(t)
+    elif isinstance(stmt, ast.Expr):
+        call = stmt.value
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute):
+            target(call.func.value)          # X.update(...), X.append(...)
+    else:                                    # if / try / with / for at module level
+        if isinstance(stmt, (ast.For, ast.AsyncFor)):
+            target(stmt.target)
+        if isinstance(stmt, (ast.With, ast.AsyncWith)):
+            for item in stmt.items:
+                if item.optional_vars is not None:
+                    target(item.optional_vars)
+        for child in ast.iter_child_nodes(stmt):
+            if isinstance(child, ast.stmt):
+                out |= _bound_names(child)
+            elif isinstance(child, ast.ExceptHandler):
+                for sub in child.body:
+                    out |= _bound_names(sub)
+    return out
+
+
+def _binding_form(stmt: ast.stmt, name: str) -> Any:
+    """An import binds only the alias asked about; anything else is the statement."""
+    if isinstance(stmt, (ast.Import, ast.ImportFrom)):
+        aliases = [a for a in stmt.names if (a.asname or a.name.split(".")[0]) == name]
+        return {"_": type(stmt).__name__, "module": getattr(stmt, "module", None),
+                "level": getattr(stmt, "level", 0),
+                "names": [[a.name, a.asname] for a in aliases]}
+    return _ast_canonical(stmt)
+
+
+def config_definition_pins(root: Path, sources: Any) -> dict[str, str]:
+    """Derive the config names `sources` read and hash each one's definition."""
+    root = Path(root)
+    names: set[str] = set()
+    prefixes: set[str] = set()
+    for rel in sorted(sources):
+        if not rel.endswith(".py") or rel == CONFIG_SOURCE:
+            continue
+        tree = ast.parse((root / rel).read_bytes().replace(b"\r\n", b"\n"), filename=rel)
+        got, pre = _config_reads(tree, rel)
+        names |= got
+        prefixes |= pre
+    config_tree = ast.parse((root / CONFIG_SOURCE).read_bytes().replace(b"\r\n", b"\n"),
+                            filename=CONFIG_SOURCE)
+    bindings: dict[str, list[ast.stmt]] = {}
+    for stmt in config_tree.body:
+        for bound in _bound_names(stmt):
+            bindings.setdefault(bound, []).append(stmt)
+    names |= {n for n in bindings for p in prefixes if n.startswith(p)}
+    closure: set[str] = set()
+    todo = sorted(names)
+    while todo:
+        name = todo.pop()
+        if name in closure:
+            continue
+        closure.add(name)
+        for stmt in bindings.get(name, []):
+            for node in ast.walk(stmt):
+                if (isinstance(node, ast.Name) and node.id in bindings
+                        and node.id not in closure):
+                    todo.append(node.id)
+    pins: dict[str, str] = {}
+    for name in sorted(closure):
+        stmts = bindings.get(name)
+        pins[name] = ("ABSENT" if not stmts else
+                      _sha([_binding_form(s, name) for s in stmts]))
+    return pins
+
+
+def _verify_config_definitions(content: dict, *, root: Path) -> None:
+    pin = content.get("config_definitions")
+    if pin is None:
+        return
+    expected = pin.get("sha256") if isinstance(pin, dict) else None
+    if (not isinstance(pin, dict) or pin.get("path") != CONFIG_SOURCE
+            or pin.get("basis") != CONFIG_DEFINITION_BASIS
+            or not isinstance(expected, dict) or not expected):
+        raise EpochRefused("policy config definition pin unreadable")
+    sources = content.get("source_sha256") or {}
+    if CONFIG_SOURCE in sources:
+        raise EpochRefused("policy config pinned both by bytes and by definitions")
+    actual = config_definition_pins(Path(root), sources)
+    if set(actual) != set(expected):
+        moved = sorted(set(actual) ^ set(expected))
+        raise EpochRefused(
+            f"policy source changed: {CONFIG_SOURCE} read set {moved[:6]}")
+    for name in sorted(expected):
+        if actual[name] != expected[name]:
+            raise EpochRefused(f"policy source changed: {CONFIG_SOURCE}:{name}")
+
+
 def _utc() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -128,7 +356,10 @@ def _load_contract(path: Path, *, root: Path, expected_hash: str,
         raise EpochRefused("index exclusion changed")
     if content.get("paper_account_fingerprint") != EXPECTED_ACCOUNT_FINGERPRINT:
         raise EpochRefused("approved paper account fingerprint changed")
-    if strict_source_inventory and set(content.get("source_sha256") or {}) != EXPECTED_SOURCE_PATHS:
+    inventory = set(content.get("source_sha256") or {})
+    if content.get("config_definitions") is not None:
+        inventory.add(CONFIG_SOURCE)
+    if strict_source_inventory and inventory != EXPECTED_SOURCE_PATHS:
         raise EpochRefused("policy source inventory changed")
     if content.get("binding_limits") != EXPECTED_LIMITS:
         raise EpochRefused("binding risk limits changed")
@@ -164,6 +395,7 @@ def _load_contract(path: Path, *, root: Path, expected_hash: str,
             raise EpochRefused(f"policy source changed: {rel}")
     if not content.get("source_sha256"):
         raise EpochRefused("policy has no source manifest")
+    _verify_config_definitions(content, root=Path(root))
     return {"content": content, "content_sha256": raw["content_sha256"]}
 
 
