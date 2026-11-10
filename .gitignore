@@ -519,3 +519,7 @@ backend/data/optimus/local_runtime_digest/
 
 # Generated after the final source commit for CLI deployment provenance.
 /backend/_build_source.json
+
+# 2026-11-11 CH-32: rows extracted from licensed broker / Bloomberg reports (analyst-report-extract
+# skill -> scripts.analyst_report_rows). Licensed content; the repo is public.
+backend/data/optimus/analyst_reports/

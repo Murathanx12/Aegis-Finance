@@ -21,8 +21,12 @@ when tests pass, not when the push succeeds, not when health returns 200.
 ## Steps
 
 1. **CI first.** A push does not deploy until CI is green:
-   `curl -s "https://api.github.com/repos/Murathanx12/Aegis-Finance/actions/runs?per_page=1"`
-   → check `status`/`conclusion` for YOUR head sha. Red CI = no deploy, fix it.
+   `python -m scripts.ci_watch --wait` (public API, no token; it filters on YOUR
+   full head sha and on the workflow named CI. The old `per_page=1` curl read
+   whichever workflow was listed first and false-negatived twice on 2026-10-07).
+   Red CI = no deploy, fix it. A run that never starts may be the Actions-minute
+   quota (the repo was private ~10-11 to 11-09 and ran out); read the run list,
+   never assume green.
 2. **Confirm the commit flipped.** Poll `GET /api/health/full` until
    `deploy.commit` equals your pushed sha (Railway build ≈ 3-8 min after CI).
    If it never flips: `railway status` (look for "Waiting for CI" or a stuck
