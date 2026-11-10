@@ -149,17 +149,29 @@ def test_a_revision_across_a_split_is_on_one_share_basis():
     assert np.allclose(r1.to_numpy(), 0.0), "a split read as a -50% revision"
 
 
-def test_a_revision_with_an_unknown_factor_is_nan_not_basis_mixed():
+def test_a_revision_with_no_known_factor_refuses_rather_than_going_all_nan():
+    """Review 3: a missing ibes.adj made exp_rev all-NaN SILENTLY."""
     c = PIT.from_frames(_unadjusted(), _link(), None)
     assert c["adj_factor"].isna().all()
-    assert PIT.rebased_revision(c).isna().all()
+    with pytest.raises(PIT.IbesUnadjustedUnavailable):
+        PIT.rebased_revision(c)
+    with pytest.raises(PIT.IbesUnadjustedUnavailable):
+        IC.expectations_pivots(consensus=c)
+
+
+def test_a_row_with_an_unknown_factor_is_nan_not_basis_mixed():
+    c = PIT.from_frames(_unadjusted(), _link(), _adj_table())
+    c.loc[c["permno"] == 1001, "adj_factor"] = np.nan
+    r = PIT.rebased_revision(c)
+    assert r[c["permno"] == 1001].isna().all()
+    assert r[c["permno"] == 1002].notna().sum() > 0
 
 
 # -- the leaky construction must FAIL the same invariant --------------------
 
 def _leaky_consensus():
     """The old loaders: the vendor-adjusted values, mislabelled as quoted."""
-    c = PIT.from_frames(_adjusted_like_the_vendor(_unadjusted()), _link())
+    c = PIT.from_frames(_adjusted_like_the_vendor(_unadjusted()), _link(), _adj_table())
     assert (c.loc[c["permno"] == 1000 + SPLITTER, "stdev"] == 0.0).all(), \
         "fixture: the splitter's spread must round to 0.00 on today's basis"
     return c

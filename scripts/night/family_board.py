@@ -66,7 +66,7 @@ def ibes_monthly(keys: pd.DataFrame) -> pd.DataFrame:
     5-business-day distribution lag, and is stale after 45 days.
     """
     from backend.services.portfolio_farm import revisions as RV
-    raw = RV.derive(RV._load_raw(RUNTIME / "optimus" / "wrds"))
+    raw = RV.derive(RV._load_raw())   # as quoted since 2026-11-11 (ibes_pit_consensus)
     me = raw["meanest"].abs()
     raw["rev_dispersion_clean"] = np.where((me >= 0.25) & (raw["stdev"] > 0), -raw["stdev"] / me, np.nan)
     raw = raw[["permno", "statpers", "rev_dispersion", "rev_breadth", "rev_dispersion_clean"]].copy()

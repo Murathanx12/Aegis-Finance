@@ -19,9 +19,10 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-from backend.config import IBES_SPLIT_ROUNDING_MIN_ABS_MEANEST as LO
 from backend.services.portfolio_farm import revisions as RV
 from scripts.night import family_board as FB
+
+LO = 0.25   # the PR #94 guard this check compared against (removed from config 2026-11-11)
 
 
 def main() -> int:
@@ -30,7 +31,7 @@ def main() -> int:
     t0 = time.time()
     os.environ["NIGHT_IBES"] = "0"
     df = FB.load("1993-01-01")
-    raw = RV._load_raw(FB.RUNTIME / "optimus" / "wrds")[["permno", "statpers", "meanest", "stdev"]].copy()
+    raw = RV._load_adjusted_diagnostic(FB.RUNTIME / "optimus" / "wrds")  # the LEAKY file, on purpose[["permno", "statpers", "meanest", "stdev"]].copy()
     raw["usable"] = pd.to_datetime(raw["statpers"]) + pd.offsets.BDay(5)
     raw["symbol"] = raw["permno"].astype(int).map(lambda x: f"{x:06d}")
     keys = df[["date", "symbol"]].sort_values("date")

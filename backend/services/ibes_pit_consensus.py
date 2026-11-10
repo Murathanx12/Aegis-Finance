@@ -187,9 +187,17 @@ def rebased_revision(frame: pd.DataFrame, *, min_abs_prev: float = 0.01) -> pd.S
     Both values are as quoted; when a split falls between the two statpers, the
     earlier value is restated in the later date's shares with the ratio of IBES's own
     factors (adj_{t-1} / adj_t is the split that happened in between). A row whose
-    factor is unknown is NaN, never a basis-mixed number.
+    factor is unknown is NaN, never a basis-mixed number; a frame with NO known
+    factor raises `IbesUnadjustedUnavailable`.
     """
     require_as_quoted(frame, who="rebased_revision")
+    if len(frame) and not np.isfinite(pd.to_numeric(frame["adj_factor"], errors="coerce")).any():
+        # review 3, 2026-11-11: an all-NaN revision series from a missing ibes.adj
+        # was a silent empty signal. Per-row unknowns stay NaN; ALL unknown refuses.
+        raise IbesUnadjustedUnavailable(
+            f"rebased_revision: no split factor for any row (ibes.adj absent at "
+            f"{adj_factors_path()} or unmatched); a revision across an unknown split "
+            f"is basis-mixed, so the whole series is refused rather than returned NaN")
     f = frame.sort_values(["permno", "statpers"], kind="mergesort")
     g = f.groupby("permno", sort=False)
     prev = g["meanest"].shift(1)

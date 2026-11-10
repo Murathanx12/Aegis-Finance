@@ -6055,15 +6055,6 @@ FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC = 0.10
 #: No new paper book before this date (roadmap 2026-10-06 §7 "measure before you add").
 FLEET_V3_EARLIEST_SEED = "2026-10-26"
 
-#: IBES summary history on disk is split-adjusted to TODAY's share basis and rounded to
-#: cents, so a firm that later splits many times (a future winner) shows meanest ~0.01 and
-#: stdev 0.00 in early years (Apple FY1 2004: 0.01 / 0.00 with 17 estimates; it split 56x
-#: later). Below this |meanest|, consensus LEVELS (dispersion, magnitude) are rounding plus
-#: look-ahead and are not used. Measured 2026-11-11: the leaky dispersion top-20 had a
-#: median future split factor of 4.0x in 2008 vs 1.0x for all names; with this guard the
-#: "edge" goes from +0.94%/mo (t 6.3) to +0.08 (t 0.6). Breadth counts are unaffected.
-IBES_SPLIT_ROUNDING_MIN_ABS_MEANEST = 0.25
-
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
