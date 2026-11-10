@@ -2871,6 +2871,19 @@ WARM_SKIP = os.getenv("AEGIS_WARM_SKIP", "0") in ("1", "true", "yes")
 #: ceiling remains BELOW the vendor balance, which is the rule that matters.
 RESEARCH_LLM_MAX_CALLS = int(os.getenv("AEGIS_RESEARCH_LLM_MAX_CALLS", "120000"))
 RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "40.0"))
+
+# ── DEEPSEEK MONTHLY ENVELOPE (OD-2, owner decision 2026-11-10) ───────────────
+#: The PC's DeepSeek reservation envelope (`backend/services/provider_budget.py`)
+#: is a CALENDAR-MONTH envelope (UTC): one file per month,
+#: `session_budget/deepseek_local_<YYYY-MM>.json`, created from this cap on the
+#: first paid call of the month and never reset or replaced inside it. The
+#: guard refused every call from 2026-10-15 to 2026-11-10 because the single
+#: envelope it required was never created and no rollover existed. Owner
+#: decision OD-2: $15/month, raised on demand -- for the running month with
+#: `python -m backend.services.provider_budget raise --cap <usd> --evidence ..`,
+#: for future months with this env var. Amounts are PEAK LIST estimates
+#: (conservative vs the billed balance), never billed dollars.
+DEEPSEEK_MONTHLY_CAP_USD = float(os.getenv("AEGIS_DEEPSEEK_MONTHLY_CAP_USD", "15.0"))
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for

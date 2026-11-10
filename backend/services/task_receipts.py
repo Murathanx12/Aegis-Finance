@@ -89,7 +89,7 @@ def map_status(value: Any) -> str:
         return "OK"
     if s.startswith("OBSERVE_ONLY") or s.startswith("OK"):
         return "OK"
-    if s.startswith("REFUS") or s.startswith("BLOCKED"):
+    if s.startswith("REFUS") or s.startswith("BLOCKED") or s.startswith("BUDGET_REFUS"):
         return "REFUSED"
     if s.startswith("STOP") or s.startswith("PAUSED"):
         return "STOPPED"
@@ -488,7 +488,11 @@ def r_world_digest(ctx, task) -> Reading:
     # Budget refusals live outside the normal digest directory. Read only this
     # public receipt family, never the private shared-budget envelope.
     reasons = {"SHARED_ENVELOPE_BLOCKED", "SHARED_ENVELOPE_INVALID",
-               "SHARED_ENVELOPE_EXHAUSTED", "SHARED_ENVELOPE_UNAVAILABLE"}
+               "SHARED_ENVELOPE_EXHAUSTED", "SHARED_ENVELOPE_UNAVAILABLE",
+               # the preflight's finer codes (6b75aee6) read as REFUSED with
+               # their name, not as a malformed receipt (2026-11-10, CH-04)
+               "SHARED_ENVELOPE_MISSING", "SHARED_ENVELOPE_LOCK_UNREADABLE",
+               "SHARED_ENVELOPE_MALFORMED", "SHARED_ENVELOPE_IMPORT_FAILED"}
     latest = None
     try:
         failures = sorted((ctx.optimus_dir / "news_digest" / "receipts").glob(
