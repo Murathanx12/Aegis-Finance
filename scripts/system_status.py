@@ -81,6 +81,11 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+class DateOnly(datetime):
+    """A stamp parsed from a DATE with no time part (a file named for a local
+    day). Only these get the one-day 'ahead of UTC' slack in `judge_age`."""
+
+
 def parse_ts(v: Any) -> Optional[datetime]:
     """ISO / compact (20261110T163035Z) / date string -> aware UTC datetime, else None."""
     if v is None or isinstance(v, bool):
@@ -88,6 +93,12 @@ def parse_ts(v: Any) -> Optional[datetime]:
     if isinstance(v, datetime):
         return v if v.tzinfo else v.replace(tzinfo=timezone.utc)
     s = str(v).strip()
+    dm = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", s)
+    if dm:
+        try:
+            return DateOnly(*map(int, dm.groups()), tzinfo=timezone.utc)
+        except ValueError:
+            return None
     m = re.fullmatch(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?", s)
     if m:
         return datetime(*map(int, m.groups()), tzinfo=timezone.utc)
@@ -132,8 +143,9 @@ def judge_age(stamp: Optional[datetime], now: datetime, lim_s: Optional[float],
     if stamp is None:
         return "UNKNOWN", None, "no readable date on the evidence"
     age = (now - stamp).total_seconds()
-    if stamp.hour == stamp.minute == stamp.second == 0 and -86400 <= age < 0:
-        age = 0.0   # a date-only stamp (a file named for the owner's local day) may be ahead of UTC
+    if isinstance(stamp, DateOnly) and -86400 <= age < 0:
+        age = 0.0   # a date-only stamp (a file named for the owner's local day) may be ahead of UTC;
+        #             a full timestamp that happens to be midnight gets no slack (review 3)
     if age < -FUTURE_SLACK_S:
         return "UNKNOWN", age, "evidence is dated in the future"
     if lim_s is None:
@@ -354,7 +366,9 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
         next_run, state = sch.get("Next Run Time", ""), sch.get("Scheduled Task State", "")
         pr = by_name.get(name)
         mapped = map_probe_row(pr) if pr else None
-        status = mapped["status"] if mapped else "OK"
+        # review 3: with no receipt reader the scheduler's "Last Result 0" is not
+        # evidence the job did anything (10-15 -> 11-10 ran rc 0 while refused)
+        status = mapped["status"] if mapped else "UNKNOWN"
         flags = []
         never = str(last_res).strip() == "267011" or "N/A" in str(last_run)
         running = str(last_res).strip() == "267009"
@@ -373,9 +387,13 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
         is_one = any(p.search(name) for p in one_shot)
         detail = (f"last run {last_run or '-'} result {last_res or '-'}; next {next_run or '-'}"
                   + (f"; {', '.join(flags)}" if flags else "")
-                  + (f"; receipt: {mapped['detail'][:200]}" if mapped else "; scheduler view only (no receipt reader declared)"))
+                  + (f"; receipt: {mapped['detail'][:200]}" if mapped else
+                     ("; exit 0 with no receipt read" if str(last_res).strip() == "0" else "")
+                     + "; scheduler view only (no receipt reader declared)"))
         act = "" if status == "OK" else (
-            (mapped["action"] if mapped and mapped["action"] else "Open Task Scheduler for this task and read its receipt.")
+            (mapped["action"] if mapped and mapped["action"] else
+             "Open Task Scheduler for this task and read its receipt; declare a receipt reader "
+             "(system_health task probe) so this row can be judged.")
             + (" One-shot: delete it once its job is done." if is_one else ""))
         out.append(row("tasks", name, status, detail,
                        evidence=(mapped or {}).get("evidence_path") or "schtasks",
@@ -396,16 +414,29 @@ def learning_rows(optimus: Path, now: datetime, ctx: Any, limits: Optional[dict]
     env_p = optimus / "session_budget" / "deepseek_local.json"
     try:
         from backend.services import provider_budget as PB
-        raw = PB._load(env_p)
-        view = PB._month_view(raw, PB.month_id(now))
+        if not env_p.exists():
+            raise FileNotFoundError(str(env_p))
+        # review 3 (#97): read through the guard's own view, which applies the
+        # deferred-settlement sidecar (and any block it carries) in memory, so
+        # the row shows true spend; a raw _load does not see it.
+        view = PB._peek(env_p)
         held, cap = PB._held(view) / PB.SCALE, view["cap_units"] / PB.SCALE
         room = view["cap_units"] - PB._held(view)
         starts = [parse_ts(c.get("started_utc")) for c in view["calls"].values()]
         last_call = max((s for s in starts if s), default=None)
         st = "OK"
-        bits = [f"{view['month']}: ${held:.4f} of ${cap:.2f} cap, {len(view['calls'])} calls"]
-        if raw.get("blocked"):
-            st, bits = "DOWN", bits + [f"BLOCKED ({str(raw['blocked'])[:80]})"]
+        bits = [f"{view.get('month') or view.get('session_id')}: ${held:.4f} of ${cap:.2f} cap, "
+                f"{len(view['calls'])} calls"]
+        pending = view.get("sidecar_pending") or 0
+        if pending:
+            age_h = view.get("sidecar_oldest_age_h")
+            lim_h = float(getattr(C, "DEEPSEEK_SIDECAR_STALE_HOURS", 12.0))
+            bits.append(f"{pending} deferred settlement(s) in the sidecar, counted in held ("
+                        + ("age unknown" if age_h is None else f"oldest {age_h:.1f} h") + ")")
+            if age_h is None or age_h > lim_h:
+                st = "DEGRADED"
+        if view.get("blocked"):
+            st, bits = "DOWN", bits + [f"BLOCKED ({str(view['blocked'])[:80]})"]
         elif room < PB.MIN_RESERVATION_UNITS:
             st, bits = "DOWN", bits + ["EXHAUSTED: every call refuses"]
         elif held / cap >= 0.8:
@@ -433,6 +464,8 @@ def learning_rows(optimus: Path, now: datetime, ctx: Any, limits: Optional[dict]
                   + (f"; {rd.reason}" if rd.reason else ""))
         if typed == 0:
             st = worst(st, "DOWN")
+        elif typed is None:
+            st = worst(st, "UNKNOWN")                 # no typed count: cannot be judged (review 3)
         out.append(dated_row("learning", "world_digest", st, detail, rd.stamp, now,
                              evidence=rd.proof or "digest/world_digest_*.json", limits=limits,
                              action_bad="0 typed rows or a budget refusal means the learner is starved: read the digest's spend/refusal receipt and fix the cause (CH-04)."))
@@ -479,7 +512,8 @@ def learning_rows(optimus: Path, now: datetime, ctx: Any, limits: Optional[dict]
     if hl:
         r = hl[-1]
         txt = " ".join(str(r.get(k) or "") for k in ("status", "verdict", "reason")).upper()
-        cst = "DOWN" if "BUDGET_REFUSED" in txt else "OK"
+        # the learner row's keyword set (review 3): REFUSED/ERROR/VOID/FAIL are red too
+        cst = "DOWN" if any(k in txt for k in ("REFUS", "ERROR", "FAIL", "VOID", "BUDGET")) else "OK"
         out.append(dated_row("learning", "hyp_lab", cst,
                              f"last row {r.get('kind')} {r.get('hyp_id')} {r.get('status')} {r.get('verdict') or ''}".strip(),
                              parse_ts(r.get("utc")), now, evidence="hyp_lab/ledger.jsonl (last row)", limits=limits,
@@ -526,8 +560,9 @@ def universe_rows(optimus: Path, data_dir: Path, now: datetime, limits: Optional
     if isinstance(g, dict):
         nodes = g.get("nodes_by_type") or g.get("n_nodes")
         edges = g.get("edges_by_type") or g.get("n_edges")
-        st = str(g.get("status") or "OK")
-        cst = "OK" if st.upper() in ("OK", "ALIVE", "BUILT") else "DEGRADED"
+        st = str(g.get("status") or "UNKNOWN")        # no status field is not OK (review 3)
+        cst = ("OK" if st.upper() in ("OK", "ALIVE", "BUILT") else
+               "UNKNOWN" if st == "UNKNOWN" else "DEGRADED")
         newest_bar = g.get("newest_bar_date")
         out.append(dated_row("universe", "universe_graph", cst,
                              f"nodes {nodes}; edges {edges}; newest bar {newest_bar}; status {st}",
@@ -842,7 +877,7 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
         sections[m["section"]]["rows"].append(m)
     # worst first inside each section
     for s in sections.values():
-        s["rows"].sort(key=lambda r: (-_SEV[r["status"]], r["name"]))
+        s["rows"].sort(key=lambda r: (-_SEV[_st(r)], r["name"]))
     counted = [r for s in sections.values() for r in s["rows"] if not r.get("one_shot")
                and not r["name"].startswith("rule ")]
     counts = {k: sum(1 for r in counted if r["status"] == k) for k in STATUSES}
@@ -883,9 +918,16 @@ def header_line(rec: dict) -> str:
 
 
 def reds(rec: dict) -> list[dict]:
-    rows = [r for s in rec["sections"].values() for r in s["rows"] if r["status"] in ("DOWN", "DEGRADED", "UNKNOWN")
+    rows = [r for s in rec["sections"].values() for r in s["rows"] if _st(r) != "OK"
             and not r.get("one_shot")]
-    return sorted(rows, key=lambda r: (-_SEV[r["status"]], r["section"], r["name"]))
+    return sorted(rows, key=lambda r: (-_SEV[_st(r)], str(r.get("section")), str(r.get("name"))))
+
+
+def _st(r: dict) -> str:
+    """A row's status, normalised: anything outside STATUSES is UNKNOWN (a stale
+    or foreign status.json can carry anything)."""
+    s = r.get("status")
+    return s if s in STATUSES else "UNKNOWN"
 
 
 # ═══════════════════════════════════════════════════════════════ rendering
@@ -896,14 +938,14 @@ def render_text(rec: dict) -> str:
     if red:
         L.append("NEEDS ATTENTION")
         for r in red:
-            L.append(f"  [{r['status']:<8}] {r['section']}/{r['name']} -- {r['detail'][:150]}")
+            L.append(f"  [{_st(r):<8}] {r['section']}/{r['name']} -- {r['detail'][:150]}")
             if r.get("action"):
                 L.append(f"             -> {r['action']}")
         L.append("")
     for key, s in rec["sections"].items():
         L.append(f"{s['title'].upper()} ({len(s['rows'])})")
         for r in s["rows"]:
-            tag = "one-shot" if r.get("one_shot") else r["status"]
+            tag = "one-shot" if r.get("one_shot") else _st(r)
             L.append(f"  {tag:<8} {r['name']:<34} {r['detail'][:110]}")
         L.append("")
     if rec.get("undetermined"):
@@ -947,7 +989,8 @@ def _row_html(r: dict, *, show_section: bool = False) -> str:
     lim = f" / limit {fmt_age(r['limit_s'])}" if r.get("limit_s") else ""
     ev = f"<span class=ev>{e(r['evidence_path'])}{e(age)}{e(lim)}</span>" if r.get("evidence_path") or age else ""
     act = f"<span class=act>{e(r['action'])}</span>" if r.get("action") else ""
-    return (f"<div class=r><span class='b {r['status']}'>{r['status']}</span><span class=n>{name}</span>"
+    st = _st(r)                                     # a foreign status renders UNKNOWN (review 3 N1)
+    return (f"<div class=r><span class='b {st}'>{e(st)}</span><span class=n>{name}</span>"
             f"<span class=d>{e(r['detail'])}{ev}{act}</span></div>")
 
 
@@ -978,10 +1021,10 @@ def render_html(rec: dict, *, now: Optional[datetime] = None) -> str:
     for key, s in rec["sections"].items():
         rows = [r for r in s["rows"] if not r.get("one_shot")]
         ones = [r for r in s["rows"] if r.get("one_shot")]
-        oks = [r for r in rows if r["status"] == "OK"]
-        parts.append(f"<h2>{e(s['title'])} <span class=mut>({len(rows)})</span> "
-                     f"<button type=button data-fold='sec-{key}'>{'hide' if len(rows) <= 12 else 'show'}</button></h2>"
-                     f"<div class=card id='sec-{key}'{'' if len(rows) <= 12 else ' hidden'}>"
+        k = e(str(key), quote=True)
+        parts.append(f"<h2>{e(str(s.get('title') or key))} <span class=mut>({len(rows)})</span> "
+                     f"<button type=button data-fold='sec-{k}'>{'hide' if len(rows) <= 12 else 'show'}</button></h2>"
+                     f"<div class=card id='sec-{k}'{'' if len(rows) <= 12 else ' hidden'}>"
                      + "".join(_row_html(r) for r in rows) + "</div>")
         if ones:
             parts.append("<p class=mut>Known one-shot tasks (not counted): " + e(", ".join(r["name"] for r in ones)) + "</p>")

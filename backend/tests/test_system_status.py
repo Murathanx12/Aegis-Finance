@@ -48,7 +48,9 @@ def test_undated_or_future_evidence_is_unknown_never_ok():
 
 def test_date_only_stamp_one_day_ahead_is_not_the_future():
     # the owner's local day (UTC+8) can already be tomorrow in UTC
-    tomorrow = datetime(2026, 11, 11, tzinfo=timezone.utc)
+    # (review 3 O5: the slack applies to a stamp PARSED from a date, not to
+    # any datetime that happens to be midnight)
+    tomorrow = S.parse_ts((NOW + timedelta(days=1)).date().isoformat())
     assert S.judge_age(tomorrow, NOW, 3 * 86400)[0] == "OK"
 
 
@@ -330,3 +332,153 @@ def test_page_and_json_serve_the_receipt(monkeypatch, tmp_path):
     assert c.get("/api/control/system-status").json()["counts"]["DOWN"] == 1
     S.write_atomic(tmp_path / "system_status" / "status.json", json.dumps({"receipt": "other"}))
     assert c.get("/system-status").status_code == 404          # a foreign file is not served
+
+
+# -- review 3 (S65) on #95 ------------------------------------------------------
+
+def _sched(monkeypatch, tasks: dict):
+    from backend.services import system_health as SH
+    monkeypatch.setattr(SH, "_schtasks", lambda ctx: tasks)
+
+
+def test_a_task_with_no_receipt_reader_is_unknown_not_ok(monkeypatch):
+    """R1: 'Last Result 0' alone is the scheduler's word, not evidence the job
+    did anything (10-15 -> 11-10: rc 0 while every call was refused)."""
+    _sched(monkeypatch, {"AegisNoReader": {"Last Run Time": "11/10/2026 3:00:00 AM",
+                                           "Last Result": "0",
+                                           "Next Run Time": "11/11/2026 3:00:00 AM",
+                                           "Scheduled Task State": "Ready"}})
+    r = _by_name(S.tasks_section(object(), NOW, []))["AegisNoReader"]
+    assert r["status"] == "UNKNOWN" and "exit 0 with no receipt read" in r["detail"]
+    assert r["required"] is False                 # does not trip exit 3 on its own
+    assert r["action"]
+
+
+def test_a_receipt_without_a_status_field_is_unknown(tmp_path):
+    """O1: a universe_graph receipt with no `status` read OK on content."""
+    opt = tmp_path / "optimus"
+    _w(opt / "universe_graph" / "graph_2026-11-10.json",
+       {"generated_utc": S.iso(NOW - timedelta(hours=1)), "n_nodes": 10, "n_edges": 20})
+    g = _by_name(S.universe_rows(opt, tmp_path, NOW, None))["universe_graph"]
+    assert g["status"] == "UNKNOWN", g
+
+
+@pytest.mark.parametrize("status", ["REFUSED", "ERROR", "VOID", "FAILED"])
+def test_hyp_lab_refusals_are_red(tmp_path, status):
+    """O2: only BUDGET_REFUSED was red; REFUSED, ERROR and VOID read OK."""
+    opt = tmp_path / "optimus"
+    _w(opt / "hyp_lab" / "ledger.jsonl",
+       json.dumps({"kind": "nightly", "hyp_id": "h1", "status": status,
+                   "utc": S.iso(NOW - timedelta(hours=1))}) + "\n")
+
+    class Ctx:
+        optimus_dir = opt
+        now = NOW
+    r = _by_name(S.learning_rows(opt, NOW, Ctx(), None))["hyp_lab"]
+    assert r["status"] == "DOWN", r
+
+
+def test_world_digest_without_a_typed_count_is_unknown(tmp_path, monkeypatch):
+    """O3: a receipt lacking n_rows skipped the typed == 0 -> DOWN check."""
+    from types import SimpleNamespace
+
+    from backend.services import task_receipts as TR
+    opt = tmp_path / "optimus"
+    p = _w(opt / "digest" / "world_digest_2026-11-10.json", {"writes": {}})
+    monkeypatch.setattr(TR, "r_world_digest", lambda ctx, _: SimpleNamespace(
+        status="OK", unknown_reason=None, detail="ran", reason=None,
+        stamp=NOW - timedelta(hours=1), proof=str(p)))
+    monkeypatch.setattr(TR, "_newest", lambda folder, pat: (p, {"writes": {}}))
+
+    class Ctx:
+        optimus_dir = opt
+        now = NOW
+    r = _by_name(S.learning_rows(opt, NOW, Ctx(), None))["world_digest"]
+    assert r["status"] == "UNKNOWN" and "typed rows None" in r["detail"]
+
+
+def test_envelope_row_reads_through_peek_with_deferred_spend(tmp_path, monkeypatch):
+    """O4 / #97: the row reads the guard's own view (`_peek`), which applies
+    deferred settlements and their blocks; pending sidecar lines are named."""
+    from backend.services import provider_budget as PB
+    opt = tmp_path / "optimus"
+    env = _w(opt / "session_budget" / "deepseek_local.json", "{}")
+    seen = {}
+
+    def peek(p, budget_path=None):
+        seen["p"] = Path(p)
+        return {"month": "2026-11", "cap_units": PB._units(15), "opening_units": 0,
+                "calls": {"a": {"held_units": PB._units(0.5),
+                                "started_utc": S.iso(NOW - timedelta(hours=1))}},
+                "blocked": None, "sidecar_pending": 2, "sidecar_oldest_age_h": 30.0}
+    monkeypatch.setattr(PB, "_peek", peek)
+    monkeypatch.setattr(PB, "_load", lambda p: pytest.fail("raw _load misses the sidecar"))
+
+    class Ctx:
+        optimus_dir = opt
+        now = NOW
+    r = _by_name(S.learning_rows(opt, NOW, Ctx(), None))["deepseek_envelope"]
+    assert seen["p"] == env
+    assert "$0.5000 of $15.00" in r["detail"] and "2 deferred settlement(s)" in r["detail"]
+    assert r["status"] == "DEGRADED"           # past DEEPSEEK_SIDECAR_STALE_HOURS (or 12 h)
+
+
+def test_envelope_row_shows_a_real_deferred_block(tmp_path, monkeypatch):
+    """With #97's provider_budget on the path: a block that waits in the sidecar
+    is DOWN on the dashboard, and the deferred cost is in the held amount."""
+    from backend.services import provider_budget as PB
+    if not hasattr(PB, "_apply_sidecar"):
+        pytest.skip("provider_budget predates #97 (no sidecar); covered by the stub test above")
+    opt = tmp_path / "optimus"
+    env = opt / "session_budget" / "deepseek_local.json"
+    env.parent.mkdir(parents=True)
+    PB.initialize("fixture", 15, opening_charge_usd=0, opening_evidence="fixture", budget_path=env)
+    tk = PB.reserve("s", "u", 100, model="deepseek-chat", base_url="https://api.deepseek.com",
+                    purpose="fixture", budget_path=env)
+    import backend.services.disk_guard as DG
+    real = DG.atomic_write_json
+
+    def busy(p, o, **kw):
+        if str(p).endswith("deepseek_local.json"):
+            raise PermissionError(13, "busy", str(p))
+        return real(p, o, **kw)
+    monkeypatch.setattr(PB, "_sleep", lambda s: None)
+    monkeypatch.setattr(DG, "atomic_write_json", busy)
+    from types import SimpleNamespace as NS
+    PB.settle(tk, NS(model="deepseek-mystery", usage=NS(prompt_tokens=20, completion_tokens=10,
+                                                       prompt_cache_hit_tokens=0)))
+    monkeypatch.setattr(DG, "atomic_write_json", real)
+
+    class Ctx:
+        optimus_dir = opt
+        now = NOW
+    r = _by_name(S.learning_rows(opt, datetime.now(timezone.utc), Ctx(), None))["deepseek_envelope"]
+    assert r["status"] == "DOWN" and "BLOCKED" in r["detail"] and "deferred" in r["detail"]
+
+
+def test_a_midnight_timestamp_in_the_future_is_not_excused():
+    """O5: the one-day slack is for DATE-ONLY stamps; a full timestamp that
+    happens to be exactly midnight UTC and in the future is UNKNOWN."""
+    lim = 3600.0 * 24
+    ahead = (NOW + timedelta(days=1)).replace(hour=0, minute=0, second=0)
+    full = S.parse_ts(ahead.isoformat())
+    st, _, _ = S.judge_age(full, NOW, lim)
+    assert st == "UNKNOWN"
+    date_only = S.parse_ts(ahead.date().isoformat())
+    st2, _, _ = S.judge_age(date_only, NOW, lim)
+    assert st2 == "OK"
+
+
+def test_page_escapes_status_and_section_and_survives_a_foreign_status():
+    """N1: status and section key were interpolated unescaped; an unknown
+    status raised KeyError in the sort."""
+    rows = [_r(k, "ok_" + k, "OK") for k, _ in S.SECTIONS]
+    rec = _rec(rows)
+    bad = dict(rows[0], status="<b>x</b>")
+    rec["sections"]["tasks"]["rows"].append(bad)
+    rec["sections"]["evil'><script>"] = {"title": "t", "rows": [], "error": None}
+    page = S.render_html(rec, now=NOW)
+    assert "<b>x</b>" not in page
+    assert "evil'><script>" not in page
+    assert S.reds(rec)                          # the foreign status is shown as red, not a crash
+    assert S.render_text(rec)
