@@ -250,7 +250,11 @@ def test_real_preflight_reasons_are_read_only_and_fail_closed(
     # independently tested, default-on local sidecar.
     assert S.run(SimpleNamespace(dry_run=False, no_provisional_review=True)) == 2
     receipt.assert_called_once_with(reason)
-    assert capsys.readouterr().out == f"REFUSED: shared budget preflight: {reason}\n"
+    # CH-04 (2026-11-10): the code is followed by the envelope's one human line
+    # (spend so far, cap, what to do) -- still read-only and still non-secret.
+    first, second = capsys.readouterr().out.splitlines()
+    assert first == f"REFUSED: shared budget preflight: {reason}"
+    assert second.startswith("DEEPSEEK BUDGET") and "SECRET_TOKEN" not in second
     for guard in guards + downstream:
         guard.assert_not_called()
     assert {f.name: f.read_bytes() for f in root.iterdir() if f.is_file()} == before

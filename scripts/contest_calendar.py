@@ -403,6 +403,11 @@ def load_wls_export(folder: Path = WLS_DIR) -> Optional[pd.DataFrame]:
         raise ValueError(f"WLS export {f.name}: no ticker column found in {list(raw.columns)}")
     keys = raw[col].astype(str).str.upper().str.replace(r"\s+EQUITY$", "", regex=True).str.strip()
     out = pd.DataFrame({"bbg_key": keys})
+    if "yahoo_symbol" in raw.columns:
+        # The converted wlsemb.pdf (backend.services.licensed_data) carries a symbol join that was
+        # checked against our own bars; it is the only key that works for India, whose Bloomberg
+        # tickers (HDFCB IS) are not NSE symbols (HDFCBANK.NS).
+        out["yahoo_symbol"] = raw["yahoo_symbol"].astype("string").str.upper().str.strip()
     out["source_file"] = f.name
     return out[out.bbg_key.str.len() > 0].drop_duplicates("bbg_key")
 
@@ -411,26 +416,47 @@ def _bbg_key(bbg_ticker: str) -> str:
     return re.sub(r"\s+EQUITY$", "", str(bbg_ticker).upper()).strip()
 
 
+#: MEMB exports print EXCHANGE codes; `bloomberg_ticker` writes the composite (or the code the
+#: Terminal shows for the Yahoo suffix). Both sides collapse to one code before comparing.
+#: Measured on the 2026-10-13 WLS export against the 2026-11-09 universe: the previous six-entry
+#: map refused 1,635 real members (all 833 India names, 318 KOSPI, 191 US on UQ/UR/UA/VT/UF,
+#: 293 Europe on LN 'RR/', SE/SW, SQ/SM and Nordic share classes).
+WLS_EXCH_TO_COMPOSITE: dict[str, str] = {
+    "JT": "JP", "C1": "CH", "C2": "CH", "KQ": "KS", "KP": "KS",
+    "UN": "US", "UW": "US", "UQ": "US", "UR": "US", "UA": "US", "UF": "US", "UP": "US", "UV": "US",
+    "VT": "US", "IS": "IN", "IB": "IN", "SE": "SW", "SQ": "SM",
+}
+
+
+def _bbg_norm(bbg_ticker: str) -> str:
+    """'<SYM> <EXCH>' with the exchange collapsed to its composite and share-class punctuation
+    dropped ('BRK/B UN' == 'BRK/B US', 'RR/ LN' == 'RR LN', 'VOLVB SS' == 'VOLV-B SS')."""
+    k = _bbg_key(bbg_ticker)
+    if " " not in k:
+        return k
+    sym, ex = k.rsplit(" ", 1)
+    return f"{re.sub(r'[-/]', '', sym)} {WLS_EXCH_TO_COMPOSITE.get(ex, ex)}"
+
+
 def apply_wls(univ: pd.DataFrame, folder: Path = WLS_DIR) -> pd.DataFrame:
-    """Mark membership CONFIRMED / NOT_IN_WLS from the export; UNCONFIRMED when none exists."""
+    """Mark membership CONFIRMED / NOT_IN_WLS from the export; UNCONFIRMED when none exists.
+
+    A name is a member when its Yahoo symbol is in the export's `yahoo_symbol` column (present in
+    the converted MEMB file) or its normalised Bloomberg key matches one in the export."""
     univ = univ.copy()
     wls = load_wls_export(folder)
     if wls is None or univ.empty:
         univ["membership"] = "UNCONFIRMED_MEMBERSHIP"
         return univ
-    keys = set(wls.bbg_key)
-    # the Terminal writes composite codes (US, JP, HK...) and sometimes exchange codes; match both
-    alt = {"JT": "JP", "C1": "CH", "C2": "CH", "KQ": "KS", "UN": "US", "UW": "US"}
-    keys |= {f"{k.rsplit(' ', 1)[0]} {alt.get(k.rsplit(' ', 1)[-1], k.rsplit(' ', 1)[-1])}"
-             for k in keys if " " in k}
-    def mark(bt: str) -> str:
-        k = _bbg_key(bt)
-        if " " in k:
-            k2 = f"{k.rsplit(' ', 1)[0]} {alt.get(k.rsplit(' ', 1)[-1], k.rsplit(' ', 1)[-1])}"
-        else:
-            k2 = k
-        return "CONFIRMED_WLS" if (k in keys or k2 in keys) else "NOT_IN_WLS_EXPORT"
-    univ["membership"] = univ["bbg_ticker"].map(mark)
+    keys = {_bbg_norm(k) for k in wls.bbg_key}
+    syms = set(wls["yahoo_symbol"].dropna()) if "yahoo_symbol" in wls.columns else set()
+
+    def mark(sym: object, bt: str) -> str:
+        if syms and str(sym).upper().strip() in syms:
+            return "CONFIRMED_WLS"
+        return "CONFIRMED_WLS" if _bbg_norm(bt) in keys else "NOT_IN_WLS_EXPORT"
+    sym_col = univ["symbol"] if "symbol" in univ.columns else pd.Series([None] * len(univ), index=univ.index)
+    univ["membership"] = [mark(s, b) for s, b in zip(sym_col, univ["bbg_ticker"])]
     return univ
 
 
