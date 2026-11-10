@@ -1706,13 +1706,7 @@ SIGNAL_UNIVERSE_BANDS: dict = {
 #: Lives under backend/data (NOT docs/): .dockerignore excludes docs, so a
 #: docs path would make the IC permanently degraded in every prod image while
 #: green locally — the insider-collector failure shape (NIGHT-13 audit F1).
-#: `AEGIS_IC_FUNNEL_PATH` overrides it (CH-05): the funnel is WRITTEN state (the
-#: sim's u_funnel rebuilds it; `funnel_history/` is archived beside it) yet it sits
-#: outside `optimus/`, so a second checkout would otherwise read its own tracked,
-#: weeks-old copy and every reader would refuse on staleness while the writer kept
-#: the real one fresh in the other checkout. Unset (Railway, CI, dev) = unchanged.
-IC_FUNNEL_PATH = Path(os.getenv("AEGIS_IC_FUNNEL_PATH", "").strip()
-                      or (BACKEND_DIR / "data" / "funnel_night10.json"))
+IC_FUNNEL_PATH = BACKEND_DIR / "data" / "funnel_night10.json"
 
 #: TTL for the funnel-derived state (gate + ranking + archetype books). The
 #: funnel is a nightly artifact; composition itself is computed per request.

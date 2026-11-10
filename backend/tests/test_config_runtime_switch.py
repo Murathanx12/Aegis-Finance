@@ -1,12 +1,12 @@
-"""CH-05: a clean checkout can point at the runtime's ONE `.env` and ONE funnel file.
+"""CH-05: a clean checkout can point at the runtime's ONE `.env`.
 
 Why this exists (2026-11-11). The scheduled tasks run from a WIP checkout 269
 commits behind main; the switch to a clean checkout of a tagged main commit must
-not copy, move or duplicate `.env` (the 2026-08-24 lesson in `backend/config.py`),
-and must not leave the new checkout reading its own tracked, weeks-old
-`funnel_night10.json` while the writer keeps the real one fresh elsewhere (seen in
-the 2026-11-11 rehearsal: `alert_pass --dry-run` from the clean clone REFUSED on a
-35-day-old funnel that was main's committed copy, not the live one).
+not copy, move or duplicate `.env` (the 2026-08-24 lesson in `backend/config.py`).
+
+(The funnel path is deliberately NOT overridable here: the prepared PC policy epoch
+`pc_paper_no_index_2026_10_v1` pins the source of the `IC_FUNNEL_PATH` definition,
+and changing it refuses the epoch -- `test_pc_policy_epoch_prepared`.)
 
 Verified in a child interpreter, like `test_config_repo_root.py`: the decision is
 made at import, so it is checked at import, in an environment the test owns.
@@ -85,20 +85,3 @@ def test_a_declared_dotenv_that_is_a_directory_refuses(tmp_path: Path) -> None:
     out = _run({"AEGIS_DOTENV_PATH": str(tmp_path)})
     assert out.returncode != 0
     assert "not a file" in out.stderr
-
-
-def test_the_funnel_path_follows_its_override(tmp_path: Path) -> None:
-    shared = tmp_path / "runtime" / "backend" / "data" / "funnel_night10.json"
-    got = _probe({"AEGIS_IC_FUNNEL_PATH": str(shared)})
-    assert Path(got["funnel"]) == shared
-
-
-def test_without_the_override_the_funnel_is_the_checkout_file() -> None:
-    got = _probe({})
-    assert Path(got["funnel"]) == Path(got["backend_dir"]) / "data" / "funnel_night10.json"
-
-
-def test_a_blank_funnel_override_is_the_default_not_the_cwd() -> None:
-    """`Path("")` is `.`: a blank variable must not turn the funnel into the cwd."""
-    got = _probe({"AEGIS_IC_FUNNEL_PATH": "  "})
-    assert Path(got["funnel"]) == Path(got["backend_dir"]) / "data" / "funnel_night10.json"
