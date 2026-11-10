@@ -1,0 +1,1502 @@
+"""UNIVERSE GRAPH v1 -- the universe as typed nodes and weighted edges (ROADMAP §2a, CH-30).
+
+WHAT THE OWNER ASKED FOR
+========================
+The universe is a network of connected "bubbles" -- companies, sectors, themes,
+countries, macro factors -- with weights on the connections. When news hits one
+bubble the question is always *what does this imply for the connected ones, and
+by how much?* This module is that question, made mechanical and deterministic:
+
+    graph = build_graph(...)                       # nodes + typed edges + weights
+    propagate(graph, {"node_id": "company:NVDA",   # an event on one bubble
+                      "direction": "down", "magnitude": 0.08,
+                      "as_of": "2026-11-10"})
+    -> [Implication(target, horizon, expected_direction, expected_size,
+                    weight, n, path, confidence, why), ...]
+
+No LLM is involved anywhere. Every number on an implication comes from a
+measured edge or is labelled as unmeasured.
+
+WHAT IS AN EDGE
+===============
+Structural edges say THAT two bubbles are related; they carry no size.
+
+    sector_member   company -> sector   newest potential_universe identity.sector
+    theme_member    company -> theme    world_state.BELLWETHERS, config.BOOK_TICKER_THEMES,
+                                        theme_baskets.yaml (PIT: available_from <= as_of)
+    country_member  company -> country  news_entities/issuers.csv
+    co_coverage     company <-> company Jaccard of covering brokerages (graph_propagation
+                                        snapshots), top-K per name: the 179-name mega-cap
+                                        co-coverage graph is 100% dense, so unpruned it
+                                        says nothing (graph_propagation.py docstring)
+    co_mention      topic <-> topic     world_state beliefs.json co_mention_edges (signed,
+                                        support = n); co-mention, NOT causation
+
+The measured edge is `return_response`: the response of B over the next h
+sessions (t+1..t+h, day t EXCLUDED) after a shock day on A, where a shock day is
+|market-adjusted return| >= UNIVERSE_GRAPH_SHOCK_Z x A's trailing sigma (sigma
+from the sessions BEFORE t). The weight is a through-origin slope in SIGMA units
+
+    z_A   = s_A / sigma_A(t), capped at +-MAX_SHOCK_Z
+    y_B,h = fwd_B,h / (sigma_B(t) x sqrt(h)), winsorized at +-RESPONSE_CLIP_Z
+    b_h   = sum(z_A * y_B,h) / sum(z_A ** 2)     over A's shock days
+    w_h   = b_h * n / (n + k)                     shrunk toward zero
+
+so `expected_size = w_h x z_event x sigma_B x sqrt(h)` with today's sigmas. The
+first build fitted return units unclipped and let one meme name imply -135% from a
+PLTR day; `ret_slope` keeps that plain slope on every edge for transparency.
+Hop 2 treats the implied h-session move of the middle node (in its own
+sigma x sqrt(h) units) as its shock and multiplies by HOP_DECAY: an
+approximation, labelled as such. Return-response candidates are restricted to
+pairs that already share a structural edge (same sector, co-coverage, same
+theme) -- never one giant pairwise matrix. Sector and theme nodes are priced as
+equal-weight LEAVE-ONE-OUT baskets of their liquid members, so "A moved -> its
+sector" never counts A's own return, and "sector moved -> B" never counts B's.
+
+POINT IN TIME
+=============
+`build_graph(..., as_of=t)` truncates the panel to dates < t BEFORE anything is
+computed: sigma, shocks, forward windows (a forward window that would reach t
+is NaN and drops out). Changing any bar on or after t cannot change a weight;
+`test_universe_graph.py` pins that. `propagate` refuses an event dated before
+the graph's own as_of (its weights would contain the event's future).
+
+WHAT IT IS NOT
+==============
+Structural inputs (sector map, coverage snapshot, theme lists) are CURRENT
+snapshots, so in a historical fold they choose the candidate pairs with today's
+structure; the weights stay PIT. The price panel is the 2026-09-01-alive pull
+plus the delisted pull (survivorship note printed on every receipt). Results of
+`check` are observations, not evidence of edge. No implication reaches capital.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import logging
+import math
+import os
+import re
+import shutil
+import sys
+import time
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Iterable, Optional
+
+import numpy as np
+import pandas as pd
+
+from backend import config as _cfg
+
+logger = logging.getLogger(__name__)
+
+SCHEMA = "universe_graph/v1"
+
+NODE_TYPES = ("company", "sector", "theme", "country", "macro")
+STRUCTURAL_EDGE_TYPES = ("sector_member", "theme_member", "country_member",
+                         "co_coverage", "co_mention", "supplier", "customer")
+MEASURED_EDGE_TYPES = ("return_response",)
+
+#: world_state topics that are macro factors rather than themes. Everything else
+#: in world_state.TOPICS is a theme; `prediction_market_state` is not a bubble.
+MACRO_TOPICS = frozenset({"rates", "inflation", "credit", "dollar", "liquidity",
+                          "geopolitical_risk", "china_policy"})
+SKIP_TOPICS = frozenset({"prediction_market_state"})
+
+#: Instruments in the bars panel that are not companies.
+NON_COMPANY_SYMBOLS = frozenset({"SPY", "QQQ", "IWM", "DIA", "RSP"}) | frozenset(
+    getattr(_cfg, "WHY_MOVED_CORROBORATION_UNIVERSE", ())) | frozenset(
+    getattr(_cfg, "LLM_BOOK_REQUIRED_SERIES", ()))
+
+LABEL_ORDER = {"LOW": 0, "MEDIUM": 1, "HIGH": 2}
+
+
+# ──────────────────────────────── errors ────────────────────────────────────
+
+class GraphRefused(RuntimeError):
+    """The graph will not be built / used on these inputs. Always a red exit."""
+
+
+class UnknownNode(GraphRefused):
+    """An event names a node the graph does not hold."""
+
+
+# ──────────────────────────────── params ────────────────────────────────────
+
+@dataclass(frozen=True)
+class GraphParams:
+    shock_z: float = _cfg.UNIVERSE_GRAPH_SHOCK_Z
+    sigma_window: int = _cfg.UNIVERSE_GRAPH_SIGMA_WINDOW
+    horizons: tuple = tuple(_cfg.UNIVERSE_GRAPH_HORIZONS)
+    shrink_k: float = _cfg.UNIVERSE_GRAPH_SHRINK_K
+    min_events: int = _cfg.UNIVERSE_GRAPH_MIN_EVENTS
+    min_n_confident: int = _cfg.UNIVERSE_GRAPH_MIN_N_CONFIDENT
+    min_basket_members: int = _cfg.UNIVERSE_GRAPH_MIN_BASKET_MEMBERS
+    cocoverage_top_k: int = _cfg.UNIVERSE_GRAPH_COCOVERAGE_TOP_K
+    cocoverage_min_jaccard: float = _cfg.UNIVERSE_GRAPH_COCOVERAGE_MIN_JACCARD
+    hop_decay: float = _cfg.UNIVERSE_GRAPH_HOP_DECAY
+    hop2_fanout: int = _cfg.UNIVERSE_GRAPH_HOP2_FANOUT
+    max_implications: int = _cfg.UNIVERSE_GRAPH_MAX_IMPLICATIONS
+    response_clip_z: float = _cfg.UNIVERSE_GRAPH_RESPONSE_CLIP_Z
+    max_shock_z: float = _cfg.UNIVERSE_GRAPH_MAX_SHOCK_Z
+
+    def hash(self) -> str:
+        return hashlib.sha256(json.dumps(asdict(self), sort_keys=True, default=str)
+                              .encode()).hexdigest()[:16]
+
+
+# ──────────────────────────────── model ─────────────────────────────────────
+
+@dataclass(frozen=True)
+class Node:
+    id: str
+    type: str
+    label: str
+    source: str
+    attrs: dict = field(default_factory=dict, hash=False, compare=False)
+
+
+@dataclass
+class Edge:
+    src: str
+    dst: str
+    type: str
+    weight: float
+    n: int
+    as_of: str
+    source: str
+    #: return_response only: {h: {"w", "raw", "se", "t", "n"}}
+    horizons: dict = field(default_factory=dict)
+    #: return_response only: which structural relations admitted the pair
+    via: tuple = ()
+    sign: int = 0
+
+
+@dataclass
+class Implication:
+    target: str
+    target_type: str
+    target_label: str
+    horizon: int
+    expected_direction: int          # +1 / -1 / 0 (unknown)
+    expected_size: Optional[float]   # market-adjusted return over the horizon; None = unmeasured
+    weight: Optional[float]
+    n: int
+    path: list
+    edge_types: list
+    hops: int
+    confidence: float
+    confidence_label: str
+    why: str
+    graph_as_of: str
+    event: dict
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+def slug(text: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "_", str(text).strip().lower()).strip("_")
+    return s or "unknown"
+
+
+def company_id(sym: str) -> str:
+    return f"company:{sym}"
+
+
+def confidence_of(n: int, t: float, p: GraphParams) -> tuple[float, str]:
+    """A score in [0,1] and a label, from the edge's own n and in-sample t.
+
+    LOW whenever n is below the confident floor or |t| < 2. With ~15k fitted
+    edges about 5% clear |t| >= 2 by chance alone, so even HIGH (|t| >= 3 and
+    n >= 2x the floor) describes how well an edge was MEASURED, not skill.
+    """
+    if not n or not np.isfinite(t):
+        return 0.0, "LOW"
+    shrink = n / (n + p.shrink_k)
+    score = float(shrink * min(1.0, abs(t) / 3.0))
+    if n < p.min_n_confident or abs(t) < 2.0:
+        return round(score, 4), "LOW"
+    if abs(t) >= 3.0 and n >= 2 * p.min_n_confident:
+        return round(score, 4), "HIGH"
+    return round(score, 4), "MEDIUM"
+
+
+def _min_label(*labels: str) -> str:
+    return min(labels, key=lambda x: LABEL_ORDER[x])
+
+
+class UniverseGraph:
+    """Nodes, edges and an out-adjacency over the propagating edge types."""
+
+    def __init__(self, nodes: dict[str, Node], edges: list[Edge], *, as_of: str,
+                 params: GraphParams, meta: Optional[dict] = None) -> None:
+        self.nodes = nodes
+        self.edges = edges
+        self.as_of = as_of
+        self.params = params
+        self.meta = meta or {}
+        ref = 5 if 5 in params.horizons else params.horizons[0]
+        self.out: dict[str, list[Edge]] = {}
+        for e in edges:
+            if e.type in ("return_response", "co_mention"):
+                self.out.setdefault(e.src, []).append(e)
+        for k, lst in self.out.items():
+            lst.sort(key=lambda e: (-abs(_w(e, ref) if e.type == "return_response"
+                                         else e.weight), e.dst, e.type))
+        self.neighbours: dict[str, set[str]] = {}
+        for e in edges:
+            self.neighbours.setdefault(e.src, set()).add(e.dst)
+            self.neighbours.setdefault(e.dst, set()).add(e.src)
+
+    def counts(self) -> dict:
+        nt: dict[str, int] = {}
+        for n in self.nodes.values():
+            nt[n.type] = nt.get(n.type, 0) + 1
+        et: dict[str, int] = {}
+        for e in self.edges:
+            et[e.type] = et.get(e.type, 0) + 1
+        return {"nodes": dict(sorted(nt.items())), "edges": dict(sorted(et.items())),
+                "n_nodes": len(self.nodes), "n_edges": len(self.edges)}
+
+    # -- persistence -------------------------------------------------------
+    def to_frames(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+        nodes = pd.DataFrame([{"id": n.id, "type": n.type, "label": n.label,
+                               "source": n.source,
+                               "attrs_json": json.dumps(n.attrs, sort_keys=True, default=str)}
+                              for n in self.nodes.values()])
+        rows = []
+        for e in self.edges:
+            r = {"src": e.src, "dst": e.dst, "type": e.type, "weight": float(e.weight),
+                 "n": int(e.n), "as_of": e.as_of, "source": e.source,
+                 "via": "|".join(e.via), "sign": int(e.sign)}
+            for h in self.params.horizons:
+                hd = e.horizons.get(h) or e.horizons.get(str(h)) or {}
+                for k in ("w", "raw", "se", "t", "n", "ret_slope"):
+                    r[f"{k}_h{h}"] = hd.get(k, np.nan)
+            rows.append(r)
+        return nodes, pd.DataFrame(rows)
+
+    @classmethod
+    def from_frames(cls, nodes: pd.DataFrame, edges: pd.DataFrame, *, as_of: str,
+                    params: GraphParams, meta: Optional[dict] = None) -> "UniverseGraph":
+        nd = {r.id: Node(r.id, r.type, r.label, r.source, json.loads(r.attrs_json or "{}"))
+              for r in nodes.itertuples(index=False)}
+        out: list[Edge] = []
+        for r in edges.to_dict("records"):
+            hz = {}
+            if r["type"] == "return_response":
+                for h in params.horizons:
+                    if f"w_h{h}" in r and not pd.isna(r[f"w_h{h}"]):
+                        hz[h] = {k: (int(r[f"{k}_h{h}"]) if k == "n" else float(r[f"{k}_h{h}"]))
+                                 for k in ("w", "raw", "se", "t", "n", "ret_slope")
+                                 if f"{k}_h{h}" in r}
+            out.append(Edge(r["src"], r["dst"], r["type"], float(r["weight"]), int(r["n"]),
+                            str(r["as_of"]), str(r["source"]), hz,
+                            tuple(x for x in str(r.get("via") or "").split("|") if x),
+                            int(r.get("sign") or 0)))
+        return cls(nd, out, as_of=as_of, params=params, meta=meta)
+
+
+def _w(e: Edge, h: int) -> float:
+    hd = e.horizons.get(h)
+    return float(hd["w"]) if hd else 0.0
+
+
+# ─────────────────────────────── numerics ───────────────────────────────────
+
+def forward_sums(X: np.ndarray, h: int) -> np.ndarray:
+    """fwd[t] = sum X[t+1..t+h]; NaN unless all h values exist and t+h < T."""
+    T, N = X.shape
+    valid = ~np.isnan(X)
+    cs = np.vstack([np.zeros((1, N)), np.cumsum(np.where(valid, X, 0.0), axis=0)])
+    cv = np.vstack([np.zeros((1, N)), np.cumsum(valid, axis=0)])
+    out = np.full((T, N), np.nan)
+    if T - h - 1 < 0:
+        return out
+    idx = np.arange(0, T - h)          # t with t+h <= T-1
+    s = cs[idx + h + 1] - cs[idx + 1]
+    c = cv[idx + h + 1] - cv[idx + 1]
+    out[idx] = np.where(c == h, s, np.nan)
+    return out
+
+
+def trailing_sigma(X: np.ndarray, window: int) -> np.ndarray:
+    """Std of the `window` sessions ending the day BEFORE t (never day t)."""
+    df = pd.DataFrame(X)
+    return df.rolling(window, min_periods=max(10, window // 2)).std().shift(1).to_numpy()
+
+
+def shock_mask(X: np.ndarray, sigma: np.ndarray, z: float) -> np.ndarray:
+    with np.errstate(invalid="ignore", divide="ignore"):
+        m = np.abs(X) >= z * sigma
+    return m & np.isfinite(X) & np.isfinite(sigma) & (sigma > 0)
+
+
+def _std_shock(X: np.ndarray, sigma: np.ndarray, cap: float) -> np.ndarray:
+    with np.errstate(invalid="ignore", divide="ignore"):
+        z = np.where(np.isfinite(sigma) & (sigma > 0), X / sigma, np.nan)
+    return np.clip(z, -cap, cap)
+
+
+def _std_fwd(F: np.ndarray, sigma: np.ndarray, h: int, clip: float) -> np.ndarray:
+    with np.errstate(invalid="ignore", divide="ignore"):
+        y = np.where(np.isfinite(sigma) & (sigma > 0), F / (sigma * math.sqrt(h)), np.nan)
+    return np.clip(y, -clip, clip)
+
+
+def _last_sigma(x: np.ndarray, window: int) -> Optional[float]:
+    v = x[-window:]
+    v = v[np.isfinite(v)]
+    return float(np.std(v, ddof=1)) if len(v) >= max(10, window // 2) else None
+
+
+def fit_response(s: np.ndarray, Y: np.ndarray, k: float) -> dict:
+    """Through-origin slope of Y (n x m) on s (n,), per column, NaN-aware, shrunk."""
+    if Y.ndim == 1:
+        Y = Y[:, None]
+    V = ~np.isnan(Y)
+    Yz = np.where(V, Y, 0.0)
+    sc = s[:, None]
+    den = ((sc ** 2) * V).sum(axis=0)
+    num = (sc * Yz).sum(axis=0)
+    n = V.sum(axis=0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        b = np.where(den > 0, num / den, np.nan)
+        resid = np.where(V, Y - b[None, :] * sc, 0.0)
+        sse = (resid ** 2).sum(axis=0)
+        se = np.sqrt(sse / np.maximum(n - 1, 1) / den)
+        t = np.where(se > 0, b / se, 0.0)
+    w = b * n / (n + k)
+    return {"raw": b, "w": w, "se": se, "t": t, "n": n}
+
+
+# ──────────────────────────────── build ─────────────────────────────────────
+
+def _theme_kind(topic: str) -> str:
+    return "macro" if topic in MACRO_TOPICS else "theme"
+
+
+def build_graph(adj: pd.DataFrame, *, as_of: Any,
+                sectors: Optional[dict[str, str]] = None,
+                themes: Optional[dict[str, set]] = None,
+                theme_labels: Optional[dict[str, str]] = None,
+                coverage: Optional[dict[str, frozenset]] = None,
+                co_mention: Optional[list[dict]] = None,
+                labels: Optional[dict[str, str]] = None,
+                countries: Optional[dict[str, str]] = None,
+                ciks: Optional[dict[str, str]] = None,
+                structure_as_of: Optional[dict[str, str]] = None,
+                params: Optional[GraphParams] = None) -> UniverseGraph:
+    """Build the graph from a MARKET-ADJUSTED daily return panel (dates x symbols).
+
+    `themes` maps a node id (`theme:<key>` / `macro:<key>`) to member symbols.
+    Everything dated on or after `as_of` is dropped before any computation.
+    """
+    p = params or GraphParams()
+    as_of_ts = pd.Timestamp(as_of).tz_localize(None).normalize()
+    as_of_s = str(as_of_ts.date())
+    sa = structure_as_of or {}
+    if adj is None or adj.empty:
+        raise GraphRefused("empty return panel: nothing to measure")
+    adj = adj.sort_index()
+    adj = adj.loc[adj.index < as_of_ts]
+    adj = adj[[c for c in adj.columns if c not in NON_COMPANY_SYMBOLS]]
+    adj = adj.loc[:, adj.notna().sum() > 0]
+    min_rows = p.sigma_window + max(p.horizons) + 5
+    if len(adj) < min_rows or adj.shape[1] < 2:
+        raise GraphRefused(f"return panel before {as_of_s} has {len(adj)} sessions x "
+                           f"{adj.shape[1]} names; need >= {min_rows} sessions and 2 names")
+
+    syms = list(adj.columns)
+    col = {s: i for i, s in enumerate(syms)}
+    labels = labels or {}
+    countries = countries or {}
+    ciks = ciks or {}
+    sectors = {s: v for s, v in (sectors or {}).items() if s in col and v}
+    themes = themes or {}
+    theme_labels = theme_labels or {}
+    last_bar = str(adj.index.max().date())
+
+    nodes: dict[str, Node] = {}
+    edges: list[Edge] = []
+    for s in syms:
+        nodes[company_id(s)] = Node(company_id(s), "company", labels.get(s, s), "bars_panel",
+                                    {"symbol": s, "cik": ciks.get(s)})
+
+    # ---- structural edges -------------------------------------------------
+    sector_members: dict[str, list[str]] = {}
+    for s, sec in sorted(sectors.items()):
+        nid = f"sector:{slug(sec)}"
+        sector_members.setdefault(nid, []).append(s)
+        if nid not in nodes:
+            nodes[nid] = Node(nid, "sector", sec, "potential_universe.identity.sector", {})
+        edges.append(Edge(company_id(s), nid, "sector_member", 1.0, 1,
+                          sa.get("sectors", as_of_s), "potential_universe"))
+
+    theme_members: dict[str, list[str]] = {}
+    for nid, members in sorted(themes.items()):
+        kind = nid.split(":", 1)[0]
+        if kind not in ("theme", "macro"):
+            continue
+        if nid not in nodes:
+            nodes[nid] = Node(nid, kind, theme_labels.get(nid, nid.split(":", 1)[1]),
+                              "world_state/config/theme_baskets", {})
+        ms = sorted({m for m in members if m in col})
+        theme_members[nid] = ms
+        for m in ms:
+            edges.append(Edge(company_id(m), nid, "theme_member", 1.0, 1,
+                              sa.get("themes", as_of_s), "theme_lists"))
+
+    for s in syms:
+        c = countries.get(s)
+        if c:
+            nid = f"country:{c}"
+            if nid not in nodes:
+                nodes[nid] = Node(nid, "country", c, "news_entities/issuers.csv", {})
+            edges.append(Edge(company_id(s), nid, "country_member", 1.0, 1,
+                              sa.get("countries", as_of_s), "issuers.csv"))
+
+    cov_peers: dict[str, set[str]] = {}
+    if coverage:
+        cov = {s: f for s, f in coverage.items() if s in col and f}
+        names = sorted(cov)
+        for a in names:
+            fa = cov[a]
+            scored = []
+            for b in names:
+                if b == a:
+                    continue
+                inter = len(fa & cov[b])
+                if not inter:
+                    continue
+                jac = inter / len(fa | cov[b])
+                if jac >= p.cocoverage_min_jaccard:
+                    scored.append((-jac, b, inter))
+            scored.sort()
+            for negj, b, inter in scored[:p.cocoverage_top_k]:
+                cov_peers.setdefault(a, set()).add(b)
+                edges.append(Edge(company_id(a), company_id(b), "co_coverage",
+                                  round(-negj, 4), inter, sa.get("coverage", as_of_s),
+                                  "graph_propagation coverage snapshot"))
+
+    for cm in co_mention or []:
+        a, b = cm["from"], cm["to"]
+        if a in SKIP_TOPICS or b in SKIP_TOPICS:
+            continue
+        first = str(cm.get("first_seen") or "")[:10]
+        if first and first >= as_of_s:          # PIT: an edge first seen at/after as_of
+            continue
+        na, nb = f"{_theme_kind(a)}:{a}", f"{_theme_kind(b)}:{b}"
+        for nid, key in ((na, a), (nb, b)):
+            if nid not in nodes:
+                nodes[nid] = Node(nid, _theme_kind(key), theme_labels.get(nid, key),
+                                  "world_state.TOPICS", {})
+        sup = int(cm.get("support") or 0)
+        sign = 1 if str(cm.get("sign", "+")).strip() in ("+", "1", "up") else -1
+        edges.append(Edge(na, nb, "co_mention", round(sign * sup / (sup + p.shrink_k), 4),
+                          sup, str(cm.get("last_seen") or "")[:10] or as_of_s,
+                          "world_state beliefs co_mention_edges", sign=sign,
+                          horizons={}, via=(f"lag_sessions={cm.get('lag_sessions')}",)))
+
+    # ---- measured edges ---------------------------------------------------
+    # Fitted in SIGMA units: shock z of the source (capped) -> the target's forward
+    # return over sigma_target(t) x sqrt(h) (winsorized). `ret_slope` keeps the plain
+    # return-unit slope beside it, for transparency only.
+    X = adj.to_numpy(dtype=float)
+    sig = trailing_sigma(X, p.sigma_window)
+    shock = shock_mask(X, sig, p.shock_z)
+    Z = _std_shock(X, sig, p.max_shock_z)
+    fwd = {h: forward_sums(X, h) for h in p.horizons}
+    fwdz = {h: _std_fwd(fwd[h], sig, h, p.response_clip_z) for h in p.horizons}
+
+    def _fit_all(zs: np.ndarray, rs: np.ndarray, Yz: dict, Yr: dict) -> dict:
+        out = {}
+        for h in p.horizons:
+            f = fit_response(zs, Yz[h], p.shrink_k)
+            f["ret_slope"] = fit_response(rs, Yr[h], p.shrink_k)["raw"]
+            out[h] = f
+        return out
+
+    def _emit(src: str, dst: str, fit: dict, j: int, via: tuple, source: str) -> None:
+        h0 = p.horizons[0]
+        n0 = int(fit[h0]["n"][j])
+        if n0 < p.min_events:
+            return
+        hz = {}
+        for h in p.horizons:
+            f = fit[h]
+            if int(f["n"][j]) < 1 or not np.isfinite(f["w"][j]):
+                continue
+            hz[h] = {"w": round(float(f["w"][j]), 6), "raw": round(float(f["raw"][j]), 6),
+                     "se": round(float(f["se"][j]), 6), "t": round(float(f["t"][j]), 3),
+                     "n": int(f["n"][j]), "ret_slope": round(float(f["ret_slope"][j]), 6)}
+        if not hz:
+            return
+        ref = 5 if 5 in hz else next(iter(hz))
+        edges.append(Edge(src, dst, "return_response", hz[ref]["w"], n0, last_bar, source,
+                          hz, via))
+
+    # company -> company, candidates = pairs that already share a structural edge
+    sec_of = {s: f"sector:{slug(v)}" for s, v in sectors.items()}
+    themes_of: dict[str, set[str]] = {}
+    for nid, ms in theme_members.items():
+        for m in ms:
+            themes_of.setdefault(m, set()).add(nid)
+    n_pairs = 0
+    for a in syms:
+        ia = col[a]
+        ev = np.flatnonzero(shock[:, ia])
+        if len(ev) < p.min_events:
+            continue
+        cands: dict[str, list[str]] = {}
+        if a in sec_of:
+            for b in sector_members.get(sec_of[a], []):
+                if b != a:
+                    cands.setdefault(b, []).append("sector_member")
+        for b in sorted(cov_peers.get(a, ())):
+            cands.setdefault(b, []).append("co_coverage")
+        for nid in sorted(themes_of.get(a, ())):
+            for b in theme_members.get(nid, []):
+                if b != a:
+                    cands.setdefault(b, []).append(f"theme_member:{nid}")
+        if not cands:
+            continue
+        bs = sorted(cands)
+        jb = np.array([col[b] for b in bs])
+        fit = _fit_all(Z[ev, ia], X[ev, ia], {h: fwdz[h][ev][:, jb] for h in p.horizons},
+                       {h: fwd[h][ev][:, jb] for h in p.horizons})
+        n_pairs += len(bs)
+        for j, b in enumerate(bs):
+            _emit(company_id(a), company_id(b), fit, j, tuple(sorted(set(cands[b]))),
+                  "prices: shock z on src -> fwd market-adjusted return of dst (sigma units)")
+
+    # basket nodes (sector / theme / macro with members): leave-one-out series
+    baskets = {**sector_members, **theme_members}
+    for nid, ms in sorted(baskets.items()):
+        ms = [m for m in ms if m in col]
+        if len(ms) < p.min_basket_members or nid not in nodes:
+            continue
+        M = np.array([col[m] for m in ms])
+        Xm = X[:, M]
+        V = ~np.isnan(Xm)
+        S = np.where(V, Xm, 0.0).sum(axis=1)
+        C = V.sum(axis=1)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            full = np.where(C >= p.min_basket_members, S / np.maximum(C, 1), np.nan)
+            loo_c = C[:, None] - V
+            loo = np.where(loo_c >= p.min_basket_members - 1,
+                           (S[:, None] - np.where(V, Xm, 0.0)) / np.maximum(loo_c, 1), np.nan)
+        fsig = trailing_sigma(full[:, None], p.sigma_window)[:, 0]
+        fsh = shock_mask(full[:, None], fsig[:, None], p.shock_z)[:, 0]
+        typical = float(np.nanmedian(np.abs(full[fsh]))) if fsh.any() else None
+        old = nodes[nid]
+        nodes[nid] = Node(old.id, old.type, old.label, old.source,
+                          {**old.attrs, "n_members_priced": len(ms),
+                           "typical_shock": typical, "n_shock_days": int(fsh.sum()),
+                           "sigma": _last_sigma(full, p.sigma_window)})
+        loo_sig = trailing_sigma(loo, p.sigma_window)
+        loo_sh = shock_mask(loo, loo_sig, p.shock_z)
+        loo_z = _std_shock(loo, loo_sig, p.max_shock_z)
+        loo_fwd = {h: forward_sums(loo, h) for h in p.horizons}
+        loo_fwdz = {h: _std_fwd(loo_fwd[h], loo_sig, h, p.response_clip_z) for h in p.horizons}
+        for j, m in enumerate(ms):
+            im = col[m]
+            # member -> basket: shocks of the member, response of the basket without it
+            ev = np.flatnonzero(shock[:, im])
+            if len(ev) >= p.min_events:
+                fit = _fit_all(Z[ev, im], X[ev, im], {h: loo_fwdz[h][ev, j] for h in p.horizons},
+                               {h: loo_fwd[h][ev, j] for h in p.horizons})
+                _emit(company_id(m), nid, fit, 0, (nodes[nid].type + "_member",),
+                      "prices: shock z on member -> fwd leave-one-out basket (sigma units)")
+            # basket -> member: shocks of the basket without the member, response of it
+            ev2 = np.flatnonzero(loo_sh[:, j])
+            if len(ev2) >= p.min_events:
+                fit2 = _fit_all(loo_z[ev2, j], loo[ev2, j],
+                                {h: fwdz[h][ev2, im] for h in p.horizons},
+                                {h: fwd[h][ev2, im] for h in p.horizons})
+                _emit(nid, company_id(m), fit2, 0, (nodes[nid].type + "_member",),
+                      "prices: shock z on leave-one-out basket -> fwd member (sigma units)")
+
+    # per company: typical shock (fallback magnitude) and current sigma (unit conversion)
+    for a in syms:
+        ia = col[a]
+        m = shock[:, ia]
+        old = nodes[company_id(a)]
+        nodes[company_id(a)] = Node(old.id, old.type, old.label, old.source,
+                                    {**old.attrs,
+                                     "typical_shock": (float(np.nanmedian(np.abs(X[m, ia])))
+                                                       if m.any() else None),
+                                     "n_shock_days": int(m.sum()),
+                                     "sigma": _last_sigma(X[:, ia], p.sigma_window)})
+
+    meta = {"panel_first_session": str(adj.index.min().date()), "panel_last_session": last_bar,
+            "n_sessions": int(len(adj)), "n_company_pairs_fitted": int(n_pairs),
+            "n_shock_days_total": int(shock.sum())}
+    return UniverseGraph(nodes, edges, as_of=as_of_s, params=p, meta=meta)
+
+
+# ────────────────────────────── propagation ─────────────────────────────────
+
+def _direction(d: Any) -> int:
+    if isinstance(d, (int, float)) and not isinstance(d, bool):
+        return int(np.sign(d))
+    s = str(d).strip().lower()
+    if s in ("up", "+", "+1", "1", "positive", "long", "bullish"):
+        return 1
+    if s in ("down", "-", "-1", "negative", "short", "bearish"):
+        return -1
+    raise GraphRefused(f"event direction {d!r} is not up/down")
+
+
+def propagate(graph: UniverseGraph, event: dict) -> list[Implication]:
+    """event = {node_id, direction, magnitude?, as_of?} -> implications, 1-2 hops.
+
+    Deterministic: the same graph and event always return the same list in the
+    same order. `magnitude` is a positive fraction (0.08 = an 8% market-adjusted
+    move); when absent the node's typical shock size is used and the `why` says so.
+    """
+    p = graph.params
+    nid = event.get("node_id")
+    if nid not in graph.nodes:
+        raise UnknownNode(f"node {nid!r} is not in the graph (as_of {graph.as_of})")
+    ev_as_of = event.get("as_of")
+    if ev_as_of is not None and str(pd.Timestamp(ev_as_of).date()) < graph.as_of:
+        raise GraphRefused(
+            f"event dated {pd.Timestamp(ev_as_of).date()} precedes the graph's as_of "
+            f"{graph.as_of}: its weights would contain the event's future")
+    d = _direction(event.get("direction"))
+    if d == 0:
+        raise GraphRefused("event direction is zero")
+    node = graph.nodes[nid]
+    mag = event.get("magnitude")
+    mag_src = "event"
+    if mag is None:
+        mag = node.attrs.get("typical_shock")
+        mag_src = "typical_shock"
+    shock = d * abs(float(mag)) if mag is not None and np.isfinite(float(mag)) else None
+    if shock is None:
+        mag_src = "none"
+    src_sigma = node.attrs.get("sigma")
+    # the source's shock in its own sigma units, capped as when the weights were fitted
+    z_src = (float(np.clip(shock / src_sigma, -p.max_shock_z, p.max_shock_z))
+             if shock is not None and src_sigma else None)
+
+    def _size(z: Optional[float], w: float, target: str, h: int) -> Optional[float]:
+        tsig = (graph.nodes.get(target).attrs.get("sigma") if graph.nodes.get(target) else None)
+        if z is None or not tsig:
+            return None
+        return w * z * tsig * math.sqrt(h)
+    ev_echo = {"node_id": nid, "direction": d, "magnitude": None if mag is None else abs(float(mag)),
+               "magnitude_source": mag_src,
+               "as_of": None if ev_as_of is None else str(pd.Timestamp(ev_as_of).date())}
+
+    out: list[Implication] = []
+    hop1: dict[tuple[str, int], Implication] = {}
+
+    def _imp(target: str, h: int, size: Optional[float], direction: int, weight: Optional[float],
+             n: int, path: list, etypes: list, hops: int, score: float, label: str,
+             why: str) -> Implication:
+        tn = graph.nodes.get(target)
+        return Implication(target, tn.type if tn else "unknown", tn.label if tn else target, h,
+                           direction, None if size is None else round(float(size), 6),
+                           None if weight is None else round(float(weight), 6), int(n),
+                           path, etypes, hops, round(float(score), 4), label, why,
+                           graph.as_of, ev_echo)
+
+    for e in graph.out.get(nid, []):
+        if e.dst == nid:
+            continue
+        if e.type == "return_response":
+            for h in p.horizons:
+                hd = e.horizons.get(h)
+                if not hd:
+                    continue
+                size = _size(z_src, hd["w"], e.dst, h)
+                if size is None:
+                    continue
+                score, label = confidence_of(hd["n"], hd["t"], p)
+                imp = _imp(e.dst, h, size, int(np.sign(size)), hd["w"], hd["n"], [nid, e.dst],
+                           ["return_response"], 1, score, label,
+                           f"{nid} shock {shock:+.4f} (z {z_src:+.2f}, cap {p.max_shock_z:g}) x "
+                           f"response {hd['w']:+.4f} sigma/sigma x target sigma x sqrt({h}) "
+                           f"(n={hd['n']}, t={hd['t']:+.2f}, via {','.join(e.via) or '-'})")
+                hop1[(e.dst, h)] = imp
+        elif e.type == "co_mention":
+            for h in p.horizons:
+                imp = _imp(e.dst, h, None, d * e.sign, e.weight, e.n, [nid, e.dst],
+                           ["co_mention"], 1, 0.0, "LOW",
+                           f"co-mentioned with {nid} (support {e.n}, sign {e.sign:+d}); "
+                           f"co-mention is not causation and carries no measured size")
+                hop1[(e.dst, h)] = imp
+
+    out.extend(hop1.values())
+    seen = {k for k in hop1} | {(nid, h) for h in p.horizons}
+    for h in p.horizons:
+        firsts = [i for (t, hh), i in hop1.items() if hh == h and i.expected_size is not None]
+        firsts.sort(key=lambda i: (-abs(i.expected_size), i.target))
+        for i1 in firsts[:p.hop2_fanout]:
+            for e in graph.out.get(i1.target, []):
+                if e.type != "return_response" or (e.dst, h) in seen:
+                    continue
+                hd = e.horizons.get(h)
+                if not hd:
+                    continue
+                xsig = graph.nodes[i1.target].attrs.get("sigma")
+                if not xsig:
+                    continue
+                z_x = i1.expected_size / (xsig * math.sqrt(h))   # implied move of X, sigma units
+                size = _size(z_x, hd["w"], e.dst, h)
+                if size is None:
+                    continue
+                size *= p.hop_decay
+                s2, l2 = confidence_of(hd["n"], hd["t"], p)
+                score = i1.confidence * s2
+                n = min(i1.n, hd["n"])
+                imp = _imp(e.dst, h, size, int(np.sign(size)), hd["w"], n,
+                           [nid, i1.target, e.dst], ["return_response", "return_response"], 2,
+                           score, _min_label(i1.confidence_label, l2),
+                           f"2 hops via {i1.target}: implied {i1.expected_size:+.4f} (z {z_x:+.2f}) "
+                           f"x response {hd['w']:+.4f} x decay {p.hop_decay} (n={hd['n']})")
+                seen.add((e.dst, h))
+                out.append(imp)
+
+    out.sort(key=lambda i: (i.horizon, -(abs(i.expected_size) if i.expected_size is not None
+                                         else -1.0), i.hops, i.target))
+    capped: list[Implication] = []
+    per_h: dict[int, int] = {}
+    for i in out:
+        if per_h.get(i.horizon, 0) < p.max_implications:
+            capped.append(i)
+            per_h[i.horizon] = per_h.get(i.horizon, 0) + 1
+    return capped
+
+
+# ─────────────────────────────── consumers ──────────────────────────────────
+#
+# The three consumers ROADMAP §2a / CH-30 names. CH-31 wires them; these are the
+# exact functions it calls, so the contract exists before the caller does.
+
+def funnel_candidates(graph: UniverseGraph, events: Iterable[dict], *, horizon: int = 5,
+                      min_label: str = "MEDIUM", top_k: int = 10) -> list[dict]:
+    """(1) Funnel: company implications as candidates with `source='graph'`.
+
+    Pass `[r["ticker"] for r in rows]` to `opportunity_funnel.run(extra=...)` and keep
+    the rows as the WHY. One row per ticker (the strongest implication wins).
+    """
+    best: dict[str, dict] = {}
+    for ev in events:
+        for i in propagate(graph, ev):
+            if (i.target_type != "company" or i.horizon != horizon or i.expected_size is None
+                    or LABEL_ORDER[i.confidence_label] < LABEL_ORDER[min_label]):
+                continue
+            sym = graph.nodes[i.target].attrs.get("symbol") or i.target.split(":", 1)[1]
+            row = {"ticker": sym, "source": "graph", "event_node": ev.get("node_id"),
+                   "expected_direction": i.expected_direction, "expected_size": i.expected_size,
+                   "horizon": i.horizon, "confidence_label": i.confidence_label,
+                   "path": i.path, "why": i.why, "graph_as_of": graph.as_of}
+            if sym not in best or abs(i.expected_size) > abs(best[sym]["expected_size"]):
+                best[sym] = row
+    rows = sorted(best.values(), key=lambda r: (-abs(r["expected_size"]), r["ticker"]))
+    return rows[:top_k]
+
+
+def holdings_exposure(graph: UniverseGraph, holdings: Iterable[str],
+                      events: Iterable[dict]) -> list[dict]:
+    """(2) Overlay input for CH-14b: every implication that lands on a held name."""
+    held = {company_id(h) for h in holdings}
+    rows = []
+    for ev in events:
+        for i in propagate(graph, ev):
+            if i.target in held:
+                rows.append({**i.to_dict(), "ticker": i.target.split(":", 1)[1]})
+    rows.sort(key=lambda r: (r["ticker"], r["horizon"],
+                             -(abs(r["expected_size"]) if r["expected_size"] is not None else 0)))
+    return rows
+
+
+def owner_warnings(graph: UniverseGraph, holdings: Iterable[str], events: Iterable[dict], *,
+                   min_label: str = "MEDIUM") -> list[dict]:
+    """(3) Owner warning: ADVERSE implications on held (long) names, plain sentences.
+
+    Feed `text` into the owner-warning path (`owner_event_warning`); this function
+    sends nothing.
+    """
+    out = []
+    for r in holdings_exposure(graph, holdings, events):
+        if (r["expected_direction"] < 0 and r["expected_size"] is not None
+                and LABEL_ORDER[r["confidence_label"]] >= LABEL_ORDER[min_label]):
+            out.append({**r, "text": (
+                f"{r['ticker']}: {r['event']['node_id']} implies {r['expected_size']:+.2%} "
+                f"over {r['horizon']} sessions (market-adjusted; {r['confidence_label']} "
+                f"confidence, n={r['n']}; path {' -> '.join(r['path'])}). An observation "
+                f"from measured co-movement, not a forecast with proven skill.")})
+    return out
+
+
+# ──────────────────────────────── inputs ────────────────────────────────────
+
+def _read_bars(paths: list[Path], columns: list[str], *, symbols: Optional[Iterable[str]] = None,
+               start: Optional[pd.Timestamp] = None, end: Optional[pd.Timestamp] = None
+               ) -> pd.DataFrame:
+    frames = []
+    for i, pth in enumerate(paths):
+        filt = []
+        if symbols is not None:
+            filt.append(("symbol", "in", sorted(set(symbols))))
+        if start is not None:
+            filt.append(("date", ">=", pd.Timestamp(start)))
+        if end is not None:
+            filt.append(("date", "<", pd.Timestamp(end)))
+        df = pd.read_parquet(pth, columns=columns, filters=filt or None)
+        df["_src"] = i
+        frames.append(df)
+    if not frames:
+        return pd.DataFrame(columns=columns)
+    out = pd.concat(frames, ignore_index=True)
+    out["date"] = pd.to_datetime(out["date"]).dt.tz_localize(None)
+    out = out.sort_values(["symbol", "date", "_src"], kind="mergesort")
+    out = out.drop_duplicates(["symbol", "date"], keep="first").drop(columns="_src")
+    return out.reset_index(drop=True)
+
+
+def select_liquid(paths: list[Path], as_of: Any, *, top_n: int, lookback: int,
+                  market: str) -> tuple[list[str], dict]:
+    """Top-N companies by median dollar volume over the `lookback` sessions before as_of."""
+    as_of = pd.Timestamp(as_of)
+    start = as_of - pd.Timedelta(days=int(lookback * 1.6) + 10)
+    df = _read_bars(paths, ["symbol", "date", "close", "volume"], start=start, end=as_of)
+    if df.empty:
+        raise GraphRefused(f"no bars in {[str(p) for p in paths]} before {as_of.date()}")
+    df = df[~df["symbol"].isin(NON_COMPANY_SYMBOLS | {market})]
+    df = df[~df["symbol"].str.contains("#", regex=False)]
+    df["dv"] = df["close"] * df["volume"]
+    df = df.groupby("symbol", sort=True).tail(lookback)
+    g = df.groupby("symbol")["dv"].agg(["median", "count"])
+    g = g[g["count"] >= lookback // 2].sort_values("median", ascending=False)
+    chosen = list(g.index[:top_n])
+    info = {"rule": f"top {top_n} companies by median close*volume over the {lookback} "
+                    f"sessions before {as_of.date()} (>= {lookback // 2} bars), ETFs excluded",
+            "eligible": int(len(g)), "chosen": len(chosen),
+            "min_median_dollar_volume": float(g["median"].iloc[len(chosen) - 1]) if chosen else None}
+    return chosen, info
+
+
+def load_adjusted_returns(paths: list[Path], symbols: Iterable[str], *, market: str,
+                          max_gap_days: int, start: Optional[Any] = None,
+                          end: Optional[Any] = None) -> tuple[pd.DataFrame, dict]:
+    """Market-adjusted daily returns (r_i - r_market), dates x symbols, plus an audit."""
+    syms = sorted(set(symbols) | {market})
+    df = _read_bars(paths, ["symbol", "date", "close"], symbols=syms,
+                    start=None if start is None else pd.Timestamp(start),
+                    end=None if end is None else pd.Timestamp(end))
+    if df.empty:
+        raise GraphRefused("bars panel returned no rows for the chosen symbols")
+    df = df[df["close"] > 0]
+    df["ret"] = df.groupby("symbol")["close"].pct_change()
+    gap = df.groupby("symbol")["date"].diff().dt.days
+    n_void = int((gap > max_gap_days).sum())
+    df.loc[gap > max_gap_days, "ret"] = np.nan
+    wide = df.pivot(index="date", columns="symbol", values="ret").sort_index()
+    if market not in wide.columns:
+        raise GraphRefused(f"market symbol {market} absent from the bars panel")
+    mkt = wide.pop(market)
+    adj = wide.sub(mkt, axis=0)
+    from backend.services.xs_ranker import survivorship_audit
+    audit = survivorship_audit(df[["symbol", "date"]])
+    audit["returns_voided_across_gaps"] = n_void
+    return adj, audit
+
+
+def newest(paths: Iterable[Path]) -> Optional[Path]:
+    ps = sorted(p for p in paths if p.exists())
+    return ps[-1] if ps else None
+
+
+def load_structure(data_root: Path, as_of: Any) -> tuple[dict, list[dict]]:
+    """Every structural input, each with a status row for the receipt."""
+    data_root = Path(data_root)
+    as_of_s = str(pd.Timestamp(as_of).date())
+    rows: list[dict] = []
+    st: dict[str, Any] = {"sectors": {}, "themes": {}, "theme_labels": {}, "coverage": {},
+                          "co_mention": [], "labels": {}, "countries": {}, "ciks": {},
+                          "structure_as_of": {}}
+
+    pu = newest((data_root / "potential_universe").glob("*.jsonl")) \
+        if (data_root / "potential_universe").exists() else None
+    if pu:
+        n = 0
+        for line in pu.open(encoding="utf-8"):
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            sec = (r.get("identity") or {}).get("sector")
+            if r.get("symbol") and sec:
+                st["sectors"][r["symbol"]] = sec
+                n += 1
+        st["structure_as_of"]["sectors"] = pu.stem
+        rows.append({"input": "sector_map", "path": str(pu), "rows": n, "as_of": pu.stem,
+                     "status": "OK" if n else "EMPTY"})
+    else:
+        rows.append({"input": "sector_map", "path": str(data_root / "potential_universe"),
+                     "rows": 0, "status": "MISSING"})
+
+    from backend.services import world_state as WS
+    for topic, ticks in WS.BELLWETHERS.items():
+        nid = f"{_theme_kind(topic)}:{topic}"
+        st["themes"].setdefault(nid, set()).update(ticks)
+    for topic, spec in WS.TOPICS.items():
+        if topic not in SKIP_TOPICS:
+            nid = f"{_theme_kind(topic)}:{topic}"
+            st["theme_labels"][nid] = spec.get("meaning", topic)
+            st["themes"].setdefault(nid, set())
+    for sym, theme in getattr(_cfg, "BOOK_TICKER_THEMES", {}).items():
+        st["themes"].setdefault(f"theme:{theme}", set()).add(sym)
+    try:
+        from backend.services import theme_baskets as TB
+        for key, members in TB.universe_as_of(as_of_s).items():
+            st["themes"].setdefault(f"theme:{key}", set()).update(members)
+            st["theme_labels"][f"theme:{key}"] = (
+                TB.load_theme_baskets()["themes"][key].get("label", key))
+        tb_status = "OK"
+    except Exception as e:                       # pragma: no cover - file shipped in repo
+        tb_status = f"ERROR {type(e).__name__}: {e}"
+    st["structure_as_of"]["themes"] = as_of_s
+    rows.append({"input": "theme_lists", "rows": sum(len(v) for v in st["themes"].values()),
+                 "sources": ["world_state.BELLWETHERS", "config.BOOK_TICKER_THEMES",
+                             f"theme_baskets.yaml ({tb_status})"],
+                 "status": "OK" if tb_status == "OK" else "DEGRADED"})
+
+    cov_files = [newest((data_root / "graph_propagation").glob("coverage_snapshot_*.json")),
+                 data_root / "graph_propagation" / "coverage_midcap_sample.json"]
+    n_cov, cov_asof = 0, None
+    for f in cov_files:
+        if f is None or not f.exists():
+            continue
+        d = json.loads(f.read_text(encoding="utf-8"))
+        cov_asof = d.get("as_of") or cov_asof
+        for sym, r in (d.get("rows") or {}).items():
+            if r.get("status") == "OK" and r.get("firms"):
+                st["coverage"][sym] = frozenset(r["firms"])
+                n_cov += 1
+    st["structure_as_of"]["coverage"] = cov_asof or as_of_s
+    rows.append({"input": "co_coverage", "paths": [str(f) for f in cov_files if f],
+                 "rows": n_cov, "as_of": cov_asof, "status": "OK" if n_cov else "MISSING"})
+
+    bpath = data_root / "world_state" / "beliefs.json"
+    if bpath.exists():
+        d = json.loads(bpath.read_text(encoding="utf-8"))
+        for topic, b in (d.get("beliefs") or {}).items():
+            for e in b.get("co_mention_edges") or []:
+                st["co_mention"].append({"from": topic, **e})
+        rows.append({"input": "co_mention", "path": str(bpath), "rows": len(st["co_mention"]),
+                     "as_of": str(d.get("as_of"))[:10],
+                     "status": "OK" if st["co_mention"] else "EMPTY"})
+    else:
+        rows.append({"input": "co_mention", "path": str(bpath), "rows": 0, "status": "MISSING"})
+
+    iss = next((p for p in (data_root.parent / "news_entities" / "issuers.csv",
+                            _cfg.BACKEND_DIR / "data" / "news_entities" / "issuers.csv")
+                if p.exists()), None)
+    if iss:
+        with iss.open(encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                st["labels"][r["symbol"]] = r.get("primary_name") or r["symbol"]
+                if r.get("country"):
+                    st["countries"][r["symbol"]] = r["country"]
+        rows.append({"input": "issuers", "path": str(iss), "rows": len(st["labels"]),
+                     "status": "OK"})
+    else:
+        rows.append({"input": "issuers", "rows": 0, "status": "MISSING"})
+
+    ct = data_root / "official" / "company_tickers.json"
+    if ct.exists():
+        d = json.loads(ct.read_text(encoding="utf-8"))
+        for cik, sym in (d.get("map") or {}).items():
+            st["ciks"].setdefault(sym, cik)
+        rows.append({"input": "company_tickers (cik)", "path": str(ct), "rows": len(st["ciks"]),
+                     "as_of": str(d.get("t"))[:10], "status": "OK"})
+    rows.append({"input": "supplier/customer", "status": "NOT_USED",
+                 "note": "graph/companyworld_v1.parquet holds 2,020 SEC-filed edges keyed by "
+                         "CRSP permno, filed 1999-2011 and valid to 2013 at the latest: expired "
+                         "for a 2016+ panel and not joined to tickers. Edge type reserved."})
+    return st, rows
+
+
+def bar_paths(data_root: Path) -> list[Path]:
+    deep = data_root / "prices_deep" / "bars.parquet"
+    dead = data_root / "prices_deep" / "bars_delisted.parquet"
+    alt = data_root / "prices_2025_26" / "bars.parquet"
+    out = [deep] if deep.exists() else ([alt] if alt.exists() else [])
+    if dead.exists():
+        out.append(dead)
+    return out
+
+
+# ────────────────────────────── persistence ─────────────────────────────────
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def write_graph(graph: UniverseGraph, out_dir: Path, receipt: dict) -> Path:
+    """Write nodes/edges/receipt into a new run directory, then flip `latest.json`.
+
+    The run directory appears only after every file in it is complete (written
+    under a temp name, then renamed); `latest.json` is replaced atomically, so a
+    reader never sees a half-written graph.
+    """
+    from backend.services.disk_guard import atomic_write_json
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    build_id = receipt["build_id"]
+    final = out_dir / build_id
+    tmp = out_dir / f".{build_id}.{os.getpid()}.tmp"
+    if tmp.exists():
+        shutil.rmtree(tmp)
+    tmp.mkdir()
+    try:
+        nodes, edges = graph.to_frames()
+        nodes.to_parquet(tmp / "nodes.parquet", index=False)
+        edges.to_parquet(tmp / "edges.parquet", index=False)
+        atomic_write_json(tmp / "receipt.json", receipt)
+        if final.exists():
+            shutil.rmtree(final)
+        os.replace(tmp, final)
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    atomic_write_json(out_dir / "latest.json",
+                      {"build_id": build_id, "as_of": receipt["as_of"],
+                       "built_utc": receipt["built_utc"], "path": str(final)})
+    return final
+
+
+def load_graph(out_dir: Optional[Path] = None, build_id: Optional[str] = None) -> UniverseGraph:
+    out_dir = Path(out_dir or _cfg.UNIVERSE_GRAPH_DIR)
+    if build_id is None:
+        lp = out_dir / "latest.json"
+        if not lp.exists():
+            raise GraphRefused(f"no graph built under {out_dir} (no latest.json)")
+        build_id = json.loads(lp.read_text(encoding="utf-8"))["build_id"]
+    d = out_dir / build_id
+    rec = json.loads((d / "receipt.json").read_text(encoding="utf-8"))
+    pd_ = rec.get("params") or {}
+    params = GraphParams(**{k: (tuple(v) if isinstance(v, list) else v) for k, v in pd_.items()
+                            if k in GraphParams.__dataclass_fields__})
+    return UniverseGraph.from_frames(pd.read_parquet(d / "nodes.parquet"),
+                                     pd.read_parquet(d / "edges.parquet"),
+                                     as_of=rec["as_of"], params=params, meta=rec)
+
+
+def status(out_dir: Optional[Path] = None, *, now: Optional[Any] = None,
+           stale_days: Optional[int] = None) -> dict:
+    """Green only when a graph exists and its newest INPUT BAR is not stale.
+
+    Age is measured from the receipt's `panel_last_session` (the newest bar the
+    weights saw), not from the build's `as_of`: a nightly build on a panel that
+    stopped updating would otherwise read OK. A receipt without a parseable
+    `panel_last_session` is UNKNOWN and red, never fresh.
+    """
+    out_dir = Path(out_dir or _cfg.UNIVERSE_GRAPH_DIR)
+    limit = int(stale_days if stale_days is not None else _cfg.UNIVERSE_GRAPH_STALE_DAYS)
+    now_ts = pd.Timestamp(now) if now is not None else pd.Timestamp.now(tz="UTC")
+    if now_ts.tzinfo is not None:
+        now_ts = now_ts.tz_convert("UTC").tz_localize(None)
+    lp = out_dir / "latest.json"
+    if not lp.exists():
+        return {"status": "MISSING", "red": True, "dir": str(out_dir), "stale_after_days": limit,
+                "line": f"universe graph MISSING: nothing built under {out_dir}"}
+    try:
+        latest = json.loads(lp.read_text(encoding="utf-8"))
+        as_of = pd.Timestamp(latest["as_of"])
+        rec = json.loads((out_dir / latest["build_id"] / "receipt.json").read_text(encoding="utf-8"))
+    except Exception as e:
+        return {"status": "UNKNOWN", "red": True, "dir": str(out_dir), "stale_after_days": limit,
+                "line": f"universe graph UNKNOWN: unreadable latest/receipt ({type(e).__name__})"}
+    try:
+        last_bar = pd.Timestamp(rec["panel_last_session"])
+        if pd.isna(last_bar):
+            raise ValueError("NaT")
+    except Exception:
+        return {"status": "UNKNOWN", "red": True, "dir": str(out_dir), "stale_after_days": limit,
+                "as_of": str(as_of.date()), "build_id": latest["build_id"],
+                "line": (f"universe graph UNKNOWN: build {latest['build_id']} does not record a "
+                         f"parseable panel_last_session, so the age of its data is unknown")}
+    dated = min(as_of.normalize(), last_bar.normalize())
+    age = int((now_ts.normalize() - dated).days)
+    stale = age > limit
+    return {"status": "STALE" if stale else "OK", "red": bool(stale), "as_of": str(as_of.date()),
+            "panel_last_session": str(last_bar.date()),
+            "age_days": age, "stale_after_days": limit, "build_id": latest["build_id"],
+            "counts": rec.get("counts"), "dir": str(out_dir),
+            "line": (f"universe graph {'STALE' if stale else 'OK'}: newest bar "
+                     f"{last_bar.date()} (as_of {as_of.date()}), "
+                     f"{age}d old (red after {limit}d), "
+                     f"{(rec.get('counts') or {}).get('n_edges', '?')} edges")}
+
+
+# ──────────────────────────────── check ─────────────────────────────────────
+
+def walk_forward_check(adj: pd.DataFrame, liquid_by_year: dict[int, list[str]],
+                       structure: dict, *, years: Iterable[int], horizons: Iterable[int],
+                       params: Optional[GraphParams] = None, seed: int = 0,
+                       max_events_per_year: int = 4000) -> dict:
+    """Does propagate's sign beat a random-name control? An OBSERVATION, by year.
+
+    For each year Y: weights frozen at Y-01-01 (built only from data before it),
+    then every company shock day in Y is propagated. For each company
+    implication at horizon h the realised market-adjusted forward return of the
+    target is compared in sign; the control draws a random liquid name (not the
+    shocked name, not any of its implied targets) and gives it the SAME sign.
+    The day-clustered difference is reported because all implications of one
+    day share one market.
+    """
+    p = params or GraphParams()
+    rng = np.random.default_rng(seed)
+    horizons = [h for h in horizons if h in p.horizons]
+    adj = adj.sort_index()
+    X = adj.to_numpy(dtype=float)
+    cols = list(adj.columns)
+    col = {c: i for i, c in enumerate(cols)}
+    sig = trailing_sigma(X, p.sigma_window)
+    shk = shock_mask(X, sig, p.shock_z)
+    fwd = {h: forward_sums(X, h) for h in horizons}
+    by_year: dict[str, Any] = {}
+    replay: list[dict] = []
+    pooled = {h: {"g": 0, "c": 0, "n": 0} for h in horizons}
+    years = list(years)
+    for Y in years:
+        F, L = pd.Timestamp(f"{Y}-01-01"), pd.Timestamp(f"{Y + 1}-01-01")
+        liquid = [s for s in liquid_by_year.get(Y, []) if s in col]
+        if len(liquid) < 10:
+            by_year[str(Y)] = {"status": "SKIPPED", "reason": f"{len(liquid)} liquid names"}
+            continue
+        try:
+            g = build_graph(adj[liquid], as_of=F, params=p, **structure)
+        except GraphRefused as e:
+            by_year[str(Y)] = {"status": "REFUSED", "reason": str(e)}
+            continue
+        rows = np.flatnonzero((adj.index >= F) & (adj.index < L))
+        lj = np.array([col[s] for s in liquid])
+        evs = [(int(t), int(j)) for t in rows for j in lj if shk[t, j]]
+        n_all = len(evs)
+        if len(evs) > max_events_per_year:
+            pick = rng.choice(len(evs), size=max_events_per_year, replace=False)
+            evs = [evs[i] for i in sorted(pick)]
+        rec = {h: {"hits_g": [], "hits_c": [], "day": [], "hop": [], "label": []} for h in horizons}
+        for t, j in evs:
+            a = cols[j]
+            try:
+                imps = propagate(g, {"node_id": company_id(a), "direction": float(np.sign(X[t, j])),
+                                     "magnitude": abs(X[t, j]),
+                                     "as_of": adj.index[t]})
+            except GraphRefused:
+                continue
+            targets = {i.target for i in imps} | {company_id(a)}
+            pool = [s for s in liquid if company_id(s) not in targets]
+            for i in imps:
+                if (i.target_type != "company" or i.horizon not in rec
+                        or i.expected_direction == 0):
+                    continue
+                b = i.target.split(":", 1)[1]
+                if b not in col:
+                    continue
+                rb = fwd[i.horizon][t, col[b]]
+                if not np.isfinite(rb) or not pool:
+                    continue
+                cand = pool[int(rng.integers(len(pool)))]
+                rc = fwd[i.horizon][t, col[cand]]
+                if not np.isfinite(rc):
+                    continue
+                r = rec[i.horizon]
+                r["hits_g"].append(float(np.sign(rb) == i.expected_direction))
+                r["hits_c"].append(float(np.sign(rc) == i.expected_direction))
+                r["day"].append(t)
+                r["hop"].append(i.hops)
+                r["label"].append(i.confidence_label)
+        yr: dict[str, Any] = {"status": "OK", "weights_frozen_at": str(F.date()),
+                              "n_liquid": len(liquid), "n_shock_events": n_all,
+                              "n_events_propagated": len(evs), "graph_counts": g.counts()}
+        for h in horizons:
+            r = rec[h]
+            yr[f"h{h}"] = _summ(r)
+            yr[f"h{h}_hop1"] = _summ(r, mask=[x == 1 for x in r["hop"]])
+            yr[f"h{h}_medium_plus"] = _summ(r, mask=[x != "LOW" for x in r["label"]])
+            pooled[h]["g"] += sum(r["hits_g"])
+            pooled[h]["c"] += sum(r["hits_c"])
+            pooled[h]["n"] += len(r["hits_g"])
+        by_year[str(Y)] = yr
+        if Y == years[-1]:
+            replay = known_answer_replay(g, adj, X, fwd, shk, rows, liquid, k=5)
+    pooled_out = {f"h{h}": {"n_implications": v["n"],
+                            "hit_rate_graph": round(v["g"] / v["n"], 4) if v["n"] else None,
+                            "hit_rate_control": round(v["c"] / v["n"], 4) if v["n"] else None}
+                  for h, v in pooled.items()}
+    return {"by_year": by_year, "pooled": pooled_out, "known_answer_replay": replay}
+
+
+def _summ(r: dict, mask: Optional[list] = None) -> dict:
+    g = np.array(r["hits_g"])
+    c = np.array(r["hits_c"])
+    d = np.array(r["day"])
+    if mask is not None:
+        m = np.array(mask, dtype=bool)
+        if len(m):
+            g, c, d = g[m], c[m], d[m]
+    n = int(len(g))
+    if not n:
+        return {"n_implications": 0}
+    diff = pd.Series(g - c).groupby(d).mean()
+    nd = int(len(diff))
+    se = float(diff.std(ddof=1) / math.sqrt(nd)) if nd > 1 else float("nan")
+    return {"n_implications": n, "n_event_days": nd,
+            "hit_rate_graph": round(float(g.mean()), 4),
+            "hit_rate_control": round(float(c.mean()), 4),
+            "diff_day_clustered": round(float(diff.mean()), 4),
+            "se_day_clustered": round(se, 4) if np.isfinite(se) else None}
+
+
+def known_answer_replay(g: UniverseGraph, adj: pd.DataFrame, X: np.ndarray, fwd: dict,
+                        shk: np.ndarray, rows: np.ndarray, liquid: list[str], *,
+                        k: int = 5) -> list[dict]:
+    """The k largest shocks among the 50 most liquid names: what the graph implied
+    (weights frozen before the year) next to what the peers then did."""
+    col = {c: i for i, c in enumerate(adj.columns)}
+    top = [s for s in liquid[:50] if s in col]
+    h = 5 if 5 in fwd else next(iter(fwd))
+    last_ok = len(adj) - 1 - h          # the realised window must be complete
+    cand = [(abs(X[t, col[s]]), int(t), s) for t in rows for s in top
+            if shk[t, col[s]] and t <= last_ok]
+    cand.sort(key=lambda x: (-x[0], x[1], x[2]))
+    out, used = [], set()
+    for _, t, s in cand:
+        if s in used:
+            continue
+        used.add(s)
+        imps = [i for i in propagate(g, {"node_id": company_id(s), "direction": float(np.sign(X[t, col[s]])),
+                                         "magnitude": abs(X[t, col[s]]), "as_of": adj.index[t]})
+                if i.horizon == h and i.target_type == "company"][:5]
+        out.append({"date": str(adj.index[t].date()), "node": company_id(s),
+                    "shock_market_adjusted": round(float(X[t, col[s]]), 4),
+                    "n_measured_out_edges": sum(1 for e in g.out.get(company_id(s), [])
+                                                if e.type == "return_response"),
+                    "implied_then_realised": [
+                        {"target": i.target, "expected": i.expected_size,
+                         "confidence": i.confidence_label, "path": i.path,
+                         "realised": (round(float(fwd[h][t, col[i.target.split(':', 1)[1]]]), 4)
+                                      if i.target.split(":", 1)[1] in col
+                                      and np.isfinite(fwd[h][t, col[i.target.split(':', 1)[1]]])
+                                      else None)} for i in imps]})
+        if len(out) >= k:
+            break
+    return out
+
+
+# ───────────────────────────────── CLI ──────────────────────────────────────
+
+LIMITATIONS = [
+    "Liquid subset only (top-N by dollar volume); the receipt states N and the floor.",
+    "Structural inputs are current snapshots (sector map, coverage, theme lists); in a "
+    "historical fold they choose candidate pairs with today's structure. Weights are PIT.",
+    "Market-adjusted = r_i - r_SPY (beta 1). High-beta names carry residual market exposure.",
+    "Shock days within h sessions of each other overlap at h=21, so n overstates "
+    "independent observations there.",
+    "Sector membership and theme lists are not dated history; a name's sector is today's.",
+    "supplier/customer edges: none usable (companyworld edges expired 2013, permno-keyed).",
+    "Macro nodes have no priced series in the local panels (no TLT/USO/UUP bars), so they "
+    "propagate only along co_mention edges, unmeasured.",
+    "Observations, not evidence of edge. No implication reaches capital.",
+]
+
+
+def _build_id(as_of: str) -> str:
+    return f"ug_{as_of.replace('-', '')}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+
+
+def cmd_build(args: argparse.Namespace) -> int:
+    t0 = time.time()
+    data_root = Path(args.data_root)
+    paths = [Path(p) for p in args.bars] if args.bars else bar_paths(data_root)
+    if not paths or not all(p.exists() for p in paths):
+        print(f"REFUSED: bars panel missing ({[str(p) for p in paths]})", file=sys.stderr)
+        return 2
+    as_of = pd.Timestamp(args.as_of) if args.as_of else pd.Timestamp.now().normalize()
+    market = _cfg.UNIVERSE_GRAPH_MARKET_SYMBOL
+    try:
+        liquid, liq_info = select_liquid(paths, as_of, top_n=args.top_n,
+                                         lookback=_cfg.UNIVERSE_GRAPH_LIQUIDITY_LOOKBACK,
+                                         market=market)
+        if len(liquid) < 20:
+            raise GraphRefused(f"only {len(liquid)} liquid names before {as_of.date()}")
+        adj, surv = load_adjusted_returns(paths, liquid, market=market,
+                                          max_gap_days=_cfg.UNIVERSE_GRAPH_MAX_GAP_DAYS,
+                                          end=as_of)
+        structure, inputs = load_structure(data_root, as_of)
+        if not structure["sectors"]:
+            raise GraphRefused("sector map missing or empty: no candidate pairs to measure")
+        g = build_graph(adj, as_of=as_of, **structure)
+        counts = g.counts()
+        if not counts["edges"].get("return_response"):
+            raise GraphRefused("zero return_response edges: the graph would carry no weights")
+    except GraphRefused as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
+        return 2
+    as_of_s = g.as_of
+    built = _utc_now()
+    last = pd.Timestamp(g.meta["panel_last_session"])
+    data_age = int((pd.Timestamp(as_of_s) - last).days)
+    if data_age > _cfg.UNIVERSE_GRAPH_STALE_DAYS:
+        print(f"REFUSED: newest bar {last.date()} is {data_age}d before as_of {as_of_s} "
+              f"(limit {_cfg.UNIVERSE_GRAPH_STALE_DAYS}d): the bars panel is stale; refresh it "
+              f"before building", file=sys.stderr)
+        return 2
+    degraded = [r["input"] for r in inputs if r.get("status") not in ("OK", "NOT_USED")]
+    receipt = {
+        "schema": SCHEMA, "build_id": _build_id(as_of_s), "as_of": as_of_s, "built_utc": built,
+        "status": "DEGRADED" if degraded else "OK", "degraded_inputs": degraded,
+        "panel_last_session": g.meta["panel_last_session"],
+        "panel_age_days_at_build": int((pd.Timestamp(built[:10]) - last).days),
+        "panel_age_days_at_as_of": data_age,
+        "counts": counts, "meta": g.meta,
+        "liquid_subset": {**liq_info, "limit_reason": "first build kept tractable on a PC with "
+                                                      "~7 GB free RAM (CH-30 brief)"},
+        "survivorship": {"bars_paths": [str(p) for p in paths], **surv,
+                         "panel_membership_note": "prices_deep/bars.parquet holds names alive on "
+                         "2026-09-01; bars_delisted.parquet adds the dead ones, so the liquid "
+                         "subset is chosen from both.",
+                         "reading": "a live build picks its liquid names AT as_of, so they are "
+                         "alive by construction and the verdict above reads SURVIVOR-SELECTED; "
+                         "their weights are still measured over their whole history. The "
+                         "`check` command picks names at each 1 January, which is where "
+                         "names that later died enter."},
+        "inputs": inputs, "params": asdict(g.params), "params_hash": g.params.hash(),
+        "limitations": LIMITATIONS, "llm_spend_usd": 0.0,
+        "elapsed_s": round(time.time() - t0, 1),
+    }
+    out = Path(args.out) if args.out else _cfg.UNIVERSE_GRAPH_DIR
+    path = write_graph(g, out, receipt)
+    print(json.dumps({"written": str(path), "status": receipt["status"], "as_of": as_of_s,
+                      "counts": counts, "liquid": liq_info, "survivorship": surv,
+                      "elapsed_s": receipt["elapsed_s"]}, indent=1, default=str))
+    return 3 if degraded else 0
+
+
+def cmd_status(args: argparse.Namespace) -> int:
+    s = status(Path(args.out) if args.out else None)
+    print(json.dumps(s, indent=1, default=str))
+    return 1 if s["red"] else 0
+
+
+def cmd_propagate(args: argparse.Namespace) -> int:
+    try:
+        g = load_graph(Path(args.out) if args.out else None)
+        imps = propagate(g, {"node_id": args.node, "direction": args.direction,
+                             "magnitude": args.magnitude, "as_of": args.as_of})
+    except GraphRefused as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
+        return 2
+    print(json.dumps([i.to_dict() for i in imps if i.horizon in (args.horizons or g.params.horizons)],
+                     indent=1, default=str))
+    return 0
+
+
+def _check_rc(res: dict) -> int:
+    """2 when no year produced an OK fold: a check that measured nothing is not a pass."""
+    ok = [r for r in (res.get("by_year") or {}).values() if r.get("status") == "OK"]
+    return 0 if ok else 2
+
+
+def cmd_check(args: argparse.Namespace) -> int:
+    from backend.services.disk_guard import atomic_write_json
+    t0 = time.time()
+    data_root = Path(args.data_root)
+    paths = [Path(p) for p in args.bars] if args.bars else bar_paths(data_root)
+    if not paths:
+        print("REFUSED: bars panel missing", file=sys.stderr)
+        return 2
+    market = _cfg.UNIVERSE_GRAPH_MARKET_SYMBOL
+    years = [int(y) for y in (args.years or _cfg.UNIVERSE_GRAPH_CHECK_YEARS)]
+    try:
+        liquid_by_year, liq_info = {}, {}
+        for Y in years:
+            liquid_by_year[Y], liq_info[str(Y)] = select_liquid(
+                paths, pd.Timestamp(f"{Y}-01-01"), top_n=args.top_n,
+                lookback=_cfg.UNIVERSE_GRAPH_LIQUIDITY_LOOKBACK, market=market)
+        union = sorted(set().union(*liquid_by_year.values()))
+        adj, surv = load_adjusted_returns(paths, union, market=market,
+                                          max_gap_days=_cfg.UNIVERSE_GRAPH_MAX_GAP_DAYS)
+        structure, inputs = load_structure(data_root, pd.Timestamp.now())
+        res = walk_forward_check(adj, liquid_by_year, structure, years=years,
+                                 horizons=_cfg.UNIVERSE_GRAPH_CHECK_HORIZONS,
+                                 seed=_cfg.UNIVERSE_GRAPH_CHECK_SEED,
+                                 max_events_per_year=_cfg.UNIVERSE_GRAPH_CHECK_MAX_EVENTS_PER_YEAR)
+    except GraphRefused as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
+        return 2
+    run_id = f"check_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+    receipt = {"schema": SCHEMA + "/check", "run_id": run_id, "built_utc": _utc_now(),
+               "question": "does the sign of propagate's 1- and 5-session implication match the "
+                           "realised market-adjusted move more often than a random-name control "
+                           "given the same sign? weights frozen at 1 Jan of each year",
+               "claim_boundary": "OBSERVATION ONLY. No skill claim; nothing promoted.",
+               "liquid_by_year": liq_info, "survivorship": surv, "inputs": inputs,
+               "params": asdict(GraphParams()), "limitations": LIMITATIONS,
+               "structure_look_ahead": True,
+               "structure_look_ahead_note": "candidate pairs, theme memberships and co_mention "
+                                            "support are loaded as of today for every fold; "
+                                            "a positive here is biased upward",
+               "elapsed_s": round(time.time() - t0, 1), **res}
+    out = Path(args.out) if args.out else _cfg.UNIVERSE_GRAPH_DIR
+    atomic_write_json(out / f"{run_id}.json", receipt)
+    print(json.dumps({"written": str(out / f"{run_id}.json"), "pooled": res["pooled"],
+                      "by_year": {y: {k: v for k, v in r.items()
+                                      if k.startswith("h") or k in ("status", "n_shock_events",
+                                                                    "n_events_propagated")}
+                                  for y, r in res["by_year"].items()},
+                      "elapsed_s": receipt["elapsed_s"]}, indent=1, default=str))
+    rc = _check_rc(res)
+    if rc:
+        print("REFUSED: no year produced an OK fold (pooled n = 0)", file=sys.stderr)
+    return rc
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    ap = argparse.ArgumentParser(prog="python -m backend.services.universe_graph",
+                                 description=__doc__.split("\n\n")[0])
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    for name in ("build", "check"):
+        s = sub.add_parser(name)
+        s.add_argument("--data-root", default=str(_cfg.OPTIMUS_LEDGER_DIR),
+                       help="the optimus data dir that holds prices_deep/, world_state/ ...")
+        s.add_argument("--bars", nargs="*", help="explicit bars parquet paths (override)")
+        s.add_argument("--top-n", type=int, default=_cfg.UNIVERSE_GRAPH_TOP_N)
+        s.add_argument("--out", help=f"output dir (default {_cfg.UNIVERSE_GRAPH_DIR})")
+        if name == "build":
+            s.add_argument("--as-of", help="weights use only bars strictly before this date "
+                                           "(default: today)")
+        else:
+            s.add_argument("--years", nargs="*", type=int)
+    s = sub.add_parser("status")
+    s.add_argument("--out")
+    s = sub.add_parser("propagate")
+    s.add_argument("--node", required=True)
+    s.add_argument("--direction", required=True)
+    s.add_argument("--magnitude", type=float)
+    s.add_argument("--as-of")
+    s.add_argument("--horizons", nargs="*", type=int)
+    s.add_argument("--out")
+    args = ap.parse_args(argv)
+    return {"build": cmd_build, "status": cmd_status, "propagate": cmd_propagate,
+            "check": cmd_check}[args.cmd](args)
+
+
+if __name__ == "__main__":                       # pragma: no cover
+    logging.basicConfig(level=logging.INFO)
+    sys.exit(main())
