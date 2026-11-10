@@ -6085,6 +6085,57 @@ IBES_LINK_MAX_SCORE = 2
 IBES_ADJ_FACTORS_PATH = Path(os.getenv(
     "AEGIS_IBES_ADJ_PATH", str(OPTIMUS_LEDGER_DIR / "wrds" / "bulk" / "ibes__adj.parquet")))
 
+# ── UNIVERSE GRAPH v1 (ROADMAP §2a, CH-30) ─────────────────────────────────
+#: The universe as a typed, weighted graph (`backend/services/universe_graph.py`).
+#: Built artefacts are gitignored; the receipt carries counts by type and age.
+UNIVERSE_GRAPH_DIR = OPTIMUS_LEDGER_DIR / "universe_graph"
+#: Red when the newest build's `as_of` is older than this (§2: stale > 10 days).
+UNIVERSE_GRAPH_STALE_DAYS = 10
+#: Liquid subset: top-N names by median dollar volume over this many sessions
+#: BEFORE `as_of`. Stated on every receipt; ~7 GB of free RAM is the reason.
+UNIVERSE_GRAPH_TOP_N = 500
+UNIVERSE_GRAPH_LIQUIDITY_LOOKBACK = 252
+#: The market leg of "market-adjusted": r_i - r_SPY (beta 1, declared).
+UNIVERSE_GRAPH_MARKET_SYMBOL = "SPY"
+#: A shock day on A: |market-adjusted return| >= Z x A's trailing sigma, where
+#: sigma uses the SIGMA_WINDOW sessions ending the day BEFORE (never day t).
+UNIVERSE_GRAPH_SHOCK_Z = 2.0
+UNIVERSE_GRAPH_SIGMA_WINDOW = 63
+#: Response horizons in sessions after the shock day (t+1..t+h; day t excluded).
+UNIVERSE_GRAPH_HORIZONS: tuple = (1, 5, 21)
+#: Weights are fitted in SIGMA units (shock z of A -> B's forward return over
+#: sigma_B x sqrt(h)), with B's standardized response winsorized at +-CLIP_Z and
+#: the shock z capped at MAX_SHOCK_Z, both when fitting and when propagating:
+#: an unbounded return-unit slope let one meme name imply -135% (first build).
+UNIVERSE_GRAPH_RESPONSE_CLIP_Z = 4.0
+UNIVERSE_GRAPH_MAX_SHOCK_Z = 6.0
+#: Shrinkage n/(n+k) on every measured response slope.
+UNIVERSE_GRAPH_SHRINK_K = 20.0
+#: An edge needs at least this many shock events to be written at all; below
+#: UNIVERSE_GRAPH_MIN_N_CONFIDENT its implications are always LOW confidence.
+UNIVERSE_GRAPH_MIN_EVENTS = 5
+UNIVERSE_GRAPH_MIN_N_CONFIDENT = 15
+#: A sector / theme basket node needs this many liquid members to be priced.
+UNIVERSE_GRAPH_MIN_BASKET_MEMBERS = 3
+#: Co-coverage: keep each name's top-K peers by Jaccard of covering firms
+#: (the 179-name mega-cap graph is 100% dense at min_shared=1 --
+#: graph_propagation.py -- so an unpruned edge set carries no information).
+UNIVERSE_GRAPH_COCOVERAGE_TOP_K = 10
+UNIVERSE_GRAPH_COCOVERAGE_MIN_JACCARD = 0.30
+#: Propagation: hop-2 impulses are multiplied by this decay, only the top
+#: HOP2_FANOUT hop-1 nodes are expanded, and at most MAX_IMPLICATIONS rows return.
+UNIVERSE_GRAPH_HOP_DECAY = 0.5
+UNIVERSE_GRAPH_HOP2_FANOUT = 5
+UNIVERSE_GRAPH_MAX_IMPLICATIONS = 50
+#: A bar gap longer than this many calendar days voids the return across it
+#: (a reused ticker or a suspension is not a one-day move).
+UNIVERSE_GRAPH_MAX_GAP_DAYS = 10
+#: The honest check: walk-forward folds, weights frozen at 1 Jan of each year.
+UNIVERSE_GRAPH_CHECK_YEARS: tuple = (2021, 2022, 2023, 2024, 2025, 2026)
+UNIVERSE_GRAPH_CHECK_HORIZONS: tuple = (1, 5)
+UNIVERSE_GRAPH_CHECK_MAX_EVENTS_PER_YEAR = 4000
+UNIVERSE_GRAPH_CHECK_SEED = 20261110
+
 # ── Licensed third-party data (Bloomberg exports, broker research) — CH-00 / CH-32 ──
 #: Converted Bloomberg / broker-research tables live OUTSIDE the public repo (licence:
 #: Bloomberg L.P., UBS). `backend.services.licensed_data` reads them from here and
