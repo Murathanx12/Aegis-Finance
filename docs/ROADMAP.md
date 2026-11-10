@@ -54,36 +54,65 @@ Build a self-improving investment intelligence system that maximises portfolio u
 | M5 LEARN | Writes back source weights, novelty and priors that the universe and the books read. A learner nobody reads is dead |
 | M6 SHOW | Renders the universe, books and results from receipts, never from prose |
 
+### 2a. The universe is a weighted graph, not a list (owner design, restated 2026-11-10)
+
+The owner's words: a funnel of information flows in; "bubbles" (nodes) are connected to each other like a neural network, with weights; news lands on a node and the question is always **"what does this imply, where do these signals lead us?"** Example: a scandal hits a mega-cap CEO → that is immediate bad news for the name → *then* which suppliers, customers, competitors, ETFs and themes move, by how much, and which book acts. **Strategies and betas are instruments for learning; the graph is the product.**
+
+| Piece | Definition | Exists today |
+|---|---|---|
+| Nodes | Companies (issuer id), themes / macro stations, people, commodities, countries, ETFs | Funnel list (25 of 5,339); global list 17.5k names in `contest/`; macro stations doc (inactive); WRDS identity rows stranded |
+| Edges | supplier/customer, competitor, co-coverage (same analysts), co-mention (same news), sector/ETF membership, ownership | `graph_propagation.py` co-coverage graph (**no caller**, last receipt 09-12); `world_state` co-mention edges (last 11-03); ATLAS projection on an unmerged branch |
+| Weights | Edge strength = how much of a shock on A historically shows up in B over 1/5/21 sessions, shrunk `n/(n+k)`; **rewritten by M5 from graded outcomes** | Not built |
+| Propagation | Typed event on a node → signed, decayed impulse along edges → an **implications list** (name, direction, strength, path, why) with a receipt | Not built |
+| Consumers | (1) funnel candidates `source='graph'`; (2) overlay / exit signals on books that hold affected names; (3) owner warning; (4) the desktop map | None wired |
+
+Rules: every implication cites its path and is graded at its horizon (hit / miss / never-knowable); an edge that never predicts decays to zero; the mega-cap is a SENSOR (INVARIANTS), so its event is read for what it implies elsewhere; no implication may reach real capital.
+
 ## 3. Owner decisions (one line each; nothing assumes the answer)
 
 | ID | Decision | Recommendation | Blocks |
 |---|---|---|---|
 | **OD-1** | Contest ends **2026-11-13**: approve converting `wlsemb.pdf` → CSV into `contest/wls/` (the gate cites D1) | Yes, now | CH-00 |
-| **OD-2** | DeepSeek budget guard (`provider_budget.py`, on main `7f8869a8`/`6b75aee6`): (a) a rolling monthly envelope with a declared cap (e.g. $15/month at real billed cost) whose refusal is a red non-zero exit, or (b) remove it | (a) | CH-04 → most of M1/M5 |
+| **OD-2** | DeepSeek budget guard (`provider_budget.py`, on main `7f8869a8`/`6b75aee6`): (a) a rolling monthly envelope with a declared cap (e.g. $15/month at real billed cost) whose refusal is a red non-zero exit, or (b) remove it | (a). The owner's 10-15 request already says to rely on DeepSeek and top it up; only the cap number is open | CH-04 → most of M1/M5 |
 | **OD-3** | Lab: delete `always_on_lab_OFF` (a 30-min pause on 09-27 made permanent), or schedule llama-server for nights only | Nights only | CH-10 |
 | **OD-4** | Alpaca: sign in and put fresh keys for all six paper accounts into `.env` (offered 10-26) | Yes, when CH-07 is ready | CH-07, CH-17 |
-| **OD-5** | Confirm the "NordVPN vault" is NordLocker (`NordLocker_11273162`, 70 GB, all local). Files moved into it free nothing until they are set online-only | Confirm | CH-03 |
+| **OD-5** | Confirm the "NordVPN vault" is NordLocker (`NordLocker_11273162`, 70 GB, all local). Files moved into it free nothing until they are set online-only. **Owner confirmed 11-10** ("NordLocker, My Files, 1 TB") | Confirmed | CH-03 |
 | **OD-6** | Docker Desktop data (65 GB, unused since 09-10): purge | Purge | CH-03 |
 | **OD-7** | PC-PAPER capital: $1M with a $40k view (ASK-56), or $40k? | State once | CH-07 |
 | **OD-8** | Later: `filter-repo` to drop about 1.5 GB of historical data blobs (destructive) | Defer | — |
 | **OD-9** | Repository visibility. Public now, to stop the Actions-minute block. End state is private source plus a public tool and showcase. Going private needs CI trimmed first (CH-28): ~20 min per backend run against 2,000 free min/month, or GitHub Pro (3,000 min) | Private once CH-28 lands | CH-28, CH-29 |
+| **OD-10** | PC-PAPER still holds a ~50% SPY core (`PC_BENCHMARK_CORE = True`, `d8283f29`). On 10-14 the owner called holding SPY "just cheating" | Turn it off; SPY stays the benchmark only | CH-07 |
+| **OD-11** | Reset the six paper accounts: $100k each, one mandate and **one selector per account** (RF and Hack2 share one today). One Alpaca login allows 3 paper accounts, so six need two logins. Old trade history is archived first | Yes, after CH-30/CH-31 so the new books are dynamic from day one | CH-17 |
 
 ## 4. Modules: chunks (gate-ordered) and backlog
 
 Status vocabulary: `NOW` (unblocked, next) · `GATED` (waits on a chunk/decision) · `BUILDING` · `DONE` (receipt with a consumer) · `BACKLOG` (an idea, not yet a chunk) · `RETIRED` (closed on record, with scope). **A chunk is DONE only when its acceptance is a receipt with a consumer**: it moves paper capital, kills or confirms a hypothesis, or advances a ledger. The "Serves" column names rows in `ASKED_VS_DELIVERED_2026-11-09.md`.
+
+### Priority tiers and time (added 2026-11-10; the owner asked for MVP → good-to-have, and how long)
+
+**The MVP is one sentence:** a real news event enters, is typed, lands on the universe graph, produces implications, changes a paper book under a frozen contract, and is graded — with a receipt at every stage, and any blocked stage shown red. Nothing in P1/P2 starts ahead of a P0 chunk it could delay.
+
+| Tier | Meaning | Chunks (in order) | Agent-hours | Calendar at one working session a day |
+|---|---|---|---|---|
+| **P0 MVP** | The loop runs end to end and cannot fail silently | CH-00 · CH-02 · CH-04 · CH-09 · CH-05 · CH-08 · CH-14a · **CH-30** · CH-14b · **CH-31** · CH-06 · CH-22a (systems dashboard) | ≈ 75 | ≈ 8–10 sessions → **about two weeks** |
+| **P1 Good** | The loop learns, and the books are dynamic and different from each other | CH-01 · CH-11 · CH-12 · CH-13 · CH-16 · CH-17 (reset six accounts) · CH-07 · CH-10 · CH-18 · **CH-32** · CH-19 · CH-20 · CH-15 · CH-23 · CH-24 · CH-28 | ≈ 70 | ≈ 8–10 more sessions, overlapping P0 from week 2 → **end of November is reachable for the system, not for proof of edge** |
+| **P2 Nice** | Breadth | CH-21 · CH-22b (universe map polish) · CH-25 · CH-26 · CH-27 · CH-29 · **CH-34** · the backlog register below | open | December onward |
+
+What cannot be compressed: forward evidence (a book needs sessions to accrue: 20+ for EARLY_EVIDENCE) and statistical information that does not exist yet. Agent-hours are estimates from the 2026-11-10 document audit; re-estimate when a chunk is claimed.
 
 ### M0 FOUNDATION: runtime, storage, git, CI, budget, agents
 
 | Chunk | Status | Goal | Serves | Acceptance |
 |---|---|---|---|---|
 | CH-02 Safety snapshot | NOW | Copy the ~4.4k dirty paths out of the repo with a SHA-256 manifest; code-only snapshot branch via a temporary index; `keep/*` refs; push `codex/beta-v2-owner-20261025` (17 unpushed) and `codex/oct15-dynamic-exit5-prereg`; bundle local branches. No stash/reset/checkout/clean | G05, PR8 | Manifest; `git bundle verify` OK |
-| CH-03 Disk headroom | GATED (CH-02, OD-5/6) | Remove the 50 clean worktrees one by one; purge caches and DXCache; bundle, then remove the 48 branch-kept worktrees; archive unreferenced WRDS (43.8 GB) and the Qwen3-30B GGUF online-only. Never move `aegis-recovery-evidence` wholesale (5 live tasks) | ST1, ST4 | C: free ≥ 140 GB |
+| CH-03 Disk headroom | BUILDING (first pass 11-10: 73 clean worktrees removed, C: 66 → 147 GB free; branches kept, 3 detached heads tagged `keep/s64/*`; log in `aegis-recovery-evidence/s64-worktrees-removed-20261110.tsv`) | Remove the 50 clean worktrees one by one; purge caches and DXCache; bundle, then remove the 48 branch-kept worktrees; archive unreferenced WRDS (43.8 GB) and the Qwen3-30B GGUF online-only. Never move `aegis-recovery-evidence` wholesale (5 live tasks) | ST1, ST4 | C: free ≥ 140 GB |
 | CH-04 Unblock learning | GATED (OD-2) | Implement OD-2 on main; `0 typed / VOID / 0 rules / BUDGET_REFUSED` exits non-zero and shows red in the morning report; re-enable AegisWorldDigest | N01, B01, B15 | Digest typed rows > 0; IIF-1 `records_written > 0`; learn_runs LEARNED |
 | CH-05 Runtime = a commit | GATED (CH-02) | Rescue PR with the ~56 files in no commit; hand-merge the 33 conflicts; untrack growing data (`predictions.jsonl` 121 MB, ledgers…); `AEGIS_DATA_DIR` outside the repo; production from a runtime worktree pinned to a tag; repoint every task, including the 16 that run from recovery-evidence; record PIDs | G05, PR2 | Clean runtime `git status`; every task path resolves to the tag; CI green |
 | CH-28 CI fit for a private repo | NOW | Backend suite only on merge to main plus nightly; docs- and receipt-only diffs skip it (the classifier exists); concurrency cancels superseded runs; print the minutes per run | G03 | Projected < 1,500 min/month in a receipt |
 | CH-29 Source private, tool public | GATED (CH-28, OD-9) | Make the source repo private. The public surface is the hosted site/API plus the showcase repo, with no source and no raw research. Check `robots`/`llms.txt` and every public receipt for leakage | Mission §1.2 | Repo private; tool reachable; showcase builds from sanitised receipts |
 | CH-24 Optimus knows November | NOW | Ingest `~/.codex/memories` and handoffs; the health page reads origin/main HEAD, not the WIP checkout; fix the Claude GitHub MCP (`GITHUB_PERSONAL_ACCESS_TOKEN` unset) or drop it for the gh CLI | O02, PR2 | `session_briefing` shows November state |
 | CH-25 Bills and keys | BACKLOG→NOW | Railway bill receipt (none since September); retire hack volumes; rotate keys exposed 10-21 (FRED/Finnhub/FMP/Alpaca); revoke idle keys (OpenAI-style names, Polygon, AlphaVantage, EODHD) | I07, I15 | Invoice and rotation receipts |
+| CH-34 One home, no copies | BUILDING (P2; first pass 11-10: GitHub 71 → 13 branches by deleting the heads of 58 merged PRs, SHAs logged) | **Why the copies existed:** Codex opened one worktree and one branch per task and never removed them (121 worktrees, 71 remote and 150 local branches). Finish: triage the 48 remaining worktrees (28 hold ignored files, 20 are dirty) and 139 local branches under CH-02/CH-05; one documents home `AEGIS_DOCUMENTS/` (audits, owner feedback, archives) with the Downloads Aegis folders moved in; cold archives to NordLocker; history-wide secret scan before CH-29 | G01, ST2 | ≤ 5 worktrees; ≤ 5 remote branches; no Aegis file in Downloads; `AEGIS_DOCUMENTS/INDEX.md` lists every folder |
 | Backlog | — | Consensus plugin; NPU/both-GPU use (I12); one `.env` (I08) | | |
 
 ### M1 SENSE: everything Aegis reads
@@ -91,6 +120,7 @@ Status vocabulary: `NOW` (unblocked, next) · `GATED` (waits on a chunk/decision
 | Chunk | Status | Goal | Serves | Acceptance |
 |---|---|---|---|---|
 | CH-09 Reader at its 10-15 state, not rebuilt | GATED (CH-03) | Restore the canonical 10-15 task and code from the repo; fix the source-pin hash mismatch; 6–8 tab pool; prove a cold reboot | R01 | ≥ 2,000 pages/day for 3 days; supervisor rc 0 after reboot |
+| CH-09 note (11-10) | — | **Root cause found:** `AegisReaderSupervisor` runs Codex's `reader-carry-runtime-r7/lifecycle/clean_reader_action.py`, which checks 283 file hashes; four files changed on 11-05/06, so every start exits rc 2. Fix = point the task back at `pythonw -m scripts.task_keeper reader` (3 tabs), delete the ten `AegisReaderClean/Recovery/PaperHandoff-*` one-shot tasks, and make the on/off switch the desktop toggle. **The owner wants it OFF for now (11-10); it is off.** Also unbuilt from 10-09: newsletter / IR-alert sign-ups (WSJ, MarketWatch, Barron's, Benzinga) | R01 | — |
 | CH-12 Grade the news already acted on | NOW | The 83 hack6 news buys vs matched non-news names at 5 sessions; write up the 837 graded insider/positioning/congress forecasts (Brier ≈ 0.25) as a scoped verdict | N01, N13 | Two receipts with scoped verdicts |
 | CH-26 Video transcripts | BACKLOG | YouTube transcripts into the corpus (286 rows, 0 transcripts) | N08 | Transcript rows > 0 |
 | Backlog | — | Yahoo ticker-news leg (0 since 10-01); GDELT mostly zero; LinkedIn/hiring re-pull (S16); per-stock tone and customer reviews (S42/1.13a); type the 163k panel headlines locally (N07); FNSPID; WSJ/Barron's grading (N11); NVIDIA/Featherless for cheap bulk typing (N02) | | |
@@ -101,7 +131,9 @@ Status vocabulary: `NOW` (unblocked, next) · `GATED` (waits on a chunk/decision
 |---|---|---|---|---|
 | CH-08 Freshness | NOW | Funnel rebuilt every 5 days; remove the 1,500-sample truncation if RAM allows; deploy main to Railway (57 behind) and Vercel (27 days stale); clear the stale sim session (dead PID) through its own recovery; backfill 11-06 bars | U02 | Prod funnel age < 6 days; Railway commit = main |
 | CH-14a News adds names | GATED (CH-04) | Issuer-mapped `top_tickers` from fresh typed themes become funnel candidates (`source='news'`); the receipt prints the news share of the final 25; freshness judged on content (`n_implications == 0` is stale; hack6 says `fresh: true` on empty digests) | N01, R06 | Funnel receipt with news share > 0 |
+| **CH-30 Universe graph v1** | GATED (CH-04; the build may start now on stored data) | Build §2a from what exists: (1) node table keyed by issuer id (funnel + global list + stations; WRDS identity rows as the id master); (2) edges from `graph_propagation` co-coverage, `world_state` co-mention, sector/ETF membership, and supplier/customer where filed; (3) weights = measured 1/5/21-session response of B to shocks on A on `prices_deep`, shrunk, signs fitted **inside the fold**; (4) `propagate(event) → implications[]` with path and decay; (5) receipts + a nightly job; (6) consumers: funnel `source='graph'`, overlay input for CH-14b, owner warning. Known-answer test first: replay 5 dated shocks (e.g. a mega-cap guide-down) and print what the graph implied before the peers moved | U07, S17, 1.13a | A dated shock produces an implications receipt; ≥ 1 funnel candidate with `source='graph'`; hit rate vs a random-neighbour control printed by year |
 | CH-19 Asia first / global universe | GATED (CH-00) | `wlsemb.pdf` lists ~10.4k global members (TT/KP/TI…): use it as the global membership list; .SS/.SZ/.HK bars; coverage-normalised novelty term | U03, N06, S24 | Global members in the universe receipt; EM slice exists |
+| CH-19 note (11-10) | — | **Correction:** a 17.5k-name, 9-market list and JP/KR/TW/HK/IN/EU/CN bars already exist under `contest/` and refresh weekly, feeding only the contest. The investigator marks those names UNPRICED. The work is a **join** into the ranker panel and the graph, not a new download | U03 | — |
 | Backlog | — | CompanyWorld commodity/crypto/geopolitical edges (S17); the universe "neural map" is M6 | | |
 
 ### M3 DECIDE: books, branching, overlays, hypotheses
@@ -109,7 +141,10 @@ Status vocabulary: `NOW` (unblocked, next) · `GATED` (waits on a chunk/decision
 | Chunk | Status | Goal | Serves | Acceptance |
 |---|---|---|---|---|
 | CH-01 Owner hypotheses as typed precursors | NOW (time-critical) | Pre-register Meta-capex/AI-spend stress → AI-peer drawdown; Iran escalation → Brent/QQQ; the midterm path. Each gets a falsifier and a grading date. **Verify the date of the NVDA earnings cluster first** | N14, U06, S20 | Three TRIAL files signed before the event; graded on date |
+| CH-01 note (11-10) | — | Add an **owner-calls ledger**: each instinct call is logged before the outcome, typed, twinned and graded. First entry, diagnostic only (SPY/QQQ closes 2016 → 11-09, 24 variants chosen after looking): after a −2% three-day drop the next 5 sessions averaged +0.83% vs +0.30% unconditional (better in 10/10 years); after a +2% three-day rise +0.16% (worse in 7/10, still positive). In-and-out timing made ≈ 8%/yr vs 14.7% buy-and-hold. So "add on dips" is a sizing input to test forward; "sell the bounce" is not supported. Not a claim | S35 | A `dip_add` paper book with a twin, frozen contract |
 | CH-14b News risk-overlay book | GATED (CH-04, CH-14a) | Typed themes produce a gross scalar of 0.5–1.0 on a copy of an existing book, graded daily against the untilted copy; contract frozen first. This is the route by which a Meta/Iran/midterm reading can act | N01, S04 | Overlay live with hash and twin; ≥ 1 decision row citing a digest_id |
+| CH-14b note (11-10) | — | Reuse the existing two-key news-tilt gate in the PC plan (shadow result −7.5 bps at h5 over 15 sessions: no benefit so far); also put news into the investigator's forecast packet. `expected_return.py:85-90` still excludes news components | N01 | — |
+| **CH-31 One event, end to end** | GATED (CH-04, CH-30, CH-14b) | The acceptance test of the whole system: one real dated event → SENSE row → UNIVERSE implications → DECIDE row citing them (a reasoned no-trade is valid; a missing decision is not) → ACT paper order or logged abstention → LEARN grade at horizon. Each stage writes `SUCCESS / BLOCKED / DEGRADED` (a blocked provider is never SUCCESS). Then it runs nightly on that day's top events | PR2, N01 | One receipt chain with five linked ids, reproduced by a second agent; the nightly chain is green 5 nights, or red with a named stage |
 | CH-15 Provisional decisions and owner event-risk review | GATED (CH-04) | Before earnings and macro clusters, review the owner's exposure and issue a provisional call ("an unavailable report is not a valid reason to stay silent"); warnings actually send (0 automatic of 663 runs) | S04 | ≥ 1 automatic warning per event class, graded |
 | CH-16 Branching v1 | GATED (CH-05) | POPULATION-1000 (886 static books) becomes a learning population: each epoch kill the bottom quantile and branch the top (descendants frozen), learn joins from correlation-of-errors, run a Thompson allocator over books (Book-of-Books); RL after ≥ 3 epochs; cap snapshot retention; cash control printed beside each family | P03, BR1, S06 | `new_frozen_books > 0` every epoch; lineage file; capital moves with performance |
 | CH-20 Short and hedge leg | GATED (CH-14b) | A defined-risk short/hedge sleeve (index puts, inverse ETF or a pair short) on the overlay; worst case in dollars | 1.13a, S20 | A frozen sleeve with a twin; its first decision logged |
@@ -122,6 +157,7 @@ Status vocabulary: `NOW` (unblocked, next) · `GATED` (waits on a chunk/decision
 | CH-00 Contest unblock | NOW (ends 11-13) | pypdf → CSV of `wlsemb.pdf` into `contest/wls/`; re-run eligibility; RF/NR/Hack2 baselines; sheets for the remaining sessions | C01, C02 | A live sheet with `n_positions > 0` before 11-13 |
 | CH-07 Restore the books | GATED (CH-05, OD-4, OD-7) | Freeze revision_flow v3 (or retire it on record) and put hack2 back to work; protect or close hack6 CALX (no stop); diagnose GRADES_MISMATCH ×5; reconcile PC-PAPER; hack1/hack4 on frozen contracts, not cash; **review MIRROR (−32.9%)**; worst case in dollars first | P02, P19, S35 | Positions > 0 under new hashes plus twins; RECONCILED |
 | CH-17 Six Alpaca mandates | GATED (CH-11, CH-14b, OD-4) | ATLAS (rebuilt from evidence), RF v3, NR, Hack2, Human+AI, news challenger; PC-PAPER kept; no strategic SPY core and no idle cash without a written reason; gross ≤ 100% | P04, S36, S39 | Six accounts with positions under six policy hashes |
+| CH-17 note (11-10) | — | Nothing was ever seeded (`account_created=False` ×6); hack1/2/4 hold nothing and hack3 returns BROKER_ERROR. **Why every book held the same names:** all five leaders rank on one score, net target raises × number of firms (`crsp_event_bridge.py:160`), so heavily covered names always win (overlap 54–84%). The 247 "branches" are 19 lists × 13 reweights. The reset (OD-11) therefore needs different selectors, not different weights: RF children on rating level, target dispersion, mean-vs-median, beat quality; one graph-driven book; one news challenger. The 23-stock plan was never adopted and its virtual copy is −13.4 pp vs SPY; the 886-book population has made no new book since 10-15 and its all-cash baseline leads | P01, S05 | — |
 
 ### M5 LEARN: grading, labs, backtests, autopsy
 
@@ -132,6 +168,7 @@ Status vocabulary: `NOW` (unblocked, next) · `GATED` (waits on a chunk/decision
 | CH-11 Matched-twin re-evaluation | NOW | The leaders against same-band random twins, with by_year, LOO, MDE beside every t, and the bet-count curve; answer properly why simple lanes beat SPY | S01, S35, B10 | FINDING plus receipt |
 | CH-13 Daily discovery-failure autopsy | NOW | Top idiosyncratic movers vs what Aegis generated; what was knowable at t; misses feed the research queue | S10 | Daily file; weekly "missed but knowable" count |
 | CH-18 Backtests on what we own | GATED (CH-04 for H01) | H02 first analyst change; H03 thin-coverage specialists (392k revisions plus IBES); H01 news vs revision flow; Book F seasonality forward; consume the 2.4M WRDS IBES rows; one LEAN cross-check; each as its own book with a twin | S01, B09, B14 | Each produces a scoped FINDING; ≥ 1 becomes a book or is rejected on record |
+| **CH-32 Analyst and Bloomberg material becomes skills and features** | NOW (P1) | Move the one analyst-report skill (built from a single UBS report, user-level, run by hand) into `.claude/skills/` and wire it into the reader prompt; process the Bloomberg financials workbook that was never used; turn analyst fields into ranker features (rating level, target dispersion, mean vs median, firm-count-normalised raises); Capital IQ transcripts (1.79M headers checked, no text pulled) → H19–H21; `wlsemb.pdf` → membership (CH-00). No Bloomberg file is read by any code path today | B14, D13, C01 | Skill in repo with a caller; ≥ 3 analyst features in a ranker receipt with a by-year table |
 | CH-21 Fiction / blind-LLM loop | GATED (CH-04) | Iterate fb_20260928 with rotating models and feed graded outputs into nn_lab | B04, S29 | ≥ 5 runs; a training receipt; an ablation |
 | Backlog | — | Opus as forecaster test (S28); online FDR (S11); a larger Qwen measured on decision quality (I05) | | |
 
@@ -140,11 +177,21 @@ Status vocabulary: `NOW` (unblocked, next) · `GATED` (waits on a chunk/decision
 | Chunk | Status | Goal | Serves | Acceptance |
 |---|---|---|---|---|
 | CH-22 Desktop/site: universe neural map | GATED (CH-08) | EXE reader on/off; NN showcase; the **universe map** (orbit/blackline style) drawn live from the M2 receipt | I02, U07 | Visible on /desktop and the site |
+| CH-22 note (11-10) | — | Owner restated: **the EXE is the dashboard of the working system**, separate from the public showcase tool. Split: **CH-22a (P0)** a systems page drawn from receipts — every scheduled task and service as a node, green / red / blocked, with last receipt time and the reason; reader and lab on/off switches with an expiry; local model status; night runs; backtests; lessons learned. **CH-22b (P2)** the universe graph drawn live (orbit/blackline style; the design language is the `aegis-motion-visuals` skill, which Codex-era pages drifted from). Today the desktop pages are lists; last desktop commit 09-26, last launch 10-20 | I02, U07 | 22a: a red node appears within one cycle of a refused task; 22b: clicking a node shows its implications |
 | CH-23 Two-way Telegram | GATED (CH-05) | Owner asks route to research ("conversation held (Refused)" today) | R16 | The owner confirms a round trip |
+| CH-23 note (11-10) | — | The bot sends alerts but has refused every inbound message, about every 7 s (9,241 refusals); `AegisOwnerEventWarning` ran 756 times, sent 0, rc 0 | R16 | — |
 | CH-27 Public tool readiness | GATED (CH-29) | A hosted tool others can use at their own utility function: onboarding, personality choice, results from receipts; no source exposure | Mission §1.2 | An outside user completes a session |
 | Backlog | — | Weekly asset refresh (G02); stock lists as a web page (D05) | | |
 
-**Gate order:** CH-00, CH-01 now (exempt) → CH-02 → CH-03 → CH-04 → CH-05 (builds may start after CH-04; nothing merges to the runtime before CH-05) → M0/M2/M5 chunks in parallel → CH-11/12/13 → M3 chunks → CH-17 → M6.
+### Backlog register (S64 document audit, 2026-11-10; P2 unless promoted — each becomes a chunk row only when it has a consumer)
+
+- **Books / mechanisms:** quality buy-the-dip · pairs stat-arb as its own book (`pair_trading.py` exists, unused) · 13F-initiation / supplier-follow · cross-book consensus count · cross-asset / bond rotation · magnitude × direction book · dynamic exits quoted in sigma (stranded on `codex/oct15-dynamic-exit5-prereg`) · partial-adjustment / turnover-penalised rebalance and `n_eff/(n_eff+k)` shrink (fold into CH-16) · convex conviction sizing and risk-node caps.
+- **Sense:** official monetary-policy statements as a typed source · government-procurement sensor (4 receipts, all 10-06) · social strategy mining · product-review tone · research-paper intake · one cost-capped backfill of the digest over the stored corpus · historical-lesson reader by station tag · IPO-glut / crisis-analog panel · tone-precursor test on the SF Fed index.
+- **Learn / report:** drawdown-from-high in the RESULTS block (1 h) · issuer-cluster "distinct bets" in `results_voice` (19 accounts ahead = 14 distinct bets) · per-mechanism win share · 10-14 drawdown attribution · per-holding table with thesis and intended exit · thesis expiry and conviction decay in the decision contract · surprise half-life table · finding-to-guard registry · multi-agent desk vs one agent at equal budget · TimesFM / reranker benchmarks · owner decision attribution as a `personal_*` graded book.
+- **Foundation:** port the frozen `aegis-alpha-terminal` decision layer (no commits since 09-29) into the mandates (8 h) · second-host writer lease (Istanbul / 64 GB machine; after CH-05) · retire ~12 dead one-shot scheduled tasks · 17 matured news forecasts to regrade.
+- **Will not build:** any selection criterion based on ethnicity or religion (one line in an old theory list); the disclosed-lobbying data already in the repo covers the legitimate version.
+
+**Gate order:** CH-00, CH-01 now (exempt) → CH-02 → CH-03 → CH-04 → CH-05 (builds may start after CH-04; nothing merges to the runtime before CH-05) → M0/M2/M5 chunks in parallel → CH-11/12/13 → M3 chunks → CH-17 → M6. **Amended 11-10:** the tier table at the top of §4 orders the work; CH-30 may be built on stored data before CH-04 lands, and CH-31 is the P0 finish line.
 
 ## 5. How the work is executed (the agentic workflow)
 
@@ -170,7 +217,9 @@ The owner's own portfolio and the Codex 11-06 personal reports are not project w
 | Codex Beta V2 registry (146 requests, branch `codex/beta-v2-owner-20261025`) | Preserved by CH-02; each request is mapped to a module row when that module's chunk is claimed |
 | Codex `Downloads/codex handoff/` (6-month plan, roadmap, 59 owner_asks, 8 current_issues) | owner_asks → the ledger; current_issues → CH-04/CH-08/CH-12/CH-14/CH-05; the 6-month plan → this file |
 | 16 dated `ROADMAP_2026-0x-*` files, `V1_STATE_AND_ROADMAP`, `V2_ROADMAP`, `AEGIS_EXECUTION_ROADMAP`, `docs/archive/ROADMAP_*` | History. Their standing lane inventory (`ROADMAP_2026-08-26`) feeds M5/M3 backlogs |
+| Owner documents in Downloads (pre-beta review, AEGIS REVIEWS, portfolio review 10-14, research ideas 10-15, Beta V1 guidance, V1.1 package T01–T07, Codex handoffs 10-09 → 11-01, universe / macro-station drafts, April–September context): 8 reader reports, ~430 asks, statuses checked 11-10 | `AEGIS_DOCUMENTS/audits/2026-11-10_downloads_audit/` (kept out of the public repo); open items → §2a, CH-30/31/32/34, the note rows and the backlog register |
 
 ## 8. Changelog (one line per change; newest first)
 
+- 2026-11-10 S64: Downloads documents audited (8 readers). Added §2a (the universe as a weighted graph), priority tiers with time, OD-10/OD-11, CH-30 (graph v1), CH-31 (one event end to end = the MVP finish line), CH-32 (analyst / Bloomberg skills), CH-34 (one home, no copies), notes on CH-01/09/14b/17/19/22/23 and a backlog register. CH-03 first pass: 73 clean worktrees removed (C: 66 → 147 GB free); GitHub branches 71 → 13.
 - 2026-11-09 S63: file created as THE single roadmap (`git mv` from `ROADMAP_2026-11-09_RESTORE_THEN_COMPOUND.md`). Organised as modules M0–M6 around the universe. Mission §1.2 amended: public tool, protected source. OD-9, CH-28, CH-29 and CH-27 added. Licence → All Rights Reserved (`cd0b1d59`); repo public again to stop the Actions-minute block.
