@@ -6023,3 +6023,11 @@ FLEET_V3_WORST_CASE_EQUITY = 100_000.0
 FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC = 0.10
 #: No new paper book before this date (roadmap 2026-10-06 §7 "measure before you add").
 FLEET_V3_EARLIEST_SEED = "2026-10-26"
+
+# ── ONE EVENT END TO END (ROADMAP CH-31) ────────────────────────────────────
+#: `backend/services/one_event.py`: SENSE -> UNIVERSE -> DECIDE -> ACT -> LEARN for
+#: one dated event, one receipt. DECIDE is DEGRADED when the broker-truth positions
+#: receipt is older than this many hours or the funnel snapshot older than this
+#: many days (ROADMAP §2: a candidate set > 10 days old is red).
+ONE_EVENT_POSITIONS_STALE_HOURS = 24
+ONE_EVENT_FUNNEL_STALE_DAYS = 10
