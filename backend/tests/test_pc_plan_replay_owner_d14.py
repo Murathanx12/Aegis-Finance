@@ -164,9 +164,11 @@ def _plan(tmp: Path, mp: pytest.MonkeyPatch, *, funnel: Path | None = None,
 
 def test_the_shipped_owner_decision():
     from backend.tests.conftest import SHIPPED_OWNER_D14_FLAGS
-    # OD-10 (owner 2026-11-10): the SPY core ships OFF; the own index ships OFF
-    # until the attended activation (docs/RUNBOOK_PC_OWN_INDEX_ACTIVATION.md).
-    assert SHIPPED_OWNER_D14_FLAGS == {"PC_BENCHMARK_CORE": False,
+    # OD-10 (owner 2026-11-10) retires the SPY core, but main ships it ON and the
+    # own index OFF until the attended activation flips both in one edit
+    # (docs/RUNBOOK_PC_OWN_INDEX_ACTIVATION.md; review #89 R1: merging changes
+    # no holding).
+    assert SHIPPED_OWNER_D14_FLAGS == {"PC_BENCHMARK_CORE": True,
                                        "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP": True,
                                        "PC_SLEEVE_REVISION_FLOW": True,
                                        "PC_CONTRACT_COUNTS_PLAN_SLEEVES": True,

@@ -126,7 +126,6 @@ def dry_run(args: argparse.Namespace) -> int:
               f"{contract['policy_hash'][:16]} (version {content['version']})")
     # ---- membership (in memory: the dry-run writes nothing) -------------------
     from backend.services import pc_risk as PR                     # noqa: PLC0415
-    from backend.services import pc_sleeves as SL                  # noqa: PLC0415
     sig = PR.panel_sigmas(bars)
     fb, fb_src = PR.fallback_sigma(PR.universe_stats(sig))
     refusal = None
@@ -146,7 +145,11 @@ def dry_run(args: argparse.Namespace) -> int:
     names = [m for m in members if m not in claimed]
     prices = dict(px_held)
     prices.update({s: p for s, p in _last_closes(bars, [s for s in names if s not in prices]).items()})
-    history = SL.bound_history(names, bars) if names and refusal is None else None
+    history = OI.bound_history(names, bars) if names and refusal is None else None
+    if history and history.get("short_history"):
+        print(f"  short history (first priced after {history.get('history_start')} "
+              f"+{history.get('history_tolerance_days')} d), EXCLUDED, slot cash: "
+              f"{history['short_history']}")
     res = OI.plan(contract=contract, members_row=row, refusal=refusal, equity=equity, held=held,
                   prices=prices, acting_weights=acting, claimed=claimed, held_residual=resid,
                   sigmas=sig, fallback_sigma=fb, history=history, mode="paper_profit")
@@ -155,6 +158,10 @@ def dry_run(args: argparse.Namespace) -> int:
         print(f"  {ln}")
     print(f"  sigma fallback {fb:.2%} ({fb_src}); prices: held from the receipt, others last close "
           f"of {bars.parent.name}")
+    print("  CAVEAT (review #89 O5): this dry-run treats SPY as the index's and builds the other "
+          "sleeves' claims from the last plan receipt (it ignores revision_flow holds); the "
+          "first live session can differ. Live index buys also wait for every sell to be "
+          "confirmed filled and are sized from the broker's cash after the fills.")
     if row.get("twin", {}).get("weights"):
         print(f"  random twin (seed {row['twin']['seed']}): {sorted(row['twin']['weights'])}")
     # ---- the orders it WOULD send --------------------------------------------

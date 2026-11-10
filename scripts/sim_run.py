@@ -1346,6 +1346,20 @@ def _own_index_requested() -> bool:
     return bool(getattr(_cfg_live, "PC_OWN_INDEX", False))
 
 
+def _own_index_startup_refusal(folder: Path | None = None) -> str | None:
+    """Review #89 R2: with PC_OWN_INDEX on, a session whose frozen contract no
+    longer verifies does not start (rc 7). None when the flag is off or the
+    contract verifies."""
+    if not _own_index_requested():
+        return None
+    from backend.services import pc_own_index as OI                 # noqa: PLC0415
+    try:
+        OI.load_frozen(Path(folder or _pc_plan_dir(None)) / OI.CONTRACT_FILE)
+    except Exception as exc:                                       # noqa: BLE001
+        return f"{type(exc).__name__}: {exc}"[:300]
+    return None
+
+
 def _own_index_prepare(*, folder: Path, funnel_path: Path | None, held: dict, targets: list,
                        rf_w: dict, rf_hold: list, probe_syms: list, ex_syms: list,
                        probe_acting: bool, exploit_acting: bool, rf_acting: bool,
@@ -1354,9 +1368,25 @@ def _own_index_prepare(*, folder: Path, funnel_path: Path | None, held: dict, ta
     """OD-10 (owner 2026-11-10), BEFORE the sleeves' plan_orders: the frozen
     contract, this cycle's membership, the held names the index owns (and the
     old core), and the non-acting sleeve targets that yield their symbol to it.
-    {"on": False} when the flag is off; never raises into the plan."""
+    {"on": False} when the flag is off; never raises into the plan.
+
+    Review #89 R2 (2026-11-11): the held index names are computed from the
+    membership file BEFORE the contract is verified, so a contract that stops
+    verifying (any edit to pc_own_index.py or a key it reads) HOLDS them instead
+    of leaving them in the sleeves' plan as EXITs; `contract_refusal` then
+    blocks every send. Flag OFF with a membership file on disk (a rollback):
+    the held members are returned as `rollback_hold`, never exited."""
+    acting_claim = (set(rf_w) | set(rf_hold) | (set(probe_syms) if probe_acting else set())
+                    | (set(ex_syms) if exploit_acting else set()))
+    tsyms_all = {str(t.symbol).upper() for t in targets}
     if not _own_index_requested():
-        return {"on": False}
+        if not (Path(folder) / "own_index_members.json").exists():
+            return {"on": False}
+        from backend.services import pc_own_index as OI             # noqa: PLC0415
+        hold = {s_ for s_ in OI.held_index_names(folder, held, exclude=acting_claim,
+                                                 core_symbol=core_sym)
+                if str(s_).upper() not in tsyms_all}
+        return {"on": False, "rollback_hold": hold} if hold else {"on": False}
     from backend.services import pc_own_index as OI                 # noqa: PLC0415
     if core_on:
         return {"on": False, "enabled": True, "applied": False,
@@ -1369,15 +1399,16 @@ def _own_index_prepare(*, folder: Path, funnel_path: Path | None, held: dict, ta
     out: dict = {"on": True, "contract": None, "members_row": None, "refusal": None,
                  "owned": set() if core_claimed else {core_u}, "core_claimed": core_claimed,
                  "yield": set(), "members": []}
+    # R2: the index's held names are its own BEFORE the contract is read
+    out["owned"] |= OI.held_index_names(folder, held, exclude=acting_claim, core_symbol=core_sym)
     try:
         out["contract"] = OI.load_frozen(Path(folder) / OI.CONTRACT_FILE)
     except Exception as exc:                                       # noqa: BLE001
         out["refusal"] = f"{type(exc).__name__}: {exc}"[:300]
         out["contract_refusal"] = True
+        out["claimed"] = acting_claim
         logger.warning("u_plan RED: own index contract: %s", out["refusal"])
         return out
-    acting_claim = (set(rf_w) | set(rf_hold) | (set(probe_syms) if probe_acting else set())
-                    | (set(ex_syms) if exploit_acting else set()))
     try:
         from backend.services import pc_risk as PR                 # noqa: PLC0415
         sig = (PR.panel_sigmas(Path(bars_paths[0])) if bars_paths else
@@ -1411,7 +1442,6 @@ def _plan_own_index(oi: dict, *, equity: float, held: dict, prices: dict, target
     from backend.services import pc_own_index as OI                 # noqa: PLC0415
     try:
         from backend.services import pc_risk as PR                 # noqa: PLC0415
-        from backend.services import pc_sleeves as SL              # noqa: PLC0415
         acting = {t.symbol: float(t.weight) for t in targets
                   if (t.symbol in probe_syms and probe_acting)
                   or (t.symbol in ex_syms and exploit_acting)
@@ -1430,7 +1460,7 @@ def _plan_own_index(oi: dict, *, equity: float, held: dict, prices: dict, target
         fb, _fb_src = PR.fallback_sigma(PR.universe_stats(sig))
         claimed = set(oi.get("claimed") or set())
         names = [m for m in (oi.get("members") or []) if m not in claimed]
-        history = (SL.bound_history(names, Path(bars_paths[0]) if bars_paths else None)
+        history = (OI.bound_history(names, Path(bars_paths[0]) if bars_paths else None)
                    if names and oi.get("contract") and not oi.get("refusal") else None)
         core_u = str(_config.PC_BENCHMARK_CORE_SYMBOL).upper()
         held_oi = ({s_: q_ for s_, q_ in held.items() if str(s_).upper() != core_u}
@@ -2468,6 +2498,25 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         plan_held = {s_: q for s_, q in plan_held.items() if s_ not in rf_hold}
     if oi.get("on"):
         plan_held = {s_: q for s_, q in plan_held.items() if s_ not in oi["owned"]}
+    # review #89 R1: with the core OFF and no own index acting as its owner, a
+    # held SPY is HELD -- retiring it is the attended own-index activation's
+    # job, never an EXIT an acting EXPLOIT would send. A sleeve that targets
+    # SPY this cycle keeps it (then it is that sleeve's, as before).
+    benchmark_hold: dict = {}
+    if (not core_on and not oi.get("on") and float(held.get(core_sym, 0.0) or 0.0) > 0
+            and not any(str(t.symbol).upper() == str(core_sym).upper() for t in targets)):
+        plan_held = {s_: q for s_, q in plan_held.items() if s_ != core_sym}
+        benchmark_hold = {"held": [core_sym], "qty": float(held[core_sym]),
+                          "line": (f"benchmark_hold: {core_sym} {float(held[core_sym]):g} sh "
+                                   f"HELD -- PC_BENCHMARK_CORE is off and no own index owns it; "
+                                   f"only the attended own-index activation retires it")}
+        logger.warning("u_plan RED: %s", benchmark_hold["line"])
+    rollback_hold = set(oi.get("rollback_hold") or set())
+    if rollback_hold:
+        plan_held = {s_: q for s_, q in plan_held.items() if s_ not in rollback_hold}
+        logger.warning("u_plan RED: own index OFF with a membership on disk: %d held "
+                       "member(s) HELD, never exited: %s", len(rollback_hold),
+                       sorted(rollback_hold))
     syms = [t.symbol for t in targets] + list(held)
     if core_on and core_sym not in syms:
         syms.append(core_sym)
@@ -2727,7 +2776,12 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     to_send.sort(key=lambda p: p.side != "sell")
     sent: list[dict] = []
     send_block = None
-    if to_send and risk_gate.get("block"):
+    oi_contract_block = (f"own index contract REFUSED, every order held: {oi.get('refusal')}"
+                         [:300] if oi.get("contract_refusal") else None)
+    if to_send and oi_contract_block:
+        # review #89 R2: a contract that stops verifying holds EVERYTHING
+        send_block = oi_contract_block
+    elif to_send and risk_gate.get("block"):
         send_block = risk_gate["block"]
     elif to_send:
         try:
@@ -2742,11 +2796,16 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             except PB.BrokerError as exc:
                 open_syms, send_block = None, f"open orders unreadable: {str(exc)[:120]}"
             if open_syms is not None:
-                for p in to_send:
+                # review #89 R3: the own index's buys go LAST and only when funded
+                idx_buys = [p for p in to_send
+                            if p.side == "buy" and _state(p.symbol) == "OWN_INDEX"]
+                idx_ids = {id(p) for p in idx_buys}
+
+                def _send_one(p) -> None:
                     if p.symbol in open_syms:
                         sent.append({"status": "skipped", "symbol": p.symbol,
                                      "why": "an order for this symbol is already open"})
-                        continue
+                        return
                     try:
                         res = PB.submit(p)
                         res["state"] = _state(p.symbol)
@@ -2754,6 +2813,34 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                     except PB.BrokerError as exc:
                         sent.append({"status": "FAILED", "symbol": p.symbol,
                                      "state": _state(p.symbol), "error": str(exc)[:200]})
+                for p in to_send:
+                    if id(p) not in idx_ids:
+                        _send_one(p)
+                if idx_buys:
+                    from backend.services import pc_own_index as _OI   # noqa: PLC0415
+                    _gate = _OI.gate_index_buys(
+                        idx_buys, sells=[p for p in to_send if p.side == "sell"], sent=sent,
+                        broker=PB, cash_buffer=float(_config.PC_OWN_INDEX_CASH_BUFFER),
+                        other_buys=[p for p in to_send if p.side == "buy"
+                                    and id(p) not in idx_ids],
+                        wait_s=float(_config.PC_OWN_INDEX_SELL_FILL_WAIT_S),
+                        poll_s=float(_config.PC_OWN_INDEX_SELL_FILL_POLL_S))
+                    own_index["buy_gate"] = {k_: v_ for k_, v_ in _gate.items()
+                                             if k_ != "allowed"}
+                    own_index["line"] = f"{own_index.get('line')}; {_gate['line']}"
+                    if _gate.get("refused"):
+                        logger.warning("u_plan RED: %s", _gate["line"][:300])
+                    for p in idx_buys:
+                        q = int(_gate["allowed"].get(id(p), 0))
+                        if q <= 0:
+                            sent.append({"status": "skipped", "symbol": p.symbol,
+                                         "state": "OWN_INDEX",
+                                         "why": _gate.get("refused") or "not funded: cut to 0"})
+                            continue
+                        if q < p.qty:
+                            p.qty, p.notional = q, q * p.price
+                            p.target_qty = p.current_qty + q
+                        _send_one(p)
 
     acting = exploit_acting or probe_acting
     # ---- C11: the decision story + frozen alternatives (never an order) ------
@@ -2860,6 +2947,13 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             1 for p in to_send if _state(p.symbol) == "REVISION_FLOW")
     if core.get("applied") and sleeve_ledger is not None:
         record["benchmark_core"]["decisions"] = sleeve_ledger
+    if benchmark_hold:
+        record["benchmark_hold"] = benchmark_hold
+    if rollback_hold:
+        record["own_index_rollback_hold"] = {
+            "held": sorted(rollback_hold),
+            "line": (f"own index OFF with a membership on disk: {len(rollback_hold)} held "
+                     f"member(s) HELD, never exited (review #89 R2)")}
     if own_index.get("enabled"):
         # OD-10: only when PC_OWN_INDEX is ON, so the OFF receipt is unchanged
         record["own_index"] = {k_: v_ for k_, v_ in own_index.items()
@@ -2919,6 +3013,11 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     with (out / "decisions.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(record, default=str) + "\n")
 
+    if oi.get("contract_refusal"):
+        # review #89 R2: the receipt is written; the plan unit goes RED
+        from backend.services import pc_own_index as _OI           # noqa: PLC0415
+        raise _OI.OwnIndexRefused(f"own index contract refused; no order sent, every "
+                                  f"holding held: {oi.get('refusal')}"[:400])
     return {"planned": True, "verdict": verdict, "acting": acting,
             "bars_line": gate["line"],
             "exploit_acting": exploit_acting,
@@ -3240,6 +3339,16 @@ def run(session_id: str) -> int:
             logger.error("lease refused: %s", exc)
             SS.finish("STOPPED", f"REFUSED_LEASE: {type(exc).__name__}: {exc}"[:300])
             return 5
+        oi_refusal = _own_index_startup_refusal()
+        if oi_refusal:
+            # review #89 R2: a contract mismatch holds everything; no session
+            logger.error("own index contract refused: %s", oi_refusal)
+            SS.finish("STOPPED", f"REFUSED_OWN_INDEX_CONTRACT: {oi_refusal}"[:300])
+            try:
+                PB.close_lease(expected_nonce=(lease or {}).get("session_nonce"))
+            except Exception:                                      # noqa: BLE001
+                logger.warning("could not close the broker lease", exc_info=True)
+            return 7
     try:
         selected = os.environ.get("AEGIS_PC_EPOCH_CONTRACT")
         inherited_review = None

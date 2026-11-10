@@ -20,17 +20,26 @@ WHAT THE INDEX IS (nothing new is invented; every input already exists)
   DECLARED count, so fewer qualifying names leave their slots in CASH.
 * GROSS G: chosen by the worst case, not conviction -- the largest multiple of
   `PC_OWN_INDEX_GROSS_STEP` that fits in what the other sleeves leave (minus a
-  cash buffer) and passes BOTH (1) the whole book's one-day rho=1 k-sigma loss
-  <= `PC_WORST_CASE_MAX_FRAC_OF_EQUITY` and (2) G x |the basket's worst
-  historical 21-session return| <= `PC_OWN_INDEX_MAX_WORST_21_SESSION_LOSS_FRAC`
-  (the revision_flow sleeve's rule). An UNKNOWN bound fails; gates only shrink.
+  cash buffer), never above `PC_OWN_INDEX_MAX_GROSS` (the share the owner
+  approved, 30%), and passes BOTH (1) the whole book's one-day rho=1 k-sigma
+  loss <= `PC_WORST_CASE_MAX_FRAC_OF_EQUITY` and (2) G x |the basket's worst
+  21-session return over the FIXED window from `PC_OWN_INDEX_HISTORY_START`|
+  <= `PC_OWN_INDEX_MAX_WORST_21_SESSION_LOSS_FRAC`. A member without that
+  history is EXCLUDED (its slot is cash), so a young listing cannot drop 2020
+  from the bound (review #89 R4). An UNKNOWN bound fails; gates only shrink.
 * ONE SYMBOL, ONE SLEEVE: a member another sleeve holds or acts on this cycle is
   skipped (its slot stays cash). Held names that are members and that no other
   sleeve claims are ADOPTED (rebalanced to the index weight). A previous member
   that left at a rebuild is sold (OWN_INDEX_EXIT).
 * THE OLD CORE: a held SPY is sold whole-share (CORE_EXIT) once a frozen,
   matching contract exists -- even if today's candidate file is stale, because
-  cash is an allowed state and SPY is not. Without a valid contract nothing moves.
+  cash is an allowed state and SPY is not. Without a valid contract nothing
+  moves: the held members are HELD (never an EXIT) and the session sends no
+  order at all (review #89 R2).
+* FUNDED BUYS ONLY: index buys go out only after every sell of the session is
+  CONFIRMED filled, sized from the broker's cash read after those fills, with
+  the book's gross checked against equity first (`gate_index_buys`, review #89
+  R3). A skipped, failed or unconfirmed sell means no index buy this session.
 
 LICENCE: PRODUCT_EXPERIMENT. `contract_content()` is the frozen strategy contract
 (policy hash over every parameter + this module's source, timestamp, inputs,
@@ -47,6 +56,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -63,6 +73,10 @@ CONTRACT_FILE = "own_index_contract.json"
 MEMBERS_FILE = "own_index_members.json"
 MEMBERS_HISTORY = "own_index_members_history.jsonl"
 SOURCE_FILE = Path(__file__).resolve()
+#: Index buys are sized at the plan price plus this margin, so a market fill a
+#: little above the plan price cannot spend cash the sizing did not count.
+BUY_PRICE_MARGIN = 0.005
+_sleep = time.sleep
 
 
 class OwnIndexRefused(RuntimeError):
@@ -117,8 +131,13 @@ def contract_content(cfg: Any = None) -> dict:
             "equity": "the broker's equity read (pc_broker.snapshot), never a literal",
             "sigma": f"pc_risk.panel_sigmas ({int(c.FLEET_MANAGER_SIGMA_WINDOW)}-session daily "
                      f"sigma, bars panel); a name without one at the universe p90",
-            "history": "pc_sleeves.bound_history (prices_deep 2016.., else the short panel "
-                       "with WARN_SHORT_HISTORY)",
+            "history": "pc_own_index.bound_history: the longest panel on disk "
+                       "(pc_sleeves.history_panel), FIXED window from history_start; a member "
+                       "first priced more than history_tolerance_days after it is excluded",
+            "history_start": str(c.PC_OWN_INDEX_HISTORY_START),
+            "history_tolerance_days": int(c.PC_OWN_INDEX_HISTORY_TOLERANCE_DAYS),
+            "adv": "each member's median_dollar_vol from the candidate file feeds "
+                   "pc_broker.plan_orders' MAX_ADV_PARTICIPATION cap",
         },
         "construction": {
             "n_declared": int(c.PC_OWN_INDEX_N),
@@ -128,6 +147,7 @@ def contract_content(cfg: Any = None) -> dict:
             "rebalance_days": float(c.PC_OWN_INDEX_REBALANCE_DAYS),
             "between_rebuilds": "pc_broker.plan_orders drift band (REBALANCE_DRIFT_FRAC) only",
             "cash_buffer": float(c.PC_OWN_INDEX_CASH_BUFFER),
+            "max_gross": float(c.PC_OWN_INDEX_MAX_GROSS),
             "long_only": True, "leverage": 0.0, "gross_cap": 1.0,
         },
         "risk": {
@@ -135,12 +155,19 @@ def contract_content(cfg: Any = None) -> dict:
             "one_day_book_limit_frac": float(c.PC_WORST_CASE_MAX_FRAC_OF_EQUITY),
             "worst_21_session_limit_frac": float(c.PC_OWN_INDEX_MAX_WORST_21_SESSION_LOSS_FRAC),
             "unknown_bound": "fails (the index gross is 0)",
+            "worst_21_basis": "min(every-name-priced window, any window) over the eligible "
+                              "members, from history_start",
             "stops": "none declared; the no-stop ceiling is the whole gross",
             "gates_only_shrink": True,
         },
         "costs_and_fills": {
             "orders": "pc_broker.submit: Alpaca paper market DAY orders, whole shares, sells "
                       "before buys, only while the venue clock is open, under the session lease",
+            "funded_buys": "index buys only after every sell is confirmed filled "
+                           f"(wait {float(c.PC_OWN_INDEX_SELL_FILL_WAIT_S):g} s), sized from the "
+                           "broker's cash after the fills less the cash buffer, at plan price + "
+                           f"{BUY_PRICE_MARGIN:.1%}, and only while long market value + buys <= "
+                           "(1 - cash buffer) x equity",
             "declared_cost_bps_per_side": per_side,
             "cost_basis": "fills measured from the broker; the grade charges the declared "
                           "cost on turnover; slippage vs arrival is never imputed as zero",
@@ -326,6 +353,9 @@ def membership(folder: Path, *, contract: dict, funnel_path: Optional[Path] = No
            "previous_members": list((prev or {}).get("members") or []),
            "source": {k: v for k, v in cands.items() if k not in ("rows", "line")},
            "candidate_scores": {str(r["ticker"]).upper(): r.get("score") for r in cands["rows"]},
+           "median_dollar_vol": {str(r["ticker"]).upper(): r.get("median_dollar_vol")
+                                 for r in cands["rows"]
+                                 if isinstance(r.get("median_dollar_vol"), (int, float))},
            "twin": _twin(members, sigmas or {}, seed=seed, exclude=excl)}
     if not members:
         raise OwnIndexRefused(f"no candidate survives the exclusions "
@@ -343,6 +373,55 @@ def membership(folder: Path, *, contract: dict, funnel_path: Optional[Path] = No
                      + (f"; excluded {skipped}" if skipped else ""))}
 
 
+# ───────────────────────────── history ──────────────────────────────────────
+
+def bound_history(names: list[str], short_path: Optional[Path] = None, *,
+                  start: Optional[str] = None, tolerance_days: Optional[int] = None,
+                  window: int = 21) -> dict:
+    """The 21-session bound on a FIXED window with a minimum-history rule (review
+    #89 R4). A member first priced more than `tolerance_days` after `start` is
+    SHORT and excluded (`short_history`); the bound is the worse of the
+    every-name-priced and any-coverage windows over the eligible names, so it
+    cannot loosen when the membership rotates. {"error": ...} fails bound 2."""
+    from backend.services import pc_sleeves as SL                  # noqa: PLC0415
+    start_s = str(start or _cfg.PC_OWN_INDEX_HISTORY_START)
+    tol = int(_cfg.PC_OWN_INDEX_HISTORY_TOLERANCE_DAYS if tolerance_days is None
+              else tolerance_days)
+    path, warn = SL.history_panel(short_path)
+    base = {"history_start": start_s, "history_tolerance_days": tol, "warning": warn}
+    if path is None:
+        return {**base, "error": warn, "eligible": [], "short_history": list(names)}
+    try:
+        import pandas as pd                                        # noqa: PLC0415
+        df = pd.read_parquet(path, columns=["symbol", "date", "close"],
+                             filters=[("symbol", "in", list(names))])
+        df = df[df["close"].notna()]
+        first = df.groupby("symbol")["date"].min()
+    except Exception as exc:                                       # noqa: BLE001
+        return {**base, "error": f"{type(exc).__name__}: {exc}"[:200], "eligible": [],
+                "short_history": list(names)}
+    limit = pd.Timestamp(start_s) + pd.Timedelta(days=tol)
+    eligible = [s for s in names if s in first.index and pd.Timestamp(first[s]) <= limit]
+    short = [s for s in names if s not in eligible]
+    base.update({"eligible": eligible, "short_history": short,
+                 "first_priced": {s: str(pd.Timestamp(first[s]).date())
+                                  for s in names if s in first.index}})
+    if not eligible:
+        return {**base, "error": f"no member has history from {start_s} (+{tol} d)"}
+    h = SL.basket_history(eligible, path, window=window)
+    out = {**h, **base}
+    full, anyw = h.get("worst_window_return"), h.get("worst_window_return_any")
+    if full is None or anyw is None or h.get("error"):
+        out["error"] = h.get("error") or "worst window not computable"
+        out.pop("worst_window_return", None)
+        return out
+    out["worst_window_return_full"] = float(full)
+    out["worst_window_return"] = min(float(full), float(anyw))
+    out["worst_window_basis"] = (f"min(all-priced, any) over {len(eligible)} members priced "
+                                 f"since {start_s}; {len(short)} short-history member(s) excluded")
+    return out
+
+
 # ───────────────────────────── sizing ───────────────────────────────────────
 
 def book_k_sigma_frac(weights: dict[str, float], sigmas: dict, *, k: float,
@@ -355,11 +434,20 @@ def book_k_sigma_frac(weights: dict[str, float], sigmas: dict, *, k: float,
 def choose_gross(*, names: list[str], n_declared: int, max_name_frac: float, room: float,
                  other_weights: dict[str, float], sigmas: dict, fallback: float, k: float,
                  day_limit: float, worst_21: Optional[float], window_limit: float,
-                 step: float) -> dict:
-    """The largest declared-N gross G (a multiple of `step`) such that, with
-    w = min(cap, G/N) on the `names` that qualify, BOTH bounds hold."""
+                 step: float, max_gross: Optional[float] = None) -> dict:
+    """The largest declared-N gross G (a multiple of `step`, never above
+    `max_gross`, the owner-approved share) such that, with w = min(cap, G/N) on
+    the `names` that qualify, BOTH bounds hold."""
     other = book_k_sigma_frac(other_weights, sigmas, k=k, fallback=fallback)
-    hi = max(0.0, min(n_declared * max_name_frac, room))
+    if int(n_declared) <= 0 or step <= 0:
+        return {"room": room, "upper": 0.0, "other_k_sigma_frac": other, "trials": [],
+                "worst_21": worst_21, "declared_gross": 0.0, "w_each": 0.0, "gross": 0.0,
+                "binding": "n_declared_zero" if int(n_declared) <= 0 else "step_zero"}
+    caps = {"n_x_cap": n_declared * max_name_frac, "room": room}
+    if max_gross is not None:
+        caps["owner_max_gross"] = float(max_gross)
+    upper_by = min(caps, key=lambda k_: caps[k_])
+    hi = max(0.0, caps[upper_by])
     hi = math.floor(hi / step + 1e-9) * step
     trials = []
     g = hi
@@ -378,16 +466,17 @@ def choose_gross(*, names: list[str], n_declared: int, max_name_frac: float, roo
             best = trials[-1]
             break
         g = round(g - step, 10)
-    out = {"room": room, "upper": hi, "other_k_sigma_frac": other, "trials": trials[:25],
-           "worst_21": worst_21}
+    out = {"room": room, "upper": hi, "upper_set_by": upper_by, "max_gross": max_gross,
+           "other_k_sigma_frac": other, "trials": trials[:25], "worst_21": worst_21}
     if best is None:
         out.update({"declared_gross": 0.0, "w_each": 0.0, "gross": 0.0,
-                    "binding": ("21_session_unknown" if worst_21 is None else "both_fail_at_every_step")})
+                    "binding": ("21_session_unknown" if worst_21 is None else
+                                upper_by if hi < step else "both_fail_at_every_step")})
     else:
         first = trials[0]
         out.update({"declared_gross": best["declared_gross"], "w_each": best["w_each"],
                     "gross": best["gross"], "book_k_sigma_frac": best["book_k_sigma_frac"],
-                    "binding": ("room" if best is first else
+                    "binding": (upper_by if best is first else
                                 "one_day_k_sigma" if not first["bound_one_day"] else
                                 "worst_21_session")})
     return out
@@ -395,12 +484,16 @@ def choose_gross(*, names: list[str], n_declared: int, max_name_frac: float, roo
 
 def worst_case_lines(*, equity: float, n_declared: int, max_name_frac: float, w_each: float,
                      names: list[str], sigmas: dict, fallback: float, k: float,
-                     other_weights: dict[str, float], history: Optional[dict]) -> dict:
-    """Session protocol item 4, in dollars: the LARGEST ADMISSIBLE index (N x cap)
-    and the PLANNED one, alone and with the rest of the book."""
+                     other_weights: dict[str, float], history: Optional[dict],
+                     max_gross: Optional[float] = None) -> dict:
+    """Session protocol item 4, in dollars: the LARGEST ADMISSIBLE index
+    (min(N x cap, owner max gross)) and the PLANNED one, alone and with the rest
+    of the book."""
     eq = float(equity)
     avg = (sum(float(sigmas.get(s) or fallback) for s in names) / len(names)) if names else fallback
     big_g = n_declared * max_name_frac
+    if max_gross is not None:
+        big_g = min(big_g, float(max_gross))
     plan_g = w_each * len(names)
     other = book_k_sigma_frac(other_weights, sigmas, k=k, fallback=fallback)
     other_g = sum(max(0.0, float(w)) for w in other_weights.values())
@@ -414,10 +507,11 @@ def worst_case_lines(*, equity: float, n_declared: int, max_name_frac: float, w_
                        "with_rest_of_book_k_sigma_usd": -(plan_g * k * avg + other) * eq,
                        "sum_notional_over_equity": plan_g + other_g}}
     lines = [
-        (f"LARGEST ADMISSIBLE own index at ${eq:,.0f}: {n_declared} names x {max_name_frac:.2%} = "
-         f"{big_g:.0%} gross; no stop is declared, so n x notional x stop = {n_declared} x "
-         f"{max_name_frac:.2%} x 100% = -${big_g * eq:,.0f}; rho=1 {k:g}-sigma day {big_g:.0%} x "
-         f"{k:g} x {avg:.2%} = -${big_g * k * avg * eq:,.0f}"),
+        (f"LARGEST ADMISSIBLE own index at ${eq:,.0f}: {big_g:.0%} gross (min of {n_declared} "
+         f"names x {max_name_frac:.2%} = {n_declared * max_name_frac:.0%} and the owner's max "
+         f"gross {'none' if max_gross is None else f'{float(max_gross):.0%}'}); no stop is "
+         f"declared, so n x notional x stop = {big_g:.0%} x 100% = -${big_g * eq:,.0f}; rho=1 "
+         f"{k:g}-sigma day {big_g:.0%} x {k:g} x {avg:.2%} = -${big_g * k * avg * eq:,.0f}"),
         (f"PLANNED own index: {len(names)} x {w_each:.2%} = {plan_g:.2%} gross; {k:g}-sigma day "
          f"-${plan_g * k * avg * eq:,.0f}; with the rest of the book ({other_g:.2%} gross) "
          f"-${(plan_g * k * avg + other) * eq:,.0f} ({plan_g * k * avg + other:.2%} of equity); "
@@ -493,10 +587,14 @@ def plan(*, contract: Optional[dict], members_row: Optional[dict], refusal: Opti
                        f"filler; {len(owned)} held member(s) HELD"
                        + (f"; {core} {out['core_exit']['sell_qty']} sh -> CORE_EXIT" if core_plans else ""))
         return out
-    names = [m for m in members if m not in claimed]
+    short = set((history or {}).get("short_history") or [])
+    names = [m for m in members if m not in claimed and m not in short]
     skipped = [m for m in members if m in claimed]
+    skipped_short = [m for m in members if m not in claimed and m in short]
+    out["skipped_short_history"] = skipped_short
     if not names:
-        out.update({"refused": f"every member is held by another acting sleeve: {skipped}",
+        out.update({"refused": (f"no member qualifies: in another acting sleeve {skipped}, "
+                                f"short history {skipped_short}"),
                     "members": members, "skipped_claimed": skipped, "plans": core_plans})
         for s in sorted(owned):
             out["state_of"][s] = HOLD_STATE
@@ -518,16 +616,21 @@ def plan(*, contract: Optional[dict], members_row: Optional[dict], refusal: Opti
                         day_limit=float(cc["risk"]["one_day_book_limit_frac"]),
                         worst_21=(None if ww is None else float(ww)),
                         window_limit=float(cc["risk"]["worst_21_session_limit_frac"]),
-                        step=float(cc["construction"]["gross_step"]))
+                        step=float(cc["construction"]["gross_step"]),
+                        max_gross=float(cc["construction"]["max_gross"]))
     w = float(pick["w_each"])
     weights = {s: w for s in names} if w > 0 else {}
     wc = worst_case_lines(equity=equity, n_declared=int(cc["construction"]["n_declared"]),
                           max_name_frac=float(cc["construction"]["max_name_frac"]), w_each=w,
                           names=names, sigmas=sigmas, fallback=fallback_sigma, k=k,
-                          other_weights={**acting, **resid}, history=history)
+                          other_weights={**acting, **resid}, history=history,
+                          max_gross=float(cc["construction"]["max_gross"]))
+    adv = dict((members_row or {}).get("median_dollar_vol") or {})
     targets = [PB.Target(symbol=s, weight=w,
                          reason=(f"OWN_INDEX ({cc['version']} {contract['policy_hash'][:12]}): "
-                                 f"equal weight {w:.2%}; PRODUCT_EXPERIMENT"))
+                                 f"equal weight {w:.2%}; PRODUCT_EXPERIMENT"),
+                         median_dollar_vol=(float(adv[s]) if isinstance(adv.get(s), (int, float))
+                                            else None))
                for s in names] if weights else []
     plan_held = {s: float(held.get(s, 0.0)) for s in (set(names) | owned)}
     idx_plans = (PB.plan_orders(targets, equity=equity, held=plan_held, prices=prices)
@@ -557,6 +660,7 @@ def plan(*, contract: Optional[dict], members_row: Optional[dict], refusal: Opti
                    f"{n_decl} declared x {w:.2%} = {w * len(names):.2%} gross (binding: "
                    f"{pick['binding']}; room {room:.2%})"
                    + (f"; skipped, in another sleeve: {skipped}" if skipped else "")
+                   + (f"; excluded, short history: {skipped_short}" if skipped_short else "")
                    + (f"; {n_decl - len(names)} slot(s) cash" if n_decl > len(names) else "")
                    + (f"; {core} {out['core_exit']['sell_qty']} sh -> CORE_EXIT" if core_plans else "")
                    + ("" if mode == "paper_profit" else f"; mode={mode}: not acting"))
@@ -597,6 +701,113 @@ def clip_buys_to_post_fill_gross(plans: list, *, held: dict, prices: dict, equit
     return {"post_fill_gross_before": post / float(equity), "cut_shares": cut,
             "line": (f"OWN_INDEX_CLIPPED_TO_POST_FILL_GROSS: the book after fills would be "
                      f"{post / float(equity):.2%} of equity; index buys cut {cut}")}
+
+
+def held_index_names(folder: Path, held: dict, *, exclude: set, core_symbol: str = "SPY") -> set:
+    """Held names the membership file says are (or were) index members, minus
+    `exclude` (an acting sleeve's claim). Read WITHOUT the contract, so a
+    contract refusal or a rollback can HOLD them instead of exiting them."""
+    row = _read_json(Path(folder) / MEMBERS_FILE) or {}
+    idx = {str(s).upper() for s in (row.get("members") or [])} | {
+        str(s).upper() for s in (row.get("previous_members") or [])}
+    core = str(core_symbol).upper()
+    return {s for s in held if str(s).upper() in idx and s not in exclude
+            and str(s).upper() != core}
+
+
+def _f(x: Any) -> Optional[float]:
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return None
+    return v if math.isfinite(v) else None
+
+
+def gate_index_buys(buys: list, *, sells: list, sent: list[dict], broker: Any,
+                    cash_buffer: float, other_buys: list, wait_s: float, poll_s: float,
+                    sleep: Optional[Callable[[float], None]] = None) -> dict:
+    """Which index buys may go out NOW, and how many shares (review #89 R3).
+
+    1. Every sell this session must have been SUBMITTED; a skipped or failed
+       sell (an open order, a venue rejection) refuses every index buy.
+    2. Every submitted sell must be confirmed FILLED by the broker within
+       `wait_s`; anything else refuses every index buy.
+    3. The broker's account is re-read AFTER the fills: budget = cash - buffer x
+       equity - this session's other buys, and long market value + buys must
+       stay <= (1 - buffer) x equity. Buys are cut, in order, to fit, each at
+       plan price + BUY_PRICE_MARGIN; an unreadable account refuses.
+    Returns {"allowed": {id(plan): qty}, "line", ...}; never sends."""
+    sleep = sleep or _sleep
+    by_sym: dict[str, list] = {}
+    for r in sent:
+        by_sym.setdefault(str(r.get("symbol")), []).append(r)
+    out: dict = {"allowed": {}, "n_buys": len(buys), "n_sells": len(sells)}
+
+    def _refuse(why: str) -> dict:
+        out["refused"] = why
+        out["line"] = f"OWN_INDEX buys REFUSED this session: {why}"
+        return out
+    coids = []
+    for p in sells:
+        rs = [r for r in by_sym.get(p.symbol, []) if r.get("side", "sell") == "sell"
+              or r.get("status") != "submitted"]
+        if not rs or any(r.get("status") != "submitted" for r in rs):
+            st = (rs[-1].get("status") if rs else "not sent")
+            why = (rs[-1].get("why") or rs[-1].get("error") or "") if rs else ""
+            return _refuse(f"funding sell {p.symbol} {st}{(': ' + str(why)[:80]) if why else ''}"
+                           f"; no index buy without it")
+        coids += [(p.symbol, r.get("client_order_id")) for r in rs]
+    pending = {c: s for s, c in coids}
+    if None in pending:
+        return _refuse(f"funding sell {pending[None]} has no client order id to confirm")
+    deadline = time.monotonic() + max(0.0, float(wait_s))
+    last: dict = {}
+    while pending:
+        for c in list(pending):
+            try:
+                st = str((broker.order_by_client_id(c) or {}).get("status"))
+            except Exception as exc:                               # noqa: BLE001
+                st = f"unreadable ({type(exc).__name__})"
+            last[pending[c]] = st
+            if st == "filled":
+                pending.pop(c)
+        if not pending or time.monotonic() >= deadline:
+            break
+        sleep(max(0.0, float(poll_s)))
+    if pending:
+        return _refuse("funding sell(s) not confirmed filled within "
+                       f"{float(wait_s):g} s: " + ", ".join(f"{s} {last.get(s)}"
+                                                          for s in pending.values()))
+    try:
+        acct = broker.account() or {}
+    except Exception as exc:                                       # noqa: BLE001
+        return _refuse(f"account unreadable after the fills ({type(exc).__name__})")
+    cash, eq, lmv = _f(acct.get("cash")), _f(acct.get("equity")), _f(acct.get("long_market_value"))
+    if cash is None or eq is None or lmv is None or eq <= 0:
+        return _refuse("account cash/equity/long_market_value unreadable after the fills")
+    other = sum(max(0, int(p.qty)) * float(p.price or 0.0) for p in other_buys)
+    buf = float(cash_buffer) * eq
+    budget = min(cash - buf - other, (eq - buf) - lmv - other)
+    out.update({"cash": cash, "equity": eq, "long_market_value": lmv, "other_buys_usd": other,
+                "budget_usd": budget})
+    if budget <= 0:
+        return _refuse(f"no funded room after the fills: cash ${cash:,.0f}, long ${lmv:,.0f}, "
+                       f"equity ${eq:,.0f}, buffer ${buf:,.0f}, other buys ${other:,.0f}")
+    left, cut = budget, {}
+    for p in buys:
+        px = float(p.price or 0.0) * (1.0 + BUY_PRICE_MARGIN)
+        q = min(int(p.qty), int(left // px)) if px > 0 else 0
+        if q > 0:
+            out["allowed"][id(p)] = q
+            left -= q * px
+        if q < int(p.qty):
+            cut[p.symbol] = int(p.qty) - q
+    out["cut_shares"] = cut
+    out["line"] = (f"OWN_INDEX buys funded after {len(sells)} confirmed sell(s): budget "
+                   f"${budget:,.0f} (cash ${cash:,.0f} - buffer ${buf:,.0f} - other buys "
+                   f"${other:,.0f}; gross room ${(eq - buf) - lmv - other:,.0f})"
+                   + (f"; cut {cut}" if cut else ""))
+    return out
 
 
 # ───────────────────────────── measurement ──────────────────────────────────

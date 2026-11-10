@@ -10,7 +10,24 @@ Code: `backend/services/pc_own_index.py` (construction, frozen contract, sizing,
 measurement), `scripts/pc_own_index.py` (dry-run / freeze / measure; it never
 sends an order), the hook in `scripts/sim_run.py` `u_plan` (where the D14 core was
 planned), and the config block `PC_OWN_INDEX*` in `backend/config.py`.
-`PC_BENCHMARK_CORE` ships False and `PC_OWN_INDEX` ships False.
+`PC_BENCHMARK_CORE` ships **True** and `PC_OWN_INDEX` ships False, so merging this
+PR changes nothing any account holds. The SPY core is retired only by the attended
+activation in §4, which sets both flags in ONE edit.
+
+### Review fixes (2026-11-11, adversarial review of PR #89)
+
+| finding | what the code now does | pinned by |
+|---|---|---|
+| R1: core OFF on main orphaned ~$474k of SPY (an EXIT the first EXPLOIT-acting session would send) | main ships `PC_BENCHMARK_CORE = True`. If the core is ever OFF without the own index, a held SPY is **HELD** (`benchmark_hold` on the receipt): never planned, never an EXIT | `test_pc_own_index_review.py::test_core_off_without_the_own_index_never_plans_a_spy_sell`, `test_main_ships_the_spy_core_on...` |
+| R2: a contract that stops verifying (any edit to `pc_own_index.py` or a key it reads) turned the held index into EXITs | the held members are read from the membership file BEFORE the contract and HELD; the session sends **no order at all** (`send_block: own index contract REFUSED`); `u_plan` raises after writing its receipt (the plan unit is red); a `paper_profit` session with `PC_OWN_INDEX = True` and a non-verifying contract does not start (**rc 7**, `REFUSED_OWN_INDEX_CONTRACT`). Rollback (`PC_OWN_INDEX = False` with a membership on disk) HOLDS the members (`own_index_rollback_hold`) | `test_a_contract_that_stops_verifying_refuses_and_liquidates_nothing`, `test_rollback_flag_off_holds_the_index_names...`, `test_the_session_start_refuses_non_zero...` |
+| R3: index buys went out when the SPY sell was skipped (open order) or failed: margin | index buys are sent LAST, only after **every** sell of the session was submitted and is confirmed `filled` (`order_by_client_id`, up to `PC_OWN_INDEX_SELL_FILL_WAIT_S` = 60 s); then the account is re-read and buys are cut to `cash - 1% buffer - other buys` and to `long market value + buys <= 99% of equity`, at plan price + 0.5%. A skipped, failed or unconfirmed sell, or an unreadable account: no index buy this session | `test_no_index_buy_when_the_spy_sell_is_skipped...`, `..._fails`, `..._not_confirmed_filled`, `test_index_buys_are_sized_from_cash_after_the_fills`, the `test_gate_*` tests |
+| R4: a young listing dropped 2020 from the binding window and lifted the index 30% -> 60% | the gross never exceeds `PC_OWN_INDEX_MAX_GROSS` (**0.30**, raised only by an explicit config change + new version). The 21-session bound reads a FIXED window from `PC_OWN_INDEX_HISTORY_START` (2020-01-02); a member first priced more than 10 days after it is EXCLUDED (slot cash); the bound is min(all-priced, any-coverage) | `test_a_young_listing_is_excluded...`, `test_the_index_never_exceeds_the_owner_approved_share`, `test_the_plan_leaves_a_short_history_members_slot_in_cash` |
+| O1: the ADV cap was inert for the index | each member's `median_dollar_vol` from the candidate file is stored in the membership row and passed to `pc_broker.plan_orders` (2% ADV cap) | contract text |
+| O5: the dry-run models other sleeves coarsely | the dry-run prints that caveat | CLI |
+
+Not changed: O3 (there is still no whole-book 21-session bound; the index and
+revision_flow are each bounded at 10% separately, so a correlated month can cost
+~19% plus the residual names).
 
 ## 1. What runs today, and where
 
@@ -25,10 +42,10 @@ PROBE names held but not traded (20.6%; PROBE is MEASURED_NEGATIVE), and SPY at
 48.4% (`benchmark core: ON ... delivers 48.40%`). Broker truth on 2026-11-10 14:10Z
 was equity $948,802.98, cash $3,612.77, and SPY 633 sh = $473,718 (49.9%).
 
-**Turning `PC_BENCHMARK_CORE` off alone does not sell SPY.** A held SPY that no
-sleeve owns is state `EXIT`, and only an acting EXPLOIT sends `EXIT` orders.
-EXPLOIT has been refused for weeks (ranker `top20_net_rel_21d` −0.76%), so SPY
-would just stay. `PC_OWN_INDEX` is the flag that retires it (`CORE_EXIT`).
+**Turning `PC_BENCHMARK_CORE` off alone does not sell SPY.** Before the review
+fix a held SPY that no sleeve owned was state `EXIT`, which an acting EXPLOIT
+would have sent the first day the ranker turned positive. Now it is HELD
+(`benchmark_hold`) and only `PC_OWN_INDEX` retires it (`CORE_EXIT`).
 
 The prepared no-index epoch on main (`pc_policy_epoch.py`, `ACTIVATION_ALLOWED =
 False`, "pending independent review") would have filled the old core's slot with
@@ -47,10 +64,11 @@ never activated and is superseded by OD-10.
 * **Weights:** equal. `w = min(3%, G/20)`. When fewer than 20 names qualify, the
   empty slots stay cash.
 * **Gross G:** the largest 5% step that fits in what the other sleeves leave (less
-  a 1% cash buffer) and passes two tests: (1) the whole book's one-day ρ=1 3σ loss
-  is at most 10% of equity; (2) G × |the members' worst 21-session basket return|
-  is at most 10%. This is the same rule the revision_flow sleeve answers. An
-  unknown bound fails.
+  a 1% cash buffer), never above `PC_OWN_INDEX_MAX_GROSS` = 30%, and passes two
+  tests: (1) the whole book's one-day ρ=1 3σ loss is at most 10% of equity; (2) G
+  × |the members' worst 21-session basket return over the fixed window from
+  2020-01-02| is at most 10%. A member without that history is excluded (slot
+  cash). An unknown bound fails.
 * **One symbol, one sleeve:** a member that an *acting* sleeve holds is skipped.
   A member held by a non-acting sleeve is adopted and resized. A name that leaves
   the index at a rebuild is sold (`OWN_INDEX_EXIT`).
@@ -58,12 +76,30 @@ never activated and is superseded by OD-10.
   empty or unreadable candidate file means no index buys and held members `HOLD`.
   SPY is still retired in that case, because cash is allowed. With no valid frozen
   contract, nothing moves, not even SPY. If `PC_BENCHMARK_CORE` and `PC_OWN_INDEX`
-  are both True, the index is refused and the core plans as before. The CLI exits
-  2 (stale/empty/receipt) or 3 (contract).
+  are both True, the index is refused and the core plans as before. A contract
+  that stops verifying holds EVERYTHING (no order of any sleeve; rc 7 at session
+  start). The CLI exits 2 (stale/empty/receipt) or 3 (contract).
 
 ## 3. Worst case first (protocol item 4)
 
-From the dry-run on 2026-11-10 at broker equity $948,803:
+**Re-printed after the review fixes** (dry-run 2026-11-11 of this branch's code on
+the runtime's files, read-only: broker receipt 2026-11-10T14:10Z, funnel
+generated 2026-11-05T19:18Z (4.9 d old, 25 candidates -> 24 issuers), deep panel
+2016-01-05..2026-11-09; no member was excluded for short history), equity $948,803:
+
+* **Largest admissible index:** min(20 × 3.00% = 60%, owner max 30%) = **30% gross**.
+  No stop is declared, so n × notional × stop = 20 × 1.50% × 100% = **−$284,641**
+  (was −$569,282 before the fix). ρ=1 3σ day 30% × 3 × 2.20% = **−$18,798**. Worst
+  21 sessions (−29.35%, to 2020-03-16, all 20 priced since 2020) = **−$83,551**.
+* **Planned:** 20 × 1.50% = 30% gross, binding `owner_max_gross` (bound 2 alone
+  would allow 34%). With the rest of the book (revision_flow 30% + residual
+  5.85%): 3σ day **−$56,240 (5.93%)**; Σ|notional|/equity **0.66**; no-stop
+  ceiling of the whole book 0.66 × $948,803 = −$626,210.
+* Would-be orders: CORE_EXIT sell 633 SPY (~$473,718), 6 trims, 13 buys of
+  ~$14.2k; sells $510,005, buys $184,341; cash after ~$329k (34.7%), gross ~65%.
+  The buys go out only after the SPY sell is confirmed filled (R3).
+
+The original numbers from the 2026-11-10 dry-run (before the fixes) follow.
 
 * **Largest admissible index:** 20 × 3.00% = 60% gross. No stop is declared, so
   n × notional × stop = −$569,282. The ρ=1 3σ day is 60% × 3 × 2.20% = −$37,596.
@@ -82,12 +118,13 @@ new names at ~$14.2k each (PBI, MRTN, NPKI, JBSS, GEN, RGR, ESE, INGR, SGI, MSFT
 FELE, GOOGL, TSM). Sells come to $510,005 and buys to $184,341. Cash after is about
 $329k (34.7%) and gross is about 65%.
 
-**Owner decision OD-10a (open):** keep bound 2 on the index? If yes (the shipped
-default), the index is 30% and about 35% of equity sits in cash. If the index is
-held only to the one-day bound, as the SPY core was, it is 60% and about 5% is cash
-(3σ day −$75,038 = 7.91%; worst 21 sessions −$167,101). A builder does not widen a
-bound. Only the owner can, by changing
-`PC_OWN_INDEX_MAX_WORST_21_SESSION_LOSS_FRAC` and bumping `PC_OWN_INDEX_VERSION`.
+**Owner decision OD-10a (open):** keep the index at 30%? If yes (the shipped
+default), about 35% of equity sits in cash. If the index is held only to the
+one-day bound, as the SPY core was, it is 60% and about 5% is cash (3σ day
+−$75,038 = 7.91%; worst 21 sessions −$167,101). A builder does not widen a bound.
+Only the owner can, by raising `PC_OWN_INDEX_MAX_GROSS` (to 0.60) AND
+`PC_OWN_INDEX_MAX_WORST_21_SESSION_LOSS_FRAC`, then bumping `PC_OWN_INDEX_VERSION`
+and re-freezing. Neither can move on its own any more.
 
 ## 4. Runtime-side steps, in order (brain session, owner watching)
 
@@ -114,11 +151,11 @@ edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
    patch -p1 --binary --dry-run < od10_crlf.diff     # must report every hunk "succeeded"
    patch -p1 --binary < od10_crlf.diff
    ```
-   This was verified on 2026-11-10 against copies of the runtime files. All 10 hunks
-   applied (offsets −15..−396 lines) and both files parse. The PR's 26 own-index
-   tests passed when run against a copy of the runtime code with the patch applied.
-   After this step `PC_BENCHMARK_CORE = False` and `PC_OWN_INDEX = False`. SPY is
-   held and untouched (state EXIT, not sent), so this is a safe intermediate state.
+   This was verified on 2026-11-10 against copies of the runtime files (10 hunks)
+   BEFORE the review fixes; the fixes add hunks to both files, so re-run the
+   `--dry-run` and stop at the first hunk that does not apply. After this step
+   `PC_BENCHMARK_CORE = True` and `PC_OWN_INDEX = False`: the runtime plans exactly
+   as before (the core is ON), so this intermediate state changes nothing.
 4. **Dry-run.** The owner reads it:
    ```
    .venv\Scripts\python.exe -m scripts.pc_own_index dry-run --out backend\data\optimus\decisions\pc_plan\own_index_dryrun_<UTC>.json
@@ -135,8 +172,10 @@ edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
    ```
    This writes `backend\data\optimus\decisions\pc_plan\own_index_contract.json`.
    Write the policy hash into the roadmap changelog.
-6. **Flip:** in the runtime `backend\config.py`, set `PC_OWN_INDEX = True`. Leave
-   `PC_BENCHMARK_CORE = False`.
+6. **Flip, both flags in ONE edit, between sessions:** in the runtime
+   `backend\config.py` set `PC_BENCHMARK_CORE = False` AND `PC_OWN_INDEX = True`.
+   This is the single planned transition that retires SPY. Never flip only one:
+   core OFF alone HOLDS SPY (`benchmark_hold`), and both True refuses the index.
 7. **First session** (paper_profit, venue open): check `pc_book\<day>\intended_book.json`.
    `own_index_line` should show `20 of 20 declared x 1.50%`. `sent` should show
    `CORE_EXIT` SPY and `OWN_INDEX` buys. `sendable_by_state` should carry
@@ -147,9 +186,10 @@ edit reaches the next session only. Today's session `fdc4649e67f3` ends 22:10Z
 
 ## 5. Rollback
 
-* **Stop the index, keep the stocks:** set `PC_OWN_INDEX = False`. The index's
-  holdings become unowned (`EXIT`, not sent while EXPLOIT is refused). Nothing is
-  sold and SPY is not re-bought.
+* **Stop the index, keep the stocks:** set `PC_OWN_INDEX = False`. With the
+  membership file on disk the held members are HELD (`own_index_rollback_hold`),
+  never exited, even if EXPLOIT acts. Nothing is sold and SPY is not re-bought.
+  Selling them later is a separate attended decision.
 * **Undo OD-10 (owner only):** set `PC_BENCHMARK_CORE = True` and
   `PC_OWN_INDEX = False`. The D14 core buys SPY back to the residual on the next
   session.

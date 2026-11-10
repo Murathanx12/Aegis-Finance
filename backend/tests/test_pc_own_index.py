@@ -234,7 +234,6 @@ def test_post_fill_clip_cuts_index_buys_only(tmp_path):
 
 def _uplan(tmp: Path, mp: pytest.MonkeyPatch, *, own: bool, core: bool = False,
            funnel_age: float = 1.0, freeze: bool = True, spy_qty: float = 100.0):
-    from backend.services import pc_sleeves as SL
     from backend.tests import test_pc_plan_replay_owner_d14 as R
     from backend.tests.test_u_plan_probe import ASOF, _ranking
     from scripts import sim_run as S
@@ -246,9 +245,22 @@ def _uplan(tmp: Path, mp: pytest.MonkeyPatch, *, own: bool, core: bool = False,
     mp.setattr(config, "PC_BENCHMARK_CORE", core)
     mp.setattr(config, "PC_BENCHMARK_CORE_EXEMPT_FROM_NAME_CAP", core)
     mp.setattr(config, "PC_OWN_INDEX", own)
-    mp.setattr(SL, "bound_history", lambda names, *a, **k: {
+    mp.setattr(OI, "bound_history", lambda names, *a, **k: {
         "worst_window_return": -0.20, "worst_window_end": "2020-03-16", "window_sessions": 21,
-        "worst_day_return": -0.08, "worst_day": "2020-03-12", "panel": "stub"})
+        "worst_day_return": -0.08, "worst_day": "2020-03-12", "panel": "stub",
+        "eligible": list(names), "short_history": []})
+    # the funded-buy gate (review #89 R3): fills confirmed, the account re-read
+    real_submit = PB.submit
+
+    def _submit(plan, **kw):
+        res = real_submit(plan, **kw)
+        return {**res, "client_order_id": f"aegispc-t{len(rb.submitted):04d}"}
+    mp.setattr(PB, "submit", _submit)
+    mp.setattr(PB, "order_by_client_id", lambda coid: {"status": "filled"})
+    mp.setattr(PB, "account", lambda: {"cash": str(R.STATE["cash"] + spy_qty * 779.705),
+                                       "equity": str(R.STATE["equity"]),
+                                       "long_market_value": "0"})
+    mp.setattr(OI, "_sleep", lambda s: None)
     from backend.services import investment_committee as IC
     mp.setattr(IC, "issuer_map", lambda *a, **k: ({}, "stub"))
     folder = tmp / "decisions" / "pc_plan"
@@ -258,9 +270,13 @@ def _uplan(tmp: Path, mp: pytest.MonkeyPatch, *, own: bool, core: bool = False,
     f = _funnel(tmp, R.HELD + ["IDX1", "IDX2", "SPY", "IDX3", "IDX4", "IDX5"],
                 age_days=funnel_age)
     _ranking(tmp / "out", net=-0.2)
-    S.u_plan(tmp / "out", "paper_profit", asof=ASOF, funnel_path=f,
-             ledger_path=tmp / "ledger.jsonl", contracts_dir=folder,
-             bars_paths=[tmp / "bars.parquet"])
+    try:
+        S.u_plan(tmp / "out", "paper_profit", asof=ASOF, funnel_path=f,
+                 ledger_path=tmp / "ledger.jsonl", contracts_dir=folder,
+                 bars_paths=[tmp / "bars.parquet"])
+    except OI.OwnIndexRefused:
+        if freeze:
+            raise
     rec = json.loads((tmp / "out" / "intended_book.json").read_text(encoding="utf-8"))
     return rec, rb
 
@@ -302,11 +318,13 @@ def test_flag_on_with_a_stale_candidate_file_buys_no_index_and_never_spy(tmp_pat
     assert ("SPY", "buy") not in {(p.symbol, p.side) for p in rb.submitted}
 
 
-def test_flag_on_without_a_frozen_contract_moves_nothing_of_its_own(tmp_path, monkeypatch):
+def test_flag_on_without_a_frozen_contract_moves_nothing_at_all(tmp_path, monkeypatch):
+    """Review #89 R2: no (or no matching) contract holds EVERY order, not only
+    the index's, and the plan unit raises (red) after writing the receipt."""
     rec, rb = _uplan(tmp_path, monkeypatch, own=True, freeze=False)
     assert "no frozen contract" in rec["own_index"]["refused"]
-    assert not any(p.symbol == "SPY" for p in rb.submitted)
-    assert not any(s.get("state") in ("OWN_INDEX", "CORE_EXIT") for s in rec["sent"])
+    assert rb.submitted == [] and rec["sent"] == []
+    assert "own index contract REFUSED" in rec["send_block"]
 
 
 def test_core_and_own_index_both_on_refuses_the_index(tmp_path, monkeypatch):
@@ -322,10 +340,9 @@ def test_cli_dry_run_prints_orders_and_refuses_non_zero_on_a_stale_file(tmp_path
     from scripts import pc_own_index as CLI
     from backend.services import investment_committee as IC
     from backend.services import pc_risk as PR
-    from backend.services import pc_sleeves as SL
     monkeypatch.setattr(IC, "issuer_map", lambda *a, **k: ({}, "stub"))
     monkeypatch.setattr(PR, "panel_sigmas", lambda *a, **k: {})
-    monkeypatch.setattr(SL, "bound_history", lambda names, *a, **k: {"worst_window_return": -0.2})
+    monkeypatch.setattr(OI, "bound_history", lambda names, *a, **k: {"worst_window_return": -0.2})
     monkeypatch.setattr(CLI, "_last_closes", lambda bars, syms: {s: 50.0 for s in syms})
     snap = tmp_path / "state.json"
     snap.write_text(json.dumps({
