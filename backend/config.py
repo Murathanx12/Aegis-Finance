@@ -6057,6 +6057,28 @@ FLEET_V3_EARLIEST_SEED = "2026-10-26"
 #: "edge" goes from +0.94%/mo (t 6.3) to +0.08 (t 0.6). Breadth counts are unaffected.
 IBES_SPLIT_ROUNDING_MIN_ABS_MEANEST = 0.25
 
+#: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
+#: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
+#: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
+#: every consumer of consensus LEVELS (dispersion, revisions) and refuses when it is absent;
+#: it never falls back to the split-adjusted `ibes_consensus_monthly*` file. Licensed data:
+#: never committed. Override with AEGIS_IBES_STATSUMU_PATH / AEGIS_IBES_STATSUMU_LINK_PATH.
+IBES_STATSUMU_EPSUS_PATH = Path(os.getenv(
+    "AEGIS_IBES_STATSUMU_PATH",
+    str(Path.home() / "Aegis module" / "data" / "wrds_raw" / "ibes" / "statsumu_epsus.parquet")))
+#: The IBES ticker -> CRSP permno link pulled beside it (`wrdsapps_link_crsp_ibes.ibcrsphist`).
+IBES_STATSUMU_LINK_PATH = Path(os.getenv(
+    "AEGIS_IBES_STATSUMU_LINK_PATH",
+    str(IBES_STATSUMU_EPSUS_PATH.parent / "ibcrsphist.parquet")))
+#: Link quality accepted, the same rule the adjusted `ibes_consensus_monthly` pull used.
+IBES_LINK_MAX_SCORE = 2
+#: IBES's own split-factor history (`ibes.adj`: ticker, spdates, adj). Unadjusted values on
+#: two dates straddling a split are on two share bases; a revision between them is
+#: re-based with the ratio of the two factors in effect, which is known once the split
+#: has happened. Absent -> revisions refuse, levels are unaffected.
+IBES_ADJ_FACTORS_PATH = Path(os.getenv(
+    "AEGIS_IBES_ADJ_PATH", str(OPTIMUS_LEDGER_DIR / "wrds" / "bulk" / "ibes__adj.parquet")))
+
 # ── Licensed third-party data (Bloomberg exports, broker research) — CH-00 / CH-32 ──
 #: Converted Bloomberg / broker-research tables live OUTSIDE the public repo (licence:
 #: Bloomberg L.P., UBS). `backend.services.licensed_data` reads them from here and

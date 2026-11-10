@@ -9,7 +9,9 @@ is not a new data pull: `backend/data/optimus/wrds/jkp_full/jkp_usa_*.parquet`
 (1926-2012) and `jkp_global_factor_usa.parquet` (2013-2024) carry
 Jensen-Kelly-Pedersen's own quality (`qmj`) and calendar-seasonality
 (`seas_11_15an`, `seas_16_20an`) composites, and
-`ibes_consensus_monthly[_early].parquet` carries `stdev`/`numest`/`meanest`.
+`ibes_consensus_monthly[_early].parquet` carries `stdev`/`numest`/`meanest`
+(split-adjusted -- Book G now reads the UNADJUSTED summary through
+`backend.services.ibes_pit_consensus`; see `load_ibes_dispersion`).
 Every one of those columns has been sitting unread since the 19-22 August pulls.
 
   E  qmj_quality_tilt_v0      TRIAL-DRAFT-E   top `qmj` tercile, long only
@@ -274,29 +276,35 @@ def load_ibes_dispersion(start: int, end: int):
     frozen) and stamped on `statpers`, the consensus snapshot date. A permno
     with two snapshots in one month keeps the LATER one: the selection happens
     at the month's close and the close knows both.
-    """
-    import pandas as pd
 
-    con = wrds_dir() / "ibes_consensus_monthly.parquet"
-    early = wrds_dir() / "ibes_consensus_monthly_early.parquet"
-    frames = [pd.read_parquet(p, columns=list(IBES_COLUMNS))
-              for p in (early, con) if p.is_file()]
-    if not frames:
-        raise CharacteristicPanelUnavailable(
-            f"no IBES consensus panel at {con} or {early}; forecast dispersion "
-            f"is `stdev / meanest` on that table and this job does not "
-            f"substitute another measure of disagreement")
-    ib = pd.concat(frames, ignore_index=True)
-    ib = ib[(ib["measure"].astype(str) == IBES_MEASURE)
-            & (ib["fpi"].astype(str) == IBES_FPI)]
+    THE SOURCE CHANGED ON 2026-11-11, AND ONLY THE SOURCE. Runs 01 (v0, 09-13)
+    and the Amendment 1 read (09-13) used `ibes_consensus_monthly[_early]`, the
+    SPLIT-ADJUSTED summary: history restated in today's shares and rounded to
+    cents, so a firm that later split many times read meanest 0.01 / stdev 0.00
+    -- "unanimous" -- years earlier (Apple FY1 2004: 0.46 / 0.03 as quoted,
+    0.01 / 0.00 adjusted). Low dispersion selected future splitters, i.e.
+    future winners, and Amendment 1 divided that today's-basis stdev by the RAW
+    CRSP close, which shrank it by the future split factor directly. Both
+    numbers are a look-ahead leak (night-backtests report, PR #94). The consensus
+    now comes from `ibes_pit_consensus` (unadjusted `statsumu_epsus`, AS QUOTED
+    at statpers), so stdev, meanest and the raw CRSP close are on one share
+    basis, the basis of the decision date. There is no fallback to the adjusted
+    file.
+    """
+    from backend.services import ibes_pit_consensus as PIT
+
+    try:
+        ib = PIT.load_consensus(fpi=IBES_FPI, start_year=int(start),
+                                end_year=int(end), with_adj=False)
+    except PIT.IbesUnadjustedUnavailable as exc:
+        raise CharacteristicPanelUnavailable(str(exc)) from exc
     ib = ib.dropna(subset=["permno"])
     ib["permno"] = ib["permno"].astype("int64")
-    ib["statpers"] = pd.to_datetime(ib["statpers"])
     ib["ym"] = ib["statpers"].dt.to_period("M")
-    ib = ib[(ib["ym"].dt.year >= int(start)) & (ib["ym"].dt.year <= int(end))]
     ib = ib.sort_values(["permno", "ym", "statpers"], kind="mergesort")
     ib = ib.drop_duplicates(subset=["permno", "ym"], keep="last")
-    return ib[["permno", "ym", "numest", "meanest", "stdev"]].reset_index(drop=True)
+    return ib[["permno", "ym", "numest", "meanest", "stdev",
+               "share_basis"]].reset_index(drop=True)
 
 
 def by_month(frame) -> dict:

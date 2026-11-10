@@ -23,6 +23,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+from backend.services.ibes_pit_consensus import AS_QUOTED
 from scripts import night_books_efg_replay as EFG
 from scripts.night_first_books_replay import holm, run_monthly
 
@@ -367,6 +368,7 @@ def _ibes_frames(panel, *, stdev: dict, meanest: dict, numest: int = 5):
             "stdev": [stdev[int(p) - 1000] for p in g["permno"]],
             "meanest": [meanest[int(p) - 1000] for p in g["permno"]],
             "numest": [numest] * len(g),
+            "share_basis": [AS_QUOTED] * len(g),
         })
     return frames
 

@@ -16,6 +16,7 @@ import pandas as pd
 import pytest
 
 from backend.services import book_signals as BS
+from backend.services.ibes_pit_consensus import AS_QUOTED
 
 
 # --------------------------------------------------------------------------
@@ -358,6 +359,7 @@ def _ibes_frame(n=30, *, numest=5):
         "stdev": [0.01 * (i + 1) for i in range(n)],
         "meanest": [1.0] * n,
         "numest": [numest] * n,
+        "share_basis": [AS_QUOTED] * n,
     })
 
 
@@ -516,6 +518,7 @@ def test_the_earnings_level_channel_is_exactly_what_price_scaling_removes():
         "meanest": [5.0, 5.0, 5.0, 5.0, 5.0, 0.01],   # name 6: EPS near zero
         "numest": [5] * 6,
         "price": [50.0] * 6,
+        "share_basis": [AS_QUOTED] * 6,
     })
     v0 = BS.forecast_dispersion(f, tercile=0.0, min_names=5)
     amended = BS.forecast_dispersion(f, scale="price", tercile=0.0, min_names=5)
