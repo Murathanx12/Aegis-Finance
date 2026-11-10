@@ -33,6 +33,26 @@ def test_e3_e4_and_e2_are_tooling_only_without_runtime_consumer():
             "backend.services.provisional_event_review"} <= tooling
 
 
+def test_e6_is_tooling_only_and_has_no_native_sender_import():
+    result = SR.audit()
+    assert "backend.services.provisional_owner_notice" in result["tooling_only"]
+    assert "backend.services.provisional_owner_notice" not in SR.reachable_set()
+    import ast
+    from backend.services import provisional_owner_notice as notice
+    tree = ast.parse(Path(notice.__file__).read_bytes())
+    imports = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
+    assert "backend.services.telegram_bridge" not in imports
+    assert not any(isinstance(n, ast.Attribute) and n.attr == "send_owner_once" for n in ast.walk(tree))
+
+
+def test_clocked_pc_paper_collection_is_explicitly_inactive():
+    result = SR.audit()
+    entries = [r for r in result["orphans"] if r["module"] == "backend.services.pc_paper_collection"]
+    assert len(entries) == 1
+    assert entries[0]["reason"].startswith("DEVELOPMENT/INACTIVE")
+    assert "backend.services.pc_paper_collection" not in SR.reachable_set()
+
+
 def test_the_audit_can_actually_fail(tmp_path):
     """The guard on the guard (S47's lesson). If the scan found nothing, the
     contract above would pass forever while checking an empty set."""

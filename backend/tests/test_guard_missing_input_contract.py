@@ -1938,6 +1938,20 @@ def _case_campaign_ledger_startup():
     return (lambda: history(b""), Refused, "durable campaign spend history absent")
 
 
+def _case_provisional_owner_notice():
+    from backend.services.provisional_owner_notice import NoticeRefused, build_assessment
+
+    return (lambda: build_assessment(), NoticeRefused,
+            "an E6 assessment with no explicitly pinned manifest")
+
+
+def _case_pc_paper_collection():
+    from backend.services.pc_paper_collection import CollectionRefused, collect
+
+    return (lambda: collect(), CollectionRefused,
+            "clocked paper observation with no explicit read-only transport")
+
+
 CASES = {
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
@@ -1948,11 +1962,13 @@ CASES = {
     "public_flow_common": _case_public_flow_common,
     "fleet_manager": _case_fleet_manager,
     "world_digest": _case_world_digest,
+    "pc_paper_collection": _case_pc_paper_collection,
     "news_source_validation": _case_news_source_validation,
     "news_cik_mapping": _case_news_cik_mapping,
     "provisional_event_review": _case_provisional_event_review,
     "owner_decision_view": _case_owner_decision_view,
     "owner_decision_bridge": _case_owner_decision_bridge,
+    "provisional_owner_notice": _case_provisional_owner_notice,
     "world_state": _case_world_state,
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
