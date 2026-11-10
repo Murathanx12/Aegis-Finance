@@ -20,8 +20,9 @@ So this arm:
   `u_forecast`) forecast on the SAME UTC day, read from that day's receipt
   (`forecasts/day_<day>.json`), and refuses when there is none;
 * rebuilds the plain arm's packet with the plain arm's own `packet_for` and
-  records its hash (`base_packet_hash`), so a pair whose base packet differs
-  from the plain row's `input_snapshot_hash` is detectable after the fact;
+  records its hash (`base_packet_hash`); a name whose base differs from the
+  plain row's `input_snapshot_hash` is not asked (`base_mismatch`), and
+  `pair_report` pools only pairs whose two hashes are equal (review 3);
 * adds `news_typed` (rows about the name) and `neighbour_news` (rows about its
   graph neighbours, CONTEXT ONLY: the neighbour's ticker and the relation type,
   never a sign, weight or expected size from the graph);
@@ -252,6 +253,20 @@ def graph_neighbours_fn(*, graph_dir: Optional[Path], cutoff: datetime,
         return (lambda t: []), {"status": "GRAPH_UNREADABLE", "error": type(exc).__name__}
     if str(g.as_of) > cutoff.date().isoformat():
         return (lambda t: []), {"status": "GRAPH_AFTER_FREEZE", "as_of": g.as_of}
+    # review 3: `as_of` is a DATE, so a graph built later on the cutoff's own
+    # date passed. Compare the build's own clock; an undateable build is refused.
+    built = None
+    try:
+        gd = Path(st.get("dir") or graph_dir)
+        meta = json.loads((gd / str(st.get("build_id")) / "receipt.json").read_text(encoding="utf-8"))
+        built = _utc(meta.get("built_utc"))
+    except (OSError, ValueError, TypeError):
+        built = None
+    if built is None:
+        return (lambda t: []), {"status": "GRAPH_BUILD_TIME_UNKNOWN", "as_of": g.as_of}
+    if built > cutoff:
+        return (lambda t: []), {"status": "GRAPH_AFTER_FREEZE", "as_of": g.as_of,
+                                "built_utc": _iso(built)}
 
     def neigh(t: str) -> list[dict]:
         out, seen = [], set()
@@ -351,7 +366,8 @@ def run(day: str, *, tickers: Optional[list[str]] = None, budget_usd: Optional[f
         neighbours_fn: Optional[Callable[[str], list[dict]]] = None,
         graph_dir: Optional[Path] = None,
         ledger_path: Optional[Path] = None, out_dir: Optional[Path] = None,
-        write: bool = True, smoke: bool = False) -> dict:
+        write: bool = True, smoke: bool = False,
+        plain_hashes: Optional[dict] = None) -> dict:
     """One night of the paired arm. Returns the receipt (also written).
 
     `smoke=True` is the attended single-name proof of the packet and the row:
@@ -375,6 +391,7 @@ def run(day: str, *, tickers: Optional[list[str]] = None, budget_usd: Optional[f
                  "started_utc": _iso(now), "done": [], "refused": [], "unpriced": [],
                  "not_asked": [], "n_rows_written": 0, "spent_usd": 0.0, "calls": 0,
                  "excluded_news_rows": {}, "names_with_news": 0,
+                 "base_mismatch": [], "base_unverified": [],
                  "not_read_by_plan": ("E[r] FORECAST_GRADED reads investigator: only; "
                                       "forecast_writers lists investigator_news: as NOT READ")}
 
@@ -432,6 +449,12 @@ def run(day: str, *, tickers: Optional[list[str]] = None, budget_usd: Optional[f
         packet_fn = lambda t: NIF.packet_for(t, inputs)               # noqa: E731
     ask_fn = ask_fn or _default_ask(int(_c("INVESTIGATOR_NEWS_MAX_TOKENS", 700)))
 
+    # review 3: the base packet is rebuilt from the LATEST bars/filings at this
+    # run's clock; if they refreshed after the plain arm froze its row, the two
+    # packets differ and the difference would be credited to news. Compare with
+    # the plain row's own hash BEFORE paying; pair_report re-checks every pair.
+    if plain_hashes is None and not smoke:
+        plain_hashes = plain_base_hashes(day, ledger_path)
     excluded: Counter = Counter()
     built = []
     for t in names:
@@ -439,18 +462,30 @@ def run(day: str, *, tickers: Optional[list[str]] = None, budget_usd: Optional[f
         if base is None:
             rec["unpriced"].append(t)
             continue
+        bh = B._hash(base)
+        if not smoke:
+            known = (plain_hashes or {}).get(t)
+            if known and bh not in known:
+                rec["base_mismatch"].append(t)
+                continue
+            if not known:
+                rec["base_unverified"].append(t)
         pk, prov = news_packet(base, ticker=t, typed=typed, neighbours=neighbours_fn(t),
                                cutoff=cutoff, lookback_hours=lookback, max_direct=max_direct,
                                max_neigh_rows=max_neigh_rows, excluded_run=excluded)
-        prov["base_packet_hash"] = B._hash(base)
+        prov["base_packet_hash"] = bh
         built.append((t, pk, prov))
     rec["excluded_news_rows"] = dict(excluded)
     rec["names_with_news"] = sum(1 for _, _, p in built if p["n_news_direct"] + p["n_news_neighbour"])
     # names WITH news first: if the budget ends the run, the informative pairs exist
     built.sort(key=lambda x: -(x[2]["n_news_direct"] + x[2]["n_news_neighbour"]))
 
+    max_tokens = int(_c("INVESTIGATOR_NEWS_MAX_TOKENS", 700))
     for i, (t, pk, prov) in enumerate(built):
-        if rec["spent_usd"] + per_call_reserve > budget:
+        # the guard's own quote for THIS packet, never less than the fixed floor
+        # (review 3: a large packet's reservation exceeds the fixed estimate)
+        reserve_usd = max(per_call_reserve, _quote_usd(pk, max_tokens))
+        if rec["spent_usd"] + reserve_usd > budget:
             rec["not_asked"] = [x[0] for x in built[i:]]
             return finish("PARTIAL_RUN_BUDGET", RC_PARTIAL,
                           f"spent ${rec['spent_usd']:.4f}; the next call could pass the run "
@@ -504,7 +539,41 @@ def run(day: str, *, tickers: Optional[list[str]] = None, budget_usd: Optional[f
             NIF.write_receipt(odir / f"day_{day}.json", rec)
     if not rec["done"]:
         return finish("DEGRADED", RC_REFUSED, "zero forecasts written")
+    lost = len(rec["refused"]) + len(rec["base_mismatch"])
+    share = lost / max(1, lost + len(rec["done"]))
+    limit = float(_c("INVESTIGATOR_NEWS_MAX_REFUSED_SHARE", 0.5))
+    if share > limit:
+        return finish("DEGRADED", RC_REFUSED,
+                      f"{lost} of {lost + len(rec['done'])} name(s) refused or unpaired "
+                      f"({share:.0%} > {limit:.0%}); {len(rec['done'])} forecast(s) written")
     return finish("DONE", RC_DONE)
+
+
+def _quote_usd(pk: dict, max_tokens: int) -> float:
+    """The provider guard's reservation for this packet (USD); 0 if unquotable,
+    which leaves the fixed floor in force."""
+    try:
+        from backend.services import provider_budget as PB
+        user = NIF._message(pk, "").lstrip("\n")
+        return PB.quote(CONTRACT_NEWS, user, int(max_tokens))["reserved_units"] / PB.SCALE
+    except Exception:                                                # noqa: BLE001
+        return 0.0
+
+
+def plain_base_hashes(day: str, ledger_path: Optional[Path] = None) -> dict:
+    """ticker -> {input_snapshot_hash} of the plain arm's rows for `day`."""
+    try:
+        rows = _ledger_rows(Path(ledger_path) if ledger_path else None, (PAIR_SPECIALIST,))
+    except OSError:
+        return {}
+    out: dict = {}
+    for r in rows:
+        if str(r.get("decision_date") or str(r.get("made_at"))[:10]) != day:
+            continue
+        h = r.get("input_snapshot_hash")
+        if h:
+            out.setdefault(str(r.get("ticker")).upper(), set()).add(h)
+    return out
 
 
 # ─────────────────────────────── the comparison ──────────────────────────────
@@ -523,9 +592,16 @@ def _brier(r: dict) -> Optional[float]:
 
 
 def pair_report(rows: Iterable[dict], *, horizon: int = 1) -> dict:
-    """Paired Brier difference news - plain on identical (ticker, decision_date, h),
-    graded rows only, with a date-clustered standard error (a day's names share
-    the market). Split by whether the news arm's packet had any admitted news."""
+    """Paired Brier difference news - plain on identical (ticker, decision_date, h)
+    AND identical base packet (the news row's `inputs_used.base_packet_hash`
+    equals the plain row's `input_snapshot_hash`), graded rows only, with a
+    date-clustered standard error (a day's names share the market). Split by
+    whether the news arm's packet had any admitted news.
+
+    Review 3: the base packet is rebuilt at the news arm's run time from the
+    latest bars and filings, so a late run can carry a newer close or quarter
+    than the plain row; pooling that pair credits the difference to news. Such
+    pairs, and pairs whose hash cannot be checked, are excluded and counted."""
     plain: dict = {}
     news: dict = {}
     for r in rows:
@@ -536,18 +612,39 @@ def pair_report(rows: Iterable[dict], *, horizon: int = 1) -> dict:
             continue
         k = (r.get("ticker"), str(r.get("decision_date") or str(r.get("made_at"))[:10]))
         if r.get("specialist") == PAIR_SPECIALIST:
-            plain[k] = b
+            plain[k] = (b, r.get("input_snapshot_hash"))
         elif r.get("specialist") == SPECIALIST:
             iu = r.get("inputs_used") or {}
-            news[k] = (b, int(iu.get("n_news_direct") or 0) + int(iu.get("n_news_neighbour") or 0))
-    out: dict = {"horizon": horizon, "pair_on": "(ticker, decision_date, horizon)",
-                 "difference": "brier(news) - brier(plain); negative = news arm better"}
+            news[k] = (b, int(iu.get("n_news_direct") or 0) + int(iu.get("n_news_neighbour") or 0),
+                       iu.get("base_packet_hash"))
+    excluded = Counter({"base_mismatch": 0, "base_unknown": 0, "news_without_plain": 0,
+                        "plain_without_news": sum(1 for k in plain if k not in news)})
+    valid: dict = {}
+    for k, (b, n, bh) in news.items():
+        if k not in plain:
+            excluded["news_without_plain"] += 1
+            continue
+        pb, ph = plain[k]
+        if not bh or not ph:
+            excluded["base_unknown"] += 1
+        elif bh != ph:
+            excluded["base_mismatch"] += 1
+        else:
+            valid[k] = (b - pb, n)
+    out: dict = {"horizon": horizon,
+                 "pair_on": "(ticker, decision_date, horizon) and base_packet_hash == "
+                            "plain input_snapshot_hash",
+                 "difference": "brier(news) - brier(plain); negative = news arm better",
+                 "excluded": dict(excluded),
+                 "caveat": ("the arms also differ in transport and temperature (disclosed); the "
+                            "with/without-news split is not a clean control either, because the "
+                            "names that carried news are not exchangeable with those that did not")}
     for label, keep in (("all", lambda n: True), ("with_news", lambda n: n > 0),
                         ("without_news", lambda n: n == 0)):
         d_by_day: dict = {}
-        for k, (b, n) in news.items():
-            if k in plain and keep(n):
-                d_by_day.setdefault(k[1], []).append(b - plain[k])
+        for k, (diff, n) in valid.items():
+            if keep(n):
+                d_by_day.setdefault(k[1], []).append(diff)
         diffs = [x for v in d_by_day.values() for x in v]
         if not diffs:
             out[label] = {"n_pairs": 0, "n_days": 0}
@@ -664,7 +761,10 @@ def main(argv: Optional[list[str]] = None) -> int:
         res = (pair_report(rows, horizon=a.horizon) if a.pair_report else
                mde_table(rows, horizon=a.horizon, rho=a.rho, names_per_night=a.pairs_per_night))
         print(json.dumps(res, indent=1))
-        return 0 if (a.pair_report or res.get("status") == "OK") else RC_REFUSED
+        if a.pair_report:
+            # a report that pooled nothing is red, not an empty success (review 3)
+            return 0 if (res.get("all") or {}).get("n_pairs") else RC_REFUSED
+        return 0 if res.get("status") == "OK" else RC_REFUSED
     day = a.day or datetime.now(timezone.utc).date().isoformat()
     tickers = [t.strip().upper() for t in a.tickers.split(",") if t.strip()] if a.tickers else None
     if a.dry_run:

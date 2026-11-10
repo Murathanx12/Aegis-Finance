@@ -6131,8 +6131,12 @@ INVESTIGATOR_NEWS_PURPOSE = "investigator_news"
 #: could pass it (exit 3, PARTIAL). ~135 names x ~$0.0007 settled ~= $0.10; the margin
 #: covers the envelope's conservative peak-price settlement. Override: --budget-usd.
 INVESTIGATOR_NEWS_RUN_BUDGET_USD = 0.18
-#: Headroom kept per call when checking the run budget (a worst-case settled call).
+#: Headroom kept per call when checking the run budget: a FLOOR; the provider
+#: guard's own quote for the packet is used when larger (review 3, S65).
 INVESTIGATOR_NEWS_PER_CALL_RESERVE_USD = 0.004
+#: A run whose refused + unpaired names exceed this share of the names it
+#: tried ends DEGRADED (rc 2), not DONE, even if some forecasts were written.
+INVESTIGATOR_NEWS_MAX_REFUSED_SHARE = 0.5
 INVESTIGATOR_NEWS_MAX_TOKENS = 700
 INVESTIGATOR_NEWS_TEMPERATURE = 0.3
 #: A typed row is a candidate when published within this many hours before the cutoff.

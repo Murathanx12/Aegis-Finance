@@ -182,9 +182,17 @@ def test_contract_differs_from_plain_only_in_the_news_rule():
     assert tail in NN.CONTRACT_NEWS
 
 
-def _graded(spec, t, day, b, h=1, news=0):
-    return {"specialist": spec, "ticker": t, "decision_date": day, "horizon_days": h,
-            "brier": b, "outcome": 1, "inputs_used": {"n_news_direct": news}}
+def _graded(spec, t, day, b, h=1, news=0, base=None):
+    """A graded row. The plain arm's base packet hash is `input_snapshot_hash`;
+    the news arm records the same quantity as `inputs_used.base_packet_hash`."""
+    base = base if base is not None else f"base-{t}-{day}"
+    r = {"specialist": spec, "ticker": t, "decision_date": day, "horizon_days": h,
+         "brier": b, "outcome": 1, "inputs_used": {"n_news_direct": news}}
+    if spec == NN.PAIR_SPECIALIST:
+        r["input_snapshot_hash"] = base
+    else:
+        r["inputs_used"]["base_packet_hash"] = base
+    return r
 
 
 def test_pair_report_joins_on_ticker_day_and_splits_by_news():
@@ -265,3 +273,105 @@ def test_real_graph_neighbours_are_context_only_and_pit(tmp_path):
     assert all(set(x) == {"ticker", "relation"} for x in neigh)
     fn2, st2 = NN.graph_neighbours_fn(graph_dir=gd, cutoff=datetime(2030, 2, 1, tzinfo=timezone.utc), k=5)
     assert fn2("HELD") == [] and st2["status"] != "OK"
+
+
+# -- review 3 (S65) on #96: a pair is only a pair when the base packet is identical --
+
+def test_pair_report_pools_only_identical_base_packets():
+    d = "2030-03-04"
+    rows = [_graded(NN.PAIR_SPECIALIST, "A", d, 0.25), _graded(NN.SPECIALIST, "A", d, 0.20, news=1),
+            # the news arm ran later and its packet carried a newer bar: NOT a pair
+            _graded(NN.PAIR_SPECIALIST, "B", d, 0.25), _graded(NN.SPECIALIST, "B", d, 0.05, news=1,
+                                                               base="base-B-refreshed"),
+            # no recorded hash on the news side: cannot be verified, NOT a pair
+            _graded(NN.PAIR_SPECIALIST, "C", d, 0.25), _graded(NN.SPECIALIST, "C", d, 0.05)]
+    rows[-1]["inputs_used"].pop("base_packet_hash")
+    rep = NN.pair_report(rows)
+    assert rep["all"]["n_pairs"] == 1 and rep["all"]["mean_brier_diff"] == pytest.approx(-0.05)
+    assert rep["excluded"] == {"base_mismatch": 1, "base_unknown": 1,
+                               "news_without_plain": 0, "plain_without_news": 0}
+    assert "base_packet_hash" in rep["pair_on"]
+    assert "not exchangeable" in rep["caveat"]
+
+
+def test_cli_pair_report_with_zero_valid_pairs_is_red(tmp_path, capsys):
+    d = "2030-03-04"
+    led = tmp_path / "ledger.jsonl"
+    rows = [_graded(NN.PAIR_SPECIALIST, "A", d, 0.25),
+            _graded(NN.SPECIALIST, "A", d, 0.20, base="other")]
+    led.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    assert NN.main(["--pair-report", "--ledger", str(led)]) == NN.RC_REFUSED
+    assert '"base_mismatch": 1' in capsys.readouterr().out
+    rows[1]["inputs_used"]["base_packet_hash"] = "base-A-" + d
+    led.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    assert NN.main(["--pair-report", "--ledger", str(led)]) == 0
+
+
+def test_run_does_not_pay_for_a_name_whose_base_differs_from_the_plain_row(world):
+    """The plain arm's row for HELD was frozen on a different base packet (the
+    bars refreshed in between): HELD is not asked. QUIET has no plain row in
+    this ledger, so it is asked and counted as unverified."""
+    plain = B.make_prediction(
+        ticker="HELD", specialist=NN.PAIR_SPECIALIST, observable=B.Observable.BEATS_BENCHMARK,
+        horizon_days=1, probability=0.5, benchmark="SPY", thesis="t", counter_thesis="c",
+        next_observable="n", model="m", model_version="evidence_v3", prompt="p",
+        input_snapshot={**_packet("HELD"), "price": 11.0},
+        made_at=PLAIN_START.isoformat(timespec="seconds"), decision_date=DAY)
+    B.append([plain], path=world["ledger"])
+    calls: list = []
+    rec = _run(world, ask_fn=_ok_ask(calls))
+    assert [pk["ticker"] for pk in calls] == ["QUIET"]
+    assert rec["base_mismatch"] == ["HELD"] and rec["base_unverified"] == ["QUIET"]
+
+
+def test_a_run_that_mostly_refused_is_degraded_not_done(world, monkeypatch):
+    from backend import config as C
+    monkeypatch.setattr(C, "INVESTIGATOR_NEWS_MAX_REFUSED_SHARE", 0.4, raising=False)
+    ok = _ok_ask([])
+
+    def half(pk):
+        return ok(pk) if pk["ticker"] == "HELD" else {"refused": "parse", "_call": {}}
+    rec = _run(world, ask_fn=half)
+    assert rec["state"] == "DEGRADED" and rec["exit_code"] == NN.RC_REFUSED
+    assert rec["done"] == ["HELD"] and len(rec["refused"]) == 1
+
+
+def test_per_call_reserve_covers_a_large_packet(world):
+    """The run budget is checked against the provider guard's own quote, not a
+    fixed estimate that a large packet exceeds."""
+    from backend.services import provider_budget as PB
+    big = lambda t: {**_packet(t), "filler": "x" * 30000}            # noqa: E731
+    user = NIF_message(big("HELD"))
+    q = PB.quote(NN.CONTRACT_NEWS, user, 700)["reserved_units"] / PB.SCALE
+    assert q > 0.004
+    calls: list = []
+    rec = NN.run(DAY, now_fn=lambda: NOW, plain=world["plain"], packet_fn=big,
+                 typed_path=world["typed"], neighbours_fn=lambda t: [],
+                 ask_fn=_ok_ask(calls), budget_usd=(0.004 + q) / 2,
+                 ledger_path=world["ledger"], out_dir=world["out"])
+    assert rec["state"] == "PARTIAL_RUN_BUDGET" and calls == []
+
+
+def NIF_message(pk):
+    from scripts import night_investigator_forecast as NIF
+    return NIF._message(pk, "").lstrip("\n")
+
+
+def test_a_graph_built_after_the_cutoff_on_the_same_date_gives_no_neighbours(tmp_path):
+    UG = pytest.importorskip("backend.services.universe_graph")
+    import dataclasses
+
+    import numpy as np
+    import pandas as pd
+    rng = np.random.default_rng(7)
+    n = 300
+    df = pd.DataFrame(rng.normal(0, 0.01, (n, 4)), columns=["HELD", "PEER", "O1", "O2"],
+                      index=pd.bdate_range(end=NOW.date() - timedelta(days=1), periods=n))
+    g = UG.build_graph(df, as_of=DAY, sectors={k: "Semis" for k in df.columns})
+    gd = tmp_path / "universe_graph"
+    UG.write_graph(g, gd, {"build_id": "ug_late", "as_of": g.as_of,
+                           "built_utc": (NOW + timedelta(hours=2)).isoformat(),
+                           "panel_last_session": str(df.index[-1].date()),
+                           "params": dataclasses.asdict(g.params), "counts": g.counts()})
+    fn, st = NN.graph_neighbours_fn(graph_dir=gd, cutoff=NOW, k=5)
+    assert st["status"] == "GRAPH_AFTER_FREEZE" and fn("HELD") == []
