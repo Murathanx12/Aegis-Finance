@@ -240,10 +240,12 @@ def attach_bar_features(g: pd.DataFrame, bars: pd.DataFrame) -> pd.DataFrame:
         lambda s: s.rolling(20, min_periods=10).median())
     feat = b[["symbol", "date", "vol63", "mom20", "dvol20"]].dropna(subset=["date"])
     left = g[["ticker", "made_day"]].copy()
-    left["_d"] = pd.to_datetime(left["made_day"])
+    left["_d"] = pd.to_datetime(left["made_day"]).astype("datetime64[ns]")
     left["_i"] = np.arange(len(left))
     left = left.sort_values("_d")
-    feat = feat.rename(columns={"symbol": "ticker", "date": "_d"}).sort_values("_d")
+    feat = feat.rename(columns={"symbol": "ticker", "date": "_d"})
+    feat["_d"] = feat["_d"].astype("datetime64[ns]")
+    feat = feat.sort_values("_d")
     m = pd.merge_asof(left, feat, on="_d", by="ticker", direction="backward",
                       allow_exact_matches=False)
     m = m.sort_values("_i")
@@ -685,16 +687,23 @@ def greedy_rules(train: pd.DataFrame, b_row: np.ndarray, n_rules: int, *,
 
 
 def random_rules(train: pd.DataFrame, n_rules: int, rng: np.random.Generator) -> list[dict]:
-    """Same schema, same count, conditions drawn from SUPPORTED atoms so a
-    random rule fires as often as a searched one could."""
+    """Same schema, same count. Conditions are SUPPORTED atoms on DISTINCT
+    fields, and a two-condition combination must itself pass the support bar a
+    greedy rule passes (redrawn otherwise): the control never fires on nothing."""
     days = train["made_day"].to_numpy()
     atoms = [a for a in _atoms(train) if _supported(rule_mask({"when": [a]}, train), days)]
     acts = _actions()
     out = []
     for k in range(n_rules):
-        nc = int(rng.integers(1, 3))
-        idx = rng.choice(len(atoms), size=nc, replace=False)
-        when = [atoms[int(i)] for i in idx]
+        when = [atoms[int(rng.integers(len(atoms)))]]
+        if int(rng.integers(1, 3)) == 2:
+            for _ in range(50):
+                other = atoms[int(rng.integers(len(atoms)))]
+                if other["field"] == when[0]["field"]:
+                    continue
+                if _supported(rule_mask({"when": when + [other]}, train), days):
+                    when = when + [other]
+                    break
         out.append({"when": when, "action": acts[int(rng.integers(len(acts)))],
                     "rule_text": f"random control rule {k + 1}"})
     return out
@@ -726,7 +735,13 @@ def select_on_validation(rules: Sequence[dict], val: pd.DataFrame, b_val: np.nda
 
 def _block_bootstrap(d: np.ndarray, day: np.ndarray, rng: np.random.Generator,
                      n: int = BOOTSTRAP_DRAWS) -> tuple[float, float]:
-    """95% interval of the mean per-question Brier change, resampling DAYS."""
+    """95% interval of the mean per-question Brier change, resampling ISO WEEKS.
+
+    Not days: an h=5 forecast made Monday and one made Tuesday on the same
+    ticker share four of five return days, so day blocks are not independent
+    and a day-block interval is too narrow (CLAUDE.md protocol 11).
+    """
+    day = _weeks(day)
     days = np.unique(day)
     if len(days) < 2:
         return float("nan"), float("nan")
@@ -738,6 +753,10 @@ def _block_bootstrap(d: np.ndarray, day: np.ndarray, rng: np.random.Generator,
         idx = rng.integers(0, len(days), len(days))
         stats.append(sums[idx].sum() / max(cnts[idx].sum(), 1))
     return float(np.quantile(stats, 0.025)), float(np.quantile(stats, 0.975))
+
+
+def _weeks(day: np.ndarray) -> np.ndarray:
+    return pd.to_datetime(pd.Series(day)).dt.to_period("W").astype(str).to_numpy()
 
 
 def evaluate(g: pd.DataFrame, b_row: np.ndarray, rules: Sequence[dict],
@@ -763,7 +782,7 @@ def evaluate(g: pd.DataFrame, b_row: np.ndarray, rules: Sequence[dict],
     nr = Q.klass != "review"
     non_review = {"n_questions": int(nr.sum()),
                   "d_brier": float(d[nr].mean()) if nr.any() else None,
-                  "ci95_day_block": (list(_block_bootstrap(d[nr], Q.day[nr], rng))
+                  "ci95_week_block": (list(_block_bootstrap(d[nr], Q.day[nr], rng))
                                      if nr.any() else None)}
     by_klass = {str(k): {"n_questions": int((Q.klass == k).sum()),
                          "d_brier": float(d[Q.klass == k].mean())}
@@ -775,8 +794,9 @@ def evaluate(g: pd.DataFrame, b_row: np.ndarray, rules: Sequence[dict],
             "n_questions": int(len(Q.y)), "n_rows_fired": int(fired.sum()),
             "brier_no_rules": s0["brier"], "brier_rules": s1["brier"],
             "skill_no_rules": s0["skill"], "skill_rules": s1["skill"],
-            "d_brier": float(d.mean()), "d_brier_ci95_day_block": [lo, hi],
+            "d_brier": float(d.mean()), "d_brier_ci95_week_block": [lo, hi],
             "n_day_blocks": int(len(np.unique(Q.day))),
+            "n_week_blocks": int(len(np.unique(_weeks(Q.day)))),
             "by_month": by_month, "by_week": by_week,
             "weeks_negative": int(sum(v["d_brier"] < 0 for v in by_week.values())),
             "n_weeks": len(by_week), "non_review": non_review,
@@ -836,7 +856,7 @@ def weights_experiment(train: pd.DataFrame, held: pd.DataFrame, b_tr: np.ndarray
         by_month = {m: float(d[Q.month == m].mean()) for m in sorted(set(Q.month))}
         nr = Q.klass != "review"
         rep[name] = {"brier": s["brier"], "skill": s["skill"], "n_questions": int(len(Q.y)),
-                     "d_brier_vs_equal": float(d.mean()), "ci95_day_block": [lo, hi],
+                     "d_brier_vs_equal": float(d.mean()), "ci95_week_block": [lo, hi],
                      "d_brier_vs_equal_by_month": by_month,
                      "by_klass": {str(k): float(d[Q.klass == k].mean())
                                   for k in sorted(set(Q.klass))},
@@ -900,7 +920,8 @@ def field_values(train: pd.DataFrame) -> dict:
 def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
         complete_fn: Callable[[str, str], dict] | None = None,
         n_rules: int = N_RULES_DEFAULT, t1: str = T1_DEFAULT, t2: str = T2_DEFAULT,
-        ledger_label: str = "", frozen_llm: Sequence[dict] | None = None) -> dict:
+        ledger_label: str = "", frozen_llm: Sequence[dict] | None = None,
+        frozen_meta: dict | None = None, allow_unbound_frozen: bool = False) -> dict:
     """The whole experiment. `complete_fn(system, user) -> {"text", "cost_usd", ...}`
     is injected; None runs greedy + random only and says so."""
     rng = np.random.default_rng(SEED)
@@ -942,12 +963,28 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
         (out_dir / "llm_reply.txt").write_text(str(reply.get("text")), encoding="utf-8")
         sources["llm"] = good
     elif frozen_llm is not None:
-        # RE-SCORE, never re-write: rules frozen by an earlier run, hash-checked
+        # RE-SCORE, never re-write: rules frozen by an earlier run on THIS split.
+        binding = "bound"
+        if frozen_meta is None:
+            if not allow_unbound_frozen:
+                raise LabRefused("frozen rules carry no _meta (contract hash, t1, t2); "
+                                 "refusing to re-score them on a split they may have seen")
+            binding = "UNBOUND (legacy file; caller asserted the split)"
+        else:
+            want = {"t1": t1, "t2": t2, "contract_hash": contract_hash(run_contract)}
+            got = {k: frozen_meta.get(k) for k in want}
+            if got != want:
+                raise LabRefused(f"frozen rules were frozen for {got}, this run is {want}")
+        for r in frozen_llm:
+            ok, why = validate_rule(r)
+            if ok is None:
+                raise LabRefused(f"frozen rule {r.get('rule_hash')} no longer validates: {why}")
         bad_hash = [r.get("rule_hash") for r in frozen_llm if rule_hash(r) != r.get("rule_hash")]
         if bad_hash:
             raise LabRefused(f"frozen rules altered since freezing: {bad_hash}")
         sources["llm"] = [{k: r[k] for k in ("when", "action", "rule_text")} for r in frozen_llm]
-        llm_meta = {"called": False, "rescored_frozen": True, "n_valid": len(frozen_llm),
+        llm_meta = {"called": False, "rescored_frozen": True, "binding": binding,
+                    "n_valid": len(frozen_llm),
                     "frozen_hashes": [r["rule_hash"] for r in frozen_llm]}
     receipt["llm"] = llm_meta
     greedy, gmeta = greedy_rules(tr, b_tr, n_rules)
@@ -956,8 +993,9 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
     sources["random"] = random_rules(tr, n_rules, rng)
     # ---- FREEZE ----
     frozen = {s: freeze(r, s) for s, r in sources.items()}
-    (out_dir / "frozen_rules.json").write_text(json.dumps(frozen, indent=1, default=str),
-                                               encoding="utf-8")
+    meta = {"t1": t1, "t2": t2, "contract_hash": contract_hash(run_contract), "schema": SCHEMA}
+    (out_dir / "frozen_rules.json").write_text(
+        json.dumps({**frozen, "_meta": meta}, indent=1, default=str), encoding="utf-8")
     receipt["frozen_rules_sha"] = hashlib.sha256(
         (out_dir / "frozen_rules.json").read_bytes()).hexdigest()[:16]
     # ---- SELECT (validation) ----
@@ -989,6 +1027,17 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
     for s in frozen:
         v = held[s]["validation_selected"]["d_brier"]
         held[s]["selected_rank_vs_random_selected"] = float(np.mean(np.asarray(dist_sel) <= v))
+    # paired: the SAME held-out questions under two selected rule sets
+    Qh = questions_of(ho, b_ho)
+    se = {s_: (score_rules(ho, Qh, b_ho, selected[s_]) - Qh.y) ** 2 for s_ in frozen}
+    paired = {}
+    for a_, b_ in (("llm", "greedy"), ("llm", "random"), ("greedy", "random")):
+        if a_ in se and b_ in se:
+            dd = se[a_] - se[b_]
+            paired[f"{a_} - {b_}"] = {"d_brier": float(dd.mean()),
+                                      "ci95_week_block": list(_block_bootstrap(dd, Qh.day, rng))}
+    held["paired"] = paired
+    held["held_out_reads"] = 2 if llm_meta.get("rescored_frozen") else 1
     receipt["held_out"] = held
     receipt["n_rules_tried_total"] = {
         "llm_valid": len(sources.get("llm", [])),
@@ -1010,32 +1059,39 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
 def verdict(held: dict, weights: dict) -> dict:
     """Plain statements, computed -- never hand-written."""
     lines = []
-    sel = {s: held[s]["validation_selected"] for s in held if s in ("llm", "greedy", "random")}
+    sel = {s: held[s]["validation_selected"] for s in ("llm", "greedy", "random") if s in held}
     rnd = held.get("random_control_distribution", {}).get("d_brier_selected", {})
     for s, v in sel.items():
-        lo, hi = v["d_brier_ci95_day_block"]
+        lo, hi = v["d_brier_ci95_week_block"]
         sign = ("lower (better)" if hi < 0 else "higher (worse)" if lo > 0
                 else "not distinguishable from zero")
         nr = v.get("non_review") or {}
-        nr_txt = (f"; ex-review {nr['d_brier']:+.5f} [{nr['ci95_day_block'][0]:+.5f}, "
-                  f"{nr['ci95_day_block'][1]:+.5f}] n {nr['n_questions']}"
+        nr_txt = (f"; ex-review {nr['d_brier']:+.5f} [{nr['ci95_week_block'][0]:+.5f}, "
+                  f"{nr['ci95_week_block'][1]:+.5f}] n {nr['n_questions']}"
                   if nr.get("d_brier") is not None else "")
         lines.append(f"{s}: {v['n_rules']} selected rules, held-out d_Brier "
                      f"{v['d_brier']:+.5f} [{lo:+.5f}, {hi:+.5f}] over {v['n_questions']} "
-                     f"questions / {v['n_day_blocks']} days, {v['weeks_negative']}/"
+                     f"questions / {v['n_day_blocks']} days / {v['n_week_blocks']} week "
+                     f"blocks, {v['weeks_negative']}/"
                      f"{v['n_weeks']} weeks lower: {sign}{nr_txt}")
-    if "llm" in sel and "greedy" in sel:
-        a, b = sel["llm"]["d_brier"], sel["greedy"]["d_brier"]
-        lines.append(f"llm vs greedy (held-out d_Brier): {a:+.5f} vs {b:+.5f} -> "
-                     f"{'llm lower' if a < b else 'greedy lower' if b < a else 'tie'}")
+    for pair, v in (held.get("paired") or {}).items():
+        lo, hi = v["ci95_week_block"]
+        word = ("first lower" if hi < 0 else "second lower" if lo > 0
+                else "not distinguishable")
+        lines.append(f"{pair} (held-out, selected sets, paired): {v['d_brier']:+.5f} "
+                     f"[{lo:+.5f}, {hi:+.5f}] -> {word}")
     if rnd:
         lines.append(f"random control (selected, {held['random_control_distribution']['draws']} "
                      f"draws): p05 {rnd['p05']:+.5f} p50 {rnd['p50']:+.5f} p95 {rnd['p95']:+.5f}")
     for name, v in (weights.get("held_out") or {}).items():
-        lo, hi = v["ci95_day_block"]
+        lo, hi = v["ci95_week_block"]
         lines.append(f"weights/{name}: Brier {v['brier']:.5f} skill {v['skill']:+.4f}, "
                      f"vs equal {v['d_brier_vs_equal']:+.5f} [{lo:+.5f}, {hi:+.5f}]")
-    return {"lines": lines, "claim": "none: PRODUCT_EXPERIMENT observation, one held-out read"}
+    reads = held.get("held_out_reads", 1)
+    return {"lines": lines,
+            "claim": (f"none: PRODUCT_EXPERIMENT observation; held-out read {reads} time(s)"
+                      + (" -- a RE-SCORE of rules whose held-out was already read once"
+                         if reads > 1 else ""))}
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1051,6 +1107,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--temperature", type=float, default=0.2)
     ap.add_argument("--frozen", default=None,
                     help="re-score the 'llm' rules of an earlier frozen_rules.json (no model call)")
+    ap.add_argument("--frozen-unbound", action="store_true",
+                    help="accept a legacy frozen file with no _meta; the receipt says UNBOUND")
     a = ap.parse_args(argv)
     from backend.services import forecast_reputation as FR
     rows = FR.load_ledger(a.ledger)
@@ -1064,10 +1122,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             return LA.call_named("deepseek", system, user, purpose="self_rule_lab",
                                  max_tokens=a.max_tokens, temperature=a.temperature,
                                  validate=lambda t: parse_llm_rules(t)[0] != [])
-    frozen = (json.loads(Path(a.frozen).read_text(encoding="utf-8")).get("llm")
-              if a.frozen else None)
+    ff = json.loads(Path(a.frozen).read_text(encoding="utf-8")) if a.frozen else {}
     rec = run(rows, bars=bars, out_dir=Path(a.out), complete_fn=fn, n_rules=a.n_rules,
-              t1=a.t1, t2=a.t2, ledger_label=str(a.ledger), frozen_llm=frozen)
+              t1=a.t1, t2=a.t2, ledger_label=str(a.ledger), frozen_llm=ff.get("llm"),
+              frozen_meta=ff.get("_meta"), allow_unbound_frozen=a.frozen_unbound)
     print("\n".join(rec["verdict"]["lines"]))
     print(f"receipt: {rec['receipt_path']}")
     if a.llm and not rec["llm"].get("n_valid"):

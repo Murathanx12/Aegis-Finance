@@ -378,8 +378,17 @@ def test_direction_vs_magnitude_falls_back_to_the_rule_store(ps_paths, tmp_path)
 
 def test_default_as_of_is_the_utc_date_not_the_local_one(monkeypatch):
     """At UTC+8 between 00:00 and 08:00 local, date.today() is tomorrow in UTC
-    and forecast_reputation.refit refuses it. The default must be UTC."""
-    from datetime import datetime, timezone
+    and forecast_reputation.refit refuses it. The default must be UTC. The
+    local clock is forced AHEAD here, so the test fails on a UTC CI box too if
+    the default ever goes back to `date.today()`."""
+    from datetime import date as _date, datetime, timezone
+
+    class _AheadDate(_date):
+        @classmethod
+        def today(cls):
+            return _date(2099, 1, 1)
+
+    monkeypatch.setattr(RD, "date", _AheadDate)
     assert RD.utc_today() == datetime.now(timezone.utc).date().isoformat()
     seen = {}
 
@@ -404,4 +413,7 @@ def test_a_failed_refit_beside_learned_rules_is_a_red_exit():
     assert RD.ledger_exit_code({**learned, "reputation": "FAILED ValueError: future"}) == 4
     assert RD.ledger_exit_code({"distill": {"status": "LEARN_DEGRADED"},
                                 "reputation": "OK"}) == 3
+    # a failed refit is never masked by a degraded distillation
+    assert RD.ledger_exit_code({"distill": {"status": "LEARN_DEGRADED"},
+                                "reputation": "FAILED ValueError: future"}) == 4
     assert RD.ledger_exit_code({"distill": "FAILED boom"}) == 3

@@ -1905,16 +1905,17 @@ def night_learn(*, as_of: str | None = None, refit: bool = True,
 def ledger_exit_code(res: dict) -> int:
     """0 only when the distillation LEARNED and no refit FAILED.
 
+    4 = the reputation refit FAILED -- checked FIRST, whatever the distillation
+        did. Until 2026-11-11 a failed refit exited 0 behind LEARNED rules; and
+        checking it second would let the next rota slot's "no new graded rows"
+        (rc 3) overwrite the refit failure in the sim's unit cache.
     3 = the distillation wrote no rule (LEARN_DEGRADED, as before).
-    4 = rules were written but the reputation refit FAILED. Until 2026-11-11
-    that case exited 0: the refit failed for two weeks behind a green unit,
-    which is a guard's refusal reported as success.
     """
+    if str(res.get("reputation") or "").startswith("FAILED"):
+        return 4
     d = res.get("distill")
     if not (isinstance(d, dict) and d.get("status") == "LEARNED"):
         return 3
-    if str(res.get("reputation") or "").startswith("FAILED"):
-        return 4
     return 0
 
 

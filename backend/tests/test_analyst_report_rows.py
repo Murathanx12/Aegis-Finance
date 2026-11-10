@@ -122,10 +122,21 @@ def test_append_is_idempotent(tmp_path):
 
 
 def test_cli_refuses_an_in_repo_path_outside_the_private_dir(tmp_path, capsys):
+    import shutil
+    import subprocess
     assert CLI.out_path_allowed(tmp_path / "rows.jsonl")
-    assert CLI.out_path_allowed(CLI.PRIVATE_DIR / "x" / "rows.jsonl")
     assert not CLI.out_path_allowed(CLI.REPO / "docs" / "rows.jsonl")
     assert not CLI.out_path_allowed(CLI.REPO / "backend" / "data" / "optimus" / "rows.jsonl")
+    if shutil.which("git") and (CLI.REPO / ".git").exists():
+        assert CLI.out_path_allowed(CLI.PRIVATE_DIR / "x" / "rows.jsonl")
+    # ANOTHER checkout (the runtime, a sibling worktree) is just as tracked
+    if shutil.which("git"):
+        other = tmp_path / "other_checkout"
+        other.mkdir()
+        subprocess.run(["git", "init", "-q", str(other)], check=True)
+        assert not CLI.out_path_allowed(other / "backend" / "x.jsonl")
+        (other / ".gitignore").write_text("private/\n", encoding="utf-8")
+        assert CLI.out_path_allowed(other / "private" / "x.jsonl")
     assert CLI.main(["validate", str(FIX), "--out", str(CLI.REPO / "docs" / "x.jsonl")]) == 2
     assert CLI.main(["validate", str(FIX), "--out", str(tmp_path / "ok.jsonl")]) == 0
     bad = tmp_path / "bad.json"
@@ -139,3 +150,32 @@ def test_cli_refuses_an_in_repo_path_outside_the_private_dir(tmp_path, capsys):
 def test_the_private_dir_is_gitignored():
     gi = (CLI.REPO / ".gitignore").read_text(encoding="utf-8")
     assert "backend/data/optimus/analyst_reports/" in gi
+
+
+def test_a_different_extraction_of_the_same_source_is_refused(tmp_path):
+    rep, _ = ARR.validate_report(_rep())
+    p = tmp_path / "rows.jsonl"
+    ARR.append_rows(ARR.to_rows(rep), p)
+    r2 = _rep()
+    r2["first_held_at"] = "2026-03-09"           # a corrected, LATER knowable date
+    rep2, _ = ARR.validate_report(r2)
+    rows2 = ARR.to_rows(rep2)
+    assert {r["row_id"] for r in rows2} == {r["row_id"] for r in ARR.to_rows(rep)}
+    with pytest.raises(ARR.ReportInvalid):
+        ARR.append_rows(rows2, p)
+
+
+def test_garbage_is_an_error_not_a_nan():
+    r = _rep()
+    r["scenarios"][0]["assumptions"]["y3_op_margin_pct"] = "high"
+    r["eps_revisions"][0]["pct_change_stated"] = "10%"
+    r["rating"] = "x" * 2000
+    r["key_debates"] = [{"text": "a debate", "page": "p" * 5000}]
+    r["scenarios"].append(dict(r["scenarios"][1]))           # duplicate "base"
+    r["published_at"] = "2026-03-02xyz"
+    rep, errs = ARR.validate_report(r)
+    joined = " | ".join(errs)
+    assert rep is None
+    for needle in ("is not a number", "pct_change_stated", "rating longer", "page must be",
+                   "duplicate scenario", "published_at"):
+        assert needle in joined, needle

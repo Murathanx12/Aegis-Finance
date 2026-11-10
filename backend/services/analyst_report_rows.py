@@ -75,8 +75,11 @@ class ReportInvalid(ValueError):
 def _day(v: Any) -> str | None:
     if v is None or v == "":
         return None
+    t = str(v)
+    if len(t) > 10 and t[10] not in "T ":
+        return "INVALID"
     try:
-        return date.fromisoformat(str(v)[:10]).isoformat()
+        return date.fromisoformat(t[:10]).isoformat()
     except ValueError:
         return "INVALID"
 
@@ -93,6 +96,20 @@ def _num(v: Any) -> float | None:
 
 def _text(v: Any) -> str:
     return " ".join(str(v or "").split())
+
+
+def _page(v: Any, errs: list[str], where: str) -> int | None:
+    if v is None or v == "":
+        return None
+    try:
+        n = int(v)
+    except (TypeError, ValueError):
+        errs.append(f"{where}: page must be an integer or null")
+        return None
+    if not 0 < n < 10_000:
+        errs.append(f"{where}: page {n} out of range")
+        return None
+    return n
 
 
 def normalise_rating(raw: Any) -> str:
@@ -121,10 +138,12 @@ def validate_report(report: Any) -> tuple[dict | None, list[str]]:
     if not isinstance(report, dict):
         return None, ["not an object"]
     out: dict[str, Any] = {"schema_version": SCHEMA_VERSION}
-    for k in ("broker", "ticker"):
+    for k, cap in (("broker", 80), ("ticker", 20)):
         if not _text(report.get(k)):
             errs.append(f"missing {k}")
-        out[k] = _text(report.get(k))
+        if len(_text(report.get(k))) > cap:
+            errs.append(f"{k} longer than {cap} characters")
+        out[k] = _text(report.get(k))[:cap]
     out["ticker"] = out["ticker"].upper()
     out["title"] = _text(report.get("title"))[:MAX_TEXT]
     pub = _day(report.get("published_at"))
@@ -142,7 +161,9 @@ def validate_report(report: Any) -> tuple[dict | None, list[str]]:
     out["source_sha256"] = report.get("source_sha256")
     out["source_id"] = source_id(report)
 
-    out["rating_raw"] = _text(report.get("rating"))
+    if len(_text(report.get("rating"))) > 60:
+        errs.append("rating longer than 60 characters")
+    out["rating_raw"] = _text(report.get("rating"))[:60]
     out["rating"] = normalise_rating(report.get("rating"))
     for k in ("price_target", "prior_price_target", "price_at_publication"):
         v = _num(report.get(k))
@@ -175,8 +196,17 @@ def validate_report(report: Any) -> tuple[dict | None, list[str]]:
         if not isinstance(assum, dict):
             errs.append(f"scenario {name}: assumptions must be an object")
             assum = {}
+        clean_assum = {}
+        for ak, av in assum.items():
+            nv = _num(av)
+            if nv is not None and not math.isfinite(nv):
+                errs.append(f"scenario {name}: assumption {str(ak)[:40]!r} is not a number")
+                continue
+            clean_assum[str(ak)[:60]] = nv
+        if name in {x["name"] for x in scen}:
+            errs.append(f"scenario {name}: duplicate scenario name")
         scen.append({"name": name, "probability": prob, "price_target": spt,
-                     "assumptions": {str(k)[:60]: _num(v) for k, v in assum.items()}})
+                     "assumptions": clean_assum})
     probs = [s["probability"] for s in scen]
     if scen and all(p is not None for p in probs) and abs(sum(probs) - 1.0) > 0.01:
         warns.append(f"scenario probabilities sum to {sum(probs):.3f}, not 1")
@@ -197,6 +227,10 @@ def validate_report(report: Any) -> tuple[dict | None, list[str]]:
                if f not in (None, 0) and t is not None and math.isfinite(f) and math.isfinite(t)
                and f > 0 else None)
         stated = _num(e.get("pct_change_stated"))
+        if stated is not None and not math.isfinite(stated):
+            errs.append(f"eps_revision {e.get('period')}: pct_change_stated is not a number "
+                        f"(write 10.0, not '10%')")
+            stated = None
         if stated is not None and pct is not None and abs(stated - pct) > PCT_TOLERANCE:
             warns.append(f"eps {e.get('period')}: stated {stated}% vs recomputed {pct}%")
         eps.append({"period": _text(e.get("period"))[:40],
@@ -209,8 +243,9 @@ def validate_report(report: Any) -> tuple[dict | None, list[str]]:
     out["eps_revisions"] = eps
 
     out["key_debates"] = [{"text": _text(d.get("text") if isinstance(d, dict) else d)[:MAX_TEXT],
-                           "page": (d.get("page") if isinstance(d, dict) else None)}
-                          for d in (report.get("key_debates") or []) if _text(
+                           "page": (_page(d.get("page"), errs, f"key_debate {i}")
+                                    if isinstance(d, dict) else None)}
+                          for i, d in enumerate(report.get("key_debates") or []) if _text(
                               d.get("text") if isinstance(d, dict) else d)]
     cats = []
     for i, c in enumerate(report.get("catalysts") or []):
@@ -222,7 +257,7 @@ def validate_report(report: Any) -> tuple[dict | None, list[str]]:
             errs.append(f"catalyst {i}: expected_date must be an ISO date or null")
         cats.append({"event": _text(c.get("event"))[:MAX_TEXT], "expected_date": d,
                      "date_stated_by_source": bool(c.get("date_stated_by_source", d is not None)),
-                     "page": c.get("page")})
+                     "page": _page(c.get("page"), errs, f"catalyst {i}")})
     out["catalysts"] = cats
     fals = []
     for i, f_ in enumerate(report.get("falsifiers") or []):
@@ -283,9 +318,15 @@ def to_rows(report: dict) -> list[dict]:
     for f in report["falsifiers"]:
         rows.append({**base, "kind": "falsifier", "field": f["observable"], "value": f["statement"],
                      "by_date": f["by_date"], "origin": f["origin"]})
+    seen: dict[tuple, int] = {}
     for r in rows:
-        r["row_id"] = hashlib.sha256(json.dumps({k: v for k, v in r.items()}, sort_keys=True,
-                                                default=str).encode()).hexdigest()[:16]
+        key = (r["source_id"], r["kind"], str(r["field"]))
+        ordinal = seen.get(key, 0)
+        seen[key] = ordinal + 1
+        r["row_id"] = hashlib.sha256(json.dumps([*key, ordinal]).encode()).hexdigest()[:16]
+        r["content_hash"] = hashlib.sha256(json.dumps(
+            {k: v for k, v in r.items() if k not in ("row_id", "content_hash")},
+            sort_keys=True, default=str).encode()).hexdigest()[:16]
     return rows
 
 
@@ -300,16 +341,33 @@ def visible_at(rows: Iterable[dict], asof: str) -> list[dict]:
 
 
 def append_rows(rows: Iterable[dict], path: Path) -> int:
-    """Append-only, temp -> verify -> replace. A row already present (same
-    row_id) is not written twice. Returns the number written."""
+    """Append-only, temp -> verify -> replace. An identical row (same row_id AND
+    content_hash) is not written twice. A DIFFERENT extraction of a source that
+    is already in the file is refused: a re-extraction with a later
+    `first_held_at` appended beside the old rows would leave the old, earlier
+    `knowable_at` visible -- a point-in-time hole. Correct a source by writing
+    to a new file and replacing the old one by hand. Returns rows written."""
     path = Path(path)
-    have: set[str] = set()
+    have: dict[str, str] = {}
+    sources_in_file: set[str] = set()
     old = path.read_text(encoding="utf-8") if path.is_file() else ""
     for line in old.splitlines():
         try:
-            have.add(json.loads(line)["row_id"])
+            r0 = json.loads(line)
+            have[r0["row_id"]] = r0.get("content_hash", "")
+            sources_in_file.add(r0["source_id"])
         except (ValueError, KeyError, TypeError):
             continue
+    rows = list(rows)
+    changed = [r["row_id"] for r in rows
+               if r.get("row_id") in have and have[r["row_id"]] != r.get("content_hash")]
+    fresh_from_known = [r["row_id"] for r in rows
+                        if r.get("row_id") not in have and r.get("source_id") in sources_in_file]
+    if changed or fresh_from_known:
+        raise ReportInvalid(
+            f"{path} already holds a different extraction of source "
+            f"{rows[0].get('source_id') if rows else '?'} ({len(changed)} changed, "
+            f"{len(fresh_from_known)} new rows); refusing to append beside it")
     new = [r for r in rows if r.get("row_id") not in have]
     if not new:
         return 0

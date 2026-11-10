@@ -166,12 +166,16 @@ def test_the_loop_freezes_selects_and_reports_once(tmp_path):
     assert not any(d in seen["prompt"] for d in held_days)
     assert rec["llm"]["n_valid"] == 1 and rec["llm"]["refused"][0].startswith("REJECTED_LEAKED")
     frozen = json.loads((tmp_path / "frozen_rules.json").read_text())
-    assert set(frozen) == {"llm", "greedy", "random"}
-    assert all(r["rule_hash"] and r["frozen_utc"] for v in frozen.values() for r in v)
+    assert set(frozen) == {"llm", "greedy", "random", "_meta"}
+    assert frozen["_meta"]["t1"] == T1 and frozen["_meta"]["contract_hash"] == rec["contract_hash"]
+    assert all(r["rule_hash"] and r["frozen_utc"]
+               for k, v in frozen.items() if k != "_meta" for r in v)
+    assert set(rec["held_out"]["paired"]) == {"llm - greedy", "llm - random", "greedy - random"}
+    assert rec["held_out"]["held_out_reads"] == 1
     llm = rec["held_out"]["llm"]["validation_selected"]
     assert llm["n_rules"] == 1 and llm["d_brier"] < 0        # the planted true rule helps
     assert set(llm) >= {"by_month", "by_week", "leave_one_month_out_d_brier",
-                        "d_brier_ci95_day_block", "non_review"}
+                        "d_brier_ci95_week_block", "non_review"}
     assert "random_control_distribution" in rec["held_out"]
     assert rec["weights"]["held_out"]["investigator_only"]["d_brier_vs_equal"] < 0
     assert rec["verdict"]["claim"].startswith("none")
@@ -189,14 +193,40 @@ def test_frozen_rules_are_rescored_and_an_altered_one_is_refused(tmp_path):
     rule = {"when": [{"field": "family", "op": "eq", "value": "macro_rates"}],
             "action": {"type": "abstain"}, "rule_text": "no vote"}
     frozen = L.freeze([rule], "llm")
+    c = {**L.contract(), "t1": T1, "t2": T2, "n_rules": 2}
+    meta = {"t1": T1, "t2": T2, "contract_hash": L.contract_hash(c)}
     rec = L.run(_ledger(), bars=None, out_dir=tmp_path, n_rules=2, t1=T1, t2=T2,
-                frozen_llm=frozen)
+                frozen_llm=frozen, frozen_meta=meta)
     assert rec["llm"]["rescored_frozen"] and rec["llm"]["frozen_hashes"] == [frozen[0]["rule_hash"]]
     assert rec["held_out"]["llm"]["all_frozen"]["d_brier"] < 0
+    assert rec["held_out"]["held_out_reads"] == 2 and "RE-SCORE" in rec["verdict"]["claim"]
     tampered = [{**frozen[0], "action": {"type": "shrink", "lambda": 0.5}}]
     with pytest.raises(L.LabRefused):
         L.run(_ledger(), bars=None, out_dir=tmp_path / "t", n_rules=2, t1=T1, t2=T2,
-              frozen_llm=tampered)
+              frozen_llm=tampered, frozen_meta=meta)
+    # frozen for another split -> refused; no binding at all -> refused unless asserted
+    with pytest.raises(L.LabRefused):
+        L.run(_ledger(), bars=None, out_dir=tmp_path / "s", n_rules=2, t1="2026-09-14", t2=T2,
+              frozen_llm=frozen, frozen_meta=meta)
+    with pytest.raises(L.LabRefused):
+        L.run(_ledger(), bars=None, out_dir=tmp_path / "u", n_rules=2, t1=T1, t2=T2,
+              frozen_llm=frozen)
+    ub = L.run(_ledger(), bars=None, out_dir=tmp_path / "u2", n_rules=2, t1=T1, t2=T2,
+               frozen_llm=frozen, allow_unbound_frozen=True)
+    assert ub["llm"]["binding"].startswith("UNBOUND")
+
+
+def test_random_rules_use_distinct_fields_and_fire():
+    g = L.attach_bar_features(L.frame_from_rows(_ledger()), pd.DataFrame())
+    sp = L.split_frame(g, T1, T2)
+    tr = L.apply_buckets(sp.train, L.fit_buckets(sp.train))
+    rules = L.random_rules(tr, 30, np.random.default_rng(3))
+    days = tr["made_day"].to_numpy()
+    for r in rules:
+        fields = [c["field"] for c in r["when"]]
+        assert len(fields) == len(set(fields))
+        if len(r["when"]) == 2:
+            assert L._supported(L.rule_mask(r, tr), days)
 
 
 def test_the_premature_resolution_rows_are_held_out_like_the_refit_holds_them(monkeypatch):

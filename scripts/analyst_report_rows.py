@@ -27,14 +27,34 @@ from backend.services import analyst_report_rows as ARR  # noqa: E402
 PRIVATE_DIR = REPO / "backend" / "data" / "optimus" / "analyst_reports"
 
 
+def _git_top(path: Path) -> Path | None:
+    """The nearest enclosing git checkout (a `.git` dir OR file: worktrees use a
+    file), or None. Not just THIS checkout: the runtime checkout and every
+    sibling worktree of this public repo are just as tracked."""
+    for d in [path, *path.parents]:
+        if (d / ".git").exists():
+            return d
+    return None
+
+
 def out_path_allowed(out: Path) -> bool:
-    """Outside the repo, or under the gitignored PRIVATE_DIR. Nothing else."""
+    """Outside every git checkout, or a path git itself says is ignored.
+
+    Inside a checkout, the answer comes from `git check-ignore` (read-only), not
+    from a path comparison: Windows case, relative paths and symlinks all
+    resolve the same way for git. Git missing or erroring -> refused.
+    """
+    import subprocess
     out = Path(out).resolve()
-    repo = REPO.resolve()
-    if repo != out and repo not in out.parents:
+    top = _git_top(out.parent)
+    if top is None:
         return True
-    priv = PRIVATE_DIR.resolve()
-    return priv in out.parents
+    try:
+        r = subprocess.run(["git", "-C", str(top), "check-ignore", "-q", str(out)],
+                           capture_output=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return r.returncode == 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -64,10 +84,15 @@ def main(argv: list[str] | None = None) -> int:
     if a.out:
         out = Path(a.out).resolve()
         if not out_path_allowed(out):
-            print(f"REFUSED: {out} is inside the repo but not under {PRIVATE_DIR} "
-                  f"(gitignored); rows from a licensed report are never committed")
+            print(f"REFUSED: {out} is inside a git checkout and not ignored by it "
+                  f"(use {PRIVATE_DIR} or a path outside every checkout); rows from a "
+                  f"licensed report are never committed")
             return 2
-        n = ARR.append_rows(rows, out)
+        try:
+            n = ARR.append_rows(rows, out)
+        except ARR.ReportInvalid as exc:
+            print(f"REFUSED: {exc}")
+            return 2
         print(f"appended {n} new row(s) to {out}")
     return 0
 
