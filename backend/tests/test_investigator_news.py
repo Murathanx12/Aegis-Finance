@@ -230,3 +230,38 @@ def test_smoke_refuses_the_live_ledger_and_never_pairs(world):
     assert rows[0]["inputs_used"]["smoke"] is True and rows[0]["inputs_used"]["pair_specialist"] is None
     # with the cutoff at the run clock the late row is now admitted
     assert {r["topic"] for r in calls[0]["news_typed"]} >= {"Heldco CEO probe"}
+
+
+def test_real_graph_neighbours_are_context_only_and_pit(tmp_path):
+    """The real CH-30 module: neighbours come from the graph's out-edges, carry no
+    sign/weight, and a graph built after the cutoff gives none."""
+    UG = pytest.importorskip("backend.services.universe_graph")
+    import dataclasses
+
+    import numpy as np
+    import pandas as pd
+    rng = np.random.default_rng(5)
+    n = 420
+    dates = pd.bdate_range(end="2030-02-28", periods=n)
+    a = rng.normal(0, 0.01, n)
+    shocks = np.arange(70, n, 15)
+    a[shocks] = rng.choice([-0.07, 0.07], size=len(shocks))
+    b = rng.normal(0, 0.004, n)
+    b[1:] += 0.5 * a[:-1]
+    o = rng.normal(0, 0.01, (n, 3))
+    df = pd.DataFrame({"HELD": a, "PEER": b, "O1": o[:, 0], "O2": o[:, 1], "O3": o[:, 2]},
+                      index=dates)
+    g = UG.build_graph(df, as_of="2030-03-01", sectors={
+        "HELD": "Semis", "PEER": "Semis", "O1": "Semis", "O2": "Banks", "O3": "Banks"})
+    gd = tmp_path / "universe_graph"
+    UG.write_graph(g, gd, {"build_id": "ug_t", "as_of": g.as_of,
+                           "built_utc": "2030-03-01T00:00:00+00:00",
+                           "panel_last_session": "2030-02-28",
+                           "params": dataclasses.asdict(g.params), "counts": g.counts()})
+    fn, st = NN.graph_neighbours_fn(graph_dir=gd, cutoff=NOW, k=5)
+    assert st["status"] == "OK"
+    neigh = fn("HELD")
+    assert "PEER" in {x["ticker"] for x in neigh}
+    assert all(set(x) == {"ticker", "relation"} for x in neigh)
+    fn2, st2 = NN.graph_neighbours_fn(graph_dir=gd, cutoff=datetime(2030, 2, 1, tzinfo=timezone.utc), k=5)
+    assert fn2("HELD") == [] and st2["status"] != "OK"
