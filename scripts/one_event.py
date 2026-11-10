@@ -9,8 +9,13 @@
 `run` prints one table and writes one receipt under `<out>/receipts/`; exit 2
 when a stage is BLOCKED for a reason other than the intended
 ATTENDED_ACTIVATION_REQUIRED. Nothing is sent, no order is placed, no LLM is
-called. Paths are explicit so a worktree can read the runtime's data without
-writing into it (`--out` defaults to `<data-root>/one_event`).
+called. `--out` defaults to `<data-root>/one_event`, so with `--data-root` set
+to the runtime it WRITES INTO the runtime: pass `--out` to keep a worktree's
+rows out of it. `--now` moves the visibility clock only; every forecast row
+also carries the real write time, and a row whose `--now` is not the wall clock
+is a REPLAY row the grader never counts as forward evidence.
+`list` exits 2 when there is no corpus; `grade` exits 2 when nothing could be
+graded or is pending (no ledger, or every row refused / ungradeable).
 """
 from __future__ import annotations
 
@@ -70,6 +75,9 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     now = _now(a.now)
     if a.cmd == "list":
+        if not (Path(a.data_root) / "news_corpus").is_dir():
+            print(f"REFUSED: no news_corpus under {a.data_root}")
+            return 2
         rows = OE.list_events(Path(a.data_root), now=now, hours=a.hours, sources=a.source)
         for r in rows[:a.limit]:
             print(f"{r['published_utc'][:16]}  {r['source']:<28} {','.join(r['tickers'])[:20]:<20} "
@@ -77,12 +85,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(rows)} events with >=1 ticker in the last {a.hours:g} h")
         return 0
     if a.cmd == "grade":
-        res = OE.grade(_out(a) / "forecasts.jsonl", data_root=Path(a.data_root), now=now)
+        fpath = _out(a) / "forecasts.jsonl"
+        if not fpath.exists():
+            print(f"REFUSED: no forecast ledger at {fpath}")
+            return 2
+        res = OE.grade(fpath, data_root=Path(a.data_root), now=now)
         print(json.dumps({k: v for k, v in res.items() if k != "new_grades"}, indent=1))
         for g in res["new_grades"]:
             print(f"{g['ticker']:<6} h={g['horizon_sessions']} {g['entry_date']}->{g['exit_date']} "
                   f"adj {g['market_adjusted']:+.4f} hit {g['hit']}")
-        return 0
+        c = res["counts"]
+        return 0 if (c["graded"] + c["pending"] + c["already"]) > 0 else 2
     rec = OE.run_one(data_root=Path(a.data_root), source=a.source, key=a.key, now=now,
                      out_dir=_out(a), graph_dir=Path(a.graph_dir) if a.graph_dir else None,
                      funnel_path=Path(a.funnel) if a.funnel else None,

@@ -75,6 +75,15 @@ def no_graph(monkeypatch):
     monkeypatch.setattr(OE, "_graph_module", lambda: (None, "ImportError: synthetic absence"))
 
 
+#: The synthetic world's wall clock. `--now` never sets it; tests inject it here.
+WALL = datetime(2030, 3, 4, 15, 0, tzinfo=timezone.utc)
+
+
+@pytest.fixture(autouse=True)
+def wall_clock(monkeypatch):
+    monkeypatch.setattr(OE, "_wall_clock", lambda: WALL)
+
+
 def _run(world, **kw):
     return OE.run_one(data_root=world["root"], source="sec_edgar_8k_ex99_body", key=ACC,
                       now=world["now"], out_dir=world["out"], funnel_path=world["funnel"], **kw)
@@ -94,7 +103,9 @@ def test_chain_with_typed_direction_and_held_earnings(world):
     u = _stage(rec, "UNIVERSE")
     assert u["status"] == OE.DEGRADED and u["reason"].startswith("GRAPH_MODULE_ABSENT")
     d = _stage(rec, "DECIDE")
-    assert d["status"] == OE.SUCCESS
+    # the graph module is absent here, so the connected-holdings check never ran
+    assert d["status"] == OE.DEGRADED and "GRAPH_CONSUMERS_NOT_RUN" in d["reason"]
+    assert d["data"]["graph_consumers_ran"] is False
     assert d["data"]["owner_warning"]["status"] == "PROVISIONAL"
     assert "OWNER_WARNING_DRAFT" in d["data"]["actions"] and "NO_TRADE_REASONED" in d["data"]["actions"]
     a = _stage(rec, "ACT")
@@ -285,3 +296,82 @@ def test_real_universe_graph_from_the_default_dir(world, monkeypatch):
     d = _stage(rec, "DECIDE")["data"]
     assert "PEER" in {r["ticker"] for r in d["held_connected"]}
     assert rec["exit_code"] == 0
+
+
+# ── review 2 (S65) B1: a back-dated --now is REPLAY, never forward evidence ──
+
+def test_backdated_now_is_marked_replay_and_never_graded(world, monkeypatch):
+    _typed(world, -0.6)
+    monkeypatch.setattr(OE, "_wall_clock", lambda: WALL + timedelta(days=3))   # run 3 days late
+    rec = _run(world)                                             # --now = the event day
+    learn = _stage(rec, "LEARN")
+    assert learn["status"] == OE.DEGRADED and "REPLAY_NOT_FORWARD_EVIDENCE" in learn["reason"]
+    rows = [json.loads(x) for x in (world["out"] / "forecasts.jsonl").read_text(
+        encoding="utf-8").splitlines()]
+    assert rows and all(r["replay"] is True and r["evidence"] == "REPLAY" for r in rows)
+    assert all(r["written_utc"] == (WALL + timedelta(days=3)).isoformat(timespec="seconds")
+               for r in rows)
+    res = OE.grade(world["out"] / "forecasts.jsonl", data_root=world["root"],
+                   now=WALL + timedelta(days=14))
+    assert res["counts"]["graded"] == 0 and res["counts"]["replay_excluded"] == 2
+
+
+def test_replay_rows_do_not_block_the_forward_rows(world, monkeypatch):
+    _typed(world, -0.6)
+    monkeypatch.setattr(OE, "_wall_clock", lambda: WALL + timedelta(days=3))
+    _run(world)
+    monkeypatch.setattr(OE, "_wall_clock", lambda: WALL)
+    learn = _stage(_run(world), "LEARN")
+    assert learn["status"] == OE.SUCCESS and learn["data"]["n_new"] == 2
+
+
+def test_grader_refuses_a_row_written_after_its_entry_close(world):
+    _typed(world, -0.6)
+    _run(world)
+    fpath = world["out"] / "forecasts.jsonl"
+    rows = [json.loads(x) for x in fpath.read_text(encoding="utf-8").splitlines()]
+    late = (WALL + timedelta(days=2)).isoformat(timespec="seconds")
+    fpath.write_text("".join(json.dumps({**r, "written_utc": late}) + "\n" for r in rows),
+                     encoding="utf-8")
+    res = OE.grade(fpath, data_root=world["root"], now=WALL + timedelta(days=14))
+    assert res["counts"]["graded"] == 0 and res["counts"]["frozen_late"] == 2
+
+
+def test_grader_refuses_a_row_without_a_real_write_time(world):
+    _typed(world, -0.6)
+    _run(world)
+    fpath = world["out"] / "forecasts.jsonl"
+    rows = [json.loads(x) for x in fpath.read_text(encoding="utf-8").splitlines()]
+    fpath.write_text("".join(json.dumps({k: v for k, v in r.items() if k != "written_utc"})
+                             + "\n" for r in rows), encoding="utf-8")
+    res = OE.grade(fpath, data_root=world["root"], now=WALL + timedelta(days=14))
+    assert res["counts"]["graded"] == 0 and res["counts"]["no_write_time"] == 2
+
+
+# ── review 2 (S65) B2: a stage whose work was empty / skipped is never SUCCESS ──
+
+def test_decide_degrades_when_graph_consumers_did_not_run(world):
+    _typed(world, -0.6)
+    d = _stage(_run(world), "DECIDE")
+    assert d["status"] == OE.DEGRADED and "GRAPH_CONSUMERS_NOT_RUN" in d["reason"]
+
+
+def test_learn_degrades_without_a_directional_claim(world):
+    learn = _stage(_run(world), "LEARN")                          # untyped: no direction
+    assert learn["status"] == OE.DEGRADED and "NO_DIRECTIONAL_CLAIM" in learn["reason"]
+
+
+def test_learn_degrades_when_nothing_new_was_frozen(world):
+    _typed(world, -0.6)
+    _run(world)
+    learn = _stage(_run(world), "LEARN")
+    assert learn["status"] == OE.DEGRADED and "NOTHING_NEW_FROZEN" in learn["reason"]
+
+
+def test_cli_grade_and_list_exit_red_on_nothing(world, tmp_path):
+    from scripts import one_event as CLI
+    empty = tmp_path / "empty_root"
+    empty.mkdir()
+    assert CLI.main(["list", "--data-root", str(empty), "--now", WALL.isoformat()]) == 2
+    assert CLI.main(["grade", "--data-root", str(empty), "--out", str(tmp_path / "none"),
+                     "--now", WALL.isoformat()]) == 2

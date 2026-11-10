@@ -31,7 +31,12 @@ a new decision system. Each stage calls what already exists:
               the intended, honest status (no LLM or code path holds authority)
     LEARN     frozen forecast rows (h = 1 and 5 sessions, market-adjusted vs SPY)
               appended to `<out>/forecasts.jsonl` BEFORE any outcome exists, and
-              `grade()` that prices them on bars when their horizon has passed
+              `grade()` that prices them on bars when their horizon has passed.
+              Every row carries `written_utc`, the REAL wall clock (`_wall_clock`,
+              never `--now`). A row whose simulated `made_at` differs from it by
+              more than `ONE_EVENT_REPLAY_TOLERANCE_S` is `replay: true` and is
+              never graded as forward evidence; the grader also refuses a row with
+              no real write time, or one written after its entry close
 
 The five ids (event_id -> universe_id -> decision_id -> intent_id ->
 forecast_ids) are linked on one receipt. Exit code 2 when any stage is BLOCKED
@@ -59,6 +64,13 @@ STAGES = ("SENSE", "UNIVERSE", "DECIDE", "ACT", "LEARN")
 INTENDED_BLOCKS = frozenset({"ATTENDED_ACTIVATION_REQUIRED"})
 NY = ZoneInfo("America/New_York")
 SCHEMA = "one-event/1"
+
+
+def _wall_clock() -> datetime:
+    """The real UTC write time. `--now` never reaches it (review 2, S65, B1): a
+    simulated clock may choose which corpus rows are visible, never when a
+    forecast was frozen. Tests monkeypatch this function, nothing else does."""
+    return datetime.now(timezone.utc)
 
 
 # ─────────────────────────────── small helpers ───────────────────────────────
@@ -480,6 +492,7 @@ def decide(ev: Optional[dict], row: Optional[dict], uni: Optional[dict], *, now:
                 "conditional_loss_usd", "paper_decision", "forecast_status", "event_key")}
     # graph consumers (CH-30 report: the three exact calls)
     UG, _ = _graph_module()
+    graph_ran = False
     if UG is not None and uni and uni.get("graph_event"):
         try:
             g = UG.load_graph(graph_dir)
@@ -503,8 +516,17 @@ def decide(ev: Optional[dict], row: Optional[dict], uni: Optional[dict], *, now:
                                             "confidence_label", "path")}
                     for r in UG.funnel_candidates(g, gev, horizon=5, min_label="MEDIUM",
                                                   top_k=10)]}
+            graph_ran = True
         except Exception as exc:                                     # noqa: BLE001
             reasons.append(f"GRAPH_CONSUMERS_FAILED: {type(exc).__name__}"[:120])
+    elif UG is None:
+        reasons.append("GRAPH_CONSUMERS_NOT_RUN: universe_graph not importable, so held "
+                       "connected names were NOT checked")
+    else:
+        gst = ((uni or {}).get("graph") or {}).get("status") or "no graph event"
+        reasons.append(f"GRAPH_CONSUMERS_NOT_RUN: UNIVERSE produced no graph event ({gst}), "
+                       "so held connected names were NOT checked")
+    dec["graph_consumers_ran"] = graph_ran
     # the decision itself: a reasoned row, never silence
     acts, why = [], []
     if dec["owner_warning"] and dec["owner_warning"].get("status") == "PROVISIONAL":
@@ -584,10 +606,23 @@ def entry_session(made_at: datetime, dates: list) -> Optional[Any]:
     return None
 
 
+def is_replay(made_at: datetime, written_at: datetime) -> bool:
+    """True when the simulated `made_at` is not the real write time."""
+    tol = float(getattr(_cfg, "ONE_EVENT_REPLAY_TOLERANCE_S", 300))
+    return abs((written_at - made_at).total_seconds()) > tol
+
+
 def forecast_rows(ev: dict, uni: Optional[dict], dec: dict, *, made_at: datetime,
+                  written_at: Optional[datetime] = None,
                   horizons: Iterable[int] = (1, 5), max_connected: int = 8) -> list[dict]:
     """Frozen BEFORE any outcome. Direction None means 'no directional claim'
-    (graded for size only); the graph's rows carry its own expected sign."""
+    (graded for size only); the graph's rows carry its own expected sign.
+
+    `written_at` is the real wall clock (default `_wall_clock()`) and is sealed
+    into the row. A replay row gets its own id, so it can never occupy the id a
+    later forward run of the same event needs."""
+    written_at = written_at or _wall_clock()
+    replay = is_replay(made_at, written_at)
     targets = [{"ticker": ev["primary_ticker"], "role": "event_node",
                 "predicted_direction": ev.get("direction"),
                 "direction_source": ev.get("direction_source"), "expected_size": None,
@@ -613,6 +648,8 @@ def forecast_rows(ev: dict, uni: Optional[dict], dec: dict, *, made_at: datetime
             r = {"schema": "one-event-forecast/1", "event_id": ev["event_id"],
                  "decision_id": dec["decision_id"], "ticker": tg["ticker"], "role": tg["role"],
                  "horizon_sessions": int(h), "made_at": made_at.isoformat(timespec="seconds"),
+                 "written_utc": written_at.isoformat(timespec="seconds"), "replay": replay,
+                 "evidence": "REPLAY" if replay else "FORWARD",
                  "event_published_utc": ev["published_utc"],
                  "entry_rule": "close of the first session whose 16:00 NY close >= made_at",
                  "observable": "log-free simple return over h sessions after entry minus SPY's",
@@ -620,20 +657,26 @@ def forecast_rows(ev: dict, uni: Optional[dict], dec: dict, *, made_at: datetime
                  "direction_source": tg["direction_source"], "expected_size": tg["expected_size"],
                  "confidence_label": tg["confidence_label"], "path": tg["path"],
                  "licence": "PRODUCT_EXPERIMENT", "skill_claim": "none"}
-            r["forecast_id"] = "fc_" + _sha(ev["event_id"], tg["ticker"], int(h))
+            r["forecast_id"] = "fc_" + (
+                _sha(ev["event_id"], tg["ticker"], int(h)) if not replay
+                else _sha(ev["event_id"], tg["ticker"], int(h), "replay", r["made_at"]))
             r["seal"] = _sha(r, n=24)
             rows.append(r)
     return rows
 
 
 def append_forecasts(path: Path, rows: list[dict]) -> tuple[int, int]:
-    """Append-only; a forecast id already present is never written twice."""
+    """Append-only; a forecast id already present is never written twice. The
+    de-duplication read happens under the same lock as the append, and each line
+    is fsynced: a ledger that claims "frozen before" must survive a crash."""
     from backend.services import disk_guard as DG
-    have = {r.get("forecast_id") for r in _jsonl(path)}
-    new = [r for r in rows if r["forecast_id"] not in have]
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    for r in new:
-        DG.locked_append_line(Path(path), json.dumps(r, sort_keys=True))
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with DG.file_lock(path.with_name(path.name + ".lock")):        # re-entrant below
+        have = {r.get("forecast_id") for r in _jsonl(path)}
+        new = [r for r in rows if r["forecast_id"] not in have]
+        for r in new:
+            DG.locked_append_line(path, json.dumps(r, sort_keys=True), fsync=True)
     return len(new), len(rows) - len(new)
 
 
@@ -667,17 +710,29 @@ def grade(forecasts_path: Path, *, data_root: Path, now: datetime,
 
     PENDING when the bars do not reach entry + h sessions; UNGRADEABLE when the
     ticker or SPY has no bars. A grade row is written once per forecast id.
+
+    Refused, never graded (review 2, S65, B1): NO_WRITE_TIME (no real
+    `written_utc`, so the freeze cannot be proven), REPLAY (a `--now` row), and
+    FROZEN_LATE (the entry close is not after the real write time).
     """
     rows = _jsonl(Path(forecasts_path))
     gp = Path(grades_path) if grades_path else Path(forecasts_path).with_name("grades.jsonl")
     done = {r.get("forecast_id") for r in _jsonl(gp)}
     px = load_closes(bar_paths(data_root), [r["ticker"] for r in rows]) if rows else None
     last_bar = None if px is None or px.empty else str(px.index[-1])
-    counts = {"graded": 0, "pending": 0, "ungradeable": 0, "already": 0}
+    counts = {"graded": 0, "pending": 0, "ungradeable": 0, "already": 0,
+              "no_write_time": 0, "replay_excluded": 0, "frozen_late": 0}
     out = []
     for r in rows:
         if r["forecast_id"] in done:
             counts["already"] += 1
+            continue
+        written = _utc(r.get("written_utc"))
+        if written is None:
+            counts["no_write_time"] += 1
+            continue
+        if r.get("replay") is not False:
+            counts["replay_excluded"] += 1
             continue
         made = _utc(r["made_at"])
         if px is None or px.empty or r["ticker"] not in px.columns or "SPY" not in px.columns:
@@ -689,6 +744,9 @@ def grade(forecasts_path: Path, *, data_root: Path, now: datetime,
         h = int(r["horizon_sessions"])
         if e is None or dates.index(e) + h >= len(dates):
             counts["pending"] += 1
+            continue
+        if datetime.combine(e, dtime(16, 0), tzinfo=NY).astimezone(timezone.utc) <= written:
+            counts["frozen_late"] += 1
             continue
         i = dates.index(e)
         x = dates[i + h]
@@ -717,7 +775,9 @@ def learn(ev: Optional[dict], uni: Optional[dict], dec: Optional[dict], *, now: 
           out_dir: Path, data_root: Path, write: bool = True) -> tuple[Stage, Optional[dict]]:
     if ev is None or dec is None:
         return Stage("LEARN", BLOCKED, "NOTHING_TO_FORECAST"), None
-    rows = forecast_rows(ev, uni, dec, made_at=now)
+    written_at = _wall_clock()
+    rows = forecast_rows(ev, uni, dec, made_at=now, written_at=written_at)
+    replay = is_replay(now, written_at)
     fpath = Path(out_dir) / "forecasts.jsonl"
     reasons = []
     if write:
@@ -735,15 +795,20 @@ def learn(ev: Optional[dict], uni: Optional[dict], dec: Optional[dict], *, now: 
         reasons.append(f"NO_BARS_FOR {','.join(missing)[:80]} (ungradeable until bars exist)")
     if not any(r.get("predicted_direction") for r in rows):
         reasons.append("NO_DIRECTIONAL_CLAIM (rows graded for size only)")
+    if replay:
+        reasons.append(f"REPLAY_NOT_FORWARD_EVIDENCE (--now {now.isoformat(timespec='seconds')}"
+                       f" vs wall clock {written_at.isoformat(timespec='seconds')}; the grader "
+                       "excludes these rows)")
+    if write and n_new == 0:
+        reasons.append(f"NOTHING_NEW_FROZEN ({n_dup} row(s) already present)")
     last_bar = None if px is None or px.empty else str(px.index[-1])
     out = {"forecast_ids": [r["forecast_id"] for r in rows], "n_rows": len(rows),
            "n_new": n_new, "n_already_present": n_dup, "path": str(fpath),
            "bars_last": last_bar, "grader": "backend.services.one_event.grade "
            "(python -m scripts.one_event grade --out <dir> --data-root <optimus>)",
-           "first_gradeable": "entry close + h sessions; h=1 and h=5"}
-    status = SUCCESS
-    if missing or not write:
-        status = DEGRADED
+           "first_gradeable": "entry close + h sessions; h=1 and h=5",
+           "written_utc": written_at.isoformat(timespec="seconds"), "replay": replay}
+    status = DEGRADED if reasons else SUCCESS
     return Stage("LEARN", status, ";".join(reasons) or "OK",
                  "le_" + _sha(out["forecast_ids"]), [str(fpath)], out), out
 

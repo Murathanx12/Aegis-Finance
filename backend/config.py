@@ -6055,6 +6055,10 @@ FLEET_V3_EARLIEST_SEED = "2026-10-26"
 #: many days (ROADMAP §2: a candidate set > 10 days old is red).
 ONE_EVENT_POSITIONS_STALE_HOURS = 24
 ONE_EVENT_FUNNEL_STALE_DAYS = 10
+#: A forecast row whose simulated `made_at` (`--now`) is further than this from the
+#: REAL write time is a REPLAY row: written, sealed, and never graded as forward
+#: evidence (review 2 S65, B1: a back-dated --now must not mint a 'frozen' hit).
+ONE_EVENT_REPLAY_TOLERANCE_S = 300
 
 # ── Licensed third-party data (Bloomberg exports, broker research) — CH-00 / CH-32 ──
 #: Converted Bloomberg / broker-research tables live OUTSIDE the public repo (licence:
