@@ -151,6 +151,8 @@ backend/data/optimus/wrds/pull_terminal_failures.json
 # ARENA (ORDER 25): local ledger writes must never dirty the tree the night
 # launcher's git_dirty check reads. Railway's volume is the authoritative store.
 backend/data/optimus/arena/
+# Universe graph builds (CH-30): rebuilt from local panels, receipts inside.
+backend/data/optimus/universe_graph/
 # Runtime receipts written by pi_hourly_mtm on the prod volume; local test
 # runs of the scheduler job write real ones here too. Runtime state, not source.
 backend/data/optimus/mtm_receipts/
