@@ -41,8 +41,10 @@ Off-peak is cheaper; reserve and settle at peak until an actual billing receipt.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
+import time
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_CEILING
@@ -91,6 +93,102 @@ UNCAPPED_DEEPSEEK_PATHS = (
 
 class BudgetRefused(RuntimeError):
     """str(exc) is the one human line: reason, spend so far, cap, what to do."""
+
+
+logger = logging.getLogger(__name__)
+
+#: Retry schedule for an envelope write refused by Windows (`PermissionError`,
+#: WinError 5/32: another handle -- a non-locking reader, an AV scan of the fresh
+#: temp -- holds the target without FILE_SHARE_DELETE). Retried UNDER the lock;
+#: the temp is complete and fsynced, so a retry cannot publish a partial file.
+#: 2026-11-10 16:33:40Z: one such refusal in `settle()` discarded a PAID
+#: world_digest_synth reply and the night's biggest theme got 0 implications.
+WRITE_BACKOFF_S = (0.05, 0.1, 0.2, 0.4, 0.8, 1.6)
+_sleep = time.sleep
+#: The billing status of a paid call whose settlement could not reach the
+#: envelope: the reply is KEPT, the envelope still holds the full reservation
+#: (never less than the cost), and the settlement waits in the sidecar until the
+#: next `reserve()` reconciles it.
+DEFERRED_STATUS = "SETTLEMENT_DEFERRED_SIDECAR"
+
+
+def sidecar_path(p):
+    """`deepseek_local.json` -> `deepseek_local.unsettled.jsonl` (same directory)."""
+    p = Path(p)
+    return p.with_name(p.stem + ".unsettled.jsonl")
+
+
+def _write(p, s):
+    """`atomic_write_json`, retrying a Windows sharing refusal with backoff.
+    Anything that is not a PermissionError (disk full, a bad path) raises at once."""
+    for i in range(len(WRITE_BACKOFF_S) + 1):
+        try:
+            DG.atomic_write_json(p, s)
+            return
+        except PermissionError:
+            if i >= len(WRITE_BACKOFF_S):
+                raise
+            _sleep(WRITE_BACKOFF_S[i])
+
+
+def _append_sidecar(p, row):
+    """One fsynced line. The caller holds the envelope lock, which every sidecar
+    writer and reader also holds, so lines never interleave."""
+    sp = sidecar_path(p)
+    with open(sp, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, sort_keys=True) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+
+
+def _reconcile_sidecar(p, s):
+    """Apply deferred settlements to `s` in memory. Returns how many applied.
+
+    A line applies only to a call still RESERVED_UNKNOWN in this envelope; a
+    line for a call already settled is a no-op (idempotent after a crash between
+    the envelope write and the sidecar removal). A line naming no call here is
+    kept on the envelope as an orphan, never silently dropped. A deferred block
+    is applied whatever the call's state.
+    """
+    sp = sidecar_path(p)
+    if not sp.exists():
+        return 0
+    applied = 0
+    for ln in sp.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            row = json.loads(ln)
+        except ValueError:
+            s.setdefault("sidecar_orphans", []).append({"unparsed": ln[:200]})
+            applied += 1
+            continue
+        if row.get("blocked") and not s.get("blocked"):
+            s["blocked"] = row["blocked"]
+        r = s["calls"].get(row.get("reservation_id"))
+        if r is None:
+            s.setdefault("sidecar_orphans", []).append(row)
+            applied += 1
+            continue
+        if r["status"] != "RESERVED_UNKNOWN":
+            continue
+        if row.get("status") == "SETTLED_PEAK_ESTIMATE" and type(row.get("held_units")) is int:
+            # a settled cost above the reservation is already a block (above)
+            r.update(status="SETTLED_PEAK_ESTIMATE", held_units=row["held_units"],
+                     cost_usd=row["held_units"] / SCALE)
+        else:
+            r["status"] = "BILLING_UNKNOWN"            # keeps the full reservation held
+        r.update(served_model=row.get("served_model"), settled_utc=row.get("settled_utc"),
+                 reconciled_from_sidecar=True)
+        applied += 1
+    return applied
+
+
+def _clear_sidecar(p):
+    try:
+        sidecar_path(p).unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:                              # idempotent: re-applied lines no-op
+        logger.warning("provider_budget: sidecar not removed (%s); its lines are no-ops now", exc)
 
 
 def host_envelope_required():
@@ -179,7 +277,7 @@ def initialize(session_id, cap_usd, *, opening_charge_usd, opening_evidence, bud
     with _lock(p):
         if p.exists():
             raise BudgetRefused("existing envelope cannot be reset or replaced")
-        DG.atomic_write_json(p, {"schema": SCHEMA, "session_id": str(session_id),
+        _write(p, {"schema": SCHEMA, "session_id": str(session_id),
             "created_utc": datetime.now(timezone.utc).isoformat(), "cap_units": cap,
             "opening_units": opening, "opening_evidence": str(opening_evidence),
             "price_as_of": "2026-11-03", "price_source": "https://api-docs.deepseek.com/quick_start/pricing/",
@@ -241,7 +339,7 @@ def _ensure_envelope(p, budget_path=None):
     """
     if not monthly(budget_path) or p.exists() or p != path():
         return False
-    DG.atomic_write_json(p, _fresh(month_id()))
+    _write(p, _fresh(month_id()))
     return True
 
 
@@ -332,7 +430,7 @@ def raise_cap(cap_usd, *, evidence, budget_path=None):
                 s["cap_units"] = new
         else:
             s["cap_units"] = new
-        DG.atomic_write_json(p, s)
+        _write(p, s)
     return status_line(budget_path=budget_path)
 
 
@@ -358,11 +456,14 @@ def reserve(system, user, max_tokens, *, model, base_url, purpose,
         try:
             _ensure_envelope(p, budget_path)
             s = _load(p)
-            v = _view(s, budget_path)
         except BudgetRefused as exc:
             if str(exc).startswith("DEEPSEEK BUDGET"):
                 raise
             raise BudgetRefused(status_line(budget_path=budget_path)) from exc
+        if _reconcile_sidecar(p, s):
+            _write(p, s)
+            _clear_sidecar(p)
+        v = _view(s, budget_path)
         if s.get("blocked"):
             raise _refuse("BLOCKED", v, p)
         if _held(v) + q["reserved_units"] > v["cap_units"]:
@@ -376,7 +477,7 @@ def reserve(system, user, max_tokens, *, model, base_url, purpose,
         s["calls"][token] = {**q, "held_units": q["reserved_units"], "status": "RESERVED_UNKNOWN",
             "pid": os.getpid(), "purpose": str(purpose), "request_model": model,
             "started_utc": datetime.now(timezone.utc).isoformat(), "cost_usd": None}
-        DG.atomic_write_json(p, s)
+        _write(p, s)
     return {"id": token, "path": str(p), "reserved_usd": q["reserved_units"]/SCALE}
 
 
@@ -392,6 +493,7 @@ def settle(ticket, response=None):
         r = s["calls"][ticket["id"]]
         if r["status"] != "RESERVED_UNKNOWN":
             raise BudgetRefused("reservation already settled")
+        was_blocked = bool(s.get("blocked"))
         served = response.get("model") if isinstance(response, dict) else getattr(response, "model", None)
         usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
         cost = None
@@ -413,10 +515,29 @@ def settle(ticket, response=None):
             r["status"] = "BILLING_UNKNOWN"
         r["served_model"] = served
         r["settled_utc"] = datetime.now(timezone.utc).isoformat()
-        DG.atomic_write_json(p, s)
-        return {"cost_usd": r["cost_usd"], "budget_charge_usd": r["held_units"]/SCALE,
-                "price_as_of": "2026-11-03", "cost_basis": "PEAK_LIST_ESTIMATE_NOT_BILLED",
-                "billing_status": r["status"], "reservation_id": ticket["id"]}
+        out = {"cost_usd": r["cost_usd"], "budget_charge_usd": r["held_units"]/SCALE,
+               "price_as_of": "2026-11-03", "cost_basis": "PEAK_LIST_ESTIMATE_NOT_BILLED",
+               "billing_status": r["status"], "reservation_id": ticket["id"]}
+        try:
+            _write(p, s)
+        except PermissionError as exc:
+            # The reply is PAID: keep it. The envelope on disk still holds the
+            # full reservation (>= this cost), so spend is not under-counted; the
+            # settlement (and any block it raised) waits in the sidecar.
+            row = {"reservation_id": ticket["id"], "status": r["status"],
+                   "held_units": r["held_units"], "served_model": served,
+                   "settled_utc": r["settled_utc"], "blocked": s.get("blocked") if not was_blocked
+                   else None, "error": f"{type(exc).__name__}: {exc}"[:200]}
+            try:
+                _append_sidecar(p, row)
+                out.update(billing_status=DEFERRED_STATUS, settlement_deferred=True)
+            except OSError as exc2:
+                # nothing on disk moved: the reservation stays held, the reply is kept
+                logger.error("provider_budget: settlement of %s not recorded (%s; sidecar %s); "
+                             "the full reservation stays held", ticket["id"], exc, exc2)
+                out.update(billing_status="SETTLEMENT_FAILED_RESERVATION_RETAINED",
+                           budget_charge_usd=ticket["reserved_usd"], settlement_deferred=False)
+        return out
 
 
 def snapshot(*, budget_path=None):
