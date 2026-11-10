@@ -1,0 +1,570 @@
+{
+ "trial_id": "REVISION-FORECASTER-1",
+ "prereg": "Aegis module/TRIALS/PREREG_REVISION_FORECASTER_1.md @ d81577e",
+ "licence": "PRODUCT_EXPERIMENT (screen \u2014 licenses BUILDING, never a claim)",
+ "frozen": {
+  "fpi": "1",
+  "measure": "EPS",
+  "t1_min_days_after_event": 5,
+  "t1_max_days_after_event": 45,
+  "primary_horizon_sessions": 21,
+  "reported_horizon_sessions": 5,
+  "first_test_year": 2012,
+  "models": [
+   "ridge",
+   "lightgbm"
+  ],
+  "min_estimates": 3,
+  "scaling": "revision / price at the session before the event",
+  "fpedats_must_match": true,
+  "n_effective": "EVENT MONTHS (date blocks) \u2014 CANON \u00a758",
+  "declared_effect_size": 0.025,
+  "paired_mde80_at_rho_0.8": 0.0158,
+  "one_se_screen_bar": true
+ },
+ "implementation_decisions_not_in_the_prereg": {
+  "sign_convention": "routed target is sign(gap) x revision, so it shares the evaluation target's convention. Forced by comparability, declared before running. Raw variant reported.",
+  "forward_returns": "computed here rather than by mutating v1's frozen SPEC; equivalence to v1's fwd5 is a test",
+  "fpedats_match": "t0 and t1 must describe the same fiscal period"
+ },
+ "coverage": {
+  "events_with_a_matched_revision": 38067,
+  "event_months": 168,
+  "t1_lag_days_median": 20.0,
+  "first_year": 2006,
+  "last_year": 2019
+ },
+ "leakage_guard": {
+  "revision_signed": {
+   "status": "ok",
+   "n_blocks": 161,
+   "bar": 0.5,
+   "warned": [],
+   "features": {
+    "numeric_surprise_pct": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.017872,
+     "abs": 0.017872
+    },
+    "surprise_scaled": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.012339,
+     "abs": 0.012339
+    },
+    "expectation_dispersion": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.001277,
+     "abs": 0.001277
+    },
+    "n_estimates": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.001209,
+     "abs": 0.001209
+    },
+    "pre_event_price_runup": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.002129,
+     "abs": 0.002129
+    },
+    "overnight_gap": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.015116,
+     "abs": 0.015116
+    },
+    "abs_gap": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.005015,
+     "abs": 0.005015
+    },
+    "gap_vs_runup": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.003991,
+     "abs": 0.003991
+    },
+    "dollar_volume_20d_log": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.014081,
+     "abs": 0.014081
+    },
+    "hl_range_20d": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.016867,
+     "abs": 0.016867
+    },
+    "amihud_20d_log": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.017054,
+     "abs": 0.017054
+    },
+    "revision_up": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.003059,
+     "abs": 0.003059
+    },
+    "revision_down": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.001496,
+     "abs": 0.001496
+    },
+    "disclosure_delay_days": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.015556,
+     "abs": 0.015556
+    },
+    "atm_iv_30": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.01699,
+     "abs": 0.01699
+    },
+    "iv_term_slope": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.008206,
+     "abs": 0.008206
+    },
+    "iv_put_minus_call_30d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.014356,
+     "abs": 0.014356
+    },
+    "implied_move_1d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.01699,
+     "abs": 0.01699
+    },
+    "gap_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.00917,
+     "abs": 0.00917
+    },
+    "surprise_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.023844,
+     "abs": 0.023844
+    }
+   },
+   "ranked": [
+    [
+     0.023844,
+     "surprise_vs_implied"
+    ],
+    [
+     0.017872,
+     "numeric_surprise_pct"
+    ],
+    [
+     0.017054,
+     "amihud_20d_log"
+    ],
+    [
+     0.01699,
+     "implied_move_1d"
+    ],
+    [
+     0.01699,
+     "atm_iv_30"
+    ]
+   ]
+  },
+  "drift21": {
+   "status": "ok",
+   "n_blocks": 161,
+   "bar": 0.5,
+   "warned": [],
+   "features": {
+    "numeric_surprise_pct": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.00935,
+     "abs": 0.00935
+    },
+    "surprise_scaled": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.011527,
+     "abs": 0.011527
+    },
+    "expectation_dispersion": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.007873,
+     "abs": 0.007873
+    },
+    "n_estimates": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.016719,
+     "abs": 0.016719
+    },
+    "pre_event_price_runup": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.000855,
+     "abs": 0.000855
+    },
+    "overnight_gap": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.030985,
+     "abs": 0.030985
+    },
+    "abs_gap": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.009521,
+     "abs": 0.009521
+    },
+    "gap_vs_runup": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.014901,
+     "abs": 0.014901
+    },
+    "dollar_volume_20d_log": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.010841,
+     "abs": 0.010841
+    },
+    "hl_range_20d": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.00109,
+     "abs": 0.00109
+    },
+    "amihud_20d_log": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.010897,
+     "abs": 0.010897
+    },
+    "revision_up": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": 0.006181,
+     "abs": 0.006181
+    },
+    "revision_down": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.016428,
+     "abs": 0.016428
+    },
+    "disclosure_delay_days": {
+     "status": "ok",
+     "n_blocks": 161,
+     "mean_rank_ic": -0.008154,
+     "abs": 0.008154
+    },
+    "atm_iv_30": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 6.7e-05,
+     "abs": 6.7e-05
+    },
+    "iv_term_slope": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.000681,
+     "abs": 0.000681
+    },
+    "iv_put_minus_call_30d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.008452,
+     "abs": 0.008452
+    },
+    "implied_move_1d": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 6.7e-05,
+     "abs": 6.7e-05
+    },
+    "gap_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": 0.00732,
+     "abs": 0.00732
+    },
+    "surprise_vs_implied": {
+     "status": "ok",
+     "n_blocks": 160,
+     "mean_rank_ic": -0.017505,
+     "abs": 0.017505
+    }
+   },
+   "ranked": [
+    [
+     0.030985,
+     "overnight_gap"
+    ],
+    [
+     0.017505,
+     "surprise_vs_implied"
+    ],
+    [
+     0.016719,
+     "n_estimates"
+    ],
+    [
+     0.016428,
+     "revision_down"
+    ],
+    [
+     0.014901,
+     "gap_vs_runup"
+    ]
+   ]
+  }
+ },
+ "Q1_realised_revision_ranks_returns": {
+  "contaminated_from_event_DO_NOT_CITE": {
+   "drift21": {
+    "n_blocks": 96,
+    "mean_ic": -0.01616,
+    "se": 0.01317,
+    "t": -1.227,
+    "p": 0.22293,
+    "mde80": 0.03691,
+    "under_own_mde80": true
+   },
+   "drift5": {
+    "n_blocks": 96,
+    "mean_ic": -0.016,
+    "se": 0.01211,
+    "t": -1.321,
+    "p": 0.18966,
+    "mde80": 0.03394,
+    "under_own_mde80": true
+   }
+  },
+  "from_t1": {
+   "n_events": 22409,
+   "t1_lag_days_median": 20.0,
+   "fwd5": {
+    "revision_raw": {
+     "n_blocks": 97,
+     "mean_ic": 0.00297,
+     "se": 0.0129,
+     "t": 0.23,
+     "p": 0.81865,
+     "mde80": 0.03615,
+     "under_own_mde80": true
+    },
+    "explained_by_surprise": {
+     "n_blocks": 97,
+     "mean_ic": -0.00318,
+     "se": 0.01342,
+     "t": -0.237,
+     "p": 0.81317,
+     "mde80": 0.0376,
+     "under_own_mde80": true
+    },
+    "surprise_orthogonal_residual": {
+     "n_blocks": 97,
+     "mean_ic": 0.00979,
+     "se": 0.01335,
+     "t": 0.733,
+     "p": 0.46511,
+     "mde80": 0.03741,
+     "under_own_mde80": true
+    }
+   },
+   "fwd21": {
+    "revision_raw": {
+     "n_blocks": 97,
+     "mean_ic": 0.00712,
+     "se": 0.01421,
+     "t": 0.501,
+     "p": 0.61745,
+     "mde80": 0.03982,
+     "under_own_mde80": true
+    },
+    "explained_by_surprise": {
+     "n_blocks": 97,
+     "mean_ic": 0.00555,
+     "se": 0.01314,
+     "t": 0.422,
+     "p": 0.6737,
+     "mde80": 0.03681,
+     "under_own_mde80": true
+    },
+    "surprise_orthogonal_residual": {
+     "n_blocks": 97,
+     "mean_ic": 0.00408,
+     "se": 0.01477,
+     "t": 0.276,
+     "p": 0.78284,
+     "mde80": 0.04138,
+     "under_own_mde80": true
+    }
+   }
+  }
+ },
+ "Q2_revision_is_predictable": {
+  "ridge": {
+   "n_blocks": 96,
+   "mean_ic": -0.00205,
+   "se": 0.01294,
+   "t": -0.158,
+   "p": 0.8747,
+   "mde80": 0.03625,
+   "under_own_mde80": true
+  },
+  "lightgbm": {
+   "n_blocks": 96,
+   "mean_ic": -0.01737,
+   "se": 0.01466,
+   "t": -1.185,
+   "p": 0.23897,
+   "mde80": 0.04108,
+   "under_own_mde80": true
+  }
+ },
+ "Q3_arms": {
+  "ridge__direct__h21": {
+   "n_blocks": 96,
+   "mean_ic": 0.00401,
+   "se": 0.01186,
+   "t": 0.339,
+   "p": 0.73571,
+   "mde80": 0.03322,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "ridge__routed__h21": {
+   "n_blocks": 96,
+   "mean_ic": -0.00828,
+   "se": 0.01275,
+   "t": -0.649,
+   "p": 0.51778,
+   "mde80": 0.03573,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__direct__h21": {
+   "n_blocks": 96,
+   "mean_ic": 0.00956,
+   "se": 0.01516,
+   "t": 0.63,
+   "p": 0.53005,
+   "mde80": 0.04249,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__routed__h21": {
+   "n_blocks": 96,
+   "mean_ic": -0.02831,
+   "se": 0.01184,
+   "t": -2.391,
+   "p": 0.01877,
+   "mde80": 0.03318,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "ridge__direct__h5": {
+   "n_blocks": 96,
+   "mean_ic": 0.00543,
+   "se": 0.01207,
+   "t": 0.45,
+   "p": 0.65369,
+   "mde80": 0.03381,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "ridge__routed__h5": {
+   "n_blocks": 96,
+   "mean_ic": -0.01079,
+   "se": 0.01286,
+   "t": -0.838,
+   "p": 0.4039,
+   "mde80": 0.03604,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__direct__h5": {
+   "n_blocks": 96,
+   "mean_ic": 0.02561,
+   "se": 0.01349,
+   "t": 1.898,
+   "p": 0.06072,
+   "mde80": 0.03781,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  },
+  "lightgbm__routed__h5": {
+   "n_blocks": 96,
+   "mean_ic": -0.02625,
+   "se": 0.01273,
+   "t": -2.062,
+   "p": 0.0419,
+   "mde80": 0.03566,
+   "under_own_mde80": true,
+   "bh_fdr_q10": false
+  }
+ },
+ "Q3_paired_routed_minus_direct": {
+  "ridge__h21": {
+   "n_blocks": 96,
+   "mean_diff": -0.01229,
+   "paired_se": 0.02004,
+   "t": -0.613,
+   "realised_arm_correlation": -0.3254,
+   "paired_mde80": 0.05615,
+   "exceeds_1_se": false,
+   "band": "STOP"
+  },
+  "lightgbm__h21": {
+   "n_blocks": 96,
+   "mean_diff": -0.03787,
+   "paired_se": 0.01894,
+   "t": -1.999,
+   "realised_arm_correlation": 0.0314,
+   "paired_mde80": 0.05308,
+   "exceeds_1_se": false,
+   "band": "STOP"
+  },
+  "ridge__h5": {
+   "n_blocks": 96,
+   "mean_diff": -0.01622,
+   "paired_se": 0.0218,
+   "t": -0.744,
+   "realised_arm_correlation": -0.5291,
+   "paired_mde80": 0.06109,
+   "exceeds_1_se": false,
+   "band": "STOP"
+  },
+  "lightgbm__h5": {
+   "n_blocks": 96,
+   "mean_diff": -0.05186,
+   "paired_se": 0.01841,
+   "t": -2.816,
+   "realised_arm_correlation": 0.0146,
+   "paired_mde80": 0.0516,
+   "exceeds_1_se": false,
+   "band": "STOP"
+  }
+ },
+ "decisive_cell": "lightgbm__h21",
+ "verdict": "STOP",
+ "equivalence_note": "a STOP here bounds the effect, it does not refute the decomposition: the design's paired MDE80 is reported per cell and the pre-registration declares that a +0.010 difference is NOT resolvable by this sample."
+}
