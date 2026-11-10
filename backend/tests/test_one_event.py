@@ -289,7 +289,9 @@ def test_real_universe_graph_from_the_default_dir(world, monkeypatch):
         "counts": g.counts()})
     rec = _run(world)                                     # no graph_dir: the default is used
     u = _stage(rec, "UNIVERSE")
-    assert u["status"] == OE.SUCCESS, u["reason"]
+    # since #93 an untyped event is CONTEXT ONLY, and the stage says so (review 3)
+    assert u["status"] == OE.DEGRADED and "GRAPH_CONTEXT_ONLY" in u["reason"], u["reason"]
+    assert u["data"]["graph_context_only"] is True
     assert u["data"]["graph"]["status"] == "OK"
     assert u["data"]["graph"]["dir"] == str(OE.default_graph_dir(world["root"]))
     assert "company:PEER" in {c["target"] for c in u["data"]["connected"]}
@@ -468,3 +470,35 @@ def test_decide_names_a_red_graph_its_consumers_ran_on(world, monkeypatch):
     d = _stage(rec, "DECIDE")
     assert d["data"]["graph_consumers_ran"] is True
     assert d["status"] == OE.DEGRADED and "GRAPH_STALE" in d["reason"]
+
+
+def test_a_context_only_graph_answer_is_named_not_success(world, monkeypatch):
+    """Review 2 O2 / review 3: since #93 an untyped event propagates CONTEXT
+    ONLY (no direction, no size), so funnel candidates and graph directions
+    are empty by construction. UNIVERSE and DECIDE say so instead of SUCCESS."""
+    UG = pytest.importorskip("backend.services.universe_graph")
+    if not hasattr(UG, "_context_only"):
+        pytest.skip("universe_graph predates #93")
+
+    class Imp:
+        def to_dict(self):
+            return {"target": "company:PEER", "target_type": "company", "horizon": 1,
+                    "expected_direction": 0, "expected_size": None, "confidence_label": "LOW",
+                    "path": ["company:HELD", "company:PEER"],
+                    "event": {"mode": "context_only"}}
+
+    g = types.SimpleNamespace(nodes={"company:HELD": 1, "company:PEER": 1}, as_of="2030-03-01")
+    fake = types.SimpleNamespace(
+        status=lambda d, now=None: {"status": "OK", "red": False, "as_of": "2030-03-01",
+                                    "age_days": 3, "dir": str(d), "line": "ok"},
+        load_graph=lambda d: g, company_id=lambda s: f"company:{s}",
+        propagate=lambda graph, ev: [Imp()],
+        holdings_exposure=lambda graph, held, evs: [],
+        owner_warnings=lambda graph, held, evs, min_label="MEDIUM": [],
+        funnel_candidates=lambda graph, evs, **kw: [])
+    monkeypatch.setattr(OE, "_graph_module", lambda: (fake, None))
+    _typed(world, -0.6)
+    rec = _run(world, graph_dir=world["root"] / "universe_graph")
+    u, d = _stage(rec, "UNIVERSE"), _stage(rec, "DECIDE")
+    assert u["status"] == OE.DEGRADED and "GRAPH_CONTEXT_ONLY" in u["reason"]
+    assert d["status"] == OE.DEGRADED and "GRAPH_CONTEXT_ONLY" in d["reason"]

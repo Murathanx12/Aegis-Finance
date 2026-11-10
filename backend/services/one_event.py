@@ -387,6 +387,14 @@ def universe(ev: Optional[dict], *, now: datetime, graph_dir: Optional[Path],
     uni["connected"] = conn[:top_k]
     uni["graph_event"] = gev
     uni["direction_conditional"] = conditional
+    # review 2 O2 / review 3: since #93 an untyped event propagates CONTEXT ONLY
+    # (who is connected; no direction, no size), so graph candidates and graph
+    # forecast directions are empty by construction. Say so; never SUCCESS.
+    uni["graph_context_only"] = bool(rows) and all(
+        (r.get("event") or {}).get("mode") == "context_only" for r in rows)
+    if uni["graph_context_only"]:
+        reasons.append("GRAPH_CONTEXT_ONLY: the event carries no measured event type, so the "
+                       "graph names connected companies with no direction or size")
     if conditional:
         reasons.append("DIRECTION_UNKNOWN: implications computed for direction=+1; flip every "
                        "sign if the event is adverse")
@@ -528,6 +536,9 @@ def decide(ev: Optional[dict], row: Optional[dict], uni: Optional[dict], *, now:
                        "so held connected names were NOT checked")
     dec["graph_consumers_ran"] = graph_ran
     gstat = (uni or {}).get("graph") or {}
+    if graph_ran and (uni or {}).get("graph_context_only"):
+        reasons.append("GRAPH_CONTEXT_ONLY: no graph funnel candidates or directions are "
+                       "possible for an untyped event")
     if graph_ran and gstat.get("red"):
         # review 3: consumers that ran on a STALE (red) graph are not a clean SUCCESS
         reasons.append(f"GRAPH_{gstat.get('status')}: consumers ran on a red graph")
