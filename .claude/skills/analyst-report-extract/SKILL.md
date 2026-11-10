@@ -12,7 +12,7 @@ Only code and synthetic fixtures are committed. Do not send report text to a hos
 model (DeepSeek included) unless the owner has approved that report; extract by
 reading it yourself or from the converted tables.
 
-Origin: privately reconstructed from one UBS report (Okta, 2026-08-27) and its
+Origin: privately reconstructed from one licensed broker report and its
 conversion (`AEGIS_DOCUMENTS/bloomberg/converted/MANIFEST.json`: header, scenarios,
 EPS-revision, quantitative-review and financials tables). One report is a template,
 not evidence of skill. It replaces the user-level `aegis-analyst-operating-bridge`

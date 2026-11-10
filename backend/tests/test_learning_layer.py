@@ -417,3 +417,44 @@ def test_a_failed_refit_beside_learned_rules_is_a_red_exit():
     assert RD.ledger_exit_code({"distill": {"status": "LEARN_DEGRADED"},
                                 "reputation": "FAILED ValueError: future"}) == 4
     assert RD.ledger_exit_code({"distill": "FAILED boom"}) == 3
+
+
+def test_a_refused_refit_or_failed_policy_state_is_a_red_exit():
+    """Review 3 (S65) on #92: refit returns status REFUSED without raising
+    (too little data, a tuning failure). Beside LEARNED rules that used to exit
+    0, the sim cached the day as ok and plan_view kept reading stale weights."""
+    learned = {"distill": {"status": "LEARNED"}}
+    assert RD.ledger_exit_code({**learned, "reputation": "REFUSED"}) == 4
+    assert RD.ledger_exit_code({**learned, "reputation": None}) == 4
+    assert RD.ledger_exit_code({**learned, "reputation": "OK",
+                                "policy_state": "FAILED OSError: disk"}) == 5
+    assert RD.ledger_exit_code({**learned, "reputation": "OK",
+                                "policy_state": {"changed_since_last": []}}) == 0
+    # --no-refit: no reputation key at all is not a refit failure
+    assert RD.ledger_exit_code(learned) == 0
+
+
+def test_a_refused_refit_is_never_cached_as_ok_by_the_sim(monkeypatch, tmp_path):
+    from datetime import date
+    from types import SimpleNamespace
+
+    import scripts.sim_run as SR
+    from backend.services import forecast_reputation as FR
+    from backend.services import policy_state as PS
+    monkeypatch.setattr(FR, "refit", lambda today=None, **kw: {"status": "REFUSED",
+                                                               "reason": "tuning: thin"})
+    monkeypatch.setattr(RD, "distill_ledger", lambda as_of=None, write=True, **kw:
+                        {"status": "LEARNED", "n_rules_written": 2})
+    monkeypatch.setattr(PS, "refresh", lambda *a, **k: {"changed_since_last": []})
+    rc = RD.main(["--ledger"])
+    assert rc == 4
+    calls = []
+
+    def run(argv):
+        calls.append(argv)
+        return SimpleNamespace(returncode=rc, stdout="", stderr="")
+    day = date.today()
+    r1 = SR._daily_module_unit("distil", tmp_path, today=day, runner=run)
+    assert r1["status"] == "DEGRADED rc 4"
+    r2 = SR._daily_module_unit("distil", tmp_path, today=day, runner=run)
+    assert "skipped" not in r2 and len(calls) == 2

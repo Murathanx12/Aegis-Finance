@@ -921,9 +921,18 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
         complete_fn: Callable[[str, str], dict] | None = None,
         n_rules: int = N_RULES_DEFAULT, t1: str = T1_DEFAULT, t2: str = T2_DEFAULT,
         ledger_label: str = "", frozen_llm: Sequence[dict] | None = None,
-        frozen_meta: dict | None = None, allow_unbound_frozen: bool = False) -> dict:
+        frozen_meta: dict | None = None, allow_unbound_frozen: bool = False,
+        llm_params: dict | None = None, reads_log: Path | None = None,
+        ledger_sha: str | None = None) -> dict:
     """The whole experiment. `complete_fn(system, user) -> {"text", "cost_usd", ...}`
-    is injected; None runs greedy + random only and says so."""
+    is injected; None runs greedy + random only and says so.
+
+    Review 3 (S65): `llm_params` (temperature, max_tokens) are part of the
+    contract when a model is called, so draws at different settings no longer
+    share one contract hash (a re-score inherits the frozen file's). When
+    `reads_log` is given, every held-out read is appended there and the verdict
+    reports the CUMULATIVE count for this split (t1, t2, ledger), across runs:
+    an operator choosing among runs after reading held-out is a read too."""
     rng = np.random.default_rng(SEED)
     out_dir.mkdir(parents=True, exist_ok=True)
     g = frame_from_rows(rows, sectors=sector_map())
@@ -934,6 +943,10 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
     br = base_rates(tr)
     b_tr, b_va, b_ho = base_rate_for(tr, br), base_rate_for(va, br), base_rate_for(ho, br)
     run_contract = {**contract(), "t1": t1, "t2": t2, "n_rules": n_rules}
+    lp = (dict(llm_params) if complete_fn is not None and llm_params
+          else (frozen_meta or {}).get("llm_params") if complete_fn is None else None)
+    if lp:
+        run_contract["llm_params"] = lp        # absent key keeps pre-S65 hashes stable
     receipt: dict[str, Any] = {
         "schema": SCHEMA, "contract": run_contract,
         "contract_hash": contract_hash(run_contract),
@@ -994,6 +1007,8 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
     # ---- FREEZE ----
     frozen = {s: freeze(r, s) for s, r in sources.items()}
     meta = {"t1": t1, "t2": t2, "contract_hash": contract_hash(run_contract), "schema": SCHEMA}
+    if lp:
+        meta["llm_params"] = lp
     (out_dir / "frozen_rules.json").write_text(
         json.dumps({**frozen, "_meta": meta}, indent=1, default=str), encoding="utf-8")
     receipt["frozen_rules_sha"] = hashlib.sha256(
@@ -1038,6 +1053,10 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
                                       "ci95_week_block": list(_block_bootstrap(dd, Qh.day, rng))}
     held["paired"] = paired
     held["held_out_reads"] = 2 if llm_meta.get("rescored_frozen") else 1
+    if reads_log is not None:
+        held["held_out_reads_split_total"] = _log_held_out_read(
+            Path(reads_log), contract_hash=contract_hash(run_contract), t1=t1, t2=t2,
+            ledger_sha=ledger_sha or _rows_sha(rows), llm_params=lp, out_dir=out_dir)
     receipt["held_out"] = held
     receipt["n_rules_tried_total"] = {
         "llm_valid": len(sources.get("llm", [])),
@@ -1088,10 +1107,49 @@ def verdict(held: dict, weights: dict) -> dict:
         lines.append(f"weights/{name}: Brier {v['brier']:.5f} skill {v['skill']:+.4f}, "
                      f"vs equal {v['d_brier_vs_equal']:+.5f} [{lo:+.5f}, {hi:+.5f}]")
     reads = held.get("held_out_reads", 1)
+    total = held.get("held_out_reads_split_total")
+    split = (f"; this split's held-out has been read {total} time(s) across all runs"
+             if total is not None else "; cumulative reads of this split NOT tracked (no reads log)")
     return {"lines": lines,
             "claim": (f"none: PRODUCT_EXPERIMENT observation; held-out read {reads} time(s)"
                       + (" -- a RE-SCORE of rules whose held-out was already read once"
-                         if reads > 1 else ""))}
+                         if reads > 1 else "") + split)}
+
+
+def _rows_sha(rows: Sequence[dict]) -> str:
+    h = hashlib.sha256()
+    for r in rows:
+        h.update(str(r.get("prediction_id") or json.dumps(r, sort_keys=True, default=str)).encode())
+    return h.hexdigest()[:16]
+
+
+def _file_sha(path: Path) -> str:
+    h = hashlib.sha256()
+    with Path(path).open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()[:16]
+
+
+def _log_held_out_read(log: Path, *, contract_hash: str, t1: str, t2: str, ledger_sha: str,
+                       llm_params: dict | None, out_dir: Path) -> int:
+    """Append one held-out read; return how many reads this split (t1, t2,
+    ledger) has had, this one included. Append-only, one line per read."""
+    log.parent.mkdir(parents=True, exist_ok=True)
+    row = {"contract_hash": contract_hash, "t1": t1, "t2": t2, "ledger_sha": ledger_sha,
+           "llm_params": llm_params, "out_dir": str(out_dir),
+           "utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    with log.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, sort_keys=True) + "\n")
+    n = 0
+    for ln in log.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            r = json.loads(ln)
+        except ValueError:
+            continue
+        if (r.get("t1"), r.get("t2"), r.get("ledger_sha")) == (t1, t2, ledger_sha):
+            n += 1
+    return n
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1125,7 +1183,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     ff = json.loads(Path(a.frozen).read_text(encoding="utf-8")) if a.frozen else {}
     rec = run(rows, bars=bars, out_dir=Path(a.out), complete_fn=fn, n_rules=a.n_rules,
               t1=a.t1, t2=a.t2, ledger_label=str(a.ledger), frozen_llm=ff.get("llm"),
-              frozen_meta=ff.get("_meta"), allow_unbound_frozen=a.frozen_unbound)
+              frozen_meta=ff.get("_meta"), allow_unbound_frozen=a.frozen_unbound,
+              llm_params={"temperature": a.temperature, "max_tokens": a.max_tokens},
+              reads_log=Path(a.out).resolve().parent / "held_out_reads.jsonl",
+              ledger_sha=_file_sha(Path(a.ledger)))
     print("\n".join(rec["verdict"]["lines"]))
     print(f"receipt: {rec['receipt_path']}")
     if a.llm and not rec["llm"].get("n_valid"):

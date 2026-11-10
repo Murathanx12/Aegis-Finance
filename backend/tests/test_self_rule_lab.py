@@ -238,3 +238,37 @@ def test_the_premature_resolution_rows_are_held_out_like_the_refit_holds_them(mo
                         frozenset({_h.blake2b(victim.encode(), digest_size=16).digest()}))
     g = L.frame_from_rows(rows)
     assert victim not in set(g["row_id"]) and len(g) == len(rows) - 1
+
+
+def test_held_out_reads_are_counted_per_split_across_runs(tmp_path):
+    """Review 3 (S65) on #92 O1: four draws on one split each said 'read 1
+    time(s)' and shared one contract hash. The log counts every read of the
+    split, and temperature / max_tokens are in the contract."""
+    def fake_llm(system: str, user: str) -> dict:
+        return {"text": json.dumps({"rules": [
+            {"rule_text": "no vote", "when": [{"field": "family", "op": "eq",
+                                               "value": "macro_rates"}],
+             "action": {"type": "abstain"}}]}), "status": "OK", "cost_usd": 0.0}
+    log = tmp_path / "held_out_reads.jsonl"
+    a = L.run(_ledger(), bars=None, out_dir=tmp_path / "a", complete_fn=fake_llm, n_rules=2,
+              t1=T1, t2=T2, llm_params={"temperature": 0.2, "max_tokens": 3000},
+              reads_log=log, ledger_sha="snap1")
+    b = L.run(_ledger(), bars=None, out_dir=tmp_path / "b", complete_fn=fake_llm, n_rules=2,
+              t1=T1, t2=T2, llm_params={"temperature": 0.8, "max_tokens": 3000},
+              reads_log=log, ledger_sha="snap1")
+    assert a["contract_hash"] != b["contract_hash"]
+    assert a["held_out"]["held_out_reads_split_total"] == 1
+    assert b["held_out"]["held_out_reads_split_total"] == 2
+    assert "read 2 time(s) across all runs" in b["verdict"]["claim"]
+    # a re-score of b's frozen rules inherits b's llm_params and binds to its hash
+    fz = json.loads((tmp_path / "b" / "frozen_rules.json").read_text())
+    c = L.run(_ledger(), bars=None, out_dir=tmp_path / "c", n_rules=2, t1=T1, t2=T2,
+              frozen_llm=fz["llm"], frozen_meta=fz["_meta"], reads_log=log, ledger_sha="snap1")
+    assert c["held_out"]["held_out_reads_split_total"] == 3
+    # another ledger snapshot is another split
+    d = L.run(_ledger(), bars=None, out_dir=tmp_path / "d", n_rules=2, t1=T1, t2=T2,
+              reads_log=log, ledger_sha="snap2")
+    assert d["held_out"]["held_out_reads_split_total"] == 1
+    assert len(log.read_text().splitlines()) == 4
+    # no llm -> the contract hash is the pre-S65 one (no llm_params key)
+    assert "llm_params" not in d["contract"]

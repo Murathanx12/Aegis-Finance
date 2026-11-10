@@ -1921,16 +1921,23 @@ def night_learn(*, as_of: str | None = None, refit: bool = True,
 
 
 def ledger_exit_code(res: dict) -> int:
-    """0 only when the distillation LEARNED and no refit FAILED.
+    """0 only when the distillation LEARNED, the refit (if asked) returned OK
+    and policy_state was written.
 
-    4 = the reputation refit FAILED -- checked FIRST, whatever the distillation
-        did. Until 2026-11-11 a failed refit exited 0 behind LEARNED rules; and
-        checking it second would let the next rota slot's "no new graded rows"
-        (rc 3) overwrite the refit failure in the sim's unit cache.
+    4 = the reputation refit did not return OK -- FAILED (raised) or a status
+        such as REFUSED returned without raising (review 3, S65: too little
+        data or a tuning failure exited 0 behind LEARNED rules, the sim cached
+        the day as ok and plan_view kept stale weights). Checked FIRST,
+        whatever the distillation did, so the next rota slot's "no new graded
+        rows" (rc 3) cannot overwrite it in the sim's unit cache. A run with
+        no refit asked (`--no-refit`, no `reputation` key) is not a failure.
+    5 = policy_state FAILED.
     3 = the distillation wrote no rule (LEARN_DEGRADED, as before).
     """
-    if str(res.get("reputation") or "").startswith("FAILED"):
+    if "reputation" in res and str(res.get("reputation")) != "OK":
         return 4
+    if str(res.get("policy_state") or "").startswith("FAILED"):
+        return 5
     d = res.get("distill")
     if not (isinstance(d, dict) and d.get("status") == "LEARNED"):
         return 3
