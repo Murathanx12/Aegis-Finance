@@ -131,64 +131,229 @@ def _write(p, s):
             _sleep(WRITE_BACKOFF_S[i])
 
 
-def _append_sidecar(p, row):
-    """One fsynced line. The caller holds the envelope lock, which every sidecar
-    writer and reader also holds, so lines never interleave."""
+def _utcnow():
+    return datetime.now(timezone.utc)
+
+
+#: Blocks raised by a settlement that could reach neither the envelope nor the
+#: sidecar (review 3 O2). Latched per envelope path for THIS process: its readers
+#: see the block and its next `reserve()` persists it before admitting anything.
+_UNRECORDED_BLOCKS: dict = {}
+
+
+def _sidecar_lock(p):
+    """The sidecar's own lock. Order is always envelope -> sidecar, and a writer
+    that could not take the envelope lock takes only this one, so a settlement
+    that timed out on the envelope can still be recorded (review 3 R1)."""
     sp = sidecar_path(p)
-    with open(sp, "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(row, sort_keys=True) + "\n")
-        fh.flush()
-        os.fsync(fh.fileno())
+    return DG.file_lock(sp.with_name(sp.name + ".lock"), timeout_s=5)
 
 
-def _reconcile_sidecar(p, s):
-    """Apply deferred settlements to `s` in memory. Returns how many applied.
+def _append_sidecar(p, row):
+    """One fsynced line under the sidecar lock. A torn last line (a crash or a
+    full disk mid-write) is terminated first, so it can never swallow this row
+    (review 3 O1)."""
+    sp = sidecar_path(p)
+    with _sidecar_lock(p):
+        with open(sp, "ab+") as fh:
+            fh.seek(0, os.SEEK_END)
+            if fh.tell() > 0:
+                fh.seek(-1, os.SEEK_END)
+                if fh.read(1) != b"\n":
+                    fh.write(b"\n")
+            fh.write((json.dumps(row, sort_keys=True) + "\n").encode("utf-8"))
+            fh.flush()
+            os.fsync(fh.fileno())
+
+
+def _read_sidecar(p, *, locked=True):
+    """The sidecar's bytes (b"" when absent). `locked=False` is for the
+    read-only readers (`_peek`), which never create a lock file."""
+    sp = sidecar_path(p)
+    if not sp.exists():
+        return b""
+    if not locked:
+        try:
+            return sp.read_bytes()
+        except OSError:
+            return b""
+    with _sidecar_lock(p):
+        try:
+            return sp.read_bytes()
+        except FileNotFoundError:
+            return b""
+
+
+def _consume_sidecar(p, raw):
+    """Remove the `raw` prefix that was just applied; keep anything appended
+    since (a writer that could not take the envelope lock). Idempotent: a line
+    left behind is a no-op on the next reconcile."""
+    if not raw:
+        return
+    sp = sidecar_path(p)
+    try:
+        with _sidecar_lock(p):
+            now = sp.read_bytes() if sp.exists() else b""
+            if not now.startswith(raw):
+                return                                  # rewritten meanwhile: leave it
+            rest = now[len(raw):]
+            if rest:
+                tmp = sp.with_name(sp.name + f".{uuid.uuid4().hex}.tmp")
+                tmp.write_bytes(rest)
+                os.replace(tmp, sp)
+            else:
+                sp.unlink()
+    except (OSError, DG.FileLockTimeout) as exc:        # idempotent: re-applied lines no-op
+        logger.warning("provider_budget: sidecar not cleared (%s); its lines are no-ops now", exc)
+
+
+def _clear_sidecar(p):
+    _consume_sidecar(p, _read_sidecar(p))
+
+
+def _sidecar_lines(raw):
+    return [ln for ln in raw.decode("utf-8", errors="replace").splitlines() if ln.strip()]
+
+
+def _orphan_key(o):
+    return json.dumps(o, sort_keys=True, default=str)
+
+
+def _price(bounds, response):
+    """Pure settlement arithmetic, shared by `settle`, the lock-free fallback in
+    `attempt` and the sidecar reconcile (which recomputes from tokens, review 3
+    O5). `bounds` carries input_bound / output_bound / reserved_units."""
+    served = response.get("model") if isinstance(response, dict) else getattr(response, "model", None)
+    usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
+
+    def get(name):
+        return usage.get(name) if isinstance(usage, dict) else getattr(usage, name, None)
+    ti, to = get("prompt_tokens"), get("completion_tokens")
+    cached = get("prompt_cache_hit_tokens")
+    cached = 0 if cached is None else cached
+    return _price_tokens(bounds, served, ti, to, cached, answered=response is not None)
+
+
+def _price_tokens(bounds, served, ti, to, cached, *, answered=True):
+    block = "unknown returned model" if answered and served not in MODELS else None
+    valid = (served in MODELS and all(type(x) is int and x >= 0 for x in (ti, to, cached))
+             and cached <= ti and ti+to > 0)
+    cost = None
+    if valid:
+        cost = _units(((ti-cached)*PRICE["in"] + cached*PRICE["cached_in"] + to*PRICE["out"])/1e6)
+        if (ti > bounds["input_bound"] or to > bounds["output_bound"]
+                or cost > bounds["reserved_units"]):
+            block = "provider usage exceeded request reservation bound"
+    return {"status": "SETTLED_PEAK_ESTIMATE" if valid else "BILLING_UNKNOWN",
+            "cost_units": cost, "served": served, "block": block,
+            "tokens": {"ti": ti, "to": to, "cached": cached}}
+
+
+def _apply_sidecar(p, s, raw):
+    """Apply deferred settlements in `raw` to `s` in memory. Returns how many
+    changed `s`.
 
     A line applies only to a call still RESERVED_UNKNOWN in this envelope; a
     line for a call already settled is a no-op (idempotent after a crash between
     the envelope write and the sidecar removal). A line naming no call here is
-    kept on the envelope as an orphan, never silently dropped. A deferred block
-    is applied whatever the call's state.
+    kept on the envelope as an orphan, never silently dropped and never twice
+    (review 3 O3). A deferred block is applied whatever the call's state. The
+    cost is recomputed from the line's TOKENS against the call's own bounds; a
+    line without tokens keeps the full reservation (review 3 O5).
     """
-    sp = sidecar_path(p)
-    if not sp.exists():
-        return 0
     applied = 0
-    for ln in sp.read_text(encoding="utf-8", errors="replace").splitlines():
+    orphans = list(s.get("sidecar_orphans") or [])
+    seen = {_orphan_key(o) for o in orphans}
+
+    def orphan(o):
+        nonlocal applied
+        k = _orphan_key(o)
+        if k not in seen:
+            seen.add(k)
+            orphans.append(o)
+            applied += 1
+    for ln in _sidecar_lines(raw):
         try:
             row = json.loads(ln)
+            if not isinstance(row, dict):
+                raise ValueError("not an object")
         except ValueError:
-            s.setdefault("sidecar_orphans", []).append({"unparsed": ln[:200]})
-            applied += 1
+            orphan({"unparsed": ln[:200]})
             continue
         if row.get("blocked") and not s.get("blocked"):
             s["blocked"] = row["blocked"]
+            applied += 1
         r = s["calls"].get(row.get("reservation_id"))
         if r is None:
-            s.setdefault("sidecar_orphans", []).append(row)
-            applied += 1
+            orphan(row)
             continue
         if r["status"] != "RESERVED_UNKNOWN":
             continue
-        if row.get("status") == "SETTLED_PEAK_ESTIMATE" and type(row.get("held_units")) is int:
-            # a settled cost above the reservation is already a block (above)
-            r.update(status="SETTLED_PEAK_ESTIMATE", held_units=row["held_units"],
-                     cost_usd=row["held_units"] / SCALE)
+        tk = {k: row.get(k) for k in ("ti", "to", "cached")}
+        if (row.get("status") == "SETTLED_PEAK_ESTIMATE"
+                and all(type(v) is int for v in tk.values())):
+            pr = _price_tokens(r, row.get("served_model"), tk["ti"], tk["to"], tk["cached"])
+        else:
+            pr = {"status": "BILLING_UNKNOWN", "cost_units": None, "block": None}
+        if pr["status"] == "SETTLED_PEAK_ESTIMATE":
+            r.update(status="SETTLED_PEAK_ESTIMATE", held_units=pr["cost_units"],
+                     cost_usd=pr["cost_units"] / SCALE)
         else:
             r["status"] = "BILLING_UNKNOWN"            # keeps the full reservation held
+        if pr["block"] and not s.get("blocked"):
+            s["blocked"] = pr["block"]
         r.update(served_model=row.get("served_model"), settled_utc=row.get("settled_utc"),
                  reconciled_from_sidecar=True)
         applied += 1
+    if orphans:
+        s["sidecar_orphans"] = orphans
     return applied
 
 
-def _clear_sidecar(p):
-    try:
-        sidecar_path(p).unlink()
-    except FileNotFoundError:
-        pass
-    except OSError as exc:                              # idempotent: re-applied lines no-op
-        logger.warning("provider_budget: sidecar not removed (%s); its lines are no-ops now", exc)
+def _apply_latch(p, s):
+    reason = _UNRECORDED_BLOCKS.get(str(Path(p)))
+    if reason and not s.get("blocked"):
+        s["blocked"] = reason
+        return 1
+    return 0
+
+
+def _reconcile_sidecar(p, s):
+    """Read the sidecar (locked) and apply it to `s` in memory."""
+    return _apply_sidecar(p, s, _read_sidecar(p))
+
+
+def _sidecar_state(raw, now=None):
+    """(pending lines, age in hours of the oldest; None when any is undateable).
+    Dated by the rows' own stamps, never by the file's mtime."""
+    lines = _sidecar_lines(raw)
+    if not lines:
+        return 0, None
+    stamps = []
+    for ln in lines:
+        try:
+            row = json.loads(ln)
+            t = datetime.fromisoformat(str(row.get("deferred_utc") or row.get("settled_utc")))
+            if t.tzinfo is None:
+                raise ValueError("naive stamp")
+            stamps.append(t)
+        except (ValueError, TypeError, AttributeError):
+            return len(lines), None
+    return len(lines), ((now or _utcnow()) - min(stamps)).total_seconds() / 3600
+
+
+def reconcile(*, budget_path=None):
+    """Apply the sidecar to the envelope now (the next `reserve()` would do the
+    same). Returns the status line."""
+    p = Path(budget_path) if budget_path else path()
+    with _lock(p):
+        s = _load(p)
+        raw = _read_sidecar(p)
+        if _apply_sidecar(p, s, raw) + _apply_latch(p, s):
+            _write(p, s)
+        _UNRECORDED_BLOCKS.pop(str(p), None)
+        _consume_sidecar(p, raw)
+    return status_line(budget_path=budget_path)
 
 
 def host_envelope_required():
@@ -351,7 +516,17 @@ def _peek(p, budget_path=None):
     """The month view, or for an absent host envelope the one the first call WOULD create."""
     if monthly(budget_path) and p == path() and not p.exists():
         return _month_view(_fresh(month_id(), virtual=True), month_id())
-    return _view(_load(p), budget_path)
+    # Review 3 R2: every reader (status, preflight, snapshot, the dashboard)
+    # sees the TRUE spend and any deferred block: the sidecar and this
+    # process's unrecorded blocks are applied IN MEMORY. Nothing is written and
+    # no lock file is created.
+    s = _load(p)
+    raw = _read_sidecar(p, locked=False)
+    _apply_sidecar(p, s, raw)
+    _apply_latch(p, s)
+    v = dict(_view(s, budget_path))
+    v["sidecar_pending"], v["sidecar_oldest_age_h"] = _sidecar_state(raw)
+    return v
 
 
 #: The smallest reservation any call can make (two empty messages, 1 output
@@ -367,7 +542,13 @@ _HINTS = {
     "DAILY_CALL_CAP": "production daily call cap reached; resets at UTC midnight",
     "MISSING": f"fixed envelope absent; an attended initialize() creates it (`{CLI} init` for the month file)",
     "UNREADABLE": "envelope unreadable or malformed; inspect it, never delete or replace one holding spend",
+    "SIDECAR_STALE": f"the next paid call reconciles it, or run `{CLI} reconcile` now",
 }
+
+
+def _cfg():
+    from backend import config as C
+    return C
 
 
 def status_line(*, budget_path=None):
@@ -388,14 +569,30 @@ def status_line(*, budget_path=None):
                 f"spend so far UNKNOWN -- {_HINTS[code]}")
     room = s["cap_units"] - _held(s)
     code = "BLOCKED" if s.get("blocked") else "EXHAUSTED" if room < MIN_RESERVATION_UNITS else None
-    head = f"DEEPSEEK BUDGET REFUSED ({code})" if code else "DEEPSEEK BUDGET OK"
+    pending, age_h = s.get("sidecar_pending") or 0, s.get("sidecar_oldest_age_h")
+    limit_h = float(getattr(_cfg(), "DEEPSEEK_SIDECAR_STALE_HOURS", 12.0))
+    if code:
+        head = f"DEEPSEEK BUDGET REFUSED ({code})"
+    elif pending and (age_h is None or age_h > limit_h):
+        # an unreconciled sidecar is a date that must be compared (review 3 R2);
+        # an undateable line is UNKNOWN, never fresh
+        code = "SIDECAR_STALE"
+        head = "DEEPSEEK BUDGET DEGRADED (SIDECAR_STALE)"
+    else:
+        head = "DEEPSEEK BUDGET OK"
     created = "; not yet created, the first call creates it" if s.get("virtual") else ""
     tail = f" -- {_HINTS[code]}" if code else ""
+    side = ""
+    if pending:
+        age = "age unknown" if age_h is None else f"oldest {age_h:.1f} h"
+        side = (f"; {pending} deferred settlement(s) pending in the sidecar ({age}, limit "
+                f"{limit_h:g} h), counted in the held amount")
     scope = (f"; covers llm_analyzer only, {len(UNCAPPED_DEEPSEEK_PATHS)} other DeepSeek "
              f"call-site files are UNCAPPED (`{CLI} status` lists them)"
              if UNCAPPED_DEEPSEEK_PATHS else "")
     return (f"{head}: {s.get('month') or s.get('session_id')} held ${held:.4f} of ${cap:.2f} cap "
-            f"(peak list estimate, {len(s['calls'])} calls; envelope {p.name}{created}{scope}){tail}")
+            f"(peak list estimate, {len(s['calls'])} calls; envelope {p.name}{created}{side}"
+            f"{scope}){tail}")
 
 
 def _refuse(code, s, p):
@@ -460,9 +657,11 @@ def reserve(system, user, max_tokens, *, model, base_url, purpose,
             if str(exc).startswith("DEEPSEEK BUDGET"):
                 raise
             raise BudgetRefused(status_line(budget_path=budget_path)) from exc
-        if _reconcile_sidecar(p, s):
+        raw = _read_sidecar(p)
+        if _apply_sidecar(p, s, raw) + _apply_latch(p, s):
             _write(p, s)
-            _clear_sidecar(p)
+        _UNRECORDED_BLOCKS.pop(str(p), None)
+        _consume_sidecar(p, raw)                     # only what was applied; later lines stay
         v = _view(s, budget_path)
         if s.get("blocked"):
             raise _refuse("BLOCKED", v, p)
@@ -478,7 +677,11 @@ def reserve(system, user, max_tokens, *, model, base_url, purpose,
             "pid": os.getpid(), "purpose": str(purpose), "request_model": model,
             "started_utc": datetime.now(timezone.utc).isoformat(), "cost_usd": None}
         _write(p, s)
-    return {"id": token, "path": str(p), "reserved_usd": q["reserved_units"]/SCALE}
+    # the bounds travel on the ticket so a settlement that cannot read the
+    # envelope can still be priced and checked (review 3 R1)
+    return {"id": token, "path": str(p), "reserved_usd": q["reserved_units"]/SCALE,
+            "reserved_units": q["reserved_units"], "input_bound": q["input_bound"],
+            "output_bound": q["output_bound"]}
 
 
 def settle(ticket, response=None):
@@ -494,27 +697,16 @@ def settle(ticket, response=None):
         if r["status"] != "RESERVED_UNKNOWN":
             raise BudgetRefused("reservation already settled")
         was_blocked = bool(s.get("blocked"))
-        served = response.get("model") if isinstance(response, dict) else getattr(response, "model", None)
-        usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
-        cost = None
-        if response is not None and served not in MODELS:
-            s["blocked"] = "unknown returned model"
-        def get(name):
-            return usage.get(name) if isinstance(usage, dict) else getattr(usage, name, None)
-        ti, to = get("prompt_tokens"), get("completion_tokens")
-        cached = get("prompt_cache_hit_tokens")
-        cached = 0 if cached is None else cached
-        valid = (served in MODELS and all(type(x) is int and x >= 0 for x in (ti, to, cached))
-                 and cached <= ti and ti+to > 0)
-        if valid:
-            cost = _units(((ti-cached)*PRICE["in"] + cached*PRICE["cached_in"] + to*PRICE["out"])/1e6)
+        pr = _price(r, response)
+        if pr["block"]:
+            s["blocked"] = pr["block"]
+        if pr["status"] == "SETTLED_PEAK_ESTIMATE":
+            cost = pr["cost_units"]
             r.update(status="SETTLED_PEAK_ESTIMATE", held_units=cost, cost_usd=cost/SCALE)
-            if ti > r["input_bound"] or to > r["output_bound"] or cost > r["reserved_units"]:
-                s["blocked"] = "provider usage exceeded request reservation bound"
         else:
             r["status"] = "BILLING_UNKNOWN"
-        r["served_model"] = served
-        r["settled_utc"] = datetime.now(timezone.utc).isoformat()
+        r["served_model"] = pr["served"]
+        r["settled_utc"] = _utcnow().isoformat()
         out = {"cost_usd": r["cost_usd"], "budget_charge_usd": r["held_units"]/SCALE,
                "price_as_of": "2026-11-03", "cost_basis": "PEAK_LIST_ESTIMATE_NOT_BILLED",
                "billing_status": r["status"], "reservation_id": ticket["id"]}
@@ -522,22 +714,38 @@ def settle(ticket, response=None):
             _write(p, s)
         except PermissionError as exc:
             # The reply is PAID: keep it. The envelope on disk still holds the
-            # full reservation (>= this cost), so spend is not under-counted; the
-            # settlement (and any block it raised) waits in the sidecar.
-            row = {"reservation_id": ticket["id"], "status": r["status"],
-                   "held_units": r["held_units"], "served_model": served,
-                   "settled_utc": r["settled_utc"], "blocked": s.get("blocked") if not was_blocked
-                   else None, "error": f"{type(exc).__name__}: {exc}"[:200]}
-            try:
-                _append_sidecar(p, row)
-                out.update(billing_status=DEFERRED_STATUS, settlement_deferred=True)
-            except OSError as exc2:
-                # nothing on disk moved: the reservation stays held, the reply is kept
-                logger.error("provider_budget: settlement of %s not recorded (%s; sidecar %s); "
-                             "the full reservation stays held", ticket["id"], exc, exc2)
-                out.update(billing_status="SETTLEMENT_FAILED_RESERVATION_RETAINED",
-                           budget_charge_usd=ticket["reserved_usd"], settlement_deferred=False)
+            # full reservation; every reader applies the sidecar in memory
+            # (`_peek`), so spend is not under-counted even when the cost
+            # exceeds the reservation; the settlement and any block it raised
+            # wait in the sidecar for the next reserve.
+            out.update(_defer(ticket, pr, r["settled_utc"], exc,
+                              new_block=s.get("blocked") if not was_blocked else None))
         return out
+
+
+def _defer(ticket, pr, settled_utc, exc, *, new_block):
+    """Record a settlement the envelope could not take. Returns the accounting
+    fields to report. Never raises: the caller holds a PAID reply."""
+    p = Path(ticket["path"])
+    row = {"reservation_id": ticket["id"], "status": pr["status"],
+           "held_units": pr["cost_units"], **pr["tokens"], "served_model": pr["served"],
+           "settled_utc": settled_utc, "deferred_utc": _utcnow().isoformat(),
+           "blocked": new_block, "error": f"{type(exc).__name__}: {exc}"[:200]}
+    held_now = max(ticket["reserved_units"], pr["cost_units"] or 0)
+    try:
+        _append_sidecar(p, row)
+        return {"billing_status": DEFERRED_STATUS, "settlement_deferred": True,
+                "budget_charge_usd": held_now / SCALE}
+    except Exception as exc2:                               # noqa: BLE001
+        # nothing on disk moved: the reservation stays held, the reply is kept,
+        # and a block it raised is latched for this process (review 3 O2)
+        if new_block:
+            _UNRECORDED_BLOCKS[str(p)] = new_block
+        logger.error("provider_budget: settlement of %s not recorded (%s; sidecar %s); "
+                     "the full reservation stays held%s", ticket["id"], exc, exc2,
+                     "; its block is latched in this process" if new_block else "")
+        return {"billing_status": "SETTLEMENT_FAILED_RESERVATION_RETAINED",
+                "budget_charge_usd": held_now / SCALE, "settlement_deferred": False}
 
 
 def snapshot(*, budget_path=None):
@@ -551,7 +759,8 @@ def snapshot(*, budget_path=None):
 
 
 def preflight_snapshot():
-    """Read-only advisory check; atomic envelope replacements need no sidecar.
+    """Read-only advisory check. Deferred settlements in the sidecar (and any
+    block they carry) are applied in memory, so it sees true spend (review 3).
 
     Never creates directories/locks or writes accounting. Reservations still
     re-read under the authoritative lock before any provider dispatch. Returns
@@ -602,16 +811,32 @@ def attempt(body, *, base_url, purpose, send, production_cap=None):
         except Exception:
             pass
         raise
-    return response, finish(response)
+    try:
+        return response, finish(response)
+    except Exception as exc:                                    # noqa: BLE001
+        # Review 3 R1: the provider ANSWERED, so the reply is paid and is
+        # returned whatever settlement raised (a lock timeout, an unreadable
+        # envelope, a busy disk). The envelope still holds the full
+        # RESERVED_UNKNOWN reservation; the priced settlement goes to the
+        # sidecar, which every reader applies in memory and the next reserve
+        # writes.
+        pr = _price(ticket, response)
+        acct = {"cost_usd": None if pr["cost_units"] is None else pr["cost_units"] / SCALE,
+                "price_as_of": "2026-11-03", "cost_basis": "PEAK_LIST_ESTIMATE_NOT_BILLED",
+                "reservation_id": ticket["id"], "settle_error": type(exc).__name__}
+        acct.update(_defer(ticket, pr, _utcnow().isoformat(), exc, new_block=pr["block"]))
+        return response, acct
 
 
 def main(argv=None):
-    """`status` (exit 0 admits, 2 refuses) | `init` | `raise --cap USD --evidence TEXT`."""
+    """`status` (exit 0 admits, 1 admits but DEGRADED, 2 refuses) | `init` |
+    `raise --cap USD --evidence TEXT` | `reconcile` (apply the sidecar now)."""
     import argparse
     ap = argparse.ArgumentParser(prog="provider_budget")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status", help="print the accounting line; exit 2 when refusing")
     sub.add_parser("init", help="create the host envelope from config now (if absent)")
+    sub.add_parser("reconcile", help="apply deferred settlements (the sidecar) to the envelope now")
     r = sub.add_parser("raise", help="raise this month's cap (attended)")
     r.add_argument("--cap", type=float, required=True)
     r.add_argument("--evidence", required=True)
@@ -629,6 +854,8 @@ def main(argv=None):
         elif a.cmd == "raise":
             print(raise_cap(a.cap, evidence=a.evidence))
             return 0
+        elif a.cmd == "reconcile":
+            reconcile()
         line = status_line()
         print(line)
         try:
@@ -640,8 +867,10 @@ def main(argv=None):
         if UNCAPPED_DEEPSEEK_PATHS:
             print("uncapped (call DeepSeek outside this envelope): "
                   + ", ".join(UNCAPPED_DEEPSEEK_PATHS))
-        return 2 if line.startswith("DEEPSEEK BUDGET REFUSED") else 0
-    except BudgetRefused as exc:
+        if line.startswith("DEEPSEEK BUDGET REFUSED"):
+            return 2
+        return 1 if line.startswith("DEEPSEEK BUDGET DEGRADED") else 0
+    except (BudgetRefused, DG.FileLockTimeout) as exc:
         text = str(exc)
         print(text if text.startswith("DEEPSEEK BUDGET") else f"DEEPSEEK BUDGET REFUSED: {text}")
         return 2

@@ -137,3 +137,184 @@ def test_attempt_returns_the_paid_reply_when_the_envelope_stays_busy(month_dir, 
     out, acc = PB.attempt(body, base_url="https://api.deepseek.com", purpose="p",
                           send=lambda: sent.append(1) or resp)
     assert out is resp and sent == [1] and acc["billing_status"] == PB.DEFERRED_STATUS
+
+
+# -- review 3 (S65) on #97: the reviewer's three probes, now asserting the fix --
+# Invariant every test below checks: the spend a reader sees is never below the
+# cost of a reply that was paid for.
+
+BODY = {"model": "deepseek-chat", "max_tokens": 100,
+        "messages": [{"role": "system", "content": "s"}, {"role": "user", "content": "u"}]}
+ENV = "deepseek_local.json"
+
+
+def _seen_held(month_dir):
+    """What every reader sees: preflight and snapshot agree."""
+    a = PB._held(PB.preflight_snapshot())
+    b = PB._units(PB.snapshot()["held_usd"])
+    assert a == b
+    return a
+
+
+def _cost_units(resp):
+    u = resp.usage
+    return PB._units((u.prompt_tokens * PB.PRICE["in"]
+                      + u.completion_tokens * PB.PRICE["out"]) / 1e6)
+
+
+def test_probe1_lock_timeout_at_settle_keeps_the_paid_reply(month_dir, monkeypatch):
+    real = PB._lock
+    n = {"k": 0}
+
+    def lk(p):
+        n["k"] += 1
+        if n["k"] >= 2:                                   # reserve ok, settle times out
+            raise DG.FileLockTimeout("held by another process")
+        return real(p)
+    monkeypatch.setattr(PB, "_lock", lk)
+    sent, resp = [], _resp()
+    out, acc = PB.attempt(BODY, base_url="https://api.deepseek.com", purpose="p",
+                          send=lambda: sent.append(1) or resp)
+    assert out is resp and sent == [1]                    # paid, and KEPT
+    assert acc["billing_status"] == PB.DEFERRED_STATUS
+    assert acc["settle_error"] == "FileLockTimeout"
+    rec = _env(month_dir)["calls"][acc["reservation_id"]]
+    assert rec["status"] == "RESERVED_UNKNOWN"            # full reservation still held on disk
+    assert rec["held_units"] >= _cost_units(resp)
+    monkeypatch.setattr(PB, "_lock", real)
+    assert _seen_held(month_dir) >= _cost_units(resp)
+    _reserve()                                            # the next reserve reconciles
+    rec = _env(month_dir)["calls"][acc["reservation_id"]]
+    assert rec["status"] == "SETTLED_PEAK_ESTIMATE" and rec["held_units"] == _cost_units(resp)
+    assert not PB.sidecar_path(month_dir / ENV).exists()
+
+
+def test_load_failure_at_settle_keeps_the_paid_reply(month_dir, monkeypatch):
+    real = PB._load
+    n = {"k": 0}
+
+    def ld(p):
+        n["k"] += 1
+        if n["k"] >= 2:
+            raise PB.BudgetRefused("shared envelope absent/unreadable")
+        return real(p)
+    monkeypatch.setattr(PB, "_load", ld)
+    resp = _resp()
+    out, acc = PB.attempt(BODY, base_url="https://api.deepseek.com", purpose="p",
+                          send=lambda: resp)
+    assert out is resp and acc["billing_status"] == PB.DEFERRED_STATUS
+    assert PB._units(acc["budget_charge_usd"]) >= _cost_units(resp)
+    monkeypatch.setattr(PB, "_load", real)
+    assert _seen_held(month_dir) >= _cost_units(resp)
+
+
+def test_probe2_status_and_preflight_see_a_block_pending_in_the_sidecar(month_dir, monkeypatch):
+    t = _reserve()
+    _busy_envelope(monkeypatch, times=None)
+    PB.settle(t, _resp(model="deepseek-mystery"))         # block deferred to the sidecar
+    monkeypatch.setattr(DG, "atomic_write_json", REAL_WRITE)
+    line = PB.status_line()
+    assert line.startswith("DEEPSEEK BUDGET REFUSED (BLOCKED)"), line
+    assert "1 deferred settlement(s) pending in the sidecar" in line
+    assert PB.preflight_snapshot()["blocked"] == "unknown returned model"
+    from scripts import world_digest as WD
+    assert WD._shared_budget_refusal() == "SHARED_ENVELOPE_BLOCKED"
+    assert PB.main(["status"]) == 2
+    # no reader wrote anything
+    assert _env(month_dir).get("blocked") is None
+    assert PB.sidecar_path(month_dir / ENV).exists()
+
+
+def test_readers_see_a_settled_cost_above_its_reservation(month_dir, monkeypatch):
+    """O4: cost > reservation (itself a block) while the write is busy."""
+    t = _reserve()
+    reserved = _env(month_dir)["calls"][t["id"]]["held_units"]
+    big = _resp(out=5000)                                 # far above max_tokens=100
+    assert _cost_units(big) > reserved
+    _busy_envelope(monkeypatch, times=None)
+    PB.settle(t, big)
+    monkeypatch.setattr(DG, "atomic_write_json", REAL_WRITE)
+    assert _seen_held(month_dir) >= _cost_units(big)
+    assert PB.preflight_snapshot()["blocked"] == "provider usage exceeded request reservation bound"
+
+
+def test_probe3_partial_sidecar_line_does_not_eat_the_next_block(month_dir, monkeypatch):
+    t = _reserve()
+    sp = PB.sidecar_path(month_dir / ENV)
+    sp.write_text('{"reservation_id": "zz", "sta', encoding="utf-8")    # crash mid-line
+    _busy_envelope(monkeypatch, times=None)
+    PB.settle(t, _resp(model="deepseek-mystery"))
+    monkeypatch.setattr(DG, "atomic_write_json", REAL_WRITE)
+    with pytest.raises(PB.BudgetRefused, match="BLOCKED"):
+        _reserve()
+    s = _env(month_dir)
+    assert s["blocked"] == "unknown returned model"
+    assert [o.get("unparsed", "")[:16] for o in s["sidecar_orphans"]] == ['{"reservation_id']
+
+
+def test_unwritable_sidecar_still_blocks_this_process(month_dir, monkeypatch):
+    """O2: envelope AND sidecar unwritable: the reply is kept, the block is
+    latched in-process and persisted by this process's next reserve."""
+    t = _reserve()
+    _busy_envelope(monkeypatch, times=None)
+
+    def no_sidecar(p, row):
+        raise OSError(28, "No space left on device")
+    monkeypatch.setattr(PB, "_append_sidecar", no_sidecar)
+    acc = PB.settle(t, _resp(model="deepseek-mystery"))
+    assert acc["billing_status"] == "SETTLEMENT_FAILED_RESERVATION_RETAINED"
+    monkeypatch.setattr(DG, "atomic_write_json", REAL_WRITE)
+    assert PB.status_line().startswith("DEEPSEEK BUDGET REFUSED (BLOCKED)")
+    with pytest.raises(PB.BudgetRefused, match="BLOCKED"):
+        _reserve()
+    assert _env(month_dir)["blocked"] == "unknown returned model"
+
+
+def test_orphan_lines_are_not_re_appended_while_the_sidecar_cannot_be_cleared(
+        month_dir, monkeypatch):
+    """O3."""
+    _reserve()
+    sp = PB.sidecar_path(month_dir / ENV)
+    sp.write_text(json.dumps({"reservation_id": "not-here", "status": "BILLING_UNKNOWN"})
+                  + "\n", encoding="utf-8")
+    monkeypatch.setattr(PB, "_consume_sidecar", lambda p, raw: None)   # never cleared
+    _reserve()
+    _reserve()
+    _reserve()
+    assert len(_env(month_dir)["sidecar_orphans"]) == 1
+
+
+def test_reconcile_recomputes_cost_from_tokens_not_held_units(month_dir):
+    """O5: a parseable line claiming held_units 0 cannot release the reservation."""
+    t = _reserve()
+    reserved = _env(month_dir)["calls"][t["id"]]["held_units"]
+    sp = PB.sidecar_path(month_dir / ENV)
+    row = {"reservation_id": t["id"], "status": "SETTLED_PEAK_ESTIMATE", "held_units": 0,
+           "served_model": "deepseek-flash", "settled_utc": "2026-01-01T00:00:00+00:00"}
+    sp.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    _reserve()
+    rec = _env(month_dir)["calls"][t["id"]]
+    assert rec["status"] == "BILLING_UNKNOWN" and rec["held_units"] == reserved   # no tokens
+    t2 = _reserve()
+    sp.write_text(json.dumps({**row, "reservation_id": t2["id"], "ti": 20, "to": 10,
+                              "cached": 0}) + "\n", encoding="utf-8")
+    _reserve()
+    assert _env(month_dir)["calls"][t2["id"]]["held_units"] == _cost_units(_resp())
+
+
+def test_stale_unreconciled_sidecar_is_a_degraded_status_line(month_dir, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    t = _reserve()
+    _busy_envelope(monkeypatch, times=None)
+    PB.settle(t, _resp())
+    monkeypatch.setattr(DG, "atomic_write_json", REAL_WRITE)
+    line = PB.status_line()
+    assert line.startswith("DEEPSEEK BUDGET OK") and "pending in the sidecar" in line
+    lim = float(C.DEEPSEEK_SIDECAR_STALE_HOURS)
+    later = datetime.now(timezone.utc) + timedelta(hours=lim + 1)
+    monkeypatch.setattr(PB, "_utcnow", lambda: later)
+    line = PB.status_line()
+    assert line.startswith("DEEPSEEK BUDGET DEGRADED (SIDECAR_STALE)"), line
+    assert PB.main(["reconcile"]) == 0
+    assert PB.status_line().startswith("DEEPSEEK BUDGET OK")
+    assert not PB.sidecar_path(month_dir / ENV).exists()

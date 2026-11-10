@@ -526,3 +526,5 @@ backend/data/optimus/local_runtime_digest/
 backend/data/optimus/session_budget/deepseek_local*.json
 backend/data/optimus/session_budget/deepseek_local*.json.lock
 backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.lock
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.*.tmp

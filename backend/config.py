@@ -2895,6 +2895,11 @@ RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "40.0"))
 #: (`provider_budget.UNCAPPED_DEEPSEEK_PATHS`; a new unguarded call site fails
 #: `test_deepseek_call_sites_are_guarded`).
 DEEPSEEK_MONTHLY_CAP_USD = float(os.getenv("AEGIS_DEEPSEEK_MONTHLY_CAP_USD", "15.0"))
+#: A deferred settlement (`deepseek_local.unsettled.jsonl`, written when the
+#: envelope was busy) older than this many hours, by its own `deferred_utc`
+#: stamp, turns `provider_budget status` DEGRADED. Readers already count it in
+#: memory; this says nobody has reconciled the file (review 3, S65).
+DEEPSEEK_SIDECAR_STALE_HOURS = 12.0
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for
