@@ -273,7 +273,8 @@ def generate(provider: str, n: int, cap: float | None, max_tokens: int = 6000,
                                     "tokens_in": r.get("tokens_in"), "tokens_out": r.get("tokens_out")},
                                    indent=1, default=str), encoding="utf-8")
     if not r.get("ok") or items is None:
-        return {"provider": provider, "ok": False, "status": r.get("status"), "receipt": str(raw_path)}
+        return {"provider": provider, "ok": False, "status": r.get("status"), "receipt": str(raw_path),
+                **({"error": str(r["error"])[:400]} if r.get("error") else {})}
     from backend.services import hyp_cells as HC
     rows = L.parse_generated(items, source=f"{provider}_gen", source_ref=str(raw_path.relative_to(L.REPO)),
                              symbols=HC.bar_symbols())
@@ -481,7 +482,26 @@ def nightly(k: int, cap: float, providers: list[str], time_box_min: float) -> di
     rec["spend_this_run_usd"] = round(HL.spent()["binding_usd"] - spent0, 5)
     rec["wall_min"] = round((time.monotonic() - t0) / 60, 1)
     rec["status"] = "OK"
+    # 2026-11-10 (CH-04): from 10-15 to 11-10 every generation came back
+    # BUDGET_REFUSED and this receipt still said OK at rc 0. The deterministic
+    # work above (declare/run from the backlog) is kept; the night is not green.
+    refused = [g for g in gens if g.get("status") == "BUDGET_REFUSED"]
+    if refused:
+        rec["status"] = "BUDGET_REFUSED"
+        err = str(refused[0].get("error") or "")
+        rec["reason"] = err if "DEEPSEEK BUDGET" in err else "; ".join(x for x in (err, _budget_line()) if x)
+        rec["why_exited"] = rec["reason"]
     return _write_nightly(rec, stamp)
+
+
+def _budget_line() -> str:
+    """The provider envelope's one line: spend so far, cap, what to do."""
+    try:
+        from backend.services import provider_budget as PB
+        return PB.status_line()
+    except Exception as exc:                                     # noqa: BLE001
+        return (f"DEEPSEEK BUDGET REFUSED: status unavailable ({type(exc).__name__}) -- "
+                "run `python -m backend.services.provider_budget status`")
 
 
 def _write_nightly(rec: dict, stamp: str) -> dict:
@@ -498,6 +518,8 @@ def cmd_nightly(a) -> int:
                      indent=1, default=str))
     if rec.get("stop"):
         return 3          # the exit code the old .cmd used for a STOP, now WITH a receipt
+    if rec.get("status") != "OK" and rec.get("reason"):
+        print(f"hyp_lab nightly {rec.get('status')}: {rec.get('reason')}")
     return 0 if rec.get("status") == "OK" else 2
 
 

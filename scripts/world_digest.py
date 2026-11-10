@@ -143,6 +143,18 @@ def _shared_budget_refusal() -> str | None:
     return None
 
 
+def _budget_status_line() -> str:
+    """The envelope's one human line (spend so far, cap, what to do), or a
+    fixed fallback. Never raises; carries no block reason or evidence text."""
+    try:
+        from backend.services import provider_budget as PB
+        line = PB.status_line()
+        return line if isinstance(line, str) else "DEEPSEEK BUDGET: status unavailable"
+    except Exception:                                                # noqa: BLE001
+        return ("DEEPSEEK BUDGET: status unavailable -- run "
+                "`python -m backend.services.provider_budget status`")
+
+
 def _host_budget_required() -> bool:
     """Match the provider's PC enforcement without changing cloud runs."""
     try:
@@ -267,6 +279,7 @@ def run(a: argparse.Namespace) -> int:
         refusal = _shared_budget_refusal()
         if refusal:
             _p(f"REFUSED: shared budget preflight: {refusal}")
+            _p(_budget_status_line())
             budget_receipt_written = False
             try:
                 budget_path = _budget_failure_receipt(refusal)
@@ -532,6 +545,7 @@ def run(a: argparse.Namespace) -> int:
     _p(f"-> {od / f'world_digest_{stamp}.md'}")
     if budget_refused:
         _p("DEGRADED_MODEL_BUDGET: partial artifacts preserved; model budget refused")
+        _p(_budget_status_line())
         return 2
     return 0
 
