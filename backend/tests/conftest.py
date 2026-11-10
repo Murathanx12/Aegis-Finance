@@ -119,12 +119,12 @@ def _fresh_fmp_budget():
 
 @pytest.fixture(autouse=True)
 def _deepseek_month_envelope_to_tmp(tmp_path_factory, monkeypatch):
-    """Keep the monthly DeepSeek envelope (OD-2, 2026-11-10) off the host.
+    """Keep the host DeepSeek envelope (OD-2, 2026-11-10) off the host.
 
-    `provider_budget` now CREATES this month's envelope on the first reserved
-    call. Without this, a test that reached `reserve()` on the default path
-    would write `~/aegis-finance/.../deepseek_local_<month>.json` -- the real
-    PC's spend ledger -- with fixture calls in it.
+    `provider_budget` now CREATES the host envelope on the first reserved call
+    when it is absent. Without this, a test that reached `reserve()` on the
+    default path would write `~/aegis-finance/.../deepseek_local.json` -- the
+    real PC's spend ledger -- with fixture calls in it.
     """
     try:
         from backend.services import provider_budget

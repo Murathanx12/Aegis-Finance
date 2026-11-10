@@ -2874,15 +2874,26 @@ RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "40.0"))
 
 # ── DEEPSEEK MONTHLY ENVELOPE (OD-2, owner decision 2026-11-10) ───────────────
 #: The PC's DeepSeek reservation envelope (`backend/services/provider_budget.py`)
-#: is a CALENDAR-MONTH envelope (UTC): one file per month,
-#: `session_budget/deepseek_local_<YYYY-MM>.json`, created from this cap on the
-#: first paid call of the month and never reset or replaced inside it. The
-#: guard refused every call from 2026-10-15 to 2026-11-10 because the single
-#: envelope it required was never created and no rollover existed. Owner
-#: decision OD-2: $15/month, raised on demand -- for the running month with
+#: caps each CALENDAR MONTH (UTC). It is ONE file, `session_budget/deepseek_local.json`
+#: -- the file the runtime's 2026-10-15 guard also reads and writes, so old- and
+#: new-code processes cannot each spend a cap (review #88 R1). The month's held
+#: amount is the calls started in it; the file is created from this cap on the
+#: first paid call if absent and never reset or replaced. The guard refused every
+#: call from 2026-10-15 to 2026-11-10 because the envelope it required was never
+#: created and no rollover existed. Owner decision OD-2: $15/month, raised on
+#: demand -- for the running month with
 #: `python -m backend.services.provider_budget raise --cap <usd> --evidence ..`,
 #: for future months with this env var. Amounts are PEAK LIST estimates
 #: (conservative vs the billed balance), never billed dollars.
+#: SCOPE: the cap binds only DeepSeek calls through `provider_budget.attempt()`
+#: (`llm_analyzer._call_llm` / `call_named`). These call DeepSeek OUTSIDE it and
+#: are UNCAPPED by it (some have their own campaign budgets): services
+#: architecture_arena, copilot, leakage_probe, llm_research, llm_swarm,
+#: model_provider, optimus_specialists, why_moved; scripts book_factory,
+#: companyworld_extract, connection_check, era_replay_v2,
+#: n6b_fantasy_exams_round2, recall_canary_positive_control, stack_health
+#: (`provider_budget.UNCAPPED_DEEPSEEK_PATHS`; a new unguarded call site fails
+#: `test_deepseek_call_sites_are_guarded`).
 DEEPSEEK_MONTHLY_CAP_USD = float(os.getenv("AEGIS_DEEPSEEK_MONTHLY_CAP_USD", "15.0"))
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the

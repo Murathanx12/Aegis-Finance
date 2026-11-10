@@ -1,12 +1,28 @@
-"""Local DeepSeek reservation envelope: one per UTC calendar month (OD-2).
+"""Local DeepSeek reservation envelope with a UTC calendar-month cap (OD-2).
 
-No reset, no replacement, no paid fallback. The default host envelope is a
-MONTH file, `session_budget/deepseek_local_<YYYY-MM>.json`, created on the first
-paid call of the month from `config.DEEPSEEK_MONTHLY_CAP_USD` (owner decision
-2026-11-10: $15/month, raised on demand). Inside a month it is never recreated:
-an exhausted or blocked month stays refused until an attended `raise` or
-reconciliation. An explicit `AEGIS_DEEPSEEK_BUDGET_PATH` (or `budget_path=`)
-names a FIXED envelope with the old contract: attended `initialize` only.
+No reset, no replacement, no paid fallback. The default host envelope is ONE
+file, `session_budget/deepseek_local.json` -- the same file, schema and lock the
+runtime's 2026-10-15 guard reads and writes -- so processes on old and new code
+in the same month reserve against one ledger and cannot each spend a cap
+(review #88 R1: a separate month file gave each version its own $15). The cap
+applies to the RUNNING MONTH: this month's held amount is the calls whose
+`started_utc` falls in it (a call without a parseable one counts in every
+month) plus the opening debit if the file was created in it. The month cap is
+`month_caps[<YYYY-MM>]` (written by an attended `raise`), else
+`config.DEEPSEEK_MONTHLY_CAP_USD` (owner decision 2026-11-10: $15/month). The
+file is created from config on the first paid call if absent and never
+recreated. A block (`blocked`) is file-wide and survives the month boundary
+until attended reconciliation. The 10-15 code still checks the file's LIFETIME
+held against `cap_units`, which is never below this month's held, so it is
+only ever stricter. An explicit `AEGIS_DEEPSEEK_BUDGET_PATH` (or
+`budget_path=`) names a FIXED envelope with the old contract: attended
+`initialize` only, lifetime cap.
+
+SCOPE (review #88 R2): this envelope binds the DeepSeek calls that go through
+`attempt()` -- `llm_analyzer._call_llm` / `call_named` and their callers. The
+DeepSeek call sites listed in `UNCAPPED_DEEPSEEK_PATHS` call the provider
+outside it and are NOT capped; `status_line()` says so, and
+`test_deepseek_call_sites_are_guarded` fails when a new one appears.
 
 Why creation from config rather than "fail loudly" (2026-11-10): the old single
 envelope had no rollover and nothing created it, so every DeepSeek call on the PC
@@ -47,10 +63,30 @@ SCALE = 1_000_000_000
 #: Hard per-envelope ceiling (unchanged from the session design): a cap above it,
 #: from config or `raise`, is refused rather than clipped.
 HARD_CAP_USD = 20
-#: The pre-OD-2 single envelope. Its spend inside the running month is carried
-#: into the month file as an opening debit, so the switch cannot double a month.
-LEGACY_NAME = "deepseek_local.json"
+#: The ONE host envelope file, shared with the runtime's 2026-10-15 guard.
+ENVELOPE_NAME = "deepseek_local.json"
 CLI = "python -m backend.services.provider_budget"
+#: DeepSeek call sites that do NOT pass through `attempt()` (review #88 R2,
+#: 2026-11-11). Their spend is outside the monthly cap. Pinned by
+#: `backend/tests/test_deepseek_call_sites_are_guarded.py`; shrink it by
+#: routing a caller through `attempt()`, never grow it silently.
+UNCAPPED_DEEPSEEK_PATHS = (
+    "backend/services/architecture_arena.py",
+    "backend/services/copilot.py",
+    "backend/services/leakage_probe.py",
+    "backend/services/llm_research.py",
+    "backend/services/llm_swarm.py",
+    "backend/services/model_provider.py",
+    "backend/services/optimus_specialists.py",
+    "backend/services/why_moved.py",
+    "scripts/book_factory.py",
+    "scripts/companyworld_extract.py",
+    "scripts/connection_check.py",
+    "scripts/era_replay_v2.py",
+    "scripts/n6b_fantasy_exams_round2.py",
+    "scripts/recall_canary_positive_control.py",
+    "scripts/stack_health.py",
+)
 
 
 class BudgetRefused(RuntimeError):
@@ -88,11 +124,11 @@ def monthly(budget_path=None):
     return budget_path is None and not os.getenv("AEGIS_DEEPSEEK_BUDGET_PATH")
 
 
-def path(month=None):
+def path():
     override = os.getenv("AEGIS_DEEPSEEK_BUDGET_PATH")
     if override:
         return Path(override)
-    return _default_dir() / f"deepseek_local_{month or month_id()}.json"
+    return _default_dir() / ENVELOPE_NAME
 
 
 def monthly_cap_usd():
@@ -154,43 +190,54 @@ def _held(s):
     return s["opening_units"] + sum(r["held_units"] for r in s["calls"].values())
 
 
-def _legacy_carry(month):
-    """Spend the pre-OD-2 single envelope holds for `month`, and any block on it.
+def _month_of(stamp):
+    m = str(stamp or "")[:7]
+    return m if len(m) == 7 and m[4] == "-" and m[:4].isdigit() and m[5:].isdigit() else None
 
-    An unreadable legacy file refuses: carrying an unknown amount as zero would
-    let the switch double the month.
+
+def _month_cap_units(s, month):
+    """This month's cap: an attended raise for it, else config. In the file's
+    creation month the attended `cap_units` also binds (the smaller wins)."""
+    caps = s.get("month_caps") or {}
+    if type(caps.get(month)) is int and 0 < caps[month] <= HARD_CAP_USD*SCALE:
+        return caps[month]
+    cfg = _units(monthly_cap_usd())
+    if _month_of(s.get("created_utc")) in (month, None):
+        return min(cfg, s["cap_units"])
+    return cfg
+
+
+def _month_view(s, month):
+    """The envelope as the running month sees it: its calls, its opening, its cap.
+
+    Same keys as the file (callers sum `opening_units + calls[*].held_units`
+    against `cap_units`), restricted to `month`; a call or a creation stamp that
+    does not parse counts in every month.
     """
-    legacy = _default_dir() / LEGACY_NAME
-    if not legacy.exists():
-        return 0, None, "no legacy envelope"
-    s = _load(legacy)
-    units = sum(r["held_units"] for r in s["calls"].values()
-                if str(r.get("started_utc", ""))[:7] == month)
-    if str(s.get("created_utc", ""))[:7] == month:
-        units += s["opening_units"]
-    used = units > 0 or str(s.get("created_utc", ""))[:7] == month
-    blocked = (f"carried from {LEGACY_NAME}: {s['blocked']}"
-               if used and s.get("blocked") else None)
-    return units, blocked, f"carried {units/SCALE:.6f} USD held in {month} by {LEGACY_NAME}"
+    calls = {k: r for k, r in s["calls"].items()
+             if _month_of(r.get("started_utc")) in (month, None)}
+    opening = s["opening_units"] if _month_of(s.get("created_utc")) in (month, None) else 0
+    return {**s, "calls": calls, "opening_units": opening, "cap_units": _month_cap_units(s, month),
+            "month": month, "envelope_cap_units": s["cap_units"],
+            "lifetime_held_units": _held(s), "envelope": ENVELOPE_NAME}
 
 
 def _fresh(month, *, virtual=False):
     cap = _units(monthly_cap_usd())
-    opening, blocked, evidence = _legacy_carry(month)
-    return {"schema": SCHEMA, "session_id": f"monthly-{month}", "month": month,
+    return {"schema": SCHEMA, "session_id": f"od2-monthly-from-{month}",
             "created_utc": datetime.now(timezone.utc).isoformat(), "cap_units": cap,
             "cap_source": "config.DEEPSEEK_MONTHLY_CAP_USD (OD-2)",
-            "opening_units": min(opening, cap), "opening_evidence": evidence,
+            "opening_units": 0, "opening_evidence": f"created from config on the first {month} call",
             "price_as_of": "2026-11-03", "price_source": "https://api-docs.deepseek.com/quick_start/pricing/",
             "price_basis": "PEAK_LIST_ESTIMATE_NOT_BILLED", "calls": {}, "daily": {},
-            "blocked": blocked, "cap_history": [], **({"virtual": True} if virtual else {})}
+            "blocked": None, "month_caps": {}, "cap_history": [],
+            **({"virtual": True} if virtual else {})}
 
 
-def _ensure_month(p, budget_path=None):
-    """Create THIS month's envelope from config if absent. Caller holds the lock.
+def _ensure_envelope(p, budget_path=None):
+    """Create the host envelope from config if absent. Caller holds the lock.
 
-    Never touches an existing file, a fixed (explicit-path) envelope, or a past
-    or future month.
+    Never touches an existing file or a fixed (explicit-path) envelope.
     """
     if not monthly(budget_path) or p.exists() or p != path():
         return False
@@ -198,11 +245,21 @@ def _ensure_month(p, budget_path=None):
     return True
 
 
+def _view(s, budget_path=None):
+    return _month_view(s, month_id()) if monthly(budget_path) else s
+
+
 def _peek(p, budget_path=None):
-    """Load, or for an absent current month the envelope the first call WOULD create."""
+    """The month view, or for an absent host envelope the one the first call WOULD create."""
     if monthly(budget_path) and p == path() and not p.exists():
-        return _fresh(month_id(), virtual=True)
-    return _load(p)
+        return _month_view(_fresh(month_id(), virtual=True), month_id())
+    return _view(_load(p), budget_path)
+
+
+#: The smallest reservation any call can make (two empty messages, 1 output
+#: token). Below this much room every call refuses, so status says EXHAUSTED
+#: by the same rule `reserve` applies (review #88 O2).
+MIN_RESERVATION_UNITS = _units((1024*PRICE["in"] + 1*PRICE["out"])/1e6)
 
 
 _HINTS = {
@@ -231,12 +288,16 @@ def status_line(*, budget_path=None):
         code = "MISSING" if isinstance(exc.__cause__, FileNotFoundError) else "UNREADABLE"
         return (f"DEEPSEEK BUDGET REFUSED ({code}): envelope {p.name} could not be read; "
                 f"spend so far UNKNOWN -- {_HINTS[code]}")
-    code = "BLOCKED" if s.get("blocked") else "EXHAUSTED" if held >= cap else None
+    room = s["cap_units"] - _held(s)
+    code = "BLOCKED" if s.get("blocked") else "EXHAUSTED" if room < MIN_RESERVATION_UNITS else None
     head = f"DEEPSEEK BUDGET REFUSED ({code})" if code else "DEEPSEEK BUDGET OK"
     created = "; not yet created, the first call creates it" if s.get("virtual") else ""
     tail = f" -- {_HINTS[code]}" if code else ""
+    scope = (f"; covers llm_analyzer only, {len(UNCAPPED_DEEPSEEK_PATHS)} other DeepSeek "
+             f"call-site files are UNCAPPED (`{CLI} status` lists them)"
+             if UNCAPPED_DEEPSEEK_PATHS else "")
     return (f"{head}: {s.get('month') or s.get('session_id')} held ${held:.4f} of ${cap:.2f} cap "
-            f"(peak list estimate, {len(s['calls'])} calls; envelope {p.name}{created}){tail}")
+            f"(peak list estimate, {len(s['calls'])} calls; envelope {p.name}{created}{scope}){tail}")
 
 
 def _refuse(code, s, p):
@@ -253,14 +314,24 @@ def raise_cap(cap_usd, *, evidence, budget_path=None):
     if not evidence or not 0 < new <= HARD_CAP_USD*SCALE:
         raise BudgetRefused(f"raise needs --evidence and a cap in (0, ${HARD_CAP_USD}]")
     with _lock(p):
-        _ensure_month(p, budget_path)
+        _ensure_envelope(p, budget_path)
         s = _load(p)
-        if new <= s["cap_units"]:
+        month = month_id()
+        current = _view(s, budget_path)["cap_units"]
+        if new <= current:
             raise BudgetRefused(f"raise refused: ${cap_usd} is not above the current "
-                                f"${s['cap_units']/SCALE:.2f} cap (a cap is never lowered)")
-        s.setdefault("cap_history", []).append({"from_units": s["cap_units"], "to_units": new,
+                                f"${current/SCALE:.2f} cap (a cap is never lowered)")
+        s.setdefault("cap_history", []).append({"from_units": current, "to_units": new,
+            "month": month if monthly(budget_path) else None,
             "evidence": str(evidence), "utc": datetime.now(timezone.utc).isoformat()})
-        s["cap_units"] = new
+        if monthly(budget_path):
+            s.setdefault("month_caps", {})[month] = new
+            # In the file's creation month lifetime == month, so the 10-15
+            # guard (lifetime vs cap_units) gets exactly the same room.
+            if _month_of(s.get("created_utc")) == month and new > s["cap_units"]:
+                s["cap_units"] = new
+        else:
+            s["cap_units"] = new
         DG.atomic_write_json(p, s)
     return status_line(budget_path=budget_path)
 
@@ -285,20 +356,21 @@ def reserve(system, user, max_tokens, *, model, base_url, purpose,
     p = Path(budget_path) if budget_path else path()
     with _lock(p):
         try:
-            _ensure_month(p, budget_path)
+            _ensure_envelope(p, budget_path)
             s = _load(p)
+            v = _view(s, budget_path)
         except BudgetRefused as exc:
             if str(exc).startswith("DEEPSEEK BUDGET"):
                 raise
             raise BudgetRefused(status_line(budget_path=budget_path)) from exc
         if s.get("blocked"):
-            raise _refuse("BLOCKED", s, p)
-        if _held(s) + q["reserved_units"] > s["cap_units"]:
-            raise _refuse("EXHAUSTED", s, p)
+            raise _refuse("BLOCKED", v, p)
+        if _held(v) + q["reserved_units"] > v["cap_units"]:
+            raise _refuse("EXHAUSTED", v, p)
         day = datetime.now(timezone.utc).date().isoformat()
         if production_cap is not None:
             if s["daily"].get(day, 0) >= production_cap:
-                raise _refuse(f"DAILY_CALL_CAP: {production_cap} calls", s, p)
+                raise _refuse(f"DAILY_CALL_CAP: {production_cap} calls", v, p)
             s["daily"][day] = s["daily"].get(day, 0) + 1
         token = uuid.uuid4().hex
         s["calls"][token] = {**q, "held_units": q["reserved_units"], "status": "RESERVED_UNKNOWN",
@@ -348,8 +420,8 @@ def settle(ticket, response=None):
 
 
 def snapshot(*, budget_path=None):
-    """Locked read. An absent current month reads as the envelope the first
-    call would create (`virtual: True`); nothing is written."""
+    """Locked read of the running month's view. An absent host envelope reads
+    as the one the first call would create (`virtual: True`); nothing is written."""
     p = Path(budget_path) if budget_path else path()
     with _lock(p):
         s = _peek(p, budget_path)
@@ -361,8 +433,9 @@ def preflight_snapshot():
     """Read-only advisory check; atomic envelope replacements need no sidecar.
 
     Never creates directories/locks or writes accounting. Reservations still
-    re-read under the authoritative lock before any provider dispatch. An absent
-    current month reads as the fresh envelope the first reservation creates.
+    re-read under the authoritative lock before any provider dispatch. Returns
+    the running month's view; an absent host envelope reads as the fresh one
+    the first reservation creates.
     """
     return _peek(path())
 
@@ -417,7 +490,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="provider_budget")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status", help="print the accounting line; exit 2 when refusing")
-    sub.add_parser("init", help="create this month's envelope from config now")
+    sub.add_parser("init", help="create the host envelope from config now (if absent)")
     r = sub.add_parser("raise", help="raise this month's cap (attended)")
     r.add_argument("--cap", type=float, required=True)
     r.add_argument("--evidence", required=True)
@@ -430,7 +503,7 @@ def main(argv=None):
                       "use initialize() with explicit evidence")
                 return 2
             with _lock(p):
-                made = _ensure_month(p)
+                made = _ensure_envelope(p)
             print(("created " if made else "exists  ") + str(p))
         elif a.cmd == "raise":
             print(raise_cap(a.cap, evidence=a.evidence))
@@ -443,6 +516,9 @@ def main(argv=None):
             blocked = None
         if blocked:
             print(f"blocked: {blocked}")
+        if UNCAPPED_DEEPSEEK_PATHS:
+            print("uncapped (call DeepSeek outside this envelope): "
+                  + ", ".join(UNCAPPED_DEEPSEEK_PATHS))
         return 2 if line.startswith("DEEPSEEK BUDGET REFUSED") else 0
     except BudgetRefused as exc:
         text = str(exc)

@@ -2,9 +2,11 @@
 
 From 2026-10-15 to 2026-11-10 every PC DeepSeek call was refused because the
 single envelope was never created, and hyp_lab wrote `status: OK` at rc 0 over a
-BUDGET_REFUSED generation. These pin: the month file is created from config and
-never replaced; every refusal is one line with spend, cap and the remedy; the
-callers that swallowed it now go red.
+BUDGET_REFUSED generation. These pin: the ONE host envelope (the file the
+runtime's 10-15 guard also uses) is created from config and never replaced; the
+cap binds the running month's calls; every refusal is one line with spend, cap
+and the remedy; the callers that swallowed it now go red. Old-code / new-code
+interleaving is in `test_provider_budget_mixed_versions.py`.
 """
 import json
 from types import SimpleNamespace as NS
@@ -34,12 +36,12 @@ def settle_ok(ticket, tokens_out=10):
         prompt_tokens=20, completion_tokens=tokens_out, prompt_cache_hit_tokens=0)))
 
 
-def test_first_call_of_the_month_creates_the_envelope_from_config(month_dir):
-    p = month_dir / f"deepseek_local_{PB.month_id()}.json"
-    assert not p.exists()
+def test_first_call_creates_the_one_host_envelope_from_config(month_dir):
+    p = month_dir / "deepseek_local.json"
+    assert PB.path() == p and not p.exists()
     settle_ok(reserve())
     s = json.loads(p.read_text(encoding="utf-8"))
-    assert s["cap_units"] == PB._units(15.0) and s["month"] == PB.month_id()
+    assert s["cap_units"] == PB._units(15.0) and s["schema"] == PB.SCHEMA
     assert s["opening_units"] == 0 and len(s["calls"]) == 1
     settle_ok(reserve())                      # the same file again, never recreated
     assert len(json.loads(p.read_text(encoding="utf-8"))["calls"]) == 2
@@ -52,16 +54,16 @@ def test_cap_comes_from_config_and_is_bounded(month_dir, monkeypatch):
     monkeypatch.setattr(C, "DEEPSEEK_MONTHLY_CAP_USD", 25.0)
     with pytest.raises(PB.BudgetRefused, match="AEGIS_DEEPSEEK_MONTHLY_CAP_USD"):
         reserve()
-    assert not list(month_dir.glob("deepseek_local_*.json"))
+    assert not list(month_dir.glob("deepseek_local*.json"))
 
 
-def test_reads_never_create_the_month_file(month_dir):
+def test_reads_never_create_the_envelope(month_dir):
     assert PB.preflight_snapshot()["virtual"] is True
     assert PB.snapshot()["held_usd"] == 0
     line = PB.status_line()
     assert line.startswith("DEEPSEEK BUDGET OK") and "$15.00 cap" in line
     assert "first call creates it" in line
-    assert not list(month_dir.glob("deepseek_local_*.json"))
+    assert not list(month_dir.glob("deepseek_local*.json"))
 
 
 def test_exhausted_refusal_is_one_line_with_spend_cap_and_remedy(month_dir, monkeypatch):
@@ -99,40 +101,77 @@ def test_raise_is_attended_monotone_and_keeps_spend(month_dir, monkeypatch):
     assert after["calls"] == before["calls"] and after["held_usd"] == before["held_usd"]
 
 
-def test_a_new_month_gets_a_new_file_and_the_old_one_is_untouched(month_dir, monkeypatch):
-    monkeypatch.setattr(PB, "month_id", lambda now=None: "2026-11")
-    settle_ok(reserve())
-    nov = (month_dir / "deepseek_local_2026-11.json").read_bytes()
-    monkeypatch.setattr(PB, "month_id", lambda now=None: "2026-12")
-    settle_ok(reserve())
-    assert (month_dir / "deepseek_local_2026-11.json").read_bytes() == nov
-    dec = json.loads((month_dir / "deepseek_local_2026-12.json").read_text(encoding="utf-8"))
-    assert len(dec["calls"]) == 1 and dec["opening_units"] == 0
+def _write_envelope(d, *, created, calls, blocked=None, cap=15, opening=0.0):
+    (d / "deepseek_local.json").write_text(json.dumps({"schema": PB.SCHEMA,
+        "session_id": "fixture", "created_utc": created, "cap_units": PB._units(cap),
+        "opening_units": PB._units(opening), "opening_evidence": "fixture",
+        "calls": {k: {"held_units": PB._units(usd), "status": "SETTLED_PEAK_ESTIMATE",
+                      "started_utc": when} for k, (usd, when) in calls.items()},
+        "daily": {}, "blocked": blocked}), encoding="utf-8")
 
 
-def test_legacy_single_envelope_spend_and_block_carry_into_the_month(month_dir, monkeypatch):
-    monkeypatch.setattr(PB, "month_id", lambda now=None: "2026-11")
-    legacy = month_dir / PB.LEGACY_NAME
-    legacy.write_text(json.dumps({"schema": PB.SCHEMA, "session_id": "legacy",
-        "created_utc": "2026-11-10T12:00:00+00:00", "cap_units": PB._units(15),
-        "opening_units": PB._units(0.5), "opening_evidence": "fixture",
-        "calls": {"a": {"held_units": PB._units(0.25), "status": "SETTLED_PEAK_ESTIMATE",
-                        "started_utc": "2026-11-10T13:00:00+00:00"},
-                  "b": {"held_units": PB._units(9), "status": "SETTLED_PEAK_ESTIMATE",
-                        "started_utc": "2026-10-15T13:00:00+00:00"}},
-        "daily": {}, "blocked": "unknown returned model"}), encoding="utf-8")
+def _month_start(months_back=0):
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    y, m = now.year, now.month - months_back
+    while m < 1:
+        y, m = y - 1, m + 12
+    return f"{y:04d}-{m:02d}-01T00:00:00+00:00"
+
+
+def test_only_the_running_months_calls_count_against_the_cap(month_dir):
+    """A file created last month: last month's $14.9 and opening do not bind this month."""
+    _write_envelope(month_dir, created=_month_start(1), opening=0.5,
+                    calls={"old": (14.4, _month_start(1)), "new": (0.25, _month_start(0)),
+                           "undated": (0.01, "")})
     s = PB.snapshot()
-    assert s["opening_units"] == PB._units(0.75)       # this month's only; October excluded
-    assert "carried" in s["opening_evidence"]
+    assert s["held_usd"] == pytest.approx(0.26)        # this month + the undated call
+    assert s["cap_units"] == PB._units(15) and s["opening_units"] == 0
+    assert s["lifetime_held_units"] == PB._units(15.16)
+    settle_ok(reserve())                               # admitted: the month has room
+    raw = json.loads((month_dir / "deepseek_local.json").read_text(encoding="utf-8"))
+    assert len(raw["calls"]) == 4 and raw["cap_units"] == PB._units(15)   # appended, not reset
+
+
+def test_a_block_on_the_shared_file_blocks_and_survives_the_month(month_dir):
+    _write_envelope(month_dir, created=_month_start(1), blocked="unknown returned model",
+                    calls={"old": (0.1, _month_start(1))})
     with pytest.raises(PB.BudgetRefused, match=r"\(BLOCKED\)"):
         reserve()
 
 
-def test_unreadable_legacy_envelope_refuses_rather_than_carrying_zero(month_dir):
-    (month_dir / PB.LEGACY_NAME).write_text("{not json", encoding="utf-8")
+def test_raise_in_a_later_month_writes_the_month_cap_not_the_lifetime_cap(month_dir):
+    _write_envelope(month_dir, created=_month_start(1), calls={"old": (1.0, _month_start(1))})
+    PB.raise_cap(18, evidence="owner said so")
+    raw = json.loads((month_dir / "deepseek_local.json").read_text(encoding="utf-8"))
+    assert raw["month_caps"] == {PB.month_id(): PB._units(18)}
+    assert raw["cap_units"] == PB._units(15)          # the 10-15 guard stays stricter
+    assert PB.snapshot()["cap_units"] == PB._units(18)
+
+
+def test_status_says_exhausted_when_no_call_can_fit(month_dir, monkeypatch):
+    """Review #88 O2: status and reserve use one rule."""
+    _write_envelope(month_dir, created=_month_start(0), calls={"a": (14.99985, _month_start(0))})
+    line = PB.status_line()
+    assert line.startswith("DEEPSEEK BUDGET REFUSED (EXHAUSTED)")
+    with pytest.raises(PB.BudgetRefused, match="EXHAUSTED"):
+        reserve()
+
+
+def test_status_names_the_uncapped_paths(month_dir, capsys):
+    line = PB.status_line()
+    assert "covers llm_analyzer only" in line and "UNCAPPED" in line and "\n" not in line
+    assert PB.main(["status"]) == 0
+    out = capsys.readouterr().out
+    for x in PB.UNCAPPED_DEEPSEEK_PATHS:
+        assert x in out
+
+
+def test_unreadable_envelope_refuses_and_is_never_replaced(month_dir):
+    (month_dir / PB.ENVELOPE_NAME).write_text("{not json", encoding="utf-8")
     with pytest.raises(PB.BudgetRefused, match="UNREADABLE"):
         reserve()
-    assert not list(month_dir.glob("deepseek_local_*.json"))
+    assert (month_dir / PB.ENVELOPE_NAME).read_text(encoding="utf-8") == "{not json"
 
 
 def test_fixed_envelope_keeps_the_attended_contract(month_dir, monkeypatch, tmp_path):
