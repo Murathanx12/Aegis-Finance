@@ -6023,3 +6023,24 @@ FLEET_V3_WORST_CASE_EQUITY = 100_000.0
 FLEET_V3_MAX_K_SIGMA_DAY_LOSS_FRAC = 0.10
 #: No new paper book before this date (roadmap 2026-10-06 §7 "measure before you add").
 FLEET_V3_EARLIEST_SEED = "2026-10-26"
+
+# ── Licensed third-party data (Bloomberg exports, broker research) — CH-00 / CH-32 ──
+#: Converted Bloomberg / broker-research tables live OUTSIDE the public repo (licence:
+#: Bloomberg L.P., UBS). `backend.services.licensed_data` reads them from here and
+#: returns an explicit UNAVAILABLE status (never an empty frame) when the folder is
+#: absent, which is the normal state in CI. Override with AEGIS_LICENSED_DATA_DIR.
+LICENSED_DATA_DIR = Path(os.getenv(
+    "AEGIS_LICENSED_DATA_DIR",
+    str(Path.home() / "AEGIS_DOCUMENTS" / "bloomberg" / "converted")))
+#: The manifest the converter writes beside the tables (source sha256, rows, as_of).
+LICENSED_DATA_MANIFEST = "MANIFEST.json"
+#: Shelf life by dataset KIND, counted from the dataset's own `as_of` stamp in the
+#: manifest (never the file mtime). WLS membership rebalances quarterly; a broker note
+#: or an FA pull older than a quarter plus slack is a different information state.
+LICENSED_DATA_MAX_AGE_DAYS: dict = {
+    "index_membership": 100,
+    "fundamentals": 120,
+    "broker_note": 120,
+}
+#: A kind not listed above gets this shelf life.
+LICENSED_DATA_DEFAULT_MAX_AGE_DAYS = 120
