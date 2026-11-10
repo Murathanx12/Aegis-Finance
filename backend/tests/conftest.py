@@ -118,6 +118,24 @@ def _fresh_fmp_budget():
 
 
 @pytest.fixture(autouse=True)
+def _deepseek_month_envelope_to_tmp(tmp_path_factory, monkeypatch):
+    """Keep the host DeepSeek envelope (OD-2, 2026-11-10) off the host.
+
+    `provider_budget` now CREATES the host envelope on the first reserved call
+    when it is absent. Without this, a test that reached `reserve()` on the
+    default path would write `~/aegis-finance/.../deepseek_local.json` -- the
+    real PC's spend ledger -- with fixture calls in it.
+    """
+    try:
+        from backend.services import provider_budget
+        d = tmp_path_factory.mktemp("deepseek_month")
+        monkeypatch.setattr(provider_budget, "_default_dir", lambda: d)
+    except Exception:                                            # noqa: BLE001
+        pass
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _sandbox_telemetry_to_tmp(tmp_path_factory, monkeypatch):
     """Keep the suite's stub LLM calls out of the tracked sandbox ledger.
 
