@@ -248,6 +248,21 @@ def test_event_weights_round_trip_and_lookahead_refusal(tmp_path: Path):
     with pytest.raises(UG.GraphRefused):
         UG.attach_event_weights(g, wp, tmp_path)
     assert UG.attach_event_weights(g, None, tmp_path / "none")["status"] == "MISSING"
+    # runs over different families merge; the newest run wins per family
+    er = tmp_path / "multi" / "event_response"
+    er.mkdir(parents=True)
+    a = _weights()
+    a.to_parquet(er / "event_check_20210101T000000Z_weights.parquet", index=False)
+    b = _weights(w=0.3)
+    b["family"] = "rev_up"
+    b.to_parquet(er / "event_check_20210102T000000Z_weights.parquet", index=False)
+    c = _weights(w=-0.5)
+    c.to_parquet(er / "event_check_20210103T000000Z_weights.parquet", index=False)
+    row = UG.attach_event_weights(g, None, tmp_path / "multi")
+    assert row["families"] == {"8k_results": "event_check_20210103T000000Z_weights.parquet",
+                               "rev_up": "event_check_20210102T000000Z_weights.parquet"}
+    assert set(g.event_weights["family"]) == {"8k_results", "rev_up"}
+    assert (g.event_weights.loc[g.event_weights["family"] == "8k_results", "w"] == -0.5).all()
 
 
 # ── event-typed edges: timing, families, PIT structure, the held-out screen ──
@@ -390,6 +405,16 @@ def test_sector_factor_comovement_is_not_credited_to_the_event():
     assert sec0["t_vs_liquid"] > 3                      # looks like transfer against a random name
     assert not sec0["survives"]                         # but an ordinary day explains it
     assert any("ordinary day" in r for r in sec0["fails_because"]) or sec0["q_bh"] > 0.1
+
+
+def test_event_content_sign_overrides_the_move_sign():
+    panel, structures, evs = _event_world(0.0)
+    evs = evs.assign(event_sign=-1.0)            # every surprise negative, whatever A did
+    tab = UG.event_implications(panel, evs, structures, horizons=(1,), peer_cap=15, seed=1)
+    assert set(tab["d"].unique()) == {-1}
+    tab2 = UG.event_implications(panel, evs.drop(columns="event_sign"), structures,
+                                 horizons=(1,), peer_cap=15, seed=1)
+    assert set(tab2["d"].unique()) == {-1, 1}
 
 
 def test_event_weights_are_point_in_time():

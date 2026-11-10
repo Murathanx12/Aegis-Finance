@@ -867,7 +867,8 @@ def propagate(graph: UniverseGraph, event: dict) -> list[Implication]:
     """event = {node_id, event_type?, direction?, as_of?} -> implications, deterministic.
 
     A TYPED event on a company (event_type in EVENT_FAMILIES, direction = the sign
-    of the company's own market-adjusted move over the announcement window) reads
+    of the company's own market-adjusted move over the announcement window, or the
+    surprise sign for CONTENT_SIGN_FAMILIES) reads
     the graph's `event_response` cell weights: for each connected company B, the
     expected market-adjusted move over h sessions is w x sigma_B x sqrt(h), with
     w the shrunk mean response measured on past events of that family, edge type
@@ -942,10 +943,11 @@ def propagate(graph: UniverseGraph, event: dict) -> list[Implication]:
             out.append(Implication(
                 b, tn.type, tn.label, h, int(np.sign(size)), round(size, 6), round(w, 6), int(c.n),
                 [nid, b], [f"event_response:{et}"], 1, score, label,
-                f"{etype} at {nid}, own move {'up' if d > 0 else 'down'}: past {et} "
+                f"{etype} at {nid}, {'surprise' if etype in CONTENT_SIGN_FAMILIES else 'own move'} "
+                f"{'up' if d > 0 else 'down'}: past {et} "
                 f"{'(the name itself) ' if et == 'self' else ''}responses averaged "
-                f"{float(c.mean):+.3f} sigma over {h} sessions (n={int(c.n)}, t={float(c.t):+.2f}, "
-                f"shrunk w={w:+.3f}); held-out check "
+                f"{float(c.mean):+.3f} sigma over {h} sessions (n={int(c.n)} rows, which share "
+                f"dates and are not independent; shrunk w={w:+.3f}); held-out check "
                 f"{'SURVIVED' if validated else 'did NOT survive'} "
                 f"({getattr(c, 'validated_by', 'no check') or 'no check'})",
                 graph.as_of, ev_echo))
@@ -1537,8 +1539,12 @@ EVENT_FAMILY_LABELS = {
     "rev_up": "analyst upgrade (yfinance upgrades_downgrades action=up)",
     "rev_down": "analyst downgrade (yfinance upgrades_downgrades action=down)",
     "ins_opp_buy": "insider opportunistic open-market buy (Form 4)",
+    "earn_sue": "quarterly EPS surprise vs IBES consensus; direction = SIGN OF THE SURPRISE "
+                "(the event's content), not A's move (IBES is LICENSED: local only)",
 }
 EVENT_FAMILIES = tuple(EVENT_FAMILY_LABELS)
+#: Families whose direction is the event's CONTENT (the surprise sign), not A's move.
+CONTENT_SIGN_FAMILIES = frozenset({"earn_sue"})
 #: How B is connected to A. `self` is A's own post-announcement drift, the
 #: baseline effect of this kind. customer: B is a disclosed customer of A;
 #: supplier: B discloses A as a customer.
@@ -1645,6 +1651,24 @@ def load_typed_events(data_root: Path, *, families: Optional[Iterable[str]] = No
                          "rows": int(len(i)), "last": str(day.max())[:10], "status": "OK"})
         else:
             rows.append({"input": "sec_insider", "path": str(p), "rows": 0, "status": "MISSING"})
+    p = data_root / "wrds" / "bulk" / "ibes__surpsumu.parquet"
+    if "earn_sue" in want:
+        if p.exists():
+            u = pd.read_parquet(p, columns=["oftic", "measure", "fiscalp", "usfirm", "anndats",
+                                            "suescore"],
+                                filters=[("measure", "==", "EPS"), ("fiscalp", "==", "QTR"),
+                                         ("usfirm", "==", 1)])
+            u = u[u["suescore"].notna() & (u["suescore"] != 0) & u["oftic"].notna()]
+            f = pd.DataFrame({"symbol": u["oftic"].astype(str).str.upper(), "family": "earn_sue",
+                              "ts_utc": pd.to_datetime(u["anndats"]).dt.normalize().dt.tz_localize("UTC"),
+                              "precision": "date", "source": "ibes_surpsumu",
+                              "event_sign": np.sign(u["suescore"].to_numpy()).astype(np.int8)})
+            frames.append(f)
+            rows.append({"input": "ibes surpsumu (EPS QTR US)", "path": str(p), "rows": int(len(f)),
+                         "last": str(f["ts_utc"].max())[:10], "status": "OK",
+                         "note": "LICENSED; oftic used as the ticker; anndats is DATE-only"})
+        else:
+            rows.append({"input": "ibes surpsumu", "path": str(p), "rows": 0, "status": "MISSING"})
     if not frames:
         return pd.DataFrame(columns=["symbol", "family", "ts_utc", "precision", "source"]), rows
     ev = pd.concat(frames, ignore_index=True).dropna(subset=["ts_utc"])
@@ -1853,7 +1877,10 @@ def event_implications(panel: EventPanel, events: pd.DataFrame,
             continue
         mv = float(w.sum())
         sg = float(sig[st, a]) if np.isfinite(sig[st, a]) and sig[st, a] > 0 else float("nan")
-        d = int(np.sign(mv))
+        # direction = the event's CONTENT sign when the source carries one (an earnings
+        # surprise), else the sign of A's own announcement-window move
+        es = getattr(r, "event_sign", None)
+        d = int(es) if es is not None and np.isfinite(es) and es != 0 else int(np.sign(mv))
         if d == 0 or not np.isfinite(sg):
             n_skipped["no_direction"] += 1
             continue
@@ -1921,19 +1948,43 @@ def event_implications(panel: EventPanel, events: pd.DataFrame,
             break
         pe[near] = rng.integers(lo[near], hi[near] + 1)
     tab["pe"] = pe.astype(np.int32)
-    # (d) ORDINARY DAY: on the placebo session, the prediction follows A's OWN move over a
-    # window of the same length -- "A moved, what did B do" without an event, i.e. v1's
-    # bare price shock. An event cell that does not beat this adds nothing to a price move.
+    # (d) ORDINARY DAY: a session of the same year >= 22 sessions from the event where A
+    # moved by a SIMILAR amount (|z| >= BIG_MOVE_Z when the event's move was, below it
+    # otherwise) with no event; the prediction follows A's own move there. That is v1's
+    # bare price shock: an event cell that does not beat it adds nothing to a price move.
     st_all = tab["st"].to_numpy()
     Lw = e_ - st_all
     a_col = tab["A"].to_numpy()
+    big_z = float(getattr(_cfg, "UNIVERSE_GRAPH_EVENT_BIG_MOVE_Z", 2.0))
+    with np.errstate(invalid="ignore", divide="ignore"):
+        Z1 = np.abs(X / sig)
+    ev_ids, first_row = np.unique(tab["ev"].to_numpy(), return_index=True)
+    pq_ev = np.empty(len(ev_ids), dtype=np.int64)
+    n_unmatched = 0
+    for k_, r0_ in enumerate(first_row):
+        e0, a0_ = int(e_[r0_]), int(a_col[r0_])
+        Y0 = int(years[e0])
+        lo0, hi0 = first[Y0], last[Y0]
+        idx = np.arange(lo0, hi0 + 1)
+        idx = idx[np.abs(idx - e0) > 21]
+        zz = Z1[idx, a0_]
+        want_big = abs(float(tab["za"].iat[r0_])) >= big_z
+        cand = idx[np.isfinite(zz) & ((zz >= big_z) if want_big else (zz < big_z))]
+        if not len(cand):
+            cand = idx if len(idx) else np.array([e0])
+            n_unmatched += 1
+        pq_ev[k_] = int(cand[rng.integers(len(cand))])
+    del Z1
+    pq = pq_ev[np.searchsorted(ev_ids, tab["ev"].to_numpy())]
+    tab["pq"] = pq.astype(np.int32)
+    n_skipped["ordinary_day_unmatched_magnitude"] = n_unmatched
     Xa = np.where(np.isfinite(X), X, 0.0)
     csA = np.vstack([np.zeros((1, X.shape[1])), np.cumsum(Xa, axis=0)])
     del Xa
-    a0p = np.clip(pe - Lw, 0, None)
-    mvp = csA[pe + 1, a_col] - csA[a0p, a_col]
+    a0q = np.clip(pq - Lw, 0, None)
+    mvq = csA[pq + 1, a_col] - csA[a0q, a_col]
     del csA
-    flip = (np.sign(mvp) * tab["d"].to_numpy()).astype(np.float32)   # +1 same sign as event, -1 opposite
+    flip = (np.sign(mvq) * tab["d"].to_numpy()).astype(np.float32)   # +1 same sign as event
     flip[flip == 0] = np.nan
     if 0 in horizons:
         # h = 0 is the SAME announcement window as A's own move ([e] or [date..e]):
@@ -1945,16 +1996,15 @@ def event_implications(panel: EventPanel, events: pd.DataFrame,
         CN = np.vstack([np.zeros((1, X.shape[1])), np.cumsum(np.isfinite(X), axis=0)])
         del Xz
         for name, c, end in (("", tab["B"].to_numpy(), e_), ("cb_", tab["cb"].to_numpy(), e_),
-                             ("ca_", tab["ca"].to_numpy(), e_), ("cp_", tab["B"].to_numpy(), pe)):
+                             ("ca_", tab["ca"].to_numpy(), e_), ("cp_", tab["B"].to_numpy(), pe),
+                             ("cq_", tab["B"].to_numpy(), pq)):
             ok = c >= 0
             cc = np.where(ok, c, 0)
             a0 = np.clip(end - L, 0, None)
             v = CS[end + 1, cc] - CS[a0, cc]
             n = CN[end + 1, cc] - CN[a0, cc]
             r0 = np.where(ok & (n == L + 1), v, np.nan)
-            tab[f"{name}r0"] = r0.astype(np.float32)
-            if name == "cp_":
-                tab["cq_r0"] = (r0 * flip).astype(np.float32)
+            tab[f"{name}r0"] = (r0 * flip if name == "cq_" else r0).astype(np.float32)
             if name == "":
                 sg = sig[a0, cc]
                 with np.errstate(invalid="ignore", divide="ignore"):
@@ -1963,12 +2013,12 @@ def event_implications(panel: EventPanel, events: pd.DataFrame,
         del CS, CN
     for h in [x for x in horizons if x != 0]:
         for name, c, rowidx in (("", tab["B"].to_numpy(), e_), ("cb_", tab["cb"].to_numpy(), e_),
-                                ("ca_", tab["ca"].to_numpy(), e_), ("cp_", tab["B"].to_numpy(), pe)):
+                                ("ca_", tab["ca"].to_numpy(), e_), ("cp_", tab["B"].to_numpy(), pe),
+                                ("cq_", tab["B"].to_numpy(), pq)):
             ok = c >= 0
             cc = np.where(ok, c, 0)
-            tab[f"{name}r{h}"] = np.where(ok, panel.fwd[h][rowidx, cc], np.nan).astype(np.float32)
-            if name == "cp_":
-                tab[f"cq_r{h}"] = (tab[f"cp_r{h}"].to_numpy() * flip).astype(np.float32)
+            v = np.where(ok, panel.fwd[h][rowidx, cc], np.nan)
+            tab[f"{name}r{h}"] = (v * flip if name == "cq_" else v).astype(np.float32)
             if name in ("",):
                 tab[f"{name}y{h}"] = np.where(ok, panel.fwdz[h][rowidx, cc], np.nan).astype(np.float32)
     tab["year"] = years[e_].astype(np.int16)
@@ -2408,25 +2458,35 @@ def _build_id(as_of: str) -> str:
 
 
 def attach_event_weights(g: UniverseGraph, path: Optional[Path], out_dir: Path) -> dict:
-    """Load the newest event_check weights (or `path`) onto the graph; a receipt row.
+    """Load event_check weights onto the graph; a receipt row.
 
-    Refuses weights fitted AFTER the graph's as_of (they would contain its future).
-    Without weights the row is MISSING and `propagate` answers context-only.
+    With `path`, that one file. Without it, every `event_check_*_weights.parquet`
+    under <out_dir>/event_response, keeping for each family the NEWEST run's rows
+    (a run over one family must not erase the others). Refuses weights fitted AFTER
+    the graph's as_of (they would contain its future). Without weights the row is
+    MISSING and `propagate` answers context-only.
     """
-    if path is None:
-        path = newest((Path(out_dir) / "event_response").glob("event_check_*_weights.parquet"))
-    if path is None or not Path(path).exists():
+    paths = [Path(path)] if path is not None else sorted(
+        (Path(out_dir) / "event_response").glob("event_check_*_weights.parquet"))
+    paths = [p for p in paths if p.exists()]
+    if not paths:
         return {"input": "event_response weights", "status": "MISSING",
                 "note": "no event-check weights: propagate() returns context only (no direction)"}
-    w = pd.read_parquet(path)
-    w_asof = str(w["as_of"].iloc[0]) if "as_of" in w.columns and len(w) else None
-    if w_asof is None or w_asof > g.as_of:
-        raise GraphRefused(f"event weights {path} are as of {w_asof}, after the graph's as_of "
-                           f"{g.as_of} (or undated): refusing look-ahead")
-    g.event_weights = w
-    return {"input": "event_response weights", "path": str(path), "status": "OK",
-            "as_of": w_asof, "cells": int(len(w)),
-            "validated_cells": int(w["validated"].sum()) if "validated" in w.columns else 0}
+    frames, used = {}, {}
+    for p in paths:                                   # sorted by run id = by time
+        w = pd.read_parquet(p)
+        w_asof = str(w["as_of"].iloc[0]) if "as_of" in w.columns and len(w) else None
+        if w_asof is None or w_asof > g.as_of:
+            raise GraphRefused(f"event weights {p} are as of {w_asof}, after the graph's as_of "
+                               f"{g.as_of} (or undated): refusing look-ahead")
+        for fam, wf in w.groupby("family"):
+            frames[fam] = wf
+            used[fam] = p.name
+    W = pd.concat(frames.values(), ignore_index=True)
+    g.event_weights = W
+    return {"input": "event_response weights", "paths": sorted(set(used.values())),
+            "status": "OK", "families": used, "cells": int(len(W)),
+            "validated_cells": int(W["validated"].sum()) if "validated" in W.columns else 0}
 
 
 def cmd_build(args: argparse.Namespace) -> int:
