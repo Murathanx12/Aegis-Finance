@@ -173,9 +173,15 @@ def frame_from_rows(rows: Iterable[dict], *, sectors: dict[str, str] | None = No
     grader (`forecast_reputation._outcome01`, p in [0, 1])."""
     from backend.services import forecast_reputation as FR
     sectors = sectors if sectors is not None else {}
+    held = getattr(FR, "_PREMATURE_ID_HASHES", frozenset())
     out = []
     for r in rows:
         if r.get("void_reason"):
+            continue
+        # the 214 rows graded early on 2026-10-14 (held out of every refit until an
+        # attended regrade) are held out here too, by the refit's own fingerprints
+        if held and hashlib.blake2b(str(r.get("prediction_id")).encode(),
+                                    digest_size=16).digest() in held:
             continue
         y = FR._outcome01(r.get("outcome"))
         p = FR._num(r.get("probability"))
@@ -894,7 +900,7 @@ def field_values(train: pd.DataFrame) -> dict:
 def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
         complete_fn: Callable[[str, str], dict] | None = None,
         n_rules: int = N_RULES_DEFAULT, t1: str = T1_DEFAULT, t2: str = T2_DEFAULT,
-        ledger_label: str = "") -> dict:
+        ledger_label: str = "", frozen_llm: Sequence[dict] | None = None) -> dict:
     """The whole experiment. `complete_fn(system, user) -> {"text", "cost_usd", ...}`
     is injected; None runs greedy + random only and says so."""
     rng = np.random.default_rng(SEED)
@@ -935,6 +941,14 @@ def run(rows: Sequence[dict], *, bars: pd.DataFrame | None, out_dir: Path,
         llm_meta.update({"n_valid": len(good), "refused": bad})
         (out_dir / "llm_reply.txt").write_text(str(reply.get("text")), encoding="utf-8")
         sources["llm"] = good
+    elif frozen_llm is not None:
+        # RE-SCORE, never re-write: rules frozen by an earlier run, hash-checked
+        bad_hash = [r.get("rule_hash") for r in frozen_llm if rule_hash(r) != r.get("rule_hash")]
+        if bad_hash:
+            raise LabRefused(f"frozen rules altered since freezing: {bad_hash}")
+        sources["llm"] = [{k: r[k] for k in ("when", "action", "rule_text")} for r in frozen_llm]
+        llm_meta = {"called": False, "rescored_frozen": True, "n_valid": len(frozen_llm),
+                    "frozen_hashes": [r["rule_hash"] for r in frozen_llm]}
     receipt["llm"] = llm_meta
     greedy, gmeta = greedy_rules(tr, b_tr, n_rules)
     sources["greedy"] = greedy
@@ -1035,6 +1049,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--t1", default=T1_DEFAULT)
     ap.add_argument("--t2", default=T2_DEFAULT)
     ap.add_argument("--temperature", type=float, default=0.2)
+    ap.add_argument("--frozen", default=None,
+                    help="re-score the 'llm' rules of an earlier frozen_rules.json (no model call)")
     a = ap.parse_args(argv)
     from backend.services import forecast_reputation as FR
     rows = FR.load_ledger(a.ledger)
@@ -1048,8 +1064,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             return LA.call_named("deepseek", system, user, purpose="self_rule_lab",
                                  max_tokens=a.max_tokens, temperature=a.temperature,
                                  validate=lambda t: parse_llm_rules(t)[0] != [])
+    frozen = (json.loads(Path(a.frozen).read_text(encoding="utf-8")).get("llm")
+              if a.frozen else None)
     rec = run(rows, bars=bars, out_dir=Path(a.out), complete_fn=fn, n_rules=a.n_rules,
-              t1=a.t1, t2=a.t2, ledger_label=str(a.ledger))
+              t1=a.t1, t2=a.t2, ledger_label=str(a.ledger), frozen_llm=frozen)
     print("\n".join(rec["verdict"]["lines"]))
     print(f"receipt: {rec['receipt_path']}")
     if a.llm and not rec["llm"].get("n_valid"):

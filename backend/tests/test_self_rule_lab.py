@@ -183,3 +183,28 @@ def test_no_model_means_no_llm_source_and_says_so(tmp_path):
                 t1=T1, t2=T2)
     assert rec["llm"] == {"called": False}
     assert "llm" not in rec["held_out"]
+
+
+def test_frozen_rules_are_rescored_and_an_altered_one_is_refused(tmp_path):
+    rule = {"when": [{"field": "family", "op": "eq", "value": "macro_rates"}],
+            "action": {"type": "abstain"}, "rule_text": "no vote"}
+    frozen = L.freeze([rule], "llm")
+    rec = L.run(_ledger(), bars=None, out_dir=tmp_path, n_rules=2, t1=T1, t2=T2,
+                frozen_llm=frozen)
+    assert rec["llm"]["rescored_frozen"] and rec["llm"]["frozen_hashes"] == [frozen[0]["rule_hash"]]
+    assert rec["held_out"]["llm"]["all_frozen"]["d_brier"] < 0
+    tampered = [{**frozen[0], "action": {"type": "shrink", "lambda": 0.5}}]
+    with pytest.raises(L.LabRefused):
+        L.run(_ledger(), bars=None, out_dir=tmp_path / "t", n_rules=2, t1=T1, t2=T2,
+              frozen_llm=tampered)
+
+
+def test_the_premature_resolution_rows_are_held_out_like_the_refit_holds_them(monkeypatch):
+    import hashlib as _h
+    from backend.services import forecast_reputation as FR
+    rows = _ledger()
+    victim = rows[0]["prediction_id"]
+    monkeypatch.setattr(FR, "_PREMATURE_ID_HASHES",
+                        frozenset({_h.blake2b(victim.encode(), digest_size=16).digest()}))
+    g = L.frame_from_rows(rows)
+    assert victim not in set(g["row_id"]) and len(g) == len(rows) - 1
