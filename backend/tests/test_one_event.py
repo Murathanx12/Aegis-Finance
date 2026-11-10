@@ -248,3 +248,40 @@ def test_unknown_direction_never_proposes_graph_candidates(world, monkeypatch):
     assert _stage(rec, "UNIVERSE")["data"]["direction_conditional"] is True
     d = _stage(rec, "DECIDE")["data"]
     assert d["funnel"]["graph_candidates"] == [] and called == []
+
+
+def test_real_universe_graph_from_the_default_dir(world, monkeypatch):
+    """The real CH-30 module, a synthetic graph written to `<data-root>/universe_graph`,
+    and no --graph-dir: UNIVERSE and the DECIDE consumers read the graph by default."""
+    UG = pytest.importorskip("backend.services.universe_graph")
+    import dataclasses
+
+    import numpy as np
+    monkeypatch.setattr(OE, "_graph_module", lambda: (UG, None))
+    _typed(world, -0.6)
+    rng = np.random.default_rng(11)
+    n = 420
+    dates = pd.bdate_range(end="2030-02-28", periods=n)
+    held = rng.normal(0, 0.01, n)
+    shocks = np.arange(70, n, 15)
+    held[shocks] = rng.choice([-0.07, 0.07], size=len(shocks))
+    peer = rng.normal(0, 0.004, n)
+    peer[1:] += 0.5 * held[:-1]
+    other = rng.normal(0, 0.01, (n, 3))
+    df = pd.DataFrame({"HELD": held, "PEER": peer, "OTH1": other[:, 0], "OTH2": other[:, 1],
+                       "OTH3": other[:, 2]}, index=dates)
+    g = UG.build_graph(df, as_of="2030-03-01", sectors={
+        "HELD": "Semis", "PEER": "Semis", "OTH1": "Semis", "OTH2": "Banks", "OTH3": "Banks"})
+    UG.write_graph(g, OE.default_graph_dir(world["root"]), {
+        "build_id": "ug_test", "as_of": g.as_of, "built_utc": "2030-03-01T00:00:00+00:00",
+        "panel_last_session": "2030-02-28", "params": dataclasses.asdict(g.params),
+        "counts": g.counts()})
+    rec = _run(world)                                     # no graph_dir: the default is used
+    u = _stage(rec, "UNIVERSE")
+    assert u["status"] == OE.SUCCESS, u["reason"]
+    assert u["data"]["graph"]["status"] == "OK"
+    assert u["data"]["graph"]["dir"] == str(OE.default_graph_dir(world["root"]))
+    assert "company:PEER" in {c["target"] for c in u["data"]["connected"]}
+    d = _stage(rec, "DECIDE")["data"]
+    assert "PEER" in {r["ticker"] for r in d["held_connected"]}
+    assert rec["exit_code"] == 0

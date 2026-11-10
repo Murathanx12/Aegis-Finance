@@ -14,8 +14,12 @@ a new decision system. Each stage calls what already exists:
     SENSE     the stored corpus row (`news_corpus/<source>/<day>.jsonl`): public
               timestamp, source, url; direction only from a TYPED digest row
               (`_digest_cache/extract_wd_v1.jsonl`) or an operator flag, never guessed
-    UNIVERSE  `backend.services.universe_graph` (CH-30, PR #87). Imported lazily:
-              absent -> DEGRADED with that reason, and it lights up when #87 merges
+    UNIVERSE  `backend.services.universe_graph` (CH-30). The graph is read from
+              `--graph-dir`, else `<data-root>/universe_graph` (the same dir
+              `config.UNIVERSE_GRAPH_DIR` names for the default data root), so a
+              worktree pointed at the runtime's data reads the runtime's graph.
+              Imported lazily: a checkout without the module is DEGRADED with that
+              reason rather than crashing; a missing / stale build is DEGRADED red
     DECIDE    the latest broker-truth positions receipt (`pc_book/state_latest.json`),
               the funnel snapshot, `owner_event_warning.build_warning` for a held
               earnings 8-K, the graph's `holdings_exposure` / `owner_warnings` /
@@ -280,6 +284,17 @@ def _graph_module():
         return None, f"{type(exc).__name__}: {exc}"[:200]
 
 
+def default_graph_dir(data_root: Path) -> Path:
+    """`<data-root>/universe_graph`: where `universe_graph build` writes for that root.
+
+    Derived from the data root (like the funnel and positions defaults), not from
+    `config.UNIVERSE_GRAPH_DIR`, so `--data-root <runtime optimus>` from a worktree
+    reads the runtime's graph and not the worktree's empty one. For the default
+    data root the two are the same directory.
+    """
+    return Path(data_root) / "universe_graph"
+
+
 def funnel_state(funnel_path: Path, *, now: datetime) -> dict:
     try:
         d = json.loads(Path(funnel_path).read_text(encoding="utf-8"))
@@ -314,8 +329,8 @@ def universe(ev: Optional[dict], *, now: datetime, graph_dir: Optional[Path],
         uni["graph"] = {"status": "MODULE_ABSENT", "error": err}
         uni["universe_id"] = "un_" + _sha(ev["event_id"], "no-graph", fun.get("generated_at"))
         return Stage("UNIVERSE", DEGRADED,
-                     "GRAPH_MODULE_ABSENT: backend.services.universe_graph not on this checkout "
-                     "(CH-30, PR #87 unmerged); node resolved against the funnel only",
+                     "GRAPH_MODULE_ABSENT: backend.services.universe_graph not importable on "
+                     "this checkout (CH-30); node resolved against the funnel only",
                      uni["universe_id"], evidence, uni), uni
     st = UG.status(graph_dir, now=now)
     uni["graph"] = {k: st.get(k) for k in ("status", "red", "as_of", "age_days", "build_id",
@@ -465,7 +480,7 @@ def decide(ev: Optional[dict], row: Optional[dict], uni: Optional[dict], *, now:
                 "conditional_loss_usd", "paper_decision", "forecast_status", "event_key")}
     # graph consumers (CH-30 report: the three exact calls)
     UG, _ = _graph_module()
-    if UG is not None and uni and uni.get("graph_event") and graph_dir is not None:
+    if UG is not None and uni and uni.get("graph_event"):
         try:
             g = UG.load_graph(graph_dir)
             gev = [uni["graph_event"]]
@@ -742,6 +757,7 @@ def run_one(*, data_root: Path, source: str, key: str, now: datetime, out_dir: P
     data_root = Path(data_root)
     funnel_path = Path(funnel_path) if funnel_path else data_root.parent / "funnel_night10.json"
     positions_path = Path(positions_path) if positions_path else data_root / "pc_book" / "state_latest.json"
+    graph_dir = Path(graph_dir) if graph_dir else default_graph_dir(data_root)
     row, path = find_event(data_root, source, key, now=now)
     s1, ev = sense(row, path, source=source, key=key, now=now, data_root=data_root,
                    ticker=ticker, direction=direction)
