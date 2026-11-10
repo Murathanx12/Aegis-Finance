@@ -42,6 +42,14 @@ statsmodels>=0.14.0
 # LLM (Claude preferred, DeepSeek fallback)
 anthropic>=0.40.0
 openai>=1.0.0
+# httpx is imported DIRECTLY (backend/services/beta_v1_news_runtime.py: the
+# bounded DeepSeek transport, and its SDK drift pins hash httpx's own files).
+# It was only ever installed transitively, via edgartools<6; edgartools 6.0.0
+# (uploaded 2026-11-09T19:11Z) moved to httpx2, so CI resolved no httpx and
+# 6 tests went red with ModuleNotFoundError. openai>=3.46 and anthropic>=2.7
+# depend on httpx2 too, not httpx, so nothing else pulls it in. 0.28.1 is the latest stable release
+# and has no OSV advisory (checked 2026-11-10); <1 keeps the 0.x API.
+httpx>=0.28.1,<1
 
 # Bubble detection
 lppls>=0.6.23

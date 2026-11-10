@@ -225,6 +225,12 @@ CLASSIFIED: dict[str, str] = {
         "winners'). The factory exists; no analysis path calls it."),
 
     # ---- AWAITS: built ahead of a consumer the roadmap names ----
+    "backend.services.licensed_data": (
+        "AWAITS — the reader for converted Bloomberg / broker-research tables "
+        "kept outside the repo (CH-00 / CH-32). Consumers the roadmap names: "
+        "WLS membership as the global universe slice (CH-19, CH-30 graph) and "
+        "analyst fields as ranker features (CH-32). Its own CLI reports the "
+        "inventory; it returns UNAVAILABLE, never an empty frame, without the files."),
     "backend.services.relative_value_labels": (
         "AWAITS — NEURAL-RELATIVE-VALUE-1's pairwise labels. Its consumer is "
         "RELATIVE_VALUE_NN_v1 (ROADMAP_2026-08-24 §3.2), which does not exist "
