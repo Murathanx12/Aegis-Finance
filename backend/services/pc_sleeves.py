@@ -55,40 +55,8 @@ def _contract_positions(path: Path) -> tuple[str, list[dict]]:
     return str(sel.get("book_id") or ""), list(sel.get("positions") or [])
 
 
-def book_age(asof, *, today=None, max_age_days: Optional[int] = None) -> dict:
-    """{age_days, stale, age_line}: how old the frozen membership is, COMPARED.
-
-    The sleeve mirrors a book frozen once (2026-09-25); nothing re-selects it, and
-    every u_plan cycle rewrites `revision_flow_members.json` with a fresh
-    `written_utc` over the same names -- a date that reads fresh and is not. On
-    survivor-free CRSP 2000-2024 a top-20 net-raises list that is not refreshed
-    keeps about half its month-1 edge in month 2 and little by month 3-4
-    (night-backtests `decay_factors_20261110T164325Z.json`). So the age is printed
-    against `PC_SLEEVE_REVISION_FLOW_MAX_AGE_DAYS` on every line. STALE does not
-    stop the sleeve (that is the owner's call); it names the remedy: freeze a NEW
-    book from the same rule (`scripts.revision_flow_refresh`), never edit v0.
-    An undateable `asof` is UNKNOWN, never fresh.
-    """
-    from datetime import date
-
-    lim = int(max_age_days if max_age_days is not None
-              else getattr(_cfg, "PC_SLEEVE_REVISION_FLOW_MAX_AGE_DAYS", 35))
-    t = today or date.today()
-    try:
-        a = date.fromisoformat(str(asof)[:10])
-    except (TypeError, ValueError):
-        return {"age_days": None, "stale": True,
-                "age_line": f"membership asof {asof!r}: UNKNOWN age (undateable)"}
-    days = (t - a).days
-    stale = days > lim
-    return {"age_days": days, "stale": stale,
-            "age_line": (f"membership asof {a.isoformat()}, {days}d old"
-                         + (f" -- STALE (> {lim}d; refresh = freeze a NEW book from the "
-                            f"same rule, scripts.revision_flow_refresh)" if stale else ""))}
-
-
 def load_revision_flow(*, book_id: Optional[str] = None, books_path: Optional[Path] = None,
-                       contract_path: Optional[Path] = None, today=None) -> dict:
+                       contract_path: Optional[Path] = None) -> dict:
     """The frozen revision_flow_v0 positions, cross-checked against hack2_v2.
 
     Returns {book_id, name, frozen_utc, asof, tickers, book_weight, source,
@@ -124,9 +92,8 @@ def load_revision_flow(*, book_id: Optional[str] = None, books_path: Optional[Pa
         only_b = sorted(set(tickers) - set(c_tickers))
         only_c = sorted(set(c_tickers) - set(tickers))
         raise SleeveRefused(f"ticker sets differ: book-only {only_b}, {cpath.name}-only {only_c}")
-    age = book_age(rec.get("asof"), today=today)
     return {"book_id": bid, "name": rec.get("name"), "frozen_utc": rec.get("frozen_utc"),
-            "asof": rec.get("asof"), "tickers": tickers, "book_weight": ws[0], **age,
+            "asof": rec.get("asof"), "tickers": tickers, "book_weight": ws[0],
             "licence": "PRODUCT_EXPERIMENT", "mechanism": "analyst revision flow "
             "(backend/services/revision_flow.py): net target raises x distinct firms, 90 days",
             "source": "llm_portfolio/books.jsonl (the book of record)",

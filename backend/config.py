@@ -6027,12 +6027,13 @@ PC_SLEEVE_REVISION_FLOW_CONTRACT = (OPTIMUS_LEDGER_DIR / "paper_accounts" / "fle
 #: `scripts/sim_run.py` re-prices the acting book on every cycle: over the line,
 #: the ranker's EXPLOIT is scaled first, then this sleeve; nothing is widened.
 PC_SLEEVE_REVISION_FLOW_GROSS = 0.30
-#: The frozen sleeve's membership is printed against this age on every u_plan line
-#: (`pc_sleeves.book_age`). 35 days: on survivor-free CRSP 2000-2024 an un-refreshed
-#: top-20 net-raises list keeps ~half its month-1 edge in month 2 and little by month
-#: 3-4 (night-backtests decay table, 2026-11-11). STALE informs; it does not stop the
-#: sleeve, and a refresh is a NEW frozen book, never an edit of v0.
-PC_SLEEVE_REVISION_FLOW_MAX_AGE_DAYS = 35
+#: `scripts.revision_flow_refresh` prints the frozen sleeve's membership age against this
+#: limit (STALE beyond it). 35 days: on survivor-free CRSP 2000-2024 an un-refreshed top-20
+#: net-raises list keeps ~half its month-1 edge in month 2 and little by month 3-4
+#: (night-backtests decay table, 2026-11-11). Not read by any policy-pinned source: the
+#: PC-PAPER epoch pins pc_sleeves/revision_flow/sim_run by bytes, so the u_plan line itself
+#: can only carry the age under a NEW epoch.
+REVISION_FLOW_REFRESH_MAX_AGE_DAYS = 35
 #: Bound (2) above: the sleeve's gross x |worst historical 21-session basket
 #: return, all names priced, longest panel on disk| may not exceed this fraction
 #: of equity. Same 0.10 as bound (1).

@@ -152,20 +152,3 @@ def rule_score(flow: pd.DataFrame, *, min_firms: int = 3) -> pd.Series:
     """Murat's simple rule: `net_raises * n_firms`, only where >= `min_firms` acted."""
     f = flow[flow["n_firms"] >= min_firms]
     return (f["net_raises"] * f["n_firms"]).rename("rule_score")
-
-
-def select_members(flow: pd.DataFrame, eligible: Iterable[str], *, k: int = 20,
-                   min_firms: int = 3) -> pd.Series:
-    """The rule's top-`k` among `eligible` tickers: `rule_score` descending.
-
-    The ONE selection `revision_flow_v0` was frozen with
-    (`scripts.revision_flow_sweep.freeze_books`) and the one a refresh re-runs
-    (`scripts.revision_flow_refresh`), so a refreshed list differs from the frozen
-    one by its `asof` and nothing else. Ties keep the ticker order of `flow`
-    (stable sort, as the freeze did). Returns the score Series, length <= k.
-    """
-    score = rule_score(flow, min_firms=min_firms)
-    elig = {str(x).upper() for x in eligible}
-    pool = score[score.index.isin(elig)].sort_values(ascending=False, kind="mergesort")
-    return pool.head(int(k))
-

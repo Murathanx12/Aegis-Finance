@@ -1226,7 +1226,6 @@ def _revision_flow_sleeve(*, probe_syms: list, ex_syms: list, exploit_acting: bo
                      f"{book['book_id']}, {book['licence']}): {len(weights)} names x "
                      f"{w_each:.2%} = {planned:.2%} gross (config {gross:.0%})"
                      + (f"; skipped, already in a sleeve: {skipped}" if skipped else "")
-                     + (f"; {book['age_line']}" if book.get("age_line") else "")
                      + ("" if mode == "paper_profit" else f"; mode={mode}: not acting"))}
 
 

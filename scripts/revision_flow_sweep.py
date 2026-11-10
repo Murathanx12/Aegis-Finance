@@ -353,7 +353,8 @@ def freeze_books(panel: pd.DataFrame, revisions: pd.DataFrame, *, today: date) -
     last = panel["date"].max()
     day = panel[(panel["date"] == last) & panel["eligible"]].set_index("symbol")
     flow = RF.compute(revisions, asof=pd.Timestamp(today))
-    pool = RF.select_members(flow, day.index, k=len(flow) + 1, min_firms=MIN_FIRMS)
+    score = RF.rule_score(flow, min_firms=MIN_FIRMS)
+    pool = score[score.index.isin(day.index)].sort_values(ascending=False, kind="mergesort")
     if len(pool) < BOOK_K:
         raise SystemExit(f"REFUSED: only {len(pool)} eligible names with >= {MIN_FIRMS} firms")
     top = pool.head(BOOK_K)

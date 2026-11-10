@@ -10,10 +10,15 @@ with a fresh `written_utc` over the same twenty names. On survivor-free CRSP
 in month 2 and little by month 3-4 (night-backtests decay table), so the frozen
 list is, by that history, the weaker half of the signal.
 
-This job re-runs the SAME rule the book was frozen with
-(`revision_flow.select_members`: net_raises x n_firms over the 90 days strictly
-before `asof`, >= 3 firms acting, among xs_ranker-eligible names on the latest bars
-date, top 20) and prints overlap / in / out against the live members file. It
+This job re-runs the SAME rule the book was frozen with (`select_members` below is
+`scripts.revision_flow_sweep.freeze_books`' selection line for line: net_raises x
+n_firms over the 90 days strictly before `asof`, >= 3 firms acting, among
+xs_ranker-eligible names on the latest bars date, top 20), prints the frozen list's
+age against `REVISION_FLOW_REFRESH_MAX_AGE_DAYS`, and prints overlap / in / out
+against the live members file. It lives HERE and not in `revision_flow` /
+`pc_sleeves` / `sim_run` because the PC-PAPER policy epoch
+(`backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json`) pins those files
+by bytes: editing them refuses the epoch (`test_pc_policy_epoch_prepared`). It
 freezes nothing, edits no book, touches no contract, and REFUSES to write into the
 pc_plan folder or over an existing file. A refresh that the owner adopts is a NEW
 book frozen through `revision_flow_sweep --freeze-books` (attended), plus the
@@ -48,6 +53,48 @@ MEMBERS_PATH = Path(_cfg.OPTIMUS_LEDGER_DIR) / "decisions" / "pc_plan" / "revisi
 K, MIN_FIRMS, LOOKBACK_DAYS = 20, 3, 500
 
 
+def select_members(flow: pd.DataFrame, eligible, *, k: int = K,
+                   min_firms: int = MIN_FIRMS) -> pd.Series:
+    """`freeze_books`' selection: rule_score descending (stable) on the eligible set."""
+    score = RF.rule_score(flow, min_firms=min_firms)
+    elig = {str(x).upper() for x in eligible}
+    pool = score[score.index.isin(elig)].sort_values(ascending=False, kind="mergesort")
+    return pool.head(int(k))
+
+
+def book_age(asof, *, today: date | None = None, max_age_days: int | None = None) -> dict:
+    """{age_days, stale, age_line}, COMPARED to the limit; undateable is UNKNOWN, never fresh."""
+    lim = int(max_age_days if max_age_days is not None
+              else getattr(_cfg, "REVISION_FLOW_REFRESH_MAX_AGE_DAYS", 35))
+    t = today or date.today()
+    try:
+        a = date.fromisoformat(str(asof)[:10])
+    except (TypeError, ValueError):
+        return {"age_days": None, "stale": True,
+                "age_line": f"membership asof {asof!r}: UNKNOWN age (undateable)"}
+    days = (t - a).days
+    stale = days > lim
+    return {"age_days": days, "stale": stale,
+            "age_line": (f"membership asof {a.isoformat()}, {days}d old"
+                         + (f" -- STALE (> {lim}d; refresh = freeze a NEW book from the "
+                            f"same rule)" if stale else ""))}
+
+
+def frozen_book_asof(book_id: str | None) -> str | None:
+    """The frozen book's own `asof` from the llm_portfolio store (never a file mtime)."""
+    p = Path(_cfg.OPTIMUS_LEDGER_DIR) / "llm_portfolio" / "books.jsonl"
+    if not book_id or not p.is_file():
+        return None
+    for line in p.read_text(encoding="utf-8").splitlines():
+        try:
+            b = json.loads(line)
+        except ValueError:
+            continue
+        if b.get("book_id") == book_id:
+            return b.get("asof")
+    return None
+
+
 def eligible_on_last_date(paths: list[Path], symbols: set, *,
                           until: date | None = None) -> tuple[pd.Timestamp, set]:
     frames = []
@@ -77,7 +124,7 @@ def refresh(*, asof: date, members_path: Path = MEMBERS_PATH,
     bars_date, elig = eligible_on_last_date(XR.survivorship_free_paths(), covered,
                                             until=bars_until)
     flow = RF.compute(rev, asof=pd.Timestamp(asof))
-    top = RF.select_members(flow, elig, k=K, min_firms=MIN_FIRMS)
+    top = select_members(flow, elig, k=K, min_firms=MIN_FIRMS)
     live = json.loads(Path(members_path).read_text(encoding="utf-8")) if Path(members_path).is_file() else {}
     frozen = sorted(live.get("members") or [])
     new = list(top.index)
@@ -103,6 +150,8 @@ def refresh(*, asof: date, members_path: Path = MEMBERS_PATH,
         "rule": f"top {K} by net_raises x n_firms, >= {MIN_FIRMS} firms, 90d strictly before asof",
         "frozen_members_file": str(members_path), "frozen_book_id": live.get("book_id"),
         "frozen_written_utc": live.get("written_utc"),
+        "frozen_book_asof": frozen_book_asof(live.get("book_id")),
+        "frozen_age": book_age(frozen_book_asof(live.get("book_id")), today=asof),
         "overlap": len(set(new) & set(frozen)), "n_new": len(new), "n_frozen": len(frozen),
         "names_in": sorted(set(new) - set(frozen)), "names_out": sorted(set(frozen) - set(new)),
         "refreshed": rows, "frozen_members_today": frozen_now,
@@ -132,6 +181,7 @@ def main(argv=None) -> int:
     tmp.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
     json.loads(tmp.read_text(encoding="utf-8"))
     tmp.replace(out)
+    print(res["frozen_age"]["age_line"])
     print(f"bars {res['bars_date']} asof {res['asof']}: overlap {res['overlap']}/{res['n_new']}; "
           f"in {res['names_in']}; out {res['names_out']} -> {out}")
     return 0

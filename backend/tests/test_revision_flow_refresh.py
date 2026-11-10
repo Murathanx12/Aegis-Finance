@@ -2,10 +2,11 @@
 
 2026-11-11: the live sleeve mirrors a book frozen once (2026-09-25) and
 `sim_run.u_plan` rewrites `revision_flow_members.json` every cycle with a fresh
-`written_utc` over the same names. These tests pin (1) that the freeze and the
-refresh use ONE selection, (2) that the sleeve's age is compared to a limit and an
-undateable stamp is never fresh, (3) that the refresh job refuses to overwrite.
-Synthetic data only.
+`written_utc` over the same names. These tests pin (1) that the refresh selects
+exactly as `revision_flow_sweep.freeze_books` did, (2) that the frozen list's age is
+compared to a limit and an undateable stamp is never fresh, (3) that the refresh job
+refuses to overwrite, and (4) that none of it touched a source the PC-PAPER policy
+epoch pins by bytes. Synthetic data only.
 """
 
 from __future__ import annotations
@@ -15,8 +16,8 @@ from datetime import date, timedelta
 import pandas as pd
 import pytest
 
-from backend.services import pc_sleeves as SL
 from backend.services import revision_flow as RF
+from scripts import revision_flow_refresh as R
 
 
 def _revisions(today: date) -> pd.DataFrame:
@@ -41,36 +42,48 @@ def _revisions(today: date) -> pd.DataFrame:
 def test_select_members_is_the_rule_on_the_eligible_set():
     today = date.today()
     flow = RF.compute(_revisions(today), asof=pd.Timestamp(today))
-    top = RF.select_members(flow, ["AAA", "bbb", "CCC", "DDD"], k=2, min_firms=3)
+    top = R.select_members(flow, ["AAA", "bbb", "CCC", "DDD"], k=2, min_firms=3)
     assert list(top.index) == ["AAA", "BBB"]          # CCC has 2 firms; DDD scores negative
     assert top["AAA"] == 25 and top["BBB"] == 15
-    only_b = RF.select_members(flow, ["BBB"], k=20, min_firms=3)
+    only_b = R.select_members(flow, ["BBB"], k=20, min_firms=3)
     assert list(only_b.index) == ["BBB"], "an ineligible name is never selected"
 
 
 def test_book_age_is_compared_and_an_undateable_stamp_is_not_fresh():
     t = date.today()
-    fresh = SL.book_age((t - timedelta(days=10)).isoformat(), today=t, max_age_days=35)
+    fresh = R.book_age((t - timedelta(days=10)).isoformat(), today=t, max_age_days=35)
     assert fresh["age_days"] == 10 and fresh["stale"] is False and "STALE" not in fresh["age_line"]
-    old = SL.book_age((t - timedelta(days=47)).isoformat(), today=t, max_age_days=35)
+    old = R.book_age((t - timedelta(days=47)).isoformat(), today=t, max_age_days=35)
     assert old["stale"] is True and "STALE" in old["age_line"] and "NEW book" in old["age_line"]
-    bad = SL.book_age(None, today=t)
+    bad = R.book_age(None, today=t)
     assert bad["stale"] is True and bad["age_days"] is None and "UNKNOWN" in bad["age_line"]
 
 
-def test_the_loaded_book_carries_its_age(tmp_path):
+def test_the_refresh_selection_is_freeze_books_selection_line_for_line():
+    """`freeze_books` picks `score[score.index.isin(day.index)].sort_values(desc,
+    mergesort)`; the refresh must give the same ranked list on the same inputs."""
+    today = date.today()
+    flow = RF.compute(_revisions(today), asof=pd.Timestamp(today))
+    score = RF.rule_score(flow, min_firms=3)
+    day = pd.Index(["AAA", "BBB", "CCC", "DDD"])
+    ref = score[score.index.isin(day)].sort_values(ascending=False, kind="mergesort")
+    assert list(R.select_members(flow, day, k=len(ref)).index) == list(ref.index)
+
+
+def test_no_policy_pinned_source_was_edited():
+    """The PC-PAPER epoch pins pc_sleeves / revision_flow / sim_run by bytes; the
+    refresh must not need them changed (it refused CI once, 2026-11-11)."""
     import json
-    t = date.today()
-    books = tmp_path / "books.jsonl"
-    books.write_text(json.dumps({"schema": "llm_portfolio/1", "name": "revision_flow_v0",
-                                 "book_id": "abc", "asof": (t - timedelta(days=40)).isoformat(),
-                                 "positions": [{"ticker": x, "weight": 0.5} for x in ("AAA", "BBB")]})
-                     + "\n", encoding="utf-8")
-    c = tmp_path / "c.json"
-    c.write_text(json.dumps({"selection": {"book_id": "abc", "positions": [
-        {"ticker": "AAA"}, {"ticker": "BBB"}]}}), encoding="utf-8")
-    b = SL.load_revision_flow(book_id="abc", books_path=books, contract_path=c, today=t)
-    assert b["age_days"] == 40 and b["stale"] is True
+    from pathlib import Path
+    from backend.services import pc_policy_epoch as PE
+    root = Path(__file__).resolve().parents[2]
+    c = json.loads((root / "backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json")
+                   .read_text(encoding="utf-8"))
+    pinned = (c.get("content") or c).get("source_sha256") or {}
+    assert "scripts/revision_flow_refresh.py" not in pinned
+    for rel in ("backend/services/pc_sleeves.py", "backend/services/revision_flow.py",
+                "scripts/sim_run.py"):
+        assert PE._source_sha((root / rel).resolve()) == pinned[rel], rel
 
 
 def test_refresh_job_refuses_an_existing_file_and_the_live_folder(tmp_path):
