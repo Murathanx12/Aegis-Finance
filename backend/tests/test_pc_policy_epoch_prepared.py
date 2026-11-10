@@ -1240,3 +1240,126 @@ def test_active_stock_pre_post_intent_refuses_changed_capacity(tmp_path, monkeyp
     second = PE.execute_stock_cycle(journal, contract=contract, broker=broker,
                                     plan=plan, may_submit=True)
     assert second["status"] == "PENDING_PRE_POST_BOUNDARY" and broker.n_post == 0
+
+
+# ── backend/config.py is pinned by the definitions the policy reads ──────────
+# 2026-11-10: a byte hash of the whole shared config turned every PR that added
+# an unrelated constant red (#86, #87). These pin the replacement: unrelated
+# edits load, a pinned definition (direct or transitive) refuses by name.
+
+_COMMITTED = "backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json"
+
+
+def _committed_copy(tmp_path: Path, monkeypatch) -> tuple[Path, Path]:
+    import shutil
+    monkeypatch.setattr(PE, "EXPECTED_ACCOUNT_FINGERPRINT",
+                        PE.FROZEN_ACCOUNT_FINGERPRINT)
+    repo = Path(__file__).resolve().parents[2]
+    root = tmp_path / "checkout"
+    content = json.loads((repo / _COMMITTED).read_text(encoding="utf-8"))["content"]
+    for rel in [*content["source_sha256"], PE.CONFIG_SOURCE, _COMMITTED,
+                "backend/data/optimus/llm_portfolio/books.jsonl"]:
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(repo / rel, root / rel)
+    return root, root / _COMMITTED
+
+
+def _edit_config(root: Path, old: str, new: str) -> None:
+    path = root / PE.CONFIG_SOURCE
+    text = path.read_text(encoding="utf-8")
+    assert text.count(old) == 1, old
+    path.write_text(text.replace(old, new), encoding="utf-8")
+
+
+def test_committed_contract_pins_config_by_definitions_not_bytes():
+    repo = Path(__file__).resolve().parents[2]
+    content = json.loads((repo / _COMMITTED).read_text(encoding="utf-8"))["content"]
+    pin = content["config_definitions"]
+    assert PE.CONFIG_SOURCE not in content["source_sha256"]
+    assert pin["path"] == PE.CONFIG_SOURCE and pin["basis"] == PE.CONFIG_DEFINITION_BASIS
+    # The values that bound the book are in the derived read set.
+    for name in ("PC_BENCHMARK_CORE", "PC_SLEEVE_REVISION_FLOW_GROSS", "PROBE_MAX_WEIGHT",
+                 "PC_WORST_CASE_MAX_FRAC_OF_EQUITY", "ER_GAMMA", "OPTIMUS_LEDGER_DIR"):
+        assert pin["sha256"][name] != "ABSENT", name
+
+
+def test_unrelated_config_edit_keeps_the_epoch_verifiable(tmp_path, monkeypatch):
+    root, path = _committed_copy(tmp_path, monkeypatch)
+    cfg = root / PE.CONFIG_SOURCE
+    cfg.write_text(cfg.read_text(encoding="utf-8")
+                   + "\n# a later PR's block\nUNRELATED_NEW_CONSTANT = 3\n",
+                   encoding="utf-8")
+    _edit_config(root, "PC_SIGMA_FALLBACK_DAILY = 0.049",
+                 "PC_SIGMA_FALLBACK_DAILY = 0.049   # comment only")
+    frozen = PE.load_contract(path, root=root)
+    assert frozen["content_sha256"] == PE.EXPECTED_CONTENT_SHA256
+
+
+@pytest.mark.parametrize("old,new,name", [
+    ("PC_SIGMA_FALLBACK_DAILY = 0.049", "PC_SIGMA_FALLBACK_DAILY = 0.01",
+     "PC_SIGMA_FALLBACK_DAILY"),
+    ("ER_GAMMA = 1.0", "ER_GAMMA = 2.0", "ER_GAMMA"),
+    # transitive: OPTIMUS_LEDGER_DIR is read; DATA_DIR only through it
+    ("OPTIMUS_LEDGER_DIR = DATA_DIR / \"optimus\"",
+     "OPTIMUS_LEDGER_DIR = DATA_DIR / \"elsewhere\"", "OPTIMUS_LEDGER_DIR"),
+])
+def test_pinned_config_definition_change_refuses_by_name(tmp_path, monkeypatch,
+                                                         old, new, name):
+    root, path = _committed_copy(tmp_path, monkeypatch)
+    _edit_config(root, old, new)
+    with pytest.raises(PE.EpochRefused,
+                       match=f"policy source changed: backend/config.py:{name}$"):
+        PE.load_contract(path, root=root)
+
+
+def test_transitively_read_config_name_refuses(tmp_path, monkeypatch):
+    root, path = _committed_copy(tmp_path, monkeypatch)
+    cfg = root / PE.CONFIG_SOURCE
+    cfg.write_text(cfg.read_text(encoding="utf-8")
+                   + "\nDATA_DIR = BACKEND_DIR / \"moved\"\n", encoding="utf-8")
+    with pytest.raises(PE.EpochRefused, match="policy source changed: backend/config.py:DATA_DIR"):
+        PE.load_contract(path, root=root)
+
+
+def test_a_new_definition_of_a_pinned_name_refuses(tmp_path, monkeypatch):
+    root, path = _committed_copy(tmp_path, monkeypatch)
+    cfg = root / PE.CONFIG_SOURCE
+    cfg.write_text(cfg.read_text(encoding="utf-8")
+                   + "\nPROBE_MAX_WEIGHT = 0.5\n", encoding="utf-8")
+    with pytest.raises(PE.EpochRefused, match="backend/config.py:PROBE_MAX_WEIGHT"):
+        PE.load_contract(path, root=root)
+
+
+def test_config_pinned_twice_or_malformed_refuses(tmp_path, monkeypatch):
+    root, path = _committed_copy(tmp_path, monkeypatch)
+    wrapper = json.loads(path.read_text(encoding="utf-8"))
+    both = deepcopy(wrapper["content"])
+    both["source_sha256"][PE.CONFIG_SOURCE] = PE._source_sha(root / PE.CONFIG_SOURCE)
+    with pytest.raises(PE.EpochRefused, match="both by bytes and by definitions"):
+        PE._verify_config_definitions(both, root=root)
+    empty = deepcopy(wrapper["content"])
+    empty["config_definitions"]["sha256"] = {}
+    with pytest.raises(PE.EpochRefused, match="pin unreadable"):
+        PE._verify_config_definitions(empty, root=root)
+
+
+@pytest.mark.parametrize("source", [
+    "from backend import config\nX = getattr(config, name)\n",
+    "from backend import config\nf(config)\n",
+    "from backend.config import *\n",
+])
+def test_config_read_the_derivation_cannot_name_refuses(source):
+    import ast
+    with pytest.raises(PE.EpochRefused, match="policy config read"):
+        PE._config_reads(ast.parse(source), "synthetic.py")
+
+
+def test_config_read_forms_are_all_derived():
+    import ast
+    names, prefixes = PE._config_reads(ast.parse(
+        "from backend import config as C\n"
+        "import backend.config as L\n"
+        "from backend.config import A as Z\n"
+        "x = C.B + getattr(L, 'D', 0)\n"
+        "y = {k: getattr(C, k) for k in dir(C) if k.startswith('E_')}\n"), "s.py")
+    assert names == {"A", "B", "D"} and prefixes == {"E_"}
