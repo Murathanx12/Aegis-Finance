@@ -85,7 +85,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from backend.config import DATA_DIR
+from backend.config import DATA_DIR, IBES_SPLIT_ROUNDING_MIN_ABS_MEANEST
 
 from .characteristics import join_pit_series
 
@@ -218,10 +218,21 @@ def derive(df: pd.DataFrame) -> pd.DataFrame:
     prev = out.groupby("permno", sort=False)["meanest"].shift(1)
     me = out["meanest"].to_numpy(dtype=np.float64)
     pv = prev.to_numpy(dtype=np.float64)
+    sd = out["stdev"].to_numpy(dtype=np.float64)
+    # THE SPLIT-ROUNDING LEAK (2026-11-11). The summary file is split-adjusted to
+    # today's share basis and rounded to cents, so a consensus LEVEL near zero is,
+    # disproportionately, a company that will split many times later -- a future
+    # winner. stdev 0.00 over a 0.01 consensus scored as "perfect agreement" and
+    # made `rev_dispersion` the best signal ever measured here (+0.94%/mo vs twin,
+    # t 6.3) until the picks' future split factor was printed (4.0x vs 1.0x).
+    # Levels below the guard, and a zero stdev (a rounding artefact at these
+    # sizes, never observed as real unanimity on >= 3 estimates), are NaN.
+    lo = IBES_SPLIT_ROUNDING_MIN_ABS_MEANEST
     with np.errstate(invalid="ignore", divide="ignore"):
-        out["rev_magnitude"] = (me - pv) / np.maximum(np.abs(pv), FLOOR)
-        out["rev_dispersion"] = -(out["stdev"].to_numpy(dtype=np.float64)
-                                  / np.maximum(np.abs(me), FLOOR))
+        out["rev_magnitude"] = np.where(np.abs(pv) >= lo,
+                                        (me - pv) / np.maximum(np.abs(pv), FLOOR), np.nan)
+        out["rev_dispersion"] = np.where((np.abs(me) >= lo) & (sd > 0),
+                                         -(sd / np.maximum(np.abs(me), FLOOR)), np.nan)
     return out
 
 

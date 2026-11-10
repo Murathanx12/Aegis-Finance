@@ -155,16 +155,41 @@ def test_magnitude_uses_the_PREVIOUS_month_of_the_SAME_company():
     assert d["rev_magnitude"].iloc[3] == pytest.approx(0.1)
 
 
-def test_the_denominator_floor_stops_rounding_becoming_a_signal():
-    """Summary EPS estimates are ROUNDED. A consensus of $0.02 going to $0.03
-    is a 50% 'revision' that is mostly the rounding grid."""
+def test_a_near_zero_consensus_level_is_not_a_revision_at_all():
+    """Summary EPS estimates are ROUNDED and split-adjusted to today's share
+    basis. A consensus of $0.02 going to $0.03 is the rounding grid -- and,
+    disproportionately, a company that later split many times. It used to be
+    floored to a 10% 'revision'; since 2026-11-11 it is no revision (NaN)."""
     df = _frame([
         (1, "2013-01-18", 5, 0, 0, 0.02, 0.01),
         (1, "2013-02-15", 5, 1, 0, 0.03, 0.01),
     ])
     d = RV.derive(df)
-    # 0.01 / max(0.02, FLOOR=0.10) = 0.10, not 0.50
-    assert d["rev_magnitude"].iloc[1] == pytest.approx(0.10)
+    assert np.isnan(d["rev_magnitude"].iloc[1])
+
+
+def test_the_floor_still_bounds_a_real_level_change():
+    df = _frame([
+        (1, "2013-01-18", 5, 0, 0, 0.30, 0.05),
+        (1, "2013-02-15", 5, 1, 0, 0.36, 0.05),
+    ])
+    d = RV.derive(df)
+    assert d["rev_magnitude"].iloc[1] == pytest.approx(0.20)
+
+
+def test_split_rounded_zero_dispersion_is_NOT_perfect_agreement():
+    """Apple, FY1 EPS, 2004-06-17 on disk: 19 estimates, meanest 0.01, stdev 0.00
+    -- because Apple later split 56x. Under the old floor this scored 0, the
+    maximum, so `rev_dispersion` bought future stock-splitters."""
+    df = _frame([
+        (14593, "2004-06-17", 19, 0, 0, 0.01, 0.00),     # split-rounded future winner
+        (2, "2004-06-17", 19, 0, 0, 2.00, 0.00),         # zero stdev on a real level
+        (3, "2004-06-17", 19, 0, 0, 2.00, 0.04),         # a real, low dispersion
+    ])
+    d = RV.derive(df)
+    assert np.isnan(d["rev_dispersion"].iloc[0])
+    assert np.isnan(d["rev_dispersion"].iloc[1])
+    assert d["rev_dispersion"].iloc[2] == pytest.approx(-0.02)
 
 
 def test_dispersion_is_negated_so_high_means_agreement():

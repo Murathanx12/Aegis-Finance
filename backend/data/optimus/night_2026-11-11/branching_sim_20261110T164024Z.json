@@ -1,0 +1,2878 @@
+{
+ "run_id": "branching_sim_20261110T164024Z",
+ "pid": 8716,
+ "licence": "PRODUCT_EXPERIMENT (simulation only)",
+ "llm_spend_usd": 0.0,
+ "args": {
+  "epoch": 6,
+  "burn": 36,
+  "kill": 0.25,
+  "top": 6,
+  "min_age": 24,
+  "cap": 80,
+  "alloc_n": 8,
+  "cost_bps": 10.0,
+  "seed": 20261111
+ },
+ "inputs": {
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\crsp_rebuild\\library_panel_2026-09-29T075640Z.parquet": {
+   "bytes": 324163038,
+   "mtime": "2026-09-29T16:01:28"
+  },
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\crsp_rebuild\\library_fund_2026-09-29T041550Z.parquet": {
+   "bytes": 35565964,
+   "mtime": "2026-09-29T15:33:40"
+  },
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\crsp_rebuild\\event_bridge_EB_2026-09-29T1055Z.parquet": {
+   "bytes": 31071134,
+   "mtime": "2026-09-29T18:43:54"
+  }
+ },
+ "n_roots": 30,
+ "n_branches_ever": 163,
+ "summary": {
+  "allocator_net_cagr": 0.13473230580376883,
+  "allocator_twin_cagr": 0.08641370074294819,
+  "market_cagr_same_months": 0.11071855170597678,
+  "ew_all_live_cagr_same_months": 0.13295044059771866,
+  "ew_roots_only_cagr_same_months": 0.08470758675718493,
+  "ew_roots_static_note": "all 30 roots equal weight, never pruned (shadow series after a kill)",
+  "allocator_vs_twin": {
+   "n_months": 359,
+   "n_blocks": 119,
+   "mean_monthly": 0.005197692400448357,
+   "t_blocks": 1.9816861653675795,
+   "mde_monthly": 0.007115659704539462
+  },
+  "allocator_vs_market": {
+   "n_months": 358,
+   "n_blocks": 119,
+   "mean_monthly": 0.004323361434842189,
+   "t_blocks": 1.4734491118852469,
+   "mde_monthly": 0.007741439058087214
+  },
+  "allocator_vs_ew_roots": {
+   "n_months": 359,
+   "n_blocks": 119,
+   "mean_monthly": 0.004789080066332306,
+   "t_blocks": 2.453761148526694,
+   "mde_monthly": 0.005328559585007033
+  },
+  "ew_all_vs_ew_roots": {
+   "n_months": 371,
+   "n_blocks": 123,
+   "mean_monthly": 0.004210083022519725,
+   "t_blocks": 2.560931377566784,
+   "mde_monthly": 0.0045201652625969585
+  },
+  "ew_live_vs_its_twins": {
+   "n_months": 371,
+   "n_blocks": 123,
+   "mean_monthly": 0.0042835824312923146,
+   "t_blocks": 2.0147473437497236,
+   "mde_monthly": 0.005762093346397843,
+   "years_positive": 17,
+   "n_years": 31,
+   "loo_worst": 0.0026246812982976824,
+   "loo_worst_year": 1999,
+   "by_year": {
+    "1994": -0.02482156886337543,
+    "1995": 0.08000496618988434,
+    "1996": 0.0246656011453444,
+    "1997": -0.07180359784495272,
+    "1998": 0.30940486800809,
+    "1999": 0.6469484959205805,
+    "2000": -0.14595516596502695,
+    "2001": -0.1230878938554486,
+    "2002": -0.005660637486711639,
+    "2003": 0.21328033466343885,
+    "2004": -0.02462370766085379,
+    "2005": 0.08785878137479378,
+    "2006": -0.08941200761124685,
+    "2007": 0.2537000784514196,
+    "2008": -0.13017105265208645,
+    "2009": -0.10600980561893765,
+    "2010": -0.02935397398900297,
+    "2011": -0.03882431623941233,
+    "2012": 0.12504488206208428,
+    "2013": 0.055115275786501015,
+    "2014": -0.002135124795421166,
+    "2015": 0.2216533967141079,
+    "2016": 0.00852585958581624,
+    "2017": 0.03515730825955382,
+    "2018": 0.0015206991970669395,
+    "2019": -0.0756438692953072,
+    "2020": 0.11705997311548641,
+    "2021": -0.07002971876653295,
+    "2022": 0.1755565685370348,
+    "2023": 0.03219461806971467,
+    "2024": 0.13904981557284757
+   }
+  },
+  "ew_roots_vs_their_twins": {
+   "n_months": 371,
+   "n_blocks": 123,
+   "mean_monthly": 0.0003920393746994346,
+   "t_blocks": 0.23987473232754758,
+   "mde_monthly": 0.003631747867683091,
+   "years_positive": 12,
+   "n_years": 31,
+   "loo_worst": -0.00047790554840682845,
+   "loo_worst_year": 1999,
+   "by_year": {
+    "1994": -0.02482156886337543,
+    "1995": 0.08000496618988434,
+    "1996": 0.0246656011453444,
+    "1997": -0.08581210124280594,
+    "1998": 0.11111922729643774,
+    "1999": 0.31701469989154174,
+    "2000": -0.03358997623203327,
+    "2001": 0.056597753185675816,
+    "2002": 0.04467842978686122,
+    "2003": 0.060313314959288204,
+    "2004": -0.05527220775712455,
+    "2005": -0.03895037075284149,
+    "2006": -0.06087456430313139,
+    "2007": -0.029997772495586064,
+    "2008": -0.04419626783415975,
+    "2009": -0.08530791049829087,
+    "2010": -0.032188062697751235,
+    "2011": -0.09569115244909038,
+    "2012": -0.015974509183571624,
+    "2013": -0.02195193763264503,
+    "2014": -0.010442544482068914,
+    "2015": -0.01768513637562045,
+    "2016": -0.04096890361346484,
+    "2017": 0.025698767858538436,
+    "2018": 0.032812472233945136,
+    "2019": -0.04817892370302009,
+    "2020": 0.145478067462522,
+    "2021": -0.048355880681887974,
+    "2022": 0.007131283094289172,
+    "2023": -0.009931351453583821,
+    "2024": 0.040123167161215195
+   }
+  },
+  "pruning_gain_net_of_twins": {
+   "n_months": 371,
+   "n_blocks": 123,
+   "mean_monthly": 0.0038915430565928783,
+   "t_blocks": 2.4936923791018613,
+   "mde_monthly": 0.004306063493011449,
+   "years_positive": 18,
+   "n_years": 31,
+   "loo_worst": 0.003102586846704511,
+   "loo_worst_year": 1999,
+   "by_year": {
+    "1994": 0.0,
+    "1995": 0.0,
+    "1996": 0.0,
+    "1997": 0.014008503397853252,
+    "1998": 0.19828564071165222,
+    "1999": 0.3299337960290387,
+    "2000": -0.11236518973299367,
+    "2001": -0.17968564704112444,
+    "2002": -0.050339067273572846,
+    "2003": 0.1529670197041507,
+    "2004": 0.03064850009627075,
+    "2005": 0.12680915212763527,
+    "2006": -0.028537443308115452,
+    "2007": 0.2836978509470057,
+    "2008": -0.08597478481792667,
+    "2009": -0.02070189512064677,
+    "2010": 0.00283408870874826,
+    "2011": 0.056866836209678064,
+    "2012": 0.14101939124565593,
+    "2013": 0.07706721341914603,
+    "2014": 0.008307419686647746,
+    "2015": 0.23933853308972833,
+    "2016": 0.04949476319928109,
+    "2017": 0.009458540401015382,
+    "2018": -0.0312917730368782,
+    "2019": -0.0274649455922871,
+    "2020": -0.0284180943470356,
+    "2021": -0.02167383808464498,
+    "2022": 0.16842528544274565,
+    "2023": 0.04212596952329849,
+    "2024": 0.09892664841163236
+   }
+  },
+  "allocator_vs_twin_by_year": {
+   "1995": 0.0566421934787323,
+   "1996": 0.07433561277596402,
+   "1997": -0.12999052055035265,
+   "1998": 0.23764892024733952,
+   "1999": 0.8174583161100313,
+   "2000": -0.023024163389618532,
+   "2001": -0.19733805127492343,
+   "2002": -0.01593684578924017,
+   "2003": 0.2154541240389298,
+   "2004": 0.05919694808563939,
+   "2005": 0.09536938388148297,
+   "2006": -0.08980014245666462,
+   "2007": 0.32038048935084973,
+   "2008": -0.10793514222209784,
+   "2009": -0.12170156660963788,
+   "2010": -0.016611573053813507,
+   "2011": -0.03403658684732414,
+   "2012": 0.09795796757113437,
+   "2013": 0.06564531820232332,
+   "2014": -0.050569509703603716,
+   "2015": 0.23702346295351098,
+   "2016": -0.027153535798345167,
+   "2017": 0.07527458585296828,
+   "2018": 0.009739975159662337,
+   "2019": -0.053652980457736914,
+   "2020": 0.11728237520422358,
+   "2021": -0.11435570867201564,
+   "2022": 0.1868676527230514,
+   "2023": 0.025012500525846783,
+   "2024": 0.1567880724246443
+  },
+  "years_positive": 17,
+  "n_years": 30,
+  "loo_worst": 0.0030216520335761645,
+  "loo_worst_year": 1999,
+  "first_allocator_month": "1995-01-31"
+ },
+ "epochs": [
+  {
+   "month": "1997-01-31",
+   "live": 34,
+   "distinct_bets": 16,
+   "killed": 5,
+   "born": 9
+  },
+  {
+   "month": "1997-07-31",
+   "live": 35,
+   "distinct_bets": 20,
+   "killed": 4,
+   "born": 5
+  },
+  {
+   "month": "1998-01-30",
+   "live": 38,
+   "distinct_bets": 20,
+   "killed": 3,
+   "born": 6
+  },
+  {
+   "month": "1998-07-31",
+   "live": 39,
+   "distinct_bets": 23,
+   "killed": 2,
+   "born": 3
+  },
+  {
+   "month": "1999-01-29",
+   "live": 38,
+   "distinct_bets": 22,
+   "killed": 4,
+   "born": 3
+  },
+  {
+   "month": "1999-07-30",
+   "live": 37,
+   "distinct_bets": 23,
+   "killed": 4,
+   "born": 3
+  },
+  {
+   "month": "2000-01-31",
+   "live": 35,
+   "distinct_bets": 22,
+   "killed": 5,
+   "born": 3
+  },
+  {
+   "month": "2000-07-31",
+   "live": 36,
+   "distinct_bets": 22,
+   "killed": 4,
+   "born": 5
+  },
+  {
+   "month": "2001-01-31",
+   "live": 34,
+   "distinct_bets": 24,
+   "killed": 4,
+   "born": 2
+  },
+  {
+   "month": "2001-07-31",
+   "live": 32,
+   "distinct_bets": 24,
+   "killed": 5,
+   "born": 3
+  },
+  {
+   "month": "2002-01-31",
+   "live": 31,
+   "distinct_bets": 21,
+   "killed": 5,
+   "born": 4
+  },
+  {
+   "month": "2002-07-31",
+   "live": 31,
+   "distinct_bets": 19,
+   "killed": 5,
+   "born": 5
+  },
+  {
+   "month": "2003-01-31",
+   "live": 30,
+   "distinct_bets": 19,
+   "killed": 4,
+   "born": 3
+  },
+  {
+   "month": "2003-07-31",
+   "live": 28,
+   "distinct_bets": 17,
+   "killed": 4,
+   "born": 2
+  },
+  {
+   "month": "2004-01-30",
+   "live": 25,
+   "distinct_bets": 16,
+   "killed": 4,
+   "born": 1
+  },
+  {
+   "month": "2004-07-30",
+   "live": 27,
+   "distinct_bets": 15,
+   "killed": 4,
+   "born": 6
+  },
+  {
+   "month": "2005-01-31",
+   "live": 26,
+   "distinct_bets": 14,
+   "killed": 4,
+   "born": 3
+  },
+  {
+   "month": "2005-07-29",
+   "live": 24,
+   "distinct_bets": 13,
+   "killed": 3,
+   "born": 1
+  },
+  {
+   "month": "2006-01-31",
+   "live": 23,
+   "distinct_bets": 15,
+   "killed": 3,
+   "born": 2
+  },
+  {
+   "month": "2006-07-31",
+   "live": 25,
+   "distinct_bets": 16,
+   "killed": 3,
+   "born": 5
+  },
+  {
+   "month": "2007-01-31",
+   "live": 25,
+   "distinct_bets": 18,
+   "killed": 3,
+   "born": 3
+  },
+  {
+   "month": "2007-07-31",
+   "live": 26,
+   "distinct_bets": 18,
+   "killed": 3,
+   "born": 4
+  },
+  {
+   "month": "2008-01-31",
+   "live": 23,
+   "distinct_bets": 16,
+   "killed": 3,
+   "born": 0
+  },
+  {
+   "month": "2008-07-31",
+   "live": 21,
+   "distinct_bets": 12,
+   "killed": 4,
+   "born": 2
+  },
+  {
+   "month": "2009-01-30",
+   "live": 19,
+   "distinct_bets": 12,
+   "killed": 3,
+   "born": 1
+  },
+  {
+   "month": "2009-07-31",
+   "live": 18,
+   "distinct_bets": 11,
+   "killed": 4,
+   "born": 3
+  },
+  {
+   "month": "2010-01-29",
+   "live": 17,
+   "distinct_bets": 9,
+   "killed": 3,
+   "born": 2
+  },
+  {
+   "month": "2010-07-30",
+   "live": 16,
+   "distinct_bets": 9,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2011-01-31",
+   "live": 16,
+   "distinct_bets": 9,
+   "killed": 2,
+   "born": 2
+  },
+  {
+   "month": "2011-07-29",
+   "live": 16,
+   "distinct_bets": 9,
+   "killed": 2,
+   "born": 2
+  },
+  {
+   "month": "2012-01-31",
+   "live": 15,
+   "distinct_bets": 9,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2012-07-31",
+   "live": 14,
+   "distinct_bets": 8,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2013-01-31",
+   "live": 14,
+   "distinct_bets": 8,
+   "killed": 2,
+   "born": 2
+  },
+  {
+   "month": "2013-07-31",
+   "live": 16,
+   "distinct_bets": 7,
+   "killed": 2,
+   "born": 4
+  },
+  {
+   "month": "2014-01-31",
+   "live": 15,
+   "distinct_bets": 8,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2014-07-31",
+   "live": 14,
+   "distinct_bets": 7,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2015-01-30",
+   "live": 13,
+   "distinct_bets": 8,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2015-07-31",
+   "live": 14,
+   "distinct_bets": 8,
+   "killed": 2,
+   "born": 3
+  },
+  {
+   "month": "2016-01-29",
+   "live": 13,
+   "distinct_bets": 6,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2016-07-29",
+   "live": 12,
+   "distinct_bets": 7,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2017-01-31",
+   "live": 13,
+   "distinct_bets": 6,
+   "killed": 1,
+   "born": 2
+  },
+  {
+   "month": "2017-07-31",
+   "live": 13,
+   "distinct_bets": 6,
+   "killed": 2,
+   "born": 2
+  },
+  {
+   "month": "2018-01-31",
+   "live": 12,
+   "distinct_bets": 6,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2018-07-31",
+   "live": 13,
+   "distinct_bets": 6,
+   "killed": 1,
+   "born": 2
+  },
+  {
+   "month": "2019-01-31",
+   "live": 12,
+   "distinct_bets": 6,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2019-07-31",
+   "live": 13,
+   "distinct_bets": 7,
+   "killed": 2,
+   "born": 3
+  },
+  {
+   "month": "2020-01-31",
+   "live": 12,
+   "distinct_bets": 8,
+   "killed": 1,
+   "born": 0
+  },
+  {
+   "month": "2020-07-31",
+   "live": 11,
+   "distinct_bets": 5,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2021-01-29",
+   "live": 12,
+   "distinct_bets": 5,
+   "killed": 1,
+   "born": 2
+  },
+  {
+   "month": "2021-07-30",
+   "live": 11,
+   "distinct_bets": 8,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2022-01-31",
+   "live": 12,
+   "distinct_bets": 7,
+   "killed": 1,
+   "born": 2
+  },
+  {
+   "month": "2022-07-29",
+   "live": 12,
+   "distinct_bets": 7,
+   "killed": 1,
+   "born": 1
+  },
+  {
+   "month": "2023-01-31",
+   "live": 10,
+   "distinct_bets": 6,
+   "killed": 2,
+   "born": 0
+  },
+  {
+   "month": "2023-07-31",
+   "live": 10,
+   "distinct_bets": 6,
+   "killed": 1,
+   "born": 1
+  },
+  {
+   "month": "2024-01-31",
+   "live": 9,
+   "distinct_bets": 5,
+   "killed": 2,
+   "born": 1
+  },
+  {
+   "month": "2024-07-31",
+   "live": 11,
+   "distinct_bets": 5,
+   "killed": 1,
+   "born": 3
+  }
+ ],
+ "branches": [
+  {
+   "id": "B0001",
+   "label": "mom_12_1/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2001-01-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": 0.0019072021511055966,
+   "t": 0.4164682191804286
+  },
+  {
+   "id": "B0002",
+   "label": "mom_6_1/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1998-01-30",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": 0.0015668419138109436,
+   "t": 0.31003895758083166
+  },
+  {
+   "id": "B0003",
+   "label": "mom_3/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1998-01-30",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": -0.0006760001761249535,
+   "t": -0.2855050614363634
+  },
+  {
+   "id": "B0004",
+   "label": "rev_1m/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-01-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": -0.005226371454726876,
+   "t": -1.252182894142
+  },
+  {
+   "id": "B0005",
+   "label": "rev_5d/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-01-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": -0.007274896046519278,
+   "t": -1.938571347489953
+  },
+  {
+   "id": "B0006",
+   "label": "resid_mom/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2001-01-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": 0.00019434380891788814,
+   "t": -0.04182456361407798
+  },
+  {
+   "id": "B0007",
+   "label": "near_52w_high/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-01-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": -0.001884868073204518,
+   "t": -0.9117171991480416
+  },
+  {
+   "id": "B0008",
+   "label": "above_ma200/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2006-01-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": 0.004283252195076566,
+   "t": 0.8208676655776679
+  },
+  {
+   "id": "B0009",
+   "label": "seasonality/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-01-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": -0.0029379993303524777,
+   "t": -0.7906859451159751
+  },
+  {
+   "id": "B0010",
+   "label": "up_days/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1998-07-31",
+   "source": "price",
+   "months": 371,
+   "mean_excess_vs_twin": 0.002947566658887938,
+   "t": 0.9982803658717269
+  },
+  {
+   "id": "B0011",
+   "label": "low_vol/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-07-31",
+   "source": "risk",
+   "months": 371,
+   "mean_excess_vs_twin": -0.002736088486201221,
+   "t": -1.1023965773718714
+  },
+  {
+   "id": "B0012",
+   "label": "low_idio/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1998-01-30",
+   "source": "risk",
+   "months": 371,
+   "mean_excess_vs_twin": -0.0022250726658001162,
+   "t": -0.8605066782794948
+  },
+  {
+   "id": "B0013",
+   "label": "low_beta/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-01-31",
+   "source": "risk",
+   "months": 371,
+   "mean_excess_vs_twin": -0.008493221379641423,
+   "t": -2.756037172201065
+  },
+  {
+   "id": "B0014",
+   "label": "low_max/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-07-31",
+   "source": "risk",
+   "months": 371,
+   "mean_excess_vs_twin": -0.0011633501350162192,
+   "t": -0.3879202399033539
+  },
+  {
+   "id": "B0015",
+   "label": "illiquid/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-07-31",
+   "source": "risk",
+   "months": 371,
+   "mean_excess_vs_twin": -0.010185037993403603,
+   "t": -2.7955584549396417
+  },
+  {
+   "id": "B0016",
+   "label": "neg_skew/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1998-07-31",
+   "source": "risk",
+   "months": 371,
+   "mean_excess_vs_twin": 0.004058577691962262,
+   "t": 1.7786113805685053
+  },
+  {
+   "id": "B0017",
+   "label": "gp_at/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1999-07-30",
+   "source": "fundamental",
+   "months": 371,
+   "mean_excess_vs_twin": 0.0010467486067994155,
+   "t": 0.2810713772754571
+  },
+  {
+   "id": "B0018",
+   "label": "value_bm/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1997-07-31",
+   "source": "fundamental",
+   "months": 371,
+   "mean_excess_vs_twin": 0.001683894247002525,
+   "t": 0.43249885448793435
+  },
+  {
+   "id": "B0019",
+   "label": "low_debt/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2000-01-31",
+   "source": "fundamental",
+   "months": 371,
+   "mean_excess_vs_twin": 0.002142574450966851,
+   "t": 0.8748856815332237
+  },
+  {
+   "id": "B0020",
+   "label": "margin/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2000-07-31",
+   "source": "fundamental",
+   "months": 371,
+   "mean_excess_vs_twin": 0.004244857172441482,
+   "t": 1.5700886401145582
+  },
+  {
+   "id": "B0021",
+   "label": "roe/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1999-01-29",
+   "source": "fundamental",
+   "months": 371,
+   "mean_excess_vs_twin": -0.0001269546867915111,
+   "t": -0.10908773293730181
+  },
+  {
+   "id": "B0022",
+   "label": "net_raises/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2002-01-31",
+   "source": "analyst_event",
+   "months": 308,
+   "mean_excess_vs_twin": 0.005384227623075011,
+   "t": 2.0414332718661363
+  },
+  {
+   "id": "B0023",
+   "label": "flow_rule/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2001-07-31",
+   "source": "analyst_event",
+   "months": 308,
+   "mean_excess_vs_twin": 0.005066170947926102,
+   "t": 2.3001470003044777
+  },
+  {
+   "id": "B0024",
+   "label": "flow_accel/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2001-07-31",
+   "source": "analyst_event",
+   "months": 308,
+   "mean_excess_vs_twin": 0.0036426069434594625,
+   "t": 1.3990131187782373
+  },
+  {
+   "id": "B0025",
+   "label": "rating_net/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1999-07-30",
+   "source": "analyst_event",
+   "months": 371,
+   "mean_excess_vs_twin": 0.0021600895444385134,
+   "t": 1.195196518684821
+  },
+  {
+   "id": "B0026",
+   "label": "low_target_cv/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2003-07-31",
+   "source": "analyst_event",
+   "months": 308,
+   "mean_excess_vs_twin": 0.0011642470396174872,
+   "t": 0.592089460637931
+  },
+  {
+   "id": "B0027",
+   "label": "ear/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "1999-01-29",
+   "source": "analyst_event",
+   "months": 371,
+   "mean_excess_vs_twin": 0.0051796116028843455,
+   "t": 1.720408262142629
+  },
+  {
+   "id": "B0028",
+   "label": "insider_buyers/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2008-01-31",
+   "source": "analyst_event",
+   "months": 227,
+   "mean_excess_vs_twin": -0.00041033669984529735,
+   "t": -0.2960272156834916
+  },
+  {
+   "id": "B0029",
+   "label": "insider_ratio/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2008-01-31",
+   "source": "analyst_event",
+   "months": 227,
+   "mean_excess_vs_twin": -0.003169420426444337,
+   "t": -1.0139403319446243
+  },
+  {
+   "id": "B0030",
+   "label": "target_change/k20/eligible",
+   "kind": "root",
+   "parents": [],
+   "born": "1994-01-31",
+   "died": "2008-07-31",
+   "source": "analyst_event",
+   "months": 308,
+   "mean_excess_vs_twin": 0.009422103481017283,
+   "t": 1.717663984611851
+  },
+  {
+   "id": "B0031",
+   "label": "above_ma200/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0008"
+   ],
+   "born": "1997-02-28",
+   "died": "2011-07-29",
+   "source": "price",
+   "months": 174,
+   "mean_excess_vs_twin": 0.00703950646341979,
+   "t": 0.9698784818092399
+  },
+  {
+   "id": "B0032",
+   "label": "ear/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0027"
+   ],
+   "born": "1997-02-28",
+   "died": "1999-01-29",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0030091484810083357,
+   "t": 0.36003544804858584
+  },
+  {
+   "id": "B0033",
+   "label": "rating_net/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0025"
+   ],
+   "born": "1997-02-28",
+   "died": "2000-01-31",
+   "source": "analyst_event",
+   "months": 36,
+   "mean_excess_vs_twin": 0.01338206076224516,
+   "t": 2.150889898633886
+  },
+  {
+   "id": "B0034",
+   "label": "neg_skew/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0016"
+   ],
+   "born": "1997-02-28",
+   "died": "1999-01-29",
+   "source": "risk",
+   "months": 24,
+   "mean_excess_vs_twin": -0.003010509194753753,
+   "t": -0.32828201514070987
+  },
+  {
+   "id": "B0035",
+   "label": "resid_mom/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0006"
+   ],
+   "born": "1997-02-28",
+   "died": "1999-07-30",
+   "source": "price",
+   "months": 30,
+   "mean_excess_vs_twin": -0.0024960914439630722,
+   "t": -0.11749440736094312
+  },
+  {
+   "id": "B0036",
+   "label": "low_debt/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0019"
+   ],
+   "born": "1997-02-28",
+   "died": "2000-01-31",
+   "source": "fundamental",
+   "months": 36,
+   "mean_excess_vs_twin": 0.01917198356557475,
+   "t": 2.076041382736627
+  },
+  {
+   "id": "B0037",
+   "label": "rating_net+neg_skew/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0025",
+    "B0016"
+   ],
+   "born": "1997-02-28",
+   "died": "2000-01-31",
+   "source": "analyst_event+risk",
+   "months": 36,
+   "mean_excess_vs_twin": 0.0038205704591340447,
+   "t": 0.4837763746694337
+  },
+  {
+   "id": "B0038",
+   "label": "rating_net+resid_mom/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0025",
+    "B0006"
+   ],
+   "born": "1997-02-28",
+   "died": "2016-07-29",
+   "source": "analyst_event+price",
+   "months": 234,
+   "mean_excess_vs_twin": 0.008894648554919869,
+   "t": 1.6303660412071599
+  },
+  {
+   "id": "B0039",
+   "label": "above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0008",
+    "B0025"
+   ],
+   "born": "1997-02-28",
+   "died": "2000-07-31",
+   "source": "analyst_event+price",
+   "months": 42,
+   "mean_excess_vs_twin": 0.018384362976943132,
+   "t": 1.025173373594572
+  },
+  {
+   "id": "B0040",
+   "label": "resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0035"
+   ],
+   "born": "1997-08-29",
+   "died": "2013-01-31",
+   "source": "price",
+   "months": 186,
+   "mean_excess_vs_twin": 0.006493846150782841,
+   "t": 0.6673287922423587
+  },
+  {
+   "id": "B0041",
+   "label": "rating_net+resid_mom/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0038"
+   ],
+   "born": "1997-08-29",
+   "died": "2022-07-29",
+   "source": "analyst_event+price",
+   "months": 300,
+   "mean_excess_vs_twin": 0.006868364926405852,
+   "t": 1.3467811516584738
+  },
+  {
+   "id": "B0042",
+   "label": "rating_net+neg_skew/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0037"
+   ],
+   "born": "1997-08-29",
+   "died": "1999-07-30",
+   "source": "analyst_event+risk",
+   "months": 24,
+   "mean_excess_vs_twin": 0.006096878409297332,
+   "t": 0.8763216054561527
+  },
+  {
+   "id": "B0043",
+   "label": "ear/k10/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0032"
+   ],
+   "born": "1997-08-29",
+   "died": "2001-07-31",
+   "source": "analyst_event",
+   "months": 48,
+   "mean_excess_vs_twin": 0.014701341960221576,
+   "t": 0.6843577860795165
+  },
+  {
+   "id": "B0044",
+   "label": "above_ma200/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0008"
+   ],
+   "born": "1997-08-29",
+   "died": "2002-01-31",
+   "source": "price",
+   "months": 54,
+   "mean_excess_vs_twin": 0.012129164232132405,
+   "t": 0.48150559866379905
+  },
+  {
+   "id": "B0046",
+   "label": "rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0041"
+   ],
+   "born": "1998-02-27",
+   "died": "2006-01-31",
+   "source": "analyst_event+price",
+   "months": 96,
+   "mean_excess_vs_twin": 0.01072409527730306,
+   "t": 0.8066392446107449
+  },
+  {
+   "id": "B0049",
+   "label": "above_ma200+rating_net/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0039"
+   ],
+   "born": "1998-02-27",
+   "died": "2017-07-31",
+   "source": "analyst_event+price",
+   "months": 234,
+   "mean_excess_vs_twin": 0.00843407886508607,
+   "t": 1.9539904212222377
+  },
+  {
+   "id": "B0050",
+   "label": "rating_net/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0025"
+   ],
+   "born": "1998-02-27",
+   "died": "2000-01-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0049856143798109,
+   "t": 0.40660394439822767
+  },
+  {
+   "id": "B0051",
+   "label": "low_debt/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0019"
+   ],
+   "born": "1998-02-27",
+   "died": "2001-01-31",
+   "source": "fundamental",
+   "months": 36,
+   "mean_excess_vs_twin": 0.011463693645499099,
+   "t": 0.9995494337003128
+  },
+  {
+   "id": "B0053",
+   "label": "low_debt+rating_net+neg_skew/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0037",
+    "B0019"
+   ],
+   "born": "1998-02-27",
+   "died": "2000-07-31",
+   "source": "analyst_event+fundamental+risk",
+   "months": 30,
+   "mean_excess_vs_twin": 0.01962970355507932,
+   "t": 0.9040097409933509
+  },
+  {
+   "id": "B0054",
+   "label": "low_debt+above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0039",
+    "B0019"
+   ],
+   "born": "1998-02-27",
+   "died": "2004-01-30",
+   "source": "analyst_event+fundamental+price",
+   "months": 72,
+   "mean_excess_vs_twin": 0.011622609018544587,
+   "t": 0.8420110923149166
+  },
+  {
+   "id": "B0055",
+   "label": "rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0046"
+   ],
+   "born": "1998-08-31",
+   "died": "2005-07-29",
+   "source": "analyst_event+price",
+   "months": 84,
+   "mean_excess_vs_twin": 0.009501226320323746,
+   "t": 1.317354384407159
+  },
+  {
+   "id": "B0056",
+   "label": "rating_net/k10/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0050"
+   ],
+   "born": "1998-08-31",
+   "died": "2000-07-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": 0.008934885457892961,
+   "t": 0.6891063019241277
+  },
+  {
+   "id": "B0061",
+   "label": "above_ma200+rating_net+resid_mom/k20/liquid500",
+   "kind": "join",
+   "parents": [
+    "B0040",
+    "B0039"
+   ],
+   "born": "1998-08-31",
+   "died": "2003-01-31",
+   "source": "analyst_event+price",
+   "months": 54,
+   "mean_excess_vs_twin": 0.011418151019690263,
+   "t": 0.5111325263880272
+  },
+  {
+   "id": "B0062",
+   "label": "resid_mom/k20/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0040"
+   ],
+   "born": "1999-02-26",
+   "died": "2001-01-31",
+   "source": "price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.010949936715066116,
+   "t": 0.2445909236469148
+  },
+  {
+   "id": "B0063",
+   "label": "above_ma200+rating_net+resid_mom/k20/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0061"
+   ],
+   "born": "1999-02-26",
+   "died": "2015-01-30",
+   "source": "analyst_event+price",
+   "months": 192,
+   "mean_excess_vs_twin": 0.007970470606928513,
+   "t": 1.1712443242431252
+  },
+  {
+   "id": "B0066",
+   "label": "rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0055"
+   ],
+   "born": "1999-02-26",
+   "died": "2004-01-30",
+   "source": "analyst_event+price",
+   "months": 60,
+   "mean_excess_vs_twin": 0.011333059261389979,
+   "t": 0.9494689897590926
+  },
+  {
+   "id": "B0069",
+   "label": "resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0040"
+   ],
+   "born": "1999-08-31",
+   "died": "2003-01-31",
+   "source": "price",
+   "months": 42,
+   "mean_excess_vs_twin": 0.010873076793417558,
+   "t": 0.5038415287227369
+  },
+  {
+   "id": "B0070",
+   "label": "above_ma200+rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0061"
+   ],
+   "born": "1999-08-31",
+   "died": "2001-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.010060602687399873,
+   "t": 0.3500630236481695
+  },
+  {
+   "id": "B0073",
+   "label": "rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0055"
+   ],
+   "born": "1999-08-31",
+   "died": "2001-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.01173135004973637,
+   "t": 0.4156496271716655
+  },
+  {
+   "id": "B0074",
+   "label": "resid_mom/k50/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0069"
+   ],
+   "born": "2000-02-29",
+   "died": "2002-01-31",
+   "source": "price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.025159353360467106,
+   "t": -0.7838561352781763
+  },
+  {
+   "id": "B0075",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0063"
+   ],
+   "born": "2000-02-29",
+   "died": "2002-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.022762198149113958,
+   "t": -1.4827774789901305
+  },
+  {
+   "id": "B0076",
+   "label": "target_change/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0030"
+   ],
+   "born": "2000-02-29",
+   "died": "2002-01-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": -0.03437610154171169,
+   "t": -1.058773780639098
+  },
+  {
+   "id": "B0080",
+   "label": "target_change/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0030"
+   ],
+   "born": "2000-08-31",
+   "died": "2002-07-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": -0.01886383736302219,
+   "t": -1.3971291982146268
+  },
+  {
+   "id": "B0082",
+   "label": "resid_mom/k10/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0040"
+   ],
+   "born": "2000-08-31",
+   "died": "2002-07-31",
+   "source": "price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.01264318926905742,
+   "t": -0.4350310603698141
+  },
+  {
+   "id": "B0086",
+   "label": "target_change+above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0061"
+   ],
+   "born": "2000-08-31",
+   "died": "2002-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.008722878837893544,
+   "t": -0.6841366367037465
+  },
+  {
+   "id": "B0087",
+   "label": "target_change+rating_net+resid_mom/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0046"
+   ],
+   "born": "2000-08-31",
+   "died": "2002-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.009425259983767182,
+   "t": -0.5791552747999692
+  },
+  {
+   "id": "B0088",
+   "label": "target_change+above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0063"
+   ],
+   "born": "2000-08-31",
+   "died": "2002-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.00378030695212112,
+   "t": -0.39491234738459974
+  },
+  {
+   "id": "B0089",
+   "label": "target_change/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0030"
+   ],
+   "born": "2001-02-28",
+   "died": "2003-01-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": -0.005013326947392061,
+   "t": -0.7685392186804444
+  },
+  {
+   "id": "B0094",
+   "label": "above_ma200+rating_net/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0049"
+   ],
+   "born": "2001-02-28",
+   "died": "2003-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0012428863093335862,
+   "t": -0.15556047933452102
+  },
+  {
+   "id": "B0102",
+   "label": "above_ma200+rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0061"
+   ],
+   "born": "2001-08-31",
+   "died": "2003-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.009147708980467123,
+   "t": -0.49655600576312015
+  },
+  {
+   "id": "B0103",
+   "label": "low_debt+above_ma200+rating_net/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0054"
+   ],
+   "born": "2001-08-31",
+   "died": "2003-07-31",
+   "source": "analyst_event+fundamental+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0070909771525730645,
+   "t": 0.6268657936483419
+  },
+  {
+   "id": "B0105",
+   "label": "low_debt+above_ma200+rating_net/k20/liquid500",
+   "kind": "join",
+   "parents": [
+    "B0040",
+    "B0054"
+   ],
+   "born": "2001-08-31",
+   "died": "2003-07-31",
+   "source": "analyst_event+fundamental+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.006609695460058358,
+   "t": 0.6177476749316902
+  },
+  {
+   "id": "B0109",
+   "label": "above_ma200+rating_net+resid_mom/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0063"
+   ],
+   "born": "2002-02-28",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 274,
+   "mean_excess_vs_twin": 0.009963479861996421,
+   "t": 2.7660261233270687
+  },
+  {
+   "id": "B0110",
+   "label": "above_ma200+rating_net/k20/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0049"
+   ],
+   "born": "2002-02-28",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 274,
+   "mean_excess_vs_twin": 0.009343781818024853,
+   "t": 4.084933046026559
+  },
+  {
+   "id": "B0111",
+   "label": "rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0038"
+   ],
+   "born": "2002-02-28",
+   "died": "2004-01-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.009239363385817443,
+   "t": 1.0006103490722698
+  },
+  {
+   "id": "B0112",
+   "label": "low_debt+above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0054"
+   ],
+   "born": "2002-02-28",
+   "died": "2004-01-30",
+   "source": "analyst_event+fundamental+price",
+   "months": 24,
+   "mean_excess_vs_twin": 2.6717160821523086e-05,
+   "t": 0.005961790025753294
+  },
+  {
+   "id": "B0117",
+   "label": "above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2002-08-30",
+   "died": "2004-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.005041591950887109,
+   "t": 0.8368008468701268
+  },
+  {
+   "id": "B0118",
+   "label": "target_change/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0030"
+   ],
+   "born": "2002-08-30",
+   "died": "2005-01-31",
+   "source": "analyst_event",
+   "months": 30,
+   "mean_excess_vs_twin": 0.008134285856005407,
+   "t": 0.5863632176378789
+  },
+  {
+   "id": "B0119",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0063"
+   ],
+   "born": "2002-08-30",
+   "died": "2004-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.008912070556521899,
+   "t": 1.7648026803698351
+  },
+  {
+   "id": "B0123",
+   "label": "target_change+above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0049"
+   ],
+   "born": "2002-08-30",
+   "died": "2004-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.009325722203679063,
+   "t": 0.8611051799015257
+  },
+  {
+   "id": "B0124",
+   "label": "target_change+resid_mom/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0040"
+   ],
+   "born": "2002-08-30",
+   "died": "2004-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.007101317056483665,
+   "t": 0.4829259701034572
+  },
+  {
+   "id": "B0127",
+   "label": "resid_mom/k10/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0040"
+   ],
+   "born": "2003-02-28",
+   "died": "2005-01-31",
+   "source": "price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.027602253352703793,
+   "t": -1.0908726245261748
+  },
+  {
+   "id": "B0132",
+   "label": "target_change+resid_mom/k20/liquid500",
+   "kind": "join",
+   "parents": [
+    "B0040",
+    "B0030"
+   ],
+   "born": "2003-02-28",
+   "died": "2005-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.010424780426504713,
+   "t": 0.9598122419526571
+  },
+  {
+   "id": "B0133",
+   "label": "target_change+rating_net+resid_mom/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0038"
+   ],
+   "born": "2003-02-28",
+   "died": "2005-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.010126978768854185,
+   "t": 0.7530911703406057
+  },
+  {
+   "id": "B0137",
+   "label": "target_change/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0030"
+   ],
+   "born": "2003-08-29",
+   "died": "2005-07-29",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0028844622943599743,
+   "t": 0.3486618178879941
+  },
+  {
+   "id": "B0138",
+   "label": "resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0040"
+   ],
+   "born": "2003-08-29",
+   "died": "2005-07-29",
+   "source": "price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.004493770229647716,
+   "t": -0.6810789214545456
+  },
+  {
+   "id": "B0144",
+   "label": "target_change/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0118"
+   ],
+   "born": "2004-02-27",
+   "died": "2006-01-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": 0.00011153113140088707,
+   "t": 0.008482007688313366
+  },
+  {
+   "id": "B0153",
+   "label": "target_change/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0030"
+   ],
+   "born": "2004-08-31",
+   "died": "2007-07-31",
+   "source": "analyst_event",
+   "months": 36,
+   "mean_excess_vs_twin": 0.002157787749609139,
+   "t": 0.43745139367501784
+  },
+  {
+   "id": "B0155",
+   "label": "above_ma200+rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2004-08-31",
+   "died": "2010-01-29",
+   "source": "analyst_event+price",
+   "months": 66,
+   "mean_excess_vs_twin": 0.0060199399444619515,
+   "t": 0.618404160634544
+  },
+  {
+   "id": "B0156",
+   "label": "rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0038"
+   ],
+   "born": "2004-08-31",
+   "died": "2006-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.00040301720530794397,
+   "t": 0.06330800458888393
+  },
+  {
+   "id": "B0158",
+   "label": "above_ma200+rating_net+resid_mom/k20/liquid500",
+   "kind": "join",
+   "parents": [
+    "B0040",
+    "B0110"
+   ],
+   "born": "2004-08-31",
+   "died": "2006-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.00030178463113784623,
+   "t": -0.028702651493561205
+  },
+  {
+   "id": "B0159",
+   "label": "target_change+above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0109"
+   ],
+   "born": "2004-08-31",
+   "died": "2006-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0027749525303719185,
+   "t": -0.3555084940130489
+  },
+  {
+   "id": "B0160",
+   "label": "target_change+above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0030",
+    "B0110"
+   ],
+   "born": "2004-08-31",
+   "died": "2007-07-31",
+   "source": "analyst_event+price",
+   "months": 36,
+   "mean_excess_vs_twin": 0.00777603959655598,
+   "t": 1.0620724179892478
+  },
+  {
+   "id": "B0162",
+   "label": "above_ma200+rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0158"
+   ],
+   "born": "2005-02-28",
+   "died": "2007-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0013128145854965848,
+   "t": 0.3929854798980156
+  },
+  {
+   "id": "B0163",
+   "label": "target_change+above_ma200+rating_net/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0160"
+   ],
+   "born": "2005-02-28",
+   "died": "2007-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0005524521686216659,
+   "t": 0.08135297447744813
+  },
+  {
+   "id": "B0164",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0063"
+   ],
+   "born": "2005-02-28",
+   "died": "2007-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0015647401672281309,
+   "t": -0.3202611428590886
+  },
+  {
+   "id": "B0171",
+   "label": "target_change/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0030"
+   ],
+   "born": "2005-08-31",
+   "died": "2007-07-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0023809854010110147,
+   "t": 0.3002364539997118
+  },
+  {
+   "id": "B0181",
+   "label": "resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0040"
+   ],
+   "born": "2006-02-28",
+   "died": "2008-01-31",
+   "source": "price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0035957200246361115,
+   "t": 0.4471032828765555
+  },
+  {
+   "id": "B0182",
+   "label": "above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2006-02-28",
+   "died": "2008-07-31",
+   "source": "analyst_event+price",
+   "months": 30,
+   "mean_excess_vs_twin": 0.007212209648563262,
+   "t": 1.0766073770686984
+  },
+  {
+   "id": "B0188",
+   "label": "insider_ratio/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0029"
+   ],
+   "born": "2006-08-31",
+   "died": "2008-07-31",
+   "source": "analyst_event",
+   "months": 24,
+   "mean_excess_vs_twin": -0.010941604529484006,
+   "t": -1.2108743391266246
+  },
+  {
+   "id": "B0189",
+   "label": "rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0038"
+   ],
+   "born": "2006-08-31",
+   "died": "2009-01-30",
+   "source": "analyst_event+price",
+   "months": 30,
+   "mean_excess_vs_twin": 2.427170152468535e-05,
+   "t": 0.002156928369295172
+  },
+  {
+   "id": "B0192",
+   "label": "above_ma200+rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0063"
+   ],
+   "born": "2006-08-31",
+   "died": "2011-01-31",
+   "source": "analyst_event+price",
+   "months": 54,
+   "mean_excess_vs_twin": 0.006967171098567821,
+   "t": 1.0365360921772622
+  },
+  {
+   "id": "B0194",
+   "label": "target_change+rating_net+resid_mom/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0038",
+    "B0030"
+   ],
+   "born": "2006-08-31",
+   "died": "2008-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0080341306864523,
+   "t": 0.5892349056005473
+  },
+  {
+   "id": "B0195",
+   "label": "target_change+resid_mom/k20/liquid500",
+   "kind": "join",
+   "parents": [
+    "B0040",
+    "B0030"
+   ],
+   "born": "2006-08-31",
+   "died": "2010-01-29",
+   "source": "analyst_event+price",
+   "months": 42,
+   "mean_excess_vs_twin": 0.007609141126410419,
+   "t": 0.8157267566131456
+  },
+  {
+   "id": "B0197",
+   "label": "resid_mom/k10/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0040"
+   ],
+   "born": "2007-02-28",
+   "died": "2009-01-30",
+   "source": "price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.02629903269077209,
+   "t": -1.6684297947742706
+  },
+  {
+   "id": "B0200",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2007-02-28",
+   "died": "2010-01-29",
+   "source": "analyst_event+price",
+   "months": 36,
+   "mean_excess_vs_twin": 0.004332421720900577,
+   "t": 0.5015348716018425
+  },
+  {
+   "id": "B0201",
+   "label": "target_change+resid_mom/k20/eligible",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0195"
+   ],
+   "born": "2007-02-28",
+   "died": "2009-01-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0167299799834509,
+   "t": -1.2670138129446535
+  },
+  {
+   "id": "B0205",
+   "label": "above_ma200+rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0192"
+   ],
+   "born": "2007-08-31",
+   "died": "2009-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0024667927528828244,
+   "t": -0.179320424981717
+  },
+  {
+   "id": "B0207",
+   "label": "target_change+resid_mom/k10/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0195"
+   ],
+   "born": "2007-08-31",
+   "died": "2009-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.004092220237511018,
+   "t": 0.20158076390373664
+  },
+  {
+   "id": "B0209",
+   "label": "target_change+rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0194"
+   ],
+   "born": "2007-08-31",
+   "died": "2009-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0014014623772579775,
+   "t": 0.07439332349272172
+  },
+  {
+   "id": "B0210",
+   "label": "above_ma200+rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0200"
+   ],
+   "born": "2007-08-31",
+   "died": "2009-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0046597945971783745,
+   "t": -0.5556673917803288
+  },
+  {
+   "id": "B0217",
+   "label": "target_change+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0207"
+   ],
+   "born": "2008-08-29",
+   "died": "2010-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.007656828935524544,
+   "t": -0.8177426512870845
+  },
+  {
+   "id": "B0218",
+   "label": "target_change+rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0209"
+   ],
+   "born": "2008-08-29",
+   "died": "2010-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.019954422469143914,
+   "t": -1.6979783193229578
+  },
+  {
+   "id": "B0229",
+   "label": "target_change+above_ma200+rating_net/k20/eligible",
+   "kind": "join",
+   "parents": [
+    "B0110",
+    "B0195"
+   ],
+   "born": "2009-02-27",
+   "died": "2011-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.007573255936837738,
+   "t": -0.4363320932387448
+  },
+  {
+   "id": "B0230",
+   "label": "above_ma200+rating_net/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2009-08-31",
+   "died": "2012-07-31",
+   "source": "analyst_event+price",
+   "months": 36,
+   "mean_excess_vs_twin": 0.005025958537799924,
+   "t": 0.618513267450124
+  },
+  {
+   "id": "B0231",
+   "label": "rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2009-08-31",
+   "died": "2014-07-31",
+   "source": "analyst_event+price",
+   "months": 60,
+   "mean_excess_vs_twin": 0.00717678565750205,
+   "t": 1.243139048759368
+  },
+  {
+   "id": "B0233",
+   "label": "rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0038"
+   ],
+   "born": "2009-08-31",
+   "died": "2011-07-29",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.001795644785623122,
+   "t": -0.3220042395406335
+  },
+  {
+   "id": "B0236",
+   "label": "rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0231"
+   ],
+   "born": "2010-02-26",
+   "died": "2012-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0006296565297625439,
+   "t": 0.13897352379946273
+  },
+  {
+   "id": "B0237",
+   "label": "above_ma200+rating_net/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0230"
+   ],
+   "born": "2010-02-26",
+   "died": "2012-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.001141942312480509,
+   "t": -0.17114919310304874
+  },
+  {
+   "id": "B0246",
+   "label": "above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2010-08-31",
+   "died": "2012-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.00588515047149437,
+   "t": 1.0705234869708273
+  },
+  {
+   "id": "B0251",
+   "label": "above_ma200+rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2011-02-28",
+   "died": "2013-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.007270765234656855,
+   "t": 1.22321116581199
+  },
+  {
+   "id": "B0252",
+   "label": "rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0038"
+   ],
+   "born": "2011-02-28",
+   "died": "2013-07-31",
+   "source": "analyst_event+price",
+   "months": 30,
+   "mean_excess_vs_twin": 0.006075470537739486,
+   "t": 1.66704498208844
+  },
+  {
+   "id": "B0257",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2011-08-31",
+   "died": "2014-01-31",
+   "source": "analyst_event+price",
+   "months": 30,
+   "mean_excess_vs_twin": 0.007733289872816037,
+   "t": 1.7662564500351752
+  },
+  {
+   "id": "B0258",
+   "label": "rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0038"
+   ],
+   "born": "2011-08-31",
+   "died": "2013-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0059355637428078105,
+   "t": 1.215941316160737
+  },
+  {
+   "id": "B0260",
+   "label": "rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0258"
+   ],
+   "born": "2012-02-29",
+   "died": "2014-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0024815596049910715,
+   "t": 0.8180738187958977
+  },
+  {
+   "id": "B0269",
+   "label": "above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2012-08-31",
+   "died": "2014-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.004303620802341458,
+   "t": 1.5384481387864293
+  },
+  {
+   "id": "B0275",
+   "label": "above_ma200+rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2013-02-28",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 142,
+   "mean_excess_vs_twin": 0.008863960596736529,
+   "t": 2.138578008044309
+  },
+  {
+   "id": "B0277",
+   "label": "above_ma200+rating_net/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0049"
+   ],
+   "born": "2013-02-28",
+   "died": "2015-01-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0041694906957763555,
+   "t": 1.5647733944970161
+  },
+  {
+   "id": "B0278",
+   "label": "rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2013-08-30",
+   "died": "2015-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0004071553249556513,
+   "t": -0.07163391080143308
+  },
+  {
+   "id": "B0279",
+   "label": "above_ma200+rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0275"
+   ],
+   "born": "2013-08-30",
+   "died": "2016-07-29",
+   "source": "analyst_event+price",
+   "months": 36,
+   "mean_excess_vs_twin": 0.006774044777402799,
+   "t": 1.4422403449632102
+  },
+  {
+   "id": "B0282",
+   "label": "rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0231"
+   ],
+   "born": "2013-08-30",
+   "died": "2015-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0025613869708425996,
+   "t": 0.4992035248069197
+  },
+  {
+   "id": "B0283",
+   "label": "rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0038"
+   ],
+   "born": "2013-08-30",
+   "died": "2016-01-29",
+   "source": "analyst_event+price",
+   "months": 30,
+   "mean_excess_vs_twin": 0.008084596379171374,
+   "t": 1.428707220571423
+  },
+  {
+   "id": "B0289",
+   "label": "rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0278"
+   ],
+   "born": "2014-02-28",
+   "died": "2016-01-29",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.004961998205077548,
+   "t": 0.9782382877069189
+  },
+  {
+   "id": "B0292",
+   "label": "above_ma200+rating_net/k10/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2014-08-29",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 124,
+   "mean_excess_vs_twin": 0.0076441172183452115,
+   "t": 1.2530793286002841
+  },
+  {
+   "id": "B0296",
+   "label": "above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0292"
+   ],
+   "born": "2015-02-27",
+   "died": "2017-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0005251793482500249,
+   "t": 0.08049217376709784
+  },
+  {
+   "id": "B0302",
+   "label": "above_ma200+rating_net/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0292"
+   ],
+   "born": "2015-08-31",
+   "died": "2020-07-31",
+   "source": "analyst_event+price",
+   "months": 60,
+   "mean_excess_vs_twin": 0.006419661391042568,
+   "t": 1.2264149447760697
+  },
+  {
+   "id": "B0303",
+   "label": "rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2015-08-31",
+   "died": "2018-01-31",
+   "source": "analyst_event+price",
+   "months": 30,
+   "mean_excess_vs_twin": 0.007218160917921727,
+   "t": 1.3870974214610527
+  },
+  {
+   "id": "B0306",
+   "label": "above_ma200+rating_net/k10/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0049"
+   ],
+   "born": "2015-08-31",
+   "died": "2017-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.001311227339084641,
+   "t": 0.1003924664754843
+  },
+  {
+   "id": "B0312",
+   "label": "above_ma200+rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0275"
+   ],
+   "born": "2016-02-29",
+   "died": "2018-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0033915024800713436,
+   "t": -1.0978822671644624
+  },
+  {
+   "id": "B0314",
+   "label": "above_ma200+rating_net/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0302"
+   ],
+   "born": "2016-08-31",
+   "died": "2018-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0022359770294098484,
+   "t": 0.8416798823846584
+  },
+  {
+   "id": "B0323",
+   "label": "above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2017-02-28",
+   "died": "2019-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.003159347539401959,
+   "t": 0.796617648167872
+  },
+  {
+   "id": "B0325",
+   "label": "rating_net+resid_mom/k20/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2017-02-28",
+   "died": "2019-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0016777716856978438,
+   "t": -0.23350979162409818
+  },
+  {
+   "id": "B0328",
+   "label": "above_ma200+rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0275"
+   ],
+   "born": "2017-08-31",
+   "died": "2019-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0032654398137266665,
+   "t": 0.5831046029258449
+  },
+  {
+   "id": "B0329",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2017-08-31",
+   "died": "2019-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0036821454898610623,
+   "t": 1.0376137591140167
+  },
+  {
+   "id": "B0335",
+   "label": "above_ma200+rating_net/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2018-02-28",
+   "died": "2020-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.006710134829773927,
+   "t": -0.9746143659145718
+  },
+  {
+   "id": "B0340",
+   "label": "above_ma200+rating_net/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0302"
+   ],
+   "born": "2018-08-31",
+   "died": "2020-07-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.004149961257814535,
+   "t": -0.7716581992555589
+  },
+  {
+   "id": "B0343",
+   "label": "rating_net+resid_mom/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2018-08-31",
+   "died": "2022-01-31",
+   "source": "analyst_event+price",
+   "months": 42,
+   "mean_excess_vs_twin": 0.0021238269466531947,
+   "t": 0.18853558498711345
+  },
+  {
+   "id": "B0347",
+   "label": "rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2019-02-28",
+   "died": "2021-01-29",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.0036837599029294044,
+   "t": -0.48425025160392365
+  },
+  {
+   "id": "B0352",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2019-08-30",
+   "died": "2021-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": -0.006934633972360678,
+   "t": -0.7559459493528526
+  },
+  {
+   "id": "B0353",
+   "label": "rating_net+resid_mom/k20/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2019-08-30",
+   "died": "2021-07-30",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0009774966771743405,
+   "t": 0.05372840891212093
+  },
+  {
+   "id": "B0355",
+   "label": "above_ma200+rating_net/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0292"
+   ],
+   "born": "2019-08-30",
+   "died": "2023-01-31",
+   "source": "analyst_event+price",
+   "months": 42,
+   "mean_excess_vs_twin": 0.004731000300637248,
+   "t": 0.7649359664071153
+  },
+  {
+   "id": "B0365",
+   "label": "above_ma200+rating_net/k10/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0292"
+   ],
+   "born": "2020-08-31",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 52,
+   "mean_excess_vs_twin": 0.012582856969578884,
+   "t": 2.0242520540440165
+  },
+  {
+   "id": "B0371",
+   "label": "above_ma200+rating_net/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0110"
+   ],
+   "born": "2021-02-26",
+   "died": "2023-07-31",
+   "source": "analyst_event+price",
+   "months": 30,
+   "mean_excess_vs_twin": 0.007276061559978732,
+   "t": 1.1555866769213192
+  },
+  {
+   "id": "B0373",
+   "label": "rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0041"
+   ],
+   "born": "2021-02-26",
+   "died": "2023-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.0023074768983443925,
+   "t": 0.33791573080210885
+  },
+  {
+   "id": "B0378",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2021-08-31",
+   "died": "2024-07-31",
+   "source": "analyst_event+price",
+   "months": 36,
+   "mean_excess_vs_twin": 0.007289724706441375,
+   "t": 1.4455800364986513
+  },
+  {
+   "id": "B0380",
+   "label": "above_ma200+rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0378"
+   ],
+   "born": "2022-02-28",
+   "died": "2024-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.004605222426942389,
+   "t": 0.5441663368304092
+  },
+  {
+   "id": "B0382",
+   "label": "above_ma200+rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0275"
+   ],
+   "born": "2022-02-28",
+   "died": "2024-01-31",
+   "source": "analyst_event+price",
+   "months": 24,
+   "mean_excess_vs_twin": 0.008032747428590494,
+   "t": 0.8880444856303491
+  },
+  {
+   "id": "B0391",
+   "label": "above_ma200+rating_net+resid_mom/k20/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2022-08-31",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 28,
+   "mean_excess_vs_twin": 0.017945124879617826,
+   "t": 1.561478449740149
+  },
+  {
+   "id": "B0398",
+   "label": "above_ma200+rating_net/k20/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0365"
+   ],
+   "born": "2023-08-31",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 16,
+   "mean_excess_vs_twin": -0.00203068519280839,
+   "t": -0.17330798780463114
+  },
+  {
+   "id": "B0407",
+   "label": "above_ma200+rating_net/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0365"
+   ],
+   "born": "2024-02-29",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 10,
+   "mean_excess_vs_twin": 0.005050361293975578,
+   "t": null
+  },
+  {
+   "id": "B0410",
+   "label": "above_ma200+rating_net+resid_mom/k20/liquid500",
+   "kind": "mutant_universe",
+   "parents": [
+    "B0391"
+   ],
+   "born": "2024-08-30",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 4,
+   "mean_excess_vs_twin": 0.014860573320184516,
+   "t": null
+  },
+  {
+   "id": "B0412",
+   "label": "above_ma200+rating_net+resid_mom/k50/eligible",
+   "kind": "mutant_k",
+   "parents": [
+    "B0109"
+   ],
+   "born": "2024-08-30",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 4,
+   "mean_excess_vs_twin": 0.020255714871671382,
+   "t": null
+  },
+  {
+   "id": "B0413",
+   "label": "above_ma200+rating_net+resid_mom/k50/liquid500",
+   "kind": "mutant_k",
+   "parents": [
+    "B0275"
+   ],
+   "born": "2024-08-30",
+   "died": null,
+   "source": "analyst_event+price",
+   "months": 4,
+   "mean_excess_vs_twin": 0.006662645070627844,
+   "t": null
+  }
+ ],
+ "elapsed_s": 11.5,
+ "hindsight_note": "The ROOT selector list was written on 2026-11-11 by someone who has read the 2026-09-29 library boards; the epoch decisions are forward-only, the root list is not."
+}
