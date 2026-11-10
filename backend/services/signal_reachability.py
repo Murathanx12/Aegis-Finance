@@ -247,6 +247,14 @@ CLASSIFIED: dict[str, str] = {
         "the WHOLE-FILE config_hash, so adding a book first makes "
         "assert_config_current refuse to run AND refuse to migrate, for all "
         "ten. This is a SEQUENCING wait with a date, not a missing consumer."),
+    "backend.services.universe_graph": (
+        "AWAITS -- CH-30 universe graph v1 (ROADMAP §2a): typed nodes, measured "
+        "event_response edges (typed events: 8-K families, analyst up/downgrades, "
+        "insider buys; `event-check` is its held-out test), propagate(event) -> "
+        "implications (context only for an untyped event). Its consumers are "
+        "CH-31's wiring: funnel_candidates -> opportunity_funnel.run(extra=...), "
+        "holdings_exposure -> the CH-14b overlay, owner_warnings -> the owner "
+        "warning path. Built by its own CLI; no scheduled caller yet."),
     "backend.services.theme_baskets": (
         "AWAITS — point-in-time secular theme baskets; the narrative work "
         "that would consume them is LOGGED, not queued (roadmap §5)."),
