@@ -110,7 +110,14 @@ def attach_adj_factor(frame: pd.DataFrame, adj: pd.DataFrame | None) -> pd.DataF
     a = adj[["ticker", "spdates", "adj"]].dropna().copy()
     a["spdates"] = pd.to_datetime(a["spdates"])
     a["adj"] = pd.to_numeric(a["adj"], errors="coerce")
-    a = a.dropna().sort_values("spdates", kind="mergesort")
+    a = a.dropna()
+    # one dtype on both sides (parquet strings arrive as `string[python]` or object,
+    # timestamps as ns or us); merge_asof refuses a mismatch rather than coercing
+    a["ticker"] = a["ticker"].astype(str).astype(object)
+    a["spdates"] = a["spdates"].astype("datetime64[ns]")
+    a = a.sort_values("spdates", kind="mergesort")
+    out["ticker"] = out["ticker"].astype(str).astype(object)
+    out["statpers"] = out["statpers"].astype("datetime64[ns]")
     out = out.sort_values("statpers", kind="mergesort")
     out = pd.merge_asof(out, a.rename(columns={"spdates": "statpers", "adj": "adj_factor"}),
                         on="statpers", by="ticker", direction="backward")

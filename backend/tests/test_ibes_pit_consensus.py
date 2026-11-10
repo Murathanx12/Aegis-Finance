@@ -205,3 +205,13 @@ def test_loader_refuses_when_the_unadjusted_file_is_absent(tmp_path, monkeypatch
         PIT.load_consensus()
     with pytest.raises(EFG.CharacteristicPanelUnavailable):
         EFG.load_ibes_dispersion(2000, 2001)
+
+
+def test_mixed_parquet_dtypes_do_not_break_the_factor_join():
+    """Parquet hands back `string[python]` tickers and us/ns timestamps; the join
+    must not refuse them (it did on the first real run, 2026-11-11)."""
+    u = _unadjusted().astype({"ticker": "string"})
+    u["statpers"] = u["statpers"].astype("datetime64[us]")
+    adj = _adj_table().astype({"ticker": "string"})
+    c = PIT.from_frames(u, _link(), adj)
+    assert (c.loc[c["permno"] == 1000 + SPLITTER, "adj_factor"] == FUTURE_SPLIT).all()
