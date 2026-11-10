@@ -114,6 +114,29 @@ def build1_path(name: str) -> Path:
 # (do not retrofit the live track record). See docs/TRIALS/TRIAL-001 note.
 DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
 
+#: WHICH `.env`: `PROJECT_ROOT / ".env"` unless `AEGIS_DOTENV_PATH` names one file
+#: explicitly (CH-05, 2026-11-11). The scheduled tasks are to move from the WIP
+#: checkout to a clean checkout of a tagged main commit, and the keys must not be
+#: copied, moved or duplicated to get there -- the 2026-08-24 lesson below. So the
+#: new checkout POINTS at the one existing file instead. A set variable that names
+#: no file REFUSES at import (a red, non-zero exit): falling back to the checkout's
+#: own `.env` would run a scheduled job keyless and quietly, which is exactly how
+#: the packaged app ran for weeks (`_repo_root` docstring).
+def _dotenv_path() -> Path:
+    explicit = os.getenv("AEGIS_DOTENV_PATH", "").strip()
+    if not explicit:
+        return PROJECT_ROOT / ".env"
+    path = Path(explicit).expanduser()
+    if not path.is_file():
+        raise RuntimeError(
+            f"AEGIS_DOTENV_PATH is set to {explicit!r}, which is not a file; refusing to "
+            "start without the declared keys (unset it to use PROJECT_ROOT/.env)")
+    return path.resolve()
+
+
+DOTENV_PATH = _dotenv_path()
+
+
 #: CI has no `.env`; this machine does, and that difference is load-bearing —
 #: eleven tests once passed locally BECAUSE a secrets file existed and failed in
 #: CI. The documented way to reproduce CI was to `mv .env .env.hidden` inside a
@@ -131,7 +154,7 @@ DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
 #: Read from the real environment rather than a config value, because config is
 #: what this decides.
 if os.getenv("AEGIS_IGNORE_DOTENV", "").strip().lower() not in ("1", "true", "yes"):
-    load_dotenv(PROJECT_ROOT / ".env")
+    load_dotenv(DOTENV_PATH)
 
 
 # ── US market calendar ────────────────────────────────────────────────────────
@@ -6110,6 +6133,42 @@ UNIVERSE_GRAPH_CHECK_YEARS: tuple = (2021, 2022, 2023, 2024, 2025, 2026)
 UNIVERSE_GRAPH_CHECK_HORIZONS: tuple = (1, 5)
 UNIVERSE_GRAPH_CHECK_MAX_EVENTS_PER_YEAR = 4000
 UNIVERSE_GRAPH_CHECK_SEED = 20261110
+
+# ── UNIVERSE GRAPH: event-typed edges (`event_response`, night-event-graph) ──
+#: A typed event (8-K item family, analyst up/downgrade, insider buy) at A on its
+#: EFFECTIVE session e (public before 16:00 ET on a session -> e = that session,
+#: else the next one; a date-only stamp -> the session AFTER the date), signed by
+#: A's own market-adjusted move over the announcement window. Weight = mean of
+#: B's response over e+1..e+h in B's sigma units, estimated only from events
+#: whose outcome window closed before the as-of date, shrunk n/(n+k).
+UNIVERSE_GRAPH_EVENT_TOP_N = 1500
+UNIVERSE_GRAPH_EVENT_HORIZONS: tuple = (1, 5, 21)
+UNIVERSE_GRAPH_EVENT_SHRINK_K = 20.0
+#: A cell (family x edge type x direction) needs this many past rows to predict.
+UNIVERSE_GRAPH_EVENT_MIN_ROWS = 30
+#: Sector / theme peers sampled per event (seeded), so one 80-name sector does
+#: not outweigh every other edge type. Co-coverage keeps its top-K.
+UNIVERSE_GRAPH_EVENT_PEER_CAP = 15
+#: A daily market-adjusted move beyond this is treated as a bad bar (split,
+#: reused ticker) and voided; stated on the receipt.
+UNIVERSE_GRAPH_EVENT_MAX_ABS_DAILY = 0.75
+#: A second, declared subset of every cell: events whose announcement-window move
+#: on A was at least this many sigma ("the news moved A"). Weights are fitted
+#: within the subset; both subsets share one BH family.
+UNIVERSE_GRAPH_EVENT_BIG_MOVE_Z = 2.0
+#: Co-coverage, PIT: covering firms = firms with an up/down/init/main/reit
+#: action on the ticker in the trailing window before the as-of date.
+UNIVERSE_GRAPH_EVENT_COVERAGE_WINDOW_DAYS = 730
+#: Customer/supplier links (Compustat segment customer disclosures): usable from
+#: fiscal-year end + LAG days (10-K filing delay), for VALID days after that.
+UNIVERSE_GRAPH_EVENT_SEGLINK_LAG_DAYS = 120
+UNIVERSE_GRAPH_EVENT_SEGLINK_VALID_DAYS = 450
+UNIVERSE_GRAPH_EVENT_CHECK_YEARS: tuple = (2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026)
+UNIVERSE_GRAPH_EVENT_FDR_Q = 0.10
+UNIVERSE_GRAPH_EVENT_SEED = 20261111
+#: Cost ruler for a surviving cell: portfolio_farm.Policy's flat default
+#: (5 bp + 1 bp slippage one-way = 12 bp round trip) and a wider sensitivity.
+UNIVERSE_GRAPH_EVENT_COST_RT_BPS: tuple = (12.0, 35.0)
 
 # ── Licensed third-party data (Bloomberg exports, broker research) — CH-00 / CH-32 ──
 #: Converted Bloomberg / broker-research tables live OUTSIDE the public repo (licence:
