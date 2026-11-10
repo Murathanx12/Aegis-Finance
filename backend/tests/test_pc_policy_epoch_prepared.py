@@ -1251,17 +1251,31 @@ _COMMITTED = "backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json"
 
 
 def _committed_copy(tmp_path: Path, monkeypatch) -> tuple[Path, Path]:
+    """A copy of this checkout's policy sources under a contract re-pinned to them.
+
+    Re-pinned rather than the committed identity, so the mechanism stays tested
+    after the committed epoch is superseded (an edit to a byte-pinned source,
+    e.g. OD-10's sim_run.py, makes the committed epoch fail closed by design).
+    """
     import shutil
     monkeypatch.setattr(PE, "EXPECTED_ACCOUNT_FINGERPRINT",
                         PE.FROZEN_ACCOUNT_FINGERPRINT)
     repo = Path(__file__).resolve().parents[2]
     root = tmp_path / "checkout"
     content = json.loads((repo / _COMMITTED).read_text(encoding="utf-8"))["content"]
-    for rel in [*content["source_sha256"], PE.CONFIG_SOURCE, _COMMITTED,
+    for rel in [*content["source_sha256"], PE.CONFIG_SOURCE,
                 "backend/data/optimus/llm_portfolio/books.jsonl"]:
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(repo / rel, root / rel)
-    return root, root / _COMMITTED
+    content["source_sha256"] = {rel: PE._source_sha(root / rel)
+                                for rel in content["source_sha256"]}
+    content["config_definitions"]["sha256"] = PE.config_definition_pins(
+        root, content["source_sha256"])
+    wrapper = {"content": content, "content_sha256": PE._sha(content)}
+    path = root / "repinned.json"
+    path.write_text(json.dumps(wrapper), encoding="utf-8")
+    monkeypatch.setattr(PE, "EXPECTED_CONTENT_SHA256", wrapper["content_sha256"])
+    return root, path
 
 
 def _edit_config(root: Path, old: str, new: str) -> None:
@@ -1291,8 +1305,7 @@ def test_unrelated_config_edit_keeps_the_epoch_verifiable(tmp_path, monkeypatch)
                    encoding="utf-8")
     _edit_config(root, "PC_SIGMA_FALLBACK_DAILY = 0.049",
                  "PC_SIGMA_FALLBACK_DAILY = 0.049   # comment only")
-    frozen = PE.load_contract(path, root=root)
-    assert frozen["content_sha256"] == PE.EXPECTED_CONTENT_SHA256
+    PE.load_contract(path, root=root)
 
 
 @pytest.mark.parametrize("old,new,name", [
