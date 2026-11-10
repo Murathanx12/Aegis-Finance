@@ -813,8 +813,10 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
         text = _reply_text(response)
     except Exception as e:                                     # noqa: BLE001
         if getattr(e, "no_wire", False):
+            # The refusal's own line (spend so far, cap, what to do) travels
+            # to the caller; a generic string here hid the cause for 26 days.
             return {**out, "status": "BUDGET_REFUSED", "budget_charge_usd": 0.0,
-                    "error": "shared host envelope refused before dispatch"}
+                    "error": f"shared host envelope refused before dispatch: {e}"[:400]}
         accounting = getattr(e, "shared_budget_accounting", accounting)
         if accounting is not None:
             out.update(accounting)
