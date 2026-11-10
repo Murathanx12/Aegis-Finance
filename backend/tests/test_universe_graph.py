@@ -164,18 +164,43 @@ def test_propagate_refuses_lookahead_and_unknown_nodes():
         UG.propagate_price_shock(g, {"node_id": "company:LEAD", "direction": "sideways"})
 
 
-def _weights(validated: bool = True, w: float = -0.2, d: int = -1) -> pd.DataFrame:
+def _weights(w: float = -0.2, d: int = -1) -> pd.DataFrame:
     rows = []
     for h in (1, 5, 21):
         rows.append({"family": "8k_results", "edge": "sector", "d": d, "h": h, "mean": w * 1.2,
-                     "n": 400, "sd": 1.0, "w": w, "t": 4.0, "validated": validated,
-                     "validated_by": "event_check_test", "as_of": "2021-06-01"})
+                     "n": 400, "sd": 1.0, "w": w, "t": 4.0, "as_of": "2021-06-01"})
     return pd.DataFrame(rows)
 
 
-def test_consumers_return_graph_sourced_rows_only_for_typed_events():
+def _attach_checked(g: UG.UniverseGraph, tmp: Path, *, p: float = 1e-9,
+                    w: float = -0.2) -> dict:
+    """What `event-check` writes for the 8k_results x sector cells (weights + the
+    hash-linked receipt over the full registered grid), attached to `g`. p tiny =
+    the cells survive; p = 0.5 = measured and NOT validated (review2 #93)."""
+    from backend import config
+    ev = tmp / "event_response"
+    m = UG.register_grid(ev)["tradable"]
+    cells = [{"family": "8k_results", "subset": "all", "edge": "sector", "h": h, "n": 400,
+              "tradable": True, "p_vs_liquid": p, "p_vs_sector": p, "p_vs_placebo": p,
+              "p_vs_ordinary_day": p, "diff_vs_liquid_bps": 20.0, "diff_vs_sector_bps": 15.0,
+              "diff_vs_placebo_bps": 12.0, "diff_vs_ordinary_day_bps": 10.0,
+              "years_positive": "9/9", "loyo_worst_bps": 5.0,
+              "tail_top1pct_share_of_signed_ret": 0.1} for h in (1, 5, 21)]
+    W = _weights(w=w)
+    W["subset"] = "all"
+    UG.write_event_check_outputs(
+        ev, run_id="event_check_20210601T000000Z",
+        res={"cells": UG.screen_cells(cells, 0.10, m_total=m), "weights": W}, receipt={},
+        grid=UG.grid_of_run(ev, families=UG.EVENT_FAMILIES,
+                            years=config.UNIVERSE_GRAPH_EVENT_CHECK_YEARS,
+                            horizons=config.UNIVERSE_GRAPH_EVENT_HORIZONS,
+                            top_n=config.UNIVERSE_GRAPH_EVENT_TOP_N))
+    return UG.attach_event_weights(g, None, tmp)
+
+
+def test_consumers_return_graph_sourced_rows_only_for_typed_events(tmp_path: Path):
     g = _graph(_panel())
-    g.event_weights = _weights(validated=True)
+    _attach_checked(g, tmp_path)
     ev = [{"node_id": "company:LEAD", "event_type": "8k_results", "direction": "down"}]
     rows = UG.funnel_candidates(g, ev, horizon=1, min_label="MEDIUM")
     assert rows and all(r["source"] == "graph" for r in rows)
@@ -209,9 +234,9 @@ def test_untyped_event_is_context_only_never_price_shock_weights():
         g, {"node_id": "company:LEAD", "event_type": "8k_results", "direction": "down"}))
 
 
-def test_typed_event_reads_event_weights_and_labels_unvalidated_low():
+def test_typed_event_reads_event_weights_and_unvalidated_is_context_only(tmp_path: Path):
     g = _graph(_panel())
-    g.event_weights = _weights(validated=True)
+    _attach_checked(g, tmp_path / "ok")
     ev = {"node_id": "company:LEAD", "event_type": "8k_results", "direction": "down"}
     a = UG.propagate(g, ev)
     assert [i.to_dict() for i in a] == [i.to_dict() for i in UG.propagate(g, ev)]
@@ -226,15 +251,17 @@ def test_typed_event_reads_event_weights_and_labels_unvalidated_low():
     # the "up" cell was never measured -> nothing directional for an up move
     up = UG.propagate(g, {**ev, "direction": "up"})
     assert all(i.expected_size is None for i in up)
-    g.event_weights = _weights(validated=False)
+    # measured but NOT validated: context only (review2 #93 B2)
+    _attach_checked(g, tmp_path / "no", p=0.5)
     low = UG.propagate(g, ev)
     assert low and all(i.confidence_label == "LOW" for i in low)
-    assert all("did NOT survive" in i.why for i in low)
+    assert all(i.expected_direction == 0 and i.expected_size is None for i in low)
+    assert all("NOT validated" in i.why for i in low)
 
 
 def test_event_weights_round_trip_and_lookahead_refusal(tmp_path: Path):
     g = _graph(_panel())
-    g.event_weights = _weights()
+    _attach_checked(g, tmp_path)
     rec = {"build_id": "ug_ev", "as_of": g.as_of, "built_utc": "2021-06-01T00:00:00+00:00",
            "params": __import__("dataclasses").asdict(g.params), "counts": g.counts()}
     UG.write_graph(g, tmp_path, rec)

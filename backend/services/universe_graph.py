@@ -241,15 +241,21 @@ class UniverseGraph:
 
     def __init__(self, nodes: dict[str, Node], edges: list[Edge], *, as_of: str,
                  params: GraphParams, meta: Optional[dict] = None,
-                 event_weights: Optional[pd.DataFrame] = None) -> None:
+                 event_weights: Optional[pd.DataFrame] = None,
+                 event_validation: Optional[dict] = None) -> None:
         self.nodes = nodes
         self.edges = edges
         self.as_of = as_of
         self.params = params
         self.meta = meta or {}
-        #: event_response cell weights (family, edge, d, h, mean, n, sd, w, t, validated);
-        #: None = this graph cannot say anything directional about an event.
+        #: event_response cell weights (family, subset, edge, d, h, mean, n, sd, w, t,
+        #: source_file); None = this graph cannot say anything directional about an event.
         self.event_weights = event_weights
+        #: review2 #93 B1: which cells are VALIDATED, derived from the hash-linked
+        #: validation receipt by `attach_event_weights` / `load_graph` (never read
+        #: from a column): {"keys": {(family, subset, edge, h): run_id}, ...}.
+        #: None or no key = not validated = context only in `propagate`.
+        self.event_validation = event_validation
         ref = 5 if 5 in params.horizons else params.horizons[0]
         self.out: dict[str, list[Edge]] = {}
         for e in edges:
@@ -873,7 +879,10 @@ def propagate(graph: UniverseGraph, event: dict) -> list[Implication]:
     expected market-adjusted move over h sessions is w x sigma_B x sqrt(h), with
     w the shrunk mean response measured on past events of that family, edge type
     and direction. The label is LOW unless that cell SURVIVED the held-out check
-    (`validated`); MEDIUM/HIGH then follow n and t.
+    (`graph.event_validation`, derived from the validation receipt, review2
+    #93 B1); MEDIUM/HIGH then follow n and t. A typed cell that was NOT
+    validated returns CONTEXT ONLY for that name (review2 B2): direction 0, no
+    size, no weight; its measured w and n are in the WHY.
 
     An UNTYPED event (no event_type), an unknown type, a missing direction or a
     graph without event weights returns CONTEXT ONLY: the connected names, with
@@ -924,6 +933,8 @@ def propagate(graph: UniverseGraph, event: dict) -> list[Implication]:
     ev_echo = {"node_id": nid, "event_type": etype, "direction": d,
                "as_of": None if ev_as_of is None else str(pd.Timestamp(ev_as_of).date()),
                "mode": "event_response", "subset": subset}
+    vkeys = dict((graph.event_validation or {}).get("keys") or {})
+    vwhy = str((graph.event_validation or {}).get("why") or "no validation receipt")
     out: list[Implication] = []
     for b, ets in sorted(links.items()):
         tn = graph.nodes.get(b)
@@ -935,23 +946,29 @@ def propagate(graph: UniverseGraph, event: dict) -> list[Implication]:
             if c is None or not tsig:
                 continue
             w = float(c.w)
-            validated = bool(getattr(c, "validated", False))
+            run = vkeys.get((etype, subset, et, int(h)))
+            measured = (f"{etype} at {nid}, "
+                        f"{'surprise' if etype in CONTENT_SIGN_FAMILIES else 'own move'} "
+                        f"{'up' if d > 0 else 'down'}: past {et} "
+                        f"{'(the name itself) ' if et == 'self' else ''}responses averaged "
+                        f"{float(c.mean):+.3f} sigma over {h} sessions (n={int(c.n)} rows, which "
+                        f"share dates and are not independent; shrunk w={w:+.3f})")
+            if run is None:
+                # review2 #93 B2: measured but not validated -> context only
+                out.append(Implication(
+                    b, tn.type, tn.label, h, 0, None, None, int(c.n), [nid, b],
+                    [f"event_response:{et}"], 1, 0.0, "LOW",
+                    f"context only: {measured}; held-out check: NOT validated ({vwhy}), so "
+                    f"no direction or size is implied", graph.as_of, ev_echo))
+                continue
             score, label = confidence_of(int(c.n), float(c.t), p)
-            if not validated:
-                label = "LOW"
             size = w * float(tsig) * math.sqrt(h)
             out.append(Implication(
                 b, tn.type, tn.label, h, int(np.sign(size)), round(size, 6), round(w, 6), int(c.n),
                 [nid, b], [f"event_response:{et}"], 1, score, label,
-                f"{etype} at {nid}, {'surprise' if etype in CONTENT_SIGN_FAMILIES else 'own move'} "
-                f"{'up' if d > 0 else 'down'}: past {et} "
-                f"{'(the name itself) ' if et == 'self' else ''}responses averaged "
-                f"{float(c.mean):+.3f} sigma over {h} sessions (n={int(c.n)} rows, which share "
-                f"dates and are not independent; shrunk w={w:+.3f}); held-out check "
-                f"{'SURVIVED' if validated else 'did NOT survive'} "
-                f"({getattr(c, 'validated_by', 'no check') or 'no check'})",
-                graph.as_of, ev_echo))
-    out.sort(key=lambda i: (i.horizon, -abs(i.expected_size), i.target))
+                f"{measured}; held-out check SURVIVED (receipt {run}, re-screened at load "
+                f"against the full registered grid)", graph.as_of, ev_echo))
+    out.sort(key=lambda i: (i.horizon, -abs(i.expected_size or 0.0), i.target))
     per_h: dict[int, int] = {}
     capped = []
     for i in out:
@@ -1269,7 +1286,12 @@ def write_graph(graph: UniverseGraph, out_dir: Path, receipt: dict) -> Path:
         nodes.to_parquet(tmp / "nodes.parquet", index=False)
         edges.to_parquet(tmp / "edges.parquet", index=False)
         if graph.event_weights is not None and not graph.event_weights.empty:
-            graph.event_weights.to_parquet(tmp / "event_weights.parquet", index=False)
+            ew = graph.event_weights.drop(columns=[c for c in ("validated", "validated_by")
+                                                   if c in graph.event_weights.columns])
+            ew.to_parquet(tmp / "event_weights.parquet", index=False)
+            if graph.event_validation and graph.event_validation.get("event_dir"):
+                receipt = {**receipt,
+                           "event_weights_dir": graph.event_validation["event_dir"]}
         atomic_write_json(tmp / "receipt.json", receipt)
         if final.exists():
             shutil.rmtree(final)
@@ -1296,10 +1318,17 @@ def load_graph(out_dir: Optional[Path] = None, build_id: Optional[str] = None) -
     params = GraphParams(**{k: (tuple(v) if isinstance(v, list) else v) for k, v in pd_.items()
                             if k in GraphParams.__dataclass_fields__})
     ew = d / "event_weights.parquet"
-    return UniverseGraph.from_frames(pd.read_parquet(d / "nodes.parquet"),
-                                     pd.read_parquet(d / "edges.parquet"),
-                                     as_of=rec["as_of"], params=params, meta=rec,
-                                     event_weights=pd.read_parquet(ew) if ew.exists() else None)
+    W = pd.read_parquet(ew) if ew.exists() else None
+    g = UniverseGraph.from_frames(pd.read_parquet(d / "nodes.parquet"),
+                                  pd.read_parquet(d / "edges.parquet"),
+                                  as_of=rec["as_of"], params=params, meta=rec, event_weights=W)
+    if W is not None:
+        # review2 #93 B1: validation is re-derived from the receipts, never read
+        W = W.drop(columns=[c for c in ("validated", "validated_by") if c in W.columns])
+        g.event_weights = W
+        g.event_validation = _validation_of(
+            W, Path(rec.get("event_weights_dir") or (out_dir / "event_response")))
+    return g
 
 
 def status(out_dir: Optional[Path] = None, *, now: Optional[Any] = None,
@@ -2064,17 +2093,21 @@ def fit_event_weights(train: pd.DataFrame, h: int, *, k: float) -> tuple[pd.Data
     return g, p[["A", "B", "edge", "d", "pn", "wp"]]
 
 
-def bh_fdr(pvals: Iterable[float]) -> np.ndarray:
-    """Benjamini-Hochberg q-values (NaN p stays NaN and is not counted)."""
+def bh_fdr(pvals: Iterable[float], m: Optional[int] = None) -> np.ndarray:
+    """Benjamini-Hochberg q-values (NaN p stays NaN). `m` is the size of the
+    family the correction covers: the FULL registered grid (review2 #93 B3),
+    never fewer than the finite p-values given -- cells not measured in this
+    run count as p = 1."""
     p = np.asarray(list(pvals), dtype=float)
     q = np.full(len(p), np.nan)
     ok = np.isfinite(p)
-    m = int(ok.sum())
-    if not m:
+    n_ok = int(ok.sum())
+    if not n_ok:
         return q
+    m_eff = max(n_ok, int(m or 0))
     idx = np.flatnonzero(ok)
     order = idx[np.argsort(p[idx], kind="mergesort")]
-    ranked = p[order] * m / np.arange(1, m + 1)
+    ranked = p[order] * m_eff / np.arange(1, n_ok + 1)
     q[order] = np.minimum.accumulate(ranked[::-1])[::-1].clip(max=1.0)
     return q
 
@@ -2224,8 +2257,12 @@ def event_walk_forward(tab: pd.DataFrame, dates: pd.DatetimeIndex, *, years: Ite
     return cells, P
 
 
-def screen_cells(cells: list[dict], q: float) -> list[dict]:
+def screen_cells(cells: list[dict], q: float, m_total: Optional[int] = None) -> list[dict]:
     """BH-FDR across EVERY cell; a survivor must beat ALL its controls.
+
+    `m_total` is the BH denominator: the count of every cell ever REGISTERED
+    (`registered_cell_counts`), so a run over one family or a few years is
+    corrected as if the whole grid had been looked at (review2 #93 B3).
 
     The cell's p is the LARGEST of its defined control p-values (liquid name,
     same-sector name, date placebo): an intersection-union test, so a cell that
@@ -2240,7 +2277,8 @@ def screen_cells(cells: list[dict], q: float) -> list[dict]:
         return max(ps) if ps else float("nan")
     for c in cells:
         c["p_cell_iut"] = _r(_p(c), 5)
-    qs = bh_fdr([_p(c) for c in cells])
+        c["bh_denominator"] = max(len(cells), int(m_total or 0))
+    qs = bh_fdr([_p(c) for c in cells], m=m_total)
     for c, qq in zip(cells, qs):
         c["q_bh"] = _r(qq, 5)
         yp = c.get("years_positive", "0/0").split("/")
@@ -2381,8 +2419,10 @@ def prepare_event_inputs(data_root: Path, *, top_n: int, years: Iterable[int],
 
 def run_event_check(inp: dict, *, years: Iterable[int], horizons: Iterable[int],
                     families: Optional[Iterable[str]] = None, weights_as_of: Optional[Any] = None,
-                    log: Any = print) -> dict:
-    """Held-out grid over every family x edge type x horizon, then one BH screen."""
+                    log: Any = print, m_total: Optional[int] = None,
+                    m_total_same: Optional[int] = None) -> dict:
+    """Held-out grid over every family x edge type x horizon, then one BH screen
+    whose denominator is the full registered grid (`m_total`, review2 #93 B3)."""
     years, horizons = list(years), list(horizons)
     panel, structures, events = inp["panel"], inp["structures"], inp["events"]
     k = _cfg.UNIVERSE_GRAPH_EVENT_SHRINK_K
@@ -2434,8 +2474,10 @@ def run_event_check(inp: dict, *, years: Iterable[int], horizons: Iterable[int],
         del tab
     # The tradable grid (h >= 1) and the same-session information-transfer grid (h = 0)
     # answer different questions, so each gets its own BH family.
-    trad = screen_cells([c for c in cells if c["h"] > 0], _cfg.UNIVERSE_GRAPH_EVENT_FDR_Q)
-    same = screen_cells([c for c in cells if c["h"] == 0], _cfg.UNIVERSE_GRAPH_EVENT_FDR_Q)
+    trad = screen_cells([c for c in cells if c["h"] > 0], _cfg.UNIVERSE_GRAPH_EVENT_FDR_Q,
+                        m_total=m_total)
+    same = screen_cells([c for c in cells if c["h"] == 0], _cfg.UNIVERSE_GRAPH_EVENT_FDR_Q,
+                        m_total=m_total_same)
     for c in same:
         c["tradable"] = False
         if c["edge"] == "self" and c["family"] not in CONTENT_SIGN_FAMILIES:
@@ -2476,6 +2518,202 @@ LIMITATIONS = [
 ]
 
 
+EVENT_SUBSETS = ("all", "big_move")
+#: Append-only registry of every event-check grid ever declared (review2 #93
+#: B3). The BH denominator is the UNION of its cells, so it can only grow.
+GRID_REGISTRY_FILE = "grid_registry.jsonl"
+
+
+def registered_grid() -> dict:
+    """The grid this code + config declares: every (family, subset, edge, h)
+    cell, the held-out years and the liquid-panel size. `grid_id` hashes it."""
+    hs = [int(h) for h in _cfg.UNIVERSE_GRAPH_EVENT_HORIZONS]
+    spec = {"families": list(EVENT_FAMILIES), "subsets": list(EVENT_SUBSETS),
+            "edge_types": list(EVENT_EDGE_TYPES), "horizons": hs,
+            "years": [int(y) for y in _cfg.UNIVERSE_GRAPH_EVENT_CHECK_YEARS],
+            "top_n": int(_cfg.UNIVERSE_GRAPH_EVENT_TOP_N),
+            "fdr_q": float(_cfg.UNIVERSE_GRAPH_EVENT_FDR_Q)}
+    cells = [[f, sb, e, h] for f in spec["families"] for sb in spec["subsets"]
+             for e in spec["edge_types"] for h in hs]
+    same = [[f, sb, e, 0] for f in spec["families"] for sb in spec["subsets"]
+            for e in spec["edge_types"]]
+    gid = hashlib.sha256(json.dumps(spec, sort_keys=True).encode("utf-8")).hexdigest()[:16]
+    return {"grid_id": gid, "spec": spec, "tradable_cells": cells, "same_session_cells": same}
+
+
+def _registry_rows(event_dir: Path) -> list[dict]:
+    p = Path(event_dir) / GRID_REGISTRY_FILE
+    if not p.exists():
+        return []
+    rows = []
+    for ln in p.read_text(encoding="utf-8").splitlines():
+        if ln.strip():
+            rows.append(json.loads(ln))          # a corrupt registry raises: refuse
+    return rows
+
+
+def register_grid(event_dir: Path) -> dict:
+    """Append the declared grid to the registry once per grid_id; return counts."""
+    from backend.services.disk_guard import locked_append_line
+    reg = registered_grid()
+    ev = Path(event_dir)
+    ev.mkdir(parents=True, exist_ok=True)
+    if reg["grid_id"] not in {r.get("grid_id") for r in _registry_rows(ev)}:
+        locked_append_line(ev / GRID_REGISTRY_FILE, json.dumps(
+            {"grid_id": reg["grid_id"], "registered_utc": _utc_now(), "spec": reg["spec"],
+             "tradable_cells": reg["tradable_cells"],
+             "same_session_cells": reg["same_session_cells"]}, sort_keys=True), fsync=True)
+    return registered_cell_counts(ev)
+
+
+def registered_cell_counts(event_dir: Path) -> dict:
+    """BH denominators: the union of every cell in every registered grid, plus
+    the grid this code declares now. It never shrinks when a grid does."""
+    reg = registered_grid()
+    trad = {tuple(c) for c in reg["tradable_cells"]}
+    same = {tuple(c) for c in reg["same_session_cells"]}
+    rows = _registry_rows(event_dir)
+    for r in rows:
+        trad |= {tuple(c) for c in r.get("tradable_cells") or []}
+        same |= {tuple(c) for c in r.get("same_session_cells") or []}
+    return {"tradable": len(trad), "same_session": len(same), "n_registered_grids": len(rows),
+            "grid_id": reg["grid_id"]}
+
+
+def grid_of_run(event_dir: Path, *, families: Iterable[str], years: Iterable[int],
+                horizons: Iterable[int], top_n: int) -> dict:
+    """What a run looked at, against the registered grid. `complete` only when
+    it ran every registered family, year and horizon at the registered top_n:
+    only a complete run can validate a cell."""
+    reg = registered_grid()
+    spec = reg["spec"]
+    fams, yrs = sorted(set(families)), sorted(int(y) for y in years)
+    hs = sorted(int(h) for h in horizons if int(h) > 0)
+    complete = (fams == sorted(spec["families"]) and yrs == sorted(spec["years"])
+                and hs == sorted(spec["horizons"]) and int(top_n) == int(spec["top_n"]))
+    counts = registered_cell_counts(event_dir)
+    return {"grid_id": reg["grid_id"], "complete": bool(complete), "families_run": fams,
+            "years_run": yrs, "horizons_run": hs, "top_n_run": int(top_n),
+            "bh_denominator_tradable": counts["tradable"],
+            "bh_denominator_same_session": counts["same_session"],
+            "n_registered_grids": counts["n_registered_grids"]}
+
+
+def _file_sha256(path: Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def write_event_check_outputs(event_dir: Path, *, run_id: str, res: dict, receipt: dict,
+                              grid: dict) -> dict:
+    """Write the weights (NO `validated` column) and the receipt that validates
+    them: the weights file's sha256 and the grid it was screened over. Returns
+    the receipt as written."""
+    from backend.services.disk_guard import atomic_write_json
+    ev = Path(event_dir)
+    ev.mkdir(parents=True, exist_ok=True)
+    wpath = None
+    w = res.get("weights")
+    if w is not None and not w.empty:
+        w = w.drop(columns=[c for c in ("validated", "validated_by") if c in w.columns])
+        if "as_of" not in w.columns:
+            w["as_of"] = str(pd.Timestamp.now().normalize().date())
+        wpath = ev / f"{run_id}_weights.parquet"
+        tmp = wpath.with_suffix(".tmp")
+        w.to_parquet(tmp, index=False)
+        os.replace(tmp, wpath)
+    out = {**receipt, "run_id": run_id, "grid": grid,
+           "weights_file": wpath.name if wpath else None,
+           "weights_path": str(wpath) if wpath else None,
+           "weights_sha256": _file_sha256(wpath) if wpath else None,
+           "validation_rule": ("a cell is VALIDATED only when this receipt's weights_sha256 "
+                               "matches the weights file, grid.complete is true, grid.grid_id "
+                               "equals the grid the loading code declares, and the cell "
+                               "survives a re-screen of these cell statistics against every "
+                               "registered cell (registry union); derived at load, never "
+                               "stored as a flag"),
+           "cells": res.get("cells") or []}
+    atomic_write_json(ev / f"{run_id}.json", out)
+    return out
+
+
+def derive_validation(weights_path: Path, event_dir: Optional[Path] = None) -> dict:
+    """Which cells of ONE weights file are validated, from its receipt
+    `<event_dir>/<run_id>.json` (review2 #93 B1). Every failed link returns no
+    keys and says why; nothing in the weights file itself is trusted."""
+    wp = Path(weights_path)
+    ev = Path(event_dir) if event_dir is not None else wp.parent
+    run_id = wp.name[:-len("_weights.parquet")] if wp.name.endswith("_weights.parquet") else None
+    base = {"weights_file": wp.name, "run_id": run_id, "keys": {}}
+    if run_id is None:
+        return {**base, "status": "UNVALIDATED", "why": "not an event_check weights file name"}
+    rp = ev / f"{run_id}.json"
+    if not rp.exists():
+        return {**base, "status": "UNVALIDATED", "why": f"no validation receipt {rp.name}"}
+    try:
+        rc = json.loads(rp.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return {**base, "status": "UNVALIDATED", "why": f"receipt unreadable: {type(exc).__name__}"}
+    if not wp.exists() or rc.get("weights_sha256") != _file_sha256(wp):
+        return {**base, "status": "UNVALIDATED",
+                "why": "weights sha256 does not match the receipt (edited after the check)"}
+    grid = rc.get("grid") or {}
+    reg = registered_grid()
+    if not grid.get("complete"):
+        return {**base, "status": "UNVALIDATED",
+                "why": "the run did not cover the full registered grid (partial run)"}
+    if grid.get("grid_id") != reg["grid_id"]:
+        return {**base, "status": "UNVALIDATED",
+                "why": f"receipt grid {grid.get('grid_id')} is not the declared grid {reg['grid_id']}"}
+    try:
+        m = registered_cell_counts(ev)["tradable"]
+    except (OSError, ValueError) as exc:
+        return {**base, "status": "UNVALIDATED", "why": f"grid registry unreadable: {exc}"[:200]}
+    if not (ev / GRID_REGISTRY_FILE).exists():
+        return {**base, "status": "UNVALIDATED", "why": "no grid registry beside the receipt"}
+    cells = [json.loads(json.dumps(c)) for c in (rc.get("cells") or [])
+             if c.get("tradable", int(c.get("h", 0)) > 0) and int(c.get("h", 0)) > 0]
+    for c in cells:
+        c.pop("survives", None)
+        c.pop("q_bh", None)
+    screened = screen_cells(cells, float(reg["spec"]["fdr_q"]), m_total=m)
+    keys = {(c["family"], c.get("subset", "all"), c["edge"], int(c["h"])): run_id
+            for c in screened if c.get("survives")}
+    return {**base, "keys": keys, "status": "OK", "bh_denominator": m,
+            "why": f"receipt {run_id}: {len(keys)} cell(s) survive the re-screen over {m} cells"}
+
+
+def _validation_of(W: pd.DataFrame, event_dir: Path) -> dict:
+    """The graph-level validation of a merged weights frame: per source file,
+    `derive_validation`, then keep only keys whose rows are in the frame with
+    the source file's own w (a copy edited after the check is not validated)."""
+    keys: dict = {}
+    by_file: dict = {}
+    if W is None or W.empty or "source_file" not in W.columns:
+        return {"keys": {}, "by_file": {}, "event_dir": str(event_dir),
+                "why": "weights carry no source_file: no receipt can validate them"}
+    for src, wf in W.groupby("source_file"):
+        sp = Path(event_dir) / str(src)
+        v = derive_validation(sp, event_dir)
+        by_file[str(src)] = {k_: v_ for k_, v_ in v.items() if k_ != "keys"}
+        if not v["keys"]:
+            continue
+        orig = pd.read_parquet(sp)
+        sub = "subset" if "subset" in orig.columns else None
+        for key, run in v["keys"].items():
+            fam, sb, edge, h = key
+            def _sel(df: pd.DataFrame) -> pd.DataFrame:
+                m_ = (df["family"] == fam) & (df["edge"] == edge) & (df["h"].astype(int) == h)
+                if sub and "subset" in df.columns:
+                    m_ &= df["subset"] == sb
+                return df[m_].sort_values(["d"])[["d", "w"]].reset_index(drop=True)
+            a, b = _sel(wf), _sel(orig)
+            if len(a) and len(a) == len(b) and np.allclose(a.to_numpy(float), b.to_numpy(float),
+                                                           rtol=0, atol=1e-12):
+                keys[key] = run
+    why = "; ".join(f"{f}: {v.get('why')}" for f, v in sorted(by_file.items()))
+    return {"keys": keys, "by_file": by_file, "event_dir": str(event_dir), "why": why[:400]}
+
+
 def _build_id(as_of: str) -> str:
     return f"ug_{as_of.replace('-', '')}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
 
@@ -2488,6 +2726,10 @@ def attach_event_weights(g: UniverseGraph, path: Optional[Path], out_dir: Path) 
     (a run over one family must not erase the others). Refuses weights fitted AFTER
     the graph's as_of (they would contain its future). Without weights the row is
     MISSING and `propagate` answers context-only.
+
+    Review2 #93 B1: any `validated` column in a file is DROPPED; which cells are
+    validated is derived from each file's hash-linked receipt
+    (`derive_validation`) into `g.event_validation`.
     """
     paths = [Path(path)] if path is not None else sorted(
         (Path(out_dir) / "event_response").glob("event_check_*_weights.parquet"))
@@ -2502,14 +2744,20 @@ def attach_event_weights(g: UniverseGraph, path: Optional[Path], out_dir: Path) 
         if w_asof is None or w_asof > g.as_of:
             raise GraphRefused(f"event weights {p} are as of {w_asof}, after the graph's as_of "
                                f"{g.as_of} (or undated): refusing look-ahead")
+        w = w.drop(columns=[c for c in ("validated", "validated_by") if c in w.columns])
+        w["source_file"] = p.name
         for fam, wf in w.groupby("family"):
             frames[fam] = wf
             used[fam] = p.name
     W = pd.concat(frames.values(), ignore_index=True)
+    ev_dir = Path(path).parent if path is not None else Path(out_dir) / "event_response"
+    val = _validation_of(W, ev_dir)
     g.event_weights = W
+    g.event_validation = val
     return {"input": "event_response weights", "paths": sorted(set(used.values())),
             "status": "OK", "families": used, "cells": int(len(W)),
-            "validated_cells": int(W["validated"].sum()) if "validated" in W.columns else 0}
+            "validated_cells": len(val["keys"]), "event_dir": str(ev_dir),
+            "validation": val["by_file"]}
 
 
 def cmd_build(args: argparse.Namespace) -> int:
@@ -2664,7 +2912,6 @@ def cmd_check(args: argparse.Namespace) -> int:
 
 def cmd_event_check(args: argparse.Namespace) -> int:
     """Held-out check of event-typed edges; writes a receipt and the as-of weights."""
-    from backend.services.disk_guard import atomic_write_json
     t0 = time.time()
     years = [int(y) for y in (args.years or _cfg.UNIVERSE_GRAPH_EVENT_CHECK_YEARS)]
     struct_years = sorted(set(range(min(years) - 1, max(years) + 1)))
@@ -2673,6 +2920,13 @@ def cmd_event_check(args: argparse.Namespace) -> int:
     if unknown:
         print(f"REFUSED: unknown event families {unknown}", file=sys.stderr)
         return 2
+    out = Path(args.out) if args.out else _cfg.UNIVERSE_GRAPH_DIR / "event_response"
+    # review2 #93 B3: the grid is registered BEFORE anything is measured, and
+    # the BH denominator is every cell ever registered, whatever this run picks
+    counts = register_grid(out)
+    grid = grid_of_run(out, families=fams, years=years,
+                       horizons=_cfg.UNIVERSE_GRAPH_EVENT_HORIZONS, top_n=args.top_n)
+    print(json.dumps({"grid": {k: v for k, v in grid.items()}}), flush=True)
     try:
         inp = prepare_event_inputs(Path(args.data_root), top_n=args.top_n, years=struct_years,
                                    families=fams)
@@ -2682,7 +2936,8 @@ def cmd_event_check(args: argparse.Namespace) -> int:
         res = run_event_check(inp, years=years,
                               horizons=(0, *_cfg.UNIVERSE_GRAPH_EVENT_HORIZONS),
                               families=fams, weights_as_of=pd.Timestamp.now().normalize(),
-                              log=lambda m: print(m, flush=True))
+                              log=lambda m: print(m, flush=True),
+                              m_total=counts["tradable"], m_total_same=counts["same_session"])
     except GraphRefused as e:
         print(f"REFUSED: {e}", file=sys.stderr)
         return 2
@@ -2690,21 +2945,9 @@ def cmd_event_check(args: argparse.Namespace) -> int:
         print("REFUSED: zero cells measured (no events matched the liquid panel)", file=sys.stderr)
         return 2
     run_id = f"event_check_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
-    out = Path(args.out) if args.out else _cfg.UNIVERSE_GRAPH_DIR / "event_response"
     out.mkdir(parents=True, exist_ok=True)
-    wpath = None
     if res["weights"] is not None and not res["weights"].empty:
-        surv = {(c["family"], c.get("subset", "all"), c["edge"], c["h"])
-                for c in res["cells"] if c["survives"]}
-        w = res["weights"]
-        w["validated"] = [(f, sb, e, int(h)) in surv for f, sb, e, h in
-                          zip(w["family"], w["subset"], w["edge"], w["h"])]
-        w["validated_by"] = run_id
-        w["as_of"] = str(pd.Timestamp.now().normalize().date())
-        wpath = out / f"{run_id}_weights.parquet"
-        tmp = wpath.with_suffix(".tmp")
-        w.to_parquet(tmp, index=False)
-        os.replace(tmp, wpath)
+        res["weights"]["as_of"] = str(pd.Timestamp.now().normalize().date())
     cells = sorted(res["cells"], key=lambda c: (c["family"], c.get("subset", "all"), c["edge"],
                                                  c["h"]))
     receipt = {
@@ -2723,7 +2966,9 @@ def cmd_event_check(args: argparse.Namespace) -> int:
                              "event moves connected names at all (information transfer). It is "
                              "in the close of e, so it is NOT tradable after the event; screened "
                              "as its own BH family and never counted as a survivor.",
-        "screen": {"test": "BH-FDR across ALL cells on the intersection-union p = max of the "
+        "screen": {"test": "BH-FDR across ALL REGISTERED cells (denominator = every cell in "
+                           "grid_registry.jsonl, not only those this run measured) on the "
+                           "intersection-union p = max of the "
                            "month-clustered two-sided p of (graph signed return - control) over "
                            "the defined controls: random liquid name, random same-sector "
                            "unconnected name, same name on a random session of the same year, "
@@ -2740,11 +2985,15 @@ def cmd_event_check(args: argparse.Namespace) -> int:
                    "seed": _cfg.UNIVERSE_GRAPH_EVENT_SEED,
                    "cost_rt_bps": list(_cfg.UNIVERSE_GRAPH_EVENT_COST_RT_BPS)},
         **{k: v for k, v in inp["receipt"].items()},
-        "by_family": res["families"], "cells": cells,
-        "weights_path": str(wpath) if wpath else None,
+        "by_family": res["families"],
+        "control_note": "the ordinary-day and date-placebo controls are sessions of the same "
+                        "year >= 22 sessions from the event, which may FOLLOW it; they are "
+                        "controls, never inputs to a weight, so this is not look-ahead",
         "limitations": EVENT_LIMITATIONS, "llm_spend_usd": 0.0,
         "elapsed_s": round(time.time() - t0, 1)}
-    atomic_write_json(out / f"{run_id}.json", receipt)
+    receipt = write_event_check_outputs(out, run_id=run_id, res={**res, "cells": cells},
+                                        receipt=receipt, grid=grid)
+    wpath = receipt.get("weights_path")
     for c in cells:
         print(f"{c['family']:17s} {c.get('subset', 'all'):8s} {c['edge']:12s} h{c['h']:<3d} n={c['n']:>8d} "
               f"hit {c['hit_graph']} vs {c['hit_ctrl_liquid']}  sr {c['mean_signed_ret_bps']}bp "
