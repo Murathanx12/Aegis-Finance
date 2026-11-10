@@ -372,3 +372,36 @@ def test_direction_vs_magnitude_falls_back_to_the_rule_store(ps_paths, tmp_path)
     assert dvm["source"].startswith("learned_rules")
     assert dvm["by_family"]["investigator"]["magnitude_skill_heldout"] == 0.0556
     assert dvm["by_family"]["investigator"]["direction_skill_heldout"] == -0.0872
+
+
+# ── 2026-11-11: the as-of is a UTC date, and a failed refit is a red exit ────
+
+def test_default_as_of_is_the_utc_date_not_the_local_one(monkeypatch):
+    """At UTC+8 between 00:00 and 08:00 local, date.today() is tomorrow in UTC
+    and forecast_reputation.refit refuses it. The default must be UTC."""
+    from datetime import datetime, timezone
+    assert RD.utc_today() == datetime.now(timezone.utc).date().isoformat()
+    seen = {}
+
+    def fake_refit(today=None, **kw):
+        seen["refit"] = today
+        return {"status": "OK"}
+
+    def fake_distill(as_of=None, write=True, **kw):
+        seen["distill"] = as_of
+        return {"status": "LEARN_DEGRADED"}
+
+    monkeypatch.setattr(FR, "refit", fake_refit)
+    monkeypatch.setattr(RD, "distill_ledger", fake_distill)
+    monkeypatch.setattr(PS, "refresh", lambda *a, **k: {"changed_since_last": []})
+    RD.night_learn(write=False)
+    assert seen["refit"] == seen["distill"] == RD.utc_today()
+
+
+def test_a_failed_refit_beside_learned_rules_is_a_red_exit():
+    learned = {"distill": {"status": "LEARNED"}}
+    assert RD.ledger_exit_code({**learned, "reputation": "OK"}) == 0
+    assert RD.ledger_exit_code({**learned, "reputation": "FAILED ValueError: future"}) == 4
+    assert RD.ledger_exit_code({"distill": {"status": "LEARN_DEGRADED"},
+                                "reputation": "OK"}) == 3
+    assert RD.ledger_exit_code({"distill": "FAILED boom"}) == 3
