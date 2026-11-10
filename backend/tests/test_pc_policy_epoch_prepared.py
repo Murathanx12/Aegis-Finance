@@ -19,15 +19,24 @@ def _approved_offline_account(monkeypatch):
                         PE.account_fingerprint("offline-account"))
 
 
-def test_committed_prepared_contract_verifies_its_actual_sources(monkeypatch):
+def test_committed_prepared_contract_is_superseded_and_fails_closed(monkeypatch):
+    """The 2026-10 no-index epoch pinned the SOURCE of 15 files as of 2026-10-10.
+    OD-10 (owner 2026-11-10) replaced its cash-fill with the account's own index
+    (backend/services/pc_own_index.py), which edits two of those files, so the
+    committed epoch no longer verifies. It was never activated
+    (ACTIVATION_ALLOWED is False); a selected stale epoch must refuse, never
+    load: sim_run turns that refusal into an observe-only hold."""
     monkeypatch.setattr(PE, "EXPECTED_ACCOUNT_FINGERPRINT",
                         PE.FROZEN_ACCOUNT_FINGERPRINT)
     root = Path(__file__).resolve().parents[2]
     path = root / "backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json"
-    frozen = PE.load_contract(path, root=root)
-    assert frozen["content"]["strategic_index_target"] is None
-    assert frozen["content"]["allocation"]["revision_flow_gross_cap"] == 0.30
-    assert frozen["content"]["allocation"]["probe_gross_cap"] == 0.20
+    assert PE.ACTIVATION_ALLOWED is False
+    with pytest.raises(PE.EpochRefused, match="policy source changed"):
+        PE.load_contract(path, root=root)
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    assert raw["content"]["strategic_index_target"] is None
+    assert raw["content"]["allocation"]["revision_flow_gross_cap"] == 0.30
+    assert raw["content"]["allocation"]["probe_gross_cap"] == 0.20
 
 
 def _contract(root: Path) -> tuple[Path, dict]:

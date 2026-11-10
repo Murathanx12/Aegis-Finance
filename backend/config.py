@@ -5985,6 +5985,16 @@ RAILWAY_FLEET_STOPPED_REASON = ("Railway fleet loops stopped on purpose 2026-09-
 #: PC-PAPER had been ~80% cash since 2026-09-22 (equity $1,002,024, cash $800,653,
 #: +0.20% vs SPY +0.72%, receipt paper_accounts/roi_2026-10-06T235345Z.json).
 #: Every OFF path stays pinned byte-identical (test_pc_plan_replay_owner_d14.py).
+#:
+#: OWNER DECISION 2026-11-10 (OD-10, docs/ROADMAP.md §3): holding SPY is not the
+#: account's job ("it should go for specific stocks and make its own index");
+#: SPY becomes the BENCHMARK only, replaced by `PC_OWN_INDEX` below. The flag
+#: still SHIPS True on main (review #89 R1, 2026-11-11): merging must change
+#: nothing any account holds, and the core is retired only by the attended
+#: activation, which sets PC_BENCHMARK_CORE = False AND PC_OWN_INDEX = True in
+#: ONE edit (docs/RUNBOOK_PC_OWN_INDEX_ACTIVATION.md). Should the core be turned
+#: OFF without the own index, a held SPY is HELD (never planned, never an
+#: EXIT): `sim_run` records `benchmark_hold` and no sleeve can sell it.
 PC_BENCHMARK_CORE = True
 #: SPY is an ordinary listed equity order on the Alpaca paper venue (pc_broker
 #: already samples it in BENCHMARKS); no proxy ETF is needed.
@@ -6058,6 +6068,63 @@ PC_SLEEVE_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
 #: at these horizons (sessions), each name's excess over the core (SPY). 1 so a
 #: night's result is readable the next day; 5 and 21 match the book's horizon.
 PC_SLEEVE_GRADE_HORIZONS: tuple = (1, 5, 21)
+
+# ── OD-10 (owner 2026-11-10): PC-PAPER makes its OWN index; SPY is the benchmark only ──
+#: "it should go for specific stocks and make its own index". `backend/services/
+#: pc_own_index.py`, called from `sim_run.u_plan` where the SPY core used to be
+#: planned. Licence PRODUCT_EXPERIMENT: a frozen contract (policy hash over the
+#: values below + the module's source) must exist BEFORE the first decision
+#: (`python -m scripts.pc_own_index freeze`); a contract that no longer matches
+#: config or code REFUSES. Default False: activation is attended (dry-run first).
+#: Mutually exclusive with PC_BENCHMARK_CORE: both True REFUSES the index.
+PC_OWN_INDEX = False
+#: Bump when any value below changes; a changed contract under an old version
+#: is refused, never silently re-frozen.
+PC_OWN_INDEX_VERSION = "own_index_v1"
+#: Membership: the opportunity funnel's fresh candidates (IC_FUNNEL_PATH, the
+#: universe hub's 5,3xx -> 25 selection), one line per issuer, in funnel score
+#: order, minus the excluded symbols and the revision_flow sleeve's names, top N.
+PC_OWN_INDEX_N = 20
+#: The candidate file may be at most this old (its own `generated_at` stamp,
+#: never mtime) when a membership is frozen = investment_committee.FUNNEL_STALE_DAYS,
+#: the age at which the sim's u_funnel rebuilds it. Undateable = stale.
+PC_OWN_INDEX_MAX_SOURCE_AGE_DAYS = 10.0
+#: A frozen membership is reused for this many days, then rebuilt from a fresh
+#: candidate file (weekly). Between rebuilds only pc_broker's drift band rebalances.
+PC_OWN_INDEX_REBALANCE_DAYS = 7.0
+#: Equal weight, w = min(cap, G / N) with N the DECLARED count: when fewer than N
+#: names qualify, their slots stay CASH (never re-spread, never SPY).
+PC_OWN_INDEX_MAX_NAME_FRAC = 0.03
+#: G = the largest multiple of this step (<= N x cap, <= 1 - other sleeves - held
+#: names no sleeve trades this cycle - cash buffer) passing BOTH bounds below.
+PC_OWN_INDEX_GROSS_STEP = 0.05
+#: Bound 1, the whole book's one-day rho=1 k-sigma loss (k = PROBE_WORST_CASE_SIGMA)
+#: <= PC_WORST_CASE_MAX_FRAC_OF_EQUITY. Bound 2, the index's gross x |its basket's
+#: worst historical 21-session return, all names priced, longest panel| <= this
+#: (the same rule and number the revision_flow sleeve answers). On 2026-11-10 the
+#: retired SPY core (49% x SPY's worst 21 sessions -32.8%) would have read 16.1%.
+PC_OWN_INDEX_MAX_WORST_21_SESSION_LOSS_FRAC = 0.10
+#: Never a member: the benchmark and broad index ETFs (the point of OD-10).
+PC_OWN_INDEX_EXCLUDED: tuple = ("SPY", "VOO", "IVV", "QQQ", "IWM", "DIA", "VTI", "URTH")
+#: Fraction of equity left in cash so a fill above the planned price cannot margin.
+PC_OWN_INDEX_CASH_BUFFER = 0.01
+#: The share of equity the owner approved for the index: 30% ships (OD-10a is
+#: the owner's choice between 30% and the 60% that N x cap allows). The gross never exceeds it, whatever the bounds
+#: would admit; raising it is an explicit config change (and a new contract
+#: version), never a side effect of a rotating membership (review #89 R4).
+PC_OWN_INDEX_MAX_GROSS = 0.30
+#: The 21-session bound reads a FIXED window from this date (it holds the 2020
+#: crash and the 2022 drawdown). A member first priced more than
+#: PC_OWN_INDEX_HISTORY_TOLERANCE_DAYS after it is EXCLUDED from the index (its
+#: slot is cash): a young listing can no longer shorten the window the bound
+#: binds on (review #89 R4: one 2025 IPO lifted the index from 30% to 60%).
+PC_OWN_INDEX_HISTORY_START = "2020-01-02"
+PC_OWN_INDEX_HISTORY_TOLERANCE_DAYS = 10
+#: Index buys go out only after every sell of the session is confirmed FILLED
+#: (pc_broker.order_by_client_id), polled every POLL_S for up to WAIT_S; then
+#: they are sized from the broker's cash read after the fills (review #89 R3).
+PC_OWN_INDEX_SELL_FILL_WAIT_S = 60.0
+PC_OWN_INDEX_SELL_FILL_POLL_S = 2.0
 #: The six-role v3 fleet contracts are written HERE, never into
 #: `fleet_manager/contracts/`: no seed path reads this folder, and
 #: `fleet_manager.load_contract`/`freeze_contract` refuse a PREPARED body.

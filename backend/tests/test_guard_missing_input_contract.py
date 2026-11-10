@@ -1865,6 +1865,17 @@ def _case_pc_sleeves():
             SleeveRefused, "load_revision_flow() with no frozen book")
 
 
+def _case_pc_own_index():
+    # OD-10 (owner 2026-11-10): the own index. The missing input is THE CANDIDATE
+    # FILE: an index built from nothing would buy nothing and read as "the index
+    # is in cash"; `read_candidates` refuses instead (and SPY is never the filler).
+    from pathlib import Path as _P
+
+    from backend.services.pc_own_index import OwnIndexRefused, read_candidates
+    return (lambda: read_candidates(_P("does/not/exist/funnel.json"), issuer_of={}),
+            OwnIndexRefused, "read_candidates() with no candidate file")
+
+
 def _case_pc_policy_epoch():
     # The missing input is the broker observation clock. Preparation must not
     # create a transition journal from an undated, absent evidence bundle.
@@ -1953,6 +1964,7 @@ CASES = {
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
     "pc_sleeves": _case_pc_sleeves,
     "pc_policy_epoch": _case_pc_policy_epoch,
+    "pc_own_index": _case_pc_own_index,
     "results_voice": _case_results_voice,
     "public_paper_accounts": _case_public_paper_accounts,
     "public_flow_common": _case_public_flow_common,
