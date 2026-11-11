@@ -541,8 +541,16 @@ def run_plan(plan: dict, *, popen=subprocess.Popen, job_factory=None) -> int:
             # `run_night_launcher --scheduled` marks a firing with isatty() True as
             # `contradicted` (run_night_launcher.py:372-400, measured 2026-08-19). A pipe
             # is not a character device, needs no console and no file on disk.
+            # With no --log and no handles of our own (Task Scheduler starts pythonw with
+            # none), stdout/stderr must be the null device, never None: because stdin is
+            # a pipe, subprocess would otherwise hand the child a stdout pipe nobody reads,
+            # and its first print raises (AegisStraddleForward exited 120 in 2 s on the
+            # first real repoint, 2026-11-11). A console entry keeps inheriting.
+            quiet = fh is None and _windowless()
             child = popen(r["argv"], cwd=plan["cwd"], env=r["env"], stdin=subprocess.PIPE,
-                          stdout=fh, stderr=subprocess.STDOUT if fh else None,
+                          stdout=fh if fh else (subprocess.DEVNULL if quiet else None),
+                          stderr=(subprocess.STDOUT if fh else
+                                  (subprocess.DEVNULL if quiet else None)),
                           creationflags=flags)
             if getattr(child, "stdin", None) is not None:
                 child.stdin.close()

@@ -437,6 +437,23 @@ def test_a_real_child_exit_code_cwd_and_env_arrive_unchanged(tmp_path, entry):
 
 
 @pytest.mark.skipif(not WIN, reason="the wrapper runs scheduled tasks on Windows")
+def test_a_task_scheduler_shaped_firing_can_print_and_still_exit_zero(tmp_path):
+    """Task Scheduler starts pythonw with NO standard handles. The first real
+    repoint (AegisStraddleForward, 2026-11-11) exited 120 in 2 s without doing
+    its work: with stdin a pipe and stdout None, subprocess hands the child a
+    stdout pipe nobody reads, so the first print raises and the exit flush
+    fails. The earlier pythonw test never saw it because `capture_output` gave
+    the wrapper handles to pass down. No handles here, as in production."""
+    clone, cfg, out, env = _probe_clone(tmp_path)
+    exe = Path(cfg["AEGIS_VENV_DIR"]) / "Scripts" / "pythonw.exe"
+    r = subprocess.run([str(exe), "-I", str(clone / "scripts" / "runtime_task.py"), "--pythonw",
+                        "-m", "rtprobe", "0"], env=env, cwd=str(tmp_path), timeout=120,
+                       creationflags=subprocess.DETACHED_PROCESS)
+    assert r.returncode == 0
+    assert json.loads(out.read_text(encoding="utf-8"))["stdin_isatty"] is False
+
+
+@pytest.mark.skipif(not WIN, reason="the wrapper runs scheduled tasks on Windows")
 def test_a_logged_real_child_goes_to_its_log(tmp_path):
     clone, cfg, out, env = _probe_clone(tmp_path)
     exe = Path(cfg["AEGIS_VENV_DIR"]) / "Scripts" / "pythonw.exe"
