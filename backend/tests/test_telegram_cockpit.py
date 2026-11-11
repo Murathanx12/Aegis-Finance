@@ -331,7 +331,9 @@ def test_the_agent_wires_the_router_and_the_button_handler():
     import inspect
     from scripts import telegram_agent as TA
     assert "telegram_cockpit" in inspect.getsource(TA.text_reply)
-    assert inspect.getsource(TA.main).count("callback_handler=callback_reply") == 2
+    # CH-05 R7: main polls with the table of the configured mode; "full" is this one
+    assert TA.tables("full")[2] is TA.callback_reply
+    assert inspect.getsource(TA.main).count("callback_handler=callback_handler") == 2
 
 
 # ─────────────────────────── review fixes (C6 review 2026-10-06) ─────────────

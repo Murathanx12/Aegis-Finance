@@ -4934,6 +4934,19 @@ TELEGRAM_RECEIPT_STALE_H: dict = {
     "bars": 96.0, "default": 26.0,
 }
 
+# ── Telegram read-only agent (CH-05 R7, 2026-11-11, `backend/services/telegram_readonly.py`) ──
+#: Which table `scripts.telegram_agent --serve` answers with. "read_only" (the default): a fixed
+#: set of receipt reads (status, budget, digest, books, nav, positions, help); no command can
+#: place an order, start or stop a sim or a task, call a model or run a shell. "full": the
+#: 09-22..10-06 table (/sim start, /deep and /research on an /approve tap, the DeepSeek
+#: classifier for unmatched text, a broker GET on "status") -- an owner decision. Any other
+#: value refuses at start (exit 2).
+TELEGRAM_AGENT_MODE = os.getenv("AEGIS_TELEGRAM_AGENT_MODE", "read_only").strip().lower()
+#: `status` answers from system_status/status.json; older than this many hours it says STALE.
+TELEGRAM_READONLY_STATUS_STALE_H = 6.0
+#: `positions` answers from the newest fleet-manager run receipt; older than this, STALE.
+TELEGRAM_READONLY_POSITIONS_STALE_H = 26.0
+
 # ── Stitched tickers (review 2026-09-29 F4, `backend/services/stitched_tickers.py`) ──
 #: A symbol whose bars stop for MORE than this many market sessions and then
 #: resume is a CANDIDATE stitch (two companies under one reused ticker). The gap
