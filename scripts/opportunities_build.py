@@ -75,6 +75,25 @@ from backend.services import publish_receipts as PR  # noqa: E402
 OPT = Path(_config.OPTIMUS_LEDGER_DIR)
 
 
+def source_reference(path: Path) -> str:
+    """Portable logical source name; configured data may live outside this checkout.
+
+    These references identify the logical dataset, not a public filesystem URL.
+    Refuse unknown roots instead of leaking a private absolute path.
+    """
+    resolved = path.resolve()
+    roots = ((OPT, "backend/data/optimus"),
+             (Path(_config.DATA_DIR), "backend/data"),
+             (REPO, ""), (Path(_config.PROJECT_ROOT), ""))
+    for root, prefix in roots:
+        try:
+            relative = resolved.relative_to(root.resolve()).as_posix()
+        except ValueError:
+            continue
+        return f"{prefix}/{relative}" if prefix and relative != "." else (prefix or relative)
+    raise ValueError("source path is outside the configured repository and data roots")
+
+
 def newest_stock_list() -> tuple[str, Path, Path]:
     """(asof, WORK dir, rendered Markdown) of the NEWEST stock-list build on disk (F6:
     never a hard-coded date). A day counts only when its WORK dir holds the build's
@@ -93,7 +112,7 @@ try:
     STOCK_LISTS_ASOF, WORK, MD_V3 = newest_stock_list()
 except SystemExit:  # importable without a build on disk (tests); build() then has only the books
     STOCK_LISTS_ASOF, WORK, MD_V3 = None, OPT / "stock_lists" / "_none", REPO / "docs" / "_no_stock_list.md"
-MD_V3_REL = MD_V3.relative_to(REPO).as_posix()
+MD_V3_REL = source_reference(MD_V3) if STOCK_LISTS_ASOF else None
 
 NEWS_LOOKBACK_DAYS = 30
 INSIDER_LOOKBACK_DAYS = 180
@@ -233,7 +252,7 @@ def load_books() -> dict[str, dict]:
     return out
 
 
-def lists_from_md() -> tuple[list[dict], str]:
+def lists_from_md() -> tuple[list[dict], Optional[str]]:
     lines = MD_V3.read_text(encoding="utf-8").splitlines() if MD_V3.exists() else []
     out = []
     # ROI list: prefer the build's own JSON rows (hook added 2026-10-06), else the MD table.
@@ -242,7 +261,7 @@ def lists_from_md() -> tuple[list[dict], str]:
     roi_src = None
     if roi_json.exists():
         blob = json.loads(roi_json.read_text(encoding="utf-8"))
-        roi_src = roi_json.relative_to(REPO).as_posix()
+        roi_src = source_reference(roi_json)
         for r in blob.get("ranked", []):
             roi_rows.append({"ticker": r["ticker"], "rank": r["rank"], "list_score": r["score"],
                              "eligibility": "RANKED", "why_list": None, "card": r.get("card"), "n": r.get("n")})
@@ -413,7 +432,7 @@ def load_reputation(now: datetime, *, write: bool = True) -> dict:
         asof = pd.Timestamp(now.astimezone(timezone.utc).replace(tzinfo=None))
         rv = AR.load_revisions()
         blob, path, fresh = AR.monthly_receipt(asof, rv=rv, write=write)
-        where = path.relative_to(REPO).as_posix() if path else "in memory (dry run: nothing written)"
+        where = source_reference(path) if path else "in memory (dry run: nothing written)"
         pit = blob.get("pit") or {}
         return {"known": AR.known_before(rv, asof), "tabs": AR.tables_from_receipt(blob),
                 "sectors": AR.load_identity_sectors(),
@@ -1082,7 +1101,7 @@ def build(now: Optional[datetime] = None, *, write_receipts: bool = True) -> dic
                                             f"{BADGE_MIN_FLAGS} of the 3."),
                    "low_upside": f"LOW UPSIDE = median-target upside below {LOW_UPSIDE:.0%}; never shown green.",
                    "evidence": "OBSERVED = listed, not traded. EARLY_EVIDENCE = paper-graded for N sessions; not a result."},
-        "inputs": {"stock_list_markdown": md_src, "stock_list_work_dir": WORK.relative_to(REPO).as_posix(),
+        "inputs": {"stock_list_markdown": md_src, "stock_list_work_dir": source_reference(WORK) if STOCK_LISTS_ASOF else None,
                    "books": "backend/data/optimus/llm_portfolio/books.jsonl",
                    "bars_last_spy": spy_dates[-1] if spy_dates else None,
                    "revision_flow": rv_pulled, "revision_through": rv_through,
@@ -1131,7 +1150,7 @@ def publish_public_copy() -> dict:
     (`publish_receipts`), scoped to the `opportunities` kind only, so the tracked
     `backend/data/public_receipts/opportunities/latest.json` is current without a separate
     `python -m scripts.publish_receipts` run. A failed or refused publish is printed and
-    never fails the build: the raw receipt this run wrote is already safely on disk, and the
+    fails the command: the raw receipt this run wrote is already safely on disk, and the
     previous published copy (if any) is kept, named, by `publish_receipts.publish` itself."""
     return PR.publish(kinds=(PR.KIND_BY_NAME["opportunities"],))
 
@@ -1146,7 +1165,6 @@ def main(argv: Optional[list[str]] = None) -> int:
     if a.dry_run:
         return 0
     p = write(blob)
-    print(f"wrote {p.relative_to(REPO).as_posix()} ({p.stat().st_size/1e6:.2f} MB)")
     removed = prune_raw_receipts()
     if removed:
         print(f"pruned {len(removed)} raw receipt(s) beyond the newest {_config.OPPORTUNITIES_KEEP_RAW} "
@@ -1157,6 +1175,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     print(f"published public copy: {opp_bytes:,} B / {PR.MAX_BYTES:,} B budget "
           f"({opp_entry.get('status')}; folder {pub.get('status')}"
           + (f": {pub['why']}" if pub.get("why") else "") + ")")
+    if pub.get("status") != "OK" or opp_entry.get("status") != "OK":
+        print("ERROR opportunities public copy was not published successfully", file=sys.stderr)
+        return 1
+    print(f"wrote {source_reference(p)} ({p.stat().st_size/1e6:.2f} MB)")
     return 0
 
 

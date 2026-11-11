@@ -2,6 +2,8 @@
 
     python -m scripts.world_digest                    # one run over the last 36 h, <= $0.90
     python -m scripts.world_digest --hours 12 --budget 0.5
+    python -m scripts.world_digest --phase-auto       # the scheduled form: run only if the market
+                                                      # phase says one is due (world_digest_phase)
     python -m scripts.world_digest --dry-run          # cached extractions only, NO paid call, NO rows
     python -m scripts.world_digest --grade            # the graded news_digest rows + trust; $0
     python -m scripts.world_digest --backtest         # the size test on past dated headlines
@@ -75,7 +77,23 @@ class RunLock:
         self.path = path
 
     def __enter__(self):
+        from backend.services import disk_guard as DG
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        # Ported from the runtime (CH-05 R5): the exists -> write below is a
+        # check-then-act race; two runs starting together both saw no marker and
+        # both ran. An OS lock on a sidecar makes the check and the write one step.
+        self._guard = DG.file_lock(self.path.with_name(self.path.name + ".guard"), timeout_s=.1)
+        try:
+            self._guard.__enter__()
+        except DG.FileLockTimeout as exc:
+            raise RuntimeError(f"another world digest run holds {self.path.name}.guard") from exc
+        try:
+            return self._enter_marker()
+        except BaseException:
+            self._guard.__exit__(*sys.exc_info())
+            raise
+
+    def _enter_marker(self):
         if self.path.exists():
             try:
                 age = time.time() - self.path.stat().st_mtime
@@ -94,6 +112,8 @@ class RunLock:
             self.path.unlink()
         except OSError:
             pass
+        finally:
+            self._guard.__exit__(*a)
 
 
 def previous_titles() -> list[str]:
@@ -740,14 +760,59 @@ def backtest(a: argparse.Namespace) -> int:
     return 0
 
 
+def _phase_decisions_path() -> Path:
+    return WD.work_dir() / "schedule" / "decisions.jsonl"
+
+
+def _count_items(since: datetime, until: datetime) -> int:
+    return len(WD.collect(since, until)["items"])
+
+
+def phase_auto(a: argparse.Namespace, *, now: datetime | None = None,
+               snapshot_fn=None, count_fn=None, run_fn=None) -> int:
+    """`--phase-auto`: decide by market phase, then run (or say why not).
+
+    SKIP -> rc 0, REFUSED -> rc 2, RUN -> the run's rc. Every tick leaves one
+    receipt line in `news_digest/schedule/decisions.jsonl`; a RUN leaves a second
+    line with the run's rc. Caller holds the RunLock, so two ticks cannot both
+    decide RUN. `now`/`snapshot_fn`/`count_fn`/`run_fn` are injected by tests."""
+    from backend.services import disk_guard as DG
+    from backend.services import world_digest_phase as WDP
+    if snapshot_fn is None:
+        from backend.services import provider_budget as PB
+        snapshot_fn = PB.preflight_snapshot
+    now = now or datetime.now(timezone.utc)
+    if WD.stop_file().exists():
+        _p("STOPPED: STOP file present")
+        return 0
+    rec = WDP.decide(now, out_dir=WD.out_dir(), decisions_path=_phase_decisions_path(),
+                     snapshot_fn=snapshot_fn, count_new_items=count_fn or _count_items)
+    DG.locked_append_line(_phase_decisions_path(), json.dumps(rec, sort_keys=True, default=str))
+    _p(f"PHASE {rec.get('phase')} slot {rec.get('slot')}: {rec['decision']} {rec['reason']}"
+       + (f"; hours {rec['hours']}, budget ${rec['budget_usd']:.2f}" if rec["decision"] == WDP.RUN else "")
+       + (f"; digest month ${rec['spend']['digest_mtd_usd']:.4f} of share ${rec['spend']['share_usd']:.2f}"
+          if rec.get("spend") else ""))
+    if rec["decision"] == WDP.SKIP:
+        return 0
+    if rec["decision"] != WDP.RUN:
+        if rec["reason"] in ("SHARE_EXHAUSTED", "ENVELOPE_BLOCKED", "ENVELOPE_UNREADABLE"):
+            _p(_budget_status_line())
+        return 2
+    a.hours, a.budget = float(rec["hours"]), float(rec["budget_usd"])
+    rc = (run_fn or run)(a)
+    DG.locked_append_line(_phase_decisions_path(), json.dumps(
+        {"t": datetime.now(timezone.utc).isoformat(), "schema": "world_digest_phase/1",
+         "decision": "RUN_RESULT", "slot": rec["slot"], "rc": rc}, sort_keys=True))
+    return rc
+
+
 def print_schtasks() -> int:
     py = REPO / ".venv" / "Scripts" / "pythonw.exe"
-    every = int(_cfg.WORLD_DIGEST_EVERY_H)
-    _p("Register (PowerShell):")
-    _p(f"  $a = New-ScheduledTaskAction -Execute '{py}' -Argument '-m scripts.world_digest --hours 24' "
+    _p("Register (PowerShell): one tick every 30 min; the digest decides by market phase")
+    _p(f"  $a = New-ScheduledTaskAction -Execute '{py}' -Argument '-m scripts.world_digest --phase-auto' "
        f"-WorkingDirectory '{REPO}'")
-    _p(f"  $t = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(5) "
-       f"-RepetitionInterval (New-TimeSpan -Hours {every})")
+    _p("  $t = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(5) "
+       "-RepetitionInterval (New-TimeSpan -Minutes 30)")
     _p("  $s = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew "
        "-ExecutionTimeLimit (New-TimeSpan -Minutes 60)")
     _p(f"  Register-ScheduledTask -TaskName '{TASK_NAME}' -Action $a -Trigger $t -Settings $s")
@@ -778,6 +843,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--bt-per-day", type=int, default=40)
     ap.add_argument("--bt-budget", type=float, default=0.15)
     ap.add_argument("--schtasks", action="store_true")
+    ap.add_argument("--phase-auto", action="store_true",
+                    help="decide by US market phase whether a run is due, its hours and its "
+                         "budget (overrides --hours/--budget); skip rc 0, refuse rc 2")
     a = ap.parse_args(argv)
     if a.schtasks:
         return print_schtasks()
@@ -788,9 +856,12 @@ def main(argv: list[str] | None = None) -> int:
     if a.budget > 1.0:
         _p(f"REFUSED: --budget {a.budget} is above the $1 per-run ceiling")
         return 2
+    if a.phase_auto and a.dry_run:
+        _p("REFUSED: --phase-auto decides a paid run; use --dry-run without it")
+        return 2
     try:
         with RunLock(WD.work_dir() / "run.lock"):
-            return run(a)
+            return phase_auto(a) if a.phase_auto else run(a)
     except RuntimeError as exc:
         _p(f"REFUSED: {exc}")
         _failure_receipt(f"REFUSED: {exc}")

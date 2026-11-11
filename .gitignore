@@ -451,6 +451,8 @@ backend/data/optimus/contest/calendar/confirmations_terminal*.csv
 # 2026-09-29: digests paraphrase subscriber articles; the repo is public
 backend/data/optimus/digest/
 backend/data/optimus/news_digest/read_next.jsonl
+# CH-05 R5: the phase scheduler's per-tick decision receipts (machine-local state)
+backend/data/optimus/news_digest/schedule/
 
 # 2026-10-02 finisher: browser-automation debug output, and two machine-local
 # runtime paths (the task_keeper launch log/state, and the always_on_lab OFF

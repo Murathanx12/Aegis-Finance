@@ -1091,7 +1091,8 @@ class Meter:
     Older cloud responses without shared accounting retain the token-price fallback.
     """
 
-    def __init__(self, budget_usd: float, *, llm: Optional[Callable[..., dict]] = None):
+    def __init__(self, budget_usd: float, *, llm: Optional[Callable[..., dict]] = None,
+                 local_llm: Optional[Callable[..., dict]] = None):
         # no declared budget, no paid call: a NaN budget compared False against
         # every spend and would never have refused (guard contract, 2026-09-29)
         try:
@@ -1105,11 +1106,14 @@ class Meter:
         self.calls = 0
         self.failed = 0
         self.unpriced = 0
+        self.local_calls = 0
+        self.local_failed = 0
         self.models: Counter = Counter()
         self.statuses: Counter = Counter()
         self.by_stage: Counter = Counter()
         self._lock = threading.Lock()
         self._llm = llm
+        self._local_llm = local_llm
         self._tl = threading.local()
 
     def last_model(self) -> str:
@@ -1119,27 +1123,79 @@ class Meter:
     def remaining(self) -> float:
         return self.budget - self.spent
 
+    def call_local(self, system: str, user: str, *, purpose: str, max_tokens: int) -> Optional[str]:
+        """One turn from the ON-BOX model (llama-server via `llm_analyzer.call_named("local")`).
+
+        $0 and outside every DeepSeek gate: it never debits this run's budget or a
+        stage cap. None when the local model did not answer (not listening, not
+        ready, refused, empty); the caller decides whether to fall back to the
+        metered DeepSeek path (CH-05 R5, `WORLD_DIGEST_EXTRACT_PROVIDER`)."""
+        try:
+            if self._local_llm is not None:
+                res = self._local_llm(system, user, purpose=purpose, max_tokens=max_tokens)
+            else:
+                from backend.services import llm_analyzer as LA
+                res = LA.call_named("local", system, user, purpose=purpose,
+                                    max_tokens=max_tokens, temperature=0.2,
+                                    ensure_reason=purpose)
+        except Exception:                                            # noqa: BLE001
+            res = {"ok": False, "status": "LOCAL_RAISED"}
+        with self._lock:
+            self.local_calls += 1
+            self.statuses["local:" + str(res.get("status"))] += 1
+            if res.get("ok") and res.get("text"):
+                served = str(res.get("served_model") or res.get("model") or "unknown")
+                self.models["local:" + served] += 1
+            else:
+                self.local_failed += 1
+        if res.get("ok") and res.get("text"):
+            self._tl.model = "local:" + str(res.get("served_model") or res.get("model") or "unknown")
+            return res.get("text")
+        return None
+
     def call(self, system: str, user: str, *, purpose: str, max_tokens: int,
              stage: str, reserve_usd: float = 0.0, stage_cap: Optional[float] = None) -> Optional[str]:
+        try:
+            reserve_usd = float(reserve_usd)
+        except (TypeError, ValueError):
+            reserve_usd = float("nan")
+        if not math.isfinite(reserve_usd) or reserve_usd < 0 or (
+                stage_cap is not None and (not math.isfinite(float(stage_cap)) or float(stage_cap) < 0)):
+            raise BudgetExceeded("invalid run/stage reservation")
         with self._lock:
             if self.spent + reserve_usd > self.budget:
                 raise BudgetExceeded(f"${self.spent:.4f} spent of ${self.budget:.2f}")
             if stage_cap is not None and self.by_stage[stage] + reserve_usd > stage_cap:
                 raise BudgetExceeded(f"stage {stage} at ${self.by_stage[stage]:.4f} of "
                                      f"${stage_cap:.2f}")
-        if self._llm is not None:
-            res = self._llm(system, user, purpose=purpose, max_tokens=max_tokens)
-        else:
-            from backend.services import llm_analyzer as LA
-            res = LA.call_named("deepseek", system, user, purpose=purpose,
-                                max_tokens=max_tokens, production_budget=False,
-                                temperature=0.2)
+            # Ported from the runtime (CH-05 R5): debit the in-flight reservation
+            # under the SAME lock as both gates. Checking and debiting apart let
+            # N worker threads all pass the gate on the same headroom and then
+            # each spend it (extraction runs 8 workers, implications 4).
+            self.spent += reserve_usd
+            self.by_stage[stage] += reserve_usd
+        try:
+            if self._llm is not None:
+                res = self._llm(system, user, purpose=purpose, max_tokens=max_tokens)
+            else:
+                from backend.services import llm_analyzer as LA
+                res = LA.call_named("deepseek", system, user, purpose=purpose,
+                                    max_tokens=max_tokens, production_budget=False,
+                                    temperature=0.2)
+        except BaseException:
+            # Unknown dispatch outcome: the reservation stays debited.
+            with self._lock:
+                self.calls += 1
+                self.failed += 1
+                self.unpriced += 1
+            raise
         self._tl.model = "deepseek:" + str(res.get("served_model") or res.get("model") or "unknown")
         cost = res.get("cost_usd")
         unpriced = False
         if "budget_charge_usd" in res:
             # The PC envelope holds this amount even when billable usage is unknown.
-            # A missing/invalid charge must not turn a dispatched call into $0.
+            # A missing/invalid charge must not turn a dispatched call into $0
+            # (the reservation above stays debited when this raises).
             charge = res["budget_charge_usd"]
             if type(charge) not in (int, float) or not math.isfinite(charge) or charge < 0:
                 raise BudgetExceeded("invalid shared budget charge")
@@ -1151,8 +1207,8 @@ class Meter:
             unpriced = bool(ti or to)
         with self._lock:
             self.calls += 1
-            self.spent += float(cost)
-            self.by_stage[stage] += float(cost)
+            self.spent += float(cost) - reserve_usd
+            self.by_stage[stage] += float(cost) - reserve_usd
             self.unpriced += int(unpriced)
             self.statuses[str(res.get("status"))] += 1
             if res.get("served_model") or res.get("model"):
@@ -1164,6 +1220,7 @@ class Meter:
     def summary(self) -> dict:
         return {"budget_usd": self.budget, "spent_usd": round(self.spent, 5),
                 "calls": self.calls, "failed": self.failed, "unpriced_calls": self.unpriced,
+                "local_calls": self.local_calls, "local_failed": self.local_failed,
                 "served_models": dict(self.models), "statuses": dict(self.statuses),
                 "by_stage_usd": {k: round(v, 5) for k, v in self.by_stage.items()}}
 
@@ -1245,6 +1302,23 @@ def local_event_stage(items: list[Item], *,
             "by_item": by}
 
 
+#: Who types stage 1 (CH-05 R5, 2026-11-11; owner: "for bulky jobs, we can use the
+#: local model we have downloaded"). "deepseek" (default) is the metered path above.
+#: "local" asks the on-box llama-server first (`llm_analyzer.call_named("local")`, which
+#: starts it on demand via `llama_server.ensure` and the reaper stops it when idle) and
+#: falls back to DeepSeek for any call it does not answer or does not type. It REPLACES
+#: the DeepSeek typing of those rows (unlike WORLD_DIGEST_LOCAL_EXTRACT, which only
+#: annotates), so it changes what the digest synthesises: owner decision, default OFF.
+EXTRACT_PROVIDERS = ("deepseek", "local")
+
+
+def extract_provider() -> str:
+    p = str(getattr(_cfg, "WORLD_DIGEST_EXTRACT_PROVIDER", "deepseek"))
+    if p not in EXTRACT_PROVIDERS:
+        raise ValueError(f"WORLD_DIGEST_EXTRACT_PROVIDER={p!r} is not one of {EXTRACT_PROVIDERS}")
+    return p
+
+
 def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
                   stage_cap: float, workers: int = 8,
                   cache_file: Optional[Path] = None,
@@ -1275,13 +1349,48 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
     batches = [heads[k:k + per] for k in range(0, len(heads), per)]
     lock = threading.Lock()
     local = local_event_stage(singles, runner=local_runner)
+    use_local = extract_provider() == "local"
+    local_gate = threading.Semaphore(max(1, int(getattr(_cfg, "WORLD_DIGEST_LOCAL_CONCURRENCY", 1))))
+    accept_share = float(getattr(_cfg, "WORLD_DIGEST_LOCAL_BATCH_ACCEPT_SHARE", 0.8))
+
+    def typed_call(system: str, user: str, *, max_tokens: int, reserve_usd: float,
+                   accept: Callable[[str], bool]) -> Optional[str]:
+        """Stage-1 typing: the on-box model first when WORLD_DIGEST_EXTRACT_PROVIDER is
+        "local", else (and on any local miss) the metered DeepSeek call. A local reply
+        that does not type is a miss, never a lost item: DeepSeek types it instead."""
+        if use_local:
+            with local_gate:
+                reply = meter.call_local(system, user, purpose="world_digest_extract_local",
+                                         max_tokens=max_tokens)
+            if reply is not None and accept(reply):
+                with lock:
+                    stats["local_typed_calls"] += 1
+                return reply
+            with lock:
+                stats["local_fallback_calls"] += 1
+        return meter.call(system, user, purpose="world_digest_extract",
+                          max_tokens=max_tokens, stage="extract", reserve_usd=reserve_usd,
+                          stage_cap=stage_cap)
+
+    def batch_rows(reply: Optional[str]) -> dict[int, dict]:
+        got = _parse_json(reply)
+        arr = got.get("rows") if isinstance(got, dict) else got
+        if not isinstance(arr, list):
+            arr = salvage_objects(reply)      # a reply cut at max_tokens keeps its whole rows
+        by_i = {}
+        for r in arr or []:
+            if isinstance(r, dict):
+                try:
+                    by_i[int(r.get("i"))] = r
+                except (TypeError, ValueError):
+                    continue
+        return by_i
 
     def one(it: Item) -> None:
         prompt, flagged = _item_prompt(it)
         try:
-            reply = meter.call(EXTRACT_SYSTEM, prompt, purpose="world_digest_extract",
-                               max_tokens=600, stage="extract", reserve_usd=0.002,
-                               stage_cap=stage_cap)
+            reply = typed_call(EXTRACT_SYSTEM, prompt, max_tokens=600, reserve_usd=0.002,
+                               accept=lambda r: type_row(_parse_json(r), it) is not None)
         except BudgetExceeded:
             with lock:
                 stats["budget_skipped"] += 1
@@ -1309,26 +1418,20 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
             flagged += f
             lines.append(f"{k}. [{it.source}] {t}")
         user = "<<<ITEMS\n" + "\n".join(lines) + "\nITEMS>>>"
+        def accept(r: str) -> bool:
+            got_i = batch_rows(r)
+            typed = sum(1 for k, it in enumerate(b) if type_row(got_i.get(k), it) is not None)
+            return typed >= accept_share * len(b)
+
         try:
-            reply = meter.call(HEADLINE_SYSTEM, user, purpose="world_digest_extract",
-                               max_tokens=3500, stage="extract", reserve_usd=0.004,
-                               stage_cap=stage_cap)
+            reply = typed_call(HEADLINE_SYSTEM, user, max_tokens=3500, reserve_usd=0.004,
+                               accept=accept)
         except BudgetExceeded:
             with lock:
                 stats["budget_skipped"] += len(b)
             return
         served = meter.last_model()
-        got = _parse_json(reply)
-        arr = got.get("rows") if isinstance(got, dict) else got
-        if not isinstance(arr, list):
-            arr = salvage_objects(reply)      # a reply cut at max_tokens keeps its whole rows
-        by_i = {}
-        for r in arr or []:
-            if isinstance(r, dict):
-                try:
-                    by_i[int(r.get("i"))] = r
-                except (TypeError, ValueError):
-                    continue
+        by_i = batch_rows(reply)
         new_cache = []
         with lock:
             for k, it in enumerate(b):
@@ -1350,6 +1453,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
         list(ex.map(batch, batches))
     return {"rows": rows, "cache_hits": hits, "n_new_single": len(singles),
             "n_new_headline_batches": len(batches), **dict(stats),
+            "extract_provider": "local" if use_local else "deepseek",
             "local_stage": {k: v for k, v in local.items() if k != "by_item"}}
 
 

@@ -5246,6 +5246,52 @@ WORLD_DIGEST_LOCAL_EXTRACT = False
 WORLD_DIGEST_LOCAL_MIN_FREE_RAM_GB = 3.0
 WORLD_DIGEST_LOCAL_TIMEOUT_S = 900.0
 
+# ── WORLD DIGEST BY MARKET PHASE + LOCAL BULK TYPING (CH-05 R5, 2026-11-11) ──
+#: Owner, 2026-11-11: the DeepSeek budget stays at 15-20 USD a month, and the digest
+#: runs "based on when it should run rather than being a time code"; bulky jobs may use
+#: the local model. `python -m scripts.world_digest --phase-auto` (any tick frequency)
+#: works out the XNYS phase from `market_sessions`, runs at most once per phase slot,
+#: covers the news since the last COMPLETE run, and caps its spend at
+#: min(phase ceiling, what is left of the digest's monthly share). See
+#: `backend/services/world_digest_phase.py`.
+#: The digest's share of DEEPSEEK_MONTHLY_CAP_USD (0.60 x $15 = $9.00/month). Every
+#: call whose envelope purpose starts with "world_digest" counts against it.
+WORLD_DIGEST_MONTHLY_SHARE = 0.60
+#: Per-run spend ceiling (USD) by phase. A ceiling, not an estimate: measured
+#: 2026-11-10 a cold 24 h run (1,324 new items) cost $0.271, a warm one $0.053.
+WORLD_DIGEST_PHASE_CEILING_USD = {"PRE_MARKET": 0.35, "SESSION": 0.15,
+                                  "AFTER_CLOSE": 0.35, "CLOSED": 0.30}
+#: When a phase's slot opens, in minutes from its anchor (America/New_York):
+#: PRE_MARKET from open-150 (07:00 ET) to the open; SESSION from open+120 (11:30 ET)
+#: to the close; AFTER_CLOSE from close+150 (18:30 ET, after AegisDailyPass's
+#: 17:30 ET news pull) to midnight ET; CLOSED (weekend/holiday) from 10:00 ET.
+WORLD_DIGEST_PHASE_OPENS_MIN = {"PRE_MARKET": ("open", -150), "SESSION": ("open", 120),
+                                "AFTER_CLOSE": ("close", 150), "CLOSED": ("midnight", 600)}
+#: Phases that still run when the month is over pace; the others skip (OVER_PACE).
+WORLD_DIGEST_PHASE_ESSENTIAL = ("PRE_MARKET", "AFTER_CLOSE")
+#: Over pace = digest month-to-date > share x elapsed fraction of the month + this slack.
+WORLD_DIGEST_PHASE_PACE_SLACK_USD = 0.50
+#: Below this much room left in the share a run is REFUSED (rc 2): a warm run's
+#: theme + implication stages alone measured $0.053.
+WORLD_DIGEST_PHASE_MIN_RUN_USD = 0.06
+#: A slot with fewer new items than this waits (NOTHING_NEW, rc 0) until the slot ends.
+WORLD_DIGEST_PHASE_MIN_NEW_ITEMS = 25
+#: Coverage = since the last COMPLETE run (no budget-skipped item) minus this overlap,
+#: clamped to [MIN, MAX] hours; MAX = WORLD_DIGEST_MAX_ITEM_AGE_DAYS x 24.
+WORLD_DIGEST_PHASE_OVERLAP_H = 0.25
+WORLD_DIGEST_PHASE_MIN_HOURS = 1.0
+WORLD_DIGEST_PHASE_MAX_HOURS = 96.0
+#: A slot whose runs failed this many times REFUSES (rc 2) instead of paying again.
+WORLD_DIGEST_PHASE_MAX_ATTEMPTS = 2
+#: Stage-1 typing provider: "deepseek" (default) or "local" (llama-server first,
+#: DeepSeek fallback per call). OFF by default: it changes the typed rows.
+WORLD_DIGEST_EXTRACT_PROVIDER = os.getenv("AEGIS_WORLD_DIGEST_EXTRACT_PROVIDER", "deepseek")
+#: Concurrent requests to the local server (llama-server queues; 1 keeps it calm).
+WORLD_DIGEST_LOCAL_CONCURRENCY = 1
+#: A local headline batch is accepted only if it types at least this share of its
+#: rows; otherwise DeepSeek types the whole batch.
+WORLD_DIGEST_LOCAL_BATCH_ACCEPT_SHARE = 0.8
+
 #: Review 2026-09-29 (REVIEW_2026-09-29_READER_POOL.md). F3: this many BLANK
 #: pages in a row on one host cool it like a challenge (a load that reached the
 #: site always counts against the caps). F6: a recurring item whose tab open

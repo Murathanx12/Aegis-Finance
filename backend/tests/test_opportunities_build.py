@@ -222,7 +222,7 @@ def test_main_prunes_and_publishes_the_public_copy_after_a_build(tmp_path, monke
     rc = B.main([])
     assert rc == 0
     out = capsys.readouterr().out
-    assert "wrote opportunities" in out
+    assert out.strip().splitlines()[-1].startswith("wrote opportunities")
     assert "pruned 2 raw receipt(s)" in out                        # 3 pre-existing + 1 new - keep 2 = 2 removed
     assert "published public copy: 1,234 B" in out
     assert calls["kinds"] == (B.PR.KIND_BY_NAME["opportunities"],)  # scoped to this kind only
@@ -258,3 +258,50 @@ def test_gitignore_matches_raw_receipts_but_not_the_published_copy():
     assert ignored("backend/data/optimus/opportunities/opportunities_2099-01-01_20990101T000000Z.json")
     assert not ignored("backend/data/public_receipts/opportunities/latest.json")
     assert not ignored("backend/data/optimus/opportunities/README.md")  # a non-.json file in the dir is untouched
+
+
+@pytest.mark.parametrize("external", [False, True])
+def test_source_reference_stock_list_external_data_root(tmp_path, monkeypatch, external):
+    import json
+    repo = tmp_path / "publication"
+    data = (tmp_path / "runtime-data") if external else repo / "backend" / "data"
+    opt = data / "optimus"
+    work = opt / "stock_lists" / "2026-09-27"
+    work.mkdir(parents=True)
+    roi = work / "roi_list_v3.json"
+    roi.write_text(json.dumps({"ranked": [], "excluded": []}), encoding="utf-8")
+    md = repo / "docs" / "research_notes" / "2026-09-27" / "stock_lists_2026-09-27_v3.md"
+    monkeypatch.setattr(B, "REPO", repo)
+    monkeypatch.setattr(B, "OPT", opt)
+    monkeypatch.setattr(B._config, "DATA_DIR", data)
+    monkeypatch.setattr(B, "WORK", work)
+    monkeypatch.setattr(B, "MD_V3", md)
+    assert B.source_reference(work) == "backend/data/optimus/stock_lists/2026-09-27"
+    assert B.source_reference(roi) == "backend/data/optimus/stock_lists/2026-09-27/roi_list_v3.json"
+    assert B.source_reference(md) == "docs/research_notes/2026-09-27/stock_lists_2026-09-27_v3.md"
+    B.lists_from_md()  # real JSON parsing also uses the portable reference
+    receipt = opt / "opportunities" / "fixture.json"
+    assert B.source_reference(receipt) == "backend/data/optimus/opportunities/fixture.json"
+
+
+def test_source_reference_refuses_unknown_root_without_private_path(tmp_path):
+    with pytest.raises(ValueError) as caught:
+        B.source_reference(tmp_path / "private" / "source.json")
+    assert str(tmp_path) not in str(caught.value)
+
+
+@pytest.mark.parametrize("publish_status,entry_status", [("REFUSED", "OK"), ("OK", "REFUSED"), ("OK", None)])
+def test_main_publish_failure_never_emits_caller_success(tmp_path, monkeypatch, capsys,
+                                                         publish_status, entry_status):
+    monkeypatch.setattr(B, "build", lambda **kwargs: {"lists": []})
+    raw = tmp_path / "raw.json"
+    raw.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(B, "write", lambda blob: raw)
+    monkeypatch.setattr(B, "prune_raw_receipts", lambda: [])
+    monkeypatch.setattr(B, "publish_public_copy", lambda: {
+        "status": publish_status, "kinds": {"opportunities": {"status": entry_status}}})
+    assert B.main([]) == 1
+    captured = capsys.readouterr()
+    assert not any(line.startswith("wrote ") for line in captured.out.splitlines())
+    assert "not published successfully" in captured.err
+    assert raw.read_text(encoding="utf-8") == "{}"
