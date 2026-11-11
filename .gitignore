@@ -525,6 +525,9 @@ backend/data/optimus/local_runtime_digest/
 # CH-31 one-event receipts and frozen forecasts (written by scripts/one_event.py)
 backend/data/optimus/one_event/
 
+# 2026-11-11 CH-32: rows extracted from licensed broker / Bloomberg reports (analyst-report-extract
+# skill -> scripts.analyst_report_rows). Licensed content; the repo is public.
+backend/data/optimus/analyst_reports/
 # OD-2 (2026-11-10): the PC DeepSeek envelopes are a host spend ledger, never committed
 backend/data/optimus/session_budget/deepseek_local*.json
 backend/data/optimus/session_budget/deepseek_local*.json.lock

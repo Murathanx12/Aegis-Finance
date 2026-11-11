@@ -1,0 +1,36 @@
+{
+ "_note": "SYNTHETIC. A fictional company and broker; no real report text or numbers.",
+ "broker": "Example Securities",
+ "ticker": "exmp",
+ "title": "Synthetic note: margin story intact",
+ "published_at": "2026-03-02",
+ "first_held_at": "2026-03-05",
+ "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+ "rating": "Outperform",
+ "price_target": 120,
+ "prior_price_target": 100,
+ "price_at_publication": 96,
+ "scenarios": [
+  {"name": "upside", "probability": 0.25, "price_target": 160,
+   "assumptions": {"y3_revenue_growth_pct": 18, "y3_op_margin_pct": 24}},
+  {"name": "base", "probability": 0.5, "price_target": 120,
+   "assumptions": {"y3_revenue_growth_pct": 12, "y3_op_margin_pct": 21}},
+  {"name": "downside", "probability": 0.25, "price_target": 70,
+   "assumptions": {"y3_revenue_growth_pct": 5, "y3_op_margin_pct": 17}}
+ ],
+ "eps_revisions": [
+  {"period": "Q2", "fiscal_context": "FY12/26E", "eps_from": 1.00, "eps_to": 1.10,
+   "pct_change_stated": 10.0, "consensus": 1.02},
+  {"period": "FY26E", "fiscal_context": "FY12/26E", "eps_from": 4.00, "eps_to": 4.00,
+   "pct_change_stated": 0.0, "consensus": 3.95}
+ ],
+ "key_debates": [{"text": "Is the new product cannibalising the old one?", "page": 1}],
+ "catalysts": [
+  {"event": "Q2 results", "expected_date": "2026-05-06", "date_stated_by_source": true, "page": 1},
+  {"event": "Investor day", "expected_date": null, "page": 2}
+ ],
+ "falsifiers": [
+  {"statement": "Operating margin below 19% in the Q2 print would break the base case",
+   "observable": "Q2 GAAP operating margin", "by_date": "2026-05-06", "origin": "source"}
+ ]
+}

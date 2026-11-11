@@ -142,13 +142,14 @@ CLASSIFIED: dict[str, str] = {
         "calls this descriptive Beta adapter. Reviewed context receipts are "
         "development evidence; no production integration or activation is claimed."),
     "backend.services.ledger_retrieval": (
-        "OK -- M3's hindsight-safe retrieval gate, shipped BEFORE the store it "
-        "guards (roadmap 2026-09-11). M2's `learned_rules.jsonl` does not exist "
-        "yet, so nothing calls this today, and that is the point: a retrieval "
-        "gate written after the first rule is written is a gate written after "
-        "the first leak. It is exercised by `test_ask_authority.py`'s three "
-        "directional tests and becomes reachable the day the distillation job "
-        "lands. Reclassify or delete it if M2 is abandoned."),
+        "GAP -- M3's hindsight-safe retrieval gate, shipped BEFORE the store it "
+        "guards (roadmap 2026-09-11). The store now exists: `learned_rules.jsonl` "
+        "held 217 rules on 2026-11-11 (`learner.rule_distillation --ledger`), "
+        "and still nothing outside tests calls `rules_visible_at` / "
+        "`retrieval_report`; the only reader of the rules is policy_state's "
+        "descriptive `direction_vs_magnitude` fallback. Rules accumulate unread "
+        "(CH-32 night check). Wire a consumer through this gate or retire the "
+        "rule writer; `visible_at` itself is used by lab_decision_vs_reality."),
     "backend.services.brain_queries": (
         "OK -- the READ-ONLY query surface the Optimus MCP wraps (roadmap "
         "11b, chunk 8, 2026-09-12). Its caller lives in the `optimus` repo: "

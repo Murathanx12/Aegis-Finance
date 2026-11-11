@@ -22,7 +22,7 @@ the same postal district as the lanes gets this check on both sides.
 
 ## Invariants to verify
 
-1. **Lane YAMLs byte-stable:** `git diff --stat -- data/*.yaml` shows NOTHING
+1. **Lane YAMLs byte-stable:** `git diff --stat -- backend/data/*.yaml` shows NOTHING
    unless this change is an explicit, attended new-lane/new-version ship.
    `paper_portfolios.yaml`, `book_lanes.yaml`, `conservative_atr_lanes.yaml`
    each keep their existing content hash (hashes are printed in registry rows
@@ -53,3 +53,11 @@ the same postal district as the lanes gets this check on both sides.
   `/api/pi/track-record` before/after, and diff the lane set + segment
   boundaries + latest NAV dates.
 - If ANY invariant fails: stop, do not commit/push; the fix is attended.
+- Run git from YOUR worktree (`git -C <worktree> ...`). Never run a
+  state-changing git command in the runtime checkout `C:/Users/mrthn/aegis-finance`:
+  scheduled tasks run from it, and on 2026-11-11 a `sparse-checkout` there hid
+  ~6,800 tracked files for four minutes.
+- Scope (2026-10-09): these are the WEBSITE lanes (Railway
+  `selfless-courage/Aegis-Finance`). The paper fleet books are owned by the PC
+  fleet managers and the execution repo; their check is broker reconciliation
+  plus advancing receipts (`docs/VERIFICATION_2026-10-09.md`).

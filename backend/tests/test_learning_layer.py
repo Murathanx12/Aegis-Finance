@@ -372,3 +372,89 @@ def test_direction_vs_magnitude_falls_back_to_the_rule_store(ps_paths, tmp_path)
     assert dvm["source"].startswith("learned_rules")
     assert dvm["by_family"]["investigator"]["magnitude_skill_heldout"] == 0.0556
     assert dvm["by_family"]["investigator"]["direction_skill_heldout"] == -0.0872
+
+
+# ── 2026-11-11: the as-of is a UTC date, and a failed refit is a red exit ────
+
+def test_default_as_of_is_the_utc_date_not_the_local_one(monkeypatch):
+    """At UTC+8 between 00:00 and 08:00 local, date.today() is tomorrow in UTC
+    and forecast_reputation.refit refuses it. The default must be UTC. The
+    local clock is forced AHEAD here, so the test fails on a UTC CI box too if
+    the default ever goes back to `date.today()`."""
+    from datetime import date as _date, datetime, timezone
+
+    class _AheadDate(_date):
+        @classmethod
+        def today(cls):
+            return _date(2099, 1, 1)
+
+    monkeypatch.setattr(RD, "date", _AheadDate)
+    assert RD.utc_today() == datetime.now(timezone.utc).date().isoformat()
+    seen = {}
+
+    def fake_refit(today=None, **kw):
+        seen["refit"] = today
+        return {"status": "OK"}
+
+    def fake_distill(as_of=None, write=True, **kw):
+        seen["distill"] = as_of
+        return {"status": "LEARN_DEGRADED"}
+
+    monkeypatch.setattr(FR, "refit", fake_refit)
+    monkeypatch.setattr(RD, "distill_ledger", fake_distill)
+    monkeypatch.setattr(PS, "refresh", lambda *a, **k: {"changed_since_last": []})
+    RD.night_learn(write=False)
+    assert seen["refit"] == seen["distill"] == RD.utc_today()
+
+
+def test_a_failed_refit_beside_learned_rules_is_a_red_exit():
+    learned = {"distill": {"status": "LEARNED"}}
+    assert RD.ledger_exit_code({**learned, "reputation": "OK"}) == 0
+    assert RD.ledger_exit_code({**learned, "reputation": "FAILED ValueError: future"}) == 4
+    assert RD.ledger_exit_code({"distill": {"status": "LEARN_DEGRADED"},
+                                "reputation": "OK"}) == 3
+    # a failed refit is never masked by a degraded distillation
+    assert RD.ledger_exit_code({"distill": {"status": "LEARN_DEGRADED"},
+                                "reputation": "FAILED ValueError: future"}) == 4
+    assert RD.ledger_exit_code({"distill": "FAILED boom"}) == 3
+
+
+def test_a_refused_refit_or_failed_policy_state_is_a_red_exit():
+    """Review 3 (S65) on #92: refit returns status REFUSED without raising
+    (too little data, a tuning failure). Beside LEARNED rules that used to exit
+    0, the sim cached the day as ok and plan_view kept reading stale weights."""
+    learned = {"distill": {"status": "LEARNED"}}
+    assert RD.ledger_exit_code({**learned, "reputation": "REFUSED"}) == 4
+    assert RD.ledger_exit_code({**learned, "reputation": None}) == 4
+    assert RD.ledger_exit_code({**learned, "reputation": "OK",
+                                "policy_state": "FAILED OSError: disk"}) == 5
+    assert RD.ledger_exit_code({**learned, "reputation": "OK",
+                                "policy_state": {"changed_since_last": []}}) == 0
+    # --no-refit: no reputation key at all is not a refit failure
+    assert RD.ledger_exit_code(learned) == 0
+
+
+def test_a_refused_refit_is_never_cached_as_ok_by_the_sim(monkeypatch, tmp_path):
+    from datetime import date
+    from types import SimpleNamespace
+
+    import scripts.sim_run as SR
+    from backend.services import forecast_reputation as FR
+    from backend.services import policy_state as PS
+    monkeypatch.setattr(FR, "refit", lambda today=None, **kw: {"status": "REFUSED",
+                                                               "reason": "tuning: thin"})
+    monkeypatch.setattr(RD, "distill_ledger", lambda as_of=None, write=True, **kw:
+                        {"status": "LEARNED", "n_rules_written": 2})
+    monkeypatch.setattr(PS, "refresh", lambda *a, **k: {"changed_since_last": []})
+    rc = RD.main(["--ledger"])
+    assert rc == 4
+    calls = []
+
+    def run(argv):
+        calls.append(argv)
+        return SimpleNamespace(returncode=rc, stdout="", stderr="")
+    day = date.today()
+    r1 = SR._daily_module_unit("distil", tmp_path, today=day, runner=run)
+    assert r1["status"] == "DEGRADED rc 4"
+    r2 = SR._daily_module_unit("distil", tmp_path, today=day, runner=run)
+    assert "skipped" not in r2 and len(calls) == 2

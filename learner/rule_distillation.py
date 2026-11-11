@@ -1696,7 +1696,7 @@ def distill_ledger(*, as_of: str | None = None, rows: Sequence[dict] | None = No
     `LEARN_DEGRADED` receipt naming the reason, never a silent heartbeat.
     """
     C = _cfg()
-    as_of = str(as_of or date.today().isoformat())[:10]
+    as_of = str(as_of or utc_today())[:10]
     rules_path = Path(rules_path or LEARNED_RULES)
     runs_path = Path(runs_path or LEARN_RUNS)
     led = Path(C.OPTIMUS_LEDGER_DIR)
@@ -1867,6 +1867,19 @@ def distill_ledger(*, as_of: str | None = None, rows: Sequence[dict] | None = No
     return _finish("LEARNED", None, new_rules)
 
 
+def utc_today() -> str:
+    """The default as-of: the UTC date, never the machine's local date.
+
+    2026-11-11: the PC runs at UTC+8 and the sim's `distil` unit fires between
+    15:00Z and 24:00Z, so `date.today()` was usually TOMORROW in UTC, and
+    `forecast_reputation.refit` (since 2026-10-15) refuses a future as-of. Every
+    such night lost its reputation refit while the distillation itself reported
+    LEARNED; the newest reputation receipt was 2026-10-27 and `policy_state.
+    plan_view` ignored the stale weights. The grader admits on UTC dates too.
+    """
+    return datetime.now(timezone.utc).date().isoformat()
+
+
 def night_learn(*, as_of: str | None = None, refit: bool = True,
                 write: bool = True) -> dict:
     """The one nightly entry point: reputation refit -> distil -> policy_state.
@@ -1875,7 +1888,7 @@ def night_learn(*, as_of: str | None = None, refit: bool = True,
     written from the newest receipt beats no policy file.
     """
     C = _cfg()
-    as_of = str(as_of or date.today().isoformat())[:10]
+    as_of = str(as_of or utc_today())[:10]
     out: dict[str, Any] = {"as_of": as_of}
     rep, rpath = None, None
     if refit:
@@ -1907,6 +1920,30 @@ def night_learn(*, as_of: str | None = None, refit: bool = True,
     return out
 
 
+def ledger_exit_code(res: dict) -> int:
+    """0 only when the distillation LEARNED, the refit (if asked) returned OK
+    and policy_state was written.
+
+    4 = the reputation refit did not return OK -- FAILED (raised) or a status
+        such as REFUSED returned without raising (review 3, S65: too little
+        data or a tuning failure exited 0 behind LEARNED rules, the sim cached
+        the day as ok and plan_view kept stale weights). Checked FIRST,
+        whatever the distillation did, so the next rota slot's "no new graded
+        rows" (rc 3) cannot overwrite it in the sim's unit cache. A run with
+        no refit asked (`--no-refit`, no `reputation` key) is not a failure.
+    5 = policy_state FAILED.
+    3 = the distillation wrote no rule (LEARN_DEGRADED, as before).
+    """
+    if "reputation" in res and str(res.get("reputation")) != "OK":
+        return 4
+    if str(res.get("policy_state") or "").startswith("FAILED"):
+        return 5
+    d = res.get("distill")
+    if not (isinstance(d, dict) and d.get("status") == "LEARNED"):
+        return 3
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--month", default=None)
@@ -1922,8 +1959,7 @@ def main(argv=None) -> int:
     if a.ledger:
         res = night_learn(as_of=a.as_of, refit=not a.no_refit)
         print(json.dumps(res, indent=1, default=str))
-        d = res.get("distill")
-        return 0 if isinstance(d, dict) and d.get("status") == "LEARNED" else 3
+        return ledger_exit_code(res)
     payload = M2_distill(smoke=a.smoke, run=a.run, month=a.month,
                          backend=a.backend)
     dest = (Path(a.out) if a.out else
