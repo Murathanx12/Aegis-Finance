@@ -62,7 +62,7 @@ verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
   (backend CI ~20 min/run, Codex PR churn). It is **public again**. **License changed MIT → All Rights
   Reserved** (`cd0b1d59`); vendored MIT code keeps its notices. Do not go private again without trimming CI.
   A self-hosted runner on a public repo is refused (fork PRs would run on the key-holding PC).
-- **Contest ends 2026-11-13** (`scripts/contest_calendar.py`); the blocker is converting `wlsemb.pdf` to CSV (CH-00).
+- **The contest is over for us** (shortlisted, not admitted; OD-1). **Since 2026-11-11:** Featherless is a declared, capped SECOND LLM provider for bulk typing (flag OFF; `AEGIS_LLM_PURPOSE_PROVIDER`), DeepSeek stays primary. CH-05 is code complete on main: scheduled jobs move to a fresh clone per release tag BESIDE this checkout (`aegis-runtime-<tag>`, `scripts/runtime_release.py`, `scripts/runtime_task.py`). **Never merge or pull main into this WIP checkout: main untracked 81 growing data files (#108) and the merge would delete them from live data.** A push to main touching `frontend/**` deploys the public frontend to Vercel.
 
 ## READ `docs/INDEX.md` FIRST (2026-08-28) — and the VISION file
 
@@ -384,6 +384,8 @@ execution drag · LLM spend and cost per gradeable output.
 failure shows it is necessary.
 
 ## THE LLM PROVIDER IS DEEPSEEK, AND IT IS THE ONLY ONE
+
+> **2026-11-11 amendment:** no longer the only one. Featherless (prepaid credit, per token) is a declared secondary for named bulk purposes, behind its own envelope (25 USD/month, 75 USD lifetime by default) and OFF until `AEGIS_LLM_PURPOSE_PROVIDER` names a purpose (#107). Everything below still holds for DeepSeek as the primary.
 
 > **2026-11-09 amendment:** `.env` also carries OpenAI-style names (`GTP_TOKEN`, `AAT_OPENAI`),
 > NVIDIA NIM and Featherless keys. None is wired into a production path (NVIDIA timed out 11-06;
