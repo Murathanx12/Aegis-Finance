@@ -204,7 +204,7 @@ def test_a_stop_file_runs_nothing_and_exits_zero(tmp_path):
 
 
 def test_a_logged_segment_writes_to_its_log_without_a_console(tmp_path):
-    plan, _ = _plan(tmp_path, ["--log", r"logs\x.log", "-m", "a"])
+    plan, _ = _plan(tmp_path, ["--log", os.path.join("logs", "x.log"), "-m", "a"])
     kws = []
     RT.run_plan(plan, popen=lambda argv, **kw: (kws.append(kw), FakeChild(0))[1])
     assert kws[0]["stdout"] is not None and kws[0]["stderr"] == subprocess.STDOUT
