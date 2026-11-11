@@ -79,12 +79,31 @@ def deep_deepseek() -> dict:
     if not key:
         return {"name": "deep:deepseek", "verdict": "UNKNOWN",
                 "detail": "DEEPSEEK_API_KEY absent", "proof": None}
-    body = json.dumps({"model": "deepseek-chat", "max_tokens": 16, "temperature": 0,
-                       "messages": [{"role": "user", "content": PING}]}).encode()
-    req = urllib.request.Request("https://api.deepseek.com/chat/completions", data=body,
+    from backend.services import llm_language as _lang
+    from backend.services import provider_budget as PB
+    # Two messages (the language pin as the system turn) so the probe can be
+    # reserved against the monthly host envelope (CH-05 R2) like any other call.
+    request = {"model": "deepseek-chat", "max_tokens": 16, "temperature": 0,
+               "messages": _lang.pin_messages([{"role": "user", "content": PING}])}
+    req = urllib.request.Request("https://api.deepseek.com/chat/completions",
+                                 data=json.dumps(request).encode(),
                                  headers={"Content-Type": "application/json",
                                           "Authorization": f"Bearer {key}"})
-    r, dt, err = _t(lambda: json.load(urllib.request.urlopen(req, timeout=90)))  # noqa: S310
+    refused: list[str] = []
+
+    def _call():
+        try:
+            return PB.guarded_send(
+                request, purpose="stack_health_deep",
+                send=lambda: json.load(urllib.request.urlopen(req, timeout=90)))[0]  # noqa: S310
+        except PB.BudgetRefused as exc:
+            refused.append(str(exc))
+            raise
+    r, dt, err = _t(_call)
+    if refused:
+        # not DEAD (nothing was asked) and not UNKNOWN: a REFUSED row exits 2
+        return {"name": "deep:deepseek", "verdict": "REFUSED", "detail": refused[0][:240],
+                "proof": "provider_budget envelope"}
     if err:
         return {"name": "deep:deepseek", "verdict": "DEAD", "detail": err, "proof": None}
     msg = r["choices"][0]["message"]["content"].strip()[:60]
@@ -105,7 +124,7 @@ def run(deep: bool = False, *, only: Optional[set] = None, allow_proc: bool = Tr
     if deep:
         rows += [deep_local_model(), deep_deepseek()]
     rc = SH.exit_code(rows)
-    red = [r["name"] for r in rows if r.get("verdict") in ("DEAD", "STALE")]
+    red = [r["name"] for r in rows if r.get("verdict") in ("DEAD", "STALE", "REFUSED")]
     return {"receipt": "stack_health", "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "deep": deep, "green": rc == 0, "red": red,
             "unknown": [r["name"] for r in rows if r.get("verdict") == "UNKNOWN"],

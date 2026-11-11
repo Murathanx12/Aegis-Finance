@@ -2908,16 +2908,20 @@ RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "40.0"))
 #: `python -m backend.services.provider_budget raise --cap <usd> --evidence ..`,
 #: for future months with this env var. Amounts are PEAK LIST estimates
 #: (conservative vs the billed balance), never billed dollars.
-#: SCOPE: the cap binds only DeepSeek calls through `provider_budget.attempt()`
-#: (`llm_analyzer._call_llm` / `call_named`). These call DeepSeek OUTSIDE it and
-#: are UNCAPPED by it (some have their own campaign budgets): services
-#: architecture_arena, copilot, leakage_probe, llm_research, llm_swarm,
-#: model_provider, optimus_specialists, why_moved; scripts book_factory,
-#: companyworld_extract, connection_check, era_replay_v2,
-#: n6b_fantasy_exams_round2, recall_canary_positive_control, stack_health
-#: (`provider_budget.UNCAPPED_DEEPSEEK_PATHS`; a new unguarded call site fails
-#: `test_deepseek_call_sites_are_guarded`).
+#: SCOPE: the cap binds DeepSeek calls through `provider_budget.attempt()`
+#: (`llm_analyzer._call_llm` / `call_named`, and since CH-05 R2 2026-11-11 every
+#: `guarded_create` / `guarded_send` caller: llm_swarm, model_provider,
+#: llm_research, why_moved, leakage_probe, book_factory, companyworld_extract,
+#: era_replay_v2, n6b_fantasy_exams_round2, recall_canary_positive_control,
+#: stack_health). Still UNCAPPED by it: architecture_arena, copilot,
+#: optimus_specialists (`provider_budget.UNCAPPED_DEEPSEEK_PATHS`; a new
+#: unguarded call site fails `test_deepseek_call_sites_are_guarded`).
 DEEPSEEK_MONTHLY_CAP_USD = float(os.getenv("AEGIS_DEEPSEEK_MONTHLY_CAP_USD", "15.0"))
+#: CH-05 R2 (ported from the runtime's 10-15 guard): wall-clock ceiling of the
+#: shared `llm_analyzer` DeepSeek client. The SDK default is 600 s, and a hung
+#: request holds its envelope reservation (and the job) for all of it. An
+#: evidence-mode call still sets its own 1..60 s timeout per request.
+DEEPSEEK_SDK_TIMEOUT_S = float(os.getenv("AEGIS_DEEPSEEK_SDK_TIMEOUT_S", "120.0"))
 #: A deferred settlement (`deepseek_local.unsettled.jsonl`, written when the
 #: envelope was busy) older than this many hours, by its own `deferred_utc`
 #: stamp, turns `provider_budget status` DEGRADED. Readers already count it in

@@ -1,12 +1,17 @@
 """Every LLM chat call site is either guarded, declared uncapped, or not DeepSeek.
 
 Review #88 R2 (2026-11-11): the "$15/month" envelope binds only the calls that
-go through `provider_budget.attempt()` -- `llm_analyzer`'s DeepSeek path. Other
-modules call DeepSeek directly. Routing them is not a one-line change (tools,
-multi-turn messages, `response_format`, raw HTTP), so they are DECLARED in
-`provider_budget.UNCAPPED_DEEPSEEK_PATHS` and named on the status line. This
-test fails when a NEW chat call site appears anywhere, or an existing file gains
-one, until it is routed through `attempt()` or declared here on purpose.
+go through `provider_budget.attempt()`. CH-05 R2 (2026-11-11) routed eleven more
+files through it (`guarded_create` for an OpenAI-SDK client -- the create call
+stays written at the call site, so this scan and the language contract still
+see it -- `guarded_send` for raw HTTP, or `llm_analyzer._budgeted_deepseek_create`,
+after which a script has no create of its own left and drops out of the scan).
+What still cannot be reserved (tools, a multi-turn transcript, an unpriced
+model, no output bound) is DECLARED in `provider_budget.UNCAPPED_DEEPSEEK_PATHS`
+and named on the status line. This test fails when a NEW chat call site appears
+anywhere, or an existing file gains one, until it is routed through `attempt()`
+or declared here on purpose; and it fails when a file declared GUARDED stops
+calling the envelope.
 
 A call site is a `<x>.chat.completions.create(...)` call, or a string constant
 containing `chat/completions` (raw HTTP). Docstrings are skipped (CLAUDE.md
@@ -23,17 +28,42 @@ ROOT = Path(__file__).resolve().parents[2]
 SCAN = ("backend", "scripts", "learner", "engine", "lab", "nn_lab", "ft_lab", "tools", "sdk",
         "desktop")
 
-#: The guarded file: its DeepSeek create goes through `attempt()` on the PC
-#: (`_budgeted_deepseek_create`); the others are the cloud branch of that same
-#: function (no host envelope off Windows, by design), NVIDIA, and local.
-GUARDED = {"backend/services/llm_analyzer.py": 4}
+#: Guarded files: their DeepSeek request goes through `attempt()` on the PC.
+#: The remaining counted sites in them are the cloud branch of the same helper
+#: (no host envelope off Windows, by design), other providers, local servers,
+#: or a `chat/completions` string used as a receipt label.
+GUARDED = {
+    # `_budgeted_deepseek_create` + the cloud branch, NVIDIA, local
+    "backend/services/llm_analyzer.py": 4,
+    "backend/services/llm_swarm.py": 1,                # guarded_create (IIF-1 path)
+    "backend/services/why_moved.py": 1,                # guarded_create
+    "backend/services/leakage_probe.py": 1,            # guarded_create
+    "scripts/companyworld_extract.py": 1,              # guarded_create
+    # the DeepSeek decider via guarded_create; the OpenAI gpt-5-nano rewriter
+    "scripts/era_replay_v2.py": 2,
+    "backend/services/llm_research.py": 1,             # raw HTTP via guarded_send
+    "backend/services/model_provider.py": 1,           # deepseek via guarded_send; others plain
+    "scripts/recall_canary_positive_control.py": 1,    # raw HTTP via guarded_send
+    # the deep DeepSeek probe via guarded_send; the local probe and two receipt labels
+    "scripts/stack_health.py": 4,
+}
 
-#: Chat call sites that never reach DeepSeek (local servers on 127.0.0.1).
+#: Chat call sites that never reach DeepSeek (local servers on 127.0.0.1, or
+#: another provider).
 NOT_DEEPSEEK = {
     "backend/services/beta_v1_news_runtime.py": 1,     # 127.0.0.1 passive local route
     "scripts/night_l4_qwen3_measure.py": 1,            # local qwen3 server
     "scripts/fiction_backtest.py": 1,                  # llm_analyzer._get_local_client()
+    # its DeepSeek call is `_budgeted_deepseek_create` (no create left); this is
+    # the local llama-server request (an f-string with a literal inside)
+    "scripts/book_factory.py": 2,
+    # DeepSeek is probed at GET /user/balance only; the chat probes are NVIDIA,
+    # the HF router, OpenAI and Featherless
+    "scripts/connection_check.py": 7,
 }
+
+#: The names that put a request inside the envelope.
+ENVELOPE_CALLS = {"attempt", "guarded_send", "guarded_create", "_budgeted_deepseek_create"}
 
 
 def _docstring_ids(tree: ast.AST) -> set[int]:
@@ -87,21 +117,9 @@ def _scan() -> dict[str, int]:
 
 #: Pinned site counts for the declared-uncapped files (count grows => red).
 UNCAPPED_COUNTS = {
-    "backend/services/architecture_arena.py": 1,
-    "backend/services/copilot.py": 2,
-    "backend/services/leakage_probe.py": 1,
-    "backend/services/llm_research.py": 1,
-    "backend/services/llm_swarm.py": 1,
-    "backend/services/model_provider.py": 1,
-    "backend/services/optimus_specialists.py": 1,
-    "backend/services/why_moved.py": 1,
-    "scripts/book_factory.py": 3,                  # incl. one local-server site
-    "scripts/companyworld_extract.py": 1,
-    "scripts/connection_check.py": 7,              # incl. HF/OpenAI probes
-    "scripts/era_replay_v2.py": 2,
-    "scripts/n6b_fantasy_exams_round2.py": 1,
-    "scripts/recall_canary_positive_control.py": 1,
-    "scripts/stack_health.py": 4,                  # incl. local-server probes
+    "backend/services/architecture_arena.py": 1,   # multi-turn; v4-pro arm unpriced
+    "backend/services/copilot.py": 2,              # tools, history, no max_tokens
+    "backend/services/optimus_specialists.py": 1,  # no max_tokens
 }
 
 
@@ -117,6 +135,25 @@ def test_no_unclassified_chat_call_site():
 
 def test_uncapped_declaration_matches_the_module_constant():
     assert set(PB.UNCAPPED_DEEPSEEK_PATHS) == set(UNCAPPED_COUNTS)
+
+
+def _calls_named(path: Path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8-sig"))
+    out = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            f = node.func
+            out.add(f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", ""))
+    return out
+
+
+def test_every_guarded_file_still_calls_the_envelope():
+    """A GUARDED count is only a number; this checks the claim behind it (and
+    for the files that dropped out of the scan when they were routed)."""
+    routed = ("scripts/n6b_fantasy_exams_round2.py", "scripts/book_factory.py")
+    missing = [f for f in (*GUARDED, *routed)
+               if not _calls_named(ROOT / f) & ENVELOPE_CALLS]
+    assert not missing, f"declared guarded but no envelope call found: {missing}"
 
 
 def test_the_scanner_skips_docstrings_and_sees_raw_http(tmp_path):

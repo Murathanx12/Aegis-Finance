@@ -82,6 +82,7 @@ except Exception:                                              # noqa: BLE001
     pass
 
 from backend.services import llm_telemetry                     # noqa: E402
+from backend.services import provider_budget as PB             # noqa: E402
 from backend.services.research_budget import (                 # noqa: E402
     ResearchBudgetExhausted, require)
 
@@ -579,12 +580,21 @@ def fetch_and_extract(row: dict, cli, since: str) -> dict:
         _budget_ok(since)
         t0 = time.perf_counter()
         try:
-            resp = cli.chat.completions.create(
+            # CH-05 R2: reserved against the monthly host DeepSeek envelope.
+            body = dict(
                 model=EXTRACT_MODEL, temperature=EXTRACT_TEMPERATURE,
                 max_tokens=EXTRACT_MAX_TOKENS,
                 response_format={"type": "json_object"},
                 messages=[{"role": "system", "content": SYSTEM},
                           {"role": "user", "content": user}])
+            resp, _accounting = PB.guarded_create(
+                cli, body, purpose="companyworld_edges",
+                send=lambda c: c.chat.completions.create(**body))
+        except PB.BudgetRefused as exc:
+            # nothing was sent; the envelope's refusal halts every worker
+            with _LOCK:
+                _STATE["halted"] = str(exc)
+            raise ResearchBudgetExhausted(str(exc)) from exc
         except Exception as exc:                               # noqa: BLE001
             last_err = f"{type(exc).__name__}: {str(exc)[:160]}"
             time.sleep(1.5 * (attempt + 1))
@@ -1013,7 +1023,9 @@ def _finish(recs, a, t_start, wl_report, halted, bal0, spent_here):
     p = RECEIPT_DIR / f"W4b_companyworld_extract_{a.tag}.json"
     p.write_text(json.dumps(receipt, indent=2, default=str), encoding="utf-8")
     print(f"receipt -> {p}", flush=True)
-    return 0
+    # A halted run (a budget, a ceiling, or the DeepSeek envelope refusing) is
+    # red: the receipt says why, and the exit code must not say "done".
+    return 2 if halted else 0
 
 
 if __name__ == "__main__":

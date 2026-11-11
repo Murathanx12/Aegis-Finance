@@ -787,6 +787,7 @@ def call_llm(system: str, user: str, *, client=None,
     default is how "chat vs reasoner" became a comparison of v4-flash with
     itself.
     """
+    from backend.services import provider_budget as PB
     from backend.services import research_budget
     from backend.services.llm_telemetry import extract_usage
 
@@ -809,7 +810,13 @@ def call_llm(system: str, user: str, *, client=None,
                                       {"role": "user", "content": user}]}
             if not thinking:
                 kw["extra_body"] = {"thinking": {"type": "disabled"}}
-            resp = cli.chat.completions.create(**kw)
+            # CH-05 R2: reserved against the monthly host envelope first.
+            resp, _accounting = PB.guarded_create(
+                cli, kw, purpose=CAMPAIGN,
+                send=lambda c: c.chat.completions.create(**kw))
+        except PB.BudgetRefused as exc:
+            # the envelope's refusal is a campaign stop, like the governor's
+            raise ResearchBudgetExhausted(str(exc)) from exc
         except ResearchBudgetExhausted:
             raise
         except Exception as exc:                               # noqa: BLE001

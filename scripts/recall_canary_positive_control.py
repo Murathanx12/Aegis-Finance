@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv  # noqa: E402
 
 from backend.services import leakage_probe as lp  # noqa: E402
+from backend.services import provider_budget as PB  # noqa: E402
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 KEY = os.getenv("DEEPSEEK_API_KEY")
@@ -73,7 +74,10 @@ def ask(system: str, user: str) -> dict:
         data=json.dumps(body).encode(),
         headers={"Authorization": f"Bearer {KEY}",
                  "Content-Type": "application/json"})
-    r = json.load(urllib.request.urlopen(req, timeout=120))
+    # CH-05 R2: reserved against the monthly host DeepSeek envelope first.
+    r, _accounting = PB.guarded_send(
+        body, purpose="recall_canary_positive_control",
+        send=lambda: json.load(urllib.request.urlopen(req, timeout=120)))
     return {"served_model": r.get("model"),
             "text": r["choices"][0]["message"].get("content", ""),
             "usage": r.get("usage")}
@@ -87,6 +91,9 @@ def main() -> None:
         system, user = lp.recall_canary(ticker, as_of, company)
         try:
             resp = ask(system, user)
+        except PB.BudgetRefused as exc:
+            # nothing was sent: a refusal stops the control red, never a row
+            raise SystemExit(f"REFUSED: {exc}") from exc
         except Exception as exc:                      # noqa: BLE001
             rows.append({"ticker": ticker, "as_of": as_of, "error": str(exc)[:120]})
             continue

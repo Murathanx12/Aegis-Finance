@@ -619,13 +619,19 @@ def _ask(system: str, user: str, *, purpose: str, agent_meta: dict) -> tuple[dic
         return None, {"refused": "no_deepseek_client"}
     t0 = time.perf_counter()
     try:
-        resp = client.chat.completions.create(
+        # CH-05 R2: `llm_analyzer`'s envelope path (monthly host DeepSeek cap).
+        resp, _accounting = LA._budgeted_deepseek_create(
+            client, purpose=purpose, production_budget=False,
             model=LA._DEEPSEEK_MODEL,
             messages=[{"role": "system", "content": LANG.pin(system)},
                       {"role": "user", "content": user}],
             max_tokens=400, temperature=0.1,
             response_format={"type": "json_object"})
     except Exception as e:                                      # noqa: BLE001
+        if getattr(e, "no_wire", False):
+            # the envelope refused before dispatch: the run FAILS (main writes
+            # a FAILED receipt and re-raises), never a refusal row and rc 0
+            raise
         if LA._is_billing_error(e):
             LA._trip_breaker(e)
         return None, {"error": f"{type(e).__name__}: {str(e)[:200]}"}

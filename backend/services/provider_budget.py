@@ -18,9 +18,14 @@ only ever stricter. An explicit `AEGIS_DEEPSEEK_BUDGET_PATH` (or
 `budget_path=`) names a FIXED envelope with the old contract: attended
 `initialize` only, lifetime cap.
 
-SCOPE (review #88 R2): this envelope binds the DeepSeek calls that go through
-`attempt()` -- `llm_analyzer._call_llm` / `call_named` and their callers. The
-DeepSeek call sites listed in `UNCAPPED_DEEPSEEK_PATHS` call the provider
+SCOPE (review #88 R2; widened by CH-05 R2, 2026-11-11): this envelope binds
+the DeepSeek calls that go through `attempt()` -- `llm_analyzer._call_llm` /
+`call_named` and their callers, and every caller of `guarded_create()` (an
+OpenAI-SDK client) or `guarded_send()` (raw HTTP): `llm_swarm`,
+`model_provider`, `llm_research`, `why_moved`, `leakage_probe`, and the
+scripts `book_factory`, `companyworld_extract`, `era_replay_v2`,
+`n6b_fantasy_exams_round2`, `recall_canary_positive_control`, `stack_health`.
+The DeepSeek call sites listed in `UNCAPPED_DEEPSEEK_PATHS` call the provider
 outside it and are NOT capped; `status_line()` says so, and
 `test_deepseek_call_sites_are_guarded` fails when a new one appears.
 
@@ -72,22 +77,17 @@ CLI = "python -m backend.services.provider_budget"
 #: 2026-11-11). Their spend is outside the monthly cap. Pinned by
 #: `backend/tests/test_deepseek_call_sites_are_guarded.py`; shrink it by
 #: routing a caller through `attempt()`, never grow it silently.
+#: CH-05 R2 (2026-11-11) routed eleven and reclassified one (connection_check
+#: probes DeepSeek at /user/balance only). What is left cannot be reserved by
+#: this envelope without changing what the call sends:
+#:   architecture_arena -- a multi-turn transcript, and a v4-pro arm that has no
+#:                         price authority here;
+#:   copilot            -- tool calls, a growing history and no max_tokens;
+#:   optimus_specialists -- no max_tokens, so no output bound to reserve.
 UNCAPPED_DEEPSEEK_PATHS = (
     "backend/services/architecture_arena.py",
     "backend/services/copilot.py",
-    "backend/services/leakage_probe.py",
-    "backend/services/llm_research.py",
-    "backend/services/llm_swarm.py",
-    "backend/services/model_provider.py",
     "backend/services/optimus_specialists.py",
-    "backend/services/why_moved.py",
-    "scripts/book_factory.py",
-    "scripts/companyworld_extract.py",
-    "scripts/connection_check.py",
-    "scripts/era_replay_v2.py",
-    "scripts/n6b_fantasy_exams_round2.py",
-    "scripts/recall_canary_positive_control.py",
-    "scripts/stack_health.py",
 )
 
 
@@ -587,7 +587,7 @@ def status_line(*, budget_path=None):
         age = "age unknown" if age_h is None else f"oldest {age_h:.1f} h"
         side = (f"; {pending} deferred settlement(s) pending in the sidecar ({age}, limit "
                 f"{limit_h:g} h), counted in the held amount")
-    scope = (f"; covers llm_analyzer only, {len(UNCAPPED_DEEPSEEK_PATHS)} other DeepSeek "
+    scope = (f"; covers calls routed through attempt(), {len(UNCAPPED_DEEPSEEK_PATHS)} other DeepSeek "
              f"call-site files are UNCAPPED (`{CLI} status` lists them)"
              if UNCAPPED_DEEPSEEK_PATHS else "")
     return (f"{head}: {s.get('month') or s.get('session_id')} held ${held:.4f} of ${cap:.2f} cap "
@@ -770,14 +770,66 @@ def preflight_snapshot():
     return _peek(path())
 
 
+#: The request keys a reservation can price (see `attempt`).
+_ADMITTED_OPTIONS = frozenset({"model", "messages", "max_tokens", "temperature",
+                               "extra_body", "response_format"})
+_JSON_OBJECT = {"type": "json_object"}
+#: The base URL a caller that names none is assumed to speak to.
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+
+
+def guarded_send(body, *, purpose, send, base_url=DEEPSEEK_BASE_URL, production_cap=None):
+    """One DeepSeek request through the envelope on a host that requires it.
+
+    Returns `(response, accounting)`. On a host where the envelope is not
+    required (Railway/Linux without `AEGIS_DEEPSEEK_HOST_ENVELOPE=1`) it is the
+    plain `send()` and `accounting` is None, exactly like
+    `llm_analyzer._budgeted_deepseek_create`. A refusal raises `BudgetRefused`
+    with `no_wire = True` and nothing was sent; the caller must make it a red,
+    non-zero outcome, never an empty success.
+    """
+    if not host_envelope_required():
+        return send(), None
+    return attempt(body, base_url=base_url, purpose=purpose, send=send,
+                   production_cap=production_cap)
+
+
+def guarded_create(client, body, *, purpose, send, production_cap=None):
+    """One OpenAI-SDK DeepSeek request through the envelope.
+
+    `send(transport)` is the caller's own `transport.chat.completions.create(
+    **body)`. It stays written AT THE CALL SITE on purpose: the language
+    contract (`llm_language.DIRECT_CALL_SITES`) and the call-site guard find
+    call sites by that expression, and a helper that hid it would hide the
+    module from both. On the envelope host `transport` is the client with SDK
+    retries disabled -- an SDK retry is a second billable request inside ONE
+    reservation; callers keep their own retry loops, and each of their retries
+    is a new reservation. Elsewhere it is the client unchanged. Returns
+    `(response, accounting)`; see `guarded_send`.
+    """
+    if not host_envelope_required():
+        return send(client), None
+    with_options = getattr(client, "with_options", None)
+    transport = with_options(max_retries=0) if callable(with_options) else client
+    return attempt(body, base_url=str(getattr(client, "base_url", None) or DEEPSEEK_BASE_URL),
+                   purpose=purpose, production_cap=production_cap,
+                   send=lambda: send(transport))
+
+
 def attempt(body, *, base_url, purpose, send, production_cap=None):
     """Reserve/settle one existing transport invocation; no retries or routing.
 
     `send` is the caller's existing SDK/requests/urllib operation. It must raise
     on a transport/HTTP failure and return the raw provider object or JSON dict.
+
+    `response_format={"type": "json_object"}` is admitted (CH-05 R2): JSON mode
+    changes the reply's form, not what is billed -- settlement prices the
+    returned usage, and the input bound in `quote()` already carries 1024
+    tokens of protocol overhead. Any other `response_format` is refused.
     """
-    if (set(body) - {"model", "messages", "max_tokens", "temperature", "extra_body"}
-            or body.get("extra_body", {}) not in ({}, {"thinking": {"type": "disabled"}})):
+    if (set(body) - _ADMITTED_OPTIONS
+            or body.get("extra_body", {}) not in ({}, {"thinking": {"type": "disabled"}})
+            or body.get("response_format", _JSON_OBJECT) != _JSON_OBJECT):
         exc = BudgetRefused("unsupported billable request options")
         exc.no_wire = True
         raise exc

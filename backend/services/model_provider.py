@@ -128,6 +128,16 @@ class ProviderRefusal(RuntimeError):
     """The provider was not configured, or its reply could not be trusted."""
 
 
+class BudgetRefusal(ProviderRefusal):
+    """The monthly DeepSeek envelope refused BEFORE dispatch; nothing was sent.
+
+    A `ProviderRefusal`, so every caller's existing "no answer" contract still
+    holds, but its own class and its message is the envelope's one line (spend
+    so far, cap, what to do), so it is never read as "the provider was down".
+    """
+    budget_refused = True
+
+
 class LanguageRefused(ProviderRefusal):
     """The reply came back and was not English. DISCARDED, never repaired.
 
@@ -151,6 +161,9 @@ class Reply:
     latency_s: float
     prompt_tokens: int | None
     completion_tokens: int | None
+    #: The host DeepSeek envelope's settlement (`provider_budget`); None for
+    #: other providers and where the envelope is not required (cloud).
+    budget_accounting: dict | None = None
 
     @property
     def total_tokens(self) -> int | None:
@@ -220,9 +233,22 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
         spec["base_url"].rstrip("/") + "/chat/completions", method="POST",
         data=json.dumps(body).encode(), headers=headers)
     t0 = time.monotonic()
-    try:
+    accounting = None
+
+    def send():
         with urllib.request.urlopen(req, timeout=timeout) as r:
-            payload = json.loads(r.read().decode())
+            return json.loads(r.read().decode())
+    from backend.services import provider_budget as PB
+    try:
+        if name == "deepseek":
+            # CH-05 R2: DeepSeek is reserved against the monthly host envelope
+            # before dispatch; nothing is sent when it refuses.
+            payload, accounting = PB.guarded_send(body, base_url=spec["base_url"],
+                                                  purpose=purpose, send=send)
+        else:
+            payload = send()
+    except PB.BudgetRefused as exc:
+        raise BudgetRefusal(str(exc)) from exc
     except urllib.error.HTTPError as exc:
         raise ProviderRefusal(f"{name} HTTP {exc.code}: {exc.read().decode()[:300]}") from exc
     except Exception as exc:  # noqa: BLE001 -- transport failures are the provider's state
@@ -248,7 +274,8 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
     usage = payload.get("usage") or {}
     reply = Reply(provider=name, model=body["model"], text=text, latency_s=round(dt, 3),
                   prompt_tokens=usage.get("prompt_tokens"),
-                  completion_tokens=usage.get("completion_tokens"))
+                  completion_tokens=usage.get("completion_tokens"),
+                  budget_accounting=accounting)
     # THE RESPONSE HALF OF THE LANGUAGE CONTRACT, applied here and nowhere else.
     # A pin is a REQUEST; a model that ignores it is precisely the failure being
     # guarded, so a wire path that pins and then trusts whatever came back has
