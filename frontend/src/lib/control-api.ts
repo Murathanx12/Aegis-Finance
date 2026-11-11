@@ -1090,6 +1090,101 @@ export interface ProtectFirstResponse {
   limits?: string;
 }
 
+// ---------------------------------------------------------------- the reader
+// `backend/services/reader_control.py` via `/api/control/reader*` (CH-22b).
+// The one switch for the web reader; it replaces AegisReaderControl.exe.
+
+export interface ReaderStamp {
+  utc: string | null;
+  age_s: number | null;
+  freshness: "FRESH" | "STALE" | "FUTURE" | "UNDATEABLE" | "MISSING";
+}
+
+export interface ReaderMarker {
+  name: string;
+  present: boolean;
+  owner: "absent" | "this_app" | "retired_controller" | "supervisor_repair" | "other";
+  content: string | null;
+  written_utc: string | null;
+}
+
+export interface ReaderStatus {
+  utc: string;
+  desired: "ON" | "OFF";
+  actual: string;
+  actual_words: string;
+  what_will_happen: string;
+  stop_marker: ReaderMarker;
+  pool_stop_marker: ReaderMarker;
+  supervisor: {
+    readable: boolean;
+    why?: string | null;
+    state?: string | null;
+    stamp?: ReaderStamp;
+    freshness: string;
+    pages_ok_10m?: number | null;
+    pages_ok_60m?: number | null;
+    classes_60m_by_host?: Record<string, Record<string, number>>;
+    current_hosts?: string[];
+    next_action?: string | null;
+    last_error?: string | null;
+    restarts?: number | null;
+    free_ram_gb?: number | null;
+    mode?: string | null;
+    pool_pid_as_reported?: number | null;
+  };
+  supervisor_log: {
+    readable: boolean;
+    supervisor_pid_as_logged?: number | null;
+    started?: ReaderStamp;
+    until?: string | null;
+    ended?: ReaderStamp;
+    ended_why?: string | null;
+  };
+  pool: {
+    status: { readable: boolean; stamp?: ReaderStamp; freshness: string;
+              pid_as_reported?: number | null; state?: string | null };
+    startup: { readable: boolean; stamp?: ReaderStamp; freshness: string;
+               pid_as_reported?: number | null; state?: string | null; phase?: string | null };
+  };
+  pages: {
+    readable: boolean;
+    last_ok: ReaderStamp;
+    ok_10m?: number;
+    ok_60m?: number;
+    ok_60m_by_host?: Record<string, number>;
+    invalid_rows?: number;
+  };
+  disk: { free_gb: number | null; floor_gb: number | null; below_floor: boolean | null };
+  gateway: { host?: string; port?: number; answers: boolean | null };
+  chrome: { host?: string; port?: number; answers: boolean | null };
+  handoff_present: boolean;
+  iif_quiet_now: boolean | null;
+  retired_controller: { actual_state: string | null; last_error: string | null } | null;
+  fresh_limit_s: number;
+}
+
+export interface ReaderOnResponse {
+  ok: boolean;
+  action: string;
+  detail: string;
+  decision: Record<string, unknown>;
+  status: ReaderStatus | null;
+}
+
+export interface ReaderOffResponse {
+  ok: boolean;
+  result: "STOP_REQUESTED" | "STOPPED" | "HELD_BY_OTHER" | "CANNOT_DETERMINE";
+  wrote_marker?: boolean;
+  detail: string;
+  status?: ReaderStatus;
+}
+
+export const getReader = () => controlFetch<ReaderStatus>("/reader");
+/** The process scan inside `ensure_reader` can take up to a minute. */
+export const readerOn = () => post<ReaderOnResponse>("/reader/on", undefined, 120_000);
+export const readerOff = () => post<ReaderOffResponse>("/reader/off", undefined, 30_000);
+
 export const getQuestionnaire = () =>
   controlFetch<QuestionnaireResponse>("/agency/questionnaire");
 export const getAgencyReview = (day?: string) =>

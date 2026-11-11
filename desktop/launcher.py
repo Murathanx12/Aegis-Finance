@@ -388,11 +388,17 @@ def _job_object():
         if not h:
             return None, {"bound": False, "reason": "CreateJobObject failed"}
         info = _EXT()
-        info.BasicLimitInformation.LimitFlags = 0x2000   # KILL_ON_JOB_CLOSE
+        # KILL_ON_JOB_CLOSE (0x2000) | BREAKAWAY_OK (0x800). BREAKAWAY_OK lets
+        # ONE kind of child leave: a process created with
+        # CREATE_BREAKAWAY_FROM_JOB. Only the reader switch passes that flag
+        # (`reader_control.launch_from_app`, CH-22b), because the reader must
+        # outlive the window; every other child is still killed with the app.
+        info.BasicLimitInformation.LimitFlags = 0x2000 | 0x800
         if not k32.SetInformationJobObject(h, 9, ctypes.byref(info),
                                            ctypes.sizeof(info)):
             return None, {"bound": False, "reason": "SetInformationJobObject failed"}
-        return h, {"bound": True, "flag": "JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE"}
+        return h, {"bound": True,
+                   "flag": "JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE|JOB_OBJECT_LIMIT_BREAKAWAY_OK"}
     except Exception as exc:                                     # noqa: BLE001
         return None, {"bound": False, "reason": f"{type(exc).__name__}: {exc}"}
 

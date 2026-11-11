@@ -5740,6 +5740,18 @@ READER_BUDGET_LANE_DAY_MULT = 1.6
 OFFICIAL_SOURCES_ENABLED = True
 OFFICIAL_SOURCES_EVERY_S = 900.0
 OFFICIAL_COOL_S = 86400.0
+# ── READER CONTROL INSIDE THE DESKTOP APP (CH-22b, 2026-11-11) ───────────────
+# `backend/services/reader_control.py` + `/api/control/reader*`: the one ON/OFF
+# switch for the web reader (it replaces the retired AegisReaderControl.exe).
+#: a status stamp (reader_status.json, pool status/startup) older than this is
+#: STALE; the supervisor rewrites its status every 60 s tick
+READER_CONTROL_FRESH_S = 180.0
+#: after this app launched a supervisor, a second ON inside this window reports
+#: "starting" instead of launching again (the process scan only sees the python
+#: child a moment after cmd.exe starts it)
+READER_CONTROL_LAUNCH_COOLDOWN_S = 120.0
+#: bounded tail of page_log.jsonl read for the last successful page
+READER_CONTROL_PAGE_TAIL_BYTES = 512 * 1024
 
 # ── THE ACADEMIC LANE (Q12, 2026-10-07) ──────────────────────────────────────
 # `docs/research_notes/2026-10-07/research_instruments_2026-10-07.md`: a

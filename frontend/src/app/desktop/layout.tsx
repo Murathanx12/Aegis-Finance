@@ -6,10 +6,12 @@ import {
   Activity,
   BookOpen,
   ClipboardList,
+  Gauge,
   Globe,
   LayoutDashboard,
   MessageSquare,
   Moon,
+  Newspaper,
 } from "lucide-react";
 import { DesktopGuide } from "@/components/desktop/guide";
 import { cn } from "@/lib/utils";
@@ -37,6 +39,9 @@ const TABS = [
   // no idea what the three options are options over.
   { href: "/desktop/agency", label: "Agency", icon: ClipboardList },
   { href: "/desktop/ask", label: "Ask Aegis", icon: MessageSquare },
+  // CH-22b (2026-11-11): the web reader's one ON/OFF switch. It replaced the
+  // separate "Aegis Reader" program: one controller, inside this app.
+  { href: "/desktop/reader", label: "Reader", icon: Newspaper },
 ];
 
 export default function DesktopLayout({ children }: { children: React.ReactNode }) {
@@ -76,6 +81,16 @@ export default function DesktopLayout({ children }: { children: React.ReactNode 
             </Link>
           );
         })}
+        {/* The systems dashboard is a backend-rendered page (`/system-status`,
+            CH-22a), not a route of this export, so it is a plain link: a
+            client-side <Link> would look for it in the static build and 404. */}
+        <a
+          href="/system-status"
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+        >
+          <Gauge className="size-3.5" />
+          System status
+        </a>
         {/* The first-run guide, and the only way back to it. A dialog that can
             be seen exactly once is a dialog nobody can re-read. */}
         <div className="ml-auto">
