@@ -410,7 +410,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--serve", action="store_true",
                     help="start everything and KEEP SERVING, no window -- for verifying a "
                          "packaged build, or for running the engine on a machine with no display")
-    ap.add_argument("--page", default="/desktop", help="path to open in the window")
+    ap.add_argument("--page", default="/system-status",
+                    help="path to open in the window (default: the systems dashboard; /desktop is the lists)")
     a = ap.parse_args(argv)
 
     t0 = time.time()

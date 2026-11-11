@@ -6257,3 +6257,40 @@ LICENSED_DATA_MAX_AGE_DAYS: dict = {
 }
 #: A kind not listed above gets this shelf life.
 LICENSED_DATA_DEFAULT_MAX_AGE_DAYS = 120
+
+
+# -- CH-22a (2026-11-11): the systems dashboard's per-row shelf lives -------------
+#: `scripts/system_status.py` compares every date a row prints against its limit
+#: here (hours). Past the limit the row is DEGRADED; past `SYSTEM_STATUS_DOWN_FACTOR`
+#: times the limit it is DOWN. A row whose date cannot be read is UNKNOWN, never OK.
+SYSTEM_STATUS_LIMITS_H = {
+    "deepseek_envelope": 72,      # last DeepSeek call recorded in the envelope
+    "world_digest": 36,
+    "learner": 36,
+    "reputation_refit": 14 * 24,
+    "iif1_night": 72,
+    "hyp_lab": 7 * 24,
+    "universe_graph": 48,
+    "funnel": 10 * 24,            # == investment_committee.FUNNEL_STALE_DAYS
+    "bars:prices_2025_26": 4 * 24,  # a Friday close read on Monday
+    "bars:prices_deep": 45 * 24,    # a monthly panel
+    "pc_plan": 3 * 24,
+    "paper_accounts": 3 * 24,
+    "nn_lab": 14 * 24,
+    "night_factory": 3 * 24,
+    "lessons": 7 * 24,
+    "status_receipt": 1,          # the dashboard's own receipt
+}
+SYSTEM_STATUS_DOWN_FACTOR = 3
+#: A row is only a failure to DETERMINE (exit 3) when it is required. Optional rows
+#: are rows whose producer does not exist yet; flip one here when its chunk lands.
+SYSTEM_STATUS_OPTIONAL_ROWS = ("universe_graph",)
+#: Scheduled tasks that are known one-shots (listed apart, not counted in the header).
+SYSTEM_STATUS_ONE_SHOT_TASK_PATTERNS = (r"^AegisReader(Clean|Recovery|PaperHandoff)-", r"^AegisPaperHandoff-", r"^Aegis\w*\d{8}$")
+#: Free RAM below this (GB) is DEGRADED, below the second is DOWN.
+SYSTEM_STATUS_RAM_DEGRADED_GB = 3.0
+SYSTEM_STATUS_RAM_DOWN_GB = 1.0
+#: Machine uptime above this many days is DEGRADED (the PC has to be awake AND healthy).
+SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
+#: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
+SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8

@@ -528,3 +528,6 @@ backend/data/optimus/one_event/
 # OD-2 (2026-11-10): the PC DeepSeek envelopes are a host spend ledger, never committed
 backend/data/optimus/session_budget/deepseek_local*.json
 backend/data/optimus/session_budget/deepseek_local*.json.lock
+
+# CH-22a: the systems dashboard receipt and page (local only, regenerated)
+backend/data/optimus/system_status/
