@@ -2918,6 +2918,11 @@ RESEARCH_LLM_MAX_USD = float(os.getenv("AEGIS_RESEARCH_LLM_MAX_USD", "40.0"))
 #: (`provider_budget.UNCAPPED_DEEPSEEK_PATHS`; a new unguarded call site fails
 #: `test_deepseek_call_sites_are_guarded`).
 DEEPSEEK_MONTHLY_CAP_USD = float(os.getenv("AEGIS_DEEPSEEK_MONTHLY_CAP_USD", "15.0"))
+#: A deferred settlement (`deepseek_local.unsettled.jsonl`, written when the
+#: envelope was busy) older than this many hours, by its own `deferred_utc`
+#: stamp, turns `provider_budget status` DEGRADED. Readers already count it in
+#: memory; this says nobody has reconciled the file (review 3, S65).
+DEEPSEEK_SIDECAR_STALE_HOURS = 12.0
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for
@@ -6060,6 +6065,13 @@ PC_SLEEVE_REVISION_FLOW_CONTRACT = (OPTIMUS_LEDGER_DIR / "paper_accounts" / "fle
 #: `scripts/sim_run.py` re-prices the acting book on every cycle: over the line,
 #: the ranker's EXPLOIT is scaled first, then this sleeve; nothing is widened.
 PC_SLEEVE_REVISION_FLOW_GROSS = 0.30
+#: `scripts.revision_flow_refresh` prints the frozen sleeve's membership age against this
+#: limit (STALE beyond it). 35 days: on survivor-free CRSP 2000-2024 an un-refreshed top-20
+#: net-raises list keeps ~half its month-1 edge in month 2 and little by month 3-4
+#: (night-backtests decay table, 2026-11-11). Not read by any policy-pinned source: the
+#: PC-PAPER epoch pins pc_sleeves/revision_flow/sim_run by bytes, so the u_plan line itself
+#: can only carry the age under a NEW epoch.
+REVISION_FLOW_REFRESH_MAX_AGE_DAYS = 35
 #: Bound (2) above: the sleeve's gross x |worst historical 21-session basket
 #: return, all names priced, longest panel on disk| may not exceed this fraction
 #: of equity. Same 0.10 as bound (1).
@@ -6149,6 +6161,27 @@ ONE_EVENT_FUNNEL_STALE_DAYS = 10
 #: REAL write time is a REPLAY row: written, sealed, and never graded as forward
 #: evidence (review 2 S65, B1: a back-dated --now must not mint a 'frozen' hit).
 ONE_EVENT_REPLAY_TOLERANCE_S = 300
+#: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
+#: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
+#: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
+#: every consumer of consensus LEVELS (dispersion, revisions) and refuses when it is absent;
+#: it never falls back to the split-adjusted `ibes_consensus_monthly*` file. Licensed data:
+#: never committed. Override with AEGIS_IBES_STATSUMU_PATH / AEGIS_IBES_STATSUMU_LINK_PATH.
+IBES_STATSUMU_EPSUS_PATH = Path(os.getenv(
+    "AEGIS_IBES_STATSUMU_PATH",
+    str(Path.home() / "Aegis module" / "data" / "wrds_raw" / "ibes" / "statsumu_epsus.parquet")))
+#: The IBES ticker -> CRSP permno link pulled beside it (`wrdsapps_link_crsp_ibes.ibcrsphist`).
+IBES_STATSUMU_LINK_PATH = Path(os.getenv(
+    "AEGIS_IBES_STATSUMU_LINK_PATH",
+    str(IBES_STATSUMU_EPSUS_PATH.parent / "ibcrsphist.parquet")))
+#: Link quality accepted, the same rule the adjusted `ibes_consensus_monthly` pull used.
+IBES_LINK_MAX_SCORE = 2
+#: IBES's own split-factor history (`ibes.adj`: ticker, spdates, adj). Unadjusted values on
+#: two dates straddling a split are on two share bases; a revision between them is
+#: re-based with the ratio of the two factors in effect, which is known once the split
+#: has happened. Absent -> revisions refuse, levels are unaffected.
+IBES_ADJ_FACTORS_PATH = Path(os.getenv(
+    "AEGIS_IBES_ADJ_PATH", str(OPTIMUS_LEDGER_DIR / "wrds" / "bulk" / "ibes__adj.parquet")))
 
 # ── UNIVERSE GRAPH v1 (ROADMAP §2a, CH-30) ─────────────────────────────────
 #: The universe as a typed, weighted graph (`backend/services/universe_graph.py`).
@@ -6294,3 +6327,33 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+# ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
+#: `scripts/night_investigator_news.py`: the investigator's own process and contract,
+#: plus typed world-digest rows about the name and its graph neighbours (context only),
+#: on the names the plain `investigator:evidence_v3` arm forecast the same UTC day.
+#: The trading plan does not read it (expected_return.NOT_READ_BY_DESIGN).
+INVESTIGATOR_NEWS_SPECIALIST = "investigator_news:evidence_v3"
+INVESTIGATOR_NEWS_PURPOSE = "investigator_news"
+#: Per-run spend ceiling (USD, host-envelope charge). The run stops BEFORE a call that
+#: could pass it (exit 3, PARTIAL). ~135 names x ~$0.0007 settled ~= $0.10; the margin
+#: covers the envelope's conservative peak-price settlement. Override: --budget-usd.
+INVESTIGATOR_NEWS_RUN_BUDGET_USD = 0.18
+#: Headroom kept per call when checking the run budget: a FLOOR; the provider
+#: guard's own quote for the packet is used when larger (review 3, S65).
+INVESTIGATOR_NEWS_PER_CALL_RESERVE_USD = 0.004
+#: A run whose refused + unpaired names exceed this share of the names it
+#: tried ends DEGRADED (rc 2), not DONE, even if some forecasts were written.
+INVESTIGATOR_NEWS_MAX_REFUSED_SHARE = 0.5
+INVESTIGATOR_NEWS_MAX_TOKENS = 700
+INVESTIGATOR_NEWS_TEMPERATURE = 0.3
+#: A typed row is a candidate when published within this many hours before the cutoff.
+INVESTIGATOR_NEWS_LOOKBACK_HOURS = 48
+INVESTIGATOR_NEWS_MAX_DIRECT_ROWS = 5
+INVESTIGATOR_NEWS_MAX_NEIGHBOURS = 5
+INVESTIGATOR_NEWS_MAX_NEIGHBOUR_ROWS = 3
+#: NOT registered in FORECAST_WRITERS and NOT in expected_return.NOT_READ_BY_DESIGN on
+#: purpose: both are pinned by the frozen PC policy epoch
+#: (`backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json`), so editing either
+#: would void the epoch. `forecast_writers()` therefore lists the prefix as
+#: "NOT READ (no reason registered)"; E[r] reads `investigator:` only, so the plan
+#: cannot read this arm. Registering the reason belongs with the next attended epoch.

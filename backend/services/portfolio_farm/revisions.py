@@ -9,9 +9,9 @@ market cap, dollar volume); `characteristics.py` added accounting ratios as the
 second source. This is the third, and it is different in kind from both: it is
 a record of ANALYST BEHAVIOUR, which is neither a price nor a filing.
 
-`ibes_consensus_monthly{,_early}` are on disk for BOTH eras with `permno`
-already joined — 3.68M early rows and 1.55M modern — so the whole 1993-2024
-replayable window is covered with no linkage step and no new pull.
+The unadjusted `statsumu_epsus` pull (1985-2026, US firms) covers the whole
+1993-2024 replayable window; `ibes_pit_consensus` links it to permno with the
+same rule the old adjusted pull used. See THE SHARE BASIS below.
 
 WHAT IT MEASURES, AND WHY NOT JUST `numup - numdown`
 ====================================================
@@ -62,21 +62,29 @@ character would improve every number here and raise nothing.
 shortly after, so a same-week decision is the one plausible place to be too
 early.
 
-THE SUMMARY-DATA CAVEAT, STATED BEFORE ANY RESULT
-=================================================
-This is the IBES *summary* (consensus) file, not the detail file. Two known
-properties of it are not repaired here and both are declared:
+THE SHARE BASIS (rewritten 2026-11-11 -- this was a look-ahead leak)
+=====================================================================
+Until 2026-11-11 this module read `ibes_consensus_monthly{,_early}`, the
+SPLIT-ADJUSTED summary: every historical value restated in today's shares and
+rounded to cents. A firm that later split 56x read meanest 0.01 / stdev 0.00
+years earlier, so `rev_dispersion` scored future splitters -- future winners --
+as unanimous and became the best signal ever measured here (+0.94%/mo vs twin,
+t 6.3; farm $193k vs a $24.6k market) on a leak. A first fix (PR #94) dropped
+rows whose ADJUSTED level was below $0.25; review 3 showed that guard is itself
+chosen on a future quantity (the later split factor) and selects against future
+splitters. Both are gone.
 
-  * **Split adjustment.** IBES restates historical per-share estimates for
-    later splits. A month-on-month change in `meanest` can therefore reflect a
-    split rather than a revision. `rev_breadth` is immune (it counts analysts);
-    `rev_magnitude` is not, and its plausibility bounds drop the worst of it.
-  * **Rounding.** Summary estimates are rounded, which adds noise to small
-    absolute EPS values. The `FLOOR` in the denominators is what stops that
-    noise becoming a signal.
+The consensus is now read AS QUOTED at `statpers` from the unadjusted
+`statsumu_epsus` pull through `backend.services.ibes_pit_consensus`, so
+`stdev`, `meanest` and their ratio are what a reader saw that month, on that
+month's share basis. `rev_magnitude` compares two months on ONE basis: the
+earlier value is restated in the later month's shares with IBES's own split
+factors (the split that HAPPENED in between, known at the later date). The
+definitions and the `FLOOR` are the original ones; only the input changed.
+`rev_breadth` counts analysts and was never affected.
 
-Neither is a reason to skip the join. Both are a reason not to quote
-`rev_magnitude` on its own without the census beside it.
+Still declared, not repaired: `meanest_prev` may describe the previous fiscal
+year across a FY1 roll (the module has always compared consecutive FY1 rows).
 """
 from __future__ import annotations
 
@@ -93,9 +101,9 @@ logger = logging.getLogger(__name__)
 
 WRDS_DIR = DATA_DIR / "optimus" / "wrds"
 
-#: Both eras. A signal that exists only after 2013 would silently change what
-#: a 1993-2024 run measures at the boundary — the same trap the finratio pair
-#: was built to avoid.
+#: The split-ADJUSTED files this module read until 2026-11-11. Kept only so
+#: `_load_adjusted_diagnostic` can reproduce the leak on purpose; `derive`
+#: refuses their rows (no `share_basis`).
 SOURCES = ("ibes_consensus_monthly_early", "ibes_consensus_monthly")
 
 #: FY1 annual EPS consensus. `fpi='1'` is the twelve-month-forward fiscal year,
@@ -160,25 +168,71 @@ class RevisionsUnavailable(RuntimeError):
     """The IBES consensus parquets this join needs are not on disk."""
 
 
+def _pit_paths(dir_=None):
+    """(statsumu, link, adj). `dir_`, when given, holds `statsumu_epsus.parquet`,
+    `ibcrsphist.parquet` and `ibes__adj.parquet` (tests and audits); otherwise
+    the config paths."""
+    from pathlib import Path
+
+    from backend.services import ibes_pit_consensus as PIT
+    if dir_ is not None:
+        d = Path(dir_)
+        return d / "statsumu_epsus.parquet", d / "ibcrsphist.parquet", d / "ibes__adj.parquet"
+    return PIT.statsumu_path(), PIT.link_path(), PIT.adj_factors_path()
+
+
 def available(dir_=None) -> tuple[str, ...]:
-    """Whether BOTH era files are present. Empty tuple when they are not."""
-    d = dir_ or WRDS_DIR
-    need = {"permno", "statpers", "measure", "fpi", "numest", "numup",
+    """Whether the as-quoted consensus, its link and the split factors are all
+    present. Empty tuple when any is not (no fallback to the adjusted file)."""
+    need = {"ticker", "statpers", "measure", "fpi", "numest", "numup",
             "numdown", "meanest", "stdev"}
-    for src in SOURCES:
-        p = d / f"{src}.parquet"
-        if not p.exists():
+    s, lk, adj = _pit_paths(dir_)
+    if not (s.exists() and lk.exists() and adj.exists()):
+        return ()
+    try:
+        import pyarrow.parquet as pq
+        if not need <= set(pq.ParquetFile(s).schema_arrow.names):
             return ()
-        try:
-            import pyarrow.parquet as pq
-            if not need <= set(pq.ParquetFile(p).schema_arrow.names):
-                return ()
-        except Exception:                                      # noqa: BLE001
-            return ()
+    except Exception:                                          # noqa: BLE001
+        return ()
     return AVAILABLE
 
 
+def _finish(df: pd.DataFrame) -> pd.DataFrame:
+    df = df[(df["measure"].astype(str) == MEASURE) & (df["fpi"].astype(str) == FPI)]
+    df = df.dropna(subset=["permno", "statpers", "numest"])
+    df = df[df["numest"] >= MIN_ESTIMATES].copy()
+    df["statpers"] = pd.to_datetime(df["statpers"]).dt.strftime("%Y-%m-%d")
+    df = df.sort_values(["permno", "statpers"], kind="mergesort")
+    # A duplicated (permno, statpers) is a restatement; the later row is what
+    # was on the tape at that stamp.
+    return df.drop_duplicates(["permno", "statpers"], keep="last")
+
+
 def _load_raw(dir_=None) -> pd.DataFrame:
+    """The FY1 EPS consensus AS QUOTED at statpers, with `adj_factor` and
+    `share_basis`. Refuses when the unadjusted file, its link or the split
+    factors are absent -- never a fallback to the split-adjusted file."""
+    from backend.services import ibes_pit_consensus as PIT
+    s, lk, adj = _pit_paths(dir_)
+    for p, what in ((s, "unadjusted IBES summary"), (lk, "IBES-CRSP link"),
+                    (adj, "IBES split factors (ibes.adj)")):
+        if not p.exists():
+            raise RevisionsUnavailable(
+                f"{what} is absent at {p}, so the analyst-revision join cannot be "
+                f"made PIT. This is a REFUSAL and not a fallback: the split-adjusted "
+                f"file is a look-ahead leak for levels and dispersion, and a run that "
+                f"silently dropped its only behavioural signal would look like a "
+                f"result about that signal.")
+    raw = pd.read_parquet(s, columns=list(PIT.CONSENSUS_COLUMNS))
+    link = pd.read_parquet(lk)
+    factors = pd.read_parquet(adj, columns=["ticker", "spdates", "adj"])
+    return _finish(PIT.from_frames(raw, link, factors, fpi=FPI))
+
+
+def _load_adjusted_diagnostic(dir_=None) -> pd.DataFrame:
+    """The PRE-2026-11-11 loader (split-adjusted, cents). For reproducing the
+    leak only: its rows carry no `share_basis`, so `derive` refuses them."""
     d = dir_ or WRDS_DIR
     cols = ["permno", "statpers", "measure", "fpi", "numest", "numup",
             "numdown", "meanest", "stdev"]
@@ -186,25 +240,24 @@ def _load_raw(dir_=None) -> pd.DataFrame:
     for src in SOURCES:
         p = d / f"{src}.parquet"
         if not p.exists():
-            raise RevisionsUnavailable(
-                f"{p} is absent, so the analyst-revision join cannot be made "
-                f"PIT. This is a REFUSAL and not a fallback: a run that "
-                f"silently dropped its only behavioural signal would look "
-                f"like a result about that signal.")
+            raise RevisionsUnavailable(f"{p} is absent")
         frames.append(pd.read_parquet(p, columns=cols))
-    df = pd.concat(frames, ignore_index=True)
-    df = df[(df["measure"] == MEASURE) & (df["fpi"] == FPI)]
-    df = df.dropna(subset=["permno", "statpers", "numest"])
-    df = df[df["numest"] >= MIN_ESTIMATES]
-    df["statpers"] = pd.to_datetime(df["statpers"]).dt.strftime("%Y-%m-%d")
-    df = df.sort_values(["permno", "statpers"])
-    # A duplicated (permno, statpers) is a restatement; the later row is what
-    # was on the tape at that stamp.
-    return df.drop_duplicates(["permno", "statpers"], keep="last")
+    return _finish(pd.concat(frames, ignore_index=True))
 
 
 def derive(df: pd.DataFrame) -> pd.DataFrame:
-    """Add the three derived columns. Pure, so it is testable without WRDS."""
+    """Add the three derived columns. Pure, so it is testable without WRDS.
+
+    `df` must be AS QUOTED (`share_basis` stamped by `ibes_pit_consensus`) and
+    carry `adj_factor`; anything else is refused (ValueError). A frame whose
+    split factors are ALL unknown refuses too (RevisionsUnavailable): a
+    magnitude across an unknown split is basis-mixed, never a number.
+    """
+    from backend.services.ibes_pit_consensus import require_as_quoted
+    require_as_quoted(df, who="portfolio_farm.revisions.derive")
+    if "adj_factor" not in df.columns:
+        raise RevisionsUnavailable("derive: no `adj_factor` column; a revision "
+                                   "across a split cannot be put on one basis")
     out = df.copy()
     numest = out["numest"].to_numpy(dtype=np.float64)
     up = out["numup"].to_numpy(dtype=np.float64)
@@ -215,13 +268,21 @@ def derive(df: pd.DataFrame) -> pd.DataFrame:
     # PREVIOUS value per permno. `groupby.shift` respects the sort and never
     # reaches across names — a plain `.shift()` here would carry the last
     # company's consensus onto the first row of the next one.
-    prev = out.groupby("permno", sort=False)["meanest"].shift(1)
+    g = out.groupby("permno", sort=False)
+    prev = g["meanest"].shift(1).to_numpy(dtype=np.float64)
+    a_prev = g["adj_factor"].shift(1).to_numpy(dtype=np.float64)
+    a_now = out["adj_factor"].to_numpy(dtype=np.float64)
+    if len(out) and not np.isfinite(a_now).any():
+        raise RevisionsUnavailable(
+            "derive: every split factor is unknown (ibes.adj absent or unmatched); "
+            "rev_magnitude would mix share bases across splits")
     me = out["meanest"].to_numpy(dtype=np.float64)
-    pv = prev.to_numpy(dtype=np.float64)
+    sd = out["stdev"].to_numpy(dtype=np.float64)
     with np.errstate(invalid="ignore", divide="ignore"):
+        # the earlier month restated in THIS month's shares (the split between them)
+        pv = prev * (a_now / a_prev)
         out["rev_magnitude"] = (me - pv) / np.maximum(np.abs(pv), FLOOR)
-        out["rev_dispersion"] = -(out["stdev"].to_numpy(dtype=np.float64)
-                                  / np.maximum(np.abs(me), FLOOR))
+        out["rev_dispersion"] = -(sd / np.maximum(np.abs(me), FLOOR))
     return out
 
 

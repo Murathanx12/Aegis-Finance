@@ -55,6 +55,21 @@ Run these against the changed code (grep + read, then live where possible):
    mismatch (the 67-vs-30 feature break; the sidecar-deletion bypass — both
    now guarded; keep new artifacts to the same standard).
 
+9. **A refusal that exits 0.** A guard, budget or breaker that refuses must
+   end the process non-zero and print the reason. 2026-10-15 to 11-10:
+   `provider_budget` refused every DeepSeek call (no envelope file) while the
+   world digest, IIF-1, hyp_lab and the learner reported rc 0 for 24 days.
+   2026-11-11: the nightly reputation refit failed on a local-vs-UTC date and
+   `rule_distillation --ledger` still exited 0. Grep the touched entry points
+   for a `return 0` after a caught refusal.
+10. **A pause with no expiry.** An OFF marker, a disabled flag or a "skip until"
+    file must carry its own expiry and owner. A 30-minute `always_on_lab_OFF`
+    (2026-09-27) became a five-week shutdown. List the markers the change can
+    write and how each one ends.
+11. **A date that is the machine's, not the market's.** The PC is UTC+8, the
+    scheduler is US/Eastern, the graders admit on UTC. `date.today()` in a job
+    that runs after 16:00Z is tomorrow; name the clock every date default reads.
+
 ## Output
 
 Report findings ranked by severity with file:line, each classified: fix now

@@ -1,9 +1,19 @@
 ---
 name: pre-register-trial
-description: Run BEFORE any new signal, strategy, factor, overlay, or hypothesis starts accruing data or gets evaluated. Creates the tamper-evident commitment (hypothesis + primary metric + decision rule + earliest decision date) in docs/TRIALS/ and the experiment registry. If it isn't pre-registered, it didn't happen (CANON §6).
+description: Run BEFORE a hypothesis backs a RESEARCH_CLAIM or a CAPITAL_CANDIDATE (anything that will say "this is alpha" or ask for real money), or when the owner asks to register a trial. Creates the tamper-evident commitment (hypothesis + primary metric + decision rule + earliest decision date) in docs/TRIALS/ and the experiment registry. A PRODUCT_EXPERIMENT (internal sim or paper) needs a frozen strategy contract instead.
 ---
 
 # Pre-register a Trial
+
+**Scope (CLAUDE.md "THREE LICENCES", 2026-08-23, and "EXPLORE DIRTY, PROMOTE
+CLEAN", 2026-08-24).** CANON §6 ("if it isn't pre-registered, it didn't happen")
+governs CLAIMS. A `PRODUCT_EXPERIMENT` (internal simulation or paper) needs a
+frozen strategy contract before its first decision (policy hash, timestamp,
+inputs, costs, fill convention, objective); it may be post-hoc, may try twenty
+variants and needs no significance gate. Use this procedure when a result is
+about to become a `RESEARCH_CLAIM` or a `CAPITAL_CANDIDATE`. What never relaxes
+in either case: no information acted on before it was public, no target
+leakage, costs never omitted, a version in forward paper is frozen.
 
 Every hypothesis enters as a registry trial with its decision rule committed
 **before** data accrues. The git commit timestamp is the tamper evidence. No
@@ -99,4 +109,5 @@ trial — record it as abandoned and register a successor.
   evidence (T7) — selection signals validate FORWARD (PIT IC + lane NAV).
 - LLM/brain picks are never backtested (profit mirage, canon A2) — the
   conviction lane is their only honest test.
-- No skill claims before 24 months regardless of what any interim number says.
+- No skill CLAIM before 24 months regardless of what any interim number says
+  (the floor governs claims, not what may be paper-tested).

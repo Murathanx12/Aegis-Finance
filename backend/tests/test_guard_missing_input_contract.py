@@ -1949,6 +1949,12 @@ def _case_campaign_ledger_startup():
     return (lambda: history(b""), Refused, "durable campaign spend history absent")
 
 
+def _case_analyst_report_rows():
+    from backend.services.analyst_report_rows import ReportInvalid, visible_at
+    return (lambda: visible_at([], ""), ReportInvalid,
+            "analyst rows read with no as-of date")
+
+
 def _case_universe_graph():
     import pandas as pd
 
@@ -1959,6 +1965,7 @@ def _case_universe_graph():
 
 
 CASES = {
+    "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,

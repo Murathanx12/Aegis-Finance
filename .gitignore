@@ -525,9 +525,23 @@ backend/data/optimus/local_runtime_digest/
 # CH-31 one-event receipts and frozen forecasts (written by scripts/one_event.py)
 backend/data/optimus/one_event/
 
+# 2026-11-11 CH-32: rows extracted from licensed broker / Bloomberg reports (analyst-report-extract
+# skill -> scripts.analyst_report_rows). Licensed content; the repo is public.
+backend/data/optimus/analyst_reports/
 # OD-2 (2026-11-10): the PC DeepSeek envelopes are a host spend ledger, never committed
 backend/data/optimus/session_budget/deepseek_local*.json
 backend/data/optimus/session_budget/deepseek_local*.json.lock
 
 # CH-22a: the systems dashboard receipt and page (local only, regenerated)
 backend/data/optimus/system_status/
+# S65 news-arm: the paired investigator_news day receipts
+backend/data/optimus/investigator_news/
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.lock
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.*.tmp
+# Night-local read-only comparisons (S65 leak-followup): never committed.
+backend/data/optimus/night_local/
+
+# Night research receipts (S65): research stays protected (owner rule, review 3). Kept
+# locally and in AEGIS_DOCUMENTS/research_receipts/, never in the public repo.
+backend/data/optimus/night_2026-11-11/

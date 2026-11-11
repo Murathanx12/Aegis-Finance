@@ -23,7 +23,7 @@ mirror/conviction (P1 #6) and conservative-atr (TRIAL-EXIT) safely.
 1. **Pre-register first** (see pre-register-trial): hypothesis, decision rule,
    canonical doc in `docs/TRIALS/`, committed BEFORE any forward data accrues.
 2. **Own config file, own hash:** the new lane gets its own YAML (pattern:
-   `data/conservative_atr_lanes.yaml`) — never appended into a live config
+   `backend/data/conservative_atr_lanes.yaml`) — never appended into a live config
    whose hash identifies existing segments. Mandates copied byte-identical
    where the trial demands a matched control.
 3. **Build the full wiring, no-op until seeded** (mirror the exit-lane
@@ -52,3 +52,6 @@ mirror/conviction (P1 #6) and conservative-atr (TRIAL-EXIT) safely.
 - No strategy change to an in-flight lane — a "v2" is a NEW lane or a new
   config version through the guarded evolution loop.
 - The session builds and verifies; the human flips flags.
+- Builders never deploy and never enable, create or disable a scheduled task.
+  A PC-side paper book is a fleet-manager change in the execution repo, not a
+  lane seed here.
