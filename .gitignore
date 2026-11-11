@@ -536,3 +536,6 @@ backend/data/optimus/session_budget/deepseek_local*.json.lock
 backend/data/optimus/system_status/
 # S65 news-arm: the paired investigator_news day receipts
 backend/data/optimus/investigator_news/
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.lock
+backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.*.tmp

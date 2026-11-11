@@ -114,15 +114,30 @@ def test_a_runtime_created_envelope_is_used_not_shadowed(host, monkeypatch):
 _WORKER = r"""
 import importlib.util, json, sys, time
 from pathlib import Path
-which, start, out = sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3])
+which, start, out, ready = sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[5])
 if which == "old":
     spec = importlib.util.spec_from_file_location("legacy_pb", sys.argv[4])
     mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
 else:
     from backend.services import provider_budget as mod
-while not start.exists():
-    time.sleep(0.01)
-n = 0
+# handshake: say "imported and waiting" (atomic rename), then wait for GO
+t0 = ready.with_suffix(".tmp"); t0.write_text("1"); t0.replace(ready)
+def wait_for(flag):
+    deadline = time.monotonic() + 120
+    while not flag.exists():
+        if time.monotonic() > deadline:
+            raise SystemExit("never released: " + flag.name)
+        time.sleep(0.005)
+def mark(flag):
+    t = flag.with_suffix(".tmp"); t.write_text("1"); t.replace(flag)
+wait_for(start)
+# phase 1: exactly one reservation each, so both counts are > 0 by construction
+mod.reserve("system", "user", 100, model="deepseek-chat",
+            base_url="https://api.deepseek.com", purpose="concurrent " + which)
+n = 1
+mark(ready.with_name(which + ".first"))
+wait_for(start.with_name("GO2"))
+# phase 2: race to the cap
 while True:
     try:
         mod.reserve("system", "user", 100, model="deepseek-chat",
@@ -152,14 +167,33 @@ def test_two_concurrent_processes_old_and_new_never_exceed_the_cap(host, tmp_pat
     worker = tmp_path / "worker.py"
     worker.write_text(_WORKER, encoding="utf-8")
     start = tmp_path / "GO"
-    procs = []
+    procs, ready = [], {}
     for which in ("old", "new"):
         out = tmp_path / f"{which}.json"
+        ready[which] = tmp_path / f"{which}.ready"
         procs.append((which, out, subprocess.Popen(
-            [sys.executable, str(worker), which, str(start), str(out), str(LEGACY_SRC)],
+            [sys.executable, str(worker), which, str(start), str(out), str(LEGACY_SRC),
+             str(ready[which])],
             cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)))
-    time.sleep(1.0)                              # both imported and waiting
+    # Deterministic handshake (CI flake on #89/#93): release only once BOTH
+    # children have imported their module and said so. A fixed sleep let one
+    # child, still importing on a slow runner, start after the other had spent
+    # the whole cap, so its count was 0. A child that dies first fails here.
+    def await_all(flags, what):
+        deadline = time.monotonic() + 120
+        while not all(f.exists() for f in flags):
+            for which, _out, p in procs:
+                if p.poll() is not None:
+                    so, se = p.communicate()
+                    pytest.fail(f"{which} worker exited before {what}: rc {p.returncode} {so} {se}")
+            assert time.monotonic() < deadline, f"workers never signalled {what}"
+            time.sleep(0.01)
+    await_all(ready.values(), "ready")
     start.write_text("go", encoding="utf-8")
+    # phase 2 starts only after each child holds one reservation, so the race
+    # to the cap is concurrent but neither count can be 0 by scheduling luck
+    await_all([tmp_path / f"{w}.first" for w in ready], "first reservation")
+    (tmp_path / "GO2").write_text("go", encoding="utf-8")
     counts = {}
     for which, out, p in procs:
         so, se = p.communicate(timeout=120)

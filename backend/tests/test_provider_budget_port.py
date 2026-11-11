@@ -222,9 +222,14 @@ def test_settlement_write_failure_retains_reservation(monkeypatch, isolated):
         return response
     c.chat.completions.create=send
     out=call()
-    assert out["status"] == "ERROR" and out["cost_usd"] is None
-    assert out["billing_status"] == "SETTLEMENT_FAILED_RESERVATION_RETAINED"
-    assert next(iter(PB.snapshot()["calls"].values()))["status"] == "RESERVED_UNKNOWN"
+    # review 3 (S65): the provider ANSWERED, so the paid reply is kept; the
+    # settlement waits in the sidecar and the envelope on disk keeps the full
+    # reservation. Every reader applies the sidecar in memory.
+    assert out["ok"] and out["billing_status"] == PB.DEFERRED_STATUS
+    on_disk = json.loads(isolated.read_text(encoding="utf-8"))
+    rec = next(iter(on_disk["calls"].values()))
+    assert rec["status"] == "RESERVED_UNKNOWN" and rec["held_units"] >= PB._units(out["cost_usd"])
+    assert PB.snapshot()["held_usd"] >= out["cost_usd"]
 
 
 def test_evidence_path_preserves_timeout_and_host_binding(monkeypatch, isolated):
