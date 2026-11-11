@@ -19,7 +19,13 @@ a new decision system. Each stage calls what already exists:
               `config.UNIVERSE_GRAPH_DIR` names for the default data root), so a
               worktree pointed at the runtime's data reads the runtime's graph.
               Imported lazily: a checkout without the module is DEGRADED with that
-              reason rather than crashing; a missing / stale build is DEGRADED red
+              reason rather than crashing; a missing / stale build is DEGRADED red.
+              An 8-K is passed with its MEASURED family (`eightk_family` of its item
+              codes) and NO direction: a family's direction is the company's own
+              market-adjusted announcement move, which this stage does not measure
+              and the digest's sentiment is not. The receipt quotes the graph's own
+              reason for a context-only answer (no weights, not validated, own move
+              unknown) instead of a generic one
     DECIDE    the latest broker-truth positions receipt (`pc_book/state_latest.json`),
               the funnel snapshot, `owner_event_warning.build_warning` for a held
               earnings 8-K, the graph's `holdings_exposure` / `owner_warnings` /
@@ -307,6 +313,17 @@ def default_graph_dir(data_root: Path) -> Path:
     return Path(data_root) / "universe_graph"
 
 
+def _context_reason(rows: list[dict]) -> str:
+    """Why the graph answered context only, in the graph's own words (`Implication.why`)."""
+    for r in rows:
+        why = str(r.get("why") or "")
+        if "NOT validated" in why:
+            return "its response cells are measured but NOT validated on held-out data"
+        if why.startswith("context only: "):
+            return why[len("context only: "):].split(";", 1)[0][:160]
+    return "the graph gave no reason"
+
+
 def funnel_state(funnel_path: Path, *, now: datetime) -> dict:
     try:
         d = json.loads(Path(funnel_path).read_text(encoding="utf-8"))
@@ -366,6 +383,16 @@ def universe(ev: Optional[dict], *, now: datetime, graph_dir: Optional[Path],
     d = ev.get("direction")
     conditional = d is None
     gev = {"node_id": nid, "direction": d if d else 1, "as_of": now.date().isoformat()}
+    fam_of = getattr(UG, "eightk_family", None)
+    fam = fam_of(ev.get("items")) if fam_of is not None and ev.get("items") else None
+    uni["event_family"] = fam
+    if fam:
+        # A measured family's direction is the company's OWN market-adjusted move over
+        # the announcement window (`universe_graph.propagate`). This stage does not
+        # measure it, and the digest's sentiment is a different quantity, so it is
+        # never passed off as one: the graph is asked with no direction and answers
+        # with its own reason.
+        gev.update(event_type=fam, direction=None)
     try:
         imps = UG.propagate(g, gev)
     except Exception as exc:                                         # noqa: BLE001
@@ -393,9 +420,18 @@ def universe(ev: Optional[dict], *, now: datetime, graph_dir: Optional[Path],
     uni["graph_context_only"] = bool(rows) and all(
         (r.get("event") or {}).get("mode") == "context_only" for r in rows)
     if uni["graph_context_only"]:
-        reasons.append("GRAPH_CONTEXT_ONLY: the event carries no measured event type, so the "
-                       "graph names connected companies with no direction or size")
-    if conditional:
+        uni["graph_context_reason"] = _context_reason(rows)
+        if fam:
+            reasons.append(f"GRAPH_CONTEXT_ONLY: the filing's 8-K items make it a measured "
+                           f"{fam} event, and the graph still answers context only "
+                           f"({uni['graph_context_reason']}); connected companies are named "
+                           "with no direction or size")
+        else:
+            reasons.append("GRAPH_CONTEXT_ONLY: the stored row is not one of the graph's "
+                           "measured event families (this stage types 8-K item codes only; a "
+                           "digest label is a reading, not a measured family), so the graph "
+                           "names connected companies with no direction or size")
+    if conditional and not fam:
         reasons.append("DIRECTION_UNKNOWN: implications computed for direction=+1; flip every "
                        "sign if the event is adverse")
     uni["universe_id"] = "un_" + _sha(ev["event_id"], g.as_of, gev)
@@ -538,7 +574,8 @@ def decide(ev: Optional[dict], row: Optional[dict], uni: Optional[dict], *, now:
     gstat = (uni or {}).get("graph") or {}
     if graph_ran and (uni or {}).get("graph_context_only"):
         reasons.append("GRAPH_CONTEXT_ONLY: no graph funnel candidates or directions are "
-                       "possible for an untyped event")
+                       "possible while the graph answers context only ("
+                       f"{(uni or {}).get('graph_context_reason') or 'see UNIVERSE'})")
     if graph_ran and gstat.get("red"):
         # review 3: consumers that ran on a STALE (red) graph are not a clean SUCCESS
         reasons.append(f"GRAPH_{gstat.get('status')}: consumers ran on a red graph")
