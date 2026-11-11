@@ -8,6 +8,7 @@ if it meant what it says.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
 
 import numpy as np
@@ -187,6 +188,12 @@ def test_a_coherent_probability_tree_prices_the_branches():
     assert b.expected_value() == pytest.approx(37.0)
 
 
+#: CH-05 "U": the ledger left git (it grows on the live box); this frozen sample of main's
+#: last committed copy is what the two "live ledger" tests below read.
+LEDGER_SAMPLE = (Path(__file__).resolve().parent / "fixtures" / "ch05"
+                 / "predictions_sample.jsonl")
+
+
 def test_the_live_ledger_has_records_and_every_graded_one_is_whole():
     """RETIRED ASSERTION, 2026-09-20: `all(outcome is None)`.
 
@@ -204,8 +211,11 @@ def test_the_live_ledger_has_records_and_every_graded_one_is_whole():
     `ledger_retrieval.visible_at` and would be scored by
     `belief_state.calibration` anyway, which is the shape of a hindsight leak.
     """
-    rows = read_predictions()
-    assert len(rows) >= 60, "the first live run should be on disk"
+    # CH-05 "U" (2026-11-11): predictions.jsonl grows on the live box and left git, so the
+    # shipped ledger is a frozen 85-row sample of main's last committed copy (graded,
+    # ungraded and voided rows of eight specialists). The invariant is the same.
+    rows = read_predictions(LEDGER_SAMPLE)
+    assert len(rows) >= 60, "the frozen ledger sample should be on disk"
     graded = [r for r in rows if r.get("outcome") is not None]
     for r in graded:
         assert r.get("resolved_at"), (
@@ -353,7 +363,7 @@ def test_the_live_ledger_canary_RUNS_and_returns_a_complete_report():
     operational backlog's.
     """
     from backend.services.belief_state import ledger_health
-    out = ledger_health()
+    out = ledger_health(LEDGER_SAMPLE)       # CH-05 "U": the frozen sample, see above
 
     # The report must be complete, whatever it says.
     for key in ("status", "n_records", "n_overdue", "n_void", "last_written",

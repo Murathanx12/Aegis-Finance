@@ -547,3 +547,42 @@ backend/data/optimus/night_local/
 # Night research receipts (S65): research stays protected (owner rule, review 3). Kept
 # locally and in AEGIS_DOCUMENTS/research_receipts/, never in the public repo.
 backend/data/optimus/night_2026-11-11/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CH-05 "U" (OD-c / OD-d, 2026-11-11): GROWING DATA LEAVES GIT. Default-deny.
+# Production code runs from a release clone whose backend/data/optimus is a
+# JUNCTION to the live data dir. A growing file that main still tracks shows as
+# modified through the junction, and any checkout in that clone would write
+# main's stale copy INTO live data (predictions.jsonl 125 MB -> 54 MB). So:
+#   * nothing under backend/data/optimus enters git by default (this block is
+#     LAST on purpose: it overrides every rule above for this folder);
+#   * the files already tracked stay tracked (they are byte-identical to live,
+#     so they show clean through the junction); the growing ones were untracked
+#     with `git rm --cached` in the same PR;
+#   * the keep-list below is what may still be added WITHOUT -f: manifests,
+#     seals, frozen contracts, docs, and the launch templates the old runtime
+#     still executes. Anything else is `git add -f` in a reviewed PR.
+backend/data/optimus/**
+!backend/data/optimus/**/
+!backend/data/optimus/**/README.md
+!backend/data/optimus/**/MANIFEST.json
+!backend/data/optimus/**/MANIFEST.sha256
+!backend/data/optimus/**/manifest.json
+!backend/data/optimus/**/*.manifest.json
+!backend/data/optimus/**/*_manifest.json
+!backend/data/optimus/**/MIGRATION.json
+!backend/data/optimus/ledger_manifests/**
+!backend/data/optimus/ledger_archive/*.parquet
+!backend/data/optimus/nn_lab/revisions_archive/*.parquet
+!backend/data/optimus/paper_accounts/fleet_manager/contracts/*.json
+!backend/data/optimus/paper_accounts/public_assets_refresh_*.json
+!backend/data/optimus/finra_short_volume/pull_receipt_*.json
+!backend/data/optimus/digest_inbox/WEEKEND_READING_LIST.md
+!backend/data/optimus/empty_stdin.txt
+!backend/data/optimus/dowjones/supervisor_run.cmd
+!backend/data/optimus/dowjones/queue_run.cmd
+# ...and the re-included directories must not re-open what the rules above
+# keep out entirely (ledger temp files, the raw corpus, session state):
+backend/data/optimus/**/*.tmp
+backend/data/optimus/**/*.tmp.*
+backend/data/optimus/**/*.lock

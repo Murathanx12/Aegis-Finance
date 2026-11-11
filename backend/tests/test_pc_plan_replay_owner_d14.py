@@ -301,7 +301,9 @@ def test_an_acting_exploit_name_is_not_double_held(tmp_path, monkeypatch):
 
 def test_the_real_frozen_book_matches_the_hack2_copy():
     from backend.services import pc_sleeves as SL
-    b = SL.load_revision_flow(book_id="cb8d492bb8bf9ade",
+    # CH-05 "U": books.jsonl grows on the live box and left git; the frozen row is a fixture
+    fixture = Path(__file__).resolve().parent / "fixtures" / "ch05" / "frozen_revision_book.jsonl"
+    b = SL.load_revision_flow(book_id="cb8d492bb8bf9ade", books_path=fixture,
                               contract_path=config.OPTIMUS_LEDGER_DIR / "paper_accounts"
                               / "fleet_manager" / "contracts" / "hack2_v2.json")
     assert sorted(b["tickers"]) == sorted(RF_NAMES)

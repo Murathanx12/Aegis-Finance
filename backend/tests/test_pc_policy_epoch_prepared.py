@@ -19,7 +19,7 @@ def _approved_offline_account(monkeypatch):
                         PE.account_fingerprint("offline-account"))
 
 
-def test_committed_prepared_contract_is_superseded_and_fails_closed(monkeypatch):
+def test_committed_prepared_contract_is_superseded_and_fails_closed(monkeypatch, tmp_path):
     """The 2026-10 no-index epoch pinned the SOURCE of 15 files as of 2026-10-10.
     OD-10 (owner 2026-11-10) replaced its cash-fill with the account's own index
     (backend/services/pc_own_index.py), which edits two of those files, so the
@@ -28,6 +28,7 @@ def test_committed_prepared_contract_is_superseded_and_fails_closed(monkeypatch)
     load: sim_run turns that refusal into an observe-only hold."""
     monkeypatch.setattr(PE, "EXPECTED_ACCOUNT_FINGERPRINT",
                         PE.FROZEN_ACCOUNT_FINGERPRINT)
+    _frozen_book_from_fixture(monkeypatch, tmp_path)
     root = Path(__file__).resolve().parents[2]
     path = root / "backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json"
     assert PE.ACTIVATION_ALLOWED is False
@@ -37,6 +38,21 @@ def test_committed_prepared_contract_is_superseded_and_fails_closed(monkeypatch)
     assert raw["content"]["strategic_index_target"] is None
     assert raw["content"]["allocation"]["revision_flow_gross_cap"] == 0.30
     assert raw["content"]["allocation"]["probe_gross_cap"] == 0.20
+
+
+#: CH-05 "U" (2026-11-11): `llm_portfolio/books.jsonl` grows on the live box and left git.
+#: The epoch's frozen revision book is ONE row of it; that row (byte-for-byte main's copy
+#: at 96a34ef0) is the fixture, so these tests no longer read a growing data file.
+FROZEN_BOOK_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "ch05" / "frozen_revision_book.jsonl"
+_BOOKS_REL = "backend/data/optimus/llm_portfolio/books.jsonl"
+
+
+def _frozen_book_from_fixture(monkeypatch, tmp_root: Path) -> None:
+    """Serve `_revision_row` from the fixture; every other read stays on the real root."""
+    (tmp_root / _BOOKS_REL).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_root / _BOOKS_REL).write_bytes(FROZEN_BOOK_FIXTURE.read_bytes())
+    real = PE._revision_row
+    monkeypatch.setattr(PE, "_revision_row", lambda root, book_id: real(tmp_root, book_id))
 
 
 def _contract(root: Path) -> tuple[Path, dict]:
@@ -1272,10 +1288,11 @@ def _committed_copy(tmp_path: Path, monkeypatch) -> tuple[Path, Path]:
     repo = Path(__file__).resolve().parents[2]
     root = tmp_path / "checkout"
     content = json.loads((repo / _COMMITTED).read_text(encoding="utf-8"))["content"]
-    for rel in [*content["source_sha256"], PE.CONFIG_SOURCE,
-                "backend/data/optimus/llm_portfolio/books.jsonl"]:
+    for rel in [*content["source_sha256"], PE.CONFIG_SOURCE]:
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(repo / rel, root / rel)
+    (root / _BOOKS_REL).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(FROZEN_BOOK_FIXTURE, root / _BOOKS_REL)
     content["source_sha256"] = {rel: PE._source_sha(root / rel)
                                 for rel in content["source_sha256"]}
     content["config_definitions"]["sha256"] = PE.config_definition_pins(
