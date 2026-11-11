@@ -5,6 +5,8 @@ the frozen-constituent rows the bars refresh adds are counted. Fixed clocks only
 nothing real is built, priced or written."""
 from __future__ import annotations
 
+import re
+import sys
 from datetime import date, datetime, timezone
 
 import pytest
@@ -73,3 +75,54 @@ def test_frozen_constituent_rows_count_as_bars_added(monkeypatch):
     row = DP.step_bars_refresh({})
     assert row["status"] == "ok" and row["rows"] == 5
     assert row["frozen_constituents"] == {"status": "ok", "n_new_rows": 5}
+
+
+# ── CH-05 (2026-11-11): the row comes from provisional_decision, and reaches no order path ──
+
+def test_the_refusal_row_is_built_by_the_sibling_module_not_a_copy(monkeypatch):
+    """One implementation: daily_pass calls `provisional_decision.cost_refusal_assessment`
+    (R3's §4), so `decision_contract.py` stays byte-equal to the epoch pin and the
+    assessment text cannot drift between two copies."""
+    from backend.services import provisional_decision as PD
+    assert not hasattr(DP, "_cost_refusal_assessment")
+    seen = []
+    real = PD.cost_refusal_assessment
+
+    def spy(ctx, exc, **kw):
+        seen.append(type(exc).__name__)
+        return real(ctx, exc, **kw)
+    monkeypatch.setattr(PD, "cost_refusal_assessment", spy)
+    monkeypatch.setattr(DP, "build_decision_contracts", _refuse)
+    row = DP.step_decision_contract(_ctx(), observed_clock=lambda: CLOCK)
+    assert seen == ["CostModelRefused"]
+    assert row["provisional_decision"] == real(_ctx(), DC.CostModelRefused(
+        "no cost model for 2026-11-11: spread table absent"), observed_clock=lambda: CLOCK)
+
+
+def test_no_order_path_is_reachable_from_the_provisional_row(monkeypatch):
+    """Every Python function the refused step calls is recorded (sys.setprofile); none
+    lives in a broker / fleet / sim module and none is named like an order call. The
+    broker's submit functions are booby-trapped as a second net, and the conftest
+    network guard is the third."""
+    import os
+    from backend.services import pc_broker as PB
+    for name in ("submit", "submit_epoch_core_exit", "submit_epoch_stock"):
+        monkeypatch.setattr(PB, name, lambda *a, **k: pytest.fail("an order call was reached"))
+    monkeypatch.setattr(DP, "build_decision_contracts", _refuse)
+    called: set[tuple[str, str]] = set()
+
+    def prof(frame, event, arg):
+        if event == "call":
+            called.add((frame.f_code.co_filename, frame.f_code.co_name))
+    sys.setprofile(prof)
+    try:
+        row = DP.step_decision_contract(_ctx(mandate={"max_gross": 1.0}), observed_clock=lambda: CLOCK)
+    finally:
+        sys.setprofile(None)
+    assert row["provisional_decision"]["orders_authorized"] is False
+    files = {os.path.basename(f) for f, _ in called}
+    banned = {"pc_broker.py", "pc_epoch_broker.py", "pc_epoch_planner.py", "fleet_manager.py",
+              "sim_session.py", "sim_run.py", "alpaca_mirror.py", "execution_ledger.py"}
+    assert not files & banned, sorted(files & banned)
+    assert not [n for _, n in called if re.search(r"submit|place_order|_order\b", n)]
+    assert "provisional_decision.py" in files

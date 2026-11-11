@@ -892,7 +892,10 @@ def test_the_supervisor_launches_the_pool_and_finds_its_pid_by_command_line():
     txt = S.pool_cmd_text(until="08:00", py="python.exe", day=NOW.date().isoformat())
     assert (f"-m scripts.reader_pool --handoff --profile muratclaw "
             f"--max-tabs {_config.READER_MAX_TABS} --until 08:00") in txt
-    assert ">> backend\\data\\optimus\\dowjones\\reader_pool_" in txt
+    spec = S.pool_launch(until="08:00", day=NOW.date().isoformat())
+    assert spec.out == S.DJ / f"reader_pool_{NOW.date().isoformat()}.log"
+    assert spec.err.name == spec.out.name + ".err"
+    assert f">> {spec.out} 2>> {spec.err}" in txt
     assert "reader_pool" in S.READER_CMDLINE and "dowjones_pull" in S.READER_CMDLINE
     assert S.decide(kind="QUEUE_DONE", probe={"healthy": True}, restarts=0, since_launch_s=None,
                     budget_ok=True) == "stop"

@@ -169,17 +169,6 @@ CLASSIFIED: dict[str, str] = {
         "`test_scenario_forecasts.py` and by nothing else, and it says so in its own "
         "`NOT_WIRED` string and in `declaration()[\"wired\"] is False`. Reclassify "
         "the day the Morning calls it; delete it if X3 is abandoned."),
-    # -- CH-05 rescue R4 (s65/ch05-r3-prices-contract) ---------------------
-    "backend.services.provisional_decision": (
-        "AWAITS -- CH-05 rescue R4: the runtime's provisional NO_NEW_BET rows, "
-        "moved OUT of decision_contract.py because the prepared PC policy epoch "
-        "pins that file's bytes. Its consumer is scripts.daily_pass "
-        "step_decision_contract (cost_refusal_assessment on CostModelRefused), "
-        "wired by the digest/daily-pass rescue (R5), which owns that file. "
-        "provisional_contracts' only runtime caller was earnings_deadline, "
-        "dropped with the Codex beta-v2 shadow host (OD-a). No orders, sizing, "
-        "storage or delivery. Reclassify when daily_pass imports it."),
-    # -- end CH-05 rescue R4 -------------------------------------------------
     "backend.tests": (
         "OK — the suite. It reaches the system, not the other way round."),
     "backend.services.copy_lab": (

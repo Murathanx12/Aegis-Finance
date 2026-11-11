@@ -266,16 +266,24 @@ def test_catalog_health_row_is_degraded_by_a_refused_step_of_the_same_firing(tmp
     assert "publish_receipts: ok" in rd.detail
 
 
-def test_run_opportunities_refuses_below_the_memory_floor_and_never_starts(tmp_path):
-    """Review C15 M5: the 09:00 firing shares its window with the sim owner."""
+@pytest.mark.parametrize("available", [2.5, None])
+def test_run_opportunities_memory_is_telemetry_only(tmp_path, available):
+    """Owner policy 2026-10-15 (ported from the runtime, CH-05): low or unreadable free
+    RAM is RECORDED, never a refusal -- the OS may page. Review C15 M5's 4 GB floor is gone,
+    as it is in gateway_repair since PR #100."""
     from scripts import task_keeper as K
     started = []
-    out = K.run_opportunities(runner=lambda *a, **k: started.append(1), log_path=tmp_path / "o.jsonl",
-                              free_gb=lambda: 2.5)
-    assert out["action"] == "refused" and "2.5 GB free < 4.0 GB" in out["why"] and not started
-    unk = K.run_opportunities(runner=lambda *a, **k: started.append(1), log_path=tmp_path / "o.jsonl",
-                              free_gb=lambda: None)
-    assert unk["action"] == "refused" and "could not be read" in unk["why"] and not started
+
+    def runner(*args, **kwargs):
+        started.append((args, kwargs))
+        return _R(0, "wrote backend/x.json (2.0 MB)")
+    out = K.run_opportunities(runner=runner, log_path=tmp_path / "o.jsonl",
+                              free_gb=lambda: available)
+    assert out["action"] == "ok" and len(started) == 1
+    assert out["free_gb"] == available
+    assert out["memory_policy"] == "os_paging_allowed"
+    assert "min_free_gb" not in out
+    assert started[0][1]["timeout"] == K.OPPORTUNITIES_TIMEOUT_S
 
 
 # ───────────────────── review C15 M1: precedence by AGE, rows re-aged ─────────────────────

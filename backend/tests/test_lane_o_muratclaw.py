@@ -784,11 +784,12 @@ def test_last_nights_retry_storm_cannot_happen_again():
 
 def test_the_queue_command_logs_are_found(tmp_path):
     from scripts import night_reader_supervisor as S
-    cmd = tmp_path / "q.cmd"
-    cmd.write_text("python -m scripts.dowjones_pull --queue q.txt >> a.log 2>> a.log.err\n")
+    # CH-05: the launcher is a Launch built in code, no longer a .cmd file to parse
+    cmd = S.queue_launch(tmp_path / "q.txt", log=tmp_path / "a.log")
     (tmp_path / "a.log").write_text("x" * 10 + "\nREFUSED_INSTANCE_DOWN: closed\n")
     logs = S.queue_logs(cmd)
     assert [p.name for p in logs] == ["a.log", "a.log.err"]
+    assert S.queue_logs(tmp_path / "q.cmd") == []          # a path is not a launcher
     logs = [tmp_path / "a.log", tmp_path / "missing.err"]
     assert GR.classify_exit(S.log_tail(logs))["kind"] == "CHROME_DOWN"
 

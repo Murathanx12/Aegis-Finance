@@ -2756,10 +2756,16 @@ def _print_schtasks() -> int:
     /RL LIMITED: nothing here needs admin rights, and an elevated unattended
     loop is a bigger blast radius for the same job.
     """
-    root = os.getcwd()
-    empty = f"{root}\\backend\\data\\optimus\\empty_stdin.txt"
-    log = f"{root}\\backend\\data\\optimus\\always_on_lab.log"
-    py = sys.executable
+    # CH-05 (2026-11-11): THIS checkout (the code that prints the line is the code the
+    # line runs), never `os.getcwd()`, and never a launcher file in the shared data dir.
+    root = str(ROOT)
+    pyw = os.path.join(root, ".venv", "Scripts", "pythonw.exe")
+    wrapper = os.path.join(root, "scripts", "runtime_task.py")
+    off_rel = "backend\\data\\optimus\\" + str(getattr(_config, "ALWAYS_ON_LAB_OFF_MARKER",
+                                                       "always_on_lab_OFF"))
+    log_rel = "backend\\data\\optimus\\always_on_lab.log"
+    wrapper_args = (f'-I "{wrapper}" --stop-file {off_rel} --log {log_rel} '
+                    f"-m scripts.always_on_lab")
     print("=" * 74)
     print("REGISTER THE ALWAYS-ON LAB — printed, not run; registering it is a decision")
     print("=" * 74)
@@ -2772,34 +2778,39 @@ def _print_schtasks() -> int:
   * ONE instance. A second logon's supervisor reads the shared lock at
     {lock_path()} and refuses with ALREADY_RUNNING.
 
-  * The stdin redirect comes from a REGULAR FILE, not from NUL: on Windows
-    `_isatty()` returns true for any character device, so `< NUL` redirects and
-    changes nothing observable (paid for on 2026-08-18).
+  * It runs through `scripts/runtime_task.py` (CH-05), the one wrapper every
+    task uses: `pythonw.exe` (no console window), the code of THIS checkout,
+    the OFF marker honoured before the lab starts (`--stop-file`), output
+    appended to the log (`--log`). The drivers the lab dispatches still read
+    stdin from the REGULAR file `empty_stdin.txt` (`launch_driver`), never NUL:
+    on Windows `_isatty()` returns true for any character device (2026-08-18).
 
   * No pipe. `cmd | tail` reports tail's exit code, and the exit code is the
     guard.
+
+  * NO DATA-DIR LAUNCHER. This used to print a two-line
+    `backend\\data\\optimus\\always_on_lab.cmd` whose first line was `cd /d
+    <a checkout>`. The data dir is shared by every checkout through a junction,
+    so from a release clone that file ran the OLD checkout's code. A Startup
+    `.vbs` that still runs it must be rewritten to the line below.
 """)
-    # 2026-09-13, measured: `schtasks` caps /TR at 261 characters (this line is
-    # longer) and refuses ONLOGON for a non-elevated user ("Access is denied").
-    # What registered without elevation was a two-line wrapper .cmd and a
-    # windowless .vbs in the user's Startup folder -- the same effect, printed
-    # first because it is the one that works. The schtasks form stays below for
-    # an elevated shell.
-    wrapper = os.path.join(root, "backend", "data", "optimus", "always_on_lab.cmd")
-    print("  # 1. the wrapper (schtasks /TR is capped at 261 chars):")
-    print(f"  #    {wrapper}  containing:")
-    print("  #      @echo off")
-    print(f"  #      cd /d {root}")
-    print(f"  #      {py} -m scripts.always_on_lab < {empty} >> {log} 2>&1")
-    print("  # 2. windowless at logon WITHOUT elevation (the Startup folder):")
+    # 2026-09-13, measured: `schtasks` caps /TR at 261 characters and refuses
+    # ONLOGON for a non-elevated user ("Access is denied"). What registers
+    # without elevation is a windowless .vbs in the user's Startup folder, printed
+    # first because it is the one that works; the schtasks form (an elevated
+    # shell only) points at the same wrapper.
+    print("  # 1. windowless at logon WITHOUT elevation (the Startup folder):")
     startup = os.path.join("%APPDATA%", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", f"{TASK_NAME}.vbs")
     print(f"  #    {startup}  containing:")
     print('  #      Set sh = CreateObject("WScript.Shell")')
-    print(f'  #      sh.Run """{wrapper}""", 0, False')
-    print("  # 3. or, from an ELEVATED shell only (ONLOGON is denied otherwise):")
-    print(f'  schtasks /Create /TN "{TASK_NAME}" /SC ONLOGON /RL LIMITED /TR "{wrapper}"')
+    vbs_args = wrapper_args.replace('"', '""')
+    print(f'  #      sh.Run """{pyw}"" {vbs_args}", 0, False')
+    print("  # 2. or, from an ELEVATED shell only (ONLOGON is denied otherwise; /TR is capped")
+    print("  #    at 261 characters, so check the printed length before running it):")
+    tr = f'\\"{pyw}\\" {wrapper_args}'.replace(f'"{wrapper}"', f'\\"{wrapper}\\"')
+    print(f'  schtasks /Create /TN "{TASK_NAME}" /SC ONLOGON /RL LIMITED /TR "{tr}"')
     print("\n  Already registered? Change it in place rather than re-registering:\n")
-    print(f'  schtasks /Change /TN "{TASK_NAME}" /TR "{wrapper}"')
+    print(f'  schtasks /Change /TN "{TASK_NAME}" /TR "{tr}"')
     print(f"""
   THE OTHER TWO TASKS ARE NOW FALLBACKS, NOT THE CLOCK (chunk 17, 2026-09-19).
   {DRIVERS['daily_pass']['task']} and {DRIVERS['night_launcher']['task']}
