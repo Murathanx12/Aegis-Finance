@@ -1,5 +1,7 @@
 # AEGIS — THE CONTEXT DOSSIER (2026-09-19)
 
+> **Correction 2026-11-11.** The analyst-forecast dispersion and consensus-level numbers in this document came from a consensus file that is split-adjusted after the fact, so it carried later share splits back in time (look-ahead). Re-run on the as-quoted file, the result is about zero. Do not cite those numbers. See `docs/ROADMAP.md`, CH-18 note (11-11), and `backend/services/ibes_pit_consensus.py`.
+
 *Give this file to any Claude session (or any model) that has to reason about Aegis. It is the
 one-file answer to "what is this, what is known, what is dead, what is live, what is next, and how
 do we work". Everything here is backed by a file in the repo; the path is beside each claim. It

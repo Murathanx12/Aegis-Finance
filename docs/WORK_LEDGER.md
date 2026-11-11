@@ -21,5 +21,6 @@ removed when that chunk merges.
 
 | Chunk | Agent | Closed | Outcome |
 |---|---|---|---|
+| S65 night builders (CH-00/32 #86, CH-04 #88 #97, CH-30 #87 #93, CH-31 #91 #96, CH-22a #95, OD-10 #89, CI #90, CH-05 prep #98, learner + skills #92, consensus leak fix #94) | Claude S65 + builders | 2026-11-11 | all merged to main; nothing is in the runtime yet (CH-05); worktrees under `aegis-wt\` removed after merge |
 | roadmap S64 amendment (docs/ROADMAP.md only) | Claude S64 | 2026-11-10 | §2a universe graph, tiers, CH-30/31/32/34 |
 | license | Claude S63 | 2026-11-09 | `cd0b1d59` All Rights Reserved; CI green |

@@ -1,5 +1,7 @@
 # Adjudication of `research_notes/2026-09-26/audit_forecasts_and_learning_since_august.md` — Fable, 2026-09-26 04:00 HKT
 
+> **Correction 2026-11-11.** The analyst-forecast dispersion and consensus-level numbers in this document came from a consensus file that is split-adjusted after the fact, so it carried later share splits back in time (look-ahead). Re-run on the as-quoted file, the result is about zero. Do not cite those numbers. See `docs/ROADMAP.md`, CH-18 note (11-11), and `backend/services/ibes_pit_consensus.py`.
+
 | # | audit finding | verdict | action |
 |---|---|---|---|
 | 1 | Accrual stopped 08-28 → 09-24 and nothing went red; grading ran twice, late; ~600 rows lost to the reset | **accepted, already fixed** (accrual canary; `u_forecast` daily; `u_grade` every cycle) | none new |

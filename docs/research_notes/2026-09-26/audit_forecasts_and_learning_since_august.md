@@ -1,5 +1,7 @@
 # Audit — forecasts, decisions and learning since 2026-08-11
 
+> **Correction 2026-11-11.** The analyst-forecast dispersion and consensus-level numbers in this document came from a consensus file that is split-adjusted after the fact, so it carried later share splits back in time (look-ahead). Re-run on the as-quoted file, the result is about zero. Do not cite those numbers. See `docs/ROADMAP.md`, CH-18 note (11-11), and `backend/services/ibes_pit_consensus.py`.
+
 **Written 2026-09-26, read-only, $0.00 LLM spend.** No repo source or data was modified; the running sim
 (`backend/data/optimus/sim/`, session `746074adc086`) was not touched. Every number below was computed from
 a snapshot of `backend/data/optimus/predictions.jsonl` taken at the start of the audit (**26,148 rows**) or

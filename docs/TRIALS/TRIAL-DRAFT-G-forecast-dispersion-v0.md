@@ -1,5 +1,7 @@
 # TRIAL-DRAFT-G — analyst forecast dispersion, long-only-avoid (`forecast_dispersion_v0`)
 
+> **Correction 2026-11-11.** The analyst-forecast dispersion and consensus-level numbers in this document came from a consensus file that is split-adjusted after the fact, so it carried later share splits back in time (look-ahead). Re-run on the as-quoted file, the result is about zero. Do not cite those numbers. See `docs/ROADMAP.md`, CH-18 note (11-11), and `backend/services/ibes_pit_consensus.py`.
+
 **STATUS: UNSIGNED DRAFT.** Written 2026-09-13, before any read. It is not in
 `rule_experiments` and has not incremented `cumulative_trials`: registration is
 the attended step. This draft licenses a `PRODUCT_EXPERIMENT` READ only; a

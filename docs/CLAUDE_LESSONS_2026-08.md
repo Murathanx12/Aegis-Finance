@@ -1,5 +1,7 @@
 # CLAUDE.md LESSONS — the long form (moved out of CLAUDE.md on 2026-08-29)
 
+> **Correction 2026-11-11.** The analyst-forecast dispersion and consensus-level numbers in this document came from a consensus file that is split-adjusted after the fact, so it carried later share splits back in time (look-ahead). Re-run on the as-quoted file, the result is about zero. Do not cite those numbers. See `docs/ROADMAP.md`, CH-18 note (11-11), and `backend/services/ibes_pit_consensus.py`.
+
 **Status: TIER 0 supplement.** Every paragraph here was in `CLAUDE.md` until
 2026-08-29 and is unchanged; it moved because an 809-line operating file was
 being skimmed. The farm's seven lessons, the product feature list, the layout,
