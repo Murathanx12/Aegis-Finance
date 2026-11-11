@@ -112,6 +112,7 @@ import shutil
 import subprocess
 import threading
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -373,6 +374,7 @@ _CLI_LEDGER: dict[str, Any] = {"calls": 0, "seconds": 0.0, "timeouts": 0, "by_cm
 #: drive them from more than one thread, so every read-modify-write of the
 #: ledger holds this lock (a lost `+= 1` would under-count CLI calls).
 _LEDGER_LOCK = threading.RLock()
+_PAPER_SCOPE_THREAD_LOCK = threading.RLock()
 
 
 def cli_ledger() -> dict:
@@ -804,11 +806,20 @@ def _broker_free_cli_cwd(env):
             raise OpenClawRefused("RESEARCH_CLI_GLOBAL_BROKER_DOTENV")
     return str(cwd)
 
+@contextmanager
 def _paper_scope_lock():
     import tempfile
     from backend.services import disk_guard
-    return disk_guard.file_lock(Path(tempfile.gettempdir()) /
-        "aegis_openclaw_exclusive_paper_scope.lock", timeout_s=0)
+    # Cooperating threads of THIS process wait their turn locally: the file
+    # lock's timeout_s=0 also applies to its per-path thread lock, so a reader
+    # thread that met another reader thread's browser call used to fail with
+    # FileLockTimeout instead of queueing. Other processes still face the same
+    # immediate, exclusive paper-scope refusal at the file boundary.
+    # (Ported from the runtime checkout, CH-05 R1.)
+    with _PAPER_SCOPE_THREAD_LOCK:
+        with disk_guard.file_lock(Path(tempfile.gettempdir()) /
+                "aegis_openclaw_exclusive_paper_scope.lock", timeout_s=0) as scope_path:
+            yield scope_path
 
 def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProcess:
     if args[:1] == ["browser"]:

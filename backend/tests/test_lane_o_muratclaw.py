@@ -659,53 +659,34 @@ def test_a_killed_gateway_is_started_once_and_nothing_else():
     assert w.cmds == [["gateway", "start"]]
 
 
-def test_under_the_memory_floor_the_repair_reclaims_then_starts_once_the_floor_clears():
-    """The floor used to END the repair -- a gate the repair could never clear
-    while a browser held the memory. It now reclaims what the reader owns
-    first; when that lifts free memory over the floor, the gateway starts."""
-    w = World(gw=False, free=0.6)
-    reclaims: list[float] = []
-
-    def reclaim(need):
-        reclaims.append(need)
-        w.free = 1.9                          # the recycle freed memory
-        return {"ok": True}
+def test_low_physical_ram_starts_gateway_without_reclaiming_owner_tabs():
+    w = World(gw=False, free=0.1)
     d = w.deps()
-    d.reclaim = reclaim
+    d.reclaim = lambda need: pytest.fail("physical-free RAM must not trigger reclaim")
     r = GR.repair("GATEWAY_DOWN", deps=d)
-    names = [s["step"] for s in r["steps"]]
-    assert reclaims == [GR.min_free_gb()]
-    assert names[0] == "reclaim_memory" and "gateway_start" in names
-    assert r["healthy"] and r["cleared_by"] == "gateway_start"
+    assert w.cmds == [["gateway", "start"]]
+    assert r["healthy"]
 
 
-def test_a_reclaim_that_cannot_clear_the_floor_starts_no_gateway():
-    """The 2026-09-28 14:30 kill test, run 1: at 0.5-0.8 GB free a started
-    gateway did not bind its port for 19.6 minutes. c0ac5310 started it anyway
-    after a failed reclaim; reverted 2026-09-29 to the measured rule. The fake
-    gateway here WOULD bind at once, so this pins the rule, not the fake."""
-    w = World(gw=False, free=0.6)
-    d = w.deps()
-    d.reclaim = lambda need: {"ok": False}
-    r = GR.repair("GATEWAY_DOWN", deps=d)
-    assert [s["step"] for s in r["steps"]] == ["reclaim_memory"]
-    assert not any(c[:1] == ["gateway"] for c in w.cmds)
-    assert not r["healthy"] and r["stopped_because"].startswith("LOW_MEMORY")
+def test_low_ram_does_not_hide_actual_gateway_start_failure():
+    w = World(gw=False, free=0.1, start_works=False)
+    r = GR.repair("GATEWAY_DOWN", deps=w.deps())
+    assert w.cmds == [["gateway", "start"]]
+    assert not r["healthy"]
+    assert "did not bind" in r["stopped_because"]
 
 
-def test_the_repair_docstring_states_the_rule_the_code_follows():
-    doc = GR.repair.__doc__ or ""
-    assert "NO gateway (re)start below `OPENCLAW_REPAIR_MIN_FREE_GB`" in doc
-    assert "LOW_MEMORY" in doc and "RECLAIMS" in doc
+def test_unreadable_free_ram_does_not_block_gateway_start():
+    w = World(gw=False, free=None)
+    r = GR.repair("GATEWAY_DOWN", deps=w.deps())
+    assert r["healthy"] and w.cmds == [["gateway", "start"]]
 
 
-def test_a_latched_gateway_under_the_floor_is_not_restarted_either():
-    w = World(gw=True, latched=True, free=0.7)
-    d = w.deps()
-    d.reclaim = lambda need: {"ok": False}
-    r = GR.repair("GATEWAY_STUCK", deps=d)
-    assert ["gateway", "restart"] not in w.cmds and ["gateway", "start"] not in w.cmds
-    assert r["stopped_because"].startswith("LOW_MEMORY")
+def test_latched_gateway_repair_preserves_actual_probes_under_low_ram():
+    w = World(gw=True, latched=True, free=0.1)
+    r = GR.repair("GATEWAY_STUCK", deps=w.deps())
+    assert ["gateway", "restart"] in w.cmds
+    assert r["healthy"]
 
 
 def test_the_default_reclaim_closes_only_the_pools_own_tabs(tmp_path, monkeypatch):
@@ -725,7 +706,7 @@ def test_the_default_reclaim_closes_only_the_pools_own_tabs(tmp_path, monkeypatc
 def test_a_gateway_already_starting_is_waited_for_never_doubled():
     """The 2026-09-28 14:30 kill test: `restart` after a slow `start` left two
     gateway trees fighting for one port."""
-    w = World(gw=False, procs=[{"pid": 1}])
+    w = World(gw=False, free=0.1, procs=[{"pid": 1}])
     r = GR.repair("GATEWAY_DOWN", deps=w.deps())
     assert not r["healthy"] and "GATEWAY_STARTING_SLOW" in r["stopped_because"]
     assert not any(c[:2] in (["gateway", "start"], ["gateway", "restart"]) for c in w.cmds)

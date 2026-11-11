@@ -340,18 +340,15 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
     Returns `{fault, steps: [...], healthy, cleared_by, stopped_because}`;
     never raises.
 
-    Two rules from the kill test of 2026-09-28 14:30 (see the lane-O note,
-    `docs/research_notes/2026-09-28/lane_o_build_2026-09-28.md` section 3):
-    * NO gateway (re)start below `OPENCLAW_REPAIR_MIN_FREE_GB` free RAM -- at
-      0.5-0.8 GB a started gateway did not bind its port for 19.6 minutes (run
-      1, FAILED); with ample memory the same start bound in 42 s (run 2). Below
-      the floor the repair first RECLAIMS what the reader owns (its own hung and
-      idle tabs, then a graceful recycle of the dedicated Chrome only when every
-      page in it is the reader's), re-reads free memory, and if it is still
-      under the floor it stops with `LOW_MEMORY` and starts nothing. The
-      supervisor's repair budget retries later. (c0ac5310 briefly started the
-      gateway below the floor anyway; that contradicted the measurement and was
-      reverted on 2026-09-29.)
+    Physical-free RAM does not refuse a gateway (re)start (owner request
+    2026-10-15, "remove the RAM guard"; ported from the runtime checkout in
+    CH-05 R1). The 2026-09-28 kill test (a start at 0.5-0.8 GB free did not
+    bind its port for 19.6 minutes; `docs/research_notes/2026-09-28/
+    lane_o_build_2026-09-28.md` section 3) stays historical evidence: today
+    readiness is decided by the bounded port wait and the probes, and a start
+    that does not bind still ends the repair red ("did not bind its port").
+    Windows manages paging. `min_free_gb()` and `Deps.reclaim` remain for
+    callers that reclaim memory on purpose; the repair no longer calls them.
     * NEVER `gateway restart` while a gateway process is still coming up:
       `restart` ended the task's root and started a second tree beside the
       first, and two gateways then competed for one port."""
@@ -411,27 +408,11 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
         if after["healthy"]:
             return done(after, "kill_orphan_mcp_by_pid")
 
-    # 3. the gateway itself: memory first, never two trees
+    # 3. the gateway itself: never two trees. Physical-free RAM is telemetry,
+    # not startup admission (owner request 2026-10-15); lifecycle ownership,
+    # bounded waits and actual probe failures still decide the repair.
     if not after["healthy"] and (not after["gateway_port"] or after.get("latched")
                                  or fault == "GATEWAY_STUCK"):
-        free = d.free_gb()
-        if free is not None and free < min_free_gb():
-            # Reclaim what the READER owns first (the floor used to be a gate
-            # the repair itself could never clear while a browser held the
-            # memory), then re-read. Still under the floor -> no start: the
-            # kill test measured a 19.6-minute non-bind at 0.5-0.8 GB free.
-            rec = step("reclaim_memory", lambda: d.reclaim(min_free_gb()))
-            if rec["healthy"]:
-                return done(rec, "reclaim_memory")
-            after = rec
-            free2 = d.free_gb()
-            if free2 is not None and free2 < min_free_gb():
-                say(event="repair_deferred", fault=fault, why="LOW_MEMORY", free_gb=free2,
-                    floor_gb=min_free_gb())
-                return done(after, None, f"LOW_MEMORY: {free2} GB free < {min_free_gb()} GB "
-                                         f"after reclaiming the reader's own memory; a gateway "
-                                         f"started now does not bind its port (kill test "
-                                         f"2026-09-28, run 1)")
         if not after["gateway_port"]:
             procs = d.gateway_procs()
             if procs:
