@@ -1964,6 +1964,36 @@ def _case_universe_graph():
             "empty return panel")
 
 
+# -- CH-05 rescue R3 (s65/ch05-r3-prices-contract): staged price admission --
+def _case_global_price_admission():
+    from backend.services.global_price_admission import AdmissionError, plan_admission
+
+    return (lambda: plan_admission(), AdmissionError,
+            "a staged price admission with no explicit owner context or receipt")
+
+
+def test_global_price_admission_positive_control_is_pure(monkeypatch):
+    """The refusal above is not the only thing the module can do, and the
+    control never reaches publication (the runtime's own pairing)."""
+    import pandas as pd
+
+    from backend.services import global_price_admission as GA
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("guard control reached price publication")
+
+    monkeypatch.setattr(GA, "publish_admission", forbidden)
+    call, exception, _ = _case_global_price_admission()
+    with pytest.raises(exception):
+        call()
+    frame = pd.DataFrame([["ABC", "2026-11-04", 10, 11, 9, 10, 100]],
+                         columns=["symbol", "date", "open", "high", "low", "close", "volume"])
+    assert len(GA.staged_sha256(frame)) == 64
+    assert "global_price_admission" in CASES
+    assert "global_price_admission" not in NOT_INPUT_GUARDS
+# -- end CH-05 rescue R3 ------------------------------------------------------
+
+
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
@@ -2102,6 +2132,7 @@ CASES = {
     "research_instruments": _case_research_instruments,
     "forecast_ledger": _case_forecast_ledger,
     "campaign_ledger_startup": _case_campaign_ledger_startup,
+    "global_price_admission": _case_global_price_admission,
 }
 
 

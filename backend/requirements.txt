@@ -114,6 +114,9 @@ praw>=8.0.3
 requests>=2.31.0
 python-dotenv>=1.0.0
 diskcache>=5.6.0
+# global_prices.cache_lock: one cooperative lock shared by the daily fetch and
+# staged price admission. Was only a transitive dependency (edgartools, torch).
+filelock>=3.12
 
 # Exports (Excel tearsheets)
 openpyxl>=3.1.0
