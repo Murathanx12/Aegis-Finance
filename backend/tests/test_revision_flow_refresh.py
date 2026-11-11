@@ -81,8 +81,10 @@ def test_no_policy_pinned_source_was_edited():
                    .read_text(encoding="utf-8"))
     pinned = (c.get("content") or c).get("source_sha256") or {}
     assert "scripts/revision_flow_refresh.py" not in pinned
-    for rel in ("backend/services/pc_sleeves.py", "backend/services/revision_flow.py",
-                "scripts/sim_run.py"):
+    # scripts/sim_run.py is not checked here: OD-10 (#89) changed it on main, so the
+    # prepared epoch already fails closed on that pin (review 4 of #89). The refresh
+    # itself never imports or edits sim_run.
+    for rel in ("backend/services/pc_sleeves.py", "backend/services/revision_flow.py"):
         assert PE._source_sha((root / rel).resolve()) == pinned[rel], rel
 
 
