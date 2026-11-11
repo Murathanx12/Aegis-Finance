@@ -126,7 +126,10 @@ def test_cli_refuses_an_in_repo_path_outside_the_private_dir(tmp_path, capsys):
     import subprocess
     assert CLI.out_path_allowed(tmp_path / "rows.jsonl")
     assert not CLI.out_path_allowed(CLI.REPO / "docs" / "rows.jsonl")
-    assert not CLI.out_path_allowed(CLI.REPO / "backend" / "data" / "optimus" / "rows.jsonl")
+    # CH-05 "U": backend/data/optimus is default-deny now, so an arbitrary file there IS
+    # ignored (allowed); a keep-list path there is still addable, so it is still refused
+    assert not CLI.out_path_allowed(CLI.REPO / "backend" / "data" / "optimus" / "ledger_manifests"
+                                    / "rows.jsonl")
     if shutil.which("git") and (CLI.REPO / ".git").exists():
         assert CLI.out_path_allowed(CLI.PRIVATE_DIR / "x" / "rows.jsonl")
     # ANOTHER checkout (the runtime, a sibling worktree) is just as tracked
