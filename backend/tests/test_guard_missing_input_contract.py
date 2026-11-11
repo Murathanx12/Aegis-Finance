@@ -1964,6 +1964,20 @@ def _case_universe_graph():
             "empty return panel")
 
 
+def _case_owner_calls():
+    # CH-01: the missing input is THE PRICE PANEL. A call logged with no bars
+    # would carry no base-rate twin, and a call without a twin grades against
+    # nothing. No entry date here on purpose: a dated question would begin to
+    # refuse for a different reason (WINDOW_STARTED) the day its window opens.
+    from pathlib import Path as _P
+
+    from backend.services.owner_calls import CallRefused, log_call
+    nowhere = _P("does/not/exist/owner_calls")
+    return (lambda: log_call(nowhere, data_root=nowhere, who="test", probability=None,
+                             text="a call", long=["SPY"], horizon=5, claim="above"),
+            CallRefused, "log_call() with no price panel to build the twin from")
+
+
 # -- CH-05 rescue R3 (s65/ch05-r3-prices-contract): staged price admission --
 def _case_global_price_admission():
     from backend.services.global_price_admission import AdmissionError, plan_admission
@@ -1997,6 +2011,7 @@ def test_global_price_admission_positive_control_is_pure(monkeypatch):
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
+    "owner_calls": _case_owner_calls,
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
     "pc_sleeves": _case_pc_sleeves,
