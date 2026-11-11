@@ -532,26 +532,37 @@ def deepseek_call(system: str, user: str, *, max_tokens: int) -> dict:
     if client is None:
         return {"text": None, "error": "DeepSeek client unavailable"}
     t0 = time.perf_counter()
+    accounting = None
     try:
-        resp = client.chat.completions.create(
+        # CH-05 R2: `llm_analyzer`'s envelope path (reserve before dispatch,
+        # settle on the reply; the plain SDK call where no envelope is required).
+        # The daily call cap above stays the process-local one it always was.
+        resp, accounting = LA._budgeted_deepseek_create(
+            client, purpose=purpose, production_budget=False,
             model=LA._DEEPSEEK_MODEL,
             messages=[{"role": "system", "content": system + LA._LANGUAGE_PIN},
                       {"role": "user", "content": user}],
             max_tokens=max_tokens, temperature=0.4,
             response_format={"type": "json_object"})
     except Exception as exc:                                 # noqa: BLE001
+        if getattr(exc, "no_wire", False):
+            # nothing was sent; `generate` stops the run on this and exits 2
+            return {"text": None, "budget_refused": True, "cost_usd": 0.0,
+                    "error": str(exc)}
         LA._record("deepseek", LA._DEEPSEEK_MODEL, purpose, system=system,
-                   user=user, t0=t0, error=exc)
+                   user=user, t0=t0, error=exc,
+                   accounting=getattr(exc, "shared_budget_accounting", None))
         if LA._is_billing_error(exc):
             LA._trip_breaker(exc)
         return {"text": None, "error": f"{type(exc).__name__}: {exc}"}
     text = (resp.choices[0].message.content or "").strip()
     LA._record("deepseek", LA._DEEPSEEK_MODEL, purpose, system=system, user=user,
                resp=resp, text=text, t0=t0,
-               validate=lambda t: parse_answer(t)[1] == "ok")
+               validate=lambda t: parse_answer(t)[1] == "ok", accounting=accounting)
     u = LT.extract_usage(resp, "deepseek")
-    cost = LT.price_call(LA._DEEPSEEK_MODEL, u["tokens_in"], u["tokens_out"],
-                         u["cached_tokens"])
+    cost = (accounting["cost_usd"] if accounting is not None else
+            LT.price_call(LA._DEEPSEEK_MODEL, u["tokens_in"], u["tokens_out"],
+                          u["cached_tokens"]))
     out = {"text": text, "model": LA._DEEPSEEK_MODEL,
            "served_model": getattr(resp, "model", None), "cost_usd": cost,
            "finish_reason": getattr(resp.choices[0], "finish_reason", None),
@@ -679,6 +690,8 @@ def generate(*, kind: str, n: int, asof: date, out_dir: Path, notes: list[str],
     own_cost = 0.0
 
     for i, strat in enumerate(strategies):
+        if rc["stopped"]:                 # set by a refused re-ask below
+            break
         s = spend(run_start)
         if not s:
             rc["stopped"] = "SPEND UNKNOWN: the telemetry ledger could not be read; refusing to call"
@@ -708,6 +721,11 @@ def generate(*, kind: str, n: int, asof: date, out_dir: Path, notes: list[str],
         ph = hashlib.sha256((system + user).encode()).hexdigest()[:16]
         stem = f"{kind}_{strat['id']}"
         ans = llm(system, user, max_tokens=C.BOOK_FACTORY_MAX_TOKENS)
+        if ans.get("budget_refused"):
+            # the DeepSeek envelope refused before dispatch: a stop, not a book
+            rc["stopped"] = str(ans.get("error") or "DEEPSEEK BUDGET REFUSED")
+            say(rc["stopped"])
+            break
         rc["n_called"] += 1
         own_cost += float(ans.get("cost_usd") or 0.0)
         parsed, status = parse_answer(ans.get("text") or "")
@@ -727,6 +745,10 @@ def generate(*, kind: str, n: int, asof: date, out_dir: Path, notes: list[str],
                 f"\n\nYOUR PREVIOUS ANSWER WAS UNFINISHED: {defect}. Return the "
                 f"COMPLETE json object again ({size_rule_} and weights plus "
                 f"cash_weight summing to 1.0)."), max_tokens=C.BOOK_FACTORY_MAX_TOKENS)
+            if ans.get("budget_refused"):
+                rc["stopped"] = str(ans.get("error") or "DEEPSEEK BUDGET REFUSED")
+                say(rc["stopped"])
+                break
             rc["n_called"] += 1
             own_cost += float(ans.get("cost_usd") or 0.0)
             parsed, status = parse_answer(ans.get("text") or "")

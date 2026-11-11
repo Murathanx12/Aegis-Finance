@@ -943,14 +943,20 @@ def call_decider(profiles: dict, labels: list[str], diary: str | None,
     t0 = time.time()
     err, parsed, raw = None, None, ""
     tin = tout = cached = 0
+    from backend.services import provider_budget as PB
     try:
-        r = _ds_client().chat.completions.create(
+        # CH-05 R2: reserved against the monthly host DeepSeek envelope; on
+        # that host the client's two SDK retries are disabled per call.
+        body = dict(
             model=DECIDER_MODEL,
             messages=[{"role": "system", "content": DECIDER_SYSTEM},
                       {"role": "user", "content": user}],
             temperature=0.0,
             response_format={"type": "json_object"},
             max_tokens=900)
+        r, _accounting = PB.guarded_create(
+            _ds_client(), body, purpose="era_replay_v2.decide",
+            send=lambda c: c.chat.completions.create(**body))
         raw = r.choices[0].message.content or ""
         u = r.usage
         cached = int(getattr(getattr(u, "prompt_tokens_details", None),
@@ -975,6 +981,9 @@ def call_decider(profiles: dict, labels: list[str], diary: str | None,
                            "normalisation: " + str(parsed if parsed else raw)[:180])
                 else:
                     parsed["rank"] = fixed
+    except PB.BudgetRefused as exc:
+        # nothing was sent: the run stops like on its own cap (exit 2)
+        raise HardCapReached(str(exc)) from exc
     except Exception as exc:                                   # noqa: BLE001
         err = f"{type(exc).__name__}: {exc}"
     lat = time.time() - t0
@@ -2228,7 +2237,8 @@ def main(argv=None) -> int:
               f"canary_year={g['canary']['exact_year_rate']:.3f}")
     print(f"\nspend ${SPEND.total():.4f} "
           f"(nano ${SPEND.nano_usd():.4f}, deepseek ${SPEND.ds_usd():.4f})")
-    return 0
+    # a halted run (its own cap, research_budget, or the DeepSeek envelope) is red
+    return 2 if res.get("stopped") else 0
 
 
 if __name__ == "__main__":

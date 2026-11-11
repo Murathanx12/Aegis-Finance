@@ -371,9 +371,12 @@ def _get_openai_client():
         return None
     try:
         from openai import OpenAI
+        # The timeout is the runtime's 10-15 fix (CH-05 R2); retries stay at
+        # the SDK default here, and the envelope path disables them per call.
         _openai_client = OpenAI(
             api_key=_DEEPSEEK_API_KEY,
             base_url=_DEEPSEEK_BASE_URL,
+            timeout=float(getattr(_config_mod, "DEEPSEEK_SDK_TIMEOUT_S", 120.0)),
         )
         return _openai_client
     except ImportError:

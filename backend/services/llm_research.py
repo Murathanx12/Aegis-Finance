@@ -119,6 +119,23 @@ def _price(model: str, pin: int, pout: int) -> float:
     return (pin * p["in"] + pout * p["out"]) / 1_000_000.0
 
 
+def _charged(accounting: Optional[dict], fallback: float) -> float:
+    """What this module's ledger charges for a call.
+
+    With the host envelope (CH-05 R2) it is the envelope's own charge -- the
+    settled peak estimate, or the full reservation while billing is unknown --
+    so a call whose billing is unknown is never ledgered as free. Without it
+    (cloud, where the envelope is not required) the config price table.
+    """
+    if accounting and accounting.get("budget_charge_usd") is not None:
+        return float(accounting["budget_charge_usd"])
+    return fallback
+
+
+def _budget_meta(accounting: Optional[dict]) -> dict:
+    return {"shared_budget": dict(accounting)} if accounting else {}
+
+
 def spent_usd(ledger_path: Optional[Path] = None) -> float:
     p = ledger_path or LEDGER_PATH
     if not p.exists():
@@ -165,6 +182,10 @@ def _mirror(call: LLMCall, *, prompt: str, schema_valid: bool) -> str:
             meta={"temperature": call.temperature,
                   "output_sha256": call.output_sha256,
                   "module_ledger_cost_usd": call.cost_usd})
+        if isinstance(call.meta.get("shared_budget"), dict):
+            # the unified ledger carries the envelope's number, not a re-price
+            row.cost_usd = call.meta["shared_budget"].get("cost_usd")
+            row.meta["shared_budget"] = call.meta["shared_budget"]
         _tel.append([row])
         return row.call_id
     except Exception as exc:                              # noqa: BLE001
@@ -223,10 +244,17 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
             f"is already spent; refusing to call")
 
     import requests
+
+    from backend.services import provider_budget as PB
     key = os.getenv("DEEPSEEK_API_KEY")
     full = prompt if not schema_hint else f"{prompt}\n\n{schema_hint}"
     t0 = time.time()
-    try:
+    request_body = {"model": model, "temperature": temperature,
+                    "max_tokens": max_tokens,
+                    "messages": _lang.pin_messages(
+                        [{"role": "user", "content": full}])}
+
+    def send():
         r = requests.post(
             "https://api.deepseek.com/chat/completions",
             headers={"Authorization": f"Bearer {key}",
@@ -240,13 +268,16 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
             # so it sat in NO enumeration and was unpinned and unguarded for
             # its whole life. Pinning is the request; `_lang.guard` below is
             # the verdict.
-            json={"model": model, "temperature": temperature,
-                  "max_tokens": max_tokens,
-                  "messages": _lang.pin_messages(
-                      [{"role": "user", "content": full}])},
+            json=request_body,
             timeout=180)
         r.raise_for_status()
-        body = r.json()
+        return r.json()
+
+    accounting = None
+    try:
+        # CH-05 R2: reserved against the monthly host envelope before the
+        # request leaves; a refusal sends nothing and raises BudgetExhausted.
+        body, accounting = PB.guarded_send(request_body, purpose=purpose, send=send)
         choice = (body.get("choices") or [{}])[0]
         # `guard` returns "" for a reply that is >10% non-Latin script, which
         # lands in the nothing-came-back branch this function already has
@@ -265,12 +296,13 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
         pout = int(usage.get("completion_tokens") or 0)
         call = LLMCall(purpose=purpose, model=body.get("model") or model,
                        prompt_tokens=pin, completion_tokens=pout,
-                       cost_usd=round(_price(model, pin, pout), 6),
+                       cost_usd=_charged(accounting, round(_price(model, pin, pout), 6)),
                        output_sha256=hashlib.sha256(text.encode()).hexdigest()[:16],
                        seconds=round(time.time() - t0, 2),
                        temperature=temperature, ok=True,
                        finish_reason=finish,
-                       truncated=(finish == "length"))
+                       truncated=(finish == "length"),
+                       meta=_budget_meta(accounting))
         _record(call, ledger_path)
         if call.truncated:
             logger.warning(
@@ -290,11 +322,19 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
         return {"text": text, "call": asdict(call), "call_id": call_id,
                 "finish_reason": finish, "truncated": call.truncated}
     except Exception as exc:  # noqa: BLE001 — a failed call is ledgered too
+        if getattr(exc, "no_wire", False):
+            # The envelope refused before dispatch: nothing was sent or spent,
+            # so nothing is ledgered. Its one line (spend, cap, what to do)
+            # travels as a campaign stop, never as "the provider was down".
+            raise BudgetExhausted(str(exc)) from exc
+        accounting = accounting or getattr(exc, "shared_budget_accounting", None)
         call = LLMCall(purpose=purpose, model=model, prompt_tokens=0,
-                       completion_tokens=0, cost_usd=0.0, output_sha256="",
+                       completion_tokens=0, cost_usd=_charged(accounting, 0.0),
+                       output_sha256="",
                        seconds=round(time.time() - t0, 2),
                        temperature=temperature, ok=False,
-                       error=f"{type(exc).__name__}: {exc}")
+                       error=f"{type(exc).__name__}: {exc}",
+                       meta=_budget_meta(accounting))
         _record(call, ledger_path)
         _mirror(call, prompt=full, schema_valid=False)
         raise LLMUnavailable(str(exc)) from exc

@@ -658,6 +658,9 @@ class SwarmReply:
     #: Night 1 lost 23 of 50 cells and could not tell those two apart at any
     #: price, because this string never left `default_llm_call`.
     finish_reason: str = ""
+    #: The host envelope's settlement for this call (`provider_budget`), or
+    #: empty where the envelope is not required (cloud) or the call was stubbed.
+    budget_accounting: dict = field(default_factory=dict)
 
 
 #: (system, user) -> SwarmReply. Injectable so the offline suite never reaches
@@ -711,6 +714,7 @@ def default_llm_call(system: str, user: str, *, client=None,
     vendor's object, not ours, and a missing field must degrade to a zero-token
     row rather than take a forecast down.
     """
+    from backend.services import provider_budget as PB
     from backend.services import research_budget
     from backend.services.llm_telemetry import extract_usage
 
@@ -722,11 +726,20 @@ def default_llm_call(system: str, user: str, *, client=None,
     for attempt in range(max_retries + 1):
         research_budget.require(campaign, since=since)
         try:
-            resp = cli.chat.completions.create(
+            # CH-05 R2: the monthly DeepSeek envelope reserves BEFORE dispatch
+            # (each retry is its own reservation) and settles on the reply.
+            body = dict(
                 model=model, temperature=temperature, max_tokens=max_tokens,
                 response_format={"type": "json_object"},
                 messages=[{"role": "system", "content": _lang.pin(system)},
                           {"role": "user", "content": user}])
+            resp, accounting = PB.guarded_create(
+                cli, body, purpose=campaign,
+                send=lambda c: c.chat.completions.create(**body))
+        except PB.BudgetRefused as exc:
+            # A refusal is a campaign stop, not a cell failure: the swarm's
+            # callers already halt on ResearchBudgetExhausted.
+            raise research_budget.ResearchBudgetExhausted(str(exc)) from exc
         except Exception as exc:                               # noqa: BLE001
             last = exc
             if attempt >= max_retries or not _is_retryable(exc):
@@ -746,7 +759,7 @@ def default_llm_call(system: str, user: str, *, client=None,
             finish_reason=str(getattr(resp.choices[0], "finish_reason", "")
                               or ""),
             latency_ms=(time.perf_counter() - t0) * 1000.0, retries=retries,
-            **u)
+            budget_accounting=dict(accounting or {}), **u)
     assert last is not None
     raise last
 

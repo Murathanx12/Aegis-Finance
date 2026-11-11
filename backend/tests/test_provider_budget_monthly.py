@@ -160,7 +160,7 @@ def test_status_says_exhausted_when_no_call_can_fit(month_dir, monkeypatch):
 
 def test_status_names_the_uncapped_paths(month_dir, capsys):
     line = PB.status_line()
-    assert "covers llm_analyzer only" in line and "UNCAPPED" in line and "\n" not in line
+    assert "covers calls routed through attempt()" in line and "UNCAPPED" in line and "\n" not in line
     assert PB.main(["status"]) == 0
     out = capsys.readouterr().out
     for x in PB.UNCAPPED_DEEPSEEK_PATHS:

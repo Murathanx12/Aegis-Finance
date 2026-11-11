@@ -731,13 +731,21 @@ def default_llm_call(system: str, user: str, *, model: str = WHY_MOVED_MODEL,
                  timeout=WHY_MOVED_LLM_TIMEOUT_S)
     import time
 
+    from backend.services import provider_budget as PB
+
     t0 = time.perf_counter()
-    resp = cli.chat.completions.create(
+    # CH-05 R2: reserved against the monthly host envelope before dispatch. A
+    # refusal raises BudgetRefused (its one line names spend, cap and remedy),
+    # which `run_lens` records as a degraded lens with that reason.
+    body = dict(
         model=model, temperature=WHY_MOVED_TEMPERATURE,
         max_tokens=WHY_MOVED_MAX_TOKENS,
         response_format={"type": "json_object"},
         messages=[{"role": "system", "content": system},
                   {"role": "user", "content": user}])
+    resp, _accounting = PB.guarded_create(
+        cli, body, purpose="why_moved_hypothesis",
+        send=lambda c: c.chat.completions.create(**body))
     text = resp.choices[0].message.content or ""
     model_version = str(getattr(resp, "model", model))
 
