@@ -32,12 +32,17 @@ What a real run does, in order, stopping at the first failure:
  6. Prints, per task: the `schtasks /Query /XML` backup, the `Set-ScheduledTask` repoint and the
     rollback, in the ch05 switch-plan order. Nothing touches a scheduled task. Task XML backups
     go under `<AEGIS_LIVE_OPTIMUS>\\runtime_switch\\task_xml_backup`, never inside a clone.
+ 7. Prints the desktop app step (CH-22b). The owner's one `Aegis.lnk` starts the app FROM a
+    release clone, and a new clone has neither `node_modules` nor a frontend export, so each
+    release needs `npm ci`, the export, and the shortcut repointed. Printed, never run.
 
 `--retire <tag>` (review 5 M4) is the only supported way to delete a clone. Every clone holds
 junctions to LIVE state (the ~82 GB data dir among them), and a recursive delete that follows a
 junction deletes the live target. Retire refuses unless the clone is a real directory named
 `aegis-runtime-<tag>` beside the live checkout, no scheduled task action names it (read-only
-`schtasks /Query /XML`) and no running process names it in its command line. It then removes
+`schtasks /Query /XML`), no running process names it in its command line, and no shortcut or
+script on the Desktop, in the Start Menu or in Startup names it (a retired clone would leave a
+double-click that does nothing, and the app is the reader's only control). It then removes
 every junction/symlink in the clone with a call that removes the LINK (`os.rmdir`/`os.unlink`
 on the verified reparse point itself), re-walks the tree to prove no reparse point remains, and
 only then deletes the tree. Never `Remove-Item -Recurse`, `rmdir /s` or Explorer on a clone.
@@ -76,6 +81,13 @@ DELETE_RULE = ("never delete a release clone with Remove-Item -Recurse, rmdir /s
 FILE_ATTRIBUTE_REPARSE_POINT = 0x400
 #: Live state that is junctioned but may legitimately be absent (a WARN, the task refuses).
 OPTIONAL_JUNCTIONS = frozenset({"nn_lab/.venv", "ft_lab/data"})
+#: The owner's one desktop entry point and what it runs through the wrapper (CH-22b).
+DESKTOP_SHORTCUT = "Aegis.lnk"
+DESKTOP_WRAPPER = ("--allow-breakaway", "--pythonw", "-m", "desktop.aegis_desktop")
+#: Where a double-click or a logon starts something: (User Shell Folders value, walk subfolders).
+#: The Desktop is listed flat: under OneDrive a recursive walk can stall on cloud-only folders.
+SHELL_FOLDERS = (("Desktop", False), ("Programs", True), ("Startup", True))
+LAUNCHER_SUFFIXES = frozenset({".lnk", ".url", ".vbs", ".cmd", ".bat", ".ps1"})
 
 
 class ReleaseRefused(RuntimeError):
@@ -315,6 +327,33 @@ def task_lines(spec: TaskSpec, *, dest: Path, cfg: Mapping[str, str], backup_dir
             "blocked": spec.blocked}
 
 
+def desktop_lines(tag: str, *, dest: Path, cfg: Mapping[str, str], backup_dir: Path) -> dict:
+    """The owner's desktop app step for one release (CH-22b), as text. The app is served FROM
+    the clone, so every new clone needs its own frontend export and the shortcut repointed."""
+    RT.parse_argv(list(DESKTOP_WRAPPER))
+    scripts = Path(cfg["AEGIS_VENV_DIR"]) / "Scripts"
+    argument = f"-I \"{dest / 'scripts' / 'runtime_task.py'}\" " + " ".join(DESKTOP_WRAPPER)
+    lnk = f"(Join-Path ([Environment]::GetFolderPath('Desktop')) {ps_quote(DESKTOP_SHORTCUT)})"
+    saved = ps_quote(str(backup_dir / DESKTOP_SHORTCUT))
+    props = {"TargetPath": str(scripts / "pythonw.exe"), "Arguments": argument,
+             "WorkingDirectory": str(dest),
+             "IconLocation": f"{dest / 'desktop' / 'assets' / 'aegis.ico'},0",
+             "Description": f"Aegis - local research desktop (release {tag})"}
+    return {
+        "export": [f"Push-Location {ps_quote(str(dest / 'frontend'))}; npm ci; Pop-Location",
+                   f"Push-Location {ps_quote(str(dest))}; & {ps_quote(str(scripts / 'python.exe'))} "
+                   "-m scripts.frontend_check --skip site; Pop-Location"],
+        "backup": f"Copy-Item {lnk} {saved}",
+        "set": (f"$s = (New-Object -ComObject WScript.Shell).CreateShortcut({lnk}); "
+                + "; ".join(f"$s.{k} = {ps_quote(v)}" for k, v in props.items()) + "; $s.Save()"),
+        "rollback": f"Copy-Item {saved} {lnk} -Force",
+        "argument": argument, "working_directory": str(dest),
+        "acceptance": (f"{dest / 'frontend' / 'out' / 'desktop' / 'reader' / 'index.html'} exists; close "
+                       "the app and open it from the shortcut: aegis_desktop_report.json in the live data "
+                       f"dir shows health_ok true and repo_root {dest}"),
+    }
+
+
 def build_plan(tag: str, cfg: Mapping[str, str], *, source: Optional[Path] = None,
                repo_url: str = GITHUB_URL, backup_dir: Optional[Path] = None,
                here: Path = REPO, now: Optional[datetime] = None,
@@ -380,7 +419,8 @@ def build_plan(tag: str, cfg: Mapping[str, str], *, source: Optional[Path] = Non
             "backup_dir": str(backup_dir), "receipt": str(receipt),
             "preflight_entries": entries, "steps": steps,
             "live_state": [dict(i) for i in RP.LIVE_STATE],
-            "tasks": [task_lines(t, dest=dest, cfg=cfg, backup_dir=backup_dir) for t in tasks]}
+            "tasks": [task_lines(t, dest=dest, cfg=cfg, backup_dir=backup_dir) for t in tasks],
+            "desktop": desktop_lines(tag, dest=dest, cfg=cfg, backup_dir=backup_dir)}
 
 
 # ───────────────────────────────────────────────────────────── executing
@@ -547,9 +587,71 @@ def query_process_cmdlines() -> list[str]:
     return [ln for ln in r.stdout.splitlines() if ln.strip()]
 
 
+def shell_folders() -> list[tuple[Path, bool]]:
+    """Read-only: the user's Desktop, Start Menu and Startup folders, from the registry (OneDrive
+    redirects the Desktop, so `~/Desktop` is not the authority). Empty off Windows."""
+    if sys.platform != "win32":
+        return []
+    import winreg  # noqa: PLC0415
+    found: list[tuple[Path, bool]] = []
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                            r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders") as key:
+            for name, deep in SHELL_FOLDERS:
+                try:
+                    raw, _ = winreg.QueryValueEx(key, name)
+                except FileNotFoundError:
+                    continue
+                found.append((Path(os.path.expandvars(raw)), deep))
+    except OSError as exc:
+        raise ReleaseRefused(f"cannot read User Shell Folders ({exc}): cannot prove no shortcut "
+                             "still starts the clone") from exc
+    if not found:
+        raise ReleaseRefused("User Shell Folders names no Desktop, Programs or Startup folder: cannot "
+                             "prove no shortcut still starts the clone")
+    return found
+
+
+def launcher_text(raw: bytes) -> str:
+    """Every reading of a launcher's bytes a path can hide in. A .lnk stores its target in the
+    ANSI code page and usually again as UTF-16 at an arbitrary offset: latin-1, the same with
+    NULs dropped (UTF-16 ASCII at either alignment), and both UTF-16 alignments."""
+    return "\n".join([raw.decode("latin-1"), raw.replace(b"\x00", b"").decode("latin-1"),
+                      raw.decode("utf-16-le", errors="replace"),
+                      raw[1:].decode("utf-16-le", errors="replace")])
+
+
+def query_launchers(folders: Optional[Sequence[tuple[Path, bool]]] = None) -> list[tuple[str, str]]:
+    """Read-only: (path, text) for every shortcut or script in the shell folders."""
+    seen: dict[str, tuple[str, str]] = {}
+    for root, deep in (shell_folders() if folders is None else folders):
+        stack = [Path(root)]
+        while stack:
+            d = stack.pop()
+            try:
+                entries = list(os.scandir(d))
+            except FileNotFoundError:
+                continue
+            except OSError as exc:
+                raise ReleaseRefused(f"cannot list {d} ({exc}): cannot prove no shortcut still "
+                                     "starts the clone") from exc
+            for e in entries:
+                if e.is_dir(follow_symlinks=False):
+                    if deep:
+                        stack.append(Path(e.path))
+                elif Path(e.name).suffix.lower() in LAUNCHER_SUFFIXES and _norm(e.path) not in seen:
+                    try:
+                        seen[_norm(e.path)] = (e.path, launcher_text(Path(e.path).read_bytes()))
+                    except OSError as exc:
+                        raise ReleaseRefused(f"cannot read {e.path} ({exc}): cannot prove it does "
+                                             "not start the clone") from exc
+    return sorted(seen.values())
+
+
 def plan_retire(tag: str, cfg: Mapping[str, str], *, here: Path = REPO,
                 task_xml: Optional[Callable[[], str]] = None,
-                processes: Optional[Callable[[], list[str]]] = None) -> dict:
+                processes: Optional[Callable[[], list[str]]] = None,
+                launchers: Optional[Callable[[], list[tuple[str, str]]]] = None) -> dict:
     """What a retire would remove, as data. Reads only; raises ReleaseRefused."""
     dest = clone_dest(tag, cfg)
     live_root = Path(cfg["AEGIS_LIVE_ROOT"])
@@ -570,9 +672,10 @@ def plan_retire(tag: str, cfg: Mapping[str, str], *, here: Path = REPO,
                              f"(first: {bad[0]['path']}); refusing to guess how to remove them")
     tasks = tasks_naming(dest, (task_xml or query_task_xml)())
     procs = [ln for ln in (processes or query_process_cmdlines)() if _names_path(ln, dest)]
-    return {"schema": "runtime_retire/1", "tag": tag, "dest": str(dest), "links": points,
+    shortcuts = [path for path, text in (launchers or query_launchers)() if _names_path(text, dest)]
+    return {"schema": "runtime_retire/2", "tag": tag, "dest": str(dest), "links": points,
             "tasks_naming_clone": tasks, "processes_naming_clone": procs,
-            "refused": bool(tasks or procs)}
+            "shortcuts_naming_clone": shortcuts, "refused": bool(tasks or procs or shortcuts)}
 
 
 def _rm_readonly(func, path, _exc) -> None:
@@ -590,6 +693,9 @@ def execute_retire(plan: dict, *, out=print) -> int:
     if plan["processes_naming_clone"]:
         raise ReleaseRefused(f"{len(plan['processes_naming_clone'])} running process(es) name {dest} "
                              f"(first: {plan['processes_naming_clone'][0][:160]}); wait for them")
+    if plan["shortcuts_naming_clone"]:
+        raise ReleaseRefused(f"shortcut(s) still start {dest}: {', '.join(plan['shortcuts_naming_clone'])}; "
+                             "repoint them at the current release first (the desktop step a release prints)")
     for lk in plan["links"]:
         p = Path(lk["path"])
         if not _is_reparse_point(p):                       # re-verify at the moment of removal
@@ -617,6 +723,8 @@ def render_retire(plan: dict, *, dry_run: bool) -> str:
     L += [f"#   {lk['path']} -> {lk['target']}" for lk in plan["links"]] or ["#   (none)"]
     L.append(f"# scheduled tasks naming the clone: {plan['tasks_naming_clone'] or 'none'}")
     L.append(f"# running processes naming the clone: {len(plan['processes_naming_clone'])}")
+    L.append("# desktop, start menu and startup launchers naming the clone: "
+             f"{plan['shortcuts_naming_clone'] or 'none'}")
     L.append("# verdict: " + ("REFUSED (see above)" if plan["refused"] else
                               "would remove the links, re-walk for reparse points, then delete the tree"))
     return "\n".join(L)
@@ -659,6 +767,12 @@ def render(plan: dict, *, dry_run: bool) -> str:
             L.append(f"#   NO ACTION GENERATED: {t['manual']}")
         L.append(f"#   rollback: {t['rollback']}")
         L.append("")
+    d = plan["desktop"]
+    L += [f"# ---- desktop app (CH-22b): {DESKTOP_SHORTCUT} starts the app FROM a release clone, and this",
+          "# clone has no node_modules and no frontend export yet. Close the app first. Until the",
+          "# shortcut is repointed, --retire refuses for the clone it still names.",
+          f"#   accept: {d['acceptance']}",
+          *d["export"], d["backup"], d["set"], f"#   rollback: {d['rollback']}", ""]
     return "\n".join(L)
 
 

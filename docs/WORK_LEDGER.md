@@ -21,6 +21,7 @@ removed when that chunk merges.
 
 | Chunk | Agent | Closed | Outcome |
 |---|---|---|---|
+| S65 late evening: CH-22b live (desktop app served from the release clone; `Aegis.lnk` repointed; old reader shortcuts moved; `runtime_release` prints the desktop step and `--retire` guards shortcuts) | Claude S65 | 2026-11-11 | done; ON/OFF buttons not yet pressed; each new release repeats the printed desktop step |
 | S65 evening: CH-05 switch, first six tasks (#110 reader launch fix, #111 null-device child + two pinned clocks, #112 no standard handles for pythonw; releases `20261111a/b/c`) | Claude S65 | 2026-11-11 | merged to main; six tasks on `aegis-runtime-20261111c`; clones a, b and rehearsal retired; next: OD-i, then DailyPass/Alerts/sim, order jobs attended |
 | S65 day builders (CH-05 R1-R6 #100-#103 #105, wrapper + Telegram #104, untrack #108, review-5 fixes #109, CH-04b Featherless #107, CH-22b reader control #106) | Claude S65 + builders | 2026-11-11 | all merged to main; review 5 in the session scratchpad; worktrees removed |
 | S65 night builders (CH-00/32 #86, CH-04 #88 #97, CH-30 #87 #93, CH-31 #91 #96, CH-22a #95, OD-10 #89, CI #90, CH-05 prep #98, learner + skills #92, consensus leak fix #94) | Claude S65 + builders | 2026-11-11 | all merged to main; nothing is in the runtime yet (CH-05); worktrees under `aegis-wt\` removed after merge |
