@@ -522,6 +522,9 @@ backend/data/optimus/local_runtime_digest/
 # Generated after the final source commit for CLI deployment provenance.
 /backend/_build_source.json
 
+# CH-31 one-event receipts and frozen forecasts (written by scripts/one_event.py)
+backend/data/optimus/one_event/
+
 # OD-2 (2026-11-10): the PC DeepSeek envelopes are a host spend ledger, never committed
 backend/data/optimus/session_budget/deepseek_local*.json
 backend/data/optimus/session_budget/deepseek_local*.json.lock

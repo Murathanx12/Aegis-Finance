@@ -42,10 +42,12 @@ failure instead of a wrong answer.
 
 WHAT IS DELIBERATELY NOT MODELLED
 =================================
-**Early closes.** The day after Thanksgiving and Christmas Eve close at 13:00
-ET. They open at 09:30 ET like any other session, and this module is only ever
-asked when the bell RINGS. An early close cannot make a pre-open night late, so
-modelling it here would be machinery with no consequence.
+**Early closes, for the opening bell.** The day after Thanksgiving and
+Christmas Eve close at 13:00 ET. They open at 09:30 ET like any other session,
+so `next_session_open` does not model them. The CLOSE is a different question:
+`session_close_utc` answers it from the calendar, early closes included,
+because a grader that assumes 16:00 on a half day prices a row from a close
+that rang before the row was written (review 3, S65, one_event).
 
 REFUSAL, NOT FALLBACK
 =====================
@@ -142,3 +144,32 @@ def non_sessions_in_year(year: int, *, weekdays_only: bool = True
             out.append(d)
         d += _dt.timedelta(days=1)
     return out
+
+
+def session_close_utc(day) -> _dt.datetime | None:
+    """The real closing bell of session `day` as tz-aware UTC, early closes
+    included; None when `day` is not an XNYS session. Raises
+    `SessionCalendarUnavailable` when the calendar cannot be loaded or `day` is
+    outside it -- never a 16:00 guess."""
+    import pandas as pd
+
+    d = pd.Timestamp(day)
+    if d.tzinfo is not None:
+        d = d.tz_convert("UTC")
+    d = d.normalize().tz_localize(None)
+    cal = _xnys()
+    if not (cal.first_session <= d <= cal.last_session):
+        raise SessionCalendarUnavailable(
+            f"{d.date()} is outside the loaded {_CALENDAR} calendar "
+            f"({_START}..{_END}); widen it rather than guessing")
+    if not cal.is_session(d):
+        return None
+    return cal.session_close(d).to_pydatetime()
+
+
+def early_close_sessions(year: int) -> list[_dt.date]:
+    """Sessions in `year` whose close is earlier than the regular one."""
+    import pandas as pd
+
+    lo, hi = pd.Timestamp(f"{year}-01-01"), pd.Timestamp(f"{year}-12-31")
+    return [d.date() for d in _xnys().early_closes if lo <= d <= hi]
