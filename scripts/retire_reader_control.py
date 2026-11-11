@@ -20,7 +20,7 @@ import argparse
 import json
 import shutil
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
@@ -46,7 +46,9 @@ def plan(*, desktop: Path | None = None, dest_dir: Path | None = None,
         return out
     target = target_of(src)
     out["shortcut_target"] = target
-    if not target or Path(target).name.lower() != EXPECTED_EXE.lower():
+    # a .lnk target is a Windows path; PureWindowsPath parses it the same on
+    # every OS (Path() on Linux would treat the backslashes as one file name)
+    if not target or PureWindowsPath(target).name.lower() != EXPECTED_EXE.lower():
         out.update(action="refuse", why=f"the shortcut points at {target!r}, not {EXPECTED_EXE}")
         return out
     if dst.exists():
