@@ -539,3 +539,9 @@ backend/data/optimus/investigator_news/
 backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl
 backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.lock
 backend/data/optimus/session_budget/deepseek_local*.unsettled.jsonl.*.tmp
+# Night-local read-only comparisons (S65 leak-followup): never committed.
+backend/data/optimus/night_local/
+
+# Night research receipts (S65): research stays protected (owner rule, review 3). Kept
+# locally and in AEGIS_DOCUMENTS/research_receipts/, never in the public repo.
+backend/data/optimus/night_2026-11-11/

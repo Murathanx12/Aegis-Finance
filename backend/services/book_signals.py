@@ -399,6 +399,7 @@ def overhang_conditioned_ranks(cgo: dict, event_sign: dict, *,
 #   E  qmj_rank            JKP `qmj`, stamped `eom`            TRIAL-DRAFT-E
 #   F  seasonality_score   JKP `seas_*an`, stamped `eom`       TRIAL-DRAFT-F
 #   G  forecast_dispersion IBES `stdev`/`meanest`, `statpers`  TRIAL-DRAFT-G
+#      (UNADJUSTED, as quoted -- `ibes_pit_consensus`; the adjusted file leaks)
 #
 # THE STAMP IS THE WHOLE PIT ARGUMENT AND IT IS NOT OURS TO INVENT. JKP's panel
 # is formation-date stamped on `eom` and its own meta.json says each
@@ -611,9 +612,23 @@ def forecast_dispersion(frame, *,
     Section 8 of the registration forbids swapping the denominator INSIDE the
     v0 registration; this parameter exists so the amendment is a separate,
     named read and never a silent change to v0's own number.
+
+    THE FRAME MUST BE AS QUOTED (2026-11-11). `frame` must carry
+    `share_basis == ibes_pit_consensus.AS_QUOTED` on every row, i.e. come from
+    the UNADJUSTED summary. The split-adjusted `ibes_consensus_monthly` file
+    restates history in today's shares and rounds to cents: a firm that later
+    split 56x reads stdev 0.00 years earlier, so the low-dispersion leg bought
+    future splitters (future winners) and both v0 (+0.89%/mo) and Amendment 1
+    (+1.19%/mo, whose raw-CRSP-close denominator shrank the today's-basis stdev
+    by the future split factor) were a look-ahead leak. A frame without the
+    declaration raises ValueError -- loudly, not as SignalUnavailable, which a
+    selector would swallow into an empty book.
     """
     import numpy as np
 
+    from backend.services.ibes_pit_consensus import require_as_quoted
+
+    require_as_quoted(frame, who="forecast_dispersion")
     if scale not in DISPERSION_SCALES:
         raise SignalUnavailable(
             f"unknown dispersion scale {scale!r}; expected one of "

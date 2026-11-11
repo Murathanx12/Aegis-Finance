@@ -79,7 +79,36 @@ def options_pivots(years=(2013, 2024)) -> dict:
     return out
 
 
-def expectations_pivots(early: bool = False) -> dict:
+#: The two eras the adjusted pull was split into; the unadjusted source is cut to
+#: the same windows so a re-run changes the SOURCE and nothing else.
+EXPECTATIONS_ERAS = {True: (1990, 2012), False: (2013, 2024)}
+
+
+def expectations_frame(consensus: pd.DataFrame) -> pd.DataFrame:
+    """exp_breadth / exp_disp / exp_rev per (permno, statpers) from an AS-QUOTED panel.
+
+    `consensus` comes from `ibes_pit_consensus` (unadjusted, `share_basis` stamped);
+    anything else is refused. Until 2026-11-11 this read the SPLIT-ADJUSTED
+    `ibes_consensus_monthly*`: a firm that later split 56x read meanest 0.01 /
+    stdev 0.00 years earlier, so `exp_disp` scored future splitters (future winners)
+    as unanimous and `exp_rev` read cent-rounding as +100% revisions. Breadth was
+    never affected. `exp_rev` now compares two as-quoted values on ONE share basis
+    (`rebased_revision`: the earlier value restated with the split that happened in
+    between).
+    """
+    from backend.services.ibes_pit_consensus import rebased_revision, require_as_quoted
+
+    require_as_quoted(consensus, who="information_classes.expectations_frame")
+    e = consensus.sort_values(["permno", "statpers"], kind="mergesort").copy()
+    e["exp_breadth"] = np.where(
+        e["numest"] > 0, (e["numup"] - e["numdown"]) / e["numest"], np.nan)
+    e["exp_disp"] = np.where(e["meanest"].abs() >= 0.01,
+                             e["stdev"] / e["meanest"].abs(), np.nan)
+    e["exp_rev"] = rebased_revision(e, min_abs_prev=0.01)
+    return e
+
+
+def expectations_pivots(early: bool = False, *, consensus: pd.DataFrame | None = None) -> dict:
     """permno x statpers pivots of IBES consensus state.
 
     `statpers` is the date the consensus was computed, so it is the
@@ -87,22 +116,15 @@ def expectations_pivots(early: bool = False) -> dict:
     used: CHRONOLOGY-AUDIT-1 C3 measured that 99.9% of rows carrying an
     `actual` have anndats_act AFTER statpers, a median 161 days of
     lookahead for anyone who reads it at statpers.
+
+    The source is the UNADJUSTED summary (`ibes_pit_consensus.load_consensus`),
+    which raises when absent -- there is no fallback to the split-adjusted file.
     """
-    f = ("ibes_consensus_monthly_early.parquet" if early
-         else "ibes_consensus_monthly.parquet")
-    e = pd.read_parquet(WRDS_DIR / f,
-                        columns=["permno", "statpers", "fpi", "numest",
-                                 "numup", "numdown", "meanest", "stdev"])
-    e = e[e["fpi"] == "1"].copy()
-    e["statpers"] = pd.to_datetime(e["statpers"])
-    e = e.sort_values("statpers")
-    e["exp_breadth"] = np.where(
-        e["numest"] > 0, (e["numup"] - e["numdown"]) / e["numest"], np.nan)
-    e["exp_disp"] = np.where(e["meanest"].abs() >= 0.01,
-                             e["stdev"] / e["meanest"].abs(), np.nan)
-    prev = e.groupby("permno")["meanest"].shift(1)
-    e["exp_rev"] = np.where(prev.abs() >= 0.01,
-                            (e["meanest"] - prev) / prev.abs(), np.nan)
+    if consensus is None:
+        from backend.services.ibes_pit_consensus import load_consensus
+        y0, y1 = EXPECTATIONS_ERAS[bool(early)]
+        consensus = load_consensus(fpi="1", start_year=y0, end_year=y1)
+    e = expectations_frame(consensus).sort_values("statpers", kind="mergesort")
     out = {}
     for c in ("exp_breadth", "exp_disp", "exp_rev"):
         out[c] = e.pivot_table(index="statpers", columns="permno",
