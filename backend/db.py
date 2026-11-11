@@ -20,14 +20,16 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
-from backend.config import BACKEND_DIR, DATA_DIR
+from backend.config import BACKEND_DIR, DATA_DIR, PI_DB_PATH  # noqa: F401  (DATA_DIR: re-export)
 
 logger = logging.getLogger(__name__)
 
 # DATA_DIR is env-configurable (AEGIS_DATA_DIR) so Railway can persist the DB on
 # a volume WITHOUT shadowing the baked-in paper_portfolios.yaml, which stays under
 # BACKEND_DIR/data (immutable). See config.DATA_DIR for the volume-mount contract.
-DB_PATH = DATA_DIR / "aegis_pi.db"
+# `config.PI_DB_PATH` is `DATA_DIR / "aegis_pi.db"` unless AEGIS_PI_DB_PATH names the
+# live file (a release clone, CH-05 review B1); see config._pi_db_path.
+DB_PATH = PI_DB_PATH
 
 _write_lock = threading.Lock()
 
