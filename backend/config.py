@@ -114,6 +114,30 @@ def build1_path(name: str) -> Path:
 # (do not retrofit the live track record). See docs/TRIALS/TRIAL-001 note.
 DATA_DIR = Path(os.getenv("AEGIS_DATA_DIR", str(BACKEND_DIR / "data")))
 
+#: The paper_nav store (`backend/db.py`, CANON §5): `DATA_DIR / "aegis_pi.db"` unless
+#: `AEGIS_PI_DB_PATH` names the file (CH-05 review 5, B1, 2026-11-11). The database is
+#: gitignored and sits outside the `backend/data/optimus` junction, so a task running
+#: from a release clone would otherwise `sqlite3.connect` a NEW, EMPTY file inside the
+#: clone and the live track record would stop advancing with nothing red. The wrapper
+#: (`scripts/runtime_task.py`) points every task at the live file instead. A set variable
+#: that names no existing file REFUSES at import: sqlite would silently create it. Never
+#: a hard link or a copy: WAL and `-shm` are per path, and two paths to one database
+#: corrupt it.
+def _pi_db_path() -> Path:
+    explicit = os.getenv("AEGIS_PI_DB_PATH", "").strip()
+    if not explicit:
+        return DATA_DIR / "aegis_pi.db"
+    path = Path(explicit).expanduser()
+    if not path.is_file():
+        raise RuntimeError(
+            f"AEGIS_PI_DB_PATH is set to {explicit!r}, which is not a file; refusing to "
+            "start rather than create an empty paper_nav database (unset it to use "
+            "DATA_DIR/aegis_pi.db)")
+    return path.resolve()
+
+
+PI_DB_PATH = _pi_db_path()
+
 #: WHICH `.env`: `PROJECT_ROOT / ".env"` unless `AEGIS_DOTENV_PATH` names one file
 #: explicitly (CH-05, 2026-11-11). The scheduled tasks are to move from the WIP
 #: checkout to a clean checkout of a tagged main commit, and the keys must not be

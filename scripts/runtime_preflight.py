@@ -38,6 +38,23 @@ each repoint, or it is a sentence. The checks, each one a failure seen that week
                  WRITE INTO THE LIVE DATA. It reaches zero only when the growing
                  files are untracked on main; until then it is printed so nobody
                  runs git surgery here.
+
+Added by CH-05 review 5 (2026-11-11):
+
+8. `pi_db`       with `--expect-pi-db`: `backend.db.DB_PATH` (what the child opens) is
+                 that file, it is a SQLite database whose `paper_nav` table HOLDS ROWS
+                 (opened read-only), and the checkout has no stray database of its own
+                 at `backend/data/aegis_pi.db`. A new empty database can never pass (B1).
+9. `siblings`    every sibling path the code derives from `REPO.parent` (SIBLINGS,
+                 pinned against an AST walk of the code by the tests) exists from THIS
+                 checkout. A clone one level too deep made the fleet a silent rc-0 no-op
+                 and three more tasks refuse (B2); now a move goes red here first.
+10. `live_state` with `--live-root`: every piece of live state outside the optimus
+                 junction (LIVE_STATE) is handled the way the table declares: junctions
+                 resolve to the live copy; the rest is listed with its mechanism.
+11. `funnel_age` (WARN) with `--live-root`: the funnel `config.IC_FUNNEL_PATH` serves
+                 here, its `generated_at`, and the live one's. Not a FAIL: which funnel
+                 a clone reads is an owner decision (OD-i, review 5 M2).
 """
 
 from __future__ import annotations
@@ -56,6 +73,97 @@ REPO = Path(__file__).resolve().parents[1]
 
 #: Top-level packages of this repository; an import outside them is a dependency.
 PACKAGES = ("backend", "scripts", "engine", "lab", "learner", "nn_lab", "ft_lab", "tools", "sdk")
+
+#: Every directory name the code reaches as `REPO.parent / <name>` (a sibling repository or
+#: checkout), and the probe that proves it is there FROM a given checkout. FAIL rows are the
+#: ones whose absence turns a scheduled job into a refusal or a silent no-op. Found by walking
+#: the code on 2026-11-11 (`test_runtime_preflight` re-walks it: a new sibling name fails the
+#: suite until it is declared here). `users` and `if_missing` are file:line evidence.
+SIBLINGS: tuple[dict, ...] = (
+    {"name": "aegis-alpha-terminal", "probe": ("aegis-alpha-terminal", ".env"), "level": "FAIL",
+     "users": ["scripts/fleet_manager_run.py:39", "scripts/paper_accounts_roi.py:63",
+               "scripts/fleet_audit.py:59", "scripts/night_p6_bars_and_regret.py:59"],
+     "if_missing": "fleet_manager_run reads no keys: every role NO_CREDENTIAL and main() returns 0 "
+                   "(fleet_manager_run.py:151,441,1335); paper_accounts_roi loses broker reads"},
+    {"name": "aegis-alpha-terminal", "probe": ("aegis-alpha-terminal", "state", "universe"),
+     "level": "FAIL", "users": ["nn_lab/universe_filter.py:27"],
+     "if_missing": "universe_filter.collect() skips it (`if tdir.exists() else []`): the nn_lab "
+                   "ETF/fund exclusion list shrinks and nothing says so"},
+    {"name": "aegis-alpha-terminal", "probe": ("aegis-alpha-terminal", "state", "research", "analyst_panel"),
+     "level": "WARN", "users": ["backend/services/task_receipts.py:933"],
+     "if_missing": "the analyst-panel health row reads UNKNOWN"},
+    {"name": "optimus", "probe": ("optimus", "tools", "refresh_aegis.py"), "level": "FAIL",
+     "users": ["scripts/task_keeper.py:1160"],
+     "if_missing": "AegisBrainRefresh refuses ('tools/refresh_aegis.py not found'), rc 2 "
+                   "(OPTIMUS_ROOT wins when set)"},
+    {"name": "Aegis module", "probe": ("Aegis module", "scripts", "iif1_config.py"), "level": "FAIL",
+     "users": ["backend/services/iif1_prereg.py:46"],
+     "if_missing": "the IIF-1 night refuses with FrozenPreregMissing"},
+    {"name": "Aegis module", "probe": ("Aegis module", "scripts", "iif1_read_gate.py"), "level": "FAIL",
+     "users": ["backend/services/iif1_grader.py:729"],
+     "if_missing": "the IIF-1 grader raises ImportError('no read gate')"},
+    {"name": "Aegis module", "probe": ("Aegis module", "runs", "MARKET-GRAPH-1", "edge_instances.parquet"),
+     "level": "WARN", "users": ["learner/features_graph.py:141"],
+     "if_missing": "graph features refuse (SystemExit REFUSED); lab jobs only"},
+    {"name": "aegis-finance-publication", "probe": ("aegis-finance-publication",), "level": "WARN",
+     "users": ["scripts/task_keeper.py:834", "scripts/task_keeper.py:1264"],
+     "if_missing": "publication tasks refuse; they run from the publication checkout, not a "
+                   "clone, and the wrapper exports AEGIS_PUBLICATION_ROOT anyway"},
+    {"name": "aegis-finance", "probe": None, "level": "WARN",
+     "users": ["scripts/task_keeper.py:69"],
+     "if_missing": "only the publication checkout derives it (`assets`); not a clone path"},
+)
+
+#: Every piece of LIVE state outside `backend/data/optimus` that scheduled code reads or
+#: writes, and how a release clone handles it (review 5, B1; inventory 2026-11-11 in the
+#: CH-05 review-fixes report). `junction`: the clone's path is a junction to the live path
+#: (made by runtime_release, checked here). `env`: an environment variable the wrapper
+#: exports points the code at the live file. `tag`: the clone's tracked copy is the right
+#: one. `absent`: not carried; what that costs is stated. `decision`: an owner decision.
+LIVE_STATE: tuple[dict, ...] = (
+    {"path": "backend/data/optimus", "how": "junction", "required": True,
+     "why": "the shared ledgers every writer uses"},
+    {"path": ".venv", "how": "junction", "required": True,
+     "why": "REPO/.venv in task_keeper._child_python, alert_pass, hyp_lab, world_digest, "
+            "straddle_forward, night_reader_supervisor"},
+    {"path": "nn_lab/.venv", "how": "junction", "required": False,
+     "why": "nn_lab's autogluon venv (AegisNNLabNightly refuses without it)"},
+    {"path": "ft_lab/data", "how": "junction", "required": False,
+     "why": "gitignored research cells (468 MB): hyp_cells.CELLS/BULK/PREDS_2026 for the hyp_lab "
+            "nightly; nn_lab size_members silently writes text_resid_7d = NaN without it"},
+    {"path": "backend/data/aegis_pi.db", "how": "env", "env": "AEGIS_PI_DB_PATH",
+     "why": "paper_nav (CANON section 5), written by daily_pass book_cadence; gitignored. "
+            "Checked by `pi_db`; -wal/-shm follow the one path"},
+    {"path": ".env", "how": "env", "env": "AEGIS_DOTENV_PATH", "why": "the keys file, pointed at"},
+    {"path": "backend/data/funnel_night10.json", "how": "decision",
+     "why": "OD-i (review 5 M2): config.IC_FUNNEL_PATH is BACKEND_DIR-relative, so a clone serves "
+            "the TAG's committed copy; see `funnel_age`"},
+    {"path": "backend/data/funnel_history", "how": "decision",
+     "why": "OD-i: opportunity_funnel archives beside IC_FUNNEL_PATH; stitched_tickers and "
+            "thesis_cards read it. A clone holds only the tag's tracked files"},
+    {"path": "backend/data/funnel_cache", "how": "decision",
+     "why": "OD-i: opportunity_funnel.CACHE_DIR (module-relative); a rebuild in a clone starts cold"},
+    {"path": "docs (generated)", "how": "decision",
+     "why": "review 5 m8: daily_pass writes docs/BRIDGE.md, docs/PAPER_ACCOUNTS.md and "
+            "docs/assets/paper_accounts_roi_*.png into the clone's TRACKED docs/, so `code_clean` "
+            "fails on the next preflight and the live checkout's copies stop updating"},
+    {"path": "backend/data/public_receipts", "how": "tag",
+     "why": "tracked; the live copy equals the runtime HEAD (no writer since). A writer in a clone "
+            "(opportunities_build.publish_public_copy) writes the clone's copy unless "
+            "AEGIS_PUBLIC_RECEIPTS_DIR is --set; DataCatalog sets it to the publication checkout"},
+    {"path": "backend/data/*.yaml|*.csv|*.json.gz|news_entities|crosswalks|copy_lab|arena|swarm|leakage_probe|scrape",
+     "how": "tag", "why": "tracked config and fixtures; on 2026-11-11 the live copies equal main "
+                          "or main is newer (news_sources.yaml)"},
+    {"path": "backend/data/terminal_mirror", "how": "absent",
+     "why": "17 live-only files, last synced 2026-09-08 by hand (terminal_state_reader --sync); "
+            "read by the journal API route, no scheduled writer"},
+    {"path": "backend/data/apscheduler_jobs.db", "how": "absent",
+     "why": "the website/desktop APScheduler store (portfolio_intelligence.scheduler); no task opens it"},
+    {"path": "backend/models/*.pkl", "how": "absent",
+     "why": "gitignored crash model (2026-09-27); readers are API routes, market_dashboard and "
+            "portfolio_intelligence.replay: the crash overlay is dark in a clone"},
+    {"path": "engine/data", "how": "absent", "why": "1.1 GB of research panels (eodhd); no scheduled reader"},
+)
 
 
 def _git(repo: Path, *args: str) -> subprocess.CompletedProcess:
@@ -249,6 +357,119 @@ def check_funnel(funnel: Path, expect: Path) -> dict:
                 {"config": str(funnel), "expected": str(expect), "exists": Path(funnel).is_file()})
 
 
+SQLITE_MAGIC = b"SQLite format 3\x00"
+
+
+def _paper_nav(db: Path) -> dict:
+    """Read-only facts about the paper_nav table; never writes (mode=ro)."""
+    import sqlite3  # noqa: PLC0415
+    con = sqlite3.connect(f"{Path(db).resolve().as_uri()}?mode=ro", uri=True, timeout=10)
+    try:
+        n, books, last = con.execute(
+            "SELECT count(*), count(DISTINCT portfolio_id), max(computed_at) FROM paper_nav").fetchone()
+        return {"paper_nav_rows": int(n), "portfolios": int(books), "last_computed_at": last}
+    finally:
+        con.close()
+
+
+def check_pi_db(repo: Path, db_path: Path, expect: Path) -> dict:
+    """B1: the database the code opens is the live one, and it holds the track record."""
+    own = repo / "backend" / "data" / "aegis_pi.db"
+    detail: dict = {"db_path": str(db_path), "expected": str(expect),
+                    "same_file": _same(db_path, expect), "exists": Path(expect).is_file()}
+    try:
+        with open(expect, "rb") as fh:
+            detail["sqlite"] = fh.read(len(SQLITE_MAGIC)) == SQLITE_MAGIC
+    except OSError:
+        detail["sqlite"] = False
+    if detail["sqlite"]:
+        try:
+            detail.update(_paper_nav(Path(expect)))
+        except Exception as exc:  # noqa: BLE001  (no table, locked, corrupt: all a FAIL)
+            detail["read_error"] = f"{type(exc).__name__}: {exc}"[:200]
+    detail["stray_db_in_checkout"] = os.path.lexists(own) and not _same(own, expect)
+    ok = (detail["same_file"] and detail["exists"] and detail["sqlite"]
+          and detail.get("paper_nav_rows", 0) > 0 and not detail["stray_db_in_checkout"])
+    if not ok:
+        detail["why"] = ("the code would open " + str(db_path) if not detail["same_file"] else
+                         "the live database is missing, not SQLite, unreadable or has no paper_nav "
+                         "rows" if not detail.get("paper_nav_rows") else
+                         f"{own} exists in this checkout: something opened the default path")
+    return _row("pi_db", ok, detail)
+
+
+def check_siblings(repo: Path, siblings: Iterable[dict] = SIBLINGS) -> dict:
+    """B2: what the code finds as `REPO.parent / <sibling>` exists from THIS checkout."""
+    parent = Path(repo).resolve().parent
+    rows, failed, warned = [], [], []
+    for s in siblings:
+        if not s.get("probe"):
+            continue
+        p = parent.joinpath(*s["probe"])
+        ok = p.exists()
+        rows.append({"path": str(p), "exists": ok, "level": s["level"], "users": s["users"],
+                     **({} if ok else {"if_missing": s["if_missing"]})})
+        if not ok:
+            (failed if s["level"] == "FAIL" else warned).append(str(p))
+    status = _row("siblings", not failed, {"parent": str(parent), "missing_fail": failed,
+                                           "missing_warn": warned, "probes": rows})
+    if not failed and warned:
+        status["status"] = "WARN"
+    return status
+
+
+def check_live_state(repo: Path, live_root: Path, table: Iterable[dict] = LIVE_STATE) -> dict:
+    """Every declared piece of live state is handled the way LIVE_STATE says."""
+    rows, failed, warned = [], [], []
+    for item in table:
+        row = {"path": item["path"], "how": item["how"]}
+        if item["how"] == "junction":
+            mine, live = repo / item["path"], Path(live_root) / item["path"]
+            row.update(resolves_to=str(Path(os.path.realpath(mine))), live=str(live),
+                       live_exists=live.exists(), ok=live.exists() and _same(mine, live))
+            if not row["ok"]:
+                (failed if item.get("required") else warned).append(item["path"])
+        elif item["how"] == "env":
+            row["env"] = item["env"]
+            row["set"] = bool(os.environ.get(item["env"]))
+        rows.append(row)
+    st = _row("live_state", not failed, {"live_root": str(live_root), "failed": failed,
+                                         "warned": warned, "items": rows})
+    if not failed and warned:
+        st["status"] = "WARN"
+    return st
+
+
+def _generated_at(p: Path) -> Optional[str]:
+    try:
+        return str(json.loads(Path(p).read_text(encoding="utf-8")).get("generated_at") or "") or None
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def _age_days(stamp: Optional[str], now: datetime) -> Optional[float]:
+    if not stamp:
+        return None
+    try:
+        ts = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if ts.tzinfo is None:
+        return None
+    return round((now - ts).total_seconds() / 86400.0, 1)
+
+
+def check_funnel_age(funnel: Path, live_funnel: Path, *, now: Optional[datetime] = None) -> dict:
+    """WARN-only: the funnel this checkout serves vs the live one (OD-i decides which)."""
+    now = now or datetime.now(timezone.utc)
+    mine, live = _generated_at(funnel), _generated_at(live_funnel)
+    detail = {"serves": str(funnel), "serves_generated_at": mine, "serves_age_days": _age_days(mine, now),
+              "live": str(live_funnel), "live_generated_at": live, "live_age_days": _age_days(live, now),
+              "same_file": _same(funnel, live_funnel),
+              "decision": "OD-i: which funnel a release clone serves (review 5 M2)"}
+    return _row("funnel_age", detail["same_file"] and mine is not None, detail, level="WARN")
+
+
 def check_tracked_data(repo: Path) -> dict:
     out = _git(repo, "status", "--porcelain=v1", "--untracked-files=no", "--", "backend/data/optimus")
     if out.returncode != 0:
@@ -262,7 +483,9 @@ def check_tracked_data(repo: Path) -> dict:
 
 # ----------------------------------------------------------------- run
 def run_checks(repo: Path, *, entries: list[str], expect_commit: str, expect_optimus: Path,
-               expect_funnel: Optional[Path], cfg: Any, environ: dict) -> dict:
+               expect_funnel: Optional[Path], cfg: Any, environ: dict,
+               expect_pi_db: Optional[Path] = None, db_path: Optional[Path] = None,
+               live_root: Optional[Path] = None, siblings: Optional[Iterable[dict]] = None) -> dict:
     rows = [check_commit(repo, expect_commit),
             check_code_clean(repo),
             check_imports(repo, entries),
@@ -272,6 +495,16 @@ def run_checks(repo: Path, *, entries: list[str], expect_commit: str, expect_opt
                               or Path(cfg.PROJECT_ROOT) / ".env"), environ)]
     if expect_funnel is not None:
         rows.append(check_funnel(Path(cfg.IC_FUNNEL_PATH), expect_funnel))
+    if expect_pi_db is not None:
+        rows.append(check_pi_db(repo, Path(db_path or getattr(cfg, "PI_DB_PATH",
+                                                             Path(cfg.DATA_DIR) / "aegis_pi.db")),
+                                expect_pi_db))
+    if siblings is not None:
+        rows.append(check_siblings(repo, siblings))
+    if live_root is not None:
+        rows.append(check_live_state(repo, live_root))
+        rows.append(check_funnel_age(Path(cfg.IC_FUNNEL_PATH),
+                                     Path(live_root) / "backend" / "data" / "funnel_night10.json"))
     rows.append(check_tracked_data(repo))
     failed = [r["check"] for r in rows if r["status"] == "FAIL"]
     return {"schema": "runtime_preflight/1", "utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -287,14 +520,25 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--expect-optimus", required=True, type=Path,
                     help="the live backend/data/optimus directory every writer must share")
     ap.add_argument("--expect-funnel", type=Path, default=None)
+    ap.add_argument("--expect-pi-db", type=Path, default=None,
+                    help="the live paper_nav database the checkout's backend.db must open")
+    ap.add_argument("--live-root", type=Path, default=None,
+                    help="the live checkout: check LIVE_STATE junctions and report the funnel age")
+    ap.add_argument("--skip-siblings", action="store_true",
+                    help="do not check the REPO.parent sibling paths (a context with no siblings)")
     ap.add_argument("--receipt", type=Path, default=None, help="write the receipt here as well")
     a = ap.parse_args(argv)
     if str(REPO) not in sys.path:
         sys.path.insert(0, str(REPO))
     from backend import config as cfg  # noqa: PLC0415  (loads the declared .env; never printed)
+    db_path = None
+    if a.expect_pi_db is not None:
+        from backend import db as _db  # noqa: PLC0415  (what every writer imports DB_PATH from)
+        db_path = Path(_db.DB_PATH)
     rep = run_checks(REPO, entries=a.entry, expect_commit=a.expect_commit,
                      expect_optimus=a.expect_optimus, expect_funnel=a.expect_funnel, cfg=cfg,
-                     environ=dict(os.environ))
+                     environ=dict(os.environ), expect_pi_db=a.expect_pi_db, db_path=db_path,
+                     live_root=a.live_root, siblings=None if a.skip_siblings else SIBLINGS)
     text = json.dumps(rep, indent=1, default=str)
     if a.receipt:
         a.receipt.parent.mkdir(parents=True, exist_ok=True)
