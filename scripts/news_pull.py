@@ -271,12 +271,23 @@ HTTP_CALL_TIMEOUT_S = 120.0
 SOURCE_BUDGET_S = 600.0
 
 
+class HttpBytes(bytes):
+    """Bytes preserving only response provenance needed for negative SEC proof."""
+    def __new__(cls, value, http_proof=None):
+        out = super().__new__(cls, value)
+        out.http_proof = dict(http_proof or {})
+        return out
+
+
 def _http_get(url: str, *, headers: dict | None = None, timeout: float = 45.0) -> bytes:
     """The single network door. Every test mocks THIS, so no test needs a socket."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as fh:  # noqa: S310 registry-gated URLs
-            return fh.read()
+            raw = fh.read()
+            return HttpBytes(raw, {"status": getattr(fh, "status", None),
+                "url": fh.geturl(), "content_type": fh.headers.get("Content-Type", ""),
+                "content_length": fh.headers.get("Content-Length", "")})
     except urllib.error.HTTPError as e:
         raise FetchError(f"HTTP {e.code} {url.split('?')[0]}") from e
     except Exception as e:  # noqa: BLE001 — the receipt wants the string, not a traceback
@@ -535,6 +546,9 @@ class FetchResult:
     sec_completed: dict[str, list[str]] = field(default_factory=dict)
     sec_archived_skipped: int = 0
     sec_feed_entries: int | None = None
+    sec_no_exhibit: dict[str, dict] = field(default_factory=dict)
+    sec_no_exhibit_this_run: int = 0
+    sec_new_no_exhibit_ids: set[str] = field(default_factory=set)
 
 
 def _sleep(seconds: float) -> None:
@@ -639,6 +653,87 @@ def _filing_base(link: str) -> tuple[str, str]:
     return base, acc
 
 
+def sec_no_exhibit_witness(raw: bytes, accession: str, url: str) -> dict | None:
+    """Strict supported HTML/SGML index schema, never absence by parser silence.
+
+    An unknown schema, missing transport metadata, challenge, partial response
+    or document-count mismatch yields no proof and must remain pending. This
+    deliberately does not certify a real index until this schema is observed.
+    """
+    import hashlib
+    import html
+    meta = getattr(raw, "http_proof", {})
+    if (not re.fullmatch(r"\d{10}-\d{2}-\d{6}", accession)
+            or meta.get("status") != 200 or meta.get("url") != url
+            or not re.fullmatch(r"https://www\.sec\.gov/Archives/edgar/data/\d+/\d+/"
+                                + re.escape(accession) + r"-index-headers\.html", url)
+            or str(meta.get("content_type", "")).split(";", 1)[0].strip().lower() != "text/html"):
+        return None
+    try:
+        if int(meta.get("content_length", "")) != len(raw) or not raw:
+            return None
+        text = raw.decode("utf-8", errors="strict")
+    except (TypeError, ValueError, UnicodeError):
+        return None
+    if (not re.match(r"\s*(?:<!DOCTYPE[^>]*>\s*)?<html\b", text, re.I)
+            or not re.search(r"</body>\s*</html>\s*$", text, re.I)
+            or re.search(r"access denied|undeclared automated tool|request rate threshold exceeded|"
+                         r"captcha|cf-chl-|cloudflare|enable javascript", text, re.I)):
+        return None
+    pre = re.findall(r"<pre\b[^>]*>(.*?)</pre>", text, re.I | re.S)
+    if len(pre) != 1 or len(re.findall(r"<body\b", text, re.I)) != 1:
+        return None
+    sgml = html.unescape(pre[0]).strip()
+    if not re.match(r"<SEC-DOCUMENT>\s*" + re.escape(accession) + r"(?:\.txt|-index\.html)\b", sgml):
+        return None
+    if not sgml.endswith("</SEC-DOCUMENT>"):
+        return None
+    header = re.findall(r"<SEC-HEADER>(.*?)</SEC-HEADER>", sgml, re.S)
+    if len(header) != 1 or not re.search(r"(?m)^[ \t]*ACCESSION NUMBER:[ \t]*" + re.escape(accession) + r"[ \t]*\r?$", header[0]):
+        return None
+    counts = re.findall(r"PUBLIC DOCUMENT COUNT:\s*(\d+)\b", header[0])
+    if len(counts) != 1 or int(counts[0]) < 1:
+        return None
+    n = int(counts[0])
+    docs = parse_filing_documents(sgml)
+    if (len(docs) != n or sgml.count("<DOCUMENT>") != n or sgml.count("</DOCUMENT>") != n
+            or any(not d.get("type") or not re.fullmatch(r"[A-Za-z0-9_.-]+", d.get("filename", "")) for d in docs)
+            or len({d["filename"] for d in docs}) != n or exhibit_99_documents(docs)):
+        return None
+    return {"schema": "sec_complete_index_no_ex99/1", "accession": accession,
+        "http": dict(meta), "raw_sha256": hashlib.sha256(raw).hexdigest(),
+        "raw_bytes": len(raw), "public_document_count": n, "documents": docs,
+        "verified_utc": _iso(_now())}
+
+
+def _sec_witness_path(accession: str, sha: str) -> Path:
+    # Both values are validated before a read/write; never trust a stored path.
+    if not re.fullmatch(r"\d{10}-\d{2}-\d{6}", accession) or not re.fullmatch(r"[0-9a-f]{64}", sha):
+        raise ValueError("invalid SEC witness identity")
+    return corpus_dir() / "_sec_index_witnesses" / accession / f"{sha}.html"
+
+
+def _verified_sec_negatives(stored: dict) -> dict:
+    import hashlib
+    valid = {}
+    for accession, proof in stored.items():
+        try:
+            if (proof["schema"] != "sec_complete_index_no_ex99/1" or proof["accession"] != accession
+                    or _filing_base(proof["entry"]["url"])[1] != accession):
+                continue
+            raw = _sec_witness_path(accession, proof["raw_sha256"]).read_bytes()
+            if hashlib.sha256(raw).hexdigest() != proof["raw_sha256"]:
+                continue
+            actual = sec_no_exhibit_witness(HttpBytes(raw, proof["http"]), accession, proof["http"]["url"])
+            if (actual and actual["documents"] == proof["documents"]
+                    and actual["public_document_count"] == proof["public_document_count"]
+                    and actual["raw_bytes"] == proof["raw_bytes"]):
+                valid[accession] = proof
+        except (OSError, ValueError, KeyError, TypeError):
+            continue  # missing/changed/unknown witness means pending, never done
+    return valid
+
+
 def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
     """The 8-K Exhibit 99 BODY — the free, no-key, no-ToS-ambiguity call text.
 
@@ -672,10 +767,16 @@ def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult
     archived = _known_raw_ids(src.id, days=None)
     completed = {acc: ids for acc, ids in completed.items()
                  if ids and all(rid in archived for rid in ids)}
+    prior_negatives = ctx.cursor.get("sec_no_exhibit", {})
+    negatives = _verified_sec_negatives(prior_negatives)
+    res.sec_no_exhibit = negatives
     by_accession = {}
-    for entry in [*pending, *current]:
+    # Retain the original feed entry in each proof so deletion/corruption of a
+    # witness requeues work even after that accession leaves the rolling feed.
+    prior_entries = [p["entry"] for p in prior_negatives.values() if isinstance(p, dict) and p.get("entry")]
+    for entry in [*pending, *prior_entries, *current]:
         _, acc = _filing_base(entry.get("url") or "")
-        if acc not in completed:
+        if acc not in completed and acc not in negatives:
             stored = dict(entry)
             if isinstance(stored.get("published"), datetime):
                 stored["published"] = _iso(stored["published"])
@@ -705,14 +806,26 @@ def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult
         _sleep(ctx.pace(src))
         try:
             res.calls += 1
-            docs = parse_filing_documents(
-                ctx.http_get_via(src, f"{base}/{acc}-index-headers.html"))
+            index_url = f"{base}/{acc}-index-headers.html"
+            index_raw = ctx.http_get_via(src, index_url)
+            docs = parse_filing_documents(index_raw)
         except FetchError as e:
             res.failures.append(f"{acc}: index-headers: {e}")
             continue
         exhibits = exhibit_99_documents(docs)
         if not exhibits:
             no_exhibit += 1
+            proof = sec_no_exhibit_witness(index_raw, acc, index_url)
+            if proof is not None:
+                from backend.services.disk_guard import atomic_write_text
+                witness = _sec_witness_path(acc, proof["raw_sha256"])
+                atomic_write_text(witness, index_raw.decode("utf-8"))
+                proof["entry"] = dict(entry)
+                # Re-read evidence before it can retire pending work.
+                if acc in _verified_sec_negatives({acc: proof}):
+                    res.sec_no_exhibit[acc] = proof
+                    res.sec_no_exhibit_this_run += 1
+                    res.sec_new_no_exhibit_ids.add(acc)
             # Parsed non-EX99 documents alone do not prove a complete index.
             # Retain this work rather than committing a vacuous all([]) proof.
             if not docs:
@@ -758,8 +871,8 @@ def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult
         if set(fetched) == set(expected):
             res.sec_completed[acc] = expected
     res.failures.append(
-        f"{no_exhibit} filing(s) passed the item filter and attached NO Exhibit 99 — "
-        f"that is an answer about the filing, not a parse failure.")
+        f"{no_exhibit} filing(s) parsed index lists NO Exhibit 99; "
+        f"{res.sec_no_exhibit_this_run} complete-index witness(es) verified; others remain pending.")
     return res
 
 
@@ -1297,14 +1410,18 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
         persisted = _known_raw_ids(src.id, days=None)
         complete = {acc: ids for acc, ids in res.sec_completed.items()
                     if ids and all(rid in persisted for rid in ids)}
+        negatives = _verified_sec_negatives(res.sec_no_exhibit)
         pending = [entry for entry in res.sec_pending
-                   if _filing_base(entry.get("url") or "")[1] not in complete]
-        sec_state = {"sec_completed": complete, "sec_pending": pending}
+                   if _filing_base(entry.get("url") or "")[1] not in complete
+                   and _filing_base(entry.get("url") or "")[1] not in negatives]
+        sec_state = {"sec_completed": complete, "sec_pending": pending, "sec_no_exhibit": negatives}
         receipt["sec_progress"] = {"completed_filings": len(complete),
                                    "feed_entries": res.sec_feed_entries,
                                    "completed_this_run": len(set(complete) - set(ctx.cursor.get("sec_completed", {}))),
                                    "archived_exhibits_skipped": res.sec_archived_skipped,
                                    "pending_filings": len(pending),
+                                   "no_exhibit_verified": len(negatives),
+                                   "no_exhibit_verified_this_run": len(res.sec_new_no_exhibit_ids & set(negatives)),
                                    "archive_verified": True}
         res.next_cursor = next(reversed(complete), ctx.cursor.get("next_cursor", ""))
     _write_cursor(src.id, {
