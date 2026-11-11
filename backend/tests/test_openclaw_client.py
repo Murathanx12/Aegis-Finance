@@ -801,3 +801,53 @@ def test_browser_names_the_route_on_its_receipt(monkeypatch, clock):
     monkeypatch.setattr(OC, "cli_route", lambda: "node")
     out = OC.browser("snapshot", profile_name="muratclaw", target_id="t20")
     assert out["cli_route"] == "node"
+
+
+# ── CH-05 R1 (ported from the runtime checkout): the paper-scope lock queues
+#    the threads of ONE process and still refuses at once across processes ──
+
+def test_the_paper_scope_lock_queues_threads_of_one_process(monkeypatch, tmp_path):
+    """The file lock is taken with timeout_s=0, and its per-path THREAD lock
+    honours that timeout too: a second reader thread meeting the first one's
+    browser call raised FileLockTimeout instead of waiting its turn. A
+    process-local RLock in front of the file lock makes cooperating threads
+    queue; the cross-process boundary is unchanged."""
+    import tempfile
+    import threading
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    order: list[str] = []
+    errors: list[BaseException] = []
+    entered, release = threading.Event(), threading.Event()
+
+    def holder():
+        with OC._paper_scope_lock():
+            order.append("a-in")
+            entered.set()
+            release.wait(5)
+            order.append("a-out")
+
+    def waiter():
+        entered.wait(5)
+        try:
+            with OC._paper_scope_lock():
+                order.append("b-in")
+        except BaseException as exc:                    # noqa: BLE001
+            errors.append(exc)
+
+    a, b = threading.Thread(target=holder), threading.Thread(target=waiter)
+    a.start(), b.start()
+    entered.wait(5)
+    b.join(0.3)                     # b must still be waiting, not have failed
+    assert not errors and b.is_alive()
+    release.set()
+    a.join(5), b.join(5)
+    assert not errors, errors
+    assert order == ["a-in", "a-out", "b-in"]
+
+
+def test_the_paper_scope_lock_is_reentrant_in_one_thread(monkeypatch, tmp_path):
+    import tempfile
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    with OC._paper_scope_lock() as outer:
+        with OC._paper_scope_lock() as inner:
+            assert outer == inner

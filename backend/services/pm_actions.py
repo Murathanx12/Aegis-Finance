@@ -38,6 +38,7 @@ from typing import Any, Optional
 
 import numpy as np
 
+from backend.config import IC_FUNNEL_PATH
 from backend.services.pm_engine import (BINARY_EXTRA_HAIRCUT,
                                         DEFAULT_CORRELATION, MIN_TICKET,
                                         REBALANCE_BAND, RETAIL_ROUND_TRIP,
@@ -654,8 +655,12 @@ def _evidence_basis() -> dict:
 #: Where the funnel leaves its last run. The brief READS this; it never runs
 #: the funnel inline, because a 27-batch market screen inside a morning report
 #: is how a report becomes something nobody waits for.
-MARKET_RADAR_PATH = (Path(__file__).resolve().parents[2] / "docs"
-                     / "opportunity_funnel_run.json")
+#: It is the file the funnel CLI actually writes (`IC_FUNNEL_PATH`). It used to
+#: be `docs/opportunity_funnel_run.json`, a tracked file nothing rewrites
+#: (generated 2026-08-10), aged by its mtime -- so every fresh checkout read it
+#: as OK. The age now comes from the receipt's own `generated_at` (CH-05 R1,
+#: ported from the runtime checkout).
+MARKET_RADAR_PATH = IC_FUNNEL_PATH
 MARKET_RADAR_STALE_HOURS = 36
 
 
@@ -671,15 +676,22 @@ def _market_radar(path: Path | None = None, *, top: int = 10) -> dict:
     p = Path(path or MARKET_RADAR_PATH)
     if not p.exists():
         return {"status": "NEVER RUN",
-                "how": "python -m backend.services.opportunity_funnel, or "
-                       "scripts/run_funnel.py",
+                "how": "python -m backend.services.opportunity_funnel",
                 "consequence": "the brief can only see the watchlist today"}
     try:
         raw = _json.loads(p.read_text(encoding="utf-8"))
+        stamp = raw.get("generated_at")
+        if not isinstance(stamp, str):
+            raise ValueError("generated_at must be a timezone-aware ISO timestamp")
+        generated = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+        if generated.utcoffset() is None:
+            raise ValueError("generated_at must include a timezone")
+        age_h = (time.time() - generated.timestamp()) / 3600.0
+        if age_h < 0:
+            raise ValueError("generated_at is in the future")
     except Exception as exc:  # noqa: BLE001
         return {"status": "UNREADABLE", "error": str(exc)[:200],
                 "consequence": "treated as absent, NOT as an empty market"}
-    age_h = (time.time() - p.stat().st_mtime) / 3600.0
     out = {
         "status": "STALE" if age_h > MARKET_RADAR_STALE_HOURS else "OK",
         "generated_at": raw.get("generated_at"),
