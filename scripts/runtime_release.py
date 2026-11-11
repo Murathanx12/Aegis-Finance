@@ -193,11 +193,9 @@ TASKS: tuple[TaskSpec, ...] = (
              "supervisor PID alive AFTER the task ends; reader logs advance",
              note="--allow-breakaway: the supervisor this task starts must outlive it; in the default "
                   "tree mode the wrapper's kill-on-close job would kill it when the task returned. "
-                  "NOT READY unless the tag includes PR #105: on main today task_keeper reader starts "
-                  "backend\\data\\optimus\\dowjones\\supervisor_run.cmd, which lives in the DATA dir "
-                  "(the junction serves the LIVE copy) and does `cd /d C:\\Users\\mrthn\\aegis-finance` "
-                  "-- it would run the WIP checkout's code. Same for night_reader_supervisor's "
-                  "queue_run.cmd (R6)."),
+                  "Needs a tag that includes PR #105 (merged 2026-11-11): before it, task_keeper reader "
+                  "started the data-dir supervisor_run.cmd, whose `cd /d C:\\Users\\mrthn\\aegis-finance` "
+                  "ran the WIP checkout's code; #105 launches the supervisor from THIS checkout."),
     TaskSpec("16", "AegisTelegramAgent", "D two-way messages",
              _w("--pythonw", "-m", "scripts.telegram_agent", "--supervise"),
              "heartbeat ok; one owner round trip",

@@ -93,7 +93,7 @@ SIBLINGS: tuple[dict, ...] = (
      "level": "WARN", "users": ["backend/services/task_receipts.py:933"],
      "if_missing": "the analyst-panel health row reads UNKNOWN"},
     {"name": "optimus", "probe": ("optimus", "tools", "refresh_aegis.py"), "level": "FAIL",
-     "users": ["scripts/task_keeper.py:1160"],
+     "users": ["scripts/task_keeper.py:1220"],
      "if_missing": "AegisBrainRefresh refuses ('tools/refresh_aegis.py not found'), rc 2 "
                    "(OPTIMUS_ROOT wins when set)"},
     {"name": "Aegis module", "probe": ("Aegis module", "scripts", "iif1_config.py"), "level": "FAIL",
@@ -106,11 +106,11 @@ SIBLINGS: tuple[dict, ...] = (
      "level": "WARN", "users": ["learner/features_graph.py:141"],
      "if_missing": "graph features refuse (SystemExit REFUSED); lab jobs only"},
     {"name": "aegis-finance-publication", "probe": ("aegis-finance-publication",), "level": "WARN",
-     "users": ["scripts/task_keeper.py:834", "scripts/task_keeper.py:1264"],
+     "users": ["scripts/task_keeper.py:894", "scripts/task_keeper.py:1324"],
      "if_missing": "publication tasks refuse; they run from the publication checkout, not a "
                    "clone, and the wrapper exports AEGIS_PUBLICATION_ROOT anyway"},
     {"name": "aegis-finance", "probe": None, "level": "WARN",
-     "users": ["scripts/task_keeper.py:69"],
+     "users": ["scripts/task_keeper.py:79"],
      "if_missing": "only the publication checkout derives it (`assets`); not a clone path"},
 )
 

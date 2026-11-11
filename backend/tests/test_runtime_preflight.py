@@ -373,12 +373,14 @@ def test_every_sibling_the_code_derives_is_declared() -> None:
     assert not undeclared, f"undeclared sibling path(s): {undeclared}"
 
 
-def test_every_sibling_user_points_at_a_line_that_builds_the_path() -> None:
+def test_every_declared_sibling_user_really_builds_that_path() -> None:
+    """Each SIBLINGS `users` file holds an AST site for that sibling name. The line numbers
+    are evidence for a reader and are NOT pinned: an edit above them must not turn this red."""
+    sites = {(f, n) for f, _l, n in sibling_sites()}
     for s in RP.SIBLINGS:
         for u in s["users"]:
-            f, line = u.rsplit(":", 1)
-            text = (REPO / f).read_text(encoding="utf-8").splitlines()[int(line) - 1]
-            assert s["name"] in text or "parent" in text, (u, text)
+            f = u.rsplit(":", 1)[0]
+            assert (f, s["name"]) in sites, (u, s["name"])
 
 
 # ───────────────────────────────────────────────────────── review 5: live_state, funnel_age
