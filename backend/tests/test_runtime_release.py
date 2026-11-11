@@ -354,6 +354,17 @@ def _nothing():
     return []
 
 
+#: The real reader, kept for its own tests; every other test gets an empty Desktop (below).
+REAL_QUERY_LAUNCHERS = RR.query_launchers
+
+
+@pytest.fixture(autouse=True)
+def _no_real_shell_folders(monkeypatch):
+    """No test reads the developer's Desktop or Start Menu: a retire plan sees no launchers
+    unless the test passes its own."""
+    monkeypatch.setattr(RR, "query_launchers", _nothing)
+
+
 def test_retire_removes_links_first_and_the_live_data_survives(tmp_path):
     cfg, dest, live_opt = _fake_clone(tmp_path)
     rp = RR.plan_retire("runtime-20261115", cfg, here=tmp_path / "dev", task_xml=lambda: "", processes=_nothing)
@@ -413,3 +424,82 @@ def test_retire_refuses_from_inside_the_clone(tmp_path):
     cfg, dest, _ = _fake_clone(tmp_path)
     with pytest.raises(RR.ReleaseRefused, match="inside"):
         RR.plan_retire("runtime-20261115", cfg, here=dest / "scripts", task_xml=lambda: "", processes=_nothing)
+
+
+# ───────────────────────────────────────────────────────────── desktop app (CH-22b)
+
+def test_the_release_prints_the_desktop_step_and_never_runs_it(tmp_path):
+    cfg = cfg_for(tmp_path)
+    plan = RR.build_plan("runtime-20261115", cfg, here=tmp_path / "dev")
+    d, dest = plan["desktop"], Path(plan["dest"])
+    assert d["argument"].endswith("--allow-breakaway --pythonw -m desktop.aegis_desktop")
+    assert d["working_directory"] == str(dest)
+    assert "npm ci" in d["export"][0] and str(dest / "frontend") in d["export"][0]
+    assert "-m scripts.frontend_check --skip site" in d["export"][1]
+    assert "CreateShortcut(" in d["set"] and "'Aegis.lnk'" in d["set"] and d["set"].endswith("$s.Save()")
+    assert str(Path(cfg["AEGIS_VENV_DIR"]) / "Scripts" / "pythonw.exe") in d["set"]
+    assert RR._names_path(d["set"], dest)                 # so --retire sees the shortcut it wrote
+    assert RR._inside(Path(plan["backup_dir"]), Path(cfg["AEGIS_LIVE_OPTIMUS"]))
+    assert str(Path(plan["backup_dir"]) / "Aegis.lnk") in d["backup"] and d["rollback"].endswith("-Force")
+    text = RR.render(plan, dry_run=True)
+    tail = text[text.index("# ---- desktop app"):].splitlines()
+    for line in (*d["export"], d["backup"], d["set"], f"#   rollback: {d['rollback']}"):
+        assert line in tail
+    assert all(st["kind"] != "desktop" for st in plan["steps"])       # printed, not a step
+
+
+def test_launcher_text_finds_a_path_in_either_encoding_at_any_offset():
+    dest = Path(r"C:\Users\x\aegis-runtime-r1") if WIN else Path("/h/aegis-runtime-r1")
+    target = str(dest / "scripts" / "runtime_task.py")
+    for raw in (b"L\x00\x01" + target.encode("latin-1") + b"\x00",              # ANSI
+                b"\x4c\x00" + target.encode("utf-16-le") + b"\x00\x00",          # UTF-16, even offset
+                b"\x4c" + target.encode("utf-16-le") + b"\x00\x00"):             # UTF-16, odd offset
+        assert RR._names_path(RR.launcher_text(raw), dest), raw[:8]
+    sibling = (str(dest) + "2").encode("utf-16-le")
+    assert not RR._names_path(RR.launcher_text(b"\x4c" + sibling), dest)
+
+
+def test_query_launchers_lists_the_desktop_flat_and_the_start_menu_deep(tmp_path):
+    desk, menu = tmp_path / "Desktop", tmp_path / "Programs"
+    (desk / "sub").mkdir(parents=True)
+    (menu / "Startup").mkdir(parents=True)
+    (desk / "Aegis.lnk").write_bytes(b"a")
+    (desk / "notes.txt").write_bytes(b"not a launcher")
+    (desk / "sub" / "deep.lnk").write_bytes(b"b")                   # Desktop subfolders are not walked
+    (menu / "Startup" / "Lab.VBS").write_bytes(b"c")
+    got = REAL_QUERY_LAUNCHERS([(desk, False), (menu, True), (menu / "Startup", True),
+                                (tmp_path / "absent", True)])
+    assert sorted(Path(p).name for p, _ in got) == ["Aegis.lnk", "Lab.VBS"]   # each file once
+
+
+def test_retire_refuses_while_a_shortcut_starts_the_clone(tmp_path):
+    cfg, dest, live_opt = _fake_clone(tmp_path)
+    lnk = tmp_path / "Desktop" / "Aegis.lnk"
+    lnk.parent.mkdir()
+    lnk.write_bytes(b"L\x00" + f'-I "{dest}{os.sep}scripts{os.sep}runtime_task.py"'.encode("utf-16-le"))
+    (lnk.parent / "Other.lnk").write_bytes((str(dest) + "2").encode("utf-16-le"))
+    rp = RR.plan_retire("runtime-20261115", cfg, here=tmp_path / "dev", task_xml=lambda: "", processes=_nothing,
+                        launchers=lambda: REAL_QUERY_LAUNCHERS([(lnk.parent, False)]))
+    assert rp["refused"] and rp["shortcuts_naming_clone"] == [str(lnk)]
+    assert "Aegis.lnk" in RR.render_retire(rp, dry_run=True)
+    with pytest.raises(RR.ReleaseRefused, match="shortcut"):
+        RR.execute_retire(rp, out=lambda *_: None)
+    assert dest.is_dir() and (live_opt / "canary.jsonl").exists()
+
+
+@pytest.mark.skipif(not WIN, reason="a real .lnk needs the Windows shell")
+def test_a_real_shortcut_written_by_the_shell_is_seen(tmp_path):
+    """The bytes Windows actually writes, not the bytes this file imagines."""
+    dest = tmp_path / "aegis-runtime-r1"
+    (dest / "scripts").mkdir(parents=True)
+    desk = tmp_path / "Desktop"
+    desk.mkdir()
+    lnk = desk / "Aegis.lnk"
+    argument = f'-I "{dest / "scripts" / "runtime_task.py"}" --pythonw -m desktop.aegis_desktop'
+    ps = (f"$s = (New-Object -ComObject WScript.Shell).CreateShortcut({RR.ps_quote(str(lnk))}); "
+          f"$s.TargetPath = {RR.ps_quote(sys.executable)}; $s.Arguments = {RR.ps_quote(argument)}; $s.Save()")
+    subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps], check=True,
+                   capture_output=True, timeout=60)
+    found = REAL_QUERY_LAUNCHERS([(desk, False)])
+    assert [p for p, text in found if RR._names_path(text, dest)] == [str(lnk)]
+    assert not [p for p, text in found if RR._names_path(text, tmp_path / "aegis-runtime-r")]   # shorter sibling
