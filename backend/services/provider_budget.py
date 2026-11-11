@@ -880,19 +880,316 @@ def attempt(body, *, base_url, purpose, send, production_cap=None):
         return response, acct
 
 
+# ───────────────── FEATHERLESS: the second provider's own envelope ─────────────────
+#
+# Owner, 2026-11-11: "we have 75$ usd in featherless api use it", for bulk work,
+# through the same kind of guard as DeepSeek and never uncapped. Measured the
+# same day (`GET /v1/plan`, `/credits/balance`): the account is on Featherless's
+# REQUEST-PRICING plan -- a prepaid credit balance billed per token, per model,
+# successful requests only, credits never expire -- with ~$74.50 left. So the
+# cap is in dollars, exactly like DeepSeek's: a monthly cap AND a lifetime
+# ceiling (the owner's $75), both from config.
+#
+# WHY ITS OWN FILE (`session_budget/featherless_local.json`), not a provider key
+# inside `deepseek_local.json`: that file is shared with the runtime's 10-15
+# guard, which reads `cap_units` as a LIFETIME DeepSeek cap capped at $20 and
+# sums every call's `held_units` against it. A Featherless row there would be
+# spent out of DeepSeek's cap by the old code and the $75 lifetime would fail
+# `_load`'s $20 contract. A separate file keeps the two ledgers independent; a
+# Featherless refusal never touches DeepSeek's room and vice versa.
+#
+# Same contract as above, smaller machinery: reserve a worst-case bound BEFORE
+# dispatch (bytes + 1024 tokens of input at the model's configured price, plus
+# max_tokens of output), refuse an unpriced model, settle from the returned
+# usage (the larger of our price x tokens and the provider's own `usage.cost`),
+# keep the FULL reservation when billing is unknown, and block the envelope
+# when a reply exceeds its bound or names a different model. There is no
+# Railway exemption: a Featherless call is capped on every host.
+
+FEATHERLESS_SCHEMA = "local_featherless_envelope/1"
+FEATHERLESS_ENVELOPE_NAME = "featherless_local.json"
+FEATHERLESS_HOST = "api.featherless.ai"
+_FL_HINTS = {
+    "EXHAUSTED_MONTH": "monthly cap reached; future months: AEGIS_FEATHERLESS_MONTHLY_CAP_USD "
+                       "(config.FEATHERLESS_MONTHLY_CAP_USD)",
+    "EXHAUSTED_LIFETIME": "lifetime ceiling reached (config.FEATHERLESS_LIFETIME_CAP_USD, the owner's "
+                          "stated credit); only the owner raises it",
+    "BLOCKED": f"attended reconciliation required; see `{CLI} status --provider featherless`",
+    "UNREADABLE": "envelope unreadable or malformed; inspect it, never delete or replace one holding spend",
+    "UNPRICED": "the model is not in config.FEATHERLESS_MODELS with a row in LLM_PRICE_PER_MTOK; add its price "
+                "(GET /v1/models/<id> .pricing) before using it",
+    "CONFIG": "fix FEATHERLESS_MONTHLY_CAP_USD / FEATHERLESS_LIFETIME_CAP_USD in backend/config.py",
+}
+
+
+def featherless_path():
+    override = os.getenv("AEGIS_FEATHERLESS_BUDGET_PATH")
+    return Path(override) if override else _default_dir() / FEATHERLESS_ENVELOPE_NAME
+
+
+def _fl_caps():
+    """(monthly, lifetime) caps in units, from config. Refuses a nonsense pair."""
+    C = _cfg()
+    month = float(getattr(C, "FEATHERLESS_MONTHLY_CAP_USD", 0.0))
+    life = float(getattr(C, "FEATHERLESS_LIFETIME_CAP_USD", 0.0))
+    if not (0 < month <= life) or life > float(getattr(C, "FEATHERLESS_HARD_CAP_USD", 75.0)):
+        raise BudgetRefused(f"FEATHERLESS BUDGET REFUSED (CONFIG): month ${month} / lifetime ${life} "
+                            f"-- {_FL_HINTS['CONFIG']}")
+    return _units(month), _units(life)
+
+
+def _fl_price(model):
+    """(in, out) USD/1M from THE rate table, for a model named in FEATHERLESS_MODELS only."""
+    C = _cfg()
+    row = ((getattr(C, "LLM_PRICE_PER_MTOK", {}) or {}).get(str(model))
+           if str(model) in tuple(getattr(C, "FEATHERLESS_MODELS", ()) or ()) else None)
+    if (not isinstance(row, dict) or not all(isinstance(row.get(k), (int, float)) and row[k] >= 0
+                                             for k in ("in", "out"))):
+        raise BudgetRefused(f"FEATHERLESS BUDGET REFUSED (UNPRICED): {model!r} -- {_FL_HINTS['UNPRICED']}")
+    return float(row["in"]), float(row["out"])
+
+
+def featherless_quote(system, user, max_tokens, model):
+    """Worst-case bound for two plain messages. Raises for an unpriced model."""
+    if type(max_tokens) is not int or max_tokens <= 0:
+        raise BudgetRefused("FEATHERLESS BUDGET REFUSED: invalid output bound")
+    p_in, p_out = _fl_price(model)
+    ti = len((system + user).encode("utf-8")) + 1024
+    return {"input_bound": ti, "output_bound": max_tokens,
+            "reserved_units": _units((ti*p_in + max_tokens*p_out)/1e6)}
+
+
+def _fl_fresh():
+    C = _cfg()
+    return {"schema": FEATHERLESS_SCHEMA, "provider": "featherless",
+            "created_utc": _utcnow().isoformat(),
+            "cap_source": "config.FEATHERLESS_MONTHLY_CAP_USD / FEATHERLESS_LIFETIME_CAP_USD",
+            "price_source": "config.LLM_PRICE_PER_MTOK rows for FEATHERLESS_MODELS (GET /v1/models/<id> .pricing)",
+            "price_as_of": str(getattr(C, "FEATHERLESS_PRICE_AS_OF", "")),
+            "calls": {}, "blocked": None}
+
+
+def _fl_load(p):
+    try:
+        s = json.loads(p.read_text(encoding="utf-8"))
+        if s.get("schema") != FEATHERLESS_SCHEMA or not isinstance(s.get("calls"), dict):
+            raise ValueError("invalid envelope contract")
+        for r in s["calls"].values():
+            if type(r.get("held_units")) is not int or r["held_units"] < 0:
+                raise ValueError("invalid held amount")
+            if r.get("status") not in {"RESERVED_UNKNOWN", "BILLING_UNKNOWN", "SETTLED",
+                                       "UNBILLED_HTTP_REFUSAL"}:
+                raise ValueError("unknown settlement status")
+        return s
+    except Exception as exc:
+        raise BudgetRefused(f"FEATHERLESS BUDGET REFUSED (UNREADABLE): {p.name} -- "
+                            f"{_FL_HINTS['UNREADABLE']}") from exc
+
+
+def _fl_held(s, month=None):
+    return sum(r["held_units"] for r in s["calls"].values()
+               if month is None or _month_of(r.get("started_utc")) in (month, None))
+
+
+def _fl_view(p):
+    """(state, month held, lifetime held, month cap, lifetime cap); an absent
+    file reads as the empty one the first call creates. Never writes."""
+    s = _fl_load(p) if p.exists() else {**_fl_fresh(), "virtual": True}
+    month_cap, life_cap = _fl_caps()
+    return s, _fl_held(s, month_id()), _fl_held(s), month_cap, life_cap
+
+
+def _fl_refuse(code, held_m, held_l, cap_m, cap_l):
+    exc = BudgetRefused(
+        f"FEATHERLESS BUDGET REFUSED ({code}): {month_id()} held ${held_m/SCALE:.4f} of "
+        f"${cap_m/SCALE:.2f} month cap; lifetime ${held_l/SCALE:.4f} of ${cap_l/SCALE:.2f} "
+        f"(envelope {FEATHERLESS_ENVELOPE_NAME}) -- {_FL_HINTS[code]}")
+    exc.no_wire = True
+    return exc
+
+
+def featherless_status_line(*, budget_path=None):
+    """One human line, like `status_line()`. Never raises."""
+    p = Path(budget_path) if budget_path else featherless_path()
+    try:
+        s, held_m, held_l, cap_m, cap_l = _fl_view(p)
+    except BudgetRefused as exc:
+        return str(exc)
+    code = ("BLOCKED" if s.get("blocked") else "EXHAUSTED_LIFETIME" if cap_l - held_l <= 0
+            else "EXHAUSTED_MONTH" if cap_m - held_m <= 0 else None)
+    head = f"FEATHERLESS BUDGET REFUSED ({code})" if code else "FEATHERLESS BUDGET OK"
+    made = "; not yet created, the first call creates it" if s.get("virtual") else ""
+    n_month = sum(1 for r in s["calls"].values() if _month_of(r.get("started_utc")) in (month_id(), None))
+    return (f"{head}: {month_id()} held ${held_m/SCALE:.4f} of ${cap_m/SCALE:.2f} month cap, lifetime "
+            f"${held_l/SCALE:.4f} of ${cap_l/SCALE:.2f} ({n_month} calls this month; envelope "
+            f"{p.name}{made})" + (f" -- {_FL_HINTS[code]}" if code else ""))
+
+
+def featherless_reserve(system, user, max_tokens, *, model, base_url, purpose, budget_path=None):
+    u = urlsplit(base_url)
+    if (u.scheme != "https" or u.hostname != FEATHERLESS_HOST or u.port not in (None, 443)
+            or u.username or u.password or u.query or u.fragment):
+        exc = BudgetRefused("FEATHERLESS BUDGET REFUSED: price authority requires the official "
+                            "HTTPS Featherless endpoint")
+        exc.no_wire = True
+        raise exc
+    q = featherless_quote(system, user, max_tokens, model)
+    p = Path(budget_path) if budget_path else featherless_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with _lock(p):
+        s = _fl_load(p) if p.exists() else _fl_fresh()
+        month_cap, life_cap = _fl_caps()
+        held_m, held_l = _fl_held(s, month_id()), _fl_held(s)
+        if s.get("blocked"):
+            raise _fl_refuse("BLOCKED", held_m, held_l, month_cap, life_cap)
+        if held_l + q["reserved_units"] > life_cap:
+            raise _fl_refuse("EXHAUSTED_LIFETIME", held_m, held_l, month_cap, life_cap)
+        if held_m + q["reserved_units"] > month_cap:
+            raise _fl_refuse("EXHAUSTED_MONTH", held_m, held_l, month_cap, life_cap)
+        token = uuid.uuid4().hex
+        s["calls"][token] = {**q, "held_units": q["reserved_units"], "status": "RESERVED_UNKNOWN",
+                             "pid": os.getpid(), "purpose": str(purpose), "request_model": str(model),
+                             "started_utc": _utcnow().isoformat(), "cost_usd": None}
+        _write(p, s)
+    return {"id": token, "path": str(p), "reserved_usd": q["reserved_units"]/SCALE,
+            "reserved_units": q["reserved_units"], "input_bound": q["input_bound"],
+            "output_bound": q["output_bound"], "model": str(model)}
+
+
+def _fl_price_reply(ticket, response):
+    """(status, held_units, cost_usd, provider_cost_usd, served, block)."""
+    if response is None:
+        return "BILLING_UNKNOWN", ticket["reserved_units"], None, None, None, None
+    served = response.get("model") if isinstance(response, dict) else getattr(response, "model", None)
+    usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
+
+    def get(name):
+        return usage.get(name) if isinstance(usage, dict) else getattr(usage, name, None)
+    ti, to, reported = get("prompt_tokens"), get("completion_tokens"), get("cost")
+    try:
+        reported = float(reported) if reported is not None else None
+        if reported is not None and (not reported >= 0 or reported != reported):
+            reported = None
+    except (TypeError, ValueError):
+        reported = None
+    if served != ticket["model"]:
+        return ("BILLING_UNKNOWN", ticket["reserved_units"], None, reported, served,
+                "unknown returned model")
+    if not all(type(x) is int and x >= 0 for x in (ti, to)) or ti + to <= 0:
+        return "BILLING_UNKNOWN", ticket["reserved_units"], None, reported, served, None
+    p_in, p_out = _fl_price(served)
+    ours = _units((ti*p_in + to*p_out)/1e6)
+    held = max(ours, _units(reported) if reported is not None else 0)
+    block = None
+    if ti > ticket["input_bound"] or to > ticket["output_bound"] or held > ticket["reserved_units"]:
+        block = "provider usage exceeded request reservation bound"
+    return "SETTLED", held, held/SCALE, reported, served, block
+
+
+def featherless_settle(ticket, response=None, *, http_status=None):
+    """Never releases money on an unknown outcome; a bound breach blocks the file.
+
+    `http_status` is the status of an HTTP ERROR RESPONSE the provider sent
+    (403 gated model, 429 concurrency, 503 at capacity, ...). Featherless bills
+    successful requests only (docs/request-pricing-and-credits), so such a call
+    settles at $0 as UNBILLED_HTTP_REFUSAL. Measured 2026-11-11: 31 calls to a
+    gated model answered 403 and the balance did not move. A timeout or a reset
+    connection has no status and keeps the FULL reservation (BILLING_UNKNOWN).
+
+    A write that fails after a PAID reply keeps the reply: the envelope still
+    holds the full reservation (never less than the cost unless the bound was
+    breached, which is what the block is for) and the error is logged."""
+    if response is None and type(http_status) is int and 400 <= http_status < 600:
+        status, held, cost, reported, served, block = "UNBILLED_HTTP_REFUSAL", 0, 0.0, None, None, None
+    else:
+        status, held, cost, reported, served, block = _fl_price_reply(ticket, response)
+    p = Path(ticket["path"])
+    # an unknown outcome returns the full reservation as `held`
+    out = {"cost_usd": cost, "budget_charge_usd": held / SCALE,
+           "provider_cost_usd": reported, "billing_status": status, "reservation_id": ticket["id"],
+           "price_as_of": str(getattr(_cfg(), "FEATHERLESS_PRICE_AS_OF", "")),
+           "cost_basis": "CONFIG_PRICE_X_TOKENS_OR_PROVIDER_COST_WHICHEVER_HIGHER",
+           "budget_envelope": FEATHERLESS_ENVELOPE_NAME}
+    try:
+        with _lock(p):
+            s = _fl_load(p)
+            r = s["calls"][ticket["id"]]
+            if r["status"] != "RESERVED_UNKNOWN":
+                raise BudgetRefused("reservation already settled")
+            r.update(status=status, held_units=(held if status in ("SETTLED", "UNBILLED_HTTP_REFUSAL")
+                                                else r["held_units"]),
+                     http_status=http_status,
+                     cost_usd=cost, provider_cost_usd=reported, served_model=served,
+                     settled_utc=_utcnow().isoformat())
+            if block and not s.get("blocked"):
+                s["blocked"] = block
+            _write(p, s)
+    except (OSError, DG.FileLockTimeout, BudgetRefused) as exc:
+        logger.error("provider_budget: featherless settlement of %s not recorded (%s); "
+                     "the full reservation stays held", ticket["id"], exc)
+        out.update(billing_status="SETTLEMENT_FAILED_RESERVATION_RETAINED",
+                   budget_charge_usd=max(held, ticket["reserved_units"]) / SCALE)
+    return out
+
+
+def featherless_attempt(body, *, purpose, send, base_url=None, budget_path=None):
+    """Reserve/settle ONE Featherless request. Returns `(response, accounting)`.
+
+    Same admission as `attempt()`: two plain messages, the priced options and
+    JSON mode only. A refusal raises `BudgetRefused` with `no_wire = True` and
+    nothing was sent; the caller makes it red, never an empty success. `send`
+    may retry 429/503 inside one reservation: Featherless bills successful
+    requests only, so a refused attempt costs nothing and one success fits."""
+    base_url = base_url or str(getattr(_cfg(), "FEATHERLESS_BASE_URL", f"https://{FEATHERLESS_HOST}/v1"))
+    messages = body.get("messages") or []
+    if (set(body) - _ADMITTED_OPTIONS or body.get("extra_body", {}) != {}
+            or body.get("response_format", _JSON_OBJECT) != _JSON_OBJECT
+            or len(messages) != 2 or messages[0].get("role") != "system"
+            or messages[1].get("role") != "user"
+            or any(type(m.get("content")) is not str for m in messages)):
+        exc = BudgetRefused("FEATHERLESS BUDGET REFUSED: unsupported billable request options")
+        exc.no_wire = True
+        raise exc
+    try:
+        ticket = featherless_reserve(messages[0]["content"], messages[1]["content"], body.get("max_tokens"),
+                                     model=body.get("model"), base_url=base_url, purpose=purpose,
+                                     budget_path=budget_path)
+    except Exception as exc:
+        exc.no_wire = True
+        raise
+    try:
+        response = send()
+    except BaseException as exc:
+        code = getattr(exc, "status_code", None)
+        if code is None:
+            code = getattr(getattr(exc, "response", None), "status_code", None)
+        try:
+            exc.shared_budget_accounting = featherless_settle(ticket, None, http_status=code)
+        except Exception:                                        # noqa: BLE001
+            pass
+        raise
+    return response, featherless_settle(ticket, response)
+
+
 def main(argv=None):
     """`status` (exit 0 admits, 1 admits but DEGRADED, 2 refuses) | `init` |
-    `raise --cap USD --evidence TEXT` | `reconcile` (apply the sidecar now)."""
+    `raise --cap USD --evidence TEXT` | `reconcile` (apply the sidecar now).
+    `status --provider featherless` reads the Featherless envelope instead."""
     import argparse
     ap = argparse.ArgumentParser(prog="provider_budget")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("status", help="print the accounting line; exit 2 when refusing")
+    st = sub.add_parser("status", help="print the accounting line; exit 2 when refusing")
+    st.add_argument("--provider", choices=("deepseek", "featherless"), default="deepseek")
     sub.add_parser("init", help="create the host envelope from config now (if absent)")
     sub.add_parser("reconcile", help="apply deferred settlements (the sidecar) to the envelope now")
     r = sub.add_parser("raise", help="raise this month's cap (attended)")
     r.add_argument("--cap", type=float, required=True)
     r.add_argument("--evidence", required=True)
     a = ap.parse_args(argv)
+    if a.cmd == "status" and a.provider == "featherless":
+        line = featherless_status_line()
+        print(line)
+        return 2 if line.startswith("FEATHERLESS BUDGET REFUSED") else 0
     try:
         if a.cmd == "init":
             p = path()

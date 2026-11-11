@@ -581,10 +581,11 @@ def test_nvidia_without_a_key_is_a_REFUSAL_not_a_fallback(monkeypatch):
 
 
 def test_deepseek_stays_the_sole_PRIMARY_and_nvidia_is_listed_as_adjudicator():
-    assert LA.SOLE_PROVISIONED_PROVIDER == "deepseek"
+    assert LA.PRIMARY_PROVIDER == "deepseek"
     st = LA.provider_status()
+    # CH-04b (2026-11-11): Featherless is a declared bulk SECONDARY, never primary
     assert st["roles"] == {"deepseek": "primary", "nvidia": "adjudicator",
-                           "local": "on_demand"}
+                           "local": "on_demand", "featherless": "bulk_secondary"}
     assert st["named"]["nvidia"]["role"] == "adjudicator"
     assert "nvidia" not in st["configured"]          # never a candidate for `active`
 

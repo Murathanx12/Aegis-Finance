@@ -555,7 +555,10 @@ def run(a: argparse.Namespace) -> int:
     DG.atomic_write_text(od / f"world_digest_{stamp}.short.txt", WD.render_short(d))
     # A later per-call refusal can follow useful deterministic work and valid
     # appended rows. Preserve those artifacts, but never report full success.
-    budget_refused = meter.statuses.get("BUDGET_REFUSED", 0) > 0
+    # CH-04b: a Featherless envelope refusal is as red as a DeepSeek one, even
+    # when the DeepSeek fallback typed the item.
+    featherless_refused = meter.statuses.get("featherless:BUDGET_REFUSED", 0) > 0
+    budget_refused = meter.statuses.get("BUDGET_REFUSED", 0) > 0 or featherless_refused
     if budget_refused:
         d["status"] = "DEGRADED_MODEL_BUDGET"
     DG.atomic_write_json(od / f"world_digest_{stamp}.json", d)
@@ -566,6 +569,13 @@ def run(a: argparse.Namespace) -> int:
     if budget_refused:
         _p("DEGRADED_MODEL_BUDGET: partial artifacts preserved; model budget refused")
         _p(_budget_status_line())
+        if featherless_refused:
+            try:
+                from backend.services import provider_budget as PB
+                _p(PB.featherless_status_line())
+            except Exception:                                        # noqa: BLE001
+                _p("FEATHERLESS BUDGET: status unavailable -- run "
+                   "`python -m backend.services.provider_budget status --provider featherless`")
         return 2
     return 0
 
