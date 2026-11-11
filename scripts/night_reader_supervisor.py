@@ -1283,7 +1283,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--queue-cmd", default=None, help=argparse.SUPPRESS)
     ap.add_argument("--claims-since", default="2026-07-01")
     ap.add_argument("--no-rolling", dest="rolling", action="store_false",
-                    help="run --queue-cmd as given instead of the self-built rolling queue")
+                    help="run --queue as given instead of the self-built rolling queue")
     ap.add_argument("--pool", dest="pool", action="store_true",
                     default=bool(getattr(_config, "READER_POOL_ENABLED", False)),
                     help="launch the multi-tab reader pool (default from config)")
