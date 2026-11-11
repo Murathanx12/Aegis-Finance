@@ -283,8 +283,8 @@ def test_launch_from_app_runs_the_keepers_own_command(monkeypatch, tmp_path):
     monkeypatch.setattr(RC.subprocess, "Popen", fake_popen)
     pid = RC.launch_from_app("continuous", tmp_path / "s.log", breakaway=True)
     assert pid == 31337
-    assert seen["argv"] == ["cmd.exe", "/c", str(TK.SUPERVISOR_CMD), "continuous",
-                            str(tmp_path / "s.log")]
+    assert seen["argv"] == TK.supervisor_argv("continuous")
+    assert (tmp_path / "s.log").exists()          # output appended to the keeper's log
     assert seen["cwd"] == str(TK.REPO) and "AEGIS_DESKTOP" not in seen["env"]
     assert seen["creationflags"] & RC.BREAKAWAY_FLAG or sys.platform != "win32"
 

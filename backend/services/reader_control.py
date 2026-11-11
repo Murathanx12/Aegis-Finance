@@ -681,18 +681,18 @@ def launch_from_app(until: str, log_path: Path, *, breakaway: bool = False) -> i
     """`task_keeper.launch_supervisor` with two differences and no others:
     the desktop-only variables are dropped from the child's environment, and,
     when the app's job allows it, CREATE_BREAKAWAY_FROM_JOB so the reader
-    outlives the window. Same command (`TK.SUPERVISOR_CMD`), same cwd, same
-    detached windowless flags -- it is the keeper's launcher, not a second one."""
+    outlives the window. Same argv (`TK.supervisor_argv`), same cwd, same log
+    and stdin handling (`TK.spawn_logged`) -- it is the keeper's launcher, not
+    a second one."""
     from scripts import task_keeper as TK
-    flags = (getattr(subprocess, "DETACHED_PROCESS", 0)
-             | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
-             | getattr(subprocess, "CREATE_NO_WINDOW", 0)
-             | (BREAKAWAY_FLAG if breakaway else 0))
-    p = subprocess.Popen(["cmd.exe", "/c", str(TK.SUPERVISOR_CMD), until, str(log_path)],
-                         cwd=str(TK.REPO), env=child_env(), stdin=subprocess.DEVNULL,
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                         creationflags=flags, close_fds=True)
-    return int(p.pid)
+
+    def popen(argv, **kw):
+        kw["env"] = child_env()
+        if breakaway and sys.platform == "win32":
+            kw["creationflags"] = int(kw.get("creationflags") or 0) | BREAKAWAY_FLAG
+        return subprocess.Popen(argv, **kw)
+
+    return TK.spawn_logged(TK.supervisor_argv(until), log_path, popen=popen)
 
 
 #: decision -> HTTP status for the router
