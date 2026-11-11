@@ -162,15 +162,17 @@ def test_the_status_file_counts_ok_pages_and_names_the_last_bad_one(tmp_path, mo
 def test_the_rolling_launcher_only_swaps_the_queue_file(tmp_path, monkeypatch):
     from scripts import night_reader_supervisor as S
     monkeypatch.setattr(S, "DJ", tmp_path)
-    tpl = tmp_path / "queue_run.cmd"
-    tpl.write_text("@echo off\r\npy.exe -m scripts.dowjones_pull --queue old\\Q.txt --handoff "
-                   "--profile muratclaw --workers 3 >> x.log\r\n", encoding="utf-8")
+    # CH-05: the template is a Launch built in code; no .cmd is read, written or run
+    tpl = S.queue_launch(tmp_path / "old" / "Q.txt", log=tmp_path / "x.log")
     from scripts import dowjones_pull as DP
     monkeypatch.setattr(DP, "last_read_days", lambda names, **k: {n: "" for n in names})
     r = S.rolling_queue(tpl, day="2026-01-02", names=["MU", "BRK-B"])
-    cmd = r["cmd"].read_text(encoding="utf-8")
-    assert f"--queue {tmp_path / 'QUEUE_rolling_2026-01-02.txt'} --handoff" in cmd
-    assert ">> x.log" in cmd and r["n_unread_today"] == 2
+    q = tmp_path / "QUEUE_rolling_2026-01-02.txt"
+    assert r["cmd"].args == ("--queue", str(q), "--handoff", "--profile", "muratclaw",
+                             "--workers", "3")
+    assert r["cmd"].module == "scripts.dowjones_pull" and S.queue_of(r["cmd"]) == q
+    assert r["cmd"].out == tmp_path / "x.log" and r["n_unread_today"] == 2
+    assert not list(tmp_path.glob("*.cmd"))
 
 
 def test_the_wsj_stock_page_takes_sister_site_article_links():

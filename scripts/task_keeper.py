@@ -25,9 +25,19 @@ WHY (automation audit, 2026-10-02)
    `reader` is idempotent: it exits when a supervisor is alive (matched on the
    COMMAND LINE, never the image name), honours the owner's pause file
    `dowjones/SUPERVISOR_STOP`, and otherwise launches
-   `dowjones/supervisor_run.cmd continuous <dated log>`, detached, and records
-   the PID it started. Automatic runs stay supervised between keeper checks;
-   manual supervisor runs retain their bounded `--until HH:MM` deadline.
+   `<this checkout>/.venv/Scripts/python.exe -m scripts.night_reader_supervisor
+   --until continuous` from THIS checkout (stdin from `empty_stdin.txt`, stdout
+   and stderr appended to a dated log, no console window), and records the PID
+   it started. Automatic runs stay supervised between keeper checks; manual
+   supervisor runs retain their bounded `--until HH:MM` deadline.
+   CH-05 (2026-11-11): it used to start the DATA-dir launcher
+   `dowjones/supervisor_run.cmd`, whose first line is `cd /d
+   C:\\Users\\mrthn\\aegis-finance`; from a release clone that ran the WIP
+   checkout's code through the shared data junction. The command line the
+   process scan matches is unchanged, so a supervisor started either way is
+   recognised and a mixed period cannot start a second one.
+   No launch inside the IIF reader quiet window (16:45-17:05 local; ported
+   from the runtime, the same window `night_reader_supervisor` honours).
 2. FOUR DAILY TASKS SKIPPED 10-02 because the PC slept over their trigger and
    battery conditions blocked the catch-up. The tasks now carry
    StartWhenAvailable + WakeToRun; `catchup` is the belt to those braces: for
@@ -72,7 +82,11 @@ from backend import config as _config  # noqa: E402
 
 OPT = Path(_config.OPTIMUS_LEDGER_DIR)
 DJ = OPT / "dowjones"
-SUPERVISOR_CMD = DJ / "supervisor_run.cmd"
+#: The module the reader keeper starts, and the needle `supervisor_rows` matches.
+SUPERVISOR_MODULE = "scripts.night_reader_supervisor"
+#: The zero-length REGULAR file a launched child reads stdin from (not NUL: on
+#: Windows `isatty()` is true for every character device; see `always_on_lab`).
+EMPTY_STDIN = OPT / "empty_stdin.txt"
 SUPERVISOR_STOP = DJ / "SUPERVISOR_STOP"
 KEEPER_DIR = OPT / "task_keeper"
 KEEPER_LOG = KEEPER_DIR / "keeper.jsonl"
@@ -148,7 +162,7 @@ def supervisor_rows(rows: list[dict]) -> list[dict]:
     out = []
     for r in rows or []:
         c = str(r.get("cmdline") or "")
-        if "scripts.night_reader_supervisor" not in c:
+        if SUPERVISOR_MODULE not in c:
             continue
         if "--probe" in c or "--repair-once" in c:
             continue
@@ -178,15 +192,64 @@ def reader_decision(*, rows: Optional[list[dict]], stop_exists: bool) -> dict:
     return {"action": "launch", "why": "no supervisor process alive"}
 
 
-def launch_supervisor(until: str, log_path: Path) -> int:
-    """Start `supervisor_run.cmd <until> <log>` detached; return its PID."""
-    flags = (getattr(subprocess, "DETACHED_PROCESS", 0)
-             | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
-             | getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    p = subprocess.Popen(["cmd.exe", "/c", str(SUPERVISOR_CMD), until, str(log_path)],
-                         cwd=str(REPO), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, creationflags=flags, close_fds=True)
+def reader_iif_quiet(now_local: datetime) -> bool:
+    """PURE. The IIF handoff window in this PC's local time (16:45-17:05), the
+    same window `night_reader_supervisor.reader_iif_quiet` pauses reading in.
+    Ported from the runtime's working tree (CH-05); a test pins the two equal."""
+    minute = now_local.hour * 60 + now_local.minute
+    return 16 * 60 + 45 <= minute < 17 * 60 + 5
+
+
+#: CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP. NOT DETACHED_PROCESS: measured
+#: 2026-11-11, a DETACHED venv `python.exe` hands its base interpreter a NEW,
+#: VISIBLE console (GetConsoleWindow != 0, IsWindowVisible true), while
+#: CREATE_NO_WINDOW gives it a console with no window (GetConsoleWindow == 0).
+#: The child outlives this process either way (Windows does not kill children
+#: on exit, and neither form breaks away from a Task Scheduler job).
+_CHILD_FLAGS = 0x08000000 | 0x00000200
+
+
+def supervisor_argv(until: str, *, py: str | None = None) -> list[str]:
+    """PURE. The supervisor's command line: the venv interpreter of THIS checkout,
+    the same `-m scripts.night_reader_supervisor --until <until>` the data-dir
+    `supervisor_run.cmd` ran, so `supervisor_rows` matches it either way."""
+    return [py or _child_python(), "-m", SUPERVISOR_MODULE, "--until", str(until)]
+
+
+def spawn_logged(argv: list[str], log_path: Path, *, err_path: Path | None = None,
+                 stdin_path: Path | None = None, cwd: Path | None = None,
+                 popen: Callable[..., Any] = subprocess.Popen) -> int:
+    """Start `argv` from `cwd` (default: THIS checkout) without a console window,
+    stdin from the empty regular file, stdout appended to `log_path` and stderr
+    to `err_path` (default: the same file, i.e. `>> log 2>&1`). Not waited on;
+    returns the PID. What the data-dir `.cmd` launchers did, minus their
+    hard-coded `cd /d C:\\Users\\mrthn\\aegis-finance`."""
+    stdin_p = Path(stdin_path or EMPTY_STDIN)
+    if not stdin_p.exists():
+        stdin_p.parent.mkdir(parents=True, exist_ok=True)
+        stdin_p.write_bytes(b"")
+    log_path = Path(log_path)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    flags = _CHILD_FLAGS if sys.platform == "win32" else 0
+    fin = stdin_p.open("rb")
+    fout = log_path.open("ab")
+    ferr = Path(err_path).open("ab") if err_path is not None else None
+    try:
+        p = popen(argv, cwd=str(cwd or REPO), stdin=fin, stdout=fout,
+                  stderr=(ferr if ferr is not None else subprocess.STDOUT),
+                  creationflags=flags, close_fds=True)
+    finally:                       # the child holds its own handles
+        fin.close()
+        fout.close()
+        if ferr is not None:
+            ferr.close()
     return int(p.pid)
+
+
+def launch_supervisor(until: str, log_path: Path) -> int:
+    """Start the reader supervisor from THIS checkout, `--until <until>`, its
+    output appended to `log_path`; return its PID."""
+    return spawn_logged(supervisor_argv(until), log_path)
 
 
 def ensure_reader(*, scan: Callable[[], Optional[list[dict]]] = scan_python,
@@ -197,12 +260,15 @@ def ensure_reader(*, scan: Callable[[], Optional[list[dict]]] = scan_python,
     stop = Path(stop_path or SUPERVISOR_STOP)
     d = reader_decision(rows=scan(), stop_exists=stop.exists())
     d["job"] = "reader"
+    if d["action"] == "launch" and reader_iif_quiet(now_local):
+        d.update(action="paused", why="IIF reader quiet window (16:45-17:05 local)")
     if d["action"] == "launch" and not dry_run:
         until = "continuous"
         sup_log = DJ / f"supervisor_{now_local:%Y-%m-%d_%H%M}.log"
         try:
             d["launched_pid"] = launch(until, sup_log)
-            d.update(until=until, supervisor_log=str(sup_log))
+            # which checkout's code the supervisor runs: the release clone or the old one
+            d.update(until=until, supervisor_log=str(sup_log), code_root=str(REPO))
         except Exception as exc:                                   # noqa: BLE001
             d["action"] = "launch_failed"
             d["why"] = f"{type(exc).__name__}: {str(exc)[:200]}"
@@ -660,10 +726,11 @@ PUBLISH_LOG = KEEPER_DIR / "publish_receipts.jsonl"
 OPPORTUNITIES_TIMEOUT_S = 45 * 60
 
 
-#: review C15 M5: the Explorer build loads bars while the sim owner fires every 30 min; below
-#: this much free RAM the build is REFUSED (logged), never started -- otherwise the OOM killer
-#: chooses between it and the sim.
-OPPORTUNITIES_MIN_FREE_GB = 4.0
+#: Physical free RAM is TELEMETRY only (owner policy 2026-10-15: the OS may page). Review
+#: C15 M5 used to REFUSE the Explorer build below 4 GB free; the runtime dropped that floor on
+#: 10-15 (the same policy `gateway_repair` follows on main since CH-05 R1, PR #100). The
+#: reading is still recorded on every row, so a later OOM can be read against it.
+OPPORTUNITIES_MEMORY_POLICY = "os_paging_allowed"
 
 
 def _free_gb() -> Optional[float]:
@@ -696,14 +763,7 @@ def run_opportunities(*, runner: Callable[..., Any] | None = None,
     cmd = [_child_python(), "-m", "scripts.opportunities_build"]
     gb = (free_gb or _free_gb)()
     row["free_gb"] = gb
-    row["min_free_gb"] = OPPORTUNITIES_MIN_FREE_GB
-    if gb is None:
-        row.update(action="refused", why="free memory could not be read; the build was not started")
-        return log(row, log_path or OPPORTUNITIES_LOG)
-    if gb < OPPORTUNITIES_MIN_FREE_GB:
-        row.update(action="refused", why=(f"{gb:.1f} GB free < {OPPORTUNITIES_MIN_FREE_GB:.1f} GB floor; the "
-                                          f"build was not started (the sim owner shares this window)"))
-        return log(row, log_path or OPPORTUNITIES_LOG)
+    row["memory_policy"] = OPPORTUNITIES_MEMORY_POLICY
     try:
         runner = runner or subprocess.run
         r = runner(cmd, cwd=str(REPO), capture_output=True, text=True, timeout=OPPORTUNITIES_TIMEOUT_S,

@@ -71,7 +71,6 @@ def test_supervision_survives_days_and_caps_until_stop_but_manual_expires(
     monkeypatch.setattr(S.time, "sleep", sleep)
     monkeypatch.setattr(S, "STOP", stop)
     monkeypatch.setattr(S, "HANDOFF", handoff)
-    monkeypatch.setattr(S, "POOL_CMD", tmp_path / "pool.cmd")
     monkeypatch.setattr(S, "log", lambda **r: events.append(r))
     monkeypatch.setattr(S, "loads", lambda: 10)
     monkeypatch.setattr(S, "load_ladder", lambda: {"level": 0, "last_act": 0})

@@ -56,17 +56,29 @@ minutes, the digest waits); a failed PID query is "unknown", not "down".
 
     python -m scripts.night_reader_supervisor --probe          # one probe, printed
     python -m scripts.night_reader_supervisor --repair-once    # probe + repair if faulted
+
+NO DATA-DIR LAUNCHER (CH-05, 2026-11-11). The reader used to be started through
+`.cmd` files in `dowjones/` (`queue_run.cmd`, `queue_run_rolling.cmd`,
+`reader_pool_run.cmd`), whose first line is `cd /d <a checkout>`. The data dir is
+shared by every checkout through a junction, so from a release clone those files
+ran the OLD checkout's code. The launcher is now a `Launch` (module, args, the
+two log files) built in code and started from THIS checkout with its own venv
+interpreter, stdin from `empty_stdin.txt`, stdout/stderr appended to the same
+logs as before, and no console window. The command line (`-m scripts.reader_pool
+...` / `-m scripts.dowjones_pull ...`) is unchanged, so `READER_CMDLINE` still
+finds readers started either way. `--queue-cmd` is refused (exit 2); `--queue`
+names the queue file for `--no-pool`.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
-import re
 import shutil
 import subprocess
 import sys
 import time
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -92,7 +104,14 @@ TICK_S = 60
 LOG_TICK_EVERY = 5
 STATUS = DJ / "reader_status.json"
 POOL_STATUS = DJ / "reader_pool_status.json"
-POOL_CMD = DJ / "reader_pool_run.cmd"
+#: CH-05: what `launch` last started, as JSON (module, args, logs, cwd, pid). A
+#: record for a reader of the night, never an executable (it replaced
+#: `reader_pool_run.cmd`, which the supervisor wrote and then ran).
+LAUNCH_RECORD = DJ / "reader_launch.json"
+#: the queue the static `queue_run.cmd` template named, and its two logs (`--no-pool`)
+DEFAULT_QUEUE = DJ / "QUEUE_2026-09-27_wide.txt"
+QUEUE_LOG = DJ / "queue_run_2026-09-28b.log"
+EMPTY_STDIN = DATA / "empty_stdin.txt"
 PAGE_LOG = DJ / "page_log.jsonl"
 #: a run that ended on the DAILY cap is retried this long after its launch
 #: (the cap is a rolling 24 h window), not ended for the night
@@ -131,23 +150,63 @@ def log(**row: object) -> None:
 READER_CMDLINE = "'scripts[.](dowjones_pull|reader_pool)'"
 
 
-def pool_cmd_text(*, until: str, profile: str = "muratclaw", py: str | None = None,
-                  day: str | None = None, max_tabs: int | None = None,
-                  capacity_ceiling: int | None = None) -> str:
-    """PURE. The launcher for the pool: same python, stdin and log shape as the
-    queue launcher, so `queue_logs` and `classify_exit` read it the same way."""
+@dataclass(frozen=True)
+class Launch:
+    """One reader process to start: `<venv python> -m <module> <args...>` from
+    THIS checkout, stdout appended to `out`, stderr to `err`. Replaces the
+    data-dir `.cmd` launchers (CH-05); `str()` is the equivalent command line,
+    for the log rows that used to print the `.cmd` path."""
+    module: str
+    args: tuple[str, ...]
+    out: Path
+    err: Path
+
+    def argv(self, py: str | None = None) -> list[str]:
+        return [py or PY, "-m", self.module, *self.args]
+
+    def __str__(self) -> str:
+        return (subprocess.list2cmdline(self.argv()) +
+                f" < {EMPTY_STDIN} >> {self.out} 2>> {self.err}")
+
+
+def pool_launch(*, until: str, profile: str = "muratclaw", day: str | None = None,
+                max_tabs: int | None = None, capacity_ceiling: int | None = None) -> Launch:
+    """PURE. The pool: the same arguments, stdin and two logs
+    `reader_pool_run.cmd` carried, so `queue_logs` and `classify_exit` read it
+    the same way."""
     from scripts.beta_v2_reader_tab_limit import supervisor_limit
     tabs = supervisor_limit(max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6),
                             preferred=getattr(_config, "READER_POOL_MAX_TABS", None),
                             capacity_ceiling=capacity_ceiling)
     day = day or datetime.now().strftime("%Y-%m-%d")
-    log = f"backend\\data\\optimus\\dowjones\\reader_pool_{day}.log"
-    deadline = "" if until == "continuous" else f"--until {until} "
-    capacity = "" if capacity_ceiling is None else f"--capacity-ceiling {capacity_ceiling} "
-    return ("@echo off\n"
-            f"cd /d {REPO}\n"
-            f"{py or PY} -m scripts.reader_pool --handoff --profile {profile} --max-tabs {tabs} {capacity}{deadline}"
-            f"< backend\\data\\optimus\\empty_stdin.txt >> {log} 2>> {log}.err\n")
+    log = DJ / f"reader_pool_{day}.log"
+    args = ["--handoff", "--profile", profile, "--max-tabs", str(tabs)]
+    if capacity_ceiling is not None:
+        args += ["--capacity-ceiling", str(capacity_ceiling)]
+    if until != "continuous":
+        args += ["--until", until]
+    return Launch("scripts.reader_pool", tuple(args), log, log.with_name(log.name + ".err"))
+
+
+def queue_launch(queue: Path, *, profile: str = "muratclaw", workers: int = 3,
+                 log: Path | None = None) -> Launch:
+    """PURE. The three-worker queue (`--no-pool`): what `queue_run.cmd` ran."""
+    log = Path(log or QUEUE_LOG)
+    return Launch("scripts.dowjones_pull",
+                  ("--queue", str(queue), "--handoff", "--profile", profile,
+                   "--workers", str(int(workers))),
+                  log, log.with_name(log.name + ".err"))
+
+
+def pool_cmd_text(*, until: str, profile: str = "muratclaw", py: str | None = None,
+                  day: str | None = None, max_tabs: int | None = None,
+                  capacity_ceiling: int | None = None) -> str:
+    """PURE. The pool's command line as text (a record and a test seam; nothing
+    writes or runs it as a file any more)."""
+    spec = pool_launch(until=until, profile=profile, day=day, max_tabs=max_tabs,
+                       capacity_ceiling=capacity_ceiling)
+    return (subprocess.list2cmdline(spec.argv(py)) +
+            f" < {EMPTY_STDIN} >> {spec.out} 2>> {spec.err}")
 
 
 def pool_status(path: Path | None = None) -> dict | None:
@@ -179,25 +238,56 @@ def loads() -> int:
         return -1
 
 
-def launch(queue_cmd: Path) -> int:
-    p = subprocess.Popen(["cmd.exe", "/c", str(queue_cmd)], cwd=str(REPO),
-                         creationflags=0x08000000 | 0x00000200,   # no window, new group
-                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL)
+def _open_append(path: Path):
+    """Open `path` for append; if another process holds it (a `cmd >>` from an
+    old-style launcher keeps the file locked on Windows, 2026-09-30), fall back
+    to a per-launch sibling so the launch itself never fails on a log."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        return path.open("ab"), path
+    except OSError:
+        alt = path.with_name(f"{path.stem}_{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}_"
+                             f"{os.getpid()}{path.suffix}")
+        return alt.open("ab"), alt
+
+
+def launch(spec: Launch, *, popen=subprocess.Popen) -> int:
+    """Start `spec` from THIS checkout with this checkout's venv interpreter:
+    stdin from the empty regular file, stdout/stderr appended to its logs, no
+    console window, its own process group. Never waited on; returns the PID and
+    writes `LAUNCH_RECORD`."""
+    if not isinstance(spec, Launch):
+        raise TypeError(f"launch() takes a Launch, not {type(spec).__name__}: "
+                        "data-dir .cmd launchers are retired (CH-05)")
+    if not EMPTY_STDIN.exists():
+        EMPTY_STDIN.parent.mkdir(parents=True, exist_ok=True)
+        EMPTY_STDIN.write_bytes(b"")
+    fin = EMPTY_STDIN.open("rb")
+    fout, out_p = _open_append(spec.out)
+    ferr, err_p = _open_append(spec.err)
+    try:
+        p = popen(spec.argv(), cwd=str(REPO),
+                  creationflags=(0x08000000 | 0x00000200) if sys.platform == "win32" else 0,
+                  stdin=fin, stdout=fout, stderr=ferr, close_fds=True)
+    finally:                          # the child holds its own handles
+        fin.close()
+        fout.close()
+        ferr.close()
+    try:
+        GR_atomic_json(LAUNCH_RECORD, {
+            "t": datetime.now().astimezone().isoformat(timespec="seconds"), "pid": p.pid,
+            "cwd": str(REPO), "argv": spec.argv(), "stdin": str(EMPTY_STDIN),
+            "stdout": str(out_p), "stderr": str(err_p)})
+    except Exception:                                              # noqa: BLE001
+        pass                          # a record, never a reason to lose the launch
     return p.pid
 
 
-def queue_logs(queue_cmd: Path) -> list[Path]:
-    """The files the queue command appends to (`>> path` / `2>> path`)."""
-    try:
-        txt = queue_cmd.read_text(encoding="utf-8", errors="replace")
-    except OSError:
+def queue_logs(spec: Launch) -> list[Path]:
+    """The files the launched reader appends to (its stdout, then its stderr)."""
+    if not isinstance(spec, Launch):
         return []
-    out = []
-    for m in re.finditer(r"2?>>\s*(\S+)", txt):
-        p = Path(m.group(1))
-        out.append(p if p.is_absolute() else REPO / p)
-    return out
+    return [spec.out, spec.err]
 
 
 def log_tail(paths: list[Path], n_bytes: int = 6000) -> str:
@@ -416,12 +506,12 @@ def GR_atomic_json(path: Path, obj: dict) -> None:
     DG.atomic_write_json(path, obj)
 
 
-def rolling_queue(template_cmd: Path, *, day: str | None = None,
+def rolling_queue(template: Launch, *, day: str | None = None,
                   names: list[str] | None = None) -> dict:
     """Build the next queue from the candidate set (oldest newest-read first) and
-    a launcher for it modelled on `template_cmd` (same python, stdin and log
+    a launcher for it modelled on `template` (same module, arguments and log
     files; only the queue file changes). Returns `{cmd, queue, n_names,
-    n_unread_today}`."""
+    n_unread_today}`; `cmd` is a `Launch`, never a file."""
     from scripts import dowjones_pull as DP
     day = day or DP._today()
     names = DP.rolling_names() if names is None else names
@@ -435,10 +525,7 @@ def rolling_queue(template_cmd: Path, *, day: str | None = None,
         if dd.exists():
             for f in dd.glob("*.done"):
                 f.unlink()
-    tpl = template_cmd.read_text(encoding="utf-8", errors="replace")
-    cmd_text = re.sub(r"--queue\s+\S+", "--queue " + str(q).replace("\\", "\\\\"), tpl)
-    cmd = DJ / "queue_run_rolling.cmd"
-    GR_atomic_text(cmd, cmd_text)
+    cmd = _with_queue(template, q)
     unread = sum(1 for n in names if (last.get(n) or "") < day)
     return {"cmd": cmd, "queue": q, "n_names": len(names), "n_unread_today": unread}
 
@@ -456,14 +543,24 @@ def _exhausted(q: Path) -> bool:
         return False
 
 
-def queue_of(cmd: Path) -> Path | None:
-    try:
-        m = re.search(r"--queue\s+(\S+)", cmd.read_text(encoding="utf-8", errors="replace"))
-    except OSError:
+def _with_queue(spec: Launch, queue: Path) -> Launch:
+    """PURE. `spec` with its `--queue` argument replaced (or added)."""
+    args = list(spec.args)
+    if "--queue" in args and args.index("--queue") + 1 < len(args):
+        args[args.index("--queue") + 1] = str(queue)
+    else:
+        args = ["--queue", str(queue), *args]
+    return replace(spec, args=tuple(args))
+
+
+def queue_of(spec: Launch) -> Path | None:
+    """The queue file a `--no-pool` launch reads, or None (the pool has none)."""
+    if not isinstance(spec, Launch) or "--queue" not in spec.args:
         return None
-    if not m:
+    i = spec.args.index("--queue")
+    if i + 1 >= len(spec.args):
         return None
-    q = Path(m.group(1))
+    q = Path(spec.args[i + 1])
     return q if q.is_absolute() else REPO / q
 
 
@@ -1181,7 +1278,9 @@ def chrome_port_open() -> bool:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--until", default="08:00", help="local HH:MM, or continuous for keeper runs")
-    ap.add_argument("--queue-cmd", default=str(DJ / "queue_run.cmd"))
+    ap.add_argument("--queue", default=str(DEFAULT_QUEUE),
+                    help="the queue file for --no-pool (the rolling queue is built from it)")
+    ap.add_argument("--queue-cmd", default=None, help=argparse.SUPPRESS)
     ap.add_argument("--claims-since", default="2026-07-01")
     ap.add_argument("--no-rolling", dest="rolling", action="store_false",
                     help="run --queue-cmd as given instead of the self-built rolling queue")
@@ -1196,6 +1295,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--capacity-ceiling", type=int, default=None,
                     help="explicit per-run capacity envelope, 1..12; leaves settings unchanged")
     a = ap.parse_args(argv)
+    if a.queue_cmd is not None:
+        ap.error("--queue-cmd is retired (CH-05): a data-dir .cmd launcher runs whatever checkout "
+                 "its `cd /d` names. Use --queue <file> with --no-pool.")
     from scripts.beta_v2_reader_tab_limit import supervisor_limit
     try:
         a.max_tabs = supervisor_limit(a.max_tabs, configured=getattr(_config, "READER_MAX_TABS", 6),
@@ -1216,16 +1318,17 @@ def main(argv: list[str] | None = None) -> int:
     budget = GR.RepairBudget()
     open_budget = open_fault_budget()
     restarts, finished, last_launch, last_hourly, last_loads = 0, False, 0.0, time.time(), loads()
-    template = Path(a.queue_cmd)
+    template = queue_launch(Path(a.queue))
     # 2026-09-28: the supervisor builds its OWN queue (never idle): the plan over
     # the candidate set, oldest-read names first, rebuilt when it is exhausted
+    pool_spec = None
     if a.pool:
         a.rolling = False
-        GR_atomic_text(POOL_CMD, pool_cmd_text(until=a.until, max_tabs=a.max_tabs,
-                                            capacity_ceiling=a.capacity_ceiling))
-        log(event="pool_mode", cmd=str(POOL_CMD))
+        pool_spec = pool_launch(until=a.until, max_tabs=a.max_tabs,
+                                capacity_ceiling=a.capacity_ceiling)
+        log(event="pool_mode", cmd=str(pool_spec))
     rq = rolling_queue(template) if a.rolling else None
-    queue_cmd = POOL_CMD if a.pool else (rq["cmd"] if rq else template)
+    queue_cmd = pool_spec if a.pool else (rq["cmd"] if rq else template)
     if rq:
         log(event="rolling_queue", queue=str(rq["queue"]), n_names=rq["n_names"],
             n_unread_today=rq["n_unread_today"])

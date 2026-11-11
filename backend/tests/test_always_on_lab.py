@@ -1320,27 +1320,28 @@ def test_the_schtasks_line_is_onlogon_limited_and_runs_nothing(capsys):
     out = capsys.readouterr().out
     assert '/SC ONLOGON' in out
     # 2026-09-13: the form that registers WITHOUT elevation is printed first
-    assert 'Startup' in out and 'always_on_lab.cmd' in out and 'WScript.Shell' in out
+    assert 'Startup' in out and 'WScript.Shell' in out
     assert '/RL LIMITED' in out
     assert '/TN "AegisAlwaysOnLab"' in out
     assert "schtasks /Create" in out and "schtasks /Change" in out
     # Only the COMMAND lines are checked, not the prose around them: the printed
-    # rationale explains why `< NUL` does not work, and a check over the whole
+    # rationale explains the retired data-dir .cmd, and a check over the whole
     # page would fail on the explanation — the same trap that caught the AST
     # guard in this file and three other tests in this repository.
     cmds = [ln for ln in out.splitlines() if ln.strip().startswith("schtasks ")]
     assert len(cmds) == 2
-    for cmd in cmds:
-        # 2026-09-13: /TR is capped at 261 characters, so the command line points
-        # at the wrapper and the wrapper carries the redirects.
-        assert "always_on_lab.cmd" in cmd
+    vbs = [ln for ln in out.splitlines() if "sh.Run" in ln]
+    assert len(vbs) == 1
+    wrapper = str(L.ROOT / "scripts" / "runtime_task.py")
+    for cmd in cmds + vbs:
+        # CH-05 (2026-11-11): every runnable line starts THIS checkout's code through
+        # the one wrapper, never a launcher in the shared data dir (`cd /d <checkout>`)
+        assert wrapper in cmd and str(L.ROOT / ".venv" / "Scripts" / "pythonw.exe") in cmd
+        assert "-m scripts.always_on_lab" in cmd
+        assert "--stop-file backend\\data\\optimus\\always_on_lab_OFF" in cmd
+        assert "--log backend\\data\\optimus\\always_on_lab.log" in cmd
+        assert ".cmd" not in cmd and "cd /d" not in cmd
         assert "| tail" not in cmd, "a pipe eats the exit code, and the code is the guard"
-    body = [ln for ln in out.splitlines() if "-m scripts.always_on_lab" in ln and "schtasks" not in ln]
-    assert body, "the wrapper body must be printed"
-    for ln in body:
-        assert "< " in ln, "the stdin redirect is load-bearing"
-        assert "NUL" not in ln, "it must come from a REGULAR file, not NUL"
-        assert "empty_stdin.txt" in ln
 
 
 # --------------------------------------------------------------------------
