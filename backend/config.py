@@ -6294,3 +6294,33 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+# ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
+#: `scripts/night_investigator_news.py`: the investigator's own process and contract,
+#: plus typed world-digest rows about the name and its graph neighbours (context only),
+#: on the names the plain `investigator:evidence_v3` arm forecast the same UTC day.
+#: The trading plan does not read it (expected_return.NOT_READ_BY_DESIGN).
+INVESTIGATOR_NEWS_SPECIALIST = "investigator_news:evidence_v3"
+INVESTIGATOR_NEWS_PURPOSE = "investigator_news"
+#: Per-run spend ceiling (USD, host-envelope charge). The run stops BEFORE a call that
+#: could pass it (exit 3, PARTIAL). ~135 names x ~$0.0007 settled ~= $0.10; the margin
+#: covers the envelope's conservative peak-price settlement. Override: --budget-usd.
+INVESTIGATOR_NEWS_RUN_BUDGET_USD = 0.18
+#: Headroom kept per call when checking the run budget: a FLOOR; the provider
+#: guard's own quote for the packet is used when larger (review 3, S65).
+INVESTIGATOR_NEWS_PER_CALL_RESERVE_USD = 0.004
+#: A run whose refused + unpaired names exceed this share of the names it
+#: tried ends DEGRADED (rc 2), not DONE, even if some forecasts were written.
+INVESTIGATOR_NEWS_MAX_REFUSED_SHARE = 0.5
+INVESTIGATOR_NEWS_MAX_TOKENS = 700
+INVESTIGATOR_NEWS_TEMPERATURE = 0.3
+#: A typed row is a candidate when published within this many hours before the cutoff.
+INVESTIGATOR_NEWS_LOOKBACK_HOURS = 48
+INVESTIGATOR_NEWS_MAX_DIRECT_ROWS = 5
+INVESTIGATOR_NEWS_MAX_NEIGHBOURS = 5
+INVESTIGATOR_NEWS_MAX_NEIGHBOUR_ROWS = 3
+#: NOT registered in FORECAST_WRITERS and NOT in expected_return.NOT_READ_BY_DESIGN on
+#: purpose: both are pinned by the frozen PC policy epoch
+#: (`backend/data/pc_policy_epochs/pc_paper_no_index_2026_10_v1.json`), so editing either
+#: would void the epoch. `forecast_writers()` therefore lists the prefix as
+#: "NOT READ (no reason registered)"; E[r] reads `investigator:` only, so the plan
+#: cannot read this arm. Registering the reason belongs with the next attended epoch.
