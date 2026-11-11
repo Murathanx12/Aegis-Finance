@@ -472,6 +472,7 @@ def test_a_task_scheduler_shaped_firing_can_print_and_still_exit_zero(tmp_path, 
         assert got["stdin_isatty"] is False and got["stdin_read"] == ""
 
 
+@pytest.mark.skipif(not WIN, reason="interpreter names are Windows paths")
 def test_a_pythonw_segment_without_a_log_is_given_no_streams(tmp_path):
     plan, _ = _plan(tmp_path, ["--pythonw", "-m", "a"])
     kws = []
