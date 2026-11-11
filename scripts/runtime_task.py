@@ -546,12 +546,21 @@ def run_plan(plan: dict, *, popen=subprocess.Popen, job_factory=None) -> int:
             # a pipe, subprocess would otherwise hand the child a stdout pipe nobody reads,
             # and its first print raises (AegisStraddleForward exited 120 in 2 s on the
             # first real repoint, 2026-11-11). A console entry keeps inheriting.
+            # A pythonw segment with no --log gets NO standard handles at all, which is
+            # what a bare Task Scheduler pythonw action gives it. Those jobs test
+            # `sys.stdout is None` to decide to open their own log (straddle_forward,
+            # alert_pass, world_digest, task_keeper); handed the null device they ran,
+            # exited 0 and wrote their log line nowhere (straddle_forward.log stopped
+            # advancing on the second repoint, 2026-11-11).
             quiet = fh is None and _windowless()
-            child = popen(r["argv"], cwd=plan["cwd"], env=r["env"], stdin=subprocess.PIPE,
-                          stdout=fh if fh else (subprocess.DEVNULL if quiet else None),
-                          stderr=(subprocess.STDOUT if fh else
-                                  (subprocess.DEVNULL if quiet else None)),
-                          creationflags=flags)
+            if fh is None and Path(r["argv"][0]).name.lower() == "pythonw.exe":
+                std = {"stdin": None, "stdout": None, "stderr": None}
+            else:
+                std = {"stdin": subprocess.PIPE,
+                       "stdout": fh if fh else (subprocess.DEVNULL if quiet else None),
+                       "stderr": (subprocess.STDOUT if fh else
+                                  (subprocess.DEVNULL if quiet else None))}
+            child = popen(r["argv"], cwd=plan["cwd"], env=r["env"], creationflags=flags, **std)
             if getattr(child, "stdin", None) is not None:
                 child.stdin.close()
         except OSError as exc:

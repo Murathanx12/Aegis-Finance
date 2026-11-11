@@ -390,8 +390,10 @@ PROBE = """import json, os, sys
 open(os.environ["RT_PROBE_OUT"], "w", encoding="utf-8").write(json.dumps({
     "cwd": os.getcwd(), "argv": sys.argv[1:], "exe": sys.executable,
     "repo_root": os.environ.get("AEGIS_REPO_ROOT"), "dotenv": os.environ.get("AEGIS_DOTENV_PATH"),
-    "pythonpath": os.environ.get("PYTHONPATH"), "stdin_isatty": sys.stdin.isatty(),
-    "stdin_read": sys.stdin.read()}))
+    "pythonpath": os.environ.get("PYTHONPATH"),
+    "stdin_isatty": None if sys.stdin is None else sys.stdin.isatty(),
+    "stdin_read": None if sys.stdin is None else sys.stdin.read(),
+    "std_none": [s is None for s in (sys.stdin, sys.stdout, sys.stderr)]}))
 print("probe-stdout")
 raise SystemExit(int(sys.argv[1]))
 """
@@ -427,30 +429,54 @@ def test_a_real_child_exit_code_cwd_and_env_arrive_unchanged(tmp_path, entry):
     assert got["repo_root"] == str(clone)
     assert got["dotenv"] == cfg["AEGIS_DOTENV_PATH"]
     assert got["pythonpath"] is None
-    # run_night_launcher --scheduled voids a firing whose stdin is a tty; NUL counts as one
-    assert got["stdin_isatty"] is False and got["stdin_read"] == ""
     if entry == "pythonw":
         assert Path(got["exe"]).name.lower() == "pythonw.exe"
+        # a bare pythonw task has no streams; the wrapper adds none, even when it has its own
+        assert got["std_none"] == [True, True, True]
+    else:
+        # run_night_launcher --scheduled voids a firing whose stdin is a tty; NUL counts as one
+        assert got["stdin_isatty"] is False and got["stdin_read"] == ""
     rows = [json.loads(x) for x in (Path(cfg["AEGIS_LIVE_OPTIMUS"]) / RT.RUN_LOG_REL)
             .read_text(encoding="utf-8").splitlines()]
     assert rows[-1]["event"] == "end" and rows[-1]["rc"] == 7
 
 
 @pytest.mark.skipif(not WIN, reason="the wrapper runs scheduled tasks on Windows")
-def test_a_task_scheduler_shaped_firing_can_print_and_still_exit_zero(tmp_path):
-    """Task Scheduler starts pythonw with NO standard handles. The first real
-    repoint (AegisStraddleForward, 2026-11-11) exited 120 in 2 s without doing
-    its work: with stdin a pipe and stdout None, subprocess hands the child a
-    stdout pipe nobody reads, so the first print raises and the exit flush
-    fails. The earlier pythonw test never saw it because `capture_output` gave
-    the wrapper handles to pass down. No handles here, as in production."""
+@pytest.mark.parametrize("child", ["pythonw", "python"])
+def test_a_task_scheduler_shaped_firing_can_print_and_still_exit_zero(tmp_path, child):
+    """Task Scheduler starts pythonw with NO standard handles; so does this test
+    (`capture_output` would give the wrapper handles to pass down, which is how the
+    first pythonw test missed both failures below).
+
+    python child: the first real repoint (AegisStraddleForward, 2026-11-11) exited 120
+    in 2 s. With stdin a pipe and stdout None, subprocess hands the child a stdout pipe
+    nobody reads, so the first print raises and the exit flush fails. It gets the null
+    device, and its stdin stays a closed pipe (never a tty).
+
+    pythonw child: the second repoint exited 0 and `straddle_forward.log` stopped
+    advancing. The job opens its own log only when `sys.stdout is None`; the null
+    device is not None, so its line went nowhere. It gets no streams at all, which is
+    what the bare task gave it."""
     clone, cfg, out, env = _probe_clone(tmp_path)
     exe = Path(cfg["AEGIS_VENV_DIR"]) / "Scripts" / "pythonw.exe"
-    r = subprocess.run([str(exe), "-I", str(clone / "scripts" / "runtime_task.py"), "--pythonw",
+    flags = ["--pythonw"] if child == "pythonw" else []
+    r = subprocess.run([str(exe), "-I", str(clone / "scripts" / "runtime_task.py"), *flags,
                         "-m", "rtprobe", "0"], env=env, cwd=str(tmp_path), timeout=120,
                        creationflags=subprocess.DETACHED_PROCESS)
     assert r.returncode == 0
-    assert json.loads(out.read_text(encoding="utf-8"))["stdin_isatty"] is False
+    got = json.loads(out.read_text(encoding="utf-8"))
+    if child == "pythonw":
+        assert got["std_none"] == [True, True, True]
+    else:
+        assert got["std_none"] == [False, False, False]
+        assert got["stdin_isatty"] is False and got["stdin_read"] == ""
+
+
+def test_a_pythonw_segment_without_a_log_is_given_no_streams(tmp_path):
+    plan, _ = _plan(tmp_path, ["--pythonw", "-m", "a"])
+    kws = []
+    RT.run_plan(plan, popen=lambda argv, **kw: (kws.append(kw), FakeChild(0))[1])
+    assert (kws[0]["stdin"], kws[0]["stdout"], kws[0]["stderr"]) == (None, None, None)
 
 
 @pytest.mark.skipif(not WIN, reason="the wrapper runs scheduled tasks on Windows")
