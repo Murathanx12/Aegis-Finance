@@ -480,6 +480,45 @@ def sim_stop() -> dict:
     return ss.request_stop(reason="desktop")
 
 
+# --------------------------------------------------------------------------
+# The web reader: ONE switch (CH-22b, 2026-11-11). It replaces the separate
+# AegisReaderControl.exe. OFF writes `dowjones/SUPERVISOR_STOP` and kills
+# nothing; ON removes only a marker this app (or the retired controller) wrote
+# and calls `task_keeper.ensure_reader()`. See `backend/services/reader_control.py`.
+# --------------------------------------------------------------------------
+
+def _reader_reply(out: dict):
+    from fastapi.responses import JSONResponse
+    code = int(out.pop("http", 200))
+    return out if code == 200 else JSONResponse(status_code=code, content=out)
+
+
+@router.get("/reader")
+def reader_status() -> dict:
+    """Files only (no process scan): safe to poll every few seconds."""
+    from backend.services import reader_control as rc
+    return rc.status()
+
+
+@router.post("/reader/on")
+def reader_on():
+    """200 launch/alive/starting/iif_quiet · 409 held by someone else, busy, or
+    refused (the app's job object would kill the reader on close) · 503 cannot
+    determine · 500 launch failed. The body always carries `detail` and `status`."""
+    _require_enabled()
+    from backend.services import reader_control as rc
+    return _reader_reply(rc.turn_on())
+
+
+@router.post("/reader/off")
+def reader_off():
+    """Writes SUPERVISOR_STOP with this app's tag; returns STOP_REQUESTED until
+    the supervisor's own status says stopped. Never kills a process."""
+    _require_enabled()
+    from backend.services import reader_control as rc
+    return _reader_reply(rc.turn_off())
+
+
 @router.get("/sim/history")
 def sim_history(limit: int = 10) -> dict:
     from backend.services import sim_session as ss
