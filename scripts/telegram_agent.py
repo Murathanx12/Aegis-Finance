@@ -28,6 +28,14 @@ Four jobs, in ascending order of how much they are worth:
 4. **Alarms worth interrupting for**, and only those: an ownership conflict on a
    broker account, a drawdown breach, a night that died without a receipt.
 
+TWO TABLES (CH-05 R7, 2026-11-11)
+=================================
+`config.TELEGRAM_AGENT_MODE` picks the table `--serve` answers with. The default,
+"read_only", is `backend.services.telegram_readonly`: status, budget, digest, books,
+nav, positions, help -- each a receipt read with its age; anything else gets a plain
+"not supported" reply. "full" is the table below (sim control, approvals, paid model
+commands on a tap, the DeepSeek classifier); turning it on is an owner decision.
+
 WHAT IT WILL NOT DO
 ===================
 It never places an order, never approves anything itself, and never sends to a
@@ -459,6 +467,25 @@ HANDLERS = {
 }
 
 
+#: CH-05 R7 (2026-11-11): which table answers. "read_only" (default) is
+#: `backend.services.telegram_readonly`: receipt reads only. "full" is the table above.
+AGENT_MODES: tuple[str, ...] = ("read_only", "full")
+
+
+def agent_mode() -> str | None:
+    """The configured mode, or None when it is not one of AGENT_MODES (main refuses)."""
+    m = str(getattr(_cfg, "TELEGRAM_AGENT_MODE", "read_only") or "").strip().lower()
+    return m if m in AGENT_MODES else None
+
+
+def tables(mode: str) -> tuple[dict, object, object]:
+    """(handlers, text_handler, callback_handler) for `TG.poll` in `mode`."""
+    if mode == "full":
+        return HANDLERS, text_reply, callback_reply
+    from backend.services import telegram_readonly as RO
+    return RO.HANDLERS, RO.text_reply, RO.callback_reply
+
+
 _DAILY_DONE: dict[str, str] = {}
 
 
@@ -708,15 +735,26 @@ def main(argv=None) -> int:
         print("brief sent")
         return 0
 
-    st = TG.status()
-    if st.get("state", "").startswith("AWAITING"):
-        print("no owner chat id yet — send /start to the bot, then --claim")
-        TG.claim_owner()
-    if not TG.owner_chat_id():
+    mode = agent_mode()
+    if mode is None:
+        logger.error("REFUSED: TELEGRAM_AGENT_MODE=%r is not one of %s",
+                     getattr(_cfg, "TELEGRAM_AGENT_MODE", None), AGENT_MODES)
         return 2
+    if mode == "full":
+        st = TG.status()
+        if st.get("state", "").startswith("AWAITING"):
+            print("no owner chat id yet — send /start to the bot, then --claim")
+            TG.claim_owner()
+    if not TG.owner_chat_id():
+        # read-only mode never claims an owner from an inbound message: the id comes from the
+        # keys file by name (TELEGRAM_OWNER_CHAT_ID) or the agent does not serve.
+        logger.error("REFUSED: %s is not set; the agent answers only a configured owner", TG.OWNER_ENV)
+        return 2
+    handlers, text_handler, callback_handler = tables(mode)
 
     if a.once:
-        print(json.dumps(TG.poll(HANDLERS, text_handler=text_reply, callback_handler=callback_reply), indent=1))
+        print(json.dumps(TG.poll(handlers, text_handler=text_handler,
+                                 callback_handler=callback_handler), indent=1))
         return 0
 
     try:
@@ -724,7 +762,7 @@ def main(argv=None) -> int:
     except Exception as exc:                                       # noqa: BLE001
         who = f"UNKNOWN ({type(exc).__name__})"
     # THE FIRST LOG LINE IS THE LIVENESS PROOF (review 2026-09-26 §5 item 3)
-    logger.info("telegram agent serving as %s, pid %s", who, os.getpid())
+    logger.info("telegram agent serving as %s, pid %s, mode %s", who, os.getpid(), mode)
     beat(loops=0, last_poll="starting")
     loops = 0
     while True:
@@ -735,7 +773,7 @@ def main(argv=None) -> int:
             logger.exception("daily jobs failed")
         state, err = "ok", None
         try:
-            TG.poll(HANDLERS, text_handler=text_reply, callback_handler=callback_reply)
+            TG.poll(handlers, text_handler=text_handler, callback_handler=callback_handler)
         except TG.TelegramRefused as exc:
             logger.warning("poll refused: %s", exc)
             state, err = "refused", str(exc)[:200]

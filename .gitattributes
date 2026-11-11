@@ -22,3 +22,8 @@ backend/tests/fixtures/**/*.csv text eol=lf
 # committed LF bytes on Windows too; never relax the runtime source hashes.
 backend/services/expected_return.py text eol=lf
 backend/services/forecast_reputation.py text eol=lf
+
+# 2026-11-11 (CH-05): a batch file checked out with LF line endings can mis-parse; the
+# runtime wrapper is a .cmd every clone runs.
+scripts/runtime_task.cmd text eol=crlf
+nn_lab/run_nightly.cmd text eol=crlf

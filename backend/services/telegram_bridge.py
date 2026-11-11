@@ -451,7 +451,10 @@ def claim_owner() -> dict:
 
 def _persist_owner(cid: str) -> None:
     os.environ[OWNER_ENV] = cid
-    env = Path(_cfg.PROJECT_ROOT) / ".env" if hasattr(_cfg, "PROJECT_ROOT") else Path(".env")
+    # CH-05: the keys file the process actually loaded (`AEGIS_DOTENV_PATH`), not a `.env`
+    # beside the code -- in a release clone that would be a new file nothing reads.
+    env = Path(getattr(_cfg, "DOTENV_PATH", None)
+               or (Path(_cfg.PROJECT_ROOT) / ".env" if hasattr(_cfg, "PROJECT_ROOT") else ".env"))
     try:
         lines = env.read_text(encoding="utf-8").splitlines()
         out, found = [], False

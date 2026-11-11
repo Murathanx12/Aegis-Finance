@@ -271,4 +271,6 @@ def test_the_agent_wires_the_reply_handler_without_displacing_ask():
     for c in ("stock", "news", "report", "digest", "analyze"):
         assert TA.HANDLERS[c].__name__ == f"reply_{c}"
     assert TA.HANDLERS["ask"].__name__ == "routed_ask"
-    assert inspect.getsource(TA.main).count("text_handler=text_reply") == 2
+    # CH-05 R7: main polls with the table of the configured mode; "full" is this one
+    assert TA.tables("full")[1] is TA.text_reply
+    assert inspect.getsource(TA.main).count("text_handler=text_handler") == 2
