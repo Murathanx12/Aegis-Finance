@@ -1,4 +1,13 @@
-"""DeepSeek is the ONLY provisioned provider, and the code must say so.
+"""DeepSeek is the PRIMARY provider, and the code must say so.
+
+AMENDED 2026-11-11 (CH-04b). Until then this file pinned DeepSeek as the ONLY
+provisioned provider. The owner then said "we have 75$ usd in featherless api
+use it", so the declaration changed on purpose, not by drift: DeepSeek stays
+the primary (the house model `_call_llm` resolves to, and the default for every
+purpose); Featherless is the one declared SECONDARY, reachable only by name for
+a purpose `config.LLM_PURPOSE_PROVIDER` routes to it (empty by default) and
+capped by its own envelope. The guard is kept: a third provider, or Featherless
+becoming the resolved house provider, fails here.
 
 WHAT HAPPENED, 2026-08-24. `llm_analyzer` reads as though Claude were primary
 and DeepSeek the fallback:
@@ -35,8 +44,28 @@ import pytest
 from backend.services import llm_analyzer as la
 
 
-def test_deepseek_is_the_declared_sole_provider():
-    assert la.SOLE_PROVISIONED_PROVIDER == "deepseek"
+def test_deepseek_is_the_declared_primary_provider():
+    assert la.PRIMARY_PROVIDER == "deepseek"
+    assert la.SOLE_PROVISIONED_PROVIDER == la.PRIMARY_PROVIDER   # deprecated alias
+
+
+def test_featherless_is_the_only_declared_secondary_and_never_the_house_model(monkeypatch):
+    """A new secondary is an owner decision and a line here, never drift."""
+    assert set(la.SECONDARY_PROVIDERS) == {"featherless"}
+    import inspect
+    # `_call_llm` (the house model) has no Featherless branch: a secondary is
+    # reached only through `call_named` for a routed purpose.
+    assert "featherless" not in inspect.getsource(la._call_llm)
+    monkeypatch.setenv("FEATHERLESS_API_KEY", "fl-test-not-a-real-key")
+    monkeypatch.setattr(la, "_DEEPSEEK_API_KEY", "")
+    monkeypatch.setattr(la, "_ANTHROPIC_API_KEY", "")
+    assert la._get_provider() == "none"          # a Featherless key alone never becomes `active`
+
+
+def test_by_default_every_purpose_resolves_to_the_primary(monkeypatch):
+    from backend import config as C
+    monkeypatch.setattr(C, "LLM_PURPOSE_PROVIDER", {})
+    assert la.provider_for("world_digest_extract") == "deepseek"
 
 
 @pytest.fixture
@@ -108,14 +137,15 @@ def test_a_whitespace_only_key_is_not_configured(monkeypatch):
 
 def test_the_provider_row_is_on_the_usage_surface(provisioned):
     u = la.llm_usage()
-    assert u["providers"]["sole_provisioned"] == "deepseek"
+    assert u["providers"]["primary"] == "deepseek"
+    assert u["providers"]["secondary"] == ["featherless"]
     assert u["providers"]["active"] == "deepseek"
 
 
-def test_the_sole_provisioned_declaration_does_NOT_depend_on_the_environment():
+def test_the_primary_declaration_does_NOT_depend_on_the_environment():
     """It is a declaration, not a reading. It must be the same string on a
     machine with keys and on CI without them."""
-    assert la.SOLE_PROVISIONED_PROVIDER == "deepseek"
+    assert la.PRIMARY_PROVIDER == "deepseek"
 
 
 def test_the_DEEPSEEK_path_carries_the_language_pin_too():

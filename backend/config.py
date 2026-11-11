@@ -2927,6 +2927,68 @@ DEEPSEEK_SDK_TIMEOUT_S = float(os.getenv("AEGIS_DEEPSEEK_SDK_TIMEOUT_S", "120.0"
 #: stamp, turns `provider_budget status` DEGRADED. Readers already count it in
 #: memory; this says nobody has reconciled the file (review 3, S65).
 DEEPSEEK_SIDECAR_STALE_HOURS = 12.0
+
+# ── FEATHERLESS: a capped SECOND provider for named bulk purposes (CH-04b, S65) ──
+#: Owner, 2026-11-11: "we have 75$ usd in featherless api use it" (DeepSeek stays
+#: at $15-20/month and stays the primary/house model). Measured the same day with
+#: the account's own key (`GET /v1/plan`, `/credits/balance`, free): plan
+#: "Request Pricing" (feather_request_pricing) = a PREPAID credit balance billed
+#: per token per model, successful requests only, credits never expire, 100
+#: concurrent units; balance $74.50. https://featherless.ai/docs/request-pricing-and-credits
+#: Every call is reserved against `session_budget/featherless_local.json`
+#: (`provider_budget.featherless_attempt`): a MONTHLY cap and a LIFETIME ceiling
+#: (the owner's $75); an unpriced model is refused; a refusal is red (rc 2).
+FEATHERLESS_BASE_URL = "https://api.featherless.ai/v1"
+FEATHERLESS_KEY_ENV = "FEATHERLESS_API_KEY"
+FEATHERLESS_MONTHLY_CAP_USD = float(os.getenv("AEGIS_FEATHERLESS_MONTHLY_CAP_USD", "25.0"))
+FEATHERLESS_LIFETIME_CAP_USD = float(os.getenv("AEGIS_FEATHERLESS_LIFETIME_CAP_USD", "75.0"))
+#: Neither cap may exceed this without a code change (the owner's stated credit).
+FEATHERLESS_HARD_CAP_USD = 75.0
+#: The Featherless rows of THE rate table (`LLM_PRICE_PER_MTOK`, X7: one table,
+#: so the envelope and telemetry price a call identically). USD per 1M tokens,
+#: from `GET /v1/models/<id>` `.pricing` (per token x 1e6), read 2026-11-11.
+#: Prices are per model and can change; re-read before adding a model. Only the
+#: ids in `FEATHERLESS_MODELS` may be sent to Featherless; any other model is
+#: REFUSED before dispatch. Input is priced at the full (uncached) rate
+#: (`cached_in == in`): conservative. GATED models (`is_gated: true`, e.g.
+#: google/gemma-3-12b-it, meta-llama/*) answer 403 until the org links a
+#: Hugging Face account, so none is listed. Ids carry an owner/ prefix and never
+#: collide with a DeepSeek name.
+FEATHERLESS_PRICE_AS_OF = "2026-11-11"
+LLM_PRICE_PER_MTOK.update({
+    "Qwen/Qwen3-30B-A3B-Instruct-2507": {"in": 0.125, "cached_in": 0.125, "out": 0.45},
+    "mistralai/Mistral-Small-3.2-24B-Instruct-2506": {"in": 0.2168, "cached_in": 0.2168, "out": 0.4025},
+    "Qwen/Qwen2.5-7B-Instruct": {"in": 0.17, "cached_in": 0.17, "out": 0.20},
+    "Qwen/Qwen3-14B": {"in": 0.12, "cached_in": 0.12, "out": 0.24},
+    "Qwen/Qwen2.5-72B-Instruct": {"in": 0.37, "cached_in": 0.37, "out": 0.40},
+})
+FEATHERLESS_MODELS: tuple[str, ...] = (
+    "Qwen/Qwen3-30B-A3B-Instruct-2507", "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+    "Qwen/Qwen2.5-7B-Instruct", "Qwen/Qwen3-14B", "Qwen/Qwen2.5-72B-Instruct",
+)
+#: The model a Featherless purpose uses unless the caller names another priced one.
+FEATHERLESS_DEFAULT_MODEL = os.getenv("AEGIS_FEATHERLESS_MODEL", "Qwen/Qwen3-30B-A3B-Instruct-2507")
+#: Per-request wall clock (the OpenAI SDK default is 600 s and holds the reservation).
+FEATHERLESS_TIMEOUT_S = float(os.getenv("AEGIS_FEATHERLESS_TIMEOUT_S", "60.0"))
+#: Send `response_format={"type": "json_object"}` on JSON purposes.
+FEATHERLESS_JSON_MODE = True
+#: Concurrent Featherless requests from one digest run (the plan allows 100 units;
+#: a <16B or MoE-30B model costs 1 unit; a 429 is retried inside one reservation).
+FEATHERLESS_CONCURRENCY = 4
+#: PURPOSE -> provider, for the call sites that consult it (today: the world
+#: digest's stage-1 typing, purpose "world_digest_extract"). EMPTY by default, so
+#: behaviour is byte-identical until a flag is set. Env form:
+#: AEGIS_LLM_PURPOSE_PROVIDER="world_digest_extract=featherless[,purpose=provider]".
+#: Providers: "deepseek" | "featherless" | "local". A non-DeepSeek route that does
+#: not type a call falls back to the metered DeepSeek path, which is admitted only
+#: if the DeepSeek envelope also allows it; every fallback is counted on the run
+#: receipt and stamped on the row (`extract_fallback_from`).
+LLM_PURPOSE_PROVIDER: dict[str, str] = {
+    k.strip(): v.strip() for k, v in (
+        part.split("=", 1) for part in os.getenv("AEGIS_LLM_PURPOSE_PROVIDER", "").split(",")
+        if "=" in part)
+    if k.strip() and v.strip()
+}
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for

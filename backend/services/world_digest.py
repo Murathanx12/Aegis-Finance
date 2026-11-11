@@ -1092,7 +1092,9 @@ class Meter:
     """
 
     def __init__(self, budget_usd: float, *, llm: Optional[Callable[..., dict]] = None,
-                 local_llm: Optional[Callable[..., dict]] = None):
+                 local_llm: Optional[Callable[..., dict]] = None,
+                 featherless_llm: Optional[Callable[..., dict]] = None,
+                 featherless_model: Optional[str] = None):
         # no declared budget, no paid call: a NaN budget compared False against
         # every spend and would never have refused (guard contract, 2026-09-29)
         try:
@@ -1118,6 +1120,14 @@ class Meter:
         self._lock = threading.Lock()
         self._llm = llm
         self._local_llm = local_llm
+        # Featherless (CH-04b): its spend is capped by ITS envelope
+        # (`provider_budget.featherless_attempt`), so it is counted apart from
+        # this run's DeepSeek budget, never inside it.
+        self._featherless_llm = featherless_llm
+        self.featherless_model = featherless_model
+        self.featherless_calls = 0
+        self.featherless_failed = 0
+        self.featherless_spent = 0.0
         self._tl = threading.local()
 
     def last_model(self) -> str:
@@ -1156,6 +1166,43 @@ class Meter:
             self._tl.model = "local:" + str(res.get("served_model") or res.get("model") or "unknown")
             return res.get("text")
         return None
+
+    def call_featherless(self, system: str, user: str, *, purpose: str,
+                         max_tokens: int) -> tuple[Optional[str], str]:
+        """One turn from Featherless (`llm_analyzer.call_named("featherless")`).
+
+        Returns `(text or None, status)`. Its money is reserved and capped by the
+        Featherless envelope, never by this run's DeepSeek budget; the charge is
+        summed in `featherless_spent`. A refusal (`BUDGET_REFUSED`) is counted as
+        `featherless:BUDGET_REFUSED` and turns the run DEGRADED (rc 2) in
+        `scripts/world_digest`, like a DeepSeek refusal."""
+        try:
+            if self._featherless_llm is not None:
+                res = self._featherless_llm(system, user, purpose=purpose, max_tokens=max_tokens)
+            else:
+                from backend.services import llm_analyzer as LA
+                res = LA.call_named("featherless", system, user, purpose=purpose,
+                                    max_tokens=max_tokens, temperature=0.2,
+                                    model_override=self.featherless_model,
+                                    json_object=bool(getattr(_cfg, "FEATHERLESS_JSON_MODE", True)))
+        except Exception:                                            # noqa: BLE001
+            res = {"ok": False, "status": "FEATHERLESS_RAISED"}
+        status = str(res.get("status"))
+        charge = res.get("budget_charge_usd", res.get("cost_usd"))
+        with self._lock:
+            self.featherless_calls += 1
+            self.statuses["featherless:" + status] += 1
+            if type(charge) in (int, float) and math.isfinite(charge) and charge > 0:
+                self.featherless_spent += float(charge)
+            if res.get("ok") and res.get("text"):
+                served = str(res.get("served_model") or res.get("model") or "unknown")
+                self.models["featherless:" + served] += 1
+            else:
+                self.featherless_failed += 1
+        if res.get("ok") and res.get("text"):
+            self._tl.model = "featherless:" + str(res.get("served_model") or res.get("model") or "unknown")
+            return res.get("text"), status
+        return None, status
 
     def call(self, system: str, user: str, *, purpose: str, max_tokens: int,
              stage: str, reserve_usd: float = 0.0, stage_cap: Optional[float] = None) -> Optional[str]:
@@ -1234,7 +1281,12 @@ class Meter:
                 "calls": self.calls, "failed": self.failed, "unpriced_calls": self.unpriced,
                 "local_calls": self.local_calls, "local_failed": self.local_failed,
                 "served_models": dict(self.models), "statuses": dict(self.statuses),
-                "by_stage_usd": {k: round(v, 5) for k, v in self.by_stage.items()}}
+                "by_stage_usd": {k: round(v, 5) for k, v in self.by_stage.items()},
+                # only when the route was used: the receipt is unchanged with the flag OFF
+                **({"featherless_calls": self.featherless_calls,
+                    "featherless_failed": self.featherless_failed,
+                    "featherless_spent_usd": round(self.featherless_spent, 5)}
+                   if self.featherless_calls else {})}
 
 
 def _item_prompt(item: Item) -> tuple[str, int]:
@@ -1321,13 +1373,22 @@ def local_event_stage(items: list[Item], *,
 #: falls back to DeepSeek for any call it does not answer or does not type. It REPLACES
 #: the DeepSeek typing of those rows (unlike WORLD_DIGEST_LOCAL_EXTRACT, which only
 #: annotates), so it changes what the digest synthesises: owner decision, default OFF.
-EXTRACT_PROVIDERS = ("deepseek", "local")
+#: "featherless" (CH-04b, 2026-11-11; owner: "we have 75$ usd in featherless api use
+#: it") types on the capped second provider first, with the same per-call DeepSeek
+#: fallback as "local"; its spend is held by its own envelope, not the digest's share.
+EXTRACT_PROVIDERS = ("deepseek", "local", "featherless")
+#: The purpose key `config.LLM_PURPOSE_PROVIDER` routes stage-1 typing by.
+EXTRACT_PURPOSE = "world_digest_extract"
 
 
 def extract_provider() -> str:
-    p = str(getattr(_cfg, "WORLD_DIGEST_EXTRACT_PROVIDER", "deepseek"))
+    """`LLM_PURPOSE_PROVIDER["world_digest_extract"]` when set, else
+    `WORLD_DIGEST_EXTRACT_PROVIDER`. An unknown name raises (a red start)."""
+    route = (getattr(_cfg, "LLM_PURPOSE_PROVIDER", {}) or {}).get(EXTRACT_PURPOSE)
+    p = str(route if route else getattr(_cfg, "WORLD_DIGEST_EXTRACT_PROVIDER", "deepseek"))
     if p not in EXTRACT_PROVIDERS:
-        raise ValueError(f"WORLD_DIGEST_EXTRACT_PROVIDER={p!r} is not one of {EXTRACT_PROVIDERS}")
+        raise ValueError(f"stage-1 typing provider {p!r} (LLM_PURPOSE_PROVIDER[{EXTRACT_PURPOSE!r}] "
+                         f"or WORLD_DIGEST_EXTRACT_PROVIDER) is not one of {EXTRACT_PROVIDERS}")
     return p
 
 
@@ -1361,15 +1422,22 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
     batches = [heads[k:k + per] for k in range(0, len(heads), per)]
     lock = threading.Lock()
     local = local_event_stage(singles, runner=local_runner)
-    use_local = extract_provider() == "local"
+    route = extract_provider()
+    use_local = route == "local"
+    use_featherless = route == "featherless"
     local_gate = threading.Semaphore(max(1, int(getattr(_cfg, "WORLD_DIGEST_LOCAL_CONCURRENCY", 1))))
+    fl_gate = threading.Semaphore(max(1, int(getattr(_cfg, "FEATHERLESS_CONCURRENCY", 4))))
     accept_share = float(getattr(_cfg, "WORLD_DIGEST_LOCAL_BATCH_ACCEPT_SHARE", 0.8))
+    fallback_tl = threading.local()
 
     def typed_call(system: str, user: str, *, max_tokens: int, reserve_usd: float,
                    accept: Callable[[str], bool]) -> Optional[str]:
-        """Stage-1 typing: the on-box model first when WORLD_DIGEST_EXTRACT_PROVIDER is
-        "local", else (and on any local miss) the metered DeepSeek call. A local reply
-        that does not type is a miss, never a lost item: DeepSeek types it instead."""
+        """Stage-1 typing: the on-box model ("local") or Featherless ("featherless")
+        first when the route says so, else (and on any miss) the metered DeepSeek call,
+        which its own envelope still admits or refuses. A reply that does not type is a
+        miss, never a lost item: DeepSeek types it instead, and the row says so
+        (`extract_fallback_from`)."""
+        fallback_tl.source = None
         if use_local:
             with local_gate:
                 reply = meter.call_local(system, user, purpose="world_digest_extract_local",
@@ -1380,9 +1448,26 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
                 return reply
             with lock:
                 stats["local_fallback_calls"] += 1
+        elif use_featherless:
+            with fl_gate:
+                reply, status = meter.call_featherless(
+                    system, user, purpose="world_digest_extract_featherless", max_tokens=max_tokens)
+            if reply is not None and accept(reply):
+                with lock:
+                    stats["featherless_typed_calls"] += 1
+                return reply
+            fallback_tl.source = "featherless:" + (status if reply is None else "NOT_TYPED")
+            with lock:
+                stats["featherless_fallback_calls"] += 1
+                stats["featherless_fallback:" + fallback_tl.source.split(":", 1)[1]] += 1
         return meter.call(system, user, purpose="world_digest_extract",
                           max_tokens=max_tokens, stage="extract", reserve_usd=reserve_usd,
                           stage_cap=stage_cap)
+
+    def stamp_fallback(row: dict) -> None:
+        src = getattr(fallback_tl, "source", None)
+        if src:
+            row["extract_fallback_from"] = src
 
     def batch_rows(reply: Optional[str]) -> dict[int, dict]:
         got = _parse_json(reply)
@@ -1413,6 +1498,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
                 stats["unparsed"] += 1
                 return
             row["extract_model"] = meter.last_model()
+            stamp_fallback(row)
             if local["status"] != "OFF":
                 row["local_event"] = local["by_item"].get(it.item_id)
             row["injection_lines_removed"] = flagged
@@ -1453,6 +1539,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
                     continue
                 row["injection_lines_removed"] = 0
                 row["extract_model"] = served
+                stamp_fallback(row)
                 rows.append(row)
                 new_cache.append({"cache_key": cache_key(it, _catalog_hash=row["subject_catalog_sha256"]), "row": row,
                                   "cached_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")})
@@ -1465,7 +1552,7 @@ def extract_items(items: list[Item], meter: Meter, *, cache: dict[str, dict],
         list(ex.map(batch, batches))
     return {"rows": rows, "cache_hits": hits, "n_new_single": len(singles),
             "n_new_headline_batches": len(batches), **dict(stats),
-            "extract_provider": "local" if use_local else "deepseek",
+            "extract_provider": route,
             "local_stage": {k: v for k, v in local.items() if k != "by_item"}}
 
 

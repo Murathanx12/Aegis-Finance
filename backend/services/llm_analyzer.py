@@ -61,7 +61,37 @@ _DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "").strip()
 #: migration path if a key ever exists. But it is DORMANT, not primary, and
 #: `provider_status()` says so on the health surface rather than leaving the
 #: next session to work it out from an empty string.
-SOLE_PROVISIONED_PROVIDER = "deepseek"
+#:
+#: AMENDED 2026-11-11 (CH-04b, owner: "we have 75$ usd in featherless api use
+#: it"). DeepSeek is still the PRIMARY: the house model `_call_llm` resolves to,
+#: and the only provider any purpose uses by default. Featherless is a declared
+#: SECONDARY, reachable only through `call_named("featherless", ...)` for a
+#: purpose the config names in `LLM_PURPOSE_PROVIDER` (empty by default), and
+#: every such call is capped by its own envelope
+#: (`provider_budget.featherless_attempt`). "Sole" stopped being true, so the
+#: declaration says what is: one primary, named secondaries.
+PRIMARY_PROVIDER = "deepseek"
+#: name -> what it is for. Never a fallback for `_call_llm`, never the primary.
+SECONDARY_PROVIDERS: dict[str, str] = {
+    "featherless": "bulk typing for purposes named in config.LLM_PURPOSE_PROVIDER; "
+                   "capped by session_budget/featherless_local.json",
+}
+#: Deprecated alias (other repos and receipts import it). It means PRIMARY now.
+SOLE_PROVISIONED_PROVIDER = PRIMARY_PROVIDER
+
+
+def provider_for(purpose: str, default: str = PRIMARY_PROVIDER) -> str:
+    """The provider config routes `purpose` to (`LLM_PURPOSE_PROVIDER`), else `default`.
+
+    Raises ValueError for a route naming a provider nobody declared: a typo in a
+    flag must be a red start, not a silent run on the default."""
+    route = (getattr(_config_mod, "LLM_PURPOSE_PROVIDER", {}) or {}).get(str(purpose))
+    if route is None:
+        return default
+    allowed = {PRIMARY_PROVIDER, "local", *SECONDARY_PROVIDERS}
+    if route not in allowed:
+        raise ValueError(f"LLM_PURPOSE_PROVIDER[{purpose!r}]={route!r} is not one of {sorted(allowed)}")
+    return route
 
 
 def provider_status() -> dict:
@@ -75,7 +105,9 @@ def provider_status() -> dict:
     keys = {"anthropic": ("ANTHROPIC_API_KEY", _ANTHROPIC_API_KEY),
             "deepseek": ("DEEPSEEK_API_KEY", _DEEPSEEK_API_KEY)}
     out: dict = {"active": _get_provider(),
-                 "sole_provisioned": SOLE_PROVISIONED_PROVIDER,
+                 "primary": PRIMARY_PROVIDER,
+                 "secondary": sorted(SECONDARY_PROVIDERS),
+                 "purpose_routes": dict(getattr(_config_mod, "LLM_PURPOSE_PROVIDER", {}) or {}),
                  "configured": [], "declared_but_empty": [], "absent": []}
     for name, (env, val) in keys.items():
         if val:
@@ -85,7 +117,7 @@ def provider_status() -> dict:
         else:
             out["absent"].append(name)
     out["matches_declaration"] = bool(
-        out["active"] == SOLE_PROVISIONED_PROVIDER)
+        out["active"] == PRIMARY_PROVIDER)
     # NAMED providers (chunk G, 2026-09-26). Reachable only by name through
     # `call_named`; never a fallback, never the primary. Listed with the same
     # configured / declared_but_empty / absent vocabulary as the keys above.
@@ -101,7 +133,15 @@ def provider_status() -> dict:
                   "cost_status": (routes.get("local") or {}).get("cost_status"),
                   "state": "unprobed (started on demand by llama_server.ensure)"},
     }
-    out["roles"] = {"deepseek": "primary", "nvidia": "adjudicator", "local": "on_demand"}
+    fl_env = os.getenv(str(getattr(_config_mod, "FEATHERLESS_KEY_ENV", "FEATHERLESS_API_KEY")))
+    fl_model = str(getattr(_config_mod, "FEATHERLESS_DEFAULT_MODEL", ""))
+    out["named"]["featherless"] = {
+        "role": "bulk_secondary", "model": fl_model,
+        "cost_status": cost_status(fl_model),
+        "state": ("configured" if (fl_env or "").strip() else
+                  "declared_but_empty" if fl_env is not None else "absent")}
+    out["roles"] = {"deepseek": "primary", "nvidia": "adjudicator", "local": "on_demand",
+                    "featherless": "bulk_secondary"}
     return out
 
 # Claude models (fast → quality)
@@ -665,6 +705,28 @@ def _get_local_client():
     return _local_client
 
 
+_featherless_client = None
+
+
+def _get_featherless_client():
+    """OpenAI-SDK client for Featherless (OpenAI-compatible). SDK retries are
+    OFF: a retry is a second billable request inside one envelope reservation;
+    429s are retried by `_create_with_429_retry` instead (unbilled refusals)."""
+    global _featherless_client
+    if _featherless_client is not None:
+        return _featherless_client
+    key = os.getenv(str(getattr(_config_mod, "FEATHERLESS_KEY_ENV", "FEATHERLESS_API_KEY")), "").strip()
+    if not key:
+        return None
+    from openai import OpenAI
+    _featherless_client = OpenAI(
+        api_key=key, base_url=str(getattr(_config_mod, "FEATHERLESS_BASE_URL",
+                                          "https://api.featherless.ai/v1")),
+        timeout=float(getattr(_config_mod, "FEATHERLESS_TIMEOUT_S", 60.0)), max_retries=0,
+        default_headers={"X-Title": "Aegis Finance"})
+    return _featherless_client
+
+
 def cost_status(model: str) -> str:
     """LISTED when the house price table knows the model, else UNPRICED."""
     return "LISTED" if str(model) in getattr(_config_mod, "LLM_PRICE_PER_MTOK", {}) else "UNPRICED"
@@ -695,8 +757,16 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                no_retry: bool = False,
                non_thinking: bool = False,
                evidence_mode: bool = False,
-               request_timeout_s: float | None = None) -> dict:
+               request_timeout_s: float | None = None,
+               json_object: bool = False) -> dict:
     """One chat turn from the NAMED provider. Never raises for a provider error.
+
+    `featherless` (CH-04b, 2026-11-11): the capped secondary. Every call is
+    reserved against `provider_budget.featherless_attempt` (monthly cap +
+    lifetime ceiling, unpriced model refused); a refusal is `BUDGET_REFUSED`
+    with the envelope's line and nothing is sent. `model_override` names any
+    model in `config.FEATHERLESS_MODELS` (priced in LLM_PRICE_PER_MTOK); `json_object=True`
+    asks for JSON mode (featherless only). No fallback to another provider.
 
     Returns `{provider, model, served_model, text, ok, status, latency_s,
     cost_usd, cost_status, tokens_in, tokens_out, cached_tokens, n_429, error}`.
@@ -736,9 +806,15 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
            "status": None, "latency_s": None, "cost_usd": None,
            "cost_status": None, "tokens_in": 0, "tokens_out": 0,
            "cached_tokens": 0, "error": None}
-    if model_override is not None and (provider != "deepseek" or model_override != "deepseek-flash"):
+    if model_override is not None and provider != "featherless" and (
+            provider != "deepseek" or model_override != "deepseek-flash"):
+        # Featherless takes any model id: an unpriced one is refused by its
+        # envelope before dispatch (BUDGET_REFUSED), never sent.
         return {**out, "status": "INVALID_MODEL_OVERRIDE",
                 "error": "only the reviewed DeepSeek Flash override is allowed"}
+    if json_object and provider != "featherless":
+        return {**out, "status": "INVALID_JSON_SCOPE",
+                "error": "json_object is wired for the featherless route only"}
     if no_retry and (provider != "deepseek" or model_override != "deepseek-flash"):
         return {**out, "status": "INVALID_NO_RETRY_SCOPE",
                 "error": "no_retry requires the reviewed DeepSeek Flash route"}
@@ -783,9 +859,15 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                     "error": f"llama_server.ensure: {st.get('action')} "
                              f"{st.get('reason') or st.get('detail') or ''}".strip()}
         client = _get_local_client()
+    elif provider == "featherless":
+        model = str(model_override or getattr(_config_mod, "FEATHERLESS_DEFAULT_MODEL", ""))
+        client = _get_featherless_client()
+        if client is None:
+            return {**out, "model": model, "status": "NOT_CONFIGURED",
+                    "error": f"{getattr(_config_mod, 'FEATHERLESS_KEY_ENV', 'FEATHERLESS_API_KEY')} is not set"}
     else:
         return {**out, "status": "UNKNOWN_PROVIDER",
-                "error": f"unknown provider {provider!r}; have deepseek, nvidia, local"}
+                "error": f"unknown provider {provider!r}; have deepseek, nvidia, local, featherless"}
 
     out["model"] = model
     out["cost_status"] = cost_status(model)
@@ -802,10 +884,26 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                            else float(temperature)))
     if non_thinking:
         kw["extra_body"] = {"thinking": {"type": "disabled"}}
+    if json_object:
+        kw["response_format"] = {"type": "json_object"}
     accounting = None
     try:
         if provider == "nvidia":
             response, out["n_429"] = _create_with_429_retry(client, provider, **kw)
+        elif provider == "featherless":
+            from backend.services import provider_budget as PB
+            n429 = {"n": 0}
+
+            def _fl_send():
+                # 429 (concurrency) is retried INSIDE one reservation: Featherless
+                # bills successful requests only, so one success fits the bound.
+                resp, n429["n"] = _create_with_429_retry(client, provider, **kw)
+                return resp
+            try:
+                response, accounting = PB.featherless_attempt(kw, purpose=purpose, send=_fl_send)
+            finally:
+                out["n_429"] = n429["n"]
+            out.update(accounting)
         elif provider == "deepseek":
             response, accounting = _budgeted_deepseek_create(
                 client, purpose=purpose, production_budget=production_budget, **kw)
