@@ -1111,6 +1111,10 @@ class Meter:
         self.models: Counter = Counter()
         self.statuses: Counter = Counter()
         self.by_stage: Counter = Counter()
+        # In-flight reservations, kept apart from `spent` so a settled cost is
+        # added exactly once (no reserve-then-subtract float residue).
+        self._inflight = 0.0
+        self._inflight_stage: Counter = Counter()
         self._lock = threading.Lock()
         self._llm = llm
         self._local_llm = local_llm
@@ -1163,17 +1167,26 @@ class Meter:
                 stage_cap is not None and (not math.isfinite(float(stage_cap)) or float(stage_cap) < 0)):
             raise BudgetExceeded("invalid run/stage reservation")
         with self._lock:
-            if self.spent + reserve_usd > self.budget:
-                raise BudgetExceeded(f"${self.spent:.4f} spent of ${self.budget:.2f}")
-            if stage_cap is not None and self.by_stage[stage] + reserve_usd > stage_cap:
+            if self.spent + self._inflight + reserve_usd > self.budget:
+                raise BudgetExceeded(f"${self.spent:.4f} spent (+${self._inflight:.4f} in flight) "
+                                     f"of ${self.budget:.2f}")
+            if stage_cap is not None and (self.by_stage[stage] + self._inflight_stage[stage]
+                                          + reserve_usd > stage_cap):
                 raise BudgetExceeded(f"stage {stage} at ${self.by_stage[stage]:.4f} of "
                                      f"${stage_cap:.2f}")
-            # Ported from the runtime (CH-05 R5): debit the in-flight reservation
-            # under the SAME lock as both gates. Checking and debiting apart let
+            # Ported from the runtime (CH-05 R5): hold the in-flight reservation
+            # under the SAME lock as both gates. Checking and holding apart let
             # N worker threads all pass the gate on the same headroom and then
             # each spend it (extraction runs 8 workers, implications 4).
-            self.spent += reserve_usd
-            self.by_stage[stage] += reserve_usd
+            self._inflight += reserve_usd
+            self._inflight_stage[stage] += reserve_usd
+
+        def release(charge: float) -> None:
+            with self._lock:
+                self._inflight -= reserve_usd
+                self._inflight_stage[stage] -= reserve_usd
+                self.spent += charge
+                self.by_stage[stage] += charge
         try:
             if self._llm is not None:
                 res = self._llm(system, user, purpose=purpose, max_tokens=max_tokens)
@@ -1183,11 +1196,10 @@ class Meter:
                                     max_tokens=max_tokens, production_budget=False,
                                     temperature=0.2)
         except BaseException:
-            # Unknown dispatch outcome: the reservation stays debited.
-            with self._lock:
-                self.calls += 1
-                self.failed += 1
-                self.unpriced += 1
+            # Unknown dispatch outcome: the reservation becomes spend (never $0).
+            # `calls` is not counted: no reply came back (callers read calls == 0
+            # as "no transport receipt", e.g. beta_v1_news).
+            release(reserve_usd)
             raise
         self._tl.model = "deepseek:" + str(res.get("served_model") or res.get("model") or "unknown")
         cost = res.get("cost_usd")
@@ -1198,6 +1210,7 @@ class Meter:
             # (the reservation above stays debited when this raises).
             charge = res["budget_charge_usd"]
             if type(charge) not in (int, float) or not math.isfinite(charge) or charge < 0:
+                release(reserve_usd)
                 raise BudgetExceeded("invalid shared budget charge")
             unpriced = charge > 0 and (cost is None or res.get("billing_status") != "SETTLED_PEAK_ESTIMATE")
             cost = charge
@@ -1205,10 +1218,9 @@ class Meter:
             ti, to = int(res.get("tokens_in") or 0), int(res.get("tokens_out") or 0)
             cost = (ti * 0.53 + to * 1.29) / 1e6
             unpriced = bool(ti or to)
+        release(float(cost))
         with self._lock:
             self.calls += 1
-            self.spent += float(cost) - reserve_usd
-            self.by_stage[stage] += float(cost) - reserve_usd
             self.unpriced += int(unpriced)
             self.statuses[str(res.get("status"))] += 1
             if res.get("served_model") or res.get("model"):

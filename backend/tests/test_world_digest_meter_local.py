@@ -31,7 +31,7 @@ def test_an_in_flight_reservation_holds_headroom_for_concurrent_callers():
         m.call("s", "u", purpose="t", max_tokens=10, stage="x", reserve_usd=0.003)
     release.set()
     t.join(5)
-    assert m.spent == pytest.approx(0.001)              # settled to the real cost
+    assert m.spent == 0.001                             # settled to the real cost, exactly once
     assert m.by_stage["x"] == pytest.approx(0.001)
 
 
@@ -41,7 +41,8 @@ def test_a_dispatch_that_raises_keeps_its_reservation():
     m = WD.Meter(1.0, llm=boom)
     with pytest.raises(ConnectionError):
         m.call("s", "u", purpose="t", max_tokens=10, stage="x", reserve_usd=0.004)
-    assert m.spent == pytest.approx(0.004) and m.failed == 1 and m.unpriced == 1
+    # the reservation becomes spend; no reply, so no counted call (beta_v1_news contract)
+    assert m.spent == pytest.approx(0.004) and m.calls == 0 and m.remaining() == pytest.approx(0.996)
 
 
 @pytest.mark.parametrize("bad", [float("nan"), -0.1, float("inf")])
