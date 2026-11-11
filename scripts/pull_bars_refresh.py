@@ -492,7 +492,8 @@ def _swap(table, dst: Path) -> tuple[bool, str]:
 def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None = None,
             dry_run: bool = False,
             puller: Callable[[list[str], str], Any] | None = None,
-            receipt_dir: Path | None = None, index: Path | None = None) -> dict:
+            receipt_dir: Path | None = None, index: Path | None = None,
+            required_mark_refresher: Callable | None = None) -> dict:
     """Refresh every panel that exists. Returns the receipt (and writes it).
 
     `puller(symbols, start) -> (DataFrame, credential_source)` is the network
@@ -503,6 +504,7 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
     import pyarrow.parquet as pq                                   # noqa: PLC0415
 
     t0 = time.time()
+    default_panels = panels is None
     panels = dict(panels or PANELS)
     puller = puller or _pull_default
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -617,6 +619,31 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         print(f"    {k}: {row['status']}  rows {row['rows_before']:,} -> {row['rows_after']:,} "
               f"(+{row['rows_added']:,})  newest {row['newest_before']} -> {row['newest_after']}"
               f"  symbols {row['symbols_after']:,}", flush=True)
+    # The US SIP panels cannot supply the five frozen European constituents.
+    # Use the existing global append-only writer once, before returning the
+    # scheduled refresh receipt. Custom-panel callers remain isolated unless
+    # they explicitly inject this stage; --dry-run returned above without IO.
+    if default_panels or required_mark_refresher is not None:
+        try:
+            if cal != "XNYS":
+                raise ValueError("EXACT_XNYS_CALENDAR_REQUIRED_FOR_FROZEN_MARKS")
+            if required_mark_refresher is None:
+                from backend.services.frozen_constituent_prices import refresh_required_marks
+                required_mark_refresher = refresh_required_marks
+            required = required_mark_refresher(
+                keep_through, observed_at=now_utc or datetime.now(timezone.utc))
+            if not isinstance(required, dict) or required.get("status") not in ("ok", "refused"):
+                raise ValueError("INVALID_FROZEN_MARK_REFRESH_RECEIPT")
+            receipt["frozen_constituents"] = required
+        except Exception as exc:
+            receipt["frozen_constituents"] = {"status": "refused",
+                "reason": f"{type(exc).__name__}: {str(exc)[:300]}",
+                "required_session": keep_through.isoformat()}
+        if receipt["frozen_constituents"]["status"] != "ok":
+            statuses.append("refused")
+            receipt["reason"] = "frozen constituents: " + str(receipt["frozen_constituents"].get("reason"))
+        elif receipt["frozen_constituents"].get("n_new_rows", 0):
+            statuses.append("ok")
     receipt["status"] = ("refused" if "refused" in statuses else
                          "ok" if "ok" in statuses else "unchanged")
     return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
@@ -632,6 +659,7 @@ def _finish(receipt: dict, t0: float, receipt_dir: Path | None, index: Path | No
     receipt["elapsed_s"] = round(time.time() - t0, 1)
     receipt["written_utc"] = _now()
     added = sum(int((r or {}).get("rows_added") or 0) for r in receipt["panels"].values())
+    added += int((receipt.get("frozen_constituents") or {}).get("n_new_rows") or 0)
     receipt["headline"] = (f"bars refresh {receipt.get('status')}: +{added:,} rows; "
                            f"{after['line']}"
                            + (f"; {receipt['reason']}" if receipt.get("reason") else "")
@@ -665,7 +693,7 @@ def main(argv=None) -> int:
     rec = refresh(dry_run=a.dry_run)
     if a.json:
         print("<<<" + json.dumps({k: rec.get(k) for k in
-                                  ("status", "headline", "line", "path", "panels", "reason")},
+                                  ("status", "headline", "line", "path", "panels", "reason", "frozen_constituents")},
                                  default=str) + ">>>")
     print(rec["headline"])
     # rc 2 = REFUSED (nothing overwritten). A refusal is a finding the caller must
