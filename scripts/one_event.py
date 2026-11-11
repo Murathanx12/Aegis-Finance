@@ -11,7 +11,10 @@ when a stage is BLOCKED for a reason other than the intended
 ATTENDED_ACTIVATION_REQUIRED. Nothing is sent, no order is placed, no LLM is
 called. `--out` defaults to `<data-root>/one_event`, so with `--data-root` set
 to the runtime it WRITES INTO the runtime: pass `--out` to keep a worktree's
-rows out of it. `--now` moves the visibility clock only; every forecast row
+rows out of it. `--no-write` writes NOTHING, neither a forecast row nor the
+receipt (the table is printed only): until 2026-11-11 it held back the forecast
+rows and still wrote the receipt, so a look at the runtime's data left a file in
+it. `--now` moves the visibility clock only; every forecast row
 also carries the real write time, and a row whose `--now` is not the wall clock
 is a REPLAY row the grader never counts as forward evidence.
 `list` exits 2 when there is no corpus; `grade` exits 2 when nothing could be
@@ -103,9 +106,11 @@ def main(argv: list[str] | None = None) -> int:
                      ticker=a.ticker,
                      direction={"up": 1, "down": -1}.get(a.direction) if a.direction else None,
                      write=not a.no_write)
-    path = OE.write_receipt(rec, _out(a))
     print(OE.table(rec))
-    print(f"-> {path}")
+    if a.no_write:
+        print("-> nothing written (--no-write): no forecast row, no receipt")
+    else:
+        print(f"-> {OE.write_receipt(rec, _out(a))}")
     return int(rec["exit_code"])
 
 

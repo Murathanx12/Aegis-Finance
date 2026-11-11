@@ -233,6 +233,18 @@ def test_cli_exit_codes(world, capsys):
     assert len(receipts) == 2
 
 
+def test_cli_no_write_writes_nothing(world, capsys):
+    """`--no-write` once held back the forecast rows and still wrote the receipt, so a
+    read-only look at the runtime's data left a file in it (2026-11-11)."""
+    from scripts import one_event as CLI
+    rc = CLI.main(["run", "--data-root", str(world["root"]), "--source", "sec_edgar_8k_ex99_body",
+                   "--funnel", str(world["funnel"]), "--out", str(world["out"]),
+                   "--now", world["now"].isoformat(), "--key", ACC, "--no-write"])
+    out = capsys.readouterr().out
+    assert rc == 0 and "NO_WRITE_REQUESTED" in out and "nothing written" in out
+    assert not world["out"].exists() or not any(world["out"].rglob("*"))
+
+
 def test_unverified_typed_ticker_gives_direction_but_degrades(world):
     p = world["root"] / "news_corpus" / "_digest_cache"
     p.mkdir(parents=True)
@@ -289,9 +301,18 @@ def test_real_universe_graph_from_the_default_dir(world, monkeypatch):
         "counts": g.counts()})
     rec = _run(world)                                     # no graph_dir: the default is used
     u = _stage(rec, "UNIVERSE")
-    # since #93 an untyped event is CONTEXT ONLY, and the stage says so (review 3)
+    # since #93 an event without a validated measured cell is CONTEXT ONLY, and the
+    # stage says so (review 3). The 8-K carries item 2.02, so the graph is asked with
+    # the MEASURED family and with no direction: the digest's -0.6 sentiment is not the
+    # company's own announcement move and is never passed off as one.
     assert u["status"] == OE.DEGRADED and "GRAPH_CONTEXT_ONLY" in u["reason"], u["reason"]
     assert u["data"]["graph_context_only"] is True
+    assert u["data"]["event_family"] == "8k_results"
+    assert u["data"]["graph_event"]["event_type"] == "8k_results"
+    assert u["data"]["graph_event"]["direction"] is None
+    assert "8k_results" in u["reason"] and "own move" in u["reason"], u["reason"]
+    assert "DIRECTION_UNKNOWN" not in u["reason"]
+    assert "own move" in _stage(rec, "DECIDE")["reason"]
     assert u["data"]["graph"]["status"] == "OK"
     assert u["data"]["graph"]["dir"] == str(OE.default_graph_dir(world["root"]))
     assert "company:PEER" in {c["target"] for c in u["data"]["connected"]}
@@ -502,3 +523,15 @@ def test_a_context_only_graph_answer_is_named_not_success(world, monkeypatch):
     u, d = _stage(rec, "UNIVERSE"), _stage(rec, "DECIDE")
     assert u["status"] == OE.DEGRADED and "GRAPH_CONTEXT_ONLY" in u["reason"]
     assert d["status"] == OE.DEGRADED and "GRAPH_CONTEXT_ONLY" in d["reason"]
+    # this fake graph has no `eightk_family`: the event stays untyped and says so
+    assert u["data"]["event_family"] is None and "not one of the graph's measured" in u["reason"]
+
+
+def test_context_reason_quotes_the_graph():
+    assert OE._context_reason([{"why": "context only: this graph carries no event_response "
+                                       "weights; company:B is connected via sector."}]) \
+        == "this graph carries no event_response weights"
+    assert "NOT validated" in OE._context_reason([{"why": "context only: 8k_results at company:A, "
+                                                          "own move up: past sector responses; held-out "
+                                                          "check: NOT validated (0 of 456), so no"}])
+    assert OE._context_reason([{}]) == "the graph gave no reason"
