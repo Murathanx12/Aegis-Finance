@@ -378,7 +378,7 @@ def test_a_logged_segment_writes_to_its_log_without_a_console(tmp_path):
     kws = []
     RT.run_plan(plan, popen=lambda argv, **kw: (kws.append(kw), FakeChild(0))[1])
     assert kws[0]["stdout"] is not None and kws[0]["stderr"] == subprocess.STDOUT
-    assert kws[0]["stdin"] == subprocess.DEVNULL
+    assert kws[0]["stdin"] == subprocess.PIPE            # never NUL: isatty() is True for NUL
     if WIN:
         assert kws[0]["creationflags"] & RT.CREATE_NO_WINDOW
     assert Path(plan["clone"], "logs", "x.log").exists()
@@ -390,7 +390,8 @@ PROBE = """import json, os, sys
 open(os.environ["RT_PROBE_OUT"], "w", encoding="utf-8").write(json.dumps({
     "cwd": os.getcwd(), "argv": sys.argv[1:], "exe": sys.executable,
     "repo_root": os.environ.get("AEGIS_REPO_ROOT"), "dotenv": os.environ.get("AEGIS_DOTENV_PATH"),
-    "pythonpath": os.environ.get("PYTHONPATH")}))
+    "pythonpath": os.environ.get("PYTHONPATH"), "stdin_isatty": sys.stdin.isatty(),
+    "stdin_read": sys.stdin.read()}))
 print("probe-stdout")
 raise SystemExit(int(sys.argv[1]))
 """
@@ -426,6 +427,8 @@ def test_a_real_child_exit_code_cwd_and_env_arrive_unchanged(tmp_path, entry):
     assert got["repo_root"] == str(clone)
     assert got["dotenv"] == cfg["AEGIS_DOTENV_PATH"]
     assert got["pythonpath"] is None
+    # run_night_launcher --scheduled voids a firing whose stdin is a tty; NUL counts as one
+    assert got["stdin_isatty"] is False and got["stdin_read"] == ""
     if entry == "pythonw":
         assert Path(got["exe"]).name.lower() == "pythonw.exe"
     rows = [json.loads(x) for x in (Path(cfg["AEGIS_LIVE_OPTIMUS"]) / RT.RUN_LOG_REL)

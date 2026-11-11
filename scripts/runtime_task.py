@@ -536,9 +536,16 @@ def run_plan(plan: dict, *, popen=subprocess.Popen, job_factory=None) -> int:
             if r["log"]:
                 Path(r["log"]).parent.mkdir(parents=True, exist_ok=True)
                 fh = open(r["log"], "ab")
-            child = popen(r["argv"], cwd=plan["cwd"], env=r["env"], stdin=subprocess.DEVNULL,
+            # stdin is a pipe closed at once (EOF), NOT the null device: the Windows CRT's
+            # `_isatty()` is True for ANY character device, NUL included, and
+            # `run_night_launcher --scheduled` marks a firing with isatty() True as
+            # `contradicted` (run_night_launcher.py:372-400, measured 2026-08-19). A pipe
+            # is not a character device, needs no console and no file on disk.
+            child = popen(r["argv"], cwd=plan["cwd"], env=r["env"], stdin=subprocess.PIPE,
                           stdout=fh, stderr=subprocess.STDOUT if fh else None,
                           creationflags=flags)
+            if getattr(child, "stdin", None) is not None:
+                child.stdin.close()
         except OSError as exc:
             if fh is not None:
                 fh.close()
