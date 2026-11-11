@@ -98,8 +98,12 @@ def test_private_inputs_refuse_before_discovery(calendar_case, guarded, monkeypa
         guard.assert_not_called()
 
 
-def test_no_candidate_is_refusal(calendar_case, guarded, capsys):
+def test_no_candidate_is_refusal(calendar_case, guarded, capsys, monkeypatch):
     kwargs, _ = calendar_case
+    # pin the clock: on the wall clock this test refused with IIF_WINDOW_DEFER every day
+    # between 16:30 and 17:05 SGT (main CI went red twice on 2026-11-11 for that alone)
+    original = discovery.run
+    monkeypatch.setattr(discovery, 'run', lambda **options: original(**options, now=kwargs['now']))
     assert S.run(args(kwargs)) == 2
     result = json.loads(capsys.readouterr().out.splitlines()[0].split(' ', 1)[1])
     assert result['status'] == 'REFUSED'
