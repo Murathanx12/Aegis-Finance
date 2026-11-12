@@ -1,0 +1,60 @@
+{
+ "base_book_id": "book:9d62cc74239b435d",
+ "base_book_note": "a RANDOM 50-name equal-weight draw from the US $3M+ dollar-volume band (the random_universe twin of the BHJ book): small-cap inclusive, names that move 70% in a day, ~8% of it on stale bars in October 2026. A macro-tone overlay may be swamped by this basket's idiosyncratic noise.",
+ "costs": "one-way rate = (COST_BPS_PER_SIDE + SLIPPAGE_BPS) / 1e4 on every traded dollar, including the overlay's own scalar turnover; cash earns 0",
+ "disclosure": {
+  "mappings_tried": 2,
+  "seen_before_choosing": "the range of the per-run source-weighted tone input (about -0.21 .. +0.05 over 2026-09-29..11-11) had been seen before SLOPE and DEADBAND were chosen; no return of any kind had been seen",
+  "v2_change": "only the baseline-age bound and the forward-path fixes; chosen by a reviewer's correctness finding, not from replay returns"
+ },
+ "grading": "only FORWARD rows of this policy_hash; a session with no row -> scalar 1.0, reason NO_DECISION_ROW (never the last scalar held); a session where a base holding's last real bar is more than STALE_BAR_SESSIONS sessions old is marked DEGRADED and the holdings are listed",
+ "history": [
+  {
+   "declared_utc": "2026-11-12T09:13:00+00:00",
+   "name": "NEWS_OVERLAY_v1",
+   "policy_hash": "ce686058847fdbc7",
+   "replay_run": "20261112T091714Z",
+   "superseded_because": "review of PR #125: the baseline's age was unbounded (on 2026-11-10 the baseline was 12 digests from 2026-10-12..14); a session with no decision row held the last scalar instead of 1.0; the forward step dated sessions by the machine's local date; early closes were not handled. v1 was never seeded and has no forward rows."
+  }
+ ],
+ "inputs": {
+  "base_holdings": "DATA_DIR/aegis_pi.db paper_positions (shares, opened_at, closed_at) + paper_book_decisions (asof_date, decided_utc) for base_book_id",
+  "digests": "OPTIMUS_LEDGER_DIR/digest/world_digest_<YYYYMMDDTHHMMSSZ>.json (world_digest.out_dir); fields themes[].tone.fear_greed and themes[].tone.n_independent_sources; dry runs ignored",
+  "prices": "OPTIMUS_LEDGER_DIR/prices_2025_26/bars.parquet close"
+ },
+ "licence": "PRODUCT_EXPERIMENT (internal simulation only: no broker, no order, no LLM authority)",
+ "mapping": "F = sum_i n_i * fear_greed_i / sum_i n_i over themes with numeric tone.fear_greed, n_i = max(1, n_independent_sources); fewer than MIN_THEMES -> EMPTY. B = median F over the previous BASELINE_N valid digests stamped strictly before this digest AND no more than BASELINE_MAX_AGE_DAYS older than it; fewer than BASELINE_MIN -> NO_BASELINE. d = F - B; raw = 1 - SLOPE * max(0, -d - DEADBAND); scalar = clip(round(raw / STEP) * STEP, SCALAR_MIN, SCALAR_MAX). Any degradation -> 1.0.",
+ "name": "NEWS_OVERLAY_v2",
+ "objective": "terminal NAV of the overlay vs its twin under the BALANCED personality (same notional, same costs); read daily, by date block, raw lines first",
+ "params": {
+  "NEWS_OVERLAY_BASELINE_MAX_AGE_DAYS": 7,
+  "NEWS_OVERLAY_BASELINE_MIN": 4,
+  "NEWS_OVERLAY_BASELINE_N": 12,
+  "NEWS_OVERLAY_BASE_BOOK": "book:9d62cc74239b435d",
+  "NEWS_OVERLAY_COST_BPS_PER_SIDE": 5.0,
+  "NEWS_OVERLAY_DEADBAND": 0.02,
+  "NEWS_OVERLAY_DECISION_ET": "15:30",
+  "NEWS_OVERLAY_MAPPINGS_TRIED": 2,
+  "NEWS_OVERLAY_MAPPING_DECLARED_UTC": "2026-11-12T09:13:00+00:00",
+  "NEWS_OVERLAY_MAX_AGE_HOURS": 36.0,
+  "NEWS_OVERLAY_MIN_THEMES": 3,
+  "NEWS_OVERLAY_NOTIONAL_USD": 100000.0,
+  "NEWS_OVERLAY_SCALAR_MAX": 1.0,
+  "NEWS_OVERLAY_SCALAR_MIN": 0.5,
+  "NEWS_OVERLAY_SLIPPAGE_BPS": 1.0,
+  "NEWS_OVERLAY_SLOPE": 5.0,
+  "NEWS_OVERLAY_STALE_BAR_SESSIONS": 5,
+  "NEWS_OVERLAY_STEP": 0.05,
+  "NEWS_OVERLAY_STEP_WINDOW_ET": [
+   "15:30",
+   "16:00"
+  ],
+  "NEWS_OVERLAY_V2_DECLARED_UTC": "2026-11-12T09:28:00+00:00"
+ },
+ "policy_hash": "2d85fa126b83f4ac",
+ "rebalance": "a book re-targets at a session close only when its scalar changed or the base book's holdings changed (a base rebalance dated on a non-session day takes effect at the first session after it); otherwise it holds its shares",
+ "schema": "news_overlay_book/v2",
+ "timing": "session t = an XNYS session dated in America/New_York; decision time = min(DECISION_ET, the session's real close - 30 min) on t; read only digests stamped strictly before it; newest older than MAX_AGE_HOURS -> STALE; fill = close of t (the next close after the digest's own stamp); the scalar earns close t -> close t+1. The forward step runs only inside STEP_WINDOW_ET on a real session (refused otherwise); a --date other than today's ET session is BACKDATED and never graded; one FORWARD row per session (a repeat is a no-op)",
+ "twin": "the base book at scalar 1.0: identical names, relative weights, re-target moments and cost rate; only the scalar differs",
+ "written_utc": "2026-11-12T09:32:36+00:00"
+}
