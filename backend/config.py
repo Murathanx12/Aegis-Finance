@@ -3096,11 +3096,12 @@ FEATHERLESS_RECONCILE_CLEARABLE_BLOCKS: tuple[str, ...] = (
 #: balance endpoint with FEATHERLESS_KEY_ENV (no completion call). The opening
 #: balance the first reconcile needs (`--opening-balance`) was measured with the
 #: account's key on 2026-11-11: $74.50. The envelope stores it and every observed
-#: balance; observed spend = opening - observed. The URL is the one the 11-11
-#: measurement named (`/credits/balance`, under /v1); only the official HTTPS host
+#: balance; observed spend = opening - observed. The URL was VERIFIED live on
+#: 2026-11-12: `/credits/balance` at the host root answers 200 with `balance_usd`
+#: (a string) and `currency`; `/v1/credits/balance` is 404. Only the official HTTPS host
 #: receives the key. Keys tried, in order, for the USD balance in the JSON reply.
 FEATHERLESS_BALANCE_URL = os.getenv("AEGIS_FEATHERLESS_BALANCE_URL",
-                                    "https://api.featherless.ai/v1/credits/balance")
+                                    "https://api.featherless.ai/credits/balance")
 #: Accepted dotted field PATHS for the USD balance in the JSON reply; anything
 #: else (a bare number, an unknown shape, a non-USD `currency`) is refused with
 #: the field names seen. A value above FEATHERLESS_BALANCE_MAX_USD is refused
@@ -5621,9 +5622,11 @@ NEWS_TILT_KEY1_MIN_TRUST = 0.05
 #: turning it on is an attended seeding step (seed-a-lane), never a builder's:
 #: the owner sets AEGIS_NEWS_OVERLAY_BOOK=1 for the scheduled step only.
 NEWS_OVERLAY_BOOK_ENABLED = os.getenv("AEGIS_NEWS_OVERLAY_BOOK", "0").strip() == "1"
-#: The base book (paper_books id): the random_universe twin of the BHJ book,
-#: 50 names EW drawn from the US $3M+ dollar-volume band, monthly.
-NEWS_OVERLAY_BASE_BOOK = "book:9d62cc74239b435d"
+#: The base. v1/v2: paper_books id "book:9d62cc74239b435d" (the random_universe
+#: twin of the BHJ book, 50 names EW from the US $3M+ band; unreadable: 30 of
+#: 32 replay days on stale bars). v3: LIQUID-RANDOM-50, defined below and
+#: derived from the bars panel inside `news_overlay_book` (no store write).
+NEWS_OVERLAY_BASE_BOOK = "LIQUID-RANDOM-50"
 NEWS_OVERLAY_SCALAR_MIN = 0.5
 NEWS_OVERLAY_SCALAR_MAX = 1.0
 #: The ONE declared mapping (v1). Per digest: F = sum_i n_i x fear_greed_i /
@@ -5667,6 +5670,40 @@ NEWS_OVERLAY_MAPPING_DECLARED_UTC = "2026-11-12T09:13:00+00:00"
 NEWS_OVERLAY_V2_DECLARED_UTC = "2026-11-12T09:28:00+00:00"
 #: v1 and v2 differ only in the baseline-age bound; both replays are reported.
 NEWS_OVERLAY_MAPPINGS_TRIED = 2
+#: v3 (2026-11-12, brain decision after PR #125): SAME mapping, NEW base. The
+#: base is LIQUID-RANDOM-50: on the first XNYS session D of each calendar month,
+#: LIQUID_N names drawn with np.random.default_rng (paper_books._draw, the
+#: engine's own twin draw) from the names that, on bars dated STRICTLY before D,
+#: have median close x volume over the last LIQUID_DV_SESSIONS sessions >=
+#: LIQUID_MIN_DOLLAR_VOL, last close >= LIQUID_MIN_PRICE, >= LIQUID_MIN_HISTORY
+#: real bars, a newest bar no more than LIQUID_MAX_BAR_AGE sessions old, no
+#: SUSPECT_CORPORATE_ACTION one-bar move (discovery_autopsy's AUTOPSY_SUSPECT_*
+#: bounds) in the last LIQUID_SUSPECT_LOOKBACK sessions, and are not an ETF /
+#: index proxy. Equal weight at D's close; held (drifting) until the next D.
+#: Draw seed = int(sha256(f"{LIQUID_SEED}:{D}")[:8], 16), recorded per draw.
+NEWS_OVERLAY_V3_DECLARED_UTC = "2026-11-12T17:48:00+00:00"
+NEWS_OVERLAY_BASES_TRIED = 2
+NEWS_OVERLAY_LIQUID_N = 50
+NEWS_OVERLAY_LIQUID_MIN_DOLLAR_VOL = 50_000_000.0
+NEWS_OVERLAY_LIQUID_DV_SESSIONS = 63
+NEWS_OVERLAY_LIQUID_MIN_PRICE = 5.0
+NEWS_OVERLAY_LIQUID_MIN_HISTORY = 252
+NEWS_OVERLAY_LIQUID_MAX_BAR_AGE = 3
+NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK = 252
+NEWS_OVERLAY_LIQUID_SEED = 20261112
+NEWS_OVERLAY_LIQUID_EXCLUDE_ETFS = True
+#: v3: a decision is REFUSED at scalar 1.0 (reason STALE_BASE_BARS) when more
+#: than this share of the base's weight (holdings at the last close before the
+#: decision) has a newest bar more than STALE_BAR_SESSIONS sessions old.
+NEWS_OVERLAY_STALE_REFUSE_SHARE = 0.10
+#: A second base for COMPARISON ONLY (never graded): the overlay on SPY alone.
+NEWS_OVERLAY_COMPARISON_BASE = "SPY"
+#: v4 (2026-11-12, review of PR #133): no mapping or base parameter changes; the
+#: forward draw is recorded and checked, eligibility needs a real bar on the
+#: session before D, a stale panel refuses. Objects looked at = 3 (two graded
+#: bases tried + the SPY comparison whose replay was seen).
+NEWS_OVERLAY_V4_DECLARED_UTC = "2026-11-12T18:40:00+00:00"
+NEWS_OVERLAY_OBJECTS_LOOKED_AT = 3
 
 # ── The reader's BROWSE lane: general news beyond Dow Jones (2026-09-29) ─────
 #: Murat, 2026-09-29: "digest the news see what they are implying is there an
@@ -6852,6 +6889,80 @@ EVENT_NODES_FILL_TOP_N = 10
 #: Price row used for the PROJECTED cost (measured list price); the reservation
 #: bound comes from provider_budget.quote().
 EVENT_NODES_FILL_PRICE_MODEL = "deepseek-v4-flash"
+# ── CH-35 slice 2: forward calendar, daily caller, three flagged consumers, foreign names ──
+#: The night lab's forward catalyst calendar (scripts/always_on_lab.py loop
+#: `catalyst_calendar`, receipt `lab_catalyst_calendar`), written to
+#: `<optimus>/night_factory_<run date>/lab_catalyst_calendar_<run date>.json`. Its
+#: per-ticker half covers only the tickers it was asked for (the PM book); its macro
+#: half (CPI/NFP from FRED, FOMC from a hand-seeded table) covers everyone.
+EVENT_NODES_CATALYST_GLOB = "night_factory_*/lab_catalyst_calendar_*.json"
+#: Macro dates (CPI, NFP, FOMC) attached to every node when within this many days.
+EVENT_NODES_MACRO_HORIZON_DAYS = 14
+#: `daily` builds this trailing window into the default store on every run.
+EVENT_NODES_DAILY_WINDOW_HOURS = 36.0
+#: Consumers: read-only joins, each OFF by default (main's output byte-identical).
+#: Names deliberately do NOT start with AUTOPSY_ / LLM_SELECTOR_ / FUNNEL_NEWS_: the
+#: autopsy hashes every AUTOPSY_* parameter into its receipt.
+EVENT_NODES_AUTOPSY_JOIN_ENABLED = False
+EVENT_NODES_SELECTOR_PACKET_ENABLED = False
+EVENT_NODES_FUNNEL_SOURCE_ENABLED = False
+#: Selector packet: top-K live nodes per candidate by importance decayed to the decision.
+EVENT_NODES_SELECTOR_TOP_K = 3
+#: The packet schema version when the event block is in the packet (hashed into the contract).
+EVENT_NODES_SELECTOR_PACKET_SCHEMA = "llm_selector_packet/3+event_nodes"
+#: Funnel: an event offers its names when its importance decayed to the build time is
+#: at least this; only these link types offer a connected name (shared sector/theme
+#: membership is a list of peers, not a link, and is not offered).
+EVENT_NODES_FUNNEL_MIN_IMPORTANCE = 4.0
+#: return_response is NOT offered: on the live graph its weights are |w| <= 0.12 and half negative.
+EVENT_NODES_FUNNEL_LINKS: tuple = ("primary", "co_mention", "co_coverage")
+#: The funnel offers a co_coverage name only at or above this weight, and a co-mentioned
+#: name only when it is named in at least this many of the event's evidence items.
+EVENT_NODES_FUNNEL_MIN_CO_COVERAGE = 0.65
+EVENT_NODES_FUNNEL_MIN_COMENTION_ITEMS = 2
+#: link_quality on every connected name (the node keeps ALL links as context): STRONG =
+#: co-mention in >= N evidence items, or co_coverage >= the weight; everything else WEAK.
+EVENT_NODES_STRONG_MIN_COMENTION_ITEMS = 2
+EVENT_NODES_STRONG_MIN_CO_COVERAGE = 0.65
+#: The autopsy join lists only PRIMARY and STRONG links by default.
+EVENT_NODES_AUTOPSY_STRONG_ONLY = True
+#: A store whose newest build (at or before the reader's instant) is older than this is
+#: EVENT_STORE_STALE: an empty join is then a stopped daily, not a quiet market.
+EVENT_NODES_STORE_STALE_HOURS = 6.0
+#: The lab catalyst calendar older than this at the build is EVENT_CALENDAR_STALE.
+EVENT_NODES_CALENDAR_STALE_HOURS = 36.0
+#: daily refuses a --now later than the wall clock by more than this (NOW_IN_FUTURE).
+EVENT_NODES_MAX_CLOCK_SKEW_S = 120
+#: daily_latest.json lists this many top nodes (ids, tickers, importance; never titles).
+EVENT_NODES_DAILY_TOP_N = 10
+#: Event-only names get their own enrichment cap, the same rule as news and filing.
+EVENT_NODES_FUNNEL_MAX_ENRICH = 5
+#: Only nodes first seen within this many hours of the reader's instant are offered/joined.
+EVENT_NODES_CONSUMER_MAX_AGE_HOURS = 120.0
+#: Foreign-language issuer names that recur in the corpus titles (measured over
+#: 2026-11-10..12: 1,546 distinct non-Latin titles; counts in the CH-35 slice-2 report).
+#: alias -> (US symbol, source of the mapping). Substring match (CJK has no word
+#: boundaries). Only names that cannot be a common noun or a person; NOT mapped on
+#: purpose: 蘋果/苹果/アップル/애플 (also the fruit; 애플망고), 아마존 (also the river),
+#: 테슬라 (also the physicist), 黃仁勳 (a person), 삼성/鴻海/騰訊/하이닉스/ソフトバンク
+#: (no US listing in the issuer table), 코어위브 (a press transliteration, no official name).
+EVENT_NODES_FOREIGN_NAME_ALIASES: dict = {
+    "台積電": ("TSM", "TSMC's Traditional-Chinese short name (台灣積體電路製造, TWSE 2330); "
+                     "ADR leg TSM per backend/data/news_entities/asia_adrs.csv (TSM,2330.TW)"),
+    "輝達": ("NVDA", "NVIDIA's official Taiwan name (輝達); 12 zh_tw titles, e.g. with 黃仁勳"),
+    "英伟达": ("NVDA", "NVIDIA's official mainland (Simplified) name; 10 zh_cn titles"),
+    "英偉達": ("NVDA", "NVIDIA's Hong Kong / Traditional form of 英伟达; 2 titles"),
+    "エヌビディア": ("NVDA", "NVIDIA Japan's official katakana name; 8 ja_jp titles"),
+    "엔비디아": ("NVDA", "NVIDIA Korea's official Hangul name; 10 ko_kr titles"),
+    "谷歌": ("GOOGL", "Google's official mainland name (谷歌, since 2006)"),
+    "グーグル": ("GOOGL", "Google Japan's official name (グーグル合同会社)"),
+    "구글": ("GOOGL", "Google Korea's official name (구글코리아)"),
+    "台积电": ("TSM", "TSMC's Simplified-Chinese short name (台积电); ADR leg TSM per asia_adrs.csv"),
+    # Micron only by its fuller forms: the bare two characters also occur in 歐美光伏 / 北美光伏 (solar)
+    "美光科技": ("MU", "Micron Technology's official Chinese name (美光科技)"),
+    "美光公司": ("MU", "Micron's Chinese name with 'company' (美光公司)"),
+    "台灣美光": ("MU", "Micron's Taiwan entity (台灣美光)"),
+}
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for

@@ -437,3 +437,109 @@ def test_overnight_window_on_a_weekday_evening_and_morning():
     s, e = FNS.overnight_window(mid)
     s_et, e_et = (pd.Timestamp(x).tz_convert("America/New_York") for x in (s, e))
     assert s_et.date() == wed - timedelta(days=1) and (e_et.hour, e_et.minute) == (9, 30)
+
+
+# ── CH-35 slice 2: event nodes as a third source (EVENT_NODES_FUNNEL_SOURCE_ENABLED) ──
+
+def _ev_store(tmp_path, now):
+    from backend.services import event_nodes as EN
+
+    def node(eid, primary, imp0, built, co=(), graph=()):
+        fs = now - timedelta(hours=6)
+        return {"event_id": eid, "primary_ticker": primary, "first_seen_utc": fs.isoformat(),
+                "built_now_utc": built.isoformat(), "content_hash": eid, "version_key": eid, "n_evidence": 3,
+                "importance": {"importance_0": imp0, "facts": {"n_publishers": 4}},
+                "decay": {"half_life_hours": 72.0}, "parent_id": "par_" + eid[3:],
+                "evidence": [{"item_key": eid, "title": "LICENSED TITLE"}],
+                "connected_names": {"co_mention": [{"ticker": t, "n_items": 1 if t == "EVW" else 2}
+                                                   for t in co],
+                                    "graph": [{"ticker": t, "link": lk, "weight": w} for t, lk, w in graph]}}
+    p = tmp_path / "ev" / EN.STORE_NAME
+    EN.append_rows(p, [
+        node("ev_big", "EVA", 9.0, now - timedelta(hours=1), co=("EVB", "EVW"),
+             graph=(("EVC", "co_coverage", 0.7), ("EVD", "shared_sector", None),
+                    ("EVR", "return_response", -0.1), ("EVF", "co_coverage", 0.6))),
+        node("ev_small", "EVS", 1.0, now - timedelta(hours=1), co=("EVT",)),         # under the threshold
+        node("ev_late", "EVL", 9.0, now + timedelta(minutes=5)),                       # built after the build
+    ])
+    return p
+
+
+def test_event_source_off_is_exactly_the_news_and_filing_collect(tmp_path, monkeypatch):
+    monkeypatch.setattr(cfg, "EVENT_NODES_FUNNEL_SOURCE_ENABLED", False)
+    store = _ev_store(tmp_path, _now())
+    a = _collect(tmp_path, [_theme(["NEWSA"])], _issuers("NEWSA"))
+    b = _collect(tmp_path, [_theme(["NEWSA"])], _issuers("NEWSA"), event_store=store)
+    assert a == b and "events" not in a
+    s3, s4 = _ranker()
+    res = FNS.admit(a, s3, s4, universe=[], screen_fn=lambda n: {}, enrich_fn=_enrich_ok)
+    assert "event" not in res["receipt"]["caps"] and "event" not in res["receipt"]["offered"]
+
+
+def test_event_source_on_offers_primary_and_linked_names_under_the_same_screens(tmp_path, monkeypatch):
+    now = _now()
+    monkeypatch.setattr(cfg, "EVENT_NODES_FUNNEL_SOURCE_ENABLED", True)
+    monkeypatch.setattr(cfg, "EVENT_NODES_FUNNEL_MAX_ENRICH", 1)
+    store = _ev_store(tmp_path, now)
+    news = _collect(tmp_path, [_theme(["NEWSA"])], _issuers("NEWSA"), event_store=store)
+    assert news["events"]["n_events_offering"] == 1 and news["events"]["n_versions_after_build_skipped"] == 1
+    # not offered: shared_sector EVD, return_response EVR, co_coverage 0.6 EVF, one-item co-mention EVW
+    assert set(news["names"]) == {"NEWSA", "EVA", "EVB", "EVC"}
+    assert news["events"]["links_refused"] == {"co_coverage_below_floor": 1, "co_mention_too_few_items": 1,
+                                               "link:return_response": 1, "link:shared_sector": 1}
+    assert news["events"]["offered_links"]["EVC"] == [("co_coverage", 0.7, "ev_big")]
+    assert news["names"]["EVB"]["sources"] == ["event"]
+    e = news["names"]["EVA"]["evidence"][0]
+    assert e["event_id"] == "ev_big" and e["via"] == "primary" and "title" not in e
+    assert "LICENSED TITLE" not in json.dumps(news)
+    close, vol = _panel({"EVA": (30.0, 5e7), "EVB": (30.0, 5e7), "EVC": (1.0, 5e7), "NEWSA": (30.0, 5e7)})
+    s3, s4 = _ranker()
+    res = FNS.admit(news, s3, s4, universe=["EVA", "EVB", "EVC", "NEWSA"],
+                    screen_fn=_screen_from(close, vol), enrich_fn=_enrich_ok)
+    d = {r["ticker"]: (r["admitted"], r["dropped_by"]) for r in res["added"]}
+    assert d["EVC"] == (False, "price_band")                            # the same screen as news
+    assert d["EVA"] == (True, None)                                     # primary outranks a co-mention
+    assert d["EVB"] == (False, "event_enrich_cap")
+    assert d["NEWSA"] == (True, None)
+    assert res["receipt"]["caps"]["event"] == 1 and res["receipt"]["offered"]["event_only"] == 3
+    assert [c.ticker for c in res["final"]] == [c.ticker for c in s4]
+
+
+def test_event_source_uses_the_version_known_at_the_build_and_names_a_torn_store(tmp_path, monkeypatch):
+    from backend.services import event_nodes as EN
+    now = _now()
+    monkeypatch.setattr(cfg, "EVENT_NODES_FUNNEL_SOURCE_ENABLED", True)
+
+    def node(imp0, built, ver, co):
+        return {"event_id": "ev_q", "primary_ticker": "EVQ", "first_seen_utc": (now - timedelta(hours=3)).isoformat(),
+                "built_now_utc": built.isoformat(), "content_hash": ver, "version_key": ver, "n_evidence": 2,
+                "importance": {"importance_0": imp0, "facts": {"n_publishers": 2}},
+                "decay": {"half_life_hours": 72.0}, "parent_id": "par_q", "evidence": [{"item_key": ver}],
+                "connected_names": {"co_mention": [{"ticker": t, "n_items": 3} for t in co], "graph": []}}
+    p = tmp_path / "ev" / EN.STORE_NAME
+    EN.append_rows(p, [node(2.0, now - timedelta(hours=2), "v1", ())])           # under the threshold then
+    EN.append_rows(p, [node(9.0, now + timedelta(minutes=1), "v2", ("EVZ",))])   # built after the build time
+    ev = FNS.event_names(now, store=p)
+    assert ev["names"] == {} and ev["status"] == "NONE_ABOVE_THRESHOLD"
+    assert ev["n_versions_after_build_skipped"] == 1
+    assert ev["store_newest_build_utc"] == (now - timedelta(hours=2)).isoformat()
+    later = FNS.event_names(now + timedelta(minutes=5), store=p)
+    assert set(later["names"]) == {"EVQ", "EVZ"}
+    p.write_bytes(p.read_bytes() + b'{"row_kind": "no')
+    torn = FNS.event_names(now, store=p)
+    assert torn["status"] == "STORE_TORN_TAIL" and torn["degradations"][0].startswith("STORE_TORN_TAIL")
+    news = _collect(tmp_path, [_theme(["NEWSA"])], _issuers("NEWSA"), event_store=p)
+    assert any(d.startswith("STORE_TORN_TAIL") for d in news["degradations"])
+
+
+def test_event_ranking_puts_link_closeness_before_event_count():
+    names = {"TWO": {"evidence": [{"source": "event", "via": "co_coverage", "link_weight": 0.66,
+                                   "importance_at_build": 5.0},
+                                  {"source": "event", "via": "co_coverage", "link_weight": 0.66,
+                                   "importance_at_build": 5.0}]},
+             "ONE": {"evidence": [{"source": "event", "via": "co_coverage", "link_weight": 0.74,
+                                   "importance_at_build": 5.0}]},
+             "CO": {"evidence": [{"source": "event", "via": "co_mention", "link_weight": 2,
+                                  "importance_at_build": 1.0}]}}
+    order = sorted(names, key=lambda t: FNS._strength(t, names))
+    assert order == ["CO", "ONE", "TWO"]

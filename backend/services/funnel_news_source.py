@@ -62,6 +62,9 @@ SOURCE_RANKER = "ranker"
 SOURCE_NEWS = "news"
 SOURCE_FILING = "filing"
 NEWS_SOURCES = (SOURCE_NEWS, SOURCE_FILING)
+#: CH-35 slice 2: event nodes as a third source (EVENT_NODES_FUNNEL_SOURCE_ENABLED, default OFF)
+SOURCE_EVENT = "event"
+ALL_SOURCES = (SOURCE_NEWS, SOURCE_FILING, SOURCE_EVENT)
 
 FILING_FORMS = frozenset({"8-K", "8-K/A"})
 _STAMP = re.compile(r"^(\d{8}T\d{6}Z)$")
@@ -366,11 +369,89 @@ def filing_names(build_time: datetime, *, path: Optional[Path] = None,
     return out
 
 
+# ─────────────────────────────── events (CH-35) ─────────────────────────────
+
+def event_store_path() -> Path:
+    return Path(_cfg.OPTIMUS_LEDGER_DIR) / str(_cfg.EVENT_NODES_DIRNAME) / "event_nodes.jsonl"
+
+
+def event_names(build_time: datetime, *, store: Optional[Path] = None) -> dict:
+    """The primary issuer and the connected names (EVENT_NODES_FUNNEL_LINKS) of every
+    event node known at `build_time` (version built at or before it) whose importance
+    decayed to `build_time` is at least EVENT_NODES_FUNNEL_MIN_IMPORTANCE. Evidence is
+    the event id, role and link; never a title."""
+    from backend.services import event_nodes as EN
+    p = Path(store) if store else event_store_path()
+    out: dict = {"path": str(p), "status": "MISSING", "names": {}, "degradations": [],
+                 "min_importance": float(_cfg.EVENT_NODES_FUNNEL_MIN_IMPORTANCE),
+                 "links": list(_cfg.EVENT_NODES_FUNNEL_LINKS), "n_nodes_known": 0, "n_events_offering": 0}
+    if not p.is_file():
+        out["degradations"].append(f"EVENT_NODES_STORE_MISSING: {p} does not exist")
+        return out
+    try:
+        known = EN.nodes_known_at(p, build_time)
+    except EN.EventNodesRefused as exc:          # torn / corrupt store: named, never a traceback
+        out["status"] = exc.code
+        out["degradations"].append(f"{exc.code}: {exc.detail}")
+        return out
+    out.update({"store_newest_build_utc": known["newest_build_utc"], "store_age_hours": known["age_hours"]})
+    if known["stale"]:
+        out["degradations"].append(known["stale"])
+    out["n_nodes_known"] = len(known["nodes"])
+    out["n_versions_after_build_skipped"] = known["n_versions_after_t_skipped"]
+    links = set(_cfg.EVENT_NODES_FUNNEL_LINKS)
+    min_cov = float(_cfg.EVENT_NODES_FUNNEL_MIN_CO_COVERAGE)
+    min_co = int(_cfg.EVENT_NODES_FUNNEL_MIN_COMENTION_ITEMS)
+    out.update({"min_co_coverage": min_cov, "min_comention_items": min_co})
+    refused: Counter = Counter()
+    thr = float(_cfg.EVENT_NODES_FUNNEL_MIN_IMPORTANCE)
+    mx = float(_cfg.EVENT_NODES_CONSUMER_MAX_AGE_HOURS)
+    names: dict[str, list] = {}
+    for n in sorted(known["nodes"].values(), key=lambda n: n["event_id"]):
+        fs = _to_dt(n.get("first_seen_utc"))
+        if fs is None or fs >= build_time or (build_time - fs).total_seconds() / 3600.0 > mx:
+            continue
+        roles = EN.roles_of(n)
+        b0 = EN.node_brief(n, n["primary_ticker"], build_time, roles[n["primary_ticker"]])
+        if b0["importance_at"] < thr:
+            continue
+        out["n_events_offering"] += 1
+        for t, role in roles.items():
+            if role["link"] not in links or not _TICKER.match(t):
+                refused[f"link:{role['link']}"] += 1
+                continue
+            w = abs(float(role.get("weight") or 0.0))
+            if role["link"] == "co_coverage" and w < min_cov:
+                refused["co_coverage_below_floor"] += 1
+                continue
+            if role["link"] == "co_mention" and w < min_co:
+                refused["co_mention_too_few_items"] += 1
+                continue
+            b = EN.node_brief(n, t, build_time, role)
+            names.setdefault(t, []).append(
+                {"source": SOURCE_EVENT, "via": role["link"], "event_id": b["event_id"],
+                 "parent_id": b["parent_id"], "event_primary": b["primary_ticker"], "role": b["role"],
+                 "importance_at_build": b["importance_at"], "link_weight": b["link_weight"], "direction": None,
+                 "mentioned": role["link"] in ("primary", "co_mention"),
+                 "first_seen_utc": b["first_seen_utc"], "stamp_used": b["version_built_utc"]})
+    for t in names:
+        names[t].sort(key=lambda e: (-e["importance_at_build"], e["event_id"]))
+    out["names"] = dict(sorted(names.items()))
+    out["links_refused"] = dict(sorted(refused.items()))
+    out["offered_links"] = {t: [(e["via"], e["link_weight"], e["event_id"]) for e in ev] for t, ev in out["names"].items()}
+    out["status"] = "FRESH" if names else "NONE_ABOVE_THRESHOLD"
+    if not names:
+        out["degradations"].append(f"EVENTS_NONE_ABOVE_THRESHOLD: 0 of {out['n_nodes_known']} known nodes at "
+                                   f"or above importance {thr} at {_iso(build_time)}")
+    return out
+
+
 # ─────────────────────────────── collect + admit ────────────────────────────
 
 def collect(build_time: datetime, *, digest_root: Optional[Path] = None,
             filings: Optional[Path] = None, filings_enabled: Optional[bool] = None,
-            max_age_hours: Optional[float] = None, issuers: Any = "default") -> dict:
+            max_age_hours: Optional[float] = None, issuers: Any = "default",
+            events_enabled: Optional[bool] = None, event_store: Optional[Path] = None) -> dict:
     """Every name news/filings offer, with its sources, direction, evidence and
     the stamp used per evidence row."""
     imap = load_issuers() if isinstance(issuers, str) and issuers == "default" else (
@@ -380,8 +461,10 @@ def collect(build_time: datetime, *, digest_root: Optional[Path] = None,
                  else filings_enabled)
     fl = filing_names(build_time, path=filings) if use_f else {
         "status": "OFF", "names": {}, "degradations": []}
+    use_e = bool(_cfg.EVENT_NODES_FUNNEL_SOURCE_ENABLED if events_enabled is None else events_enabled)
+    evb = event_names(build_time, store=event_store) if use_e else None
     per: dict[str, dict] = {}
-    for block in (dg, fl):
+    for block in (dg, fl) + ((evb,) if evb is not None else ()):
         for t, ev in (block.get("names") or {}).items():
             row = per.setdefault(t, {"issuer_id": _issuer_id(t),
                                      "issuer_name": (imap or {}).get(t), "sources": [],
@@ -389,7 +472,7 @@ def collect(build_time: datetime, *, digest_root: Optional[Path] = None,
             row["evidence"].extend(ev)
     for row in per.values():
         ev = row["evidence"]
-        row["sources"] = [s for s in NEWS_SOURCES if any(e["source"] == s for e in ev)]
+        row["sources"] = [s for s in ALL_SOURCES if any(e["source"] == s for e in ev)]
         news_ev = [e for e in ev if e["source"] == SOURCE_NEWS]
         row["net_direction"] = _direction_of(news_ev)
         row["n_mentioned"] = sum(1 for e in ev if e.get("mentioned"))
@@ -399,8 +482,14 @@ def collect(build_time: datetime, *, digest_root: Optional[Path] = None,
     fl_pub = {k: v for k, v in fl.items() if k != "names"}
     dg_pub["n_names"] = len(dg.get("names") or {})
     fl_pub["n_names"] = len(fl.get("names") or {})
-    return {"build_time": _iso(build_time), "digest": dg_pub, "filings": fl_pub,
-            "names": dict(sorted(per.items())), "degradations": degr}
+    out = {"build_time": _iso(build_time), "digest": dg_pub, "filings": fl_pub,
+           "names": dict(sorted(per.items())), "degradations": degr}
+    if evb is not None:
+        ev_pub = {k: v for k, v in evb.items() if k != "names"}
+        ev_pub["n_names"] = len(evb.get("names") or {})
+        out["events"] = ev_pub
+        out["degradations"] = degr + list(evb.get("degradations") or [])
+    return out
 
 
 def _strength(t: str, names: dict) -> tuple:
@@ -408,6 +497,14 @@ def _strength(t: str, names: dict) -> tuple:
     the highest stated confidence; filings by allow-listed items and filings."""
     ev = names[t]["evidence"]
     news = [e for e in ev if e["source"] == SOURCE_NEWS]
+    if ev and all(e["source"] == SOURCE_EVENT for e in ev):
+        # the CLOSEST link first (primary < co-mention < co_coverage by |weight|), then the
+        # strongest event, then more events, then the ticker: two weak links to two events
+        # must not outrank one close link (PINS over AMD in the first replay)
+        imp = max((float(e.get("importance_at_build") or 0.0) for e in ev), default=0.0)
+        link = min((0.0 if e.get("via") == "primary" else 1.0 if e.get("via") == "co_mention"
+                    else 2.0 - min(1.0, abs(float(e.get("link_weight") or 0.0)))) for e in ev)
+        return (link, -imp, -len(ev), t)
     if news:
         conf = max((float(e.get("confidence") or 0.0) for e in news), default=0.0)
         return (-sum(1 for e in news if e.get("mentioned")), -len(news), -conf, t)
@@ -442,6 +539,8 @@ def admit(news: dict, ranker_s3: list, ranker_s4: list, *, universe: Iterable[st
                    else max_enrich_news)
     cap_fil = int(_cfg.FUNNEL_NEWS_MAX_ENRICH_FILING if max_enrich_filing is None
                   else max_enrich_filing)
+    with_events = "events" in news
+    cap_ev = int(_cfg.EVENT_NODES_FUNNEL_MAX_ENRICH)
     uni = set(universe)
     s3_by = {c.ticker: c for c in ranker_s3}
     s4_set = {c.ticker for c in ranker_s4}
@@ -499,13 +598,19 @@ def admit(news: dict, ranker_s3: list, ranker_s4: list, *, universe: Iterable[st
             passed.append(cand)
     p_news = sorted([c for c in passed if SOURCE_NEWS in names[c.ticker]["sources"]],
                     key=lambda c: _strength(c.ticker, names))
-    p_fil = sorted([c for c in passed if SOURCE_NEWS not in names[c.ticker]["sources"]],
+    p_fil = sorted([c for c in passed if SOURCE_NEWS not in names[c.ticker]["sources"]
+                    and names[c.ticker]["sources"] != [SOURCE_EVENT]],
                    key=lambda c: _strength(c.ticker, names))
-    to_enrich = p_news[:cap_news] + p_fil[:cap_fil]
+    # event-only names: their own bucket and cap, the same screens (empty unless events are on)
+    p_ev = sorted([c for c in passed if names[c.ticker]["sources"] == [SOURCE_EVENT]],
+                  key=lambda c: _strength(c.ticker, names))
+    to_enrich = p_news[:cap_news] + p_fil[:cap_fil] + p_ev[:cap_ev]
     for c in p_news[cap_news:]:
         drop(c.ticker, "news_enrich_cap")
     for c in p_fil[cap_fil:]:
         drop(c.ticker, "filing_enrich_cap")
+    for c in p_ev[cap_ev:]:
+        drop(c.ticker, "event_enrich_cap")
     enriched = enrich_fn(to_enrich) if to_enrich else []
     got = {c.ticker: c for c in enriched}
     for c in to_enrich:
@@ -528,6 +633,9 @@ def admit(news: dict, ranker_s3: list, ranker_s4: list, *, universe: Iterable[st
         "offered": {"total": len(names),
                     "news": sum(1 for r in names.values() if SOURCE_NEWS in r["sources"]),
                     "filing": sum(1 for r in names.values() if SOURCE_FILING in r["sources"]),
+                    **({"event": sum(1 for r in names.values() if SOURCE_EVENT in r["sources"]),
+                        "event_only": sum(1 for r in names.values() if r["sources"] == [SOURCE_EVENT])}
+                       if with_events else {}),
                     "by_direction": dict(Counter(r["net_direction"] for r in names.values()))},
         "final": {"n": len(ranker_s4), "unchanged": True,
                   "tagged_in_ranker_final": len(tagged), "tagged_names": tagged,
@@ -540,7 +648,7 @@ def admit(news: dict, ranker_s3: list, ranker_s4: list, *, universe: Iterable[st
                                        "net_direction": r["net_direction"]} for r in admitted],
                             "n_dropped": sum(1 for r in rows if r["dropped_by"]),
                             "dropped_by_screen": by_screen},
-        "caps": {"news": cap_news, "filing": cap_fil},
+        "caps": {"news": cap_news, "filing": cap_fil, **({"event": cap_ev} if with_events else {})},
         "control_note": ("the candidate list is the ranker's own, unchanged; `added_by_source` "
                          "is separate, so a grader can compare ranker-only against "
                          "ranker + added from this one snapshot"),
@@ -617,8 +725,8 @@ def _live_state(data_root: Path) -> dict:
             "funnel_history_files": len(list(hist.glob("*"))) if hist.exists() else 0}
 
 
-def replay(as_of: datetime, *, data_root: Path, snapshot: Path, out_dir: Path
-           ) -> tuple[dict, int]:
+def replay(as_of: datetime, *, data_root: Path, snapshot: Path, out_dir: Path,
+           event_store: Optional[Path] = None) -> tuple[dict, int]:
     from backend.services import opportunity_funnel as F
 
     snap = json.loads(Path(snapshot).read_text(encoding="utf-8"))
@@ -637,7 +745,9 @@ def replay(as_of: datetime, *, data_root: Path, snapshot: Path, out_dir: Path
     bars = opt / "prices_2025_26" / "bars.parquet"
     facts = opt / "fundamentals_sec" / "sec_facts_history.parquet"
     news = collect(as_of, digest_root=opt / "digest", filings=fil,
-                   issuers=data_root / "news_entities" / "issuers.csv")
+                   issuers=data_root / "news_entities" / "issuers.csv",
+                   event_store=(Path(event_store) if event_store else
+                                opt / str(_cfg.EVENT_NODES_DIRNAME) / "event_nodes.jsonl"))
     res = admit(news, list(s4), list(s4), universe=uni["tickers"],
                 screen_fn=_bars_screen(bars, as_of), enrich_fn=_sec_enrich(facts, as_of))
     before = [(c.get("ticker"), c.get("score")) for c in snap.get("candidates") or []]
@@ -680,6 +790,8 @@ def main(argv: Optional[list] = None) -> int:
                     help="the backend/data folder to READ (never written)")
     ap.add_argument("--snapshot", default=None, help="default <data-root>/funnel_night10.json")
     ap.add_argument("--out", required=True, help="output directory (never the data folder)")
+    ap.add_argument("--event-store", default=None,
+                    help="event-node store read when EVENT_NODES_FUNNEL_SOURCE_ENABLED (CH-35)")
     a = ap.parse_args(argv)
     as_of = _to_dt(a.as_of)
     root = Path(a.data_root).resolve()
@@ -690,7 +802,7 @@ def main(argv: Optional[list] = None) -> int:
     before = _live_state(root)
     payload, rc = replay(as_of, data_root=root,
                          snapshot=Path(a.snapshot) if a.snapshot else root / "funnel_night10.json",
-                         out_dir=out_dir)
+                         out_dir=out_dir, event_store=Path(a.event_store) if a.event_store else None)
     after = _live_state(root)
     print(f"live state before {before}")
     print(f"live state after  {after}")
@@ -706,6 +818,14 @@ def main(argv: Optional[list] = None) -> int:
           f"{fl.get('n_in_window_item_ok')}, dropped by item {fl.get('dropped_by_item')}")
     for d in ns["degradations"]:
         print(f"DEGRADED: {d}")
+    if ns.get("events"):
+        e = ns["events"]
+        print(f"events {e.get('status')}: store newest build {e.get('store_newest_build_utc')} "
+              f"({e.get('store_age_hours')} h old); nodes known {e.get('n_nodes_known')}, events offering "
+              f"{e.get('n_events_offering')} (importance >= {e.get('min_importance')}), names {e.get('n_names')}; "
+              f"links refused {e.get('links_refused')}")
+        for t, lk in (e.get("offered_links") or {}).items():
+            print(f"  event name {t}: {lk}")
     print(f"ranker final unchanged: {ns['final']['unchanged']}")
     print(ns["both_numbers"])
     print(f"added: {[(r['ticker'], '+'.join(r['sources']), r['net_direction']) for r in ns['added_by_source']['added']]}")

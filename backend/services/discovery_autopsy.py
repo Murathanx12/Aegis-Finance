@@ -1447,6 +1447,90 @@ def assert_no_lookahead(rows: list[dict], open_d: datetime) -> None:
                                         f"{_iso(open_d)}: {bad[:5]}")
 
 
+def attach_event_nodes(rows: list[dict], store: Optional[Path], open_d: datetime) -> dict:
+    """CH-35 slice 2 (flag EVENT_NODES_AUTOPSY_JOIN_ENABLED): a READ-ONLY join of the
+    event-node store onto every mover, as the knowable kind `event_node`. A node is
+    attached when the mover is its primary issuer or a CONNECTED name, it was first
+    seen before D's open, and its version was built at or before the open
+    (`event_nodes.nodes_known_at`). Importance is decayed to the open. The ladder and
+    the knowable STATE are not changed: the join is context beside them. A mover that
+    is only a connected name of someone else's event is listed on its own (the
+    owner's "what does this imply" row). Store missing -> a named degradation."""
+    from backend.services import event_nodes as EN
+    out: dict = {"store": str(store) if store else None, "degradations": []}
+    if store is None or not Path(store).is_file():
+        out["degradations"].append(f"EVENT_NODES_STORE_MISSING: {store}; no event_node items joined")
+        for r in rows:
+            r["knowable"]["event_nodes"] = []
+            r["knowable"].setdefault("n_by_kind", {})["event_node"] = 0
+            r["event_node_role"] = None
+        out.update({"n_movers_with_event": 0, "n_primary": 0, "n_connected_only": 0,
+                    "connected_only": [], "primary": []})
+        return out
+    try:
+        known = EN.nodes_known_at(Path(store), open_d)
+    except EN.EventNodesRefused as exc:          # a torn / corrupt store: named, never a traceback
+        out["degradations"].append(f"{exc.code}: {exc.detail}; no event_node items joined")
+        for r in rows:
+            r["knowable"]["event_nodes"] = []
+            r["knowable"].setdefault("n_by_kind", {})["event_node"] = 0
+            r["event_node_role"] = None
+        out.update({"n_movers_with_event": 0, "n_primary": 0, "n_connected_only": 0,
+                    "connected_only": [], "primary": []})
+        return out
+    out.update({"store_newest_build_utc": known["newest_build_utc"], "store_age_hours_at_open": known["age_hours"],
+                "store_stale_after_hours": known["stale_after_hours"]})
+    if known["stale"]:
+        out["degradations"].append(known["stale"])
+    ev = EN.events_for([r["ticker"] for r in rows], known["nodes"], open_d)
+    strong_only = bool(C.EVENT_NODES_AUTOPSY_STRONG_ONLY)
+    n_weak_hidden = 0
+    if strong_only:
+        for t in list(ev):
+            keep = [b for b in ev[t] if b["link_quality"] in ("PRIMARY", "STRONG")]
+            n_weak_hidden += len(ev[t]) - len(keep)
+            ev[t] = keep
+    out.update({"strong_links_only": strong_only, "n_weak_links_hidden": n_weak_hidden})
+    bad = []
+    for r in rows:
+        lst = ev.get(norm_ticker(r["ticker"]), [])
+        for b in lst:
+            if _utc(b["first_seen_utc"]) >= open_d or (_utc(b["version_built_utc"]) or open_d) > open_d:
+                bad.append((r["ticker"], b["event_id"]))
+        mx = int(C.AUTOPSY_LISTED_HEADLINES_MAX)
+        r["knowable"]["event_nodes"] = lst[:mx]
+        r["knowable"].setdefault("n_by_kind", {})["event_node"] = len(lst)
+        r["event_node_role"] = (("primary" if any(b["role"] == "primary" for b in lst) else "connected_only")
+                                if lst else None)
+    if bad:
+        raise AutopsyRefused(LOOKAHEAD, f"{len(bad)} event node(s) first seen or built on/after the open "
+                                        f"{_iso(open_d)}: {bad[:5]}")
+    conn = [r for r in rows if r["event_node_role"] == "connected_only"]
+    out.update({
+        "n_nodes_known_at_open": len(known["nodes"]),
+        "n_versions_built_after_open_skipped": known["n_versions_after_t_skipped"],
+        "n_retire_rows_unapplied": known["n_retire_rows_unapplied"],
+        "n_movers_with_event": sum(1 for r in rows if r["event_node_role"]),
+        "n_primary": sum(1 for r in rows if r["event_node_role"] == "primary"),
+        "n_connected_only": len(conn),
+        #: movers that were a CONNECTED name of at least one earlier event (whether or
+        #: not they also had their own node), with the events that connect them
+        "n_connected_any": sum(1 for r in rows if any(b["role"] == "connected" for b in
+                                                      ev.get(norm_ticker(r["ticker"]), []))),
+        "connected_any": [{"ticker": r["ticker"], "side": r.get("side"),
+                           "via": [(b["primary_ticker"], b["link"], b["event_id"], b["importance_at"])
+                                   for b in ev.get(norm_ticker(r["ticker"]), []) if b["role"] == "connected"][:5]}
+                          for r in rows if any(b["role"] == "connected" for b in ev.get(norm_ticker(r["ticker"]), []))],
+        "primary": [r["ticker"] for r in rows if r["event_node_role"] == "primary"],
+        "connected_only": [{"ticker": r["ticker"], "side": r.get("side"),
+                            "via": [(b["primary_ticker"], b["link"], b["event_id"], b["importance_at"])
+                                    for b in r["knowable"]["event_nodes"][:3]]} for r in conn],
+        "note": "context only: a connected name is a link in the graph or a co-mention, "
+                "never a forecast; the ladder and the knowable state are unchanged",
+    })
+    return out
+
+
 def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
             paths: dict, corpus: Corpus, now: datetime,
             inputs_extra: Optional[dict] = None, top_k: Optional[int] = None) -> dict:
@@ -1472,6 +1556,8 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
                      know=knowable(norm_ticker(m["ticker"]), overnight, earlier,
                                    prev_close=prev_close, open_d=open_d, revisions=revs))
             for m in scr["movers"]]
+    ev_join = (attach_event_nodes(rows, paths.get("event_nodes"), open_d)
+               if bool(C.EVENT_NODES_AUTOPSY_JOIN_ENABLED) else None)
     assert_no_lookahead(rows, open_d)
     #: what this session's receipt was computed FROM, per component: a re-run
     #: with every hash equal is the same autopsy (daily mode writes nothing).
@@ -1498,6 +1584,9 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
                         for m, r in zip(scr["movers"], rows)}),
         "revisions": _sha(revs["by_ticker"]),
     }
+    if ev_join is not None:
+        input_hashes["event_nodes"] = _sha({norm_ticker(r["ticker"]): r["knowable"].get("event_nodes")
+                                            for r in rows})
 
     def _drop(d: dict, *keys: str) -> dict:
         return {k: v for k, v in d.items() if k not in keys}
@@ -1543,6 +1632,9 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
         "n_forecast_rows_for_movers": sum(len(v) for v in forecasts_by_ticker.values()),
     }
     summary = summarise(rows, scr["suspects"])
+    if ev_join is not None:
+        summary["event_nodes"] = ev_join
+        degr.extend(ev_join.get("degradations") or [])
     summary["stale_inputs"] = stale
     summary["warnings"] = warn
     summary["degradations"] = degr
@@ -2064,7 +2156,9 @@ def default_paths(data_root: Path, funnel_root: Optional[Path] = None) -> dict:
             # the issuer table CH-14a (`funnel_news_source.load_issuers`) and the
             # universe graph read; the live one sits beside the funnel.
             "issuers": fr / "news_entities" / "issuers.csv",
-            "adrs": fr / "news_entities" / "asia_adrs.csv"}
+            "adrs": fr / "news_entities" / "asia_adrs.csv",
+            # CH-35 event-node store; read only when EVENT_NODES_AUTOPSY_JOIN_ENABLED
+            "event_nodes": dr / str(C.EVENT_NODES_DIRNAME) / "event_nodes.jsonl"}
 
 
 # ──────────────────────────────────────────────────── 7. the daily run + CLI
@@ -2135,8 +2229,12 @@ def _repo_data_dirs(*roots: Path) -> list[Path]:
 def run(data_root: Path, out_dir: Optional[Path], *, funnel_root: Optional[Path] = None,
         session: Optional[date] = None, now: Optional[datetime] = None,
         top_k: Optional[int] = None, run_id: Optional[str] = None,
-        allow_stale: bool = False, daily: bool = False) -> dict:
+        allow_stale: bool = False, daily: bool = False,
+        event_store: Optional[Path] = None) -> dict:
     """Read-only over `data_root`; writes only under `out_dir`. Raises AutopsyRefused.
+
+    `event_store` overrides the event-node store read when
+    EVENT_NODES_AUTOPSY_JOIN_ENABLED (default `<data_root>/event_nodes/event_nodes.jsonl`).
 
     `daily=True`: `out_dir` must be None, and the ONLY folder written is
     `<data_root>/<AUTOPSY_DAILY_DIRNAME>/` (`DailyFolder`), idempotent on the
@@ -2149,6 +2247,8 @@ def run(data_root: Path, out_dir: Optional[Path], *, funnel_root: Optional[Path]
     """
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     paths = default_paths(data_root, funnel_root)
+    if event_store is not None:
+        paths["event_nodes"] = Path(event_store)
     fr = Path(funnel_root) if funnel_root else Path(data_root).parent
     folder: Optional[DailyFolder] = None
     if daily:
@@ -2268,7 +2368,13 @@ def headline(rec: dict) -> list[str]:
         f"{' [ALLOWED by --allow-stale]' if rec.get('allow_stale') and s['stale_inputs'] else ''}",
         f"warnings: {s['warnings'] or 'none'}",
         f"DEGRADATIONS: {s.get('degradations') or 'none'}",
-    ]
+    ] + ([f"event nodes (CH-35, context only): {s['event_nodes'].get('n_movers_with_event')} movers on a "
+          f"node known at the open; primary {s['event_nodes'].get('primary')}; CONNECTED ONLY "
+          f"{s['event_nodes'].get('n_connected_only')} "
+          f"{[c['ticker'] for c in s['event_nodes'].get('connected_only') or []]}; store newest build "
+          f"{s['event_nodes'].get('store_newest_build_utc')} ({s['event_nodes'].get('store_age_hours_at_open')} h "
+          f"before the open)"]
+         if "event_nodes" in s else [])
 
 
 def _parse_now(s: str) -> datetime:
@@ -2295,12 +2401,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--now", type=_parse_now, default=None,
                     help="ISO timestamp with zone to judge ages against (default: now)")
     ap.add_argument("--top-k", type=int, default=None)
+    ap.add_argument("--event-store", type=Path, default=None,
+                    help="event-node store read when EVENT_NODES_AUTOPSY_JOIN_ENABLED (CH-35)")
     ap.add_argument("--allow-stale", action="store_true",
                     help="write a receipt despite a stale input; the flag is recorded on it")
     a = ap.parse_args(argv)
     try:
         res = run(a.data_root, a.out, funnel_root=a.funnel_root, session=a.session,
-                  now=a.now, top_k=a.top_k, allow_stale=a.allow_stale, daily=a.daily)
+                  now=a.now, top_k=a.top_k, allow_stale=a.allow_stale, daily=a.daily,
+                  event_store=a.event_store)
     except AutopsyRefused as e:
         print(f"REFUSED {e.code}: {e.detail}", file=sys.stderr)
         return 2
