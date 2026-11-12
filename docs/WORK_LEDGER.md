@@ -21,6 +21,7 @@ removed when that chunk merges.
 
 | Chunk | Agent | Closed | Outcome |
 |---|---|---|---|
+| S65 late night: CH-01 owner calls (`backend/services/owner_calls.py`, `scripts/owner_calls.py`, `backend/tests/test_owner_calls.py`, `docs/TRIALS/OWNER-CALLS-CONTRACT-v1.json`, three `docs/TRIALS/TRIAL-OWNER-CALL-*` documents) | Claude S65 | 2026-11-11 | frozen and pushed before the 11-12 UTC inception; owner signature, three probabilities and `register` pending (OD-13); `record` has no scheduled caller yet, so forward days are pinned by hand until a later release |
 | S65 night: CH-31 typed 8-K family + `--no-write` writes nothing (`backend/services/one_event.py`, `scripts/one_event.py`) | Claude S65 | 2026-11-11 | done; chain still DEGRADED by measured verdict; OD-12 open (what counts as the finished state) |
 | S65 night: pinned-source restores for the SEC raw collector and the T04 monitor (runtime bytes only, no repo file); public assets test (`backend/tests/test_public_assets.py`, #115) | Claude S65 | 2026-11-11 | pins restored and hash-verified, each job's own next receipt still to be read; publication worktree repair waits for the owner |
 | S65 late evening: CH-22b live (desktop app served from the release clone; `Aegis.lnk` repointed; old reader shortcuts moved; `runtime_release` prints the desktop step and `--retire` guards shortcuts) | Claude S65 | 2026-11-11 | done; ON/OFF buttons not yet pressed; each new release repeats the printed desktop step |

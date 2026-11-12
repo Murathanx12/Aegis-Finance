@@ -1,0 +1,295 @@
+{
+ "computed_utc": "2026-11-11T15:55:00+00:00",
+ "questions": {
+  "A-NVDA-CLUSTER": {
+   "text": "QQQ returns less than SPY from the 2026-11-17 close (NVIDIA reports after it) over the next 5 sessions",
+   "twin_base_rate": {
+    "bars_through": "2026-11-10",
+    "by_year": {
+     "2016": 0.412,
+     "2017": 0.36,
+     "2018": 0.44,
+     "2019": 0.412,
+     "2020": 0.36,
+     "2021": 0.412,
+     "2022": 0.6,
+     "2023": 0.38,
+     "2024": 0.52,
+     "2025": 0.48,
+     "2026": 0.429
+    },
+    "first": "2016-01-04",
+    "mean": 0.000922,
+    "n_blocks": 545,
+    "p": 0.4367,
+    "sd": 0.011749
+   }
+  },
+  "B-ENERGY-42": {
+   "text": "An equal-weight XOM/CVX/COP basket returns more than SPY from the 2026-11-13 close over the next 42 sessions",
+   "twin_base_rate": {
+    "bars_through": "2026-11-10",
+    "by_year": {
+     "2016": 0.667,
+     "2017": 0.333,
+     "2018": 0.667,
+     "2019": 0.333,
+     "2020": 0.167,
+     "2021": 0.5,
+     "2022": 0.667,
+     "2023": 0.167,
+     "2024": 0.167,
+     "2025": 0.333,
+     "2026": 0.5
+    },
+    "first": "2016-01-04",
+    "mean": 0.002577,
+    "n_blocks": 64,
+    "p": 0.4062,
+    "sd": 0.123448
+   }
+  },
+  "C-MIDTERM-35": {
+   "text": "SPY is higher 35 sessions after the 2026-11-13 close",
+   "twin_base_rate": {
+    "bars_through": "2026-11-10",
+    "by_year": {
+     "2016": 0.625,
+     "2017": 1.0,
+     "2018": 0.571,
+     "2019": 0.857,
+     "2020": 0.571,
+     "2021": 0.875,
+     "2022": 0.571,
+     "2023": 0.714,
+     "2024": 1.0,
+     "2025": 0.714,
+     "2026": 0.6
+    },
+    "first": "2016-01-04",
+    "mean": 0.020602,
+    "n_blocks": 77,
+    "p": 0.7403,
+    "sd": 0.04216
+   }
+  }
+ },
+ "schema": "owner-calls-contract/1",
+ "themes": {
+  "ai_capex": {
+   "contract": {
+    "also": null,
+    "claim": "below",
+    "dedup": "lower-cased title, counted once per UTC day across the sources",
+    "entry": "close of the first XNYS session on or after D+1; events never overlap",
+    "horizon": 5,
+    "inception": "2026-11-12",
+    "long": [
+     "QQQ"
+    ],
+    "match": "\\b(capex|capital (spending|expenditures?)|ai (spending|bubble|spend|debt|bonds?)|data[- ]cent(er|re)s? (spending|debt|bonds?|costs?)|spending (spree|forecast|binge)|ai[- ]trade)\\b",
+    "min_hits": 3,
+    "min_share": 0.01,
+    "min_titles": 100,
+    "questions": {
+     "A-NVDA-CLUSTER": {
+      "claim": "below",
+      "entry_date": "2026-11-17",
+      "horizon": 5,
+      "long": [
+       "QQQ"
+      ],
+      "rule_window": [
+       "2026-11-12",
+       "2026-11-16"
+      ],
+      "short": "SPY",
+      "text": "QQQ returns less than SPY from the 2026-11-17 close (NVIDIA reports after it) over the next 5 sessions",
+      "theme": "ai_capex",
+      "threshold": 0.0
+     }
+    },
+    "short": "SPY",
+    "sources": [
+     "google_news_rss_en_us",
+     "google_news_rss_en_gb",
+     "wsj_markets",
+     "wsj_business",
+     "wsj_tech",
+     "wsj_world",
+     "mw_topstories"
+    ],
+    "state": "UNKNOWN below min_titles; TRIGGER when hits >= min_hits and hits/titles >= min_share; else QUIET",
+    "theme": "ai_capex",
+    "threshold": 0.0,
+    "trial": "TRIAL-OWNER-CALL-A",
+    "version": "owner-calls/1"
+   },
+   "contract_sha256": "ba99aa2eede5aa45e8cf26dded0cf8a724f7532fb66a488006ff58ddd32fd9e5",
+   "twin_base_rate": {
+    "bars_through": "2026-11-10",
+    "by_year": {
+     "2016": 0.412,
+     "2017": 0.36,
+     "2018": 0.44,
+     "2019": 0.412,
+     "2020": 0.36,
+     "2021": 0.412,
+     "2022": 0.6,
+     "2023": 0.38,
+     "2024": 0.52,
+     "2025": 0.48,
+     "2026": 0.429
+    },
+    "first": "2016-01-04",
+    "mean": 0.000922,
+    "n_blocks": 545,
+    "p": 0.4367,
+    "sd": 0.011749
+   }
+  },
+  "election_policy": {
+   "contract": {
+    "also": null,
+    "claim": "abs_at_least",
+    "dedup": "lower-cased title, counted once per UTC day across the sources",
+    "entry": "close of the first XNYS session on or after D+1; events never overlap",
+    "horizon": 5,
+    "inception": "2026-11-12",
+    "long": [
+     "SPY"
+    ],
+    "match": "\\b(midterms?|mid-term|election|congress|shutdown|house majority|senate majority|impeach\\w*)\\b",
+    "min_hits": 9,
+    "min_share": 0.053,
+    "min_titles": 100,
+    "questions": {
+     "C-MIDTERM-35": {
+      "claim": "above",
+      "entry_date": "2026-11-13",
+      "horizon": 35,
+      "long": [
+       "SPY"
+      ],
+      "rule_window": null,
+      "short": null,
+      "text": "SPY is higher 35 sessions after the 2026-11-13 close",
+      "theme": "election_policy",
+      "threshold": 0.0
+     }
+    },
+    "short": null,
+    "sources": [
+     "google_news_rss_en_us",
+     "google_news_rss_en_gb",
+     "wsj_markets",
+     "wsj_business",
+     "wsj_tech",
+     "wsj_world",
+     "mw_topstories"
+    ],
+    "state": "UNKNOWN below min_titles; TRIGGER when hits >= min_hits and hits/titles >= min_share; else QUIET",
+    "theme": "election_policy",
+    "threshold": 0.02,
+    "trial": "TRIAL-OWNER-CALL-C",
+    "version": "owner-calls/1"
+   },
+   "contract_sha256": "8d4428d0fce6e6f99f87a23629736823a9f97e5541f6d255fa857efd5a9543ce",
+   "twin_base_rate": {
+    "bars_through": "2026-11-10",
+    "by_year": {
+     "2016": 0.157,
+     "2017": 0.02,
+     "2018": 0.4,
+     "2019": 0.137,
+     "2020": 0.4,
+     "2021": 0.176,
+     "2022": 0.62,
+     "2023": 0.32,
+     "2024": 0.26,
+     "2025": 0.28,
+     "2026": 0.214
+    },
+    "first": "2016-01-04",
+    "mean": 0.003023,
+    "n_blocks": 545,
+    "p": 0.2716,
+    "sd": 0.022809
+   }
+  },
+  "iran_escalation": {
+   "contract": {
+    "also": "\\b(strikes?|struck|attacks?|attacked|missiles?|drones?|war|escalat\\w*|blockade|seiz\\w+|retaliat\\w*|bomb\\w*|tanker|closure|clos(e|es|ed|ing)|troops|invasion|killed)\\b",
+    "claim": "above",
+    "dedup": "lower-cased title, counted once per UTC day across the sources",
+    "entry": "close of the first XNYS session on or after D+1; events never overlap",
+    "horizon": 5,
+    "inception": "2026-11-12",
+    "long": [
+     "XOM",
+     "CVX",
+     "COP"
+    ],
+    "match": "\\b(iran|iranian|tehran|hormuz|irgc)\\b",
+    "min_hits": 6,
+    "min_share": 0.025,
+    "min_titles": 100,
+    "questions": {
+     "B-ENERGY-42": {
+      "claim": "above",
+      "entry_date": "2026-11-13",
+      "horizon": 42,
+      "long": [
+       "XOM",
+       "CVX",
+       "COP"
+      ],
+      "rule_window": null,
+      "short": "SPY",
+      "text": "An equal-weight XOM/CVX/COP basket returns more than SPY from the 2026-11-13 close over the next 42 sessions",
+      "theme": "iran_escalation",
+      "threshold": 0.0
+     }
+    },
+    "short": "SPY",
+    "sources": [
+     "google_news_rss_en_us",
+     "google_news_rss_en_gb",
+     "wsj_markets",
+     "wsj_business",
+     "wsj_tech",
+     "wsj_world",
+     "mw_topstories"
+    ],
+    "state": "UNKNOWN below min_titles; TRIGGER when hits >= min_hits and hits/titles >= min_share; else QUIET",
+    "theme": "iran_escalation",
+    "threshold": 0.0,
+    "trial": "TRIAL-OWNER-CALL-B",
+    "version": "owner-calls/1"
+   },
+   "contract_sha256": "f5b8a818b57a42a4458cdc3b55c2615ce7a885f9dcde2bcbfaeabb4db3ea4836",
+   "twin_base_rate": {
+    "bars_through": "2026-11-10",
+    "by_year": {
+     "2016": 0.549,
+     "2017": 0.36,
+     "2018": 0.5,
+     "2019": 0.412,
+     "2020": 0.36,
+     "2021": 0.51,
+     "2022": 0.62,
+     "2023": 0.42,
+     "2024": 0.48,
+     "2025": 0.44,
+     "2026": 0.571
+    },
+    "first": "2016-01-04",
+    "mean": 0.000291,
+    "n_blocks": 545,
+    "p": 0.4734,
+    "sd": 0.033765
+   }
+  }
+ },
+ "version": "owner-calls/1"
+}
