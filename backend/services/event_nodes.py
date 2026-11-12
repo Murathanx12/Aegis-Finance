@@ -315,6 +315,10 @@ def strict_tickers(text: str, tbl: Any, common: Optional[dict] = None,
                         refused[f"common_word:{k}"] += 1
                     continue
                 hits.append((m.start(), amap[k], f"alias_map:{k}"))
+    for alias, (fsym, _src) in dict(C.EVENT_NODES_FOREIGN_NAME_ALIASES).items():
+        pos = text.find(alias)
+        if pos >= 0 and (fsym in tbl.symbols or fsym.replace(".", "-") in tbl.symbols):
+            hits.append((pos, fsym, f"foreign_alias:{alias}"))
     out: dict[str, str] = {}
     for _pos, sym, rule in sorted(hits, key=lambda h: h[0]):
         s = DA.norm_ticker(sym)
@@ -966,6 +970,71 @@ def calendar_dates(calendar_dir: Path, syms: set, now: datetime) -> dict:
             "writer": "scripts/contest_calendar.py calendar (window = contest dates)"}
 
 
+def catalyst_dates(data_root: Path, syms: set, now: datetime) -> dict:
+    """Forward dates from the night lab's catalyst calendar (`lab_catalyst_calendar`,
+    written by scripts/always_on_lab.py `catalyst_calendar`): the newest receipt whose
+    OWN `utc` stamp is at or before `now` (later ones are skipped and named; an
+    unstamped one is skipped as UNDATEABLE, never trusted by its file time).
+    Earnings rows for the tickers it CHECKED (its `tickers` minus `tickers_blind`) and
+    macro rows (CPI/NFP/FOMC) within EVENT_NODES_MACRO_HORIZON_DAYS. `days_away` is
+    recomputed from `now`, never copied."""
+    files = sorted(Path(data_root).glob(str(C.EVENT_NODES_CATALYST_GLOB)))
+    skipped, ok = [], []
+    for f in files:
+        try:
+            rec = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            skipped.append(f"{f.parent.name}/{f.name} unreadable ({type(exc).__name__})")
+            continue
+        if rec.get("receipt") != "lab_catalyst_calendar":
+            skipped.append(f"{f.parent.name}/{f.name} not a lab_catalyst_calendar receipt")
+            continue
+        w = _utc(rec.get("utc"))
+        if w is None:
+            skipped.append(f"{f.parent.name}/{f.name} UNDATEABLE (no `utc` stamp)")
+            continue
+        if w > now:
+            skipped.append(f"{f.parent.name}/{f.name} written {_iso(w)} after now")
+            continue
+        ok.append((w, f, rec))
+    if not ok:
+        return {"status": "NO_CATALYST_CALENDAR_BY_NOW", "covered": set(), "dates": {}, "macro": [],
+                "skipped_after_now": skipped, "file": None, "written_utc": None,
+                "writer": "scripts/always_on_lab.py catalyst_calendar"}
+    w, f, rec = max(ok, key=lambda t: (t[0], str(t[1])))
+    pt = rec.get("per_ticker") or {}
+    blind = {DA.norm_ticker(t) for t in pt.get("tickers_blind") or []}
+    covered = {DA.norm_ticker(t) for t in rec.get("tickers") or []} - blind
+    if rec.get("ticker_refusal"):
+        covered = set()
+    dates: dict[str, list] = {}
+    for bucket in ("0_7d", "8_30d", "31_90d", "beyond_90d"):
+        for r in pt.get(bucket) or []:
+            s = DA.norm_ticker(r.get("ticker"))
+            d = str(r.get("event_time") or "")[:10]
+            if s not in syms or not re.match(r"^\d{4}-\d\d-\d\d$", d) or d < now.date().isoformat():
+                continue
+            dates.setdefault(s, []).append({
+                "date": d, "kind": str(r.get("kind") or "earnings"), "status": r.get("expectedness"),
+                "timing": (r.get("detail") or {}).get("hour") or None,
+                "days_away": (date.fromisoformat(d) - now.date()).days,
+                "source": f"{f.parent.name}/{f.name}:{r.get('source')}"})
+    hz = (now.date() + timedelta(days=int(C.EVENT_NODES_MACRO_HORIZON_DAYS))).isoformat()
+    macro = []
+    for r in rec.get("macro") or []:
+        d = str(r.get("event_time") or "")[:10]
+        if re.match(r"^\d{4}-\d\d-\d\d$", d) and now.date().isoformat() <= d <= hz:
+            macro.append({"date": d, "kind": r.get("kind"), "what": r.get("what"),
+                          "status": r.get("expectedness"),
+                          "days_away": (date.fromisoformat(d) - now.date()).days,
+                          "source": f"{f.parent.name}/{f.name}:{r.get('source')}"})
+    return {"status": "OK", "file": f"{f.parent.name}/{f.name}", "written_utc": _iso(w),
+            "covered": covered, "n_tickers_checked": len(covered), "dates": dates, "macro": macro,
+            "macro_legs": rec.get("legs"), "macro_horizon_days": int(C.EVENT_NODES_MACRO_HORIZON_DAYS),
+            "earnings_horizon_days": rec.get("horizon_days"),
+            "skipped_after_now": skipped, "writer": "scripts/always_on_lab.py catalyst_calendar"}
+
+
 def select_graph(graph_dir: Path, now: datetime) -> tuple[Optional[Any], dict]:
     """The newest universe-graph build whose receipt says it was built at or before
     `now`. A build after `now` is skipped and named; none -> GRAPH_BUILT_AFTER_NOW."""
@@ -1150,19 +1219,30 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
     for r in comention:
         r["also_graph_linked"] = r["ticker"] in gset
     cal = ctx.get("calendar") or {}
+    cat = ctx.get("catalyst") or {}
     names = [sym] + [r["ticker"] for r in comention] + sorted(gset)
-    nd, seen = [], set()
+    nd, seen, have = [], set(), set()
     for s in names:
         if s in seen:
             continue
         seen.add(s)
-        for d in (cal.get("dates") or {}).get(s, []):
-            nd.append({"ticker": s, **d})
+        # the lab calendar first (its own `utc` stamp, 120-day horizon), then the contest one
+        for d in (cat.get("dates") or {}).get(s, []) + (cal.get("dates") or {}).get(s, []):
+            k = (s, d["date"], d["kind"])
+            if k not in have:
+                have.add(k)
+                nd.append({"ticker": s, **d})
     nd.sort(key=lambda d: (d["date"], d["ticker"] != sym, d["ticker"]))
     degr = []
-    if not any(d["ticker"] == sym for d in nd):
-        degr.append(f"CALENDAR_HORIZON_SHORT: no date for {sym} in {cal.get('file')} "
-                    f"(coverage ends {cal.get('coverage_end')}; writer {cal.get('writer')})")
+    # a calendar COVERS the issuer when it checked that ticker (lab) or holds a row for
+    # it (contest); only when none does is "no date" a short horizon, not "nothing found"
+    covered_by = [n for n, ok in ((cat.get("file"), sym in (cat.get("covered") or set())),
+                                  (cal.get("file"), sym in (cal.get("dates") or {}))) if ok]
+    if not any(d["ticker"] == sym for d in nd) and not covered_by:
+        degr.append(f"CALENDAR_HORIZON_SHORT: no calendar covers {sym}: lab catalyst calendar "
+                    f"{cat.get('file')} checked {cat.get('n_tickers_checked', 0)} tickers, not {sym}; "
+                    f"{cal.get('file')} coverage ends {cal.get('coverage_end')} "
+                    f"(writer {cal.get('writer')})")
     if ctx.get("graph_meta", {}).get("status") != "OK":
         degr.append(str(ctx.get("graph_meta", {}).get("status")))
     if ctx.get("held_degradation"):
@@ -1182,7 +1262,12 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
         "next_dates": nd,
         "next_dates_coverage": {"calendar_file": cal.get("file"), "calendar_written_utc": cal.get("written_utc"),
                                 "calendar_window": cal.get("window"), "writer": cal.get("writer"),
-                                "fomc_status": cal.get("fomc_status"), "macro": cal.get("macro", []),
+                                "fomc_status": cal.get("fomc_status"),
+                                "macro": cal.get("macro", []) + list(cat.get("macro") or []),
+                                "catalyst_file": cat.get("file"), "catalyst_written_utc": cat.get("written_utc"),
+                                "catalyst_status": cat.get("status"),
+                                "catalyst_tickers_checked": cat.get("n_tickers_checked", 0),
+                                "issuer_covered_by": covered_by,
                                 "note": ("a date outside the calendar window is NOT COVERED, "
                                          "never 'nothing scheduled'")},
         "degradations": degr,
@@ -1196,13 +1281,25 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
         "fill_status": UNFILLED,
     })
     node["content_hash"] = _sha({k: v for k, v in node.items() if k not in _ANNOTATIONS})
+    node["version_key"] = version_key(node)
     return node
+
+
+def version_key(node: dict) -> str:
+    """What makes a NEW VERSION: the evidence set, the old-context set and the
+    next dates. Join scores (IDF over the window), importance drift from held /
+    forecast state, and the graph's neighbours move with every window and are NOT
+    a reason to version an unchanged event (CH-35 slice 2, `daily`)."""
+    return _sha({"primary": node["primary_ticker"],
+                 "evidence": sorted(e["item_key"] for e in node["evidence"]),
+                 "old_context": sorted(e["item_key"] for e in node.get("old_context") or []),
+                 "next_dates": sorted((d["ticker"], d["date"], d["kind"]) for d in node.get("next_dates") or [])})
 
 
 #: Fields that describe the build or other nodes, not this node's content.
 _ANNOTATIONS = ("build_id", "built_now_utc", "identity", "same_issuer_siblings", "weakest_joins",
                 "parent_id", "rank_at_build", "importance_now_at_build", "content_hash",
-                "carried_forward")
+                "carried_forward", "version_key")
 
 
 # ─────────────────────────────────────────────── 7. the store (append-only chain)
@@ -1301,9 +1398,11 @@ def assign_identity(nodes: list[dict], stored: dict[str, dict], *, since: dateti
 
 
 def append_rows(path: Path, nodes: list[dict], *, retire: Iterable[dict] = (),
-                parents: Iterable[dict] = ()) -> dict:
+                parents: Iterable[dict] = (), at: Optional[str] = None) -> dict:
     """Append new node versions (content changed), retirements and parents. Refuses
-    on a broken chain. Nothing is ever rewritten in place."""
+    on a broken chain. Nothing is ever rewritten in place. A stored version whose
+    `version_key` equals the new one's is UNCHANGED (evidence, old context and next
+    dates the same), whatever drifted in the scores. `at` stamps retire rows."""
     p = Path(path)
     v = verify_chain(p)
     if not v["ok"]:
@@ -1322,10 +1421,11 @@ def append_rows(path: Path, nodes: list[dict], *, retire: Iterable[dict] = (),
         new.append(row)
 
     for r in retire:
-        push({"row_kind": "retire", **r})
+        push({"row_kind": "retire", **({"built_now_utc": at} if at else {}), **r})
     for n in nodes:
         old = latest.get(n["event_id"])
-        if old is not None and old.get("content_hash") == n["content_hash"]:
+        if old is not None and (old.get("content_hash") == n["content_hash"] or (
+                old.get("version_key") and old.get("version_key") == n.get("version_key"))):
             same += 1
             continue
         push({"row_kind": "node", "node_version": (old or {}).get("node_version", 0) + 1,
@@ -1333,7 +1433,11 @@ def append_rows(path: Path, nodes: list[dict], *, retire: Iterable[dict] = (),
     n_par = 0
     for pa in parents:
         old = latest_par.get(pa["parent_id"])
-        if old is not None and old.get("content_hash") == pa["content_hash"]:
+        pa.setdefault("version_key", _sha({"children": sorted(c["event_id"] for c in pa["children"]),
+                                           "span": pa["span_utc"],
+                                           "co": sorted(x["ticker"] for x in pa["co_mention_union"])}))
+        if old is not None and (old.get("content_hash") == pa["content_hash"] or (
+                old.get("version_key") and old.get("version_key") == pa["version_key"])):
             continue
         push({"row_kind": "parent", "parent_version": (old or {}).get("parent_version", 0) + 1, **pa})
         n_par += 1
@@ -1416,7 +1520,8 @@ def default_paths(data_root: Path) -> dict:
             "bars": dr / "prices_2025_26" / "bars.parquet",
             "positions": dr / "pc_book" / "state_latest.json",
             "predictions": dr / "predictions.jsonl",
-            "issuers": NE.entities_dir() / "issuers.csv"}
+            "issuers": NE.entities_dir() / "issuers.csv",
+            "catalyst_root": dr}
 
 
 REQUIRED_INPUTS = (("corpus", CORPUS_MISSING, "dir"), ("filings", FILINGS_MISSING, "file"),
@@ -1476,8 +1581,9 @@ def build(data_root: Path, *, since: datetime, now: datetime,
         for s in list(syms):
             cal_syms.update(g["ticker"] for g in graph_neighbours(graph, s, gmeta))
     cal = calendar_dates(Path(P["calendar"]), cal_syms, now)
+    cat = catalyst_dates(Path(P.get("catalyst_root") or data_root), cal_syms, now)
     ctx = {"graph": graph, "graph_meta": gmeta, "held": held, "held_degradation": held_deg,
-           "forecasts": fc, "bars": bars, "calendar": cal}
+           "forecasts": fc, "bars": bars, "calendar": cal, "catalyst": cat}
     build_id = f"en_{now.strftime('%Y%m%dT%H%M%SZ')}_{_sha([_iso(since), _iso(now)])[:6]}"
     nodes = [build_node(c, now=now, build_id=build_id) for c in clusters]
     stored = latest_nodes(read_store(store_path)) if store_path else {}
@@ -1496,6 +1602,11 @@ def build(data_root: Path, *, since: datetime, now: datetime,
             "bars_last_session": bars.get("last_session"),
             "calendar": {k: cal.get(k) for k in ("status", "file", "written_utc", "window", "coverage_end",
                                                   "writer", "fomc_status", "skipped_after_now")},
+            "catalyst_calendar": {**{k: cat.get(k) for k in ("status", "file", "written_utc", "writer",
+                                                            "n_tickers_checked", "macro_legs",
+                                                            "earnings_horizon_days", "macro_horizon_days",
+                                                            "skipped_after_now")},
+                                  "covered": sorted(cat.get("covered") or []), "macro": cat.get("macro")},
             "positions": {"n_held_symbols": len(held), "degradation": held_deg},
             "identity": {"n_stored_latest": len(stored), "n_versions": sum(1 for n in nodes
                                                                         if n["identity"] != "NEW"),
@@ -1694,6 +1805,7 @@ def fill_event(node: dict, texts: list[str], *, call: Optional[Callable[[str, st
         raise EventFillRefused(FILL_PROVIDER_FAILED, f"status={status} error={res.get('error')}")
     out = validate_fill(res.get("text"), node, texts)
     out.update({"event_id": node["event_id"], "node_content_hash": node["content_hash"],
+                "filled_utc": _iso(datetime.now(timezone.utc).replace(microsecond=0)),
                 "provider": res.get("provider"), "served_model": res.get("served_model"),
                 "cost_usd": res.get("cost_usd"), "tokens_in": res.get("tokens_in"),
                 "tokens_out": res.get("tokens_out")})
@@ -1735,3 +1847,137 @@ def append_fill(path: Path, fill: dict) -> dict:
     with p.open("a", encoding="utf-8", newline="\n") as fh:
         fh.write(json.dumps(row, sort_keys=True, ensure_ascii=True) + "\n")
     return {"appended": 1, "tip": row["row_hash"]}
+
+
+# ─────────────────────────────────────────────── 10. consumers: read-only, point in time
+
+def nodes_known_at(store_path: Path, t: datetime) -> dict:
+    """{event_id: node} as the store stood at instant `t`: for every event the
+    latest node version whose `built_now_utc` is at or before `t` (a version built
+    later is NEVER used), minus retirements stamped at or before `t`. A retire row
+    without a stamp (slice-1 stores) takes the stamp of the next node row after it
+    (both were written by one build); with none after it, it is not applied and is
+    counted. Nodes first seen after `t` cannot occur (a version is built after the
+    evidence it holds). Fill rows attach the filled `dated_facts` count."""
+    rows = read_store(store_path)
+    out: dict[str, dict] = {}
+    retired: set = set()
+    pending: list[str] = []
+    n_after, n_unstamped_retire = 0, 0
+    fills: dict[str, dict] = {}
+    for r in rows:
+        k = r.get("row_kind")
+        if k == "retire":
+            st = _utc(r.get("built_now_utc"))
+            if st is None:
+                pending.append(r["event_id"])
+            elif st <= t:
+                retired.add(r["event_id"])
+            continue
+        if k == "fill":
+            st = _utc(r.get("filled_utc") or r.get("made_at") or r.get("utc"))
+            if st is not None and st <= t and r.get("status") == "FILLED":
+                fills[r["event_id"]] = r
+            continue
+        if k != "node":
+            continue
+        st = _utc(r.get("built_now_utc"))
+        if pending:
+            if st is not None and st <= t:
+                retired.update(pending)
+            pending = []
+        if st is None or st > t:
+            n_after += 1
+            continue
+        out[r["event_id"]] = r
+    n_unstamped_retire = len(pending)
+    live = {k: v for k, v in out.items() if k not in retired}
+    for eid, f in fills.items():
+        if eid in live:
+            live[eid] = {**live[eid], "_fill_dated_facts": len(f.get("dated_facts") or [])}
+    return {"nodes": live, "n_versions_after_t_skipped": n_after,
+            "n_retire_rows_unapplied": n_unstamped_retire, "n_retired": len(retired & set(out)),
+            "store": str(store_path), "t": _iso(t)}
+
+
+def roles_of(node: dict) -> dict[str, dict]:
+    """{ticker: role} for the primary issuer and every connected name of a node.
+    role = {"role": "primary" | "connected", "link": "primary" | "co_mention" |
+    <graph link type>, "weight": graph weight or co-mention item count}. A ticker
+    connected several ways keeps the strongest: primary > co_mention > graph."""
+    out: dict[str, dict] = {node["primary_ticker"]: {"role": "primary", "link": "primary", "weight": None}}
+    cn = node.get("connected_names") or {}
+    for r in cn.get("co_mention") or []:
+        out.setdefault(r["ticker"], {"role": "connected", "link": "co_mention", "weight": r.get("n_items")})
+    for g in sorted(cn.get("graph") or [], key=lambda g: (g.get("weight") is None, -abs(g.get("weight") or 0.0))):
+        out.setdefault(g["ticker"], {"role": "connected", "link": g["link"], "weight": g.get("weight")})
+    return out
+
+
+def node_brief(node: dict, ticker: str, at: datetime, role: dict) -> dict:
+    """What a consumer may carry about a node: ids, roles, counts and stamps.
+    NEVER a title, a body or a URL (licensed text)."""
+    fs = _utc(node["first_seen_utc"])
+    imp = node.get("importance") or {}
+    return {"event_id": node["event_id"], "parent_id": node.get("parent_id"),
+            "primary_ticker": node["primary_ticker"], "ticker": ticker,
+            "role": role["role"], "link": role["link"], "link_weight": role.get("weight"),
+            "first_seen_utc": node["first_seen_utc"], "version_built_utc": node.get("built_now_utc"),
+            "node_version": node.get("node_version"),
+            "age_hours": round((at - fs).total_seconds() / 3600.0, 2),
+            "importance_0": imp.get("importance_0"),
+            "importance_at": round(decay(imp.get("importance_0") or 0.0, fs, at,
+                                         (node.get("decay") or {}).get("half_life_hours")), 4),
+            "n_publishers": (imp.get("facts") or {}).get("n_publishers"),
+            "n_evidence": node.get("n_evidence"),
+            "dated_facts_filled": node.get("_fill_dated_facts")}
+
+
+def events_for(tickers: Iterable[str], known: dict, at: datetime, *,
+               max_age_hours: Optional[float] = None) -> dict[str, list[dict]]:
+    """{ticker: [node_brief...]} for nodes first seen strictly before `at` and
+    within `max_age_hours`, where the ticker is the primary issuer or a connected
+    name; sorted by importance decayed to `at`, highest first."""
+    want = {DA.norm_ticker(t) for t in tickers}
+    mx = float(C.EVENT_NODES_CONSUMER_MAX_AGE_HOURS if max_age_hours is None else max_age_hours)
+    out: dict[str, list[dict]] = {}
+    for n in known.values():
+        fs = _utc(n.get("first_seen_utc"))
+        if fs is None or fs >= at or (at - fs).total_seconds() / 3600.0 > mx:
+            continue
+        for t, role in roles_of(n).items():
+            if t in want:
+                out.setdefault(t, []).append(node_brief(n, t, at, role))
+    for t in out:
+        out[t].sort(key=lambda b: (-b["importance_at"], b["event_id"]))
+    return out
+
+
+# ─────────────────────────────────────────────── 11. the daily caller
+
+def daily(data_root: Path, *, now: datetime, out: Optional[Path] = None,
+          window_hours: Optional[float] = None) -> dict:
+    """Build the trailing window into the store and append what changed. Safe to
+    run every 30-60 minutes: identity holds across windows (`assign_identity`) and a
+    version is added only when its `version_key` changed. Raises
+    EventNodesRefused(NO_CORPUS_ROWS) when every source is empty."""
+    hours = float(C.EVENT_NODES_DAILY_WINDOW_HOURS if window_hours is None else window_hours)
+    out_dir = Path(out) if out else Path(data_root) / C.EVENT_NODES_DIRNAME
+    store = out_dir / STORE_NAME
+    since = now - timedelta(hours=hours)
+    res = build(Path(data_root), since=since, now=now, store_path=store)
+    if res["read"]["rows_read"] == 0:
+        raise EventNodesRefused(NO_CORPUS_ROWS, f"no corpus or filing row in {res['since']} .. {res['now']} "
+                                                f"across all sources; nothing built")
+    if not res["nodes"]:
+        raise EventNodesRefused(NO_EVENTS_FROM_ROWS, f"{res['read']['rows_read']} rows read and no event built")
+    before = len(read_store(store))
+    st = append_rows(store, res["nodes"], retire=res["retire"], parents=res["parents"], at=_iso(now))
+    chain = verify_chain(store)
+    new_ids = sum(1 for n in res["nodes"] if n["identity"] == "NEW")
+    return {"res": res, "store": st, "chain": chain, "rows_before": before, "window_hours": hours,
+            "summary": (f"EVENT_NODES_DAILY ok build={res['build_id']} window={hours:g}h "
+                        f"rows={res['read']['rows_read']} events={len(res['nodes'])} new_ids={new_ids} "
+                        f"+versions={st['appended_nodes']} unchanged={st['unchanged']} "
+                        f"+retired={st['retired']} +parents={st['appended_parents']} "
+                        f"chain_ok={chain['ok']} n={chain['n']} tip={str(chain.get('tip'))[:12]}")}

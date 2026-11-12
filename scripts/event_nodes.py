@@ -5,12 +5,19 @@
     python -m scripts.event_nodes fill  --data-root <optimus dir> --dry-run [--top N]
                                         [--since ISO] [--now ISO] [--show-prompt]
     python -m scripts.event_nodes verify --out DIR
+    python -m scripts.event_nodes daily --data-root <optimus dir> [--out DIR] [--now ISO]
+                                        [--window-hours 36]
 
 `build` reads the corpus READ-ONLY, appends new node versions to
 `<out>/event_nodes.jsonl` (hash-chained) and writes one receipt
 `<out>/receipts/<build_id>.json` + `.md` (titles, publishers, stamps and URLs;
 never article bodies). `--out` defaults to `<data-root>/<EVENT_NODES_DIRNAME>`,
 which WRITES INTO the data root: pass `--out` to keep it elsewhere.
+
+`daily` (CH-35 slice 2) builds the trailing EVENT_NODES_DAILY_WINDOW_HOURS into the
+default store (`<data-root>/<EVENT_NODES_DIRNAME>/`, or --out) and appends only what
+changed; safe every 30-60 minutes. It prints ONE summary line for a scheduled task's
+log and writes the build receipt beside the store. rc 2 when every source is empty.
 
 Exit codes: 0 ok (or a window with no corpus rows, which is printed as such);
 2 a refused input / window / chain, or rows read and no event built; 3 a fill
@@ -123,7 +130,8 @@ def cmd_build(a: argparse.Namespace) -> int:
     if not res["nodes"]:
         raise EN.EventNodesRefused(EN.NO_EVENTS_FROM_ROWS,
                                    f"{res['read']['rows_read']} rows read and no event built")
-    store = EN.append_rows(out / EN.STORE_NAME, res["nodes"], retire=res["retire"], parents=res["parents"])
+    store = EN.append_rows(out / EN.STORE_NAME, res["nodes"], retire=res["retire"], parents=res["parents"],
+                           at=res["now"])
     rec_dir = out / "receipts"
     rec_dir.mkdir(parents=True, exist_ok=True)
     rec = _strip(res)
@@ -173,6 +181,23 @@ def cmd_fill(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_daily(a: argparse.Namespace) -> int:
+    now = _parse(a.now) if a.now else datetime.now(timezone.utc).replace(microsecond=0)
+    data_root = Path(a.data_root)
+    out = Path(a.out) if a.out else data_root / C.EVENT_NODES_DIRNAME
+    r = EN.daily(data_root, now=now, out=out, window_hours=a.window_hours)
+    res = r["res"]
+    rec_dir = out / "receipts"
+    rec_dir.mkdir(parents=True, exist_ok=True)
+    rec = _strip(res)
+    rec.update({"store": r["store"], "chain": r["chain"], "daily": True, "window_hours": r["window_hours"],
+                "summary": r["summary"]})
+    (rec_dir / f"{res['build_id']}.json").write_text(json.dumps(rec, indent=1, sort_keys=True, default=str),
+                                                      encoding="utf-8")
+    print(r["summary"])
+    return 0 if r["chain"]["ok"] else 2
+
+
 def cmd_verify(a: argparse.Namespace) -> int:
     v = EN.verify_chain(Path(a.out) / EN.STORE_NAME)
     print(json.dumps(v))
@@ -193,16 +218,23 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--dry-run", action="store_true")
             p.add_argument("--show-prompt", action="store_true")
             p.add_argument("--show-bodies", action="store_true")
+    p = sub.add_parser("daily")
+    p.add_argument("--data-root", required=True)
+    p.add_argument("--out")
+    p.add_argument("--now")
+    p.add_argument("--window-hours", type=float, default=None)
     p = sub.add_parser("verify")
     p.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     try:
-        return {"build": cmd_build, "fill": cmd_fill, "verify": cmd_verify}[a.cmd](a)
+        return {"build": cmd_build, "fill": cmd_fill, "verify": cmd_verify,
+                "daily": cmd_daily}[a.cmd](a)
     except EN.EventFillRefused as exc:
         print(f"REFUSED {exc.code}: {exc.detail}")
         return 3
     except EN.EventNodesRefused as exc:
-        print(f"REFUSED {exc.code}: {exc.detail}")
+        print(f"EVENT_NODES_{a.cmd.upper()} REFUSED {exc.code}: {exc.detail}" if a.cmd == "daily"
+              else f"REFUSED {exc.code}: {exc.detail}")
         return 2
 
 
