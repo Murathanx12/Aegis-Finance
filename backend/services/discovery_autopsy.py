@@ -60,8 +60,11 @@ hyp_lab's field shape), and the matched non-mover is owed before it is one.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
+import sys
+import warnings
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Optional
@@ -97,6 +100,14 @@ NOT_A_SESSION = "NOT_A_SESSION"
 THIN_PANEL = "THIN_PANEL"
 NO_BENCHMARK = "NO_BENCHMARK"
 LEDGER_MISSING = "LEDGER_MISSING"
+FUNNEL_MISSING = "FUNNEL_MISSING"
+DECISIONS_MISSING = "DECISIONS_MISSING"
+DIGEST_MISSING = "DIGEST_MISSING"
+CORPUS_MISSING = "CORPUS_MISSING"
+CIK_MAP_MISSING = "CIK_MAP_MISSING"
+NO_MOVERS = "NO_MOVERS"
+LOOKAHEAD = "LOOKAHEAD"
+OUT_INSIDE_DATA_ROOT = "OUT_INSIDE_DATA_ROOT"
 
 
 class AutopsyRefused(RuntimeError):
@@ -155,6 +166,33 @@ def _as_list(v: Any) -> list:
             return []
         return [p.strip().strip("'\"") for p in inner.split(",") if p.strip().strip("'\"")]
     return []
+
+
+def norm_ticker(t: Any) -> str:
+    """One spelling for share classes: SEC writes BRK-B, the bars panel BRK.B."""
+    return str(t or "").strip().upper().replace("-", ".")
+
+
+def load_cik_map(path: Path) -> dict[int, str]:
+    """`official/company_tickers.json` ({"t": stamp, "map": {cik: ticker}}) -> {int cik: ticker}."""
+    p = Path(path)
+    if not p.is_file():
+        raise AutopsyRefused(CIK_MAP_MISSING, f"no CIK map at {p}: SEC filings carry a CIK, "
+                                              f"not a ticker, so none could name a mover")
+    try:
+        obj = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        raise AutopsyRefused(CIK_MAP_MISSING, f"unreadable CIK map {p}: {e}") from e
+    raw = obj.get("map") if isinstance(obj, dict) else None
+    if not isinstance(raw, dict) or not raw:
+        raise AutopsyRefused(CIK_MAP_MISSING, f"CIK map {p} holds no `map` rows")
+    out: dict[int, str] = {}
+    for k, v in raw.items():
+        try:
+            out[int(k)] = norm_ticker(v)
+        except (TypeError, ValueError):
+            continue
+    return out
 
 
 def session_open_utc(d: date) -> datetime:
@@ -288,6 +326,9 @@ def screen_movers(bars: pd.DataFrame, day: date, *, history: Optional[pd.DataFra
     prev = cal[i - 1]
     r_d = ret.loc[D]
     m_d = float(r_d[BENCH])
+    if not np.isfinite(m_d):
+        raise AutopsyRefused(NO_BENCHMARK, f"{BENCH} has no return on {day} (no bar on "
+                                           f"{prev.date()}): no market to net the move against")
     trail = ret.loc[cal[max(lo + 1, i - W):i]]            # returns ending D-1
     M = trail[BENCH].to_numpy(dtype=float)
     syms = [s for s in ret.columns if s != BENCH]
@@ -296,9 +337,8 @@ def screen_movers(bars: pd.DataFrame, day: date, *, history: Optional[pd.DataFra
     n_obs = valid.sum(axis=0)
     Xv = np.where(valid, X, np.nan)
     Mv = np.where(valid, M[:, None], np.nan)
-    with np.errstate(invalid="ignore", divide="ignore"), \
-            np.testing.suppress_warnings() as sup:
-        sup.filter(RuntimeWarning)
+    with np.errstate(invalid="ignore", divide="ignore"), warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)       # all-NaN columns
         mx, mm = np.nanmean(Xv, axis=0), np.nanmean(Mv, axis=0)
         cov = np.nanmean((Xv - mx) * (Mv - mm), axis=0)
         var = np.nanmean((Mv - mm) ** 2, axis=0)
@@ -355,6 +395,11 @@ def screen_movers(bars: pd.DataFrame, day: date, *, history: Optional[pd.DataFra
     ups = sorted([j for j in cand if resid[j] > 0], key=lambda j: -key[j])[:k]
     downs = sorted([j for j in cand if resid[j] < 0], key=lambda j: key[j])[:k]
     movers = [_row(j, "UP") for j in ups] + [_row(j, "DOWN") for j in downs]
+    if not movers:
+        raise AutopsyRefused(NO_MOVERS, f"no name on {day} cleared |z| >= {C.AUTOPSY_MIN_ABS_Z} "
+                                        f"and |resid| >= {C.AUTOPSY_MIN_ABS_RESID} among "
+                                        f"{int(base.sum())} screened: across a whole market "
+                                        f"that is a broken input, not a quiet day")
     return {
         "movers": movers,
         "screen": {
@@ -402,7 +447,7 @@ def funnel_in_force(funnel_path: Path, history_dir: Path, before: datetime) -> d
         if g is None or g >= before:
             continue
         snaps.setdefault(_iso(g), {"path": str(p), "generated_at": _iso(g),
-                                   "tickers": sorted({str(c.get("ticker")).upper()
+                                   "tickers": sorted({norm_ticker(c.get("ticker"))
                                                       for c in d.get("candidates") or []
                                                       if c.get("ticker")})})
     out = {"n_snapshot_files": len(paths), "unreadable": unreadable,
@@ -440,7 +485,7 @@ def contract_names(decisions_dir: Path, day: date, before: datetime,
             continue
         used.append({"path": str(p), "written_utc": _iso(w), "n_rows": len(obj.get("rows") or [])})
         for row in obj.get("rows") or []:
-            t = str(row.get("ticker") or "").upper()
+            t = norm_ticker(row.get("ticker"))
             if not t or ":" in t:
                 continue
             by.setdefault(t, []).append({"date": d.isoformat(), "written_utc": _iso(w),
@@ -473,7 +518,7 @@ def digest_names(digest_dir: Path, before: datetime, lookback_days: Optional[int
         used.append({"path": str(p), "stamp": _iso(ts), "n_themes": len(obj.get("themes") or [])})
         for th in obj.get("themes") or []:
             for t in th.get("top_tickers") or []:
-                by.setdefault(str(t).upper(), []).append({"stamp": _iso(ts),
+                by.setdefault(norm_ticker(t), []).append({"stamp": _iso(ts),
                                                          "theme": str(th.get("title") or "")[:160]})
     return {"by_ticker": by, "digests_used": used, "lookback_days": lb}
 
@@ -490,7 +535,7 @@ def index_forecasts(pred_path: Path, tickers: Iterable[str],
                                              f"cannot be told from CANDIDATE_NOT_FORECAST")
     lb = timedelta(days=int(C.AUTOPSY_FORECAST_LOOKBACK_DAYS if lookback_days is None
                             else lookback_days))
-    want = {str(t).upper() for t in tickers}
+    want = {norm_ticker(t) for t in tickers}
     by_day: dict[str, dict[str, list]] = {k: {} for k in windows}
     n = bad = no_stamp = 0
     newest: Optional[datetime] = None
@@ -512,7 +557,7 @@ def index_forecasts(pred_path: Path, tickers: Iterable[str],
                 continue
             if newest is None or made > newest:
                 newest = made
-            t = str(row.get("ticker") or "").upper()
+            t = norm_ticker(row.get("ticker"))
             if t not in want:
                 continue
             ra = str(row.get("resolves_after") or "")[:10] or None
@@ -550,10 +595,17 @@ class Corpus:
 
     The clock is `first_seen_utc` (when Aegis held the row). A row with no
     first-seen stamp falls back to `published_utc` and is flagged.
+
+    SEC 8-K rows carry `tickers: []` and a `cik:<10 digits>` entity tag; without
+    `cik_map` (int CIK -> ticker, `official/company_tickers.json`) no filing
+    could ever name a company, and every filing-led move would read as
+    NO_HEADLINE_IN_CORPUS.
     """
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, cik_map: Optional[dict[int, str]] = None) -> None:
         self.root = Path(root)
+        self.cik_map = dict(cik_map or {})
+        self.n_cik_resolved = 0
         self.sources = (sorted(p.name for p in self.root.iterdir()
                                if p.is_dir() and not p.name.startswith("_"))
                         if self.root.is_dir() else [])
@@ -579,12 +631,24 @@ class Corpus:
                     known = fs or pub
                     if known is None:
                         continue
+                    tags = [str(t) for t in _as_list(o.get("entity_tags"))]
+                    tickers = {norm_ticker(t) for t in _as_list(o.get("tickers"))}
+                    for t in tags:
+                        if t.startswith("cik:"):
+                            try:
+                                hit = self.cik_map.get(int(t[4:]))
+                            except ValueError:
+                                hit = None
+                            if hit and hit not in tickers:
+                                tickers.add(hit)
+                                tags.append(f"resolved:cik_map:{hit}")
+                                self.n_cik_resolved += 1
                     rows.append({"source": src, "title": str(o.get("title") or "")[:240],
                                  "known_at": known,
                                  "clock": "first_seen_utc" if fs else "published_utc",
                                  "published_utc": _iso(pub),
-                                 "tickers": [str(t).upper() for t in _as_list(o.get("tickers"))],
-                                 "tags": [str(t) for t in _as_list(o.get("entity_tags"))],
+                                 "tickers": sorted(t for t in tickers if t),
+                                 "tags": tags,
                                  "url": str(o.get("url") or "")[:200]})
         self._cache[key] = rows
         return rows
@@ -659,7 +723,7 @@ def knowable(ticker: str, overnight: dict, earlier: dict) -> dict:
 
 def classify(m: dict, *, funnel: dict, contracts: dict, digest: dict,
              forecasts: dict[str, list], know: dict) -> dict:
-    t = m["ticker"]
+    t = norm_ticker(m["ticker"])
     in_funnel = t in set(funnel.get("tickers") or [])
     cons = contracts["by_ticker"].get(t) or []
     fc = forecasts.get(t) or []
@@ -706,10 +770,34 @@ def summarise(rows: list[dict]) -> dict:
 
 # ──────────────────────────────────────────────────────────── 5. one day
 
+def assert_no_lookahead(rows: list[dict], open_d: datetime) -> None:
+    """Every item a mover's row cites must be dated strictly before D's open.
+
+    The windows already cut at the open; this re-checks the OUTPUT, because an
+    autopsy that cites a post-move headline as "knowable" is the hindsight
+    story rule 2 forbids, and it would read exactly like a finding.
+    """
+    bad = []
+    for r in rows:
+        k = r["knowable"]
+        for e in [k.get("earliest"), k.get("latest_before_open"), *(k.get("evidence") or [])]:
+            ts = _utc((e or {}).get("known_at"))
+            if e and (ts is None or ts >= open_d):
+                bad.append((r["ticker"], "corpus", e.get("known_at")))
+        latest = r["forecasts"].get("latest")
+        if latest and (_utc(latest.get("made_at")) or open_d) >= open_d:
+            bad.append((r["ticker"], "forecast", latest.get("made_at")))
+        for c in r["attention"].get("contract_rows") or []:
+            if (_utc(c.get("written_utc")) or open_d) >= open_d:
+                bad.append((r["ticker"], "contract", c.get("written_utc")))
+    if bad:
+        raise AutopsyRefused(LOOKAHEAD, f"{len(bad)} cited item(s) dated on/after the open "
+                                        f"{_iso(open_d)}: {bad[:5]}")
+
+
 def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
-            paths: dict, forecasts_by_ticker: dict[str, list], forecast_stats: dict,
-            corpus: Corpus, now: datetime, inputs_extra: Optional[dict] = None,
-            top_k: Optional[int] = None) -> dict:
+            paths: dict, corpus: Corpus, now: datetime,
+            inputs_extra: Optional[dict] = None, top_k: Optional[int] = None) -> dict:
     """The receipt for one session. Raises AutopsyRefused; never returns an empty list quietly."""
     open_d = session_open_utc(day)
     scr = screen_movers(bars, day, history=history, top_k=top_k)
@@ -718,17 +806,49 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
     funnel = funnel_in_force(paths["funnel"], paths["funnel_history"], open_d)
     contracts = contract_names(paths["decisions"], day, open_d)
     digest = digest_names(paths["digest"], open_d)
+    fc = index_forecasts(paths["predictions"], [m["ticker"] for m in scr["movers"]],
+                         {day.isoformat(): (open_d, day)})
+    forecasts_by_ticker = fc["by_day"][day.isoformat()]
     overnight = corpus.window(prev_close, open_d)
     lbk = timedelta(days=int(C.AUTOPSY_KNOWABLE_LOOKBACK_DAYS))
     earlier = corpus.window(prev_close - lbk, prev_close)
     rows = [classify(m, funnel=funnel, contracts=contracts, digest=digest,
                      forecasts=forecasts_by_ticker,
-                     know=knowable(m["ticker"], overnight, earlier))
+                     know=knowable(norm_ticker(m["ticker"]), overnight, earlier))
             for m in scr["movers"]]
+    assert_no_lookahead(rows, open_d)
 
     def _drop(d: dict, *keys: str) -> dict:
         return {k: v for k, v in d.items() if k not in keys}
 
+    extra = dict(inputs_extra or {})
+    stale: list[str] = list(extra.pop("stale_inputs", []))
+    if funnel.get("state") != "PRESENT":
+        stale.append("funnel: no snapshot dated before the open")
+    elif funnel.get("staleness"):
+        stale.append(f"funnel: {funnel['age_days_at_open']} days old at the open "
+                     f"(limit {funnel['stale_after_days']})")
+    if day.isoformat() in contracts["days_without_contract"]:
+        stale.append(f"contracts: no day contract for {day} written before the open")
+    if not overnight["n_rows"] >= int(C.AUTOPSY_MIN_CORPUS_ROWS):
+        stale.append(f"corpus: {overnight['n_rows']} rows overnight, under the "
+                     f"{C.AUTOPSY_MIN_CORPUS_ROWS} floor -- 'no headline' reads as UNKNOWN")
+    if not scr["screen"]["n_up_kept"] or not scr["screen"]["n_down_kept"]:
+        stale.append("screen: one tail is empty -- the winner/loser comparison is one-sided")
+    candidate_set = {
+        "n_funnel": len(funnel.get("tickers") or []),
+        "funnel_generated_at": funnel.get("generated_at"),
+        "funnel_age_days_at_open": funnel.get("age_days_at_open"),
+        "funnel_age_days_now": _r(((now - _utc(funnel["generated_at"])).total_seconds() / 86400)
+                                  if funnel.get("generated_at") else None, 2),
+        "n_contract_tickers": len(contracts["by_ticker"]),
+        "contract_files_used": [f["path"] for f in contracts["files_used"]],
+        "newest_contract_written_utc": max((f["written_utc"] for f in contracts["files_used"]),
+                                           default=None),
+        "n_forecast_rows_for_movers": sum(len(v) for v in forecasts_by_ticker.values()),
+    }
+    summary = summarise(rows)
+    summary["stale_inputs"] = stale
     rec = {
         "schema": SCHEMA, "chunk": "CH-13", "licence": "PRODUCT_EXPERIMENT",
         "session": day.isoformat(), "session_open_utc": _iso(open_d),
@@ -736,18 +856,20 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
         "written_utc": _iso(now),
         "descriptive_only": ("observations, not evidence of predictability: a headline that "
                              "preceded a move is a seed, and the matched non-mover is owed"),
+        "candidate_set": candidate_set,
         "screen": scr["screen"],
         "inputs": {
-            **(inputs_extra or {}),
+            **extra,
             "funnel": {**_drop(funnel, "tickers"), "n_candidates": len(funnel.get("tickers") or [])},
             "contracts": {**_drop(contracts, "by_ticker"), "n_tickers": len(contracts["by_ticker"])},
             "world_digest": {**_drop(digest, "by_ticker"), "n_tickers": len(digest["by_ticker"])},
-            "forecasts": forecast_stats,
+            "forecasts": fc["stats"],
             "corpus_overnight": _drop(overnight, "by_ticker"),
             "corpus_earlier": _drop(earlier, "by_ticker"),
             "corpus_root": str(corpus.root), "corpus_sources": corpus.sources,
+            "corpus_cik_resolved_rows": corpus.n_cik_resolved,
         },
-        "summary": summarise(rows),
+        "summary": summary,
         "movers": rows,
     }
     rec["receipt_sha256"] = _sha(rec, n=64)
@@ -847,13 +969,21 @@ def _atomic_write(path: Path, text: str) -> None:
 
 
 def write_outputs(rec: dict, out_dir: Path, run_id: str) -> dict:
-    """Receipt + md (run id in the name: a second run never overwrites a cited
-    receipt), index row, research-queue seeds (deduped), weekly roll-up."""
+    """Receipt + md, index row, research-queue seeds (deduped), weekly roll-up.
+
+    Two receipt files: `autopsy_<D>_<run>.json` is the one cited (run id in the
+    name, so a second run never overwrites a receipt someone quoted) and
+    `autopsy_<D>.json` is the same bytes as the day's latest run, for readers
+    that want "the autopsy of D" by name.
+    """
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    rec = {**rec, "run_id": run_id}
     stem = f"autopsy_{rec['session']}_{run_id}"
     jp, mp = out / f"{stem}.json", out / f"{stem}.md"
-    _atomic_write(jp, json.dumps(rec, indent=1, default=str))
+    body = json.dumps(rec, indent=1, default=str)
+    _atomic_write(jp, body)
+    _atomic_write(out / f"autopsy_{rec['session']}.json", body)
     _atomic_write(mp, render_md(rec))
     _append(out / "index.jsonl", [{"session": rec["session"], "run_id": run_id,
                                    "receipt": str(jp), "receipt_sha256": rec["receipt_sha256"],
@@ -864,7 +994,8 @@ def write_outputs(rec: dict, out_dir: Path, run_id: str) -> dict:
     new = [s for s in seeds if s["seed_key"] not in have]
     _append(qp, new)
     wk = weekly_rollup(out, date.fromisoformat(rec["session"]))
-    return {"receipt": str(jp), "markdown": str(mp), "queue": str(qp),
+    return {"receipt": str(jp), "latest": str(out / f"autopsy_{rec['session']}.json"),
+            "markdown": str(mp), "queue": str(qp),
             "queue_rows_added": len(new), "queue_rows_already_present": len(seeds) - len(new),
             "weekly": wk["path"]}
 
@@ -903,5 +1034,144 @@ def default_paths(data_root: Path, funnel_root: Optional[Path] = None) -> dict:
             "decisions": dr / "decisions",
             "digest": dr / "digest",
             "corpus": dr / "news_corpus",
+            "cik_map": dr / "official" / "company_tickers.json",
             "funnel": fr / "funnel_night10.json",
             "funnel_history": fr / "funnel_history"}
+
+
+# ──────────────────────────────────────────────────── 7. the daily run + CLI
+
+#: input -> refusal code. A missing input is a red exit with its name, never
+#: an empty rung: a missing forecast ledger would make every mover "not forecast".
+REQUIRED_INPUTS = (("bars", PANEL_MISSING, "file"), ("predictions", LEDGER_MISSING, "file"),
+                   ("funnel", FUNNEL_MISSING, "file"), ("decisions", DECISIONS_MISSING, "dir"),
+                   ("digest", DIGEST_MISSING, "dir"), ("corpus", CORPUS_MISSING, "dir"),
+                   ("cik_map", CIK_MAP_MISSING, "file"))
+
+
+def check_inputs(paths: dict) -> dict:
+    """Refuse, by name, on the first missing input; else every input's size."""
+    out = {}
+    for key, code, kind in REQUIRED_INPUTS:
+        p = Path(paths[key])
+        ok = p.is_file() if kind == "file" else p.is_dir()
+        if not ok:
+            raise AutopsyRefused(code, f"required input `{key}` is missing: {p}")
+        out[key] = input_stat(p)
+    return out
+
+
+def _inside(child: Path, parent: Path) -> bool:
+    try:
+        Path(child).resolve().relative_to(Path(parent).resolve())
+        return True
+    except ValueError:
+        return False
+
+
+def sessions_between(after: date, upto: date) -> int:
+    """XNYS sessions in (after, upto]."""
+    from backend.services import market_sessions as MS
+    n, d = 0, after + timedelta(days=1)
+    while d <= upto:
+        n += int(MS.is_session(d))
+        d += timedelta(days=1)
+    return n
+
+
+def run(data_root: Path, out_dir: Path, *, funnel_root: Optional[Path] = None,
+        session: Optional[date] = None, now: Optional[datetime] = None,
+        top_k: Optional[int] = None, run_id: Optional[str] = None) -> dict:
+    """Read-only over `data_root`; writes only under `out_dir`. Raises AutopsyRefused."""
+    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    paths = default_paths(data_root, funnel_root)
+    fr = Path(funnel_root) if funnel_root else Path(data_root).parent
+    for root in (Path(data_root), fr):
+        if _inside(out_dir, root):
+            raise AutopsyRefused(OUT_INSIDE_DATA_ROOT, f"--out {out_dir} is inside {root}: the "
+                                                       f"autopsy never writes into live data")
+    sizes = check_inputs(paths)
+    history = history_counts(paths["bars"])
+    facts = panel_facts(history)
+    if facts["last_date"] is None:
+        raise AutopsyRefused(PANEL_STALE, f"the bars panel {paths['bars']} holds no rows")
+    last = date.fromisoformat(facts["last_date"])
+    day = session or last
+    latest_closed = latest_closed_session(now)
+    behind = sessions_between(last, latest_closed) if latest_closed > last else 0
+    panel_age = {"panel_last_date": last.isoformat(),
+                 "latest_closed_session": latest_closed.isoformat(),
+                 "age_days": (now.date() - last).days,
+                 "sessions_behind": behind,
+                 "max_sessions_behind": int(C.AUTOPSY_PANEL_MAX_SESSIONS_BEHIND),
+                 "stale": behind > int(C.AUTOPSY_PANEL_MAX_SESSIONS_BEHIND)}
+    stale = []
+    if panel_age["stale"]:
+        stale.append(f"bars panel: ends {last}, {behind} session(s) behind the latest closed "
+                     f"session {latest_closed}")
+    start = day - timedelta(days=int(C.AUTOPSY_LOAD_CALENDAR_DAYS))
+    bars = load_bars(paths["bars"], start, day)
+    cik_map = load_cik_map(paths["cik_map"])
+    corpus = Corpus(paths["corpus"], cik_map=cik_map)
+    extra = {"sizes": sizes, "bars_panel": {**facts, **panel_age,
+                                            "survivorship": "panel built from a dated universe "
+                                            "file; dead names are under-represented"},
+             "cik_map_rows": len(cik_map), "stale_inputs": stale}
+    rec = run_day(day, bars=bars, history=history, paths=paths, corpus=corpus, now=now,
+                  inputs_extra=extra, top_k=top_k)
+    rid = run_id or now.strftime("%Y%m%dT%H%M%SZ")
+    written = write_outputs(rec, out_dir, rid)
+    return {"receipt": rec, "written": written}
+
+
+def headline(rec: dict) -> list[str]:
+    s, cs, bp = rec["summary"], rec["candidate_set"], rec["inputs"]["bars_panel"]
+    return [
+        f"session {rec['session']} | bars panel ends {bp['panel_last_date']}, age {bp['age_days']} d, "
+        f"{bp['sessions_behind']} session(s) behind {bp['latest_closed_session']}"
+        f"{' [STALE]' if bp['stale'] else ''}",
+        f"candidate set: funnel {cs['n_funnel']} names generated {cs['funnel_generated_at']} "
+        f"(age {cs['funnel_age_days_at_open']} d at the open, {cs['funnel_age_days_now']} d now); "
+        f"contracts name {cs['n_contract_tickers']} tickers (newest {cs['newest_contract_written_utc']})",
+        f"movers {s['n_movers']} (UP {s['by_side']['UP']} / DOWN {s['by_side']['DOWN']}) | "
+        f"ladder {s['by_ladder']} | knowable {s['by_knowable']}",
+        f"MISSED BUT KNOWABLE {s['n_missed_but_knowable']} | UNKNOWN {s['n_unknown']}",
+        f"stale inputs: {s['stale_inputs'] or 'none'}",
+    ]
+
+
+def _parse_now(s: str) -> datetime:
+    d = _utc(s)
+    if d is None:
+        raise argparse.ArgumentTypeError(f"--now must be an ISO timestamp with a zone: {s!r}")
+    return d
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    ap = argparse.ArgumentParser(prog="discovery_autopsy",
+                                 description="CH-13 daily discovery-failure autopsy")
+    ap.add_argument("--data-root", required=True, type=Path,
+                    help="the optimus data folder (read only), e.g. backend/data/optimus")
+    ap.add_argument("--out", required=True, type=Path, help="output folder, outside the data root")
+    ap.add_argument("--funnel-root", type=Path, default=None,
+                    help="folder holding funnel_night10.json (default: data-root's parent)")
+    ap.add_argument("--session", type=date.fromisoformat, default=None,
+                    help="session date (default: the newest session in the bars panel)")
+    ap.add_argument("--now", type=_parse_now, default=None,
+                    help="ISO timestamp with zone to judge ages against (default: now)")
+    ap.add_argument("--top-k", type=int, default=None)
+    a = ap.parse_args(argv)
+    try:
+        res = run(a.data_root, a.out, funnel_root=a.funnel_root, session=a.session,
+                  now=a.now, top_k=a.top_k)
+    except AutopsyRefused as e:
+        print(f"REFUSED {e.code}: {e.detail}", file=sys.stderr)
+        return 2
+    for ln in headline(res["receipt"]):
+        print(ln)
+    print(json.dumps(res["written"], indent=1))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

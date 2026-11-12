@@ -4238,6 +4238,13 @@ AUTOPSY_MIN_CORPUS_ROWS = 200
 AUTOPSY_NOT_NEWS_TAGS = ("column:mw_analyst_estimates", "column:marketwatch_earnings_calendar",
                          "column:marketwatch_economic_calendar",
                          "column:marketwatch_upgrades_downgrades")
+#: the bars panel is flagged STALE (printed, not refused: D is still the newest
+#: session it holds) when it ends more than this many XNYS sessions before the
+#: latest closed session. 1 tolerates the gap between the close and the refresh.
+AUTOPSY_PANEL_MAX_SESSIONS_BEHIND = 1
+#: calendar days of bars loaded before D: enough for the 63-session dollar-volume
+#: floor and the 60-session beta window, with holidays.
+AUTOPSY_LOAD_CALENDAR_DAYS = 120
 
 # ── u_forecast: the sim's daily investigator forecasts (Builder O1, 2026-09-25) ──
 #: Hard ceiling on names asked per UTC day. The union (Murat's book, every
