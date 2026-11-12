@@ -1164,14 +1164,26 @@ def evidence_texts(node: dict, items_by_key: dict) -> list[str]:
 
 
 def fill_prompt(node: dict, texts: list[str]) -> tuple[str, str]:
+    """The filing(s) first, then the newest items, up to EVENT_NODES_FILL_MAX_EVIDENCE;
+    each keeps its index in the node's evidence list, which is what a reply cites."""
     n = int(C.EVENT_NODES_FILL_MAX_EVIDENCE)
-    names = [node["primary_ticker"]] + [r["ticker"] for r in node["connected_names"]["co_mention"]]
-    names += [g["ticker"] for g in node["connected_names"]["graph"] if g["ticker"] not in names]
+    names: list[str] = []
+    for t in ([node["primary_ticker"]] + [r["ticker"] for r in node["connected_names"]["co_mention"]]
+              + [g["ticker"] for g in node["connected_names"]["graph"]]):
+        if t not in names:
+            names.append(t)
+    ev = node["evidence"][:len(texts)]
+    order = sorted(range(len(ev)), key=lambda i: (ev[i].get("kind") != "filing",
+                                                   -(_utc(ev[i].get("published_utc") or ev[i].get("first_seen_utc"))
+                                                     or datetime.min.replace(tzinfo=timezone.utc)).timestamp(), i))
+    chosen = sorted(order[:n])
     parts = [f"EVENT {node['event_id']} primary {node['primary_ticker']} first seen {node['first_seen_utc']}",
-             f"CONNECTED NAMES: {', '.join(names[:30])}", "EVIDENCE:"]
-    for i, (e, t) in enumerate(zip(node["evidence"][:n], texts[:n])):
+             f"CONNECTED NAMES: {', '.join(names[:30])}",
+             f"EVIDENCE ({len(chosen)} of {len(ev)} items; cite the [index]):"]
+    for i in chosen:
+        e = ev[i]
         parts.append(f"[{i}] {e['publisher']} ({', '.join(e['regions']) or '?'}) "
-                     f"{e['published_utc'] or e['first_seen_utc']}\n{t}")
+                     f"{e['published_utc'] or e['first_seen_utc']}\n{texts[i]}")
     return FILL_SYSTEM, "\n\n".join(parts)
 
 
