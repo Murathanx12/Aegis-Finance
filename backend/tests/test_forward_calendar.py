@@ -337,3 +337,151 @@ def test_the_real_fetcher_is_blocked_offline_and_the_pull_goes_red(tmp_path):
     rec = FC.pull(["NVDA", "AMD"], tmp_path, macro=False, now_fn=Clock(NOW), sleep_fn=lambda s: None)
     assert rec["failed"] == 2 and rec["status"] == FC.LOW_COVERAGE
     assert all("BATCH_FAILED" in (r.get("error") or "") for r in _ear(rec["snapshot_path"]))
+
+
+# ─────────────────────────────────────────── review 1: damage, passed events, resume, lock, shares
+
+def _full(tmp_path, table, at):
+    return _pull(tmp_path, list(table), table, at, scope=FC.FULL_UNIVERSE)
+
+
+def test_a_truncated_newest_snapshot_never_silently_serves_the_older_date(tmp_path):
+    d1, d2 = TODAY + timedelta(days=6), TODAY + timedelta(days=8)
+    _full(tmp_path, {"NVDA": _q("NVDA", d1), "AMD": _q("AMD", d1)}, NOW - timedelta(days=1))
+    r2 = _full(tmp_path, {"NVDA": _q("NVDA", d2), "AMD": _q("AMD", d2)}, NOW - timedelta(hours=1))
+    p = Path(r2["snapshot_path"])
+    keep = [ln for ln in p.read_bytes().split(b"\n") if b'"ticker": "NVDA"' not in ln]
+    p.write_bytes(b"\n".join(keep) + b'\n{"row_kind": "earnings", "ticker": "NV')   # torn tail
+    res = FC.next_dates(["NVDA", "AMD"], NOW, root=tmp_path)
+    nv = res["tickers"]["NVDA"]
+    assert nv["label"] == FC.FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED
+    assert nv["date"] == d1.isoformat() and nv["damaged_snapshot"] == p.name
+    assert nv["damaged_snapshot_utc"] and nv["pulled_utc"] < nv["damaged_snapshot_utc"]
+    assert res["tickers"]["AMD"]["date"] == d2.isoformat()     # its own row is intact in the newest
+    assert res["damaged_snapshots"][0]["n_bad_lines"] == 1
+    assert res["damaged_snapshots"][0]["rows_missing_vs_index"] == 1
+    f = FC.freshness(tmp_path, NOW)
+    assert f["verdict"] == "STALE" and "DAMAGED" in f["detail"]
+
+
+def test_invalid_utf8_non_object_and_malformed_dates_are_counted_not_raised(tmp_path):
+    r = _full(tmp_path, {"NVDA": _q("NVDA", TODAY + timedelta(days=3))}, NOW - timedelta(hours=1))
+    p = Path(r["snapshot_path"])
+    bad = dict(_ear(p)[0], next_date="2026-13-45")
+    with p.open("ab") as fh:
+        fh.write(b"\xff\xfe not utf8\n[1, 2, 3]\n" + json.dumps(bad).encode() + b"\n")
+    rows, n_bad = FC.read_snapshot(p)
+    assert n_bad == 3 and all(isinstance(x, dict) for x in rows)
+    res = FC.next_dates(["NVDA"], NOW, root=tmp_path)            # no exception
+    assert res["damaged_snapshots"][0]["n_bad_lines"] == 3
+    assert res["tickers"]["NVDA"]["date"] == (TODAY + timedelta(days=3)).isoformat()
+
+
+def test_same_day_passed_events_are_last_reported_never_next(tmp_path):
+    """US pre-open report at 12:30 UTC and a Tokyo report at 06:00 UTC, both TODAY:
+    at NOW (15:00 UTC) both have happened; an after-close report today has not."""
+    pre = _q("PRE", TODAY)
+    pre.update(earningsTimestamp=_ts(TODAY, 12, 30), earningsTimestampStart=_ts(TODAY, 12, 30),
+               earningsTimestampEnd=_ts(TODAY, 12, 30))
+    tokyo = {"symbol": "8035.T", "quoteType": "EQUITY", "isEarningsDateEstimate": False,
+             "exchangeTimezoneName": "Asia/Tokyo", "earningsTimestamp": _ts(TODAY, 6),
+             "earningsTimestampStart": _ts(TODAY, 6), "earningsTimestampEnd": _ts(TODAY, 6)}
+    tbl = {"PRE": pre, "8035.T": tokyo, "POST": _q("POST", TODAY, hh=21)}
+    _full(tmp_path, tbl, NOW - timedelta(days=1))   # pulled the day before: all three were "next" then
+    res = FC.next_dates(list(tbl), NOW, root=tmp_path)["tickers"]
+    for t in ("PRE", "8035.T"):
+        assert res[t]["label"] == FC.NO_DATE_IN_HORIZON and res[t]["reason"] == FC.LAST_REPORTED, t
+        assert res[t]["date"] is None and res[t]["last_reported"]["date"] == TODAY.isoformat()
+    assert res["8035.T"]["timing"] == "UNKNOWN"                 # non-US timing is not inferred
+    assert res["POST"]["label"] == FC.DATE_IN_HORIZON and res["POST"]["days_away"] == 0
+    # pulled AFTER the reports: the parse itself never calls a passed date "next"
+    for t, q in tbl.items():
+        row = FC.parse_quote(t, FC.yahoo_symbol(t), q, pulled_utc=NOW, pull_id="x")
+        if t == "POST":
+            assert row["status"] == FC.DATE
+        else:
+            assert row["status"] == FC.NO_DATE and row["no_date_reason"] == "ONLY_PAST_DATES"
+            assert row["last_reported_date"] == TODAY.isoformat() and row["next_date"] is None
+
+
+def test_a_date_only_event_passes_when_its_new_york_session_closes():
+    d = FC.market_date(NOW)
+    close = FC.session_close_utc(d)
+    assert not FC.event_passed(d.isoformat(), None, False, close - timedelta(minutes=1))
+    assert FC.event_passed(d.isoformat(), None, False, close)
+    untimed = FC.parse_quote("X", "X", _q("X", d, hh=0), pulled_utc=NOW, pull_id="x")
+    assert untimed["status"] == FC.DATE and untimed["event_time_known"] is False
+
+
+def test_sessions_away_uses_the_xnys_helper(monkeypatch):
+    from backend.services import counterfactual_prices as CP
+    FC._SESSION_MEMO.clear()
+    monkeypatch.setattr(CP, "sessions_between", lambda a, b: (3, "XNYS"))
+    monkeypatch.setattr(CP, "sessions_after", lambda a, n: (a + timedelta(days=1), "XNYS"))
+    assert FC.sessions_away(TODAY, TODAY + timedelta(days=5)) == (3, "XNYS")      # today is a session
+    FC._SESSION_MEMO.clear()
+    monkeypatch.setattr(CP, "sessions_after", lambda a, n: (a + timedelta(days=3), "XNYS"))
+    assert FC.sessions_away(TODAY, TODAY + timedelta(days=5)) == (4, "XNYS")      # today is not
+    FC._SESSION_MEMO.clear()
+
+
+def test_a_mismatched_resume_is_refused_by_name(tmp_path):
+    snap = FC.snapshots_dir(tmp_path)
+    snap.mkdir(parents=True)
+    pid = f"fc_{FC._stamp(NOW - timedelta(hours=1))}_abcdef"
+    many = [f"T{i}" for i in range(500)]
+    hdr = {"row_kind": "pull_header", "pull_id": pid, "tickers_sha": FC.tickers_sha(many),
+           "n_requested": 500, "scope": FC.FULL_UNIVERSE}
+    (snap / f"{pid}.partial.jsonl").write_text(json.dumps(hdr) + "\n", encoding="utf-8")
+    with pytest.raises(FC.ForwardCalendarRefused) as e:
+        _pull(tmp_path, ["NVDA"], {"NVDA": _q("NVDA", TODAY + timedelta(days=2))}, NOW)
+    assert e.value.code == FC.RESUME_MISMATCH and "500" in str(e.value)
+    rec = _pull(tmp_path, ["NVDA"], {"NVDA": _q("NVDA", TODAY + timedelta(days=2))}, NOW, resume=False)
+    assert rec["requested"] == 1 and rec["resumed_from"] is None
+    assert (snap / f"{pid}.partial.jsonl").is_file()                  # left in place, not adopted
+
+
+def test_a_concurrent_pull_is_a_named_skip(tmp_path):
+    import threading
+    from backend.services import disk_guard as DG
+    held, release = threading.Event(), threading.Event()
+
+    def hold():
+        with DG.file_lock(FC.store_dir(tmp_path) / FC.LOCK_NAME):
+            held.set()
+            release.wait(10)
+    th = threading.Thread(target=hold)
+    th.start()
+    try:
+        assert held.wait(10)
+        with pytest.raises(FC.ForwardCalendarRefused) as e:
+            _pull(tmp_path, ["NVDA"], {"NVDA": _q("NVDA", TODAY + timedelta(days=2))}, NOW)
+        assert e.value.code == FC.PULL_LOCKED
+    finally:
+        release.set()
+        th.join(10)
+
+
+def test_answered_share_is_the_red_floor_and_date_share_is_reported_separately(tmp_path):
+    past = {f"P{i}": _q(f"P{i}", TODAY - timedelta(days=7)) for i in range(9)}
+    tbl = {**past, "NVDA": _q("NVDA", TODAY + timedelta(days=4))}
+    rec = _full(tmp_path, tbl, NOW)
+    assert rec["answered_share"] == 1.0 and rec["date_share"] == 0.1
+    assert rec["status"] == FC.LOW_DATE_SHARE
+    with pytest.raises(FC.ForwardCalendarRefused) as e:
+        FC.check_coverage(rec)
+    assert e.value.code == FC.LOW_DATE_SHARE and "date share 0.1" in str(e.value)
+    ok = _full(tmp_path / "b", {**dict(list(past.items())[:4]), "NVDA": tbl["NVDA"],
+                                "AMD": _q("AMD", TODAY + timedelta(days=4)),
+                                "MU": _q("MU", TODAY + timedelta(days=4))}, NOW)
+    assert ok["status"] == "OK" and 0.4 <= ok["date_share"] < 0.6        # red under the old 0.60 floor
+
+
+def test_the_reader_opens_only_the_snapshots_it_needs(tmp_path):
+    d = TODAY + timedelta(days=9)
+    for k in range(5, 0, -1):
+        _full(tmp_path, {"NVDA": _q("NVDA", d), "AMD": _q("AMD", d)}, NOW - timedelta(hours=12 * k))
+    res = FC.next_dates(["NVDA", "AMD"], NOW, root=tmp_path)
+    assert res["n_snapshots_available"] == 5 and res["n_snapshots_opened"] == 1
+    res2 = FC.next_dates(["NVDA", "ZZZZ"], NOW, root=tmp_path)        # never covered: the indexes say so
+    assert res2["n_snapshots_opened"] == 1 and res2["tickers"]["ZZZZ"]["label"] == FC.NOT_COVERED
