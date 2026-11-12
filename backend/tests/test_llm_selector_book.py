@@ -642,3 +642,44 @@ def test_the_entry_rule_before_and_after_the_open(ny_hour):
                                     [], t)[0]
     assert S.contract()["entry_rule"] == S.ENTRY_RULE
     assert "next session's open" not in S.SYSTEM_PROMPT
+
+
+# ── CH-35 slice 2: the event-node block (EVENT_NODES_SELECTOR_PACKET_ENABLED) ──
+
+def _briefs(now):
+    def b(eid, primary, role, link, built, imp):
+        return {"event_id": eid, "primary_ticker": primary, "role": role, "link": link, "age_hours": 5.0,
+                "importance_at": imp, "n_publishers": 3, "dated_facts_filled": None,
+                "version_built_utc": S.iso(built), "first_seen_utc": S.iso(now - timedelta(hours=5))}
+    return {"AAA": [b("ev_1", "AAA", "primary", "primary", now - timedelta(hours=1), 6.0),
+                    b("ev_2", "ZZZ", "connected", "co_mention", now - timedelta(hours=2), 4.0),
+                    # a version built AFTER the decision: the packet's admission drops it
+                    b("ev_3", "YYY", "connected", "co_coverage", now + timedelta(minutes=1), 3.0),
+                    b("ev_4", "XXX", "connected", "co_coverage", now - timedelta(hours=2), 1.0)]}
+
+
+def test_event_block_off_leaves_contract_and_packets_exactly_as_main(monkeypatch):
+    now = _now()
+    monkeypatch.setattr(C, "EVENT_NODES_SELECTOR_PACKET_ENABLED", False)
+    h_off = S.contract_hash()
+    assert S.contract_body()["packet_schema_version"] == S.PACKET_SCHEMA_VERSION
+    assert "event_nodes" not in S.contract_body()["packet"]
+    inp = _inputs(now)
+    base = S.packets_hash(S.all_packets(inp, now))
+    assert S.packets_hash(S.all_packets({**inp, "event_by_ticker": _briefs(now)}, now)) == base
+    monkeypatch.setattr(C, "EVENT_NODES_SELECTOR_PACKET_ENABLED", True)
+    assert S.contract_hash() != h_off
+    assert S.contract_body()["packet_schema_version"] == C.EVENT_NODES_SELECTOR_PACKET_SCHEMA
+
+
+def test_event_block_on_carries_ids_and_counts_never_text(monkeypatch):
+    now = _now()
+    monkeypatch.setattr(C, "EVENT_NODES_SELECTOR_PACKET_ENABLED", True)
+    monkeypatch.setattr(C, "EVENT_NODES_SELECTOR_TOP_K", 3)
+    pk = {p["ticker"]: p for p in S.all_packets({**_inputs(now), "event_by_ticker": _briefs(now)}, now)}
+    ev = [f for f in pk["AAA"]["facts"] if f[0] == "event_node"]
+    assert sorted(f[1]["event_id"] for f in ev) == ["ev_1", "ev_2"]      # top-3, then ev_3 built after
+    assert pk["AAA"]["n_excluded_at_or_after_decision"] >= 1
+    assert set(ev[0][1]) == {"event_id", "primary", "role", "link", "age_h", "importance", "n_publishers",
+                             "dated_facts"}
+    assert not [f for f in pk["BBB"]["facts"] if f[0] == "event_node"]
