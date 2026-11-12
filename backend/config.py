@@ -1738,21 +1738,25 @@ IC_FUNNEL_TTL = 3600
 
 # ── CH-14a: news and filings ADD names to the funnel (funnel_news_source) ──
 #: OFF by default: with it off the funnel output is byte-identical to before.
-#: On, issuer-mapped tickers from the newest world digest (theme top_tickers and
-#: ticker implications) and fresh overnight 8-Ks become names to CONSIDER. They
-#: pass the same stage-1 eligibility screens and the stage-3 fundamentals
-#: requirement as every other name; they set no weight and change no score.
+#: On, the ranker's candidate list is emitted UNCHANGED (same names, order and
+#: scores; a ranker name news also mentions gets an extra `sources` tag). News /
+#: filing names go ONLY to a separate `added_by_source` block, after stage 0,
+#: the stage-1 eligibility screens and stage-3 fundamentals; they never face the
+#: ranker-only stages (1,500 truncation, stage-2 shortlist, stage-3 order cut,
+#: stage-4 profitability rank), and the block says so per name. No weight, no
+#: score, no position in the candidate list.
 FUNNEL_NEWS_SOURCE_ENABLED = False
 #: A digest older than this (hours, from its own as_of, never mtime) is STALE.
 FUNNEL_NEWS_DIGEST_MAX_AGE_HOURS = 36.0
 #: Also add fresh overnight 8-K filers (official/tables/filing_events.jsonl).
 FUNNEL_NEWS_FILINGS_ENABLED = True
-#: At most this many news/filing names are enriched at stage 3 (per-ticker calls
-#: are bounded; the stage-3 budget is twice this).
-FUNNEL_NEWS_MAX_ENRICH = 30
-#: At most this many final slots go to names that only news/filings brought in;
-#: they displace the lowest-ranked ranker-only names (listed on the receipt).
-FUNNEL_NEWS_MAX_FINAL_SLOTS = 8
+#: 8-K items that offer a name (9.01 exhibits and 5.07 vote results do not).
+FUNNEL_NEWS_FILING_ITEMS: tuple = ("1.01", "2.01", "2.02", "2.05", "2.06", "4.02",
+                                   "5.02", "7.01", "8.01")
+#: Per-source caps on stage-3 enrichment (per-ticker calls are bounded; the
+#: stage-3 budget is twice the names), so filings cannot crowd out news.
+FUNNEL_NEWS_MAX_ENRICH_NEWS = 30
+FUNNEL_NEWS_MAX_ENRICH_FILING = 20
 
 #: Headline capital levels the committee page composes a book for. A subset of
 #: capital_frontier.CAPITAL_LEVELS — the retail-to-small-fund range the page

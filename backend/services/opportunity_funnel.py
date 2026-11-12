@@ -724,7 +724,7 @@ def run(*, extra: list[str] | None = None, force_universe: bool = False,
     news_on = _news_source_enabled()
     news_block = None
     if news_on:
-        s3, s4, news_block = _news_source(build_time, tickers, s3, s4, stage4_keep)
+        news_block, added = _news_source(build_time, tickers, s3, s4)
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -745,8 +745,13 @@ def run(*, extra: list[str] | None = None, force_universe: bool = False,
     }
     if news_on:
         # CH-14a: only with the flag on does the payload change shape.
-        payload["stages"]["stage3_news_added"] = news_block["stage3"]["news_added"]
-        payload["stage3_candidates"] = news_block["stage3"]["names"]
+        # The candidate list above is the ranker's own, unchanged in names, order
+        # and scores (ranker names news also mentions carry an extra `sources`
+        # tag). News/filing names live ONLY in the separate block below, so no
+        # consumer that reads `candidates` by position can take one.
+        payload["stages"]["added_by_source"] = news_block["added_by_source"]["n_added"]
+        payload["stage3_candidates"] = [{"ticker": c.ticker, "sources": c.sources} for c in s3]
+        payload["added_by_source"] = added
         payload["news_source"] = news_block
     return payload
 
@@ -757,22 +762,35 @@ def _news_source_enabled() -> bool:
 
 
 def _news_source(build_time: datetime, tickers: list[str], s3: list[Candidate],
-                 s4: list[Candidate], stage4_keep: int
-                 ) -> tuple[list[Candidate], list[Candidate], dict]:
-    """CH-14a: news/filing names through the SAME screens, into reserved slots.
-
-    The ranker's s3/s4 are already final when this runs; nothing here re-scores
-    them. Per-ticker calls stay bounded: one batch history call for the news
-    names and at most 2 x FUNNEL_NEWS_MAX_ENRICH enrichment calls.
+                 s4: list[Candidate]) -> tuple[dict, list[dict]]:
+    """CH-14a: tag the ranker's lists (no move, no re-score) and screen every
+    other news/filing name through the SAME stage-0/1/3 screens into a separate
+    `added_by_source` block. Per-ticker calls stay bounded: one batch history
+    call for the news names, at most 2 x (news cap + filing cap) enrichment calls.
     """
-    from backend import config as _cfg
     from backend.services import funnel_news_source as FNS
 
     news = FNS.collect(build_time)
 
     def screen(names: list[str]) -> dict:
+        saved = STAGE_FAILURES.pop("stage1_batches", None)     # never overwrite the ranker's
         hist = _batch_history(names)
-        return {t: eligibility(t, hist["close"], hist["volume"]) for t in names}
+        if "stage1_batches" in STAGE_FAILURES:
+            STAGE_FAILURES["news_stage1_batches"] = STAGE_FAILURES.pop("stage1_batches")
+        if saved is not None:
+            STAGE_FAILURES["stage1_batches"] = saved
+        failed = int(hist.get("failed_batches") or 0)
+        out = {}
+        for t in names:
+            c, scr = eligibility(t, hist["close"], hist["volume"])
+            if c is None and scr == "no_price_history" and failed:
+                scr = "news_price_fetch_failed"
+            out[t] = (c, scr)
+        if failed:
+            news["degradations"].append(
+                f"NEWS_PRICE_FETCH_FAILED: {failed} batch(es) of news-name prices failed; "
+                f"names without history are dropped as news_price_fetch_failed")
+        return out
 
     def enrich(cands: list[Candidate]) -> list[Candidate]:
         saved = STAGE_FAILURES.pop("stage3", None)
@@ -784,16 +802,11 @@ def _news_source(build_time: datetime, tickers: list[str], s3: list[Candidate],
             STAGE_FAILURES["stage3"] = saved
         return got
 
-    res = FNS.admit(news, s3, s4, universe=tickers, screen_fn=screen, enrich_fn=enrich,
-                    stage4_keep=stage4_keep,
-                    max_enrich=_cfg.FUNNEL_NEWS_MAX_ENRICH,
-                    max_final_slots=_cfg.FUNNEL_NEWS_MAX_FINAL_SLOTS)
-    block = {**{k: v for k, v in news.items() if k != "names"},
-             "per_name": news["names"], **res["receipt"]}
-    for d in news["degradations"]:
-        STAGE_FAILURES.setdefault("news_source", "")
-        STAGE_FAILURES["news_source"] = (STAGE_FAILURES["news_source"] + " | " + d).strip(" |")
-    return res["stage3"], res["final"], block
+    res = FNS.admit(news, s3, s4, universe=tickers, screen_fn=screen, enrich_fn=enrich)
+    block = {**{k: v for k, v in news.items() if k != "names"}, **res["receipt"]}
+    if news["degradations"]:
+        STAGE_FAILURES["news_source"] = " | ".join(news["degradations"])
+    return block, res["added"]
 
 
 def _evidence_basis() -> dict:
@@ -911,8 +924,8 @@ def main(argv=None) -> int:
         dg = ns["digest"]
         print(f"news source: digest {dg.get('digest_id')} age {dg.get('age_hours')} h, "
               f"{dg.get('n_typed_rows')} typed rows, {dg.get('status')}; "
-              f"{ns['final']['news_share_note']}; dropped by screen "
-              f"{ {k: len(v) for k, v in ns['dropped_by_screen'].items()} }")
+              f"{ns['both_numbers']}; dropped by screen "
+              f"{ {k: len(v) for k, v in ns['added_by_source']['dropped_by_screen'].items()} }")
     if a.dry_run:
         print("--dry-run: nothing written")
         return 0
