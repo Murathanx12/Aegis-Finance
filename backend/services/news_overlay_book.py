@@ -759,7 +759,6 @@ def excluded_symbols() -> set:
 def bar_ages(close, upto: date) -> dict:
     """{symbol: sessions from its newest real bar to the last session <= upto}
     (None = no bar at all). `close` is a wide frame (index = session dates)."""
-    import numpy as np
     idx = [d for d in close.index if d <= upto]
     if not idx:
         return {}
@@ -797,22 +796,24 @@ def eligibility(close, volume, asof: date) -> dict:
     pool = []
     for s in c.columns:
         sym = str(s)
-        bad = False
+        bad: list[str] = []
         if not (dv.get(s) == dv.get(s)) or float(dv[s]) < float(_cfg.NEWS_OVERLAY_LIQUID_MIN_DOLLAR_VOL):
-            fails["dollar_vol"].add(sym); bad = True
+            bad.append("dollar_vol")
         if not (last_close.get(s) == last_close.get(s)):
-            fails["no_bar_last_session"].add(sym); bad = True
+            bad.append("no_bar_last_session")
         elif float(last_close[s]) < float(_cfg.NEWS_OVERLAY_LIQUID_MIN_PRICE):
-            fails["price"].add(sym); bad = True
+            bad.append("price")
         if int(n_hist[s]) < int(_cfg.NEWS_OVERLAY_LIQUID_MIN_HISTORY):
-            fails["history"].add(sym); bad = True
+            bad.append("history")
         a = ages.get(sym)
         if a is None or a > int(_cfg.NEWS_OVERLAY_LIQUID_MAX_BAR_AGE):
-            fails["stale"].add(sym); bad = True
+            bad.append("stale")
         if bool(suspect.get(s, False)):
-            fails["suspect"].add(sym); bad = True
+            bad.append("suspect")
         if sym.upper() in excl:
-            fails["etf"].add(sym); bad = True
+            bad.append("etf")
+        for rule in bad:
+            fails[rule].add(sym)
         if not bad:
             pool.append(sym)
     return {"asof": asof, "last_bar_date_used": idx[-1], "n_symbols": int(c.shape[1]),
