@@ -159,6 +159,38 @@ def test_no_extraction_is_paid_for_a_page_that_will_write_nothing(url, title, co
     assert (status in DC.RETRY_STATUSES) == (status == "REFUSED_UNKNOWN_PAGE_TYPE")
 
 
+def test_an_undated_page_is_its_own_status_and_is_still_validated(ledger, monkeypatch):
+    """Cannot be dated is NOT stale: a named status, no forecast, and the claim
+    validator (quote must be in the article) still runs on it."""
+    text = "Chip maker AAA said its plant will start production early. " * 8
+    monkeypatch.setattr(DC, "article_tickers", lambda text, title="": {"AAA"})
+    art = {"title": "t", "text": text}                              # no first_seen_utc
+    assert DC.precheck(art)["status"] == "UNDATED_NO_FORECAST"
+    reply = json.dumps({"claims": [
+        {"ticker": "AAA", "direction": "up", "quote": "AAA will triple, trust me",
+         "paraphrase": "AAA will rise"}]})
+    got = DC.extract_claims(art, llm_fn=lambda s, u: reply)
+    assert got["claims"] == [] and [r["why"].split(":")[0] for r in got["refused"]] == \
+        ["REFUSED_QUOTE_NOT_IN_ARTICLE"]
+    good = _claim("AAA", quote="Chip maker AAA said its plant will start production early")
+    r = _write(ledger, {**art, "sha": "u1"}, [good])
+    assert r["status"] == "UNDATED_NO_FORECAST" and r["n_rows_written"] == 0
+    assert _rows(ledger) == []
+
+
+def test_gate_false_extracts_and_validates_a_stale_page(monkeypatch):
+    old = (datetime.now(timezone.utc) - timedelta(days=27)).isoformat(timespec="seconds")
+    text = "Chip maker AAA said its plant will start production early. " * 8
+    monkeypatch.setattr(DC, "article_tickers", lambda text, title="": {"AAA"})
+    art = {"title": "t", "text": text, "first_seen_utc": old}
+    reply = json.dumps({"claims": [
+        {"ticker": "AAA", "direction": "up", "quote": "AAA will triple", "paraphrase": "up"}]})
+    assert DC.extract_claims(art, llm_fn=lambda s, u: reply)["status"] == \
+        "SKIPPED_STALE_NO_FORECAST"
+    got = DC.extract_claims(art, llm_fn=lambda s, u: reply, gate=False)
+    assert [r["why"].split(":")[0] for r in got["refused"]] == ["REFUSED_QUOTE_NOT_IN_ARTICLE"]
+
+
 def test_a_fresh_pick_page_passes_the_precheck():
     pc = DC.precheck({"url": "https://www.barrons.com/articles/buy-citigroup-stock-3da35db6",
                       "title": "Buy", "column": "barrons_stock_picks", "first_seen_utc": _now()})

@@ -618,6 +618,10 @@ def _existing_article_keys(url: str, ledger_path: Path | None) -> set[tuple[str,
     return out
 
 
+#: precheck statuses that skip the (paid) claim extraction. UNDATED is not one:
+#: an undateable page is still extracted and validated, it only writes no forecast.
+PREPAY_SKIP: frozenset[str] = frozenset({"MENTION_NO_FORECAST", "STALE_NO_FORECAST",
+                                         "REFUSED_UNKNOWN_PAGE_TYPE"})
 #: statuses a caller must NOT mark as done (the page can be re-tried once the
 #: config classifies it); every other SKIPPED_ / REFUSED_ status is final.
 RETRY_STATUSES: frozenset[str] = frozenset({"LLM_NO_REPLY", "REFUSED_UNKNOWN_PAGE_TYPE"})
@@ -661,7 +665,12 @@ def precheck(article: dict, *, now: datetime | None = None) -> dict:
     if lag_max is not None:
         lag = extraction_lag_days(article.get("first_seen_utc"), now)
         out["extraction_lag_days"] = None if lag is None else round(lag, 2)
-        if lag is None or lag > float(lag_max):
+        if lag is None:
+            # cannot be dated is NOT stale: its own named, counted status. No
+            # forecast (a forecast needs a first-seen clock), but extraction and
+            # the claim validator's safety checks still run (see PREPAY_SKIP).
+            return {**out, "forecast": False, "status": "UNDATED_NO_FORECAST"}
+        if lag > float(lag_max):
             return {**out, "forecast": False, "status": "STALE_NO_FORECAST"}
     return out
 
@@ -685,14 +694,21 @@ def default_llm(system: str, user: str) -> str | None:
         getattr(_config, "DOWJONES_CLAIMS_PURPOSE", "dowjones_claims")))
 
 
-def extract_claims(article: dict, *, llm_fn: Callable[[str, str], str | None] | None = None
-                   ) -> dict:
-    """One LLM call per article. Returns `{claims, refused, status}`."""
+def extract_claims(article: dict, *, llm_fn: Callable[[str, str], str | None] | None = None,
+                   gate: bool = True) -> dict:
+    """One LLM call per article. Returns `{claims, refused, status}`.
+
+    `gate` (default True) applies the forecast writer's pre-pay gate: a MENTION,
+    STALE or unknown-type page is not extracted, because nothing it yields may
+    become a forecast (skipping keeps zero claims, so no unsupported claim can
+    pass). An UNDATED page IS extracted and validated. A consumer that wants the
+    claims of such a page for another purpose passes `gate=False`; the validator
+    (ticker named, quote in article, backward-only) runs on every extraction."""
     text = str(article.get("text") or "")
     if len(text) < 300:
         return {"claims": [], "refused": [], "status": "SKIPPED_TOO_SHORT"}
-    pc = precheck(article)
-    if not pc["forecast"]:
+    pc = precheck(article) if gate else {"forecast": True, "status": "UNGATED"}
+    if not pc["forecast"] and pc["status"] in PREPAY_SKIP:
         # gate BEFORE paying: no extraction for a page that will write nothing
         st = pc["status"]
         if st == "REFUSED_UNKNOWN_PAGE_TYPE":
@@ -736,14 +752,14 @@ def write_forecasts(article: dict, claims: list[dict], *, ledger_path: Path | No
     the local verbatim file (gitignored). Archive articles write no forecast."""
     from backend.services import news_registry as NR
     from backend.services import source_registry as SR
-    seen = str(article["first_seen_utc"])
+    seen = str(article.get("first_seen_utc") or "")
     raw_col = article.get("column") or column_of(article.get("url", ""), article.get("title", ""),
                                                  article.get("text", ""))
     url = str(article.get("url") or "")
     col = effective_column(url, str(article.get("title") or ""), raw_col)
     grade = NR.effective_pit_grade({"published_utc": article.get("published_utc"),
                                     "first_seen_utc": seen, "pit_grade": "first_seen_only"})
-    day = seen[:10]
+    day = seen[:10] or "undated"
     # CH-12/CH-35: the page type (and the page's age) decide whether a named
     # ticker may become a directional forecast at all.
     pc = precheck({**article, "column": raw_col})
