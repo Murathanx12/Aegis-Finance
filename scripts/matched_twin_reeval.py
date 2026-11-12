@@ -585,10 +585,12 @@ def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row:
                              "verdict": word, "verdict_why": why}
     prim = out_levels[PRIMARY_LEVEL]
     if not levels[PRIMARY_LEVEL]["fallbacks"].get("drawn"):
-        prim = {**prim, "verdict": NOT_EVALUATED,
-                "verdict_why": "every holding is an ETF, index proxy, CASH or a name absent from the panel, carried "
-                               "unchanged into the twins: no stock selection to compare"}
-        out_levels[PRIMARY_LEVEL] = prim
+        for level in LEVELS:
+            out_levels[level] = {**out_levels[level], "verdict": NOT_EVALUATED,
+                                 "verdict_why": "every holding is an ETF, index proxy, CASH or a name absent from "
+                                                "the panel, carried unchanged into the twins: no stock selection "
+                                                "to compare"}
+        prim = out_levels[PRIMARY_LEVEL]
     diff_p = nav_diff(book["nav"], med_paths[PRIMARY_LEVEL])
     book_daily_pnl = np.diff(np.concatenate([[1.0], book["nav"]]))
     chain_paths = [("cash", spy["nav"], cash_spy["nav"]),
