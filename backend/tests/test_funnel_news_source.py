@@ -13,9 +13,7 @@ import math
 import sys
 from datetime import datetime, timedelta, timezone
 
-import numpy as np
 import pandas as pd
-import pytest
 
 from backend import config as cfg
 from backend.services import funnel_news_source as FNS

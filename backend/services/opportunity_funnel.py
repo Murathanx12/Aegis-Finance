@@ -47,7 +47,7 @@ import os
 import math
 import time
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -220,7 +220,6 @@ def universe(*, force: bool = False, extra: list[str] | None = None) -> dict:
 
 def _batch_history(tickers: list[str], *, period: str = "1y") -> dict:
     """BATCH price history. One call per BATCH_SIZE names, never per name."""
-    import numpy as np
     import pandas as pd
     import yfinance as yf
 
@@ -312,7 +311,6 @@ def eligibility(t: Any, close: Any, volume: Any) -> tuple[Optional[Candidate], s
 
 def stage1(tickers: list[str], *, keep: int = STAGE1_KEEP) -> list[Candidate]:
     """Cheap eligibility: priceable, liquid enough for a retail ticket, alive."""
-    import numpy as np
 
     hist = _batch_history(tickers)
     close, volume = hist["close"], hist["volume"]
@@ -462,7 +460,7 @@ def stage3(cands: list[Candidate], *, keep: int = STAGE3_KEEP,
     half the names, the stage returns fewer candidates and says so, rather than
     walking further down the list until it has filled a quota.
     """
-    from backend.services import pm_engine, signal_registry as SR
+    from backend.services import signal_registry as SR
 
     reg = SR.load()
     assert reg.permits("profitability_small", "PICKER"), (
