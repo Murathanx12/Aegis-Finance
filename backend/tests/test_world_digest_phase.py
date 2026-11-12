@@ -126,6 +126,18 @@ def test_one_successful_run_serves_the_slot(env):
     assert (r["decision"], r["reason"]) == ("SKIP", "SLOT_SERVED")
 
 
+def test_featherless_errors_with_a_complete_fallback_serve_the_slot(env):
+    # S66 (brain decision): the receipt `scripts/world_digest` now writes when
+    # Featherless refused/errored and the DeepSeek fallback typed every row --
+    # counts on the receipt, no `status` -- serves the slot (no re-run, no
+    # second synthesis bill).
+    digest(env.out, at(2026, 11, 11, 12, 5),
+           featherless={"calls": 217, "refused_or_errored": 49, "fallback_typed": 49,
+                        "by_status": {"featherless:OK": 168, "featherless:ERROR": 49}})
+    r = env.decide(PRE)
+    assert (r["decision"], r["reason"]) == ("SKIP", "SLOT_SERVED")
+
+
 def test_dry_runs_degraded_runs_and_future_stamps_never_serve_a_slot(env):
     digest(env.out, at(2026, 11, 11, 12, 5), dry_run=True)
     digest(env.out, at(2026, 11, 11, 12, 10), status="DEGRADED_MODEL_BUDGET")

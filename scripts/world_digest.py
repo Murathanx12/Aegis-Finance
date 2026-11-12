@@ -575,47 +575,37 @@ def run(a: argparse.Namespace) -> int:
     DG.atomic_write_text(od / f"world_digest_{stamp}.short.txt", WD.render_short(d))
     # A later per-call refusal can follow useful deterministic work and valid
     # appended rows. Preserve those artifacts, but never report full success.
-    # CH-04b: a Featherless envelope refusal is as red as a DeepSeek one, even
-    # when the DeepSeek fallback typed the item.
-    featherless_refused = meter.statuses.get("featherless:BUDGET_REFUSED", 0) > 0
-    budget_refused = meter.statuses.get("BUDGET_REFUSED", 0) > 0 or featherless_refused
-    # S66: Featherless calls that ERRORED (not refused) above a share stay red
-    # too, even when the DeepSeek fallback typed every item (fallback unchanged).
+    # S66 (brain decision, PR #131 review): a Featherless refusal or error whose
+    # items the metered DeepSeek fallback typed is a SERVED slot. No digest
+    # `status` is set for it (`world_digest_phase` treats any status as "not
+    # served" and re-runs the slot, re-paying synthesis); the counts go on the
+    # receipt and one loud line is printed. The red signal for a broken
+    # Featherless is `provider_budget status --provider featherless`. A DeepSeek
+    # refusal stays DEGRADED_MODEL_BUDGET, rc 2, exactly as before.
+    budget_refused = meter.statuses.get("BUDGET_REFUSED", 0) > 0
     fl_calls = int(getattr(meter, "featherless_calls", 0) or 0)
     fl_bad = sum(v for k, v in meter.statuses.items() if k.startswith("featherless:") and k != "featherless:OK")
-    fl_share = float(getattr(WD._cfg, "FEATHERLESS_DIGEST_MAX_ERROR_SHARE", 0.20))
-    featherless_errors = fl_calls > 0 and fl_bad > fl_share * fl_calls and not budget_refused
+    fl_fallback = sum(1 for r in (ex.get("rows") or []) if isinstance(r, dict) and r.get("extract_fallback_from"))
     if fl_calls:
-        d["featherless"] = {"calls": fl_calls, "not_ok": fl_bad, "max_not_ok_share": fl_share,
+        d["featherless"] = {"calls": fl_calls, "refused_or_errored": fl_bad, "fallback_typed": fl_fallback,
                             "by_status": {k: v for k, v in meter.statuses.items() if k.startswith("featherless:")},
                             "by_billing": dict(getattr(meter, "featherless_billing", {}) or {})}
     if budget_refused:
         d["status"] = "DEGRADED_MODEL_BUDGET"
-    elif featherless_errors:
-        d["status"] = "DEGRADED_FEATHERLESS_ERRORS"
     DG.atomic_write_json(od / f"world_digest_{stamp}.json", d)
     _p(f"spend ${spend['spent_usd']:.4f} of ${spend['budget_usd']:.2f}; calls {spend['calls']} "
        f"(failed {spend['failed']}); models {spend['served_models']}; balance "
        f"{d['balance']['before']} -> {d['balance']['after']}")
     _p(f"-> {od / f'world_digest_{stamp}.md'}")
     if fl_calls:
-        _p(f"featherless: {fl_calls} calls, {fl_bad} not OK; by status {d['featherless']['by_status']}; "
+        _p(f"featherless: {fl_calls} calls; by status {d['featherless']['by_status']}; "
            f"by billing {d['featherless']['by_billing']}")
-    if featherless_errors:
-        _p(f"DEGRADED_FEATHERLESS_ERRORS: {fl_bad} of {fl_calls} Featherless calls not OK "
-           f"(> {fl_share:.0%}); the DeepSeek fallback typed them; see "
-           "`python -m backend.services.provider_budget status --provider featherless`")
-        return 2
+    if fl_bad:
+        _p(f"FEATHERLESS DEGRADED: {fl_bad} refused/errored of {fl_calls}; fallback typed {fl_fallback} "
+           "-- run `python -m backend.services.provider_budget status --provider featherless`")
     if budget_refused:
         _p("DEGRADED_MODEL_BUDGET: partial artifacts preserved; model budget refused")
         _p(_budget_status_line())
-        if featherless_refused:
-            try:
-                from backend.services import provider_budget as PB
-                _p(PB.featherless_status_line())
-            except Exception:                                        # noqa: BLE001
-                _p("FEATHERLESS BUDGET: status unavailable -- run "
-                   "`python -m backend.services.provider_budget status --provider featherless`")
         return 2
     return 0
 
