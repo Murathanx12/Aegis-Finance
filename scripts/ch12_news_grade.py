@@ -58,6 +58,10 @@ DEFAULT_SEED = 20261112
 #: a control must not have been named by any digest stamped in the this-many
 #: hours before the entry close (8 days: the 5-session hold plus a weekend)
 NEWS_EXCLUSION_HOURS = 192.0
+#: calendar block width (sessions), regardless of a row's horizon
+CAL_BLOCK_SESSIONS = 5
+#: a sector tier is used when it holds at least this many eligible names
+DEFAULT_K_SECTOR = 20
 
 try:                                                            # the close is 16:00 New York
     from zoneinfo import ZoneInfo
@@ -166,20 +170,38 @@ def _r(x: Any, n: int = 6) -> Any:
 
 
 def block_se(values: Sequence[float], blocks: Sequence[Any]) -> dict:
-    """SE of the mean with one observation per block (the block's mean).
+    """Cluster-robust (CR1) SE of the ROW-weighted mean, clusters = `blocks`.
 
-    Rows inside a block share the block's news and market, so they are not
-    independent; the honest n is the number of blocks."""
-    by: dict[Any, list[float]] = defaultdict(list)
-    for v, b in zip(values, blocks):
+    Point and SE come from one estimator: the mean is the plain row mean and
+    the SE is sqrt(G/(G-1) * sum_g (sum_{i in g} (x_i - mean))^2) / n. Rows in
+    one cluster share news, market and name, so the honest n is G."""
+    xs, gs = [], []
+    for v, g in zip(values, blocks):
         if v is not None and math.isfinite(float(v)):
-            by[b].append(float(v))
-    means = np.array([np.mean(v) for v in by.values()], dtype=float)
-    k = int(means.size)
+            xs.append(float(v))
+            gs.append(g)
+    n = len(xs)
+    if n == 0:
+        return {"n_blocks": 0, "mean": None, "se": None, "estimator": "row mean, CR1 cluster SE"}
+    x = np.array(xs)
+    m = float(x.mean())
+    acc: dict[Any, float] = defaultdict(float)
+    for xi, g in zip(x, gs):
+        acc[g] += xi - m
+    k = len(acc)
     if k < 2:
-        return {"n_blocks": k, "mean_of_blocks": _r(means.mean()) if k else None, "se": None}
-    return {"n_blocks": k, "mean_of_blocks": _r(means.mean()),
-            "se": _r(float(means.std(ddof=1) / math.sqrt(k)))}
+        return {"n_blocks": k, "mean": _r(m), "se": None, "estimator": "row mean, CR1 cluster SE"}
+    var = (k / (k - 1)) * sum(v * v for v in acc.values()) / (n * n)
+    return {"n_blocks": k, "mean": _r(m), "se": _r(math.sqrt(var)), "estimator": "row mean, CR1 cluster SE"}
+
+
+def crit_distribution() -> str:
+    """Which distribution the critical values come from (recorded in receipts)."""
+    try:
+        from scipy import stats as _st  # noqa: F401
+        return "student_t(df = n_blocks - 1) via scipy"
+    except Exception:                                           # noqa: BLE001
+        return "NORMAL FALLBACK: scipy missing, critical values understate the bar at small df"
 
 
 def crit_values(n_blocks: Optional[int]) -> tuple[float, float]:
@@ -204,8 +226,65 @@ def mde_of(se: Optional[float], n_blocks: Optional[int]) -> Optional[float]:
     return _r((a + b) * se)
 
 
+def verdict_word(effect: Optional[float], se: Optional[float], n_blocks: Optional[int]) -> str:
+    if effect is None or se is None or not se or (n_blocks or 0) < 2 or not math.isfinite(effect):
+        return "CANNOT_DISTINGUISH"
+    crit, _ = crit_values(n_blocks)
+    t = effect / se
+    return "SUPPORTED_IN_SCOPE" if t > crit else ("NOT_SUPPORTED_IN_SCOPE" if t < -crit else "CANNOT_DISTINGUISH")
+
+
+def scheme_table(values: Sequence[float], *, dates: Sequence[Any], sess_idx: Sequence[Optional[int]],
+                 tickers: Sequence[Any], width: int = None, null: float = 0.0) -> dict:
+    """The row mean of `values` with its SE under three clusterings: forecast /
+    entry DATE, TICKER, and CALENDAR windows of `width` sessions (session index
+    + origin) // width, regardless of horizon, at EVERY origin 0..width-1.
+
+    The scheme with the largest MDE is the coarsest and sets t, df and MDE; its
+    verdict word stands only if every calendar origin gives the same word,
+    otherwise CANNOT_DISTINGUISH."""
+    width = int(width or CAL_BLOCK_SESSIONS)
+    vals = [float(v) - null for v in values]
+
+    def row(c: dict, name: str) -> dict:
+        se, nb = c.get("se"), c.get("n_blocks")
+        m = c.get("mean")
+        t = (m / se) if (m is not None and se) else None
+        return {"scheme": name, "n_blocks": nb, "se": se, "t": _r(t, 3) if t is not None else None,
+                "mde_80pct_power": mde_of(se, nb), "word": verdict_word(m, se, nb)}
+
+    sch = {"date": row(block_se(vals, dates), "date"), "ticker": row(block_se(vals, tickers), "ticker")}
+    sweep = []
+    for o in range(width):
+        cl = [((i + o) // width) if i is not None else "no_session" for i in sess_idx]
+        sweep.append({"origin": o, **row(block_se(vals, cl), f"calendar_{width}_origin_{o}")})
+    cal0 = sweep[0]
+    sch[f"calendar_{width}"] = cal0
+    cands = [sch["date"], sch["ticker"]] + sweep
+    ok = [c for c in cands if c["mde_80pct_power"] is not None]
+    used = max(ok, key=lambda c: c["mde_80pct_power"]) if ok else cal0
+    ts = [x["t"] for x in sweep if x["t"] is not None]
+    words = [x["word"] for x in sweep]
+    final = used["word"]
+    why_override = None
+    if any(w != final for w in words):
+        why_override = (f"the coarsest scheme ({used['scheme']}) says {final} but calendar origins disagree "
+                        f"({dict(Counter(words))}): CANNOT_DISTINGUISH")
+        final = "CANNOT_DISTINGUISH"
+    m = float(np.mean(vals)) + null if vals else None
+    return {"mean": _r(m), "null": null, "estimator": "row mean, CR1 cluster SE",
+            "schemes": sch, "used_scheme": used["scheme"], "se_used": used["se"], "n_blocks_used": used["n_blocks"],
+            "t": used["t"], "mde_80pct_power": used["mde_80pct_power"],
+            "calendar_width_sessions": width, "n_calendar_blocks_origin0": cal0["n_blocks"],
+            "origin_sweep": {"t_min": _r(min(ts), 3) if ts else None, "t_max": _r(max(ts), 3) if ts else None,
+                             "share_of_origins_agreeing_with_coarsest": _r(sum(1 for w in words if w == used["word"]) / len(words), 3),
+                             "words": dict(Counter(words)), "by_origin": sweep},
+            "word": final, "word_override": why_override,
+            "n_tickers": len({t for t in tickers}), "n_dates": len({d for d in dates})}
+
+
 def scoped_verdict(effect: Optional[float], se: Optional[float], *, n_blocks: Optional[int], covers: str,
-                   does_not_cover: str, units: str, scope: str) -> dict:
+                   does_not_cover: str, units: str, scope: str, table: Optional[dict] = None) -> dict:
     """One verdict word from VERDICTS, decided by a rule fixed before any number
     was read: SUPPORTED_IN_SCOPE when t > crit, NOT_SUPPORTED_IN_SCOPE when
     t < -crit, CANNOT_DISTINGUISH otherwise (including no SE). A verdict never
@@ -223,12 +302,20 @@ def scoped_verdict(effect: Optional[float], se: Optional[float], *, n_blocks: Op
         label = "CANNOT_DISTINGUISH"
         why = (f"|t| {abs(t):.3g} <= {crit:.3g} (df {n_blocks - 1}); |effect| {abs(effect):.4g} vs MDE {mde:.4g}: "
                f"an effect smaller than the MDE would usually go unseen at this sample")
+    if table is not None and table.get("word_override") and label != "CANNOT_DISTINGUISH":
+        label, why = "CANNOT_DISTINGUISH", table["word_override"]
     assert label in VERDICTS
-    return {"verdict": label, "scope_sentence": scope, "why": why, "effect": _r(effect), "se": _r(se),
+    return {"verdict": label, "critical_values_from": crit_distribution(),
+            "schemes": ({k: {kk: v.get(kk) for kk in ("n_blocks", "se", "t", "mde_80pct_power", "word")}
+                         for k, v in table["schemes"].items()} if table else None),
+            "used_scheme": table.get("used_scheme") if table else None,
+            "origin_sweep": ({k: v for k, v in table["origin_sweep"].items() if k != "by_origin"} if table else None), "scope_sentence": scope, "why": why, "effect": _r(effect), "se": _r(se),
             "t": _r(t, 3) if t is not None else None, "n_blocks": n_blocks, "mde_80pct_power": mde,
             "units": units, "covers": covers, "does_not_cover": does_not_cover,
             "rule": ("SUPPORTED_IN_SCOPE if t > t_crit, NOT_SUPPORTED_IN_SCOPE if t < -t_crit, else CANNOT_DISTINGUISH; "
-                     "t_crit = Student t 0.975 at df = n_blocks - 1; SE from the coarser of the block schemes; "
+                     "t_crit = Student t 0.975 at df = n_blocks - 1; SE (CR1 cluster SE of the row mean) from the scheme "
+                     "with the largest MDE among date / ticker / calendar windows at every origin; the word stands "
+                     "only if every calendar origin agrees, else CANNOT_DISTINGUISH; "
                      "MDE = (t_0.975 + t_0.80) x SE at the same df (80% power, two-sided 5%)")}
 
 
@@ -464,7 +551,8 @@ def _qbucket(series, q: int):
 
 
 def draw_controls(feat, *, sym: str, sector_of: dict[str, str], excluded: set[str], k: int,
-                  rng: np.random.Generator, no_chase: Optional[float]) -> tuple[list[str], str, int]:
+                  rng: np.random.Generator, no_chase: Optional[float], k_sector: Optional[int] = None,
+                  require_sector: bool = False) -> tuple[list[str], str, int]:
     """K names from the buy's band, the first tier that holds >= k names:
     sector x dollar-volume quintile; sector x dollar-volume tercile (both only
     when the buy has a sector); dollar-volume quintile x 63-session-vol tercile;
@@ -480,6 +568,9 @@ def draw_controls(feat, *, sym: str, sector_of: dict[str, str], excluded: set[st
     pool = f[~f.index.isin(excluded) & (f.index != sym) & (f.index != "SPY")]
     if no_chase is not None:
         pool = pool[pool["move5_sigma"].fillna(0) <= no_chase]
+    if require_sector:
+        pool = pool[pool.index.map(lambda s: bool(sector_of.get(s)))]
+    ks = int(k_sector or k)
     tries = []
     sec = sector_of.get(sym)
     if sec:
@@ -489,8 +580,10 @@ def draw_controls(feat, *, sym: str, sector_of: dict[str, str], excluded: set[st
     tries.append(("dv quintile x vol tercile", pool[(pool["dvq"] == me["dvq"]) & (pool["volq"] == me["volq"])]))
     tries.append(("dv quintile", pool[pool["dvq"] == me["dvq"]]))
     for name, cand in tries:
-        if len(cand) >= k:
-            pick = rng.choice(np.array(sorted(cand.index)), size=k, replace=False)
+        need = ks if name.startswith("sector") else k
+        if len(cand) >= need:
+            take = min(k, len(cand))
+            pick = rng.choice(np.array(sorted(cand.index)), size=take, replace=False)
             return [str(x) for x in pick], name, int(len(cand))
     name, cand = tries[-1]
     return [str(x) for x in sorted(cand.index)], name + " (pool < k: all taken)", int(len(cand))
@@ -518,7 +611,8 @@ def excess(panel: Panel, sym: str, d0: date, h: int, cost_rt: float,
 
 
 def grade_buys(buys: list[dict], panel: Panel, *, news_by_session: dict, sector_of: dict, k: int,
-               seed: int, h: int, cost_rt: float, no_chase: Optional[float], use_fill: bool) -> tuple[list[dict], dict]:
+               seed: int, h: int, cost_rt: float, no_chase: Optional[float], use_fill: bool,
+               k_sector: Optional[int] = None, require_sector: bool = False) -> tuple[list[dict], dict]:
     """One unit per buy: the buy's h-session return (raw, net, SPY-adjusted) and
     the mean of K band-matched controls' over the SAME closes. A control is
     never a name with a news trigger in the exclusion window, never a name the
@@ -556,7 +650,8 @@ def grade_buys(buys: list[dict], panel: Panel, *, news_by_session: dict, sector_
         excl = set(news_by_session.get(d0, set())) | held_near
         rng = np.random.default_rng([seed, int(hashlib.sha256(b["coid"].encode()).hexdigest()[:12], 16)])
         ctrls, band, pool_n = draw_controls(feats[d0], sym=b["symbol"], sector_of=sector_of, excluded=excl,
-                                            k=k, rng=rng, no_chase=no_chase)
+                                            k=k, rng=rng, no_chase=no_chase, k_sector=k_sector,
+                                            require_sector=require_sector)
         shared += sum(1 for c in ctrls if c in excl or c == b["symbol"] or c == "SPY")
         cx, craw = [], []
         for c in ctrls:
@@ -566,14 +661,14 @@ def grade_buys(buys: list[dict], panel: Panel, *, news_by_session: dict, sector_
                 continue
             cx.append(gc[0] - gc[1] - cost_rt)
             craw.append(gc[0])
-        if len(cx) < min(20, k):
-            skipped[f"FEWER_THAN_20_CONTROLS ({band})"] += 1
+        if len(cx) < min(20, k, k_sector or k):
+            skipped[f"FEWER_THAN_{min(20, k, k_sector or k)}_CONTROLS ({band})"] += 1
             continue
         cx_a = np.array(cx)
         pct = float((np.sum(cx_a < ex) + 0.5 * np.sum(cx_a == ex)) / cx_a.size)
         units.append({"coid": b["coid"], "symbol": b["symbol"], "decided_utc": b["t"], "entry": str(d0),
                       "exit": str(panel.offset(d0, h)), "month": str(d0)[:7],
-                      "block5": i0 // h, "entry_kind": b.get("entry_kind"),
+                      "block5": i0 // h, "sidx": i0, "entry_kind": b.get("entry_kind"),
                       "entry_basis": "fill price; SPY at its session VWAP" if use_fill else "close of entry session",
                       "raw_news": g[0], "raw_spy": g[1], "raw_ctrl_mean": float(np.mean(craw)),
                       "excess_news": ex, "excess_ctrl_mean": float(cx_a.mean()),
@@ -639,8 +734,9 @@ def summarise_units(units: list[dict], *, h: int) -> dict:
     pct = np.array([u["pct_in_controls"] for u in units])
     se_date = block_se(d, [u["entry"] for u in units])
     se_wk = block_se(d, [u["block5"] for u in units])
-    used = coarser(se_date, se_wk)
-    se_used, nb = used.get("se"), used.get("n_blocks")
+    tab = scheme_table(list(d), dates=[u["entry"] for u in units], sess_idx=[u["sidx"] for u in units],
+                       tickers=[u["symbol"] for u in units], width=h)
+    se_used, nb = tab["se_used"], tab["n_blocks_used"]
     by_month = {}
     for m in sorted({u["month"] for u in units}):
         um = [u for u in units if u["month"] == m]
@@ -660,7 +756,11 @@ def summarise_units(units: list[dict], *, h: int) -> dict:
     t = float(d.mean() / se_used) if se_used else None
     return {
         "n": int(d.size), "n_entry_dates": len(dates), "n_nonoverlapping_5_session_blocks": se_wk["n_blocks"],
-        "n_effective_blocks_used": nb,
+        "n_effective_blocks_used": nb, "n_tickers": tab["n_tickers"],
+        "scheme_table": tab,
+        "blocks_note": (f"the {len(dates)} entry dates are contiguous, so adjacent {h}-session calendar blocks share "
+                        f"hold windows: the block count overstates independence, and the origin sweep shows how "
+                        f"much t moves with the block origin"),
         "lines": {
             "raw_news_mean": _r(float(np.mean([u["raw_news"] for u in units]))),
             "raw_controls_mean": _r(float(np.mean([u["raw_ctrl_mean"] for u in units]))),
@@ -676,6 +776,7 @@ def summarise_units(units: list[dict], *, h: int) -> dict:
         "trimmed_mean_d_5pct_each_tail": _r(trim.mean()),
         "share_d_positive": _r(float((d > 0).mean())),
         "se_by_entry_date": se_date, "se_by_5_session_block": se_wk, "se_used": _r(se_used),
+        "word": tab["word"], "word_override": tab["word_override"],
         "t_vs_se_used": _r(t, 3) if t is not None else None,
         "mde_80pct_power": mde_of(se_used, nb),
         "by_month": by_month,
@@ -752,11 +853,13 @@ def run_buys(a) -> int:
     news_by_60 = news_tickers_by_session(Path(a.digest_dir), sessions, hours=60.0)
     sector_of = load_sector_map(Path(a.universe) if a.universe else None)
     cost_rt = 2.0 * a.cost_bps_side / 1e4
-    common = dict(sector_of=sector_of, k=a.k, seed=a.seed, h=a.h, cost_rt=cost_rt)
+    common = dict(sector_of=sector_of, k=a.k, seed=a.seed, h=a.h, cost_rt=cost_rt, k_sector=a.k_sector)
+    has_sec = (lambda b: bool(sector_of.get(str(b["symbol"]).upper())))
+    n_new = sum(1 for b in buys if b["entry_kind"] == "new_entry")
     variants = {
         "V1_primary_all_buys_close_entry": dict(no_chase=2.0, use_fill=False, news=news_by, sel=lambda b: True),
-        "V2_new_entries_only": dict(no_chase=2.0, use_fill=False, news=news_by,
-                                    sel=lambda b: b["entry_kind"] == "new_entry"),
+        "V6_ex_etf_buys_sector_controls": dict(no_chase=2.0, use_fill=False, news=news_by, sel=has_sec,
+                                               require_sector=True),
         "V3_filled_from_fill_price": dict(no_chase=2.0, use_fill=True, news=news_by, sel=lambda b: True),
         "V4_controls_without_no_chase_filter": dict(no_chase=None, use_fill=False, news=news_by, sel=lambda b: True),
         "V5_news_exclusion_60h_as_dev1": dict(no_chase=2.0, use_fill=False, news=news_by_60, sel=lambda b: True),
@@ -765,7 +868,9 @@ def run_buys(a) -> int:
     for name, v in variants.items():
         sel = [b for b in buys if v["sel"](b)]
         units, info = grade_buys(sel, panel, news_by_session=v["news"], no_chase=v["no_chase"],
-                                 use_fill=v["use_fill"], **common)
+                                 use_fill=v["use_fill"], require_sector=v.get("require_sector", False), **common)
+        info["bands_used"] = dict(Counter(u["band"] for u in units))
+        info["n_sector_matched"] = sum(1 for u in units if u["band"].startswith("sector"))
         res[name] = {"n_selected": len(sel), **info, "summary": summarise_units(units, h=a.h)}
         if name.startswith("V1"):
             units_primary = units
@@ -787,11 +892,22 @@ def run_buys(a) -> int:
              f"(MDE {p.get('mde_80pct_power')}); this says nothing about news as a mechanism, other horizons, "
              f"the account's stops, or the digest after typing resumed on 11-10.")
     verdict = scoped_verdict(p.get("mean_d_news_minus_controls"), p.get("se_used"), n_blocks=nb, covers=covers,
+                             table=p.get("scheme_table"),
                              does_not_cover=("news as a mechanism in general; other horizons (20 sessions); the "
                                              "contract's 3-sigma stop (the grade is close-to-close, no stop); short "
                                              "or risk-off use of news; the digest after typing resumed (11-10 onward); "
                                              "a sized or ranked news book; any other account"),
                              units=f"{a.h}-session excess return, fraction (0.01 = 1%)", scope=scope)
+    px6 = res["V6_ex_etf_buys_sector_controls"]["summary"]
+    no_sec = sorted({str(b["symbol"]) for b in buys if not has_sec(b)})
+    verdict_ex_etf = scoped_verdict(px6.get("mean_d_news_minus_controls"), px6.get("se_used"),
+                                    n_blocks=px6.get("n_effective_blocks_used"), table=px6.get("scheme_table"),
+                                    covers=(f"the same buys without the {len(no_sec)} names that have no sector "
+                                            f"({', '.join(no_sec)}: ETFs), controls restricted to names with a sector"),
+                                    does_not_cover="as the all-rows verdict",
+                                    units=f"{a.h}-session excess return, fraction",
+                                    scope=(f"Ex-ETF: {px6.get('n')} buys, d {px6.get('mean_d_news_minus_controls')}, "
+                                           f"MDE {px6.get('mde_80pct_power')}; same scope limits as the all-rows line."))
     sess_counts = Counter(str(b["session"]) for b in all_live)
     after_counts = count_files([Path(x) for x in live_folders])
     dec_newest = max(str(r.get("t")) for r in all_live) if all_live else None
@@ -808,11 +924,46 @@ def run_buys(a) -> int:
         u = Path(a.universe)
         inputs.append(input_row(u, newest=u.stem, newest_basis="universe day in the file name"))
     receipt = {
-        "schema": "ch12_news_grade/buys/2", "run_id": a.run_id,
+        "schema": "ch12_news_grade/buys/3", "run_id": a.run_id,
         "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "licence": "PRODUCT_EXPERIMENT (a grade of past paper decisions; no claim)",
         "question": (f"Did the names the {a.role} news sleeve bought beat names from the same band that had no news "
                      f"trigger, over the {a.h} sessions the contract holds them?"),
+        "headline_all_rows": {"verdict": verdict["verdict"], "n": p.get("n"), "n_tickers": p.get("n_tickers"),
+                     "n_entry_dates": p.get("n_entry_dates"), "n_calendar_blocks": p["scheme_table"]["n_calendar_blocks_origin0"],
+                     "raw_news_mean": p["lines"]["raw_news_mean"], "raw_controls_mean": p["lines"]["raw_controls_mean"],
+                     "raw_spy_mean": p["lines"]["raw_spy_mean"],
+                     "excess_news_vs_spy_net_mean": p["lines"]["excess_news_vs_spy_net_mean"],
+                     "excess_controls_vs_spy_net_mean": p["lines"]["excess_controls_vs_spy_net_mean"],
+                     "d_news_minus_controls_mean": p.get("mean_d_news_minus_controls"),
+                     "t_by_scheme": {k: v["t"] for k, v in p["scheme_table"]["schemes"].items()},
+                     "mde_by_scheme": {k: v["mde_80pct_power"] for k, v in p["scheme_table"]["schemes"].items()},
+                     "used_scheme": p["scheme_table"]["used_scheme"],
+                     "origin_sweep_t": [p["scheme_table"]["origin_sweep"]["t_min"], p["scheme_table"]["origin_sweep"]["t_max"]],
+                     "origin_share_agreeing": p["scheme_table"]["origin_sweep"]["share_of_origins_agreeing_with_coarsest"],
+                     "t": p.get("t_vs_se_used"), "mde_80pct_power": p.get("mde_80pct_power")},
+        "headline_ex_etf_sector_controls": ({"verdict": verdict_ex_etf["verdict"], "n": px6.get("n"), "n_tickers": px6.get("n_tickers"),
+                     "n_entry_dates": px6.get("n_entry_dates"), "n_calendar_blocks": px6["scheme_table"]["n_calendar_blocks_origin0"],
+                     "raw_news_mean": px6["lines"]["raw_news_mean"], "raw_controls_mean": px6["lines"]["raw_controls_mean"],
+                     "raw_spy_mean": px6["lines"]["raw_spy_mean"],
+                     "excess_news_vs_spy_net_mean": px6["lines"]["excess_news_vs_spy_net_mean"],
+                     "excess_controls_vs_spy_net_mean": px6["lines"]["excess_controls_vs_spy_net_mean"],
+                     "d_news_minus_controls_mean": px6.get("mean_d_news_minus_controls"),
+                     "t_by_scheme": {k: v["t"] for k, v in px6["scheme_table"]["schemes"].items()},
+                     "mde_by_scheme": {k: v["mde_80pct_power"] for k, v in px6["scheme_table"]["schemes"].items()},
+                     "used_scheme": px6["scheme_table"]["used_scheme"],
+                     "origin_sweep_t": [px6["scheme_table"]["origin_sweep"]["t_min"], px6["scheme_table"]["origin_sweep"]["t_max"]],
+                     "origin_share_agreeing": px6["scheme_table"]["origin_sweep"]["share_of_origins_agreeing_with_coarsest"],
+                     "t": px6.get("t_vs_se_used"), "mde_80pct_power": px6.get("mde_80pct_power")} if px6.get("n") else {"verdict": verdict_ex_etf["verdict"], "n": 0, "note": "no buy has a sector"}),
+        "sector_matching": {"k_sector": a.k_sector, "n_buys_without_sector": len(no_sec), "without_sector": no_sec,
+                            "n_sector_matched_all_rows": res["V1_primary_all_buys_close_entry"]["n_sector_matched"],
+                            "bands_all_rows": res["V1_primary_all_buys_close_entry"]["bands_used"]},
+        "survivorship": ("the bars panel is survivor-selected (names alive on 2026-09-01); measured effect on this grade: "
+                         "control draws without an exit bar are counted per variant (control_draws_without_exit_bar); a "
+                         "missing dead name can only LIFT the controls' mean, so the bias works against the buys, "
+                         "not for them"),
+        "variants_note": (f"V2 (new entries only) was dropped: all {n_new} of {len(buys)} buys are new entries, so it "
+                          f"was identical to V1"),
         "headline": {"verdict": verdict["verdict"], "scope_sentence": scope, "n": p.get("n"),
                      "n_entry_dates": p.get("n_entry_dates"), "n_effective_blocks": nb,
                      "raw_news_mean": p["lines"]["raw_news_mean"], "raw_controls_mean": p["lines"]["raw_controls_mean"],
@@ -842,7 +993,7 @@ def run_buys(a) -> int:
                    "cost": (f"{a.cost_bps_side:g} bps per side ({2 * a.cost_bps_side:g} bps round trip), the hack6_v2 "
                             f"contract's costs.assumed_bps_per_side, charged to news and controls alike"),
                    "controls": {"k": a.k, "seed": a.seed, "rng": "np.random.default_rng([seed, sha256(coid)[:12]])",
-                                "matched_on": ("first tier with >= k names: sector (potential_universe identity.sector) "
+                                "matched_on": ("first tier with enough names (sector tiers >= k_sector, others >= k; at most k drawn): sector (potential_universe identity.sector) "
                                                "x 20-session median dollar-volume quintile; sector x dv tercile; "
                                                "dv quintile x 63-session daily-vol tercile; dv quintile alone. The "
                                                "receipt's units name the tier each buy used."),
@@ -850,7 +1001,7 @@ def run_buys(a) -> int:
                                 "eligibility": (f"in the panel with >= 40 of 63 sessions of history before entry; not named "
                                                 f"by any typed ticker implication in any world digest stamped in the "
                                                 f"{a.exclusion_hours:g} h before the entry close; not bought by {a.role} "
-                                                f"within +-{a.h} sessions of the entry; not the buy; not SPY; V1-V3, V5 "
+                                                f"within +-{a.h} sessions of the entry; not the buy; not SPY; every variant but V4 "
                                                 f"also apply the contract's no-chase filter (5-session move <= 2 sigma)"),
                                 "features_known_at": "bars through the session before entry"},
                    "percentile": "share of the buy's own controls with a lower excess (ties half)",
@@ -858,10 +1009,12 @@ def run_buys(a) -> int:
                               "non-overlapping 5-session block (session index // 5); the scheme with the larger MDE "
                               "(SE x t quantiles at its own df) sets t, df and MDE"),
                    "variants_tried": list(variants),
+                   "estimator": "row mean of d; CR1 cluster-robust SE under each scheme (one estimator for point and SE)",
                    "development_history": ("dev1 (2026-11-11, copies of the inputs) used a 60 h exclusion and z-based "
                                            "MDE; V5 reproduces its exclusion")},
         "panel": {**audit, "sessions_loaded_from": a.panel_start, "calendar_last_session": str(panel.sessions[-1])},
-        "results": res, "verdict": verdict,
+        "results": res, "verdict": verdict, "verdict_ex_etf_sector_controls": verdict_ex_etf,
+        "critical_values_from": crit_distribution(),
         "units_primary": [{k2: (_r(v2) if isinstance(v2, float) else v2) for k2, v2 in u.items()} for u in units_primary],
         "inputs": inputs,
         "live_folder_file_counts": {"before": before_counts, "after": after_counts,
@@ -877,6 +1030,9 @@ def run_buys(a) -> int:
           f"raw spy={p['lines']['raw_spy_mean']} excess news={p['lines']['excess_news_vs_spy_net_mean']} "
           f"excess ctrl={p['lines']['excess_controls_vs_spy_net_mean']} d={p.get('mean_d_news_minus_controls')} "
           f"se={p.get('se_used')} t={p.get('t_vs_se_used')} mde={p.get('mde_80pct_power')} -> {verdict['verdict']}")
+    print(f"buys schemes {receipt['headline_all_rows']['t_by_scheme']} sweep {receipt['headline_all_rows']['origin_sweep_t']} "
+          f"sector-matched {receipt['sector_matching']['n_sector_matched_all_rows']}")
+    print(f"ex-ETF: {receipt['headline_ex_etf_sector_controls']}")
     print(f"receipt {path}")
     return 0
 
@@ -956,20 +1112,12 @@ def _skill_boot(p: np.ndarray, y: np.ndarray, ref: Optional[np.ndarray], blocks:
 
 
 def _two_block_se(values: Sequence[float], rows: Sequence[dict], null: float = 0.0) -> dict:
-    """Block SE of a mean two ways: forecast date, and non-overlapping horizon
-    windows (h, entry session // h). Same-horizon windows that overlap share
-    their returns, so the date count overstates the information; the coarser
-    SE (and its block count) is the one a verdict reads."""
-    d = block_se(values, [r["made_at"][:10] for r in rows])
-    hz = block_se(values, [r.get("_hblock") for r in rows])
-    used = coarser(d, hz)
-    se, nb = used.get("se"), used.get("n_blocks")
-    m = float(np.mean(values)) if len(values) else None
-    return {"mean": _r(m), "se_date_blocks": d["se"],
-            "n_date_blocks": d["n_blocks"], "se_horizon_blocks": hz["se"], "n_horizon_blocks": hz["n_blocks"],
-            "se_used": _r(se), "n_blocks_used": nb, "t_null": null,
-            "t": _r((m - null) / se, 3) if (se and m is not None) else None,
-            "mde_80pct_power": mde_of(se, nb)}
+    """Row mean of `values` with its SE under date / ticker / calendar-window
+    clusterings and the calendar origin sweep (`scheme_table`); t is against
+    `null`. Rows carry `_sidx` (entry session index) and `ticker`."""
+    tab = scheme_table(values, dates=[r["made_at"][:10] for r in rows], sess_idx=[r.get("_sidx") for r in rows],
+                       tickers=[str(r["ticker"]).upper() for r in rows], null=null)
+    return {"t_null": null, **tab}
 
 
 def _declared_ref(rows: Sequence[dict]) -> np.ndarray:
@@ -1003,17 +1151,18 @@ def score_cell(rows: list[dict], *, rng: np.random.Generator, n_boot: int, full:
         se, nb = used.get("se"), used.get("n_blocks")
         sk = a_["skill"]
         return {"skill": sk, "se_date_blocks": a_["se"], "n_date_blocks": a_["n_blocks"],
-                "se_horizon_blocks": b_["se"], "n_horizon_blocks": b_["n_blocks"],
+                "se_calendar_blocks": b_["se"], "n_calendar_blocks": b_["n_blocks"],
                 "se": _r(se), "n_blocks_used": nb,
                 "t": _r(sk / se, 3) if (se and sk is not None) else None, "mde_80pct_power": mde_of(se, nb)}
 
     excess_brier = bs_i - (ref_decl - y) ** 2          # > 0: worse than the declared control on that row
     bref = float(np.mean((ref_decl - y) ** 2))
     diff = _two_block_se(list(excess_brier), rows)
+    # per-row skill contribution: its mean is exactly 1 - BS / BS_control
+    sk_tab = _two_block_se(list(-excess_brier / bref), rows) if bref > 0 else None
     sk_pt = 1.0 - bs / bref if bref > 0 else None
-    sk_se = (diff["se_used"] / bref) if (diff["se_used"] and bref > 0) else None
     out: dict[str, Any] = {
-        "n": int(p.size), "n_date_blocks": len(set(dblocks)), "n_horizon_blocks": len(set(hblocks)),
+        "n": int(p.size), "n_date_blocks": len(set(dblocks)), "n_calendar_blocks": len(set(hblocks)),
         "observables": sorted(obs),
         "brier": _r(bs), "base_rate": _r(base), "brier_climatology": _r(base * (1 - base)),
         "brier_const_0_5": 0.25, "brier_declared_control": _r(float(np.mean((ref_decl - y) ** 2))),
@@ -1021,13 +1170,14 @@ def score_cell(rows: list[dict], *, rng: np.random.Generator, n_boot: int, full:
         "brier_raw_probability_before_shrink": _r(float(np.mean((raw - y) ** 2))),
         "p_distinct": sorted({_r(x, 4) for x in p})[:12], "p_min": _r(p.min()), "p_max": _r(p.max()),
         "brier_minus_declared_control": diff,
-        "skill_vs_declared_control": {
-            "skill": _r(sk_pt), "se": _r(sk_se), "n_blocks_used": diff["n_blocks_used"],
-            "t": _r(sk_pt / sk_se, 3) if (sk_pt is not None and sk_se) else None,
-            "mde_80pct_power": mde_of(sk_se, diff["n_blocks_used"]),
-            "se_basis": ("analytic block SE of the per-row Brier difference vs the declared control, divided by the "
-                         "control's Brier (delta method); blocks = the coarser of forecast date / non-overlapping "
-                         "horizon window by MDE")},
+        "n_tickers": len({str(r["ticker"]).upper() for r in rows}),
+        "skill_vs_declared_control": ({
+            "skill": _r(sk_pt), "se": sk_tab["se_used"], "n_blocks_used": sk_tab["n_blocks_used"],
+            "t": sk_tab["t"], "mde_80pct_power": sk_tab["mde_80pct_power"], "used_scheme": sk_tab["used_scheme"],
+            "word": sk_tab["word"], "word_override": sk_tab["word_override"], "table": sk_tab,
+            "se_basis": ("row mean of the per-row skill contribution -(BS_i - BS_control_i) / BS_control (its mean is "
+                         "the skill exactly); CR1 cluster SE under date / ticker / 5-session calendar windows at every "
+                         "origin; the largest MDE decides")} if sk_tab else {"skill": None}),
     }
     if not full:
         return out
@@ -1064,6 +1214,14 @@ def score_cell(rows: list[dict], *, rng: np.random.Generator, n_boot: int, full:
             "note": ("signed by the forecast's side (p > 0.5 long, p < 0.5 short); raw = the stock's own return; "
                      "a forecast is not a trade, so the ledger charges no cost; the net line charges the 20 bps "
                      "round trip a traded version would pay")}
+        lg = [r for r in dirn if float(r["probability"]) > 0.5 and r.get("_panel_beat") is not None]
+        if lg:
+            out["direction"]["long_beat_spy_minus_panel_share"] = {
+                "n": len(lg), "long_beat_spy_share": _r(float(np.mean([float(r["outcome"]) for r in lg]))),
+                "panel_share_beating_spy_same_windows": _r(float(np.mean([r["_panel_beat"] for r in lg]))),
+                **_two_block_se([float(r["outcome"]) - float(r["_panel_beat"]) for r in lg], lg),
+                "note": ("did the long rows beat SPY more often than the average panel name over the SAME windows? "
+                         "the panel share is the base rate a long-only pick would have met by chance")}
         pe = [r for r in dirn if r.get("_peer") is not None]
         if pe:
             out["direction"]["signed_excess_over_band_peers"] = {
@@ -1109,6 +1267,7 @@ def peer_check(rows: list[dict], bars: Sequence[Path], *, k: int, seed: int, pan
     feats: dict[date, Any] = {}
     why = Counter()
     shared = 0
+    base_cache: dict = {}
     for r in dirn:
         d0 = date.fromisoformat(r["_win"]["entry"])
         h = int(r["horizon_days"])
@@ -1131,6 +1290,14 @@ def peer_check(rows: list[dict], bars: Sequence[Path], *, k: int, seed: int, pan
             why["fewer_than_20_peers"] += 1
             continue
         sgn = 1.0 if float(r["probability"]) > 0.5 else -1.0
+        key = (d0, h)
+        if key not in base_cache:
+            c0, c1 = panel.close.loc[d0], panel.close.loc[panel.offset(d0, h)]
+            rr = (c1 / c0 - 1.0).drop(labels=["SPY"], errors="ignore")
+            rr = rr[np.isfinite(rr)]
+            spy = float(c1["SPY"] / c0["SPY"] - 1.0)
+            base_cache[key] = float((rr > spy).mean()) if rr.size else None
+        r["_panel_beat"] = base_cache[key]
         r["_peer"] = sgn * (ex - float(np.mean(cx)))
         cxa = np.array(cx)
         pct = float((np.sum(cxa < ex) + 0.5 * np.sum(cxa == ex)) / cxa.size)
@@ -1183,7 +1350,8 @@ def run_forecasts(a) -> int:
     sidx = {d: i for i, d in enumerate(sessions)}
     for r in graded_all:
         e = date.fromisoformat(r["_win"]["entry"]) if r["_win"].get("entry") else None
-        r["_hblock"] = (int(r["horizon_days"]), sidx[e] // int(r["horizon_days"])) if e in sidx else None
+        r["_sidx"] = sidx[e] if e in sidx else None
+        r["_hblock"] = (sidx[e] // CAL_BLOCK_SESSIONS) if e in sidx else None   # calendar window, any horizon
     peer_info = peer_check(clean, bars, k=a.k, seed=a.seed, panel_start=a.panel_start)
     # re-grade from the bars with the ledger's own resolver, where the panel has the name
     from backend.services import belief_state as BS
@@ -1226,34 +1394,42 @@ def run_forecasts(a) -> int:
            "shrunk x0.2 toward 0.5, so the Brier cannot move far from 0.25 by construction); other horizons; "
            "a traded book on these rules; rows resolved after the sample date")
 
-    def fam_scope(name: str, c: dict, v_word_hint: str) -> str:
+    def fam_scope(name: str, c: dict, rs: list[dict]) -> str:
+        """The scope as measured: tickers, sessions, one regime, and the long
+        rows' beat-SPY share against the panel's over the same windows."""
         sk = c.get("skill_vs_declared_control") or {}
-        dr = c.get("direction") or {}
-        pe = dr.get("signed_excess_over_band_peers") or {}
-        tail = (f"; against band-matched peers the signed excess is {pe.get('mean'):+.4f} (MDE {pe.get('mde_80pct_power')})"
-                if pe.get("mean") is not None else "")
-        return (f"{name}: {c.get('n')} rows made before their window, {sk.get('n_blocks_used')} independent blocks, "
-                f"Brier {c.get('brier')} vs 0.25 coin / {c.get('brier_declared_control')} declared control / "
-                f"{c.get('brier_climatology')} climatology, skill {sk.get('skill')} (MDE {sk.get('mde_80pct_power')})"
-                f"{tail}; this grades the stated probabilities over Sep-Oct 2026, not the underlying data as a "
-                f"signal{v_word_hint}.")
+        tab = sk.get("table") or {}
+        ent = sorted({r["_win"]["entry"] for r in rs if r["_win"].get("entry")})
+        si = [r["_sidx"] for r in rs if r.get("_sidx") is not None]
+        n_sess = (max(si) - min(si) + 1) if si else 0
+        lb = (c.get("direction") or {}).get("long_beat_spy_minus_panel_share") or {}
+        crit = crit_values(lb.get("n_blocks_used"))[0] if lb.get("n_blocks_used") else None
+        lng = (f"; long rows beat SPY {lb['long_beat_spy_share']:.1%} of the time vs "
+               f"{lb['panel_share_beating_spy_same_windows']:.1%} of panel names over the same windows, t {lb.get('t')} "
+               f"on {lb.get('n_blocks_used')} blocks ({lb.get('used_scheme')}; critical {crit:.3g})"
+               if lb.get("long_beat_spy_share") is not None and crit else "")
+        return (f"{name}: {c.get('n')} rows on {c.get('n_tickers')} tickers, entries over {n_sess} sessions "
+                f"({ent[0] if ent else '?'} to {ent[-1] if ent else '?'}), one market regime; Brier {c.get('brier')} vs "
+                f"0.25 coin / {c.get('brier_declared_control')} declared control / {c.get('brier_climatology')} "
+                f"climatology; skill {sk.get('skill')}, t {sk.get('t')} on {sk.get('n_blocks_used')} "
+                f"{sk.get('used_scheme')} blocks, MDE {sk.get('mde_80pct_power')}, calendar-origin t "
+                f"{(tab.get('origin_sweep') or {}).get('t_min')}..{(tab.get('origin_sweep') or {}).get('t_max')}{lng}. "
+                f"It grades these stated probabilities in this window, not the underlying data as a signal.")
 
     verdicts = {}
     for f in FAMILIES + ("pooled",):
         c = pooled if f == "pooled" else res_clean[f]["all"]
+        rs = clean if f == "pooled" else [r for r in clean if r["specialist"] == f]
         sk = c.get("skill_vs_declared_control") or {}
-        hint = ""
-        if f == "news_digest:insider_v0":
-            hint = (" (the Brier deficit tracks insider names lagging SPY, a band/beta effect the peer line "
-                    "separates)")
         verdicts[f] = scoped_verdict(sk.get("skill"), sk.get("se"), n_blocks=sk.get("n_blocks_used"),
+                                     table=sk.get("table"),
                                      covers=(f"{f}: {c.get('n')} graded rows made before their window, "
-                                             f"{c.get('n_date_blocks')} forecast dates / {c.get('n_horizon_blocks')} "
-                                             f"non-overlapping horizon windows, {', '.join(c.get('observables', []))}; "
-                                             f"skill = 1 - Brier / Brier(declared control: 0.5 coin for direction, "
-                                             f"vol prior for size)"),
+                                             f"{c.get('n_tickers')} tickers, {c.get('n_date_blocks')} forecast dates / "
+                                             f"{c.get('n_calendar_blocks')} {CAL_BLOCK_SESSIONS}-session calendar windows, "
+                                             f"{', '.join(c.get('observables', []))}; skill = 1 - Brier / Brier(declared "
+                                             f"control: 0.5 coin for direction, vol prior for size)"),
                                      does_not_cover=dnc, units="Brier skill score vs the declared control (fraction)",
-                                     scope=fam_scope(f, c, hint))
+                                     scope=fam_scope(f, c, rs))
     row_ledger = {
         "ledger_lines": stats.get("n_lines"), "unparseable_family_lines": stats.get("unparseable_family_lines"),
         "rows_in_families": len(rows), "voided": len(voided), "pending_ungraded": len(pending),
@@ -1274,7 +1450,7 @@ def run_forecasts(a) -> int:
         inputs.append(input_row(bp, newest=au.get("panel_last_session"), newest_basis="max bar date"))
     pk = pooled.get("skill_vs_declared_control") or {}
     receipt = {
-        "schema": "ch12_news_grade/forecasts/2", "run_id": a.run_id,
+        "schema": "ch12_news_grade/forecasts/3", "run_id": a.run_id,
         "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "licence": "PRODUCT_EXPERIMENT grade of forward rows; RESEARCH_CLAIM boundary not reached; no claim",
         "question": ("Did the rule-based news_digest insider / positioning / congress forecasts carry skill over "
@@ -1282,11 +1458,19 @@ def run_forecasts(a) -> int:
         "headline": {
             "pooled": {"verdict": verdicts["pooled"]["verdict"], "n": pooled.get("n"),
                        "n_effective_blocks": pk.get("n_blocks_used"), "brier": pooled.get("brier"),
+                       "n_tickers": pooled.get("n_tickers"), "n_calendar_blocks": pooled.get("n_calendar_blocks"),
+                       "t_by_scheme": {k: v["t"] for k, v in (pk.get("table") or {}).get("schemes", {}).items()},
+                       "used_scheme": pk.get("used_scheme"), "origin_sweep": verdicts["pooled"]["origin_sweep"],
                        "brier_const_0_5": 0.25, "brier_declared_control": pooled.get("brier_declared_control"),
                        "brier_climatology": pooled.get("brier_climatology"), "skill": pk.get("skill"),
                        "se": pk.get("se"), "t": pk.get("t"), "mde_80pct_power": pk.get("mde_80pct_power")},
             "by_family": {f: {"verdict": verdicts[f]["verdict"], "scope_sentence": verdicts[f]["scope_sentence"],
-                              "n": res_clean[f]["all"].get("n"),
+                              "n": res_clean[f]["all"].get("n"), "n_tickers": res_clean[f]["all"].get("n_tickers"),
+                              "n_calendar_blocks": res_clean[f]["all"].get("n_calendar_blocks"),
+                              "t_by_scheme": {k: v["t"] for k, v in ((res_clean[f]["all"].get("skill_vs_declared_control") or {}).get("table") or {}).get("schemes", {}).items()},
+                              "mde_by_scheme": {k: v["mde_80pct_power"] for k, v in ((res_clean[f]["all"].get("skill_vs_declared_control") or {}).get("table") or {}).get("schemes", {}).items()},
+                              "used_scheme": (res_clean[f]["all"].get("skill_vs_declared_control") or {}).get("used_scheme"),
+                              "origin_sweep": verdicts[f]["origin_sweep"],
                               "n_effective_blocks": (res_clean[f]["all"].get("skill_vs_declared_control") or {}).get("n_blocks_used"),
                               "brier": res_clean[f]["all"].get("brier"),
                               "brier_climatology": res_clean[f]["all"].get("brier_climatology"),
@@ -1333,14 +1517,15 @@ def run_forecasts(a) -> int:
         "extension_all_graded_now": {f: {"all": score_cell([r for r in graded_all if r["specialist"] == f
                                                            and (r["_win"]["gap_h"] or -1) > 0],
                                                           rng=rng, n_boot=a.n_boot, full=False)} for f in FAMILIES},
-        "verdicts": verdicts,
+        "verdicts": verdicts, "critical_values_from": crit_distribution(),
         "method": {"mde": ("(t_0.975 + t_0.80) at df = n_blocks - 1, x the analytic block SE of the per-row Brier "
                            "difference vs the declared control / the control's Brier; the block scheme with the larger "
                            "MDE sets SE and df"),
                    "bootstrap": (f"block-bootstrap SEs ({a.n_boot} resamples, seed {a.seed}) are reported beside it for "
                                  f"skill vs climatology and as a cross-check; with 2-9 blocks they understate the SE"),
-                   "blocks": ("(1) forecast date (made_at[:10]); (2) non-overlapping horizon windows (h, entry session // h): "
-                              "5-session windows written on consecutive days overlap, so (2) is the honest count"),
+                   "blocks": ("(1) forecast date; (2) ticker; (3) 5-session CALENDAR windows (entry session index + origin) // 5 "
+                              "regardless of horizon, at every origin 0-4; the largest MDE decides and the word stands only "
+                              "if every origin agrees; estimator: row mean with CR1 cluster SE"),
                    "views": ["skill vs declared control (verdict)", "skill vs climatology", "raw probability before shrink",
                              "direction hit rate", "signed excess vs SPY (raw, gross, net)", "signed excess vs band peers",
                              "with/without late rows; sample vs every row graded now"]},
@@ -1379,6 +1564,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     b.add_argument("--role", default="hack6")
     b.add_argument("--before", default="2026-11-01")
     b.add_argument("--k", type=int, default=50)
+    b.add_argument("--k-sector", type=int, default=DEFAULT_K_SECTOR,
+                   help="a sector tier is used when it holds at least this many names")
     b.add_argument("--seed", type=int, default=DEFAULT_SEED)
     b.add_argument("--h", type=int, default=5)
     b.add_argument("--cost-bps-side", type=float, default=10.0)

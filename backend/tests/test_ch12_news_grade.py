@@ -88,13 +88,17 @@ def _buys_inputs(tmp_path: Path, *, plant: float = 0.0) -> dict:
         (fm / "runs" / f"run_{rid}.json").write_text(json.dumps({"started_utc": t_dec.isoformat(), "accounts": [
             {"role": "hack6", "digest": {"file": dname}, "actions": acts}]}), encoding="utf-8")
     (fm / "decisions.jsonl").write_text("\n".join(json.dumps(r) for r in dec) + "\n", encoding="utf-8")
-    return {"fm": fm, "digest": dg, "bars": bars, "sessions": ss, "news": news}
+    uni = tmp_path / "live" / "universe.jsonl"
+    # every name has a sector except S003 (a bought name, standing in for an ETF)
+    uni.write_text("\n".join(json.dumps({"symbol": f"S{i:03d}", "identity": {"sector": f"sec{i % 3}"}})
+                             for i in range(N_SYM) if i != 3) + "\n", encoding="utf-8")
+    return {"fm": fm, "digest": dg, "bars": bars, "sessions": ss, "news": news, "universe": uni}
 
 
 def _run_buys(inp: dict, out: Path, *extra: str) -> int:
     return G.main(["buys", "--fm-dir", str(inp["fm"]), "--digest-dir", str(inp["digest"]),
                    "--bars", str(inp["bars"]), "--out", str(out), "--before", str(date.today()),
-                   "--k", "20", "--run-id", "t1", *extra])
+                   "--universe", str(inp["universe"]), "--k", "20", "--k-sector", "10", "--run-id", "t1", *extra])
 
 
 # ───────────────────────────── verdict and MDE ─────────────────────────────
@@ -119,7 +123,7 @@ def test_verdict_words_and_mde_with_few_blocks():
 def test_block_se_counts_blocks_not_rows():
     vals = [1.0] * 50 + [3.0] * 50
     b = G.block_se(vals, ["a"] * 50 + ["b"] * 50)
-    assert b["n_blocks"] == 2 and b["mean_of_blocks"] == 2.0
+    assert b["n_blocks"] == 2 and b["mean"] == 2.0
     c = G.coarser({"se": 0.1, "n_blocks": 30}, {"se": 0.2, "n_blocks": 4})
     assert c["n_blocks"] == 4
     # two blocks at a smaller SE still carry the larger MDE (df 1): they set the bar
@@ -128,7 +132,7 @@ def test_block_se_counts_blocks_not_rows():
 
 
 def test_hit_rate_t_is_against_one_half():
-    rows = [{"made_at": f"d{i % 4}", "_hblock": (5, i % 4)} for i in range(40)]
+    rows = [{"made_at": f"d{i % 4}", "_sidx": i % 4, "ticker": f"T{i % 8}"} for i in range(40)]
     x = G._two_block_se([1.0 if i % 2 else 0.0 for i in range(40)], rows, null=0.5)
     assert x["t_null"] == 0.5 and (x["t"] is None or abs(x["t"]) < 1e-6)
 
@@ -187,7 +191,7 @@ def test_buys_cli_writes_a_complete_receipt(tmp_path):
         assert row["bytes"] > 0 and row["newest_date"]
     assert r["live_folder_file_counts"]["before"] == r["live_folder_file_counts"]["after"]
     # every control is a non-news name: the news names of each date are absent from its band draws
-    assert all(u["n_controls"] >= 20 for u in r["units_primary"])
+    assert all(u["n_controls"] >= 10 for u in r["units_primary"])   # --k-sector 10
 
 
 def test_buys_planted_effect_is_seen(tmp_path):
@@ -297,3 +301,76 @@ def test_forecasts_missing_input_is_red(tmp_path):
     rc = G.main(["forecasts", "--predictions", str(tmp_path / "none.jsonl"), "--bars",
                  str(tmp_path / "none.parquet"), "--out", str(out)])
     assert rc == 2 and not out.exists()
+
+
+# ───────────────────────────── review round 1 ──────────────────────────────
+
+def test_cluster_se_is_the_row_mean_estimator():
+    vals = [1.0] * 90 + [3.0] * 10
+    b = G.block_se(vals, ["a"] * 90 + ["b"] * 10)
+    assert b["mean"] == 1.2 and b["estimator"].startswith("row mean")
+
+
+def test_ticker_scheme_decides_when_few_names_carry_the_rows():
+    rng = np.random.default_rng(5)
+    vals = [float(v) for v in rng.normal(0.0, 0.2, size=200)]
+    vals = [v + (1.0 if i % 2 else -0.2) for i, v in enumerate(vals)]   # the two names differ a lot
+    tab = G.scheme_table(vals, dates=[i % 40 for i in range(200)], sess_idx=[i % 40 for i in range(200)],
+                         tickers=["A" if i % 2 else "B" for i in range(200)])
+    assert tab["schemes"]["ticker"]["n_blocks"] == 2 and tab["used_scheme"] == "ticker"
+    assert tab["word"] == "CANNOT_DISTINGUISH"            # df 1: nothing short of a huge t clears 12.7
+
+
+def test_a_word_stands_only_if_every_calendar_origin_agrees():
+    rng = np.random.default_rng(11)
+    for trial in range(40):
+        n = 120
+        sidx = list(rng.integers(0, 30, size=n))
+        vals = list(rng.normal(rng.uniform(-0.6, 0.6), 1.0, size=n) + np.array(sidx) * rng.uniform(-0.05, 0.05))
+        tab = G.scheme_table(vals, dates=sidx, sess_idx=sidx, tickers=[f"T{i % 60}" for i in range(n)])
+        words = set(tab["origin_sweep"]["words"])
+        if len(words) > 1:
+            assert tab["word"] == "CANNOT_DISTINGUISH" and tab["word_override"]
+        assert len(tab["origin_sweep"]["by_origin"]) == G.CAL_BLOCK_SESSIONS
+        assert tab["origin_sweep"]["t_min"] is None or tab["origin_sweep"]["t_min"] <= tab["origin_sweep"]["t_max"]
+
+
+def test_sector_tier_uses_the_smaller_k_and_can_require_a_sector():
+    idx = [f"S{i:03d}" for i in range(120)]
+    feat = pd.DataFrame({"dv20": np.linspace(1, 120, 120), "sigma63": 0.02, "move5_sigma": 0.0, "n_hist": 63},
+                        index=idx)
+    sector_of = {s: ("A" if i < 30 else "B") for i, s in enumerate(idx) if i != 7}
+    rng = np.random.default_rng(2)
+    ctrls, band, pool = G.draw_controls(feat, sym="S001", sector_of=sector_of, excluded=set(), k=50, rng=rng,
+                                        no_chase=None, k_sector=5)
+    assert band.startswith("sector") and 5 <= len(ctrls) <= 50 and all(sector_of.get(c) == "A" for c in ctrls)
+    ctrls, band, _ = G.draw_controls(feat, sym="S001", sector_of=sector_of, excluded=set(), k=20, rng=rng,
+                                     no_chase=None, k_sector=500, require_sector=True)
+    assert not band.startswith("sector") and "S007" not in ctrls
+
+
+def test_buys_receipt_carries_ex_etf_line_schemes_and_distribution(tmp_path):
+    inp = _buys_inputs(tmp_path)
+    out = tmp_path / "reports"
+    assert _run_buys(inp, out) == 0
+    r = json.loads((out / "ch12_news_buys_t1.json").read_text(encoding="utf-8"))
+    a, x = r["headline_all_rows"], r["headline_ex_etf_sector_controls"]
+    assert a["n"] == 20 and x["n"] == 19 and x["verdict"] in G.VERDICTS
+    assert set(a["t_by_scheme"]) >= {"date", "ticker", f"calendar_{H}"} and a["origin_sweep_t"][0] is not None
+    assert r["sector_matching"]["without_sector"] == ["S003"] and r["sector_matching"]["n_sector_matched_all_rows"] >= 1
+    assert "V2_new_entries_only" not in r["results"] and "student_t" in r["critical_values_from"]
+    assert "LIFT the controls" in r["survivorship"]
+    assert r["verdict"]["origin_sweep"]["share_of_origins_agreeing_with_coarsest"] is not None
+
+
+def test_forecast_receipt_has_ticker_scheme_sweep_and_panel_base_rate(tmp_path):
+    inp = _forecast_inputs(tmp_path)
+    out = tmp_path / "reports"
+    assert _run_fc(inp, out) == 0
+    r = json.loads((out / "ch12_news_forecasts_t2.json").read_text(encoding="utf-8"))
+    h = r["headline"]["by_family"]["news_digest:insider_v0"]
+    assert "ticker" in h["t_by_scheme"] and h["n_tickers"] and h["n_calendar_blocks"]
+    assert h["origin_sweep"]["t_min"] is not None
+    lb = r["results_clean"]["news_digest:insider_v0"]["all"]["direction"]["long_beat_spy_minus_panel_share"]
+    assert 0.0 <= lb["panel_share_beating_spy_same_windows"] <= 1.0
+    assert "tickers" in r["verdicts"]["news_digest:insider_v0"]["scope_sentence"]
