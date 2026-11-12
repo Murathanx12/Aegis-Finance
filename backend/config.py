@@ -5405,6 +5405,46 @@ NEWS_TILT_KEY1_DELTA_BRIER = 0.02
 NEWS_TILT_KEY1_Z = 1.64
 NEWS_TILT_KEY1_MIN_TRUST = 0.05
 
+# ── CH-14b: the NEWS RISK-OVERLAY book (2026-11-12) ──────────────────────────
+#: A gross-exposure scalar in [MIN, MAX] from the world digest's typed theme
+#: tone, applied to a COPY of one internal paper book and graded daily against
+#: the untilted copy (its twin = the same book at scalar 1.0). Simulation only:
+#: no broker, no order. `backend/services/news_overlay_book.py`. OFF by default;
+#: turning it on is an attended seeding step (seed-a-lane), never a builder's.
+NEWS_OVERLAY_BOOK_ENABLED = False
+#: The base book (paper_books id): the random_universe twin of the BHJ book,
+#: 50 names EW drawn from the US $3M+ dollar-volume band, monthly.
+NEWS_OVERLAY_BASE_BOOK = "book:9d62cc74239b435d"
+NEWS_OVERLAY_SCALAR_MIN = 0.5
+NEWS_OVERLAY_SCALAR_MAX = 1.0
+#: The ONE declared mapping (v1). Per digest: F = sum_i n_i x fear_greed_i /
+#: sum_i n_i over themes with a numeric tone.fear_greed, n_i = max(1,
+#: n_independent_sources). Fewer than MIN_THEMES such themes -> EMPTY.
+#: B = median F of the previous BASELINE_N valid digests stamped strictly
+#: before this one (fewer than BASELINE_MIN -> NO_BASELINE). d = F - B.
+#: raw = 1 - SLOPE x max(0, -d - DEADBAND); scalar = clip(round to STEP).
+NEWS_OVERLAY_MIN_THEMES = 3
+NEWS_OVERLAY_BASELINE_N = 12
+NEWS_OVERLAY_BASELINE_MIN = 4
+NEWS_OVERLAY_SLOPE = 5.0
+NEWS_OVERLAY_DEADBAND = 0.02
+NEWS_OVERLAY_STEP = 0.05
+#: Decision time = this ET wall-clock time on the session; only digests stamped
+#: strictly before it are read. Fill = that session's close (the next close
+#: after the digest's own stamp). A digest older than MAX_AGE_HOURS at decision
+#: time is STALE -> scalar 1.0 with a named degradation.
+NEWS_OVERLAY_DECISION_ET = "15:30"
+NEWS_OVERLAY_MAX_AGE_HOURS = 36.0
+#: Costs: the base book's own CostModel rates (5 + 1 bps per side), charged on
+#: |delta scalar| x base gross (the overlay's own turnover) and, scaled by the
+#: scalar, on the base book's rebalance turnover. Cash earns 0 (conservative).
+NEWS_OVERLAY_COST_BPS_PER_SIDE = 5.0
+NEWS_OVERLAY_SLIPPAGE_BPS = 1.0
+NEWS_OVERLAY_NOTIONAL_USD = 100_000.0
+#: The declaration moment of the mapping above, written BEFORE the first replay.
+NEWS_OVERLAY_MAPPING_DECLARED_UTC = "2026-11-12T09:13:00+00:00"
+NEWS_OVERLAY_MAPPINGS_TRIED = 1
+
 # ── The reader's BROWSE lane: general news beyond Dow Jones (2026-09-29) ─────
 #: Murat, 2026-09-29: "digest the news see what they are implying is there an
 #: another path they are leading, not only the forecast from the websites but
