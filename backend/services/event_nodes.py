@@ -611,7 +611,7 @@ def cluster_items(items: list[Item], tbl: Any) -> tuple[list[Cluster], dict]:
                             "joined": bool(joined) if len(comps[root]) > 1 else False})
             c.members.append(it)
             c.tokens.append(toks[i])
-            c.issuers.update(it.title_tickers)
+            c.issuers.update(list(it.title_tickers))
         clusters.append(c)
     return clusters, {"n_items": len(items), "n_unclustered_no_title_issuer": unclustered,
                       "boilerplate_stems_by_source": {k: sorted(v) for k, v in sorted(boiler.items()) if v},
@@ -1077,6 +1077,7 @@ def build(data_root: Path, *, since: datetime, now: datetime,
     for n in nodes:
         n["importance_now_at_build"] = importance_now(n, now)
     nodes.sort(key=lambda n: (-n["importance"]["importance_0"], n["first_seen_utc"], n["event_id"]))
+    annotate_split_and_merge(nodes)
     for r, n in enumerate(nodes, 1):
         n["rank_at_build"] = r
     assert_no_lookahead(nodes, now)
@@ -1085,6 +1086,26 @@ def build(data_root: Path, *, since: datetime, now: datetime,
             "bars_last_session": bars.get("last_session"), "calendar": {k: cal.get(k) for k in
                                                                         ("status", "file", "window", "fomc_status")},
             "n_held_symbols": len(held), "nodes": nodes, "items": items}
+
+
+def annotate_split_and_merge(nodes: list[dict], k: int = 5) -> None:
+    """Make a split or a merge VISIBLE in the node itself: the other nodes whose
+    primary issuer is the same (a story may be split across them) and the members
+    that joined on the weakest link (a different story may have been merged in).
+    Not part of `content_hash`: siblings change when other nodes change."""
+    by: dict[str, list[dict]] = {}
+    for n in nodes:
+        by.setdefault(n["primary_ticker"], []).append(n)
+    for n in nodes:
+        n["same_issuer_siblings"] = [
+            {"event_id": o["event_id"], "n_evidence": o["n_evidence"],
+             "first_title": o["timeline"][0]["title"][:120] if o["timeline"] else None}
+            for o in by[n["primary_ticker"]] if o is not n]
+        title_of = {e["item_key"]: e["title"][:120] for e in n["evidence"]}
+        joined = [j for j in n["joins"] if j.get("joined") and j.get("score") is not None]
+        n["weakest_joins"] = [{"title": title_of.get(j["item"]), "score": j["score"],
+                               "nearest": title_of.get(j.get("nearest"))}
+                              for j in sorted(joined, key=lambda j: (j["score"], j["item"]))[:k]]
 
 
 def assert_no_lookahead(nodes: list[dict], now: datetime) -> None:

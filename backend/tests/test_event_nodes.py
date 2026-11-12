@@ -257,3 +257,18 @@ def test_cli_refuses_missing_input_with_rc2_and_writes_nothing(tmp_path, capsys)
     assert rc == 2
     assert not out.exists()
     assert "CORPUS_MISSING" in capsys.readouterr().out
+
+
+def test_a_split_is_visible_in_the_node():
+    def n(eid, sym, joins):
+        return {"event_id": eid, "primary_ticker": sym, "n_evidence": len(joins),
+                "timeline": [{"title": f"title {eid}"}],
+                "evidence": [{"item_key": j["item"], "title": j["item"]} for j in joins], "joins": joins}
+    a = n("a", "NVDA", [{"item": "x", "score": 0.9, "joined": True, "nearest": "y"},
+                        {"item": "y", "score": 0.21, "joined": True, "nearest": "x"}])
+    b = n("b", "NVDA", [{"item": "z", "score": 0.1, "joined": False, "nearest": None}])
+    c = n("c", "AVGO", [{"item": "w", "score": None, "joined": False, "nearest": None}])
+    EN.annotate_split_and_merge([a, b, c])
+    assert [s["event_id"] for s in a["same_issuer_siblings"]] == ["b"]
+    assert c["same_issuer_siblings"] == []
+    assert a["weakest_joins"][0]["score"] == 0.21
