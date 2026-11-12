@@ -1128,6 +1128,9 @@ class Meter:
         self.featherless_calls = 0
         self.featherless_failed = 0
         self.featherless_spent = 0.0
+        # S66: the envelope's billing outcome per call (SETTLED, BILLING_UNKNOWN,
+        # UNBILLED_HTTP_REFUSAL, ...) and its reply class, for the receipt.
+        self.featherless_billing: Counter = Counter()
         self._tl = threading.local()
 
     def last_model(self) -> str:
@@ -1192,6 +1195,8 @@ class Meter:
         with self._lock:
             self.featherless_calls += 1
             self.statuses["featherless:" + status] += 1
+            self.featherless_billing[f"{res.get('billing_status') or 'NO_RESERVATION'}"
+                                     f"/{res.get('reply_class') or '-'}"] += 1
             if type(charge) in (int, float) and math.isfinite(charge) and charge > 0:
                 self.featherless_spent += float(charge)
             if res.get("ok") and res.get("text"):
@@ -1285,7 +1290,8 @@ class Meter:
                 # only when the route was used: the receipt is unchanged with the flag OFF
                 **({"featherless_calls": self.featherless_calls,
                     "featherless_failed": self.featherless_failed,
-                    "featherless_spent_usd": round(self.featherless_spent, 5)}
+                    "featherless_spent_usd": round(self.featherless_spent, 5),
+                    "featherless_billing": dict(self.featherless_billing)}
                    if self.featherless_calls else {})}
 
 

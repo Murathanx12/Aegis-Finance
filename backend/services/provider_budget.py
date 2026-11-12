@@ -1056,12 +1056,73 @@ def featherless_reserve(system, user, max_tokens, *, model, base_url, purpose, b
             "output_bound": q["output_bound"], "model": str(model)}
 
 
-def _fl_price_reply(ticket, response):
-    """(status, held_units, cost_usd, provider_cost_usd, served, block)."""
+#: Reply classes (S66). The row's `status` stays inside the four values every
+#: reader of this file already accepts (an older release clone sharing the file
+#: refuses an unknown status as UNREADABLE, which would stop every caller); the
+#: finer class travels in `reply_class`.
+#:   NO_RESPONSE            send() raised with no HTTP status (timeout, reset, DNS):
+#:                          BILLING_UNKNOWN, full reservation held, no block
+#:   HTTP_ERROR             send() raised with a 4xx/5xx status (403 gated, 429, 503):
+#:                          UNBILLED_HTTP_REFUSAL, released to $0, no block
+#:   NOT_BILLED_ERROR       a 2xx body that is an ERROR (no model, no usage, no
+#:                          choices, an error/detail/message field): UNBILLED_HTTP_REFUSAL,
+#:                          released to $0 (Featherless bills successful requests only), no block
+#:   SERVED_MODEL_MISMATCH  a reply naming a DIFFERENT model: BILLING_UNKNOWN, full
+#:                          reservation held, envelope BLOCKED ("unknown returned model")
+#:   SERVED_MODEL_MISSING   a reply with usage (or otherwise not an error) but NO model:
+#:                          BILLING_UNKNOWN, full reservation held; blocks only past the
+#:                          FEATHERLESS_MISSING_MODEL_* rate
+#:   USAGE_MISSING          the right model, unreadable usage: BILLING_UNKNOWN, held, no block
+#:   OK                     SETTLED at the higher of our price and the provider's cost
+#:   ABANDONED_DEAD_PID     set by the attended reconcile on a stale RESERVED_UNKNOWN row
+FL_REPLY_CLASSES = ("NO_RESPONSE", "HTTP_ERROR", "NOT_BILLED_ERROR", "SERVED_MODEL_MISMATCH",
+                    "SERVED_MODEL_MISSING", "USAGE_MISSING", "OK", "ABANDONED_DEAD_PID")
+_FL_ERROR_FIELDS = ("error", "detail", "message")
+
+
+def _fl_field(obj, name):
+    """A field of a dict reply or of an SDK object (incl. pydantic extras)."""
+    if obj is None:
+        return None
+    if isinstance(obj, dict):
+        return obj.get(name)
+    val = getattr(obj, name, None)
+    if val is None:
+        extra = getattr(obj, "model_extra", None)
+        if isinstance(extra, dict):
+            val = extra.get(name)
+    return val
+
+
+def _fl_reply_keys(response):
+    """Top-level field NAMES present in a reply (never values): a receipt of its shape."""
+    if isinstance(response, dict):
+        return sorted(str(k) for k in response)[:20]
+    names = [k for k, v in (getattr(response, "__dict__", {}) or {}).items()
+             if not str(k).startswith("_") and v is not None]
+    names += list((getattr(response, "model_extra", None) or {}).keys())
+    return sorted({str(k) for k in names})[:20]
+
+
+def _fl_error_class(err):
+    """A short class for an error body: its type/code, never its message text."""
+    if isinstance(err, dict):
+        for k in ("type", "code", "status"):
+            v = err.get(k)
+            if v not in (None, ""):
+                return f"payload_error:{str(v)[:40]}"
+    return "payload_error"
+
+
+def _fl_classify(ticket, response):
+    """{status, reply_class, held, cost, reported, served, block, error_class}."""
+    full = ticket["reserved_units"]
+    unknown = {"status": "BILLING_UNKNOWN", "held": full, "cost": None, "reported": None,
+               "served": None, "block": None, "error_class": None}
     if response is None:
-        return "BILLING_UNKNOWN", ticket["reserved_units"], None, None, None, None
-    served = response.get("model") if isinstance(response, dict) else getattr(response, "model", None)
-    usage = response.get("usage") if isinstance(response, dict) else getattr(response, "usage", None)
+        return {**unknown, "reply_class": "NO_RESPONSE"}
+    served = _fl_field(response, "model")
+    usage = _fl_field(response, "usage")
 
     def get(name):
         return usage.get(name) if isinstance(usage, dict) else getattr(usage, name, None)
@@ -1072,21 +1133,54 @@ def _fl_price_reply(ticket, response):
             reported = None
     except (TypeError, ValueError):
         reported = None
+    if served in (None, ""):
+        err = next((v for v in (_fl_field(response, f) for f in _FL_ERROR_FIELDS) if v), None)
+        if usage is None and not _fl_field(response, "choices") and err is not None:
+            # Featherless bills successful requests only: an error body is not one.
+            return {"status": "UNBILLED_HTTP_REFUSAL", "reply_class": "NOT_BILLED_ERROR", "held": 0,
+                    "cost": 0.0, "reported": None, "served": None, "block": None,
+                    "error_class": _fl_error_class(err)}
+        return {**unknown, "reply_class": "SERVED_MODEL_MISSING", "reported": reported,
+                "error_class": "served_model_missing"}
     if served != ticket["model"]:
-        return ("BILLING_UNKNOWN", ticket["reserved_units"], None, reported, served,
-                "unknown returned model")
+        return {**unknown, "reply_class": "SERVED_MODEL_MISMATCH", "reported": reported,
+                "served": served, "block": "unknown returned model"}
     if not all(type(x) is int and x >= 0 for x in (ti, to)) or ti + to <= 0:
-        return "BILLING_UNKNOWN", ticket["reserved_units"], None, reported, served, None
+        return {**unknown, "reply_class": "USAGE_MISSING", "reported": reported, "served": served}
     p_in, p_out = _fl_price(served)
     ours = _units((ti*p_in + to*p_out)/1e6)
     held = max(ours, _units(reported) if reported is not None else 0)
     block = None
     if ti > ticket["input_bound"] or to > ticket["output_bound"] or held > ticket["reserved_units"]:
         block = "provider usage exceeded request reservation bound"
-    return "SETTLED", held, held/SCALE, reported, served, block
+    return {"status": "SETTLED", "reply_class": "OK", "held": held, "cost": held/SCALE,
+            "reported": reported, "served": served, "block": block, "error_class": None}
 
 
-def featherless_settle(ticket, response=None, *, http_status=None):
+def _fl_price_reply(ticket, response):
+    """(status, held_units, cost_usd, provider_cost_usd, served, block) -- the old
+    tuple, kept for any reader of it; `_fl_classify` carries the reply class."""
+    c = _fl_classify(ticket, response)
+    return c["status"], c["held"], c["cost"], c["reported"], c["served"], c["block"]
+
+
+def _fl_missing_model_block(s):
+    """A block reason when MORE than the configured share of the last WINDOW
+    settled calls were SERVED_MODEL_MISSING, else None. The denominator is the
+    window itself, so a handful of malformed replies never stop every caller."""
+    C = _cfg()
+    window = max(1, int(getattr(C, "FEATHERLESS_MISSING_MODEL_WINDOW", 50)))
+    share = float(getattr(C, "FEATHERLESS_MISSING_MODEL_MAX_SHARE", 0.20))
+    settled = sorted((r for r in s["calls"].values() if r.get("settled_utc")),
+                     key=lambda r: str(r.get("settled_utc")))[-window:]
+    n = sum(1 for r in settled if r.get("reply_class") == "SERVED_MODEL_MISSING")
+    if n > share * window:
+        return (f"served model missing on {n} of the last {len(settled)} calls "
+                f"(limit {share:.0%} of {window})")
+    return None
+
+
+def featherless_settle(ticket, response=None, *, http_status=None, error_class=None):
     """Never releases money on an unknown outcome; a bound breach blocks the file.
 
     `http_status` is the status of an HTTP ERROR RESPONSE the provider sent
@@ -1095,18 +1189,27 @@ def featherless_settle(ticket, response=None, *, http_status=None):
     settles at $0 as UNBILLED_HTTP_REFUSAL. Measured 2026-11-11: 31 calls to a
     gated model answered 403 and the balance did not move. A timeout or a reset
     connection has no status and keeps the FULL reservation (BILLING_UNKNOWN).
+    A RETURNED reply is classified by `_fl_classify` (see FL_REPLY_CLASSES); the
+    caller passes the 2xx it implies. `error_class` (the exception's class name)
+    and the reply's field names reach the row, so an unknown row says what it was.
 
     A write that fails after a PAID reply keeps the reply: the envelope still
     holds the full reservation (never less than the cost unless the bound was
     breached, which is what the block is for) and the error is logged."""
     if response is None and type(http_status) is int and 400 <= http_status < 600:
-        status, held, cost, reported, served, block = "UNBILLED_HTTP_REFUSAL", 0, 0.0, None, None, None
+        c = {"status": "UNBILLED_HTTP_REFUSAL", "reply_class": "HTTP_ERROR", "held": 0, "cost": 0.0,
+             "reported": None, "served": None, "block": None, "error_class": error_class}
     else:
-        status, held, cost, reported, served, block = _fl_price_reply(ticket, response)
+        c = _fl_classify(ticket, response)
+        if response is None:
+            c["error_class"] = error_class
+    status, held, cost, reported, served, block = (c["status"], c["held"], c["cost"], c["reported"],
+                                                   c["served"], c["block"])
     p = Path(ticket["path"])
     # an unknown outcome returns the full reservation as `held`
     out = {"cost_usd": cost, "budget_charge_usd": held / SCALE,
-           "provider_cost_usd": reported, "billing_status": status, "reservation_id": ticket["id"],
+           "provider_cost_usd": reported, "billing_status": status, "reply_class": c["reply_class"],
+           "reservation_id": ticket["id"],
            "price_as_of": str(getattr(_cfg(), "FEATHERLESS_PRICE_AS_OF", "")),
            "cost_basis": "CONFIG_PRICE_X_TOKENS_OR_PROVIDER_COST_WHICHEVER_HIGHER",
            "budget_envelope": FEATHERLESS_ENVELOPE_NAME}
@@ -1116,13 +1219,22 @@ def featherless_settle(ticket, response=None, *, http_status=None):
             r = s["calls"][ticket["id"]]
             if r["status"] != "RESERVED_UNKNOWN":
                 raise BudgetRefused("reservation already settled")
+            now = _utcnow().isoformat()
             r.update(status=status, held_units=(held if status in ("SETTLED", "UNBILLED_HTTP_REFUSAL")
                                                 else r["held_units"]),
-                     http_status=http_status,
+                     http_status=http_status, reply_class=c["reply_class"],
+                     error_class=(str(c["error_class"])[:80] if c["error_class"] else None),
                      cost_usd=cost, provider_cost_usd=reported, served_model=served,
-                     settled_utc=_utcnow().isoformat())
+                     settled_utc=now)
+            if response is not None:
+                r["reply_keys"] = _fl_reply_keys(response)
+            if not block and c["reply_class"] == "SERVED_MODEL_MISSING":
+                block = _fl_missing_model_block(s)
             if block and not s.get("blocked"):
                 s["blocked"] = block
+                s["blocked_by"] = {"reservation_id": ticket["id"], "utc": now, "reason": block,
+                                   "reply_class": c["reply_class"], "http_status": http_status,
+                                   "purpose": r.get("purpose"), "pid": r.get("pid")}
             _write(p, s)
     except (OSError, DG.FileLockTimeout, BudgetRefused) as exc:
         logger.error("provider_budget: featherless settlement of %s not recorded (%s); "
@@ -1164,11 +1276,274 @@ def featherless_attempt(body, *, purpose, send, base_url=None, budget_path=None)
         if code is None:
             code = getattr(getattr(exc, "response", None), "status_code", None)
         try:
-            exc.shared_budget_accounting = featherless_settle(ticket, None, http_status=code)
+            exc.shared_budget_accounting = featherless_settle(
+                ticket, None, http_status=code if type(code) is int else None,
+                error_class=type(exc).__name__)
         except Exception:                                        # noqa: BLE001
             pass
         raise
-    return response, featherless_settle(ticket, response)
+    # The openai SDK returns a parsed reply only for a 2xx (it raises
+    # APIStatusError on anything else), so a returned reply is recorded as 200;
+    # a reply object that carries its own status says so instead.
+    code = getattr(response, "http_status", None) if not isinstance(response, dict) else response.get("http_status")
+    return response, featherless_settle(ticket, response, http_status=code if type(code) is int else 200)
+
+
+# ───────────── FEATHERLESS: status details and the attended reconcile (S66) ─────────────
+#
+# 2026-11-12: a block ("unknown returned model") had no exit -- `reconcile` was
+# DeepSeek-only -- so one malformed reply would have refused every Featherless
+# caller until someone edited the file by hand. The reconcile below is the exit,
+# and it is conservative: it clears a block ONLY when the envelope holds at least
+# what the provider's own balance says was spent since the envelope's opening
+# balance, and it writes who/when/what/why into the envelope's `history`.
+
+class FeatherlessBalanceUnavailable(RuntimeError):
+    """The Featherless balance could not be read. NOT a zero, NOT a stale number."""
+
+
+def _fl_pid_alive(pid):
+    from backend.services.sim_session import pid_alive
+    return pid_alive(pid)
+
+
+def featherless_read_balance(*, opener=None, url=None, api_key=None):
+    """USD balance from the free balance endpoint (no completion call, $0).
+
+    The key is read from `config.FEATHERLESS_KEY_ENV` and sent ONLY to the official
+    HTTPS host; it is never printed, returned or stored. Raises
+    `FeatherlessBalanceUnavailable` when the request fails or the reply has no
+    readable non-negative USD number under `config.FEATHERLESS_BALANCE_KEYS`."""
+    import urllib.error
+    import urllib.request
+    C = _cfg()
+    url = str(url or getattr(C, "FEATHERLESS_BALANCE_URL", f"https://{FEATHERLESS_HOST}/v1/credits/balance"))
+    u = urlsplit(url)
+    if u.scheme != "https" or u.hostname != FEATHERLESS_HOST or u.username or u.password:
+        raise FeatherlessBalanceUnavailable("the balance URL must be the official HTTPS Featherless host")
+    key = api_key if api_key is not None else os.getenv(
+        str(getattr(C, "FEATHERLESS_KEY_ENV", "FEATHERLESS_API_KEY")), "").strip()
+    if not key:
+        raise FeatherlessBalanceUnavailable(
+            f"{getattr(C, 'FEATHERLESS_KEY_ENV', 'FEATHERLESS_API_KEY')} is not set; the balance cannot be read")
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}", "Accept": "application/json"})
+    try:
+        _open = opener or urllib.request.urlopen
+        with _open(req, timeout=float(getattr(C, "FEATHERLESS_BALANCE_TIMEOUT_S", 20.0))) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
+        raise FeatherlessBalanceUnavailable(f"{type(exc).__name__}: balance request failed") from exc
+    keys = tuple(getattr(C, "FEATHERLESS_BALANCE_KEYS", ("balance",)) or ())
+
+    def pick(obj, depth=0):
+        if isinstance(obj, (int, float)) and not isinstance(obj, bool):
+            return float(obj)
+        if isinstance(obj, str):
+            try:
+                return float(obj.strip().lstrip("$"))
+            except ValueError:
+                return None
+        if isinstance(obj, dict) and depth < 3:
+            cur = str(obj.get("currency", "USD") or "USD").upper()
+            if cur != "USD":
+                return None
+            for k in keys:
+                if k in obj:
+                    v = pick(obj[k], depth + 1)
+                    if v is not None:
+                        return v
+            if "data" in obj:
+                return pick(obj["data"], depth + 1)
+        return None
+    usd = pick(payload)
+    if usd is None or not usd >= 0 or usd != usd or usd == float("inf"):
+        names = sorted(payload)[:20] if isinstance(payload, dict) else type(payload).__name__
+        raise FeatherlessBalanceUnavailable(
+            f"no readable USD balance in the reply (fields: {names}); add the field name to "
+            f"config.FEATHERLESS_BALANCE_KEYS or pass --observed-balance with --evidence")
+    return {"balance_usd": usd, "read_utc": _utcnow().isoformat(), "source": "GET " + u.path,
+            "fields": sorted(payload)[:20] if isinstance(payload, dict) else []}
+
+
+def featherless_status_detail(*, budget_path=None, now=None, pid_alive=None):
+    """Counts by status / reply class / purpose, the block and the call that set
+    it, unsettled rows by pid liveness, the last observed balance. Never writes."""
+    p = Path(budget_path) if budget_path else featherless_path()
+    s, held_m, held_l, cap_m, cap_l = _fl_view(p)
+    now = now or _utcnow()
+    alive = pid_alive or _fl_pid_alive
+    stale_min = float(getattr(_cfg(), "FEATHERLESS_RECONCILE_STALE_MINUTES", 30.0))
+    by_status, by_class, by_purpose = {}, {}, {}
+    open_rows = []
+    for k, r in s["calls"].items():
+        st = r.get("status")
+        by_status[st] = by_status.get(st, 0) + 1
+        rc = r.get("reply_class") or ("(not recorded)" if st != "RESERVED_UNKNOWN" else "(in flight)")
+        by_class[rc] = by_class.get(rc, 0) + 1
+        key = f"{st} {r.get('purpose')}"
+        by_purpose[key] = by_purpose.get(key, 0) + 1
+        if st == "RESERVED_UNKNOWN":
+            try:
+                age = (now - datetime.fromisoformat(str(r.get("started_utc")))).total_seconds() / 60
+            except (TypeError, ValueError):
+                age = None
+            open_rows.append({"id": k, "pid": r.get("pid"), "age_min": None if age is None else round(age, 1),
+                              "pid_alive": bool(alive(r.get("pid"))),
+                              "stale": age is None or age > stale_min, "held_usd": r["held_units"] / SCALE})
+    held_by = {st: sum(r["held_units"] for r in s["calls"].values() if r.get("status") == st) / SCALE
+               for st in by_status}
+    obs = (s.get("balance_observations") or [])
+    return {"envelope": str(p), "created_utc": s.get("created_utc"), "n_calls": len(s["calls"]),
+            "by_status": by_status, "held_usd_by_status": held_by, "by_reply_class": by_class,
+            "by_status_purpose": by_purpose, "held_lifetime_usd": held_l / SCALE,
+            "held_month_usd": held_m / SCALE, "blocked": s.get("blocked"),
+            "blocked_by": s.get("blocked_by") or (
+                "not recorded (this block was set before `blocked_by` existed)" if s.get("blocked") else None),
+            "unsettled": open_rows, "opening_balance_usd": s.get("opening_balance_usd"),
+            "last_balance_observation": obs[-1] if obs else None,
+            "n_reconciles": len(s.get("history") or [])}
+
+
+def featherless_reconcile(*, dry_run=False, opening_balance_usd=None, observed_balance_usd=None,
+                          evidence=None, budget_path=None, balance_reader=None, pid_alive=None,
+                          now=None, who=None):
+    """The attended reconcile. Returns `{"rc", "decision", "lines", ...}`; rc 0
+    done (or nothing to do), 2 refused. `dry_run` makes the balance request only
+    and writes nothing.
+
+    1. observed balance: the free endpoint (`balance_reader`), or an operator's
+       `observed_balance_usd`, which needs `evidence` text;
+    2. opening balance: the envelope's stored one, else `opening_balance_usd`
+       (stored on the first reconcile); a different value is refused;
+       observed spend = opening - observed; a balance ABOVE the opening (a top-up,
+       a unit mix-up) is refused;
+    3. RESERVED_UNKNOWN rows older than FEATHERLESS_RECONCILE_STALE_MINUTES whose
+       pid is dead are settled BILLING_UNKNOWN at their FULL reservation
+       (`ABANDONED_DEAD_PID`): one account balance cannot attribute spend to a
+       row, so no reservation is ever lowered here;
+    4. a block is cleared ONLY when held (lifetime) >= observed spend, with an
+       evidence row in `history`; otherwise refused, red, with the numbers. An
+       unblocked envelope holding LESS than observed spend is also red.
+    Every non-dry run appends the observation to `balance_observations`."""
+    import getpass
+    import socket
+    p = Path(budget_path) if budget_path else featherless_path()
+    now = now or _utcnow()
+    alive = pid_alive or _fl_pid_alive
+    stale_min = float(getattr(_cfg(), "FEATHERLESS_RECONCILE_STALE_MINUTES", 30.0))
+    lines = []
+
+    def refuse(why, **extra):
+        lines.append(f"FEATHERLESS RECONCILE REFUSED: {why}")
+        return {"rc": 2, "decision": "REFUSED", "reason": why, "lines": lines, "dry_run": dry_run, **extra}
+
+    if not p.exists():
+        return refuse(f"no envelope at {p.name}")
+    if observed_balance_usd is not None:
+        if not (evidence and str(evidence).strip()):
+            return refuse("--observed-balance needs --evidence (where the number was read)")
+        try:
+            observed = float(observed_balance_usd)
+        except (TypeError, ValueError):
+            return refuse("--observed-balance is not a number")
+        if not observed >= 0 or observed == float("inf"):
+            return refuse("--observed-balance must be a finite non-negative USD amount")
+        obs = {"balance_usd": observed, "read_utc": now.isoformat(), "source": "operator",
+               "evidence": str(evidence)[:300]}
+    else:
+        try:
+            obs = (balance_reader or featherless_read_balance)()
+        except FeatherlessBalanceUnavailable as exc:
+            return refuse(f"balance unavailable: {exc}")
+        observed = float(obs["balance_usd"])
+    lines.append(f"observed balance ${observed:.4f} ({obs.get('source')}, {obs.get('read_utc')})")
+
+    ctx = (_lock(p) if not dry_run else _NullCtx())
+    with ctx:
+        s = _fl_load(p)
+        stored = s.get("opening_balance_usd")
+        if stored is not None and opening_balance_usd is not None and abs(float(stored) - float(opening_balance_usd)) > 1e-9:
+            return refuse(f"--opening-balance ${float(opening_balance_usd):.4f} differs from the envelope's "
+                          f"stored ${float(stored):.4f}; the baseline is never rewritten here")
+        opening = float(stored) if stored is not None else (
+            float(opening_balance_usd) if opening_balance_usd is not None else None)
+        if opening is None or not opening >= 0 or opening == float("inf"):
+            return refuse("no opening balance: pass --opening-balance USD (2026-11-11 measurement: $74.50)")
+        if observed > opening + 1e-9:
+            return refuse(f"observed ${observed:.4f} is ABOVE the opening ${opening:.4f} (a top-up or a unit "
+                          f"mix-up); nothing can be inferred about spend", observed_balance_usd=observed)
+        spend_units = _units(opening - observed)
+        settle_ids, left_alone = [], []
+        for k, r in s["calls"].items():
+            if r.get("status") != "RESERVED_UNKNOWN":
+                continue
+            try:
+                age = (now - datetime.fromisoformat(str(r.get("started_utc")))).total_seconds() / 60
+            except (TypeError, ValueError):
+                age = None
+            if age is not None and age > stale_min and not alive(r.get("pid")):
+                settle_ids.append(k)
+            else:
+                left_alone.append((k, r.get("pid"), None if age is None else round(age, 1)))
+        held = _fl_held(s)              # unchanged by step 3: full reservations stay held
+        blocked = s.get("blocked")
+        lines.append(f"opening ${opening:.4f} -> observed spend ${spend_units/SCALE:.6f}; envelope holds "
+                     f"${held/SCALE:.6f} (lifetime, {len(s['calls'])} rows)")
+        lines.append(f"stale RESERVED_UNKNOWN with a dead pid -> settle at full reservation: {len(settle_ids)}"
+                     + (f" ({', '.join(i[:8] for i in settle_ids[:8])}{' ...' if len(settle_ids) > 8 else ''})"
+                        if settle_ids else ""))
+        for k, pid, age in left_alone:
+            lines.append(f"left alone (pid {pid} alive or row younger than {stale_min:g} min; age {age}): {k[:8]}")
+        conservative = held >= spend_units
+        if blocked:
+            decision = "CLEAR_BLOCK" if conservative else "REFUSED"
+        else:
+            decision = "NO_BLOCK" if conservative else "REFUSED"
+        if not dry_run:
+            stamp = now.isoformat()
+            for k in settle_ids:
+                s["calls"][k].update(status="BILLING_UNKNOWN", reply_class="ABANDONED_DEAD_PID",
+                                     settled_utc=stamp, settled_by="reconcile")
+            if stored is None:
+                s["opening_balance_usd"] = opening
+                s["opening_balance_evidence"] = "reconcile --opening-balance (attended)"
+            s.setdefault("balance_observations", []).append(
+                {**{k: v for k, v in obs.items() if k != "fields"}, "observed_spend_usd": spend_units / SCALE,
+                 "held_usd": held / SCALE, "decision": decision, "utc": stamp})
+            if decision == "CLEAR_BLOCK":
+                s.setdefault("history", []).append({
+                    "utc": stamp, "action": "unblock", "previous_block": blocked,
+                    "blocked_by": s.get("blocked_by"),
+                    "who": f"{getpass.getuser()}@{socket.gethostname()}" if who is None else str(who),
+                    "observed_balance_usd": observed, "balance_source": obs.get("source"),
+                    "opening_balance_usd": opening, "observed_spend_usd": spend_units / SCALE,
+                    "held_usd": held / SCALE, "settled_dead_pid_rows": len(settle_ids),
+                    "why": "held >= observed provider spend since the opening balance: the envelope is "
+                           "conservative, so the block is cleared by attended reconcile"
+                           + (f"; operator evidence: {str(evidence)[:200]}" if evidence else "")})
+                s["blocked"] = None
+                s.pop("blocked_by", None)
+            _write(p, s)
+    verb = "would " if dry_run else ""
+    if decision == "REFUSED":
+        out = refuse(f"envelope holds ${held/SCALE:.6f} < observed provider spend ${spend_units/SCALE:.6f}"
+                     f" (block {'kept' if blocked else 'not set'}); spend outside this envelope or an "
+                     f"under-priced row -- inspect before any call")
+        out.update(held_usd=held / SCALE, observed_spend_usd=spend_units / SCALE, settled=len(settle_ids))
+        return out
+    lines.append(f"{verb}{'clear the block ' + repr(blocked) if decision == 'CLEAR_BLOCK' else 'keep: no block set'}"
+                 f"; {verb}settle {len(settle_ids)} dead-pid rows; {verb}record the observation")
+    return {"rc": 0, "decision": decision, "lines": lines, "dry_run": dry_run, "held_usd": held / SCALE,
+            "observed_spend_usd": spend_units / SCALE, "settled": len(settle_ids),
+            "left_alone": len(left_alone), "observed_balance_usd": observed}
+
+
+class _NullCtx:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
 
 
 def main(argv=None):
@@ -1181,7 +1556,15 @@ def main(argv=None):
     st = sub.add_parser("status", help="print the accounting line; exit 2 when refusing")
     st.add_argument("--provider", choices=("deepseek", "featherless"), default="deepseek")
     sub.add_parser("init", help="create the host envelope from config now (if absent)")
-    sub.add_parser("reconcile", help="apply deferred settlements (the sidecar) to the envelope now")
+    rc_ = sub.add_parser("reconcile", help="deepseek: apply deferred settlements (the sidecar) now; "
+                                           "featherless: attended balance reconcile (can clear a block)")
+    rc_.add_argument("--provider", choices=("deepseek", "featherless"), default="deepseek")
+    rc_.add_argument("--dry-run", action="store_true", help="featherless: read the balance, write nothing")
+    rc_.add_argument("--opening-balance", type=float, default=None,
+                     help="featherless: USD balance when the envelope opened (first reconcile only)")
+    rc_.add_argument("--observed-balance", type=float, default=None,
+                     help="featherless: an operator-read USD balance instead of the endpoint (needs --evidence)")
+    rc_.add_argument("--evidence", default=None)
     r = sub.add_parser("raise", help="raise this month's cap (attended)")
     r.add_argument("--cap", type=float, required=True)
     r.add_argument("--evidence", required=True)
@@ -1189,7 +1572,46 @@ def main(argv=None):
     if a.cmd == "status" and a.provider == "featherless":
         line = featherless_status_line()
         print(line)
+        try:
+            d = featherless_status_detail()
+        except BudgetRefused:
+            d = None
+        if d is not None:
+            print(f"by status: {d['by_status']}  held by status: "
+                  + ", ".join(f"{k} ${v:.6f}" for k, v in d["held_usd_by_status"].items()))
+            print(f"by reply class: {d['by_reply_class']}")
+            for k, v in sorted(d["by_status_purpose"].items()):
+                print(f"  {v:6d}  {k}")
+            if d["blocked"]:
+                print(f"blocked: {d['blocked']}")
+                print(f"blocked by: {d['blocked_by']}")
+            for o in d["unsettled"]:
+                print(f"unsettled {o['id'][:8]} pid {o['pid']} ({'alive' if o['pid_alive'] else 'dead'}), "
+                      f"age {o['age_min']} min, held ${o['held_usd']:.6f}"
+                      + (" -- stale: `reconcile --provider featherless` settles it at full reservation"
+                         if o["stale"] and not o["pid_alive"] else ""))
+            lo = d["last_balance_observation"]
+            print(f"opening balance: {d['opening_balance_usd']}; last observed: "
+                  + (f"${lo['balance_usd']:.4f} at {lo.get('utc') or lo.get('read_utc')} ({lo.get('decision')})"
+                     if lo else "never (run `reconcile --provider featherless --dry-run`)"))
         return 2 if line.startswith("FEATHERLESS BUDGET REFUSED") else 0
+    if a.cmd == "reconcile" and a.provider == "featherless":
+        try:
+            res = featherless_reconcile(dry_run=a.dry_run, opening_balance_usd=a.opening_balance,
+                                        observed_balance_usd=a.observed_balance, evidence=a.evidence)
+        except (BudgetRefused, DG.FileLockTimeout) as exc:
+            print(f"FEATHERLESS RECONCILE REFUSED: {exc}")
+            return 2
+        for ln in res["lines"]:
+            print(("[dry-run] " if a.dry_run else "") + ln)
+        if not a.dry_run:
+            print(featherless_status_line())
+        return int(res["rc"])
+    if a.cmd == "reconcile" and (a.dry_run or a.opening_balance is not None
+                                 or a.observed_balance is not None or a.evidence is not None):
+        print("DEEPSEEK BUDGET REFUSED: --dry-run/--opening-balance/--observed-balance/--evidence "
+              "belong to `reconcile --provider featherless`")
+        return 2
     try:
         if a.cmd == "init":
             p = path()
