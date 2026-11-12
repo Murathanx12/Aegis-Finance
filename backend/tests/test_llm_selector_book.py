@@ -76,10 +76,16 @@ def _inputs(now: datetime, *, include_added: bool = False) -> dict:
                                           "known_at": now - timedelta(hours=3)}]}}
 
 
-def _reply(picks: list, model: str = "deepseek-flash") -> MP.Reply:
-    return MP.Reply(provider="deepseek", model=model, text=json.dumps({"picks": picks}),
+SERVED = "stub-served-model-x"     # deliberately not the request label
+
+
+def _reply(picks: list, served: str | None = SERVED, text: str | None = None) -> MP.Reply:
+    return MP.Reply(provider="deepseek", model=str(C.LLM_SELECTOR_MODEL),
+                    text=json.dumps({"picks": picks}) if text is None else text,
                     latency_s=0.1, prompt_tokens=1000, completion_tokens=200,
-                    budget_accounting={"cost_usd": 0.0003})
+                    budget_accounting={"cost_usd": 0.0003, "reservation_id": "res-abc123",
+                                       "billing_status": "SETTLED_PEAK_ESTIMATE"},
+                    served_model=served)
 
 
 def _good(k: int | None = None) -> list:
@@ -193,7 +199,16 @@ def test_a_decision_row_carries_every_hash_and_id(tmp_path):
     row = res["row"]
     for key in ("packet_hash", "model_id", "prompt_hash", "response", "candidate_set_hash"):
         assert row[key], key
-    assert row["model_id"] == "deepseek-flash"
+    assert row["model_id"] == row["served_model"] == SERVED            # what the provider said served it
+    assert row["request_model"] == str(C.LLM_SELECTOR_MODEL)
+    assert row["reply_model_label"] == str(C.LLM_SELECTOR_MODEL)      # model_provider's label = request
+    assert row["reservation_id"] == "res-abc123"                      # links to the budget envelope
+    assert row["written_utc"]
+    from backend.services import llm_language as L
+    system, user = S.render(inp["cset"], packets, now)
+    assert row["prompt_hash"] == S.sha16(L.pin(system) + "\n" + user)  # as SENT, pin included
+    assert row["prompt_hash_rendered"] == S.sha16(system + "\n" + user)
+    assert row["prompt_hash"] != row["prompt_hash_rendered"]
     assert row["packet_hash"] == S.packets_hash(packets)
     assert row["candidate_set_hash"] == inp["cset"]["candidate_set_hash"]
     assert row["contract_hash"] == S.contract_hash()
@@ -222,7 +237,8 @@ def test_a_reply_outside_the_candidate_set_is_refused_and_counted(tmp_path):
         assert S.refusal_counts(tmp_path) == {S.OUT_OF_SET: n}
     rows = [json.loads(x) for x in (tmp_path / "refusals.jsonl").read_text(encoding="utf-8").splitlines()]
     assert rows[0]["outside"] == ["ZZZZ"] and "ZZZZ" in rows[0]["response"]   # kept, not dropped
-    assert rows[0]["prompt_hash"] and rows[0]["packet_hash"] and rows[0]["model_id"]
+    assert rows[0]["prompt_hash"] and rows[0]["packet_hash"] and rows[0]["served_model"] == SERVED
+    assert rows[0]["reservation_id"] == "res-abc123" and rows[0]["written_utc"]
     assert not (tmp_path / "decisions.jsonl").exists()          # not repaired into a 7-name book
     assert not (tmp_path / "books.jsonl").exists()
 
@@ -335,6 +351,7 @@ def test_the_contract_hash_changes_with_any_prompt_or_parameter(monkeypatch, tar
 # ── the flag ────────────────────────────────────────────────────────────────
 
 def test_flag_off_writes_nothing(tmp_path, monkeypatch):
+    monkeypatch.delenv("AEGIS_LLM_SELECTOR_BOOK", raising=False)
     now = _now()
     inp = _inputs(now)
     out = tmp_path / "out"
@@ -382,3 +399,246 @@ def test_non_latin_titles_are_left_out_of_the_packet():
                    "known_at": now - timedelta(hours=1)}]}
     items = S.knowable_facts(by, "AAA", 5)
     assert [f["value"] for f in items] == ["[rss] English headline"]
+
+
+# ── review round 1 ──────────────────────────────────────────────────────────
+
+def _decide(tmp_path, now=None, complete=None, cset=None, inp=None):
+    now = now or _now()
+    inp = inp or _inputs(now)
+    return S.run_decision(cset=cset or inp["cset"], packets=S.all_packets(inp, now), decision_time=now,
+                          out_dir=tmp_path, complete=complete or (lambda s, u: _reply(_good())),
+                          enabled=True)
+
+
+def test_decide_refuses_now_and_a_backdated_instant(tmp_path, monkeypatch):
+    from scripts import llm_selector_book as CLI
+    monkeypatch.setattr(C, "LLM_SELECTOR_BOOK_ENABLED", True)
+    monkeypatch.setattr(S, "load_inputs", lambda *a, **k: pytest.fail("--now must refuse before reading"))
+    past = S.iso(_now() - timedelta(hours=36))
+    rc = CLI.main(["--decide", "--now", past, "--data-root", str(tmp_path / "d"), "--out", str(tmp_path / "o")])
+    assert rc == 2 and not (tmp_path / "o").exists()
+    # and the service refuses a decision instant that is not the wall clock
+    with pytest.raises(S.SelectorRefused) as e:
+        _decide(tmp_path / "o2", now=_now() - timedelta(hours=36))
+    assert e.value.code == S.BACKDATED and e.value.exit_code == 2
+    assert not (tmp_path / "o2").exists()
+
+
+def test_cli_decide_uses_the_wall_clock(tmp_path, monkeypatch):
+    from scripts import llm_selector_book as CLI
+    monkeypatch.setattr(C, "LLM_SELECTOR_BOOK_ENABLED", True)
+    seen = {}
+
+    def fake_inputs(root, t, **k):
+        seen["t"] = t
+        return _inputs(t)
+    monkeypatch.setattr(S, "load_inputs", fake_inputs)
+    monkeypatch.setattr(S, "_default_complete", lambda s, u: _reply(_good()))
+    out = tmp_path / "o"
+    assert CLI.main(["--decide", "--data-root", str(tmp_path / "d"), "--out", str(out)]) == 0
+    assert abs((seen["t"] - _now()).total_seconds()) < 60
+    row = json.loads((out / "decisions.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert row["written_utc"] and row["decision_time"] == S.iso(seen["t"])
+
+
+def test_a_revision_is_cut_on_the_later_of_event_and_pull_stamps():
+    now = _now()
+    rev = pd.DataFrame([
+        # happened 10 days ago, but WE first saw it 2 days AFTER the decision
+        {"ticker": "AAA", "event_date": S.iso(now - timedelta(days=10)), "target_action": "Raises",
+         "target_change": 0.5, "first_seen_utc": S.iso(now + timedelta(days=2)),
+         "pulled_at": S.iso(now + timedelta(days=2))},
+        # happened 5 days ago, seen 4 days ago: knowable at the pull
+        {"ticker": "AAA", "event_date": S.iso(now - timedelta(days=5)), "target_action": "Lowers",
+         "target_change": -0.1, "first_seen_utc": S.iso(now - timedelta(days=4)),
+         "pulled_at": S.iso(now - timedelta(days=4))},
+    ])
+    facts = S.revision_facts(rev, "AAA", now, 90)
+    vals = {f["field"]: f for f in facts}
+    assert vals["revisions.revisions_90d"]["value"] == 1
+    assert vals["revisions.net_raises_90d"]["value"] == -1
+    assert S.parse_stamp(vals["revisions.revisions_90d"]["stamp"]) == S.parse_stamp(S.iso(now - timedelta(days=4)))
+
+
+def test_a_corpus_item_is_stamped_by_the_later_of_first_seen_and_published():
+    now = _now()
+    r = {"source": "rss", "title": "x", "known_at": now - timedelta(hours=5),
+         "first_seen_utc_raw": S.iso(now - timedelta(hours=5)), "published_at": now + timedelta(hours=1)}
+    assert S.knowable_stamp(r) == now + timedelta(hours=1)
+    pk = S.build_packet("AAA", S.knowable_facts({"AAA": [r]}, "AAA", 5), now)
+    assert pk["facts"] == [] and pk["n_excluded_at_or_after_decision"] == 1
+
+
+def test_a_second_decision_for_the_same_date_is_refused_before_the_call(tmp_path):
+    calls = []
+
+    def stub(s, u):
+        calls.append(1)
+        return _reply(_good())
+    _decide(tmp_path, complete=stub)
+    with pytest.raises(S.SelectorRefused) as e:
+        _decide(tmp_path, complete=stub)
+    assert e.value.code == S.ALREADY_DECIDED and e.value.exit_code == 2
+    assert len(calls) == 1                                       # no paid re-roll
+    assert len((tmp_path / "decisions.jsonl").read_text(encoding="utf-8").splitlines()) == 1
+    assert len((tmp_path / "books.jsonl").read_text(encoding="utf-8").splitlines()) == 3
+    ref = json.loads((tmp_path / "refusals.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert ref["code"] == S.ALREADY_DECIDED and ref["written_utc"] and ref["decision_date"]
+
+
+def test_a_missing_served_model_is_said_not_invented(tmp_path):
+    row = _decide(tmp_path, complete=lambda s, u: _reply(_good(), served=None))["row"]
+    assert row["served_model"] is None and row["model_id"] == "SERVED_MODEL_NOT_REPORTED"
+
+
+def test_model_provider_reply_carries_the_served_model(monkeypatch):
+    """`model_provider.complete` keeps the payload's own `model` (offline: the
+    transport and the budget path are stubbed)."""
+    from backend.services import provider_budget as PB
+    monkeypatch.undo()                     # the real complete(), with the transport stubbed below
+    mp = MP
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key-not-real")
+    payload = {"model": "deepseek-flash-served", "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+               "choices": [{"message": {"content": "ok, in English"}, "finish_reason": "stop"}]}
+    monkeypatch.setattr(PB, "guarded_send", lambda body, **k: (payload, {"reservation_id": "r1"}))
+    rep = mp.complete("deepseek", "hi", model="deepseek-chat", purpose="test")
+    assert rep.model == "deepseek-chat" and rep.served_model == "deepseek-flash-served"
+    assert rep.budget_accounting == {"reservation_id": "r1"}
+
+
+ONE = {"ticker": "AAA", "direction": "long", "reason": "a fact"}
+
+
+@pytest.mark.parametrize("text,code", [
+    ("Here is my book: " + json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB"}]}), S.BAD_REPLY),
+    ("```json\n" + json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB"}]}) + "\n```", S.BAD_REPLY),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB"}]}) + " {}", S.BAD_REPLY),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB"}], "note": "x"}), S.BAD_SHAPE),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB", "weight": 0.5}]}), S.BAD_SHAPE),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": " BBB"}]}), S.OUT_OF_SET),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB", "direction": "Long"}]}), S.BAD_DIRECTION),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB", "reason": "two\nlines"}]}), S.BAD_REASON),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": "BBB", "reason": "x" * 301}]}), S.BAD_REASON),
+    (json.dumps({"picks": [ONE, {**ONE, "ticker": 7}]}), S.BAD_SHAPE),
+])
+def test_the_reply_contract_is_strict(text, code):
+    with pytest.raises(S.SelectorRefused) as e:
+        S.parse_reply(text, tickers=TICKERS, k=2, directions=("long",))
+    assert e.value.code == code
+
+
+def test_upper_casing_is_the_only_normalisation():
+    out = S.parse_reply(json.dumps({"picks": [{**ONE, "ticker": "aaa"}, {**ONE, "ticker": "BBB"}]}),
+                        tickers=TICKERS, k=2, directions=("long",))
+    assert [p["ticker"] for p in out] == ["AAA", "BBB"] and out[0]["reason"] == "a fact"
+
+
+def test_a_non_latin_reason_is_refused_even_under_the_central_bar(tmp_path):
+    from backend.services import llm_language as L
+    picks = _good()
+    picks[0] = {**picks[0], "reason": "\u9ec3\u4ec1\u52f3\u82e5\u4e0b\u53f0\u4e9e\u80a1"}
+    text = json.dumps({"picks": picks}, ensure_ascii=False)
+    assert L.non_latin_share(text) <= L.NON_LATIN_BAR         # the whole reply passes the central bar
+    with pytest.raises(S.SelectorRefused) as e:
+        _decide(tmp_path, complete=lambda s, u: _reply(picks, text=text))
+    assert e.value.code == S.REASON_NOT_ENGLISH
+    ref = json.loads((tmp_path / "refusals.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert ref["response"] == text                              # raw reply kept
+
+
+def test_a_budget_refusal_row_carries_the_decision_context(tmp_path):
+    def refuse(s, u):
+        raise MP.BudgetRefusal("DEEPSEEK BUDGET REFUSED (EXHAUSTED)")
+    with pytest.raises(S.SelectorRefused):
+        _decide(tmp_path, complete=refuse)
+    ref = json.loads((tmp_path / "refusals.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    for key in ("decision_date", "candidate_set_hash", "contract_hash", "written_utc", "packet_hash",
+                "prompt_hash"):
+        assert ref.get(key), key
+    assert ref["contract_hash"] == S.contract_hash()
+
+
+@pytest.mark.parametrize("attr,value", [
+    ("PACKET_SCHEMA_VERSION", "llm_selector_packet/999"),
+    ("FUNNEL_FIELDS", ("sector",)),
+    ("ENTRY_RULE", "entered whenever"),
+    ("_language_pin", lambda: " Respond in Latin only."),
+])
+def test_the_contract_hash_covers_the_packet_code_and_the_pin(monkeypatch, attr, value):
+    before = S.contract_hash()
+    monkeypatch.setattr(S, attr, value)
+    assert S.contract_hash() != before
+
+
+def test_too_few_candidates_is_refused_before_the_call(tmp_path):
+    now = _now()
+    f = _funnel(now, added=False)
+    f["candidates"] = f["candidates"][: int(C.LLM_SELECTOR_K)]
+    cset = S.candidate_set(f, now=now, include_added=False)
+    calls = []
+    with pytest.raises(S.SelectorRefused) as e:
+        _decide(tmp_path, now=now, cset=cset, complete=lambda s, u: calls.append(1))
+    assert e.value.code == S.TOO_FEW_CANDIDATES and not calls
+    assert S.refusal_counts(tmp_path) == {S.TOO_FEW_CANDIDATES: 1}
+
+
+def test_the_env_var_turns_the_flag_on_for_one_run(tmp_path, monkeypatch):
+    from scripts import llm_selector_book as CLI
+    monkeypatch.setattr(C, "LLM_SELECTOR_BOOK_ENABLED", False)
+    monkeypatch.delenv("AEGIS_LLM_SELECTOR_BOOK", raising=False)
+    assert not S.flag_on()
+    monkeypatch.setenv("AEGIS_LLM_SELECTOR_BOOK", "1")
+    assert S.flag_on()
+    monkeypatch.setattr(S, "load_inputs", lambda root, t, **k: _inputs(t))
+    monkeypatch.setattr(S, "_default_complete", lambda s, u: _reply(_good()))
+    assert CLI.main(["--decide", "--data-root", str(tmp_path / "d"), "--out", str(tmp_path / "o")]) == 0
+    monkeypatch.setenv("AEGIS_LLM_SELECTOR_BOOK", "0")
+    assert not S.flag_on()
+
+
+def test_register_is_idempotent_and_has_a_dry_run(tmp_path, monkeypatch, capsys):
+    from scripts import llm_selector_book as CLI
+    root = tmp_path / "optimus"
+    sel = root / "llm_selector"
+    target = root / "llm_portfolio" / "books.jsonl"
+    target.parent.mkdir(parents=True)
+    target.write_text('{"book_id": "existing", "name": "old"}\n', encoding="utf-8")
+    res = _decide(sel)
+    day = res["row"]["decision_date"]
+    base = ["--register", "--decision-date", day, "--data-root", str(root)]
+    assert CLI.main(base + ["--dry-run"]) == 0
+    out = capsys.readouterr().out
+    assert "WOULD APPEND 3 rows" in out and res["books"][0]["book_id"] in out
+    assert target.read_text(encoding="utf-8").count("\n") == 1          # dry run wrote nothing
+    assert CLI.main(base) == 0
+    lines = target.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 4 and {json.loads(x)["book_id"] for x in lines[1:]} == set(res["row"]["book_ids"].values())
+    assert CLI.main(base) == 2                                            # a duplicate is refused
+    assert CLI.main(base + ["--dry-run"]) == 2
+    assert len(target.read_text(encoding="utf-8").splitlines()) == 4
+    assert CLI.main(["--register", "--decision-date", "1999-01-01", "--data-root", str(root)]) == 2
+
+
+def _a_past_session():
+    from backend.services import market_sessions as MS
+    d = (_now() - timedelta(days=30)).date()
+    while not MS.is_session(d):
+        d -= timedelta(days=1)
+    nxt = d + timedelta(days=1)
+    while not MS.is_session(nxt):
+        nxt += timedelta(days=1)
+    return d, nxt
+
+
+@pytest.mark.parametrize("ny_hour", [8, 12])          # before and after the 09:30 New York open
+def test_the_entry_rule_before_and_after_the_open(ny_hour):
+    from datetime import datetime as _dt, time as _time
+    d, nxt = _a_past_session()
+    t = _dt.combine(d, _time(ny_hour, 0), tzinfo=S.NY).astimezone(timezone.utc)
+    assert S.decision_date(t) == d
+    assert S.entry_session(t) == str(nxt)               # never D's own open, even at 08:00
+    assert S.ENTRY_RULE in S.render(S.candidate_set(_funnel(_now()), now=_now(), include_added=False),
+                                    [], t)[0]
+    assert S.contract()["entry_rule"] == S.ENTRY_RULE
+    assert "next session's open" not in S.SYSTEM_PROMPT

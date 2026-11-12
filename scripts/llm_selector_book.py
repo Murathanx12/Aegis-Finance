@@ -6,12 +6,19 @@
     # write the frozen contract from the code (only when the contract changes)
     python -m scripts.llm_selector_book --freeze-contract
 
-    # ONE real decision (needs LLM_SELECTOR_BOOK_ENABLED=True; the brain runs it)
-    python -m scripts.llm_selector_book --decide --data-root <optimus dir> --out <dir>
+    # ONE real decision at the WALL CLOCK (env AEGIS_LLM_SELECTOR_BOOK=1; the brain runs it)
+    python -m scripts.llm_selector_book --decide --data-root <optimus dir>
 
-Exit codes: 0 done · 2 refused (stale/undateable/empty candidates, missing
-input, unstamped field, reply defect, provider refusal, contract drift) ·
-3 DeepSeek budget refused · 4 flag off (nothing read, called or written).
+    # put that decision's three books on the CH-11 ruler (llm_portfolio/books.jsonl)
+    python -m scripts.llm_selector_book --register --decision-date D --data-root <optimus dir> --dry-run
+    python -m scripts.llm_selector_book --register --decision-date D --data-root <optimus dir>
+
+`--now` is for `--dry-run` ONLY; `--decide --now` is refused (NOW_NOT_ALLOWED).
+
+Exit codes: 0 done · 2 refused (stale/undateable/empty/too few candidates,
+missing input, unstamped field, reply defect, provider refusal, contract drift,
+already decided, already registered, --now with --decide) · 3 DeepSeek budget
+refused · 4 flag off (nothing read, called or written).
 """
 
 from __future__ import annotations
@@ -62,13 +69,16 @@ def dry_run(data_root: Path, out: Path, now: datetime) -> dict:
         "packets_n_excluded_at_or_after_decision": {p["ticker"]: p["n_excluded_at_or_after_decision"]
                                                     for p in packets},
         "packet_example": packets[0] if packets else None,
-        "prompt_hash": S.sha16(system + "\n" + user),
+        "prompt_hash": S.sha16(S.pinned_system(system) + "\n" + user),
+        "prompt_hash_rendered": S.sha16(system + "\n" + user),
         "prompt_chars": {"system": len(system), "user": len(user)},
         "cost": cost,
         "twins_preview": {"selection": {"seed": seed,
                                         "tickers": S.selection_twin(cset["tickers"], k, seed)},
                           "incumbent": S.incumbent_twin(cset["ranked"], k)},
         "llm_calls_made": 0,
+        "entry_session": S.entry_session(now), "entry_rule": S.ENTRY_RULE,
+        "too_few_candidates": len(cset["tickers"]) <= k,
         "flag": {"LLM_SELECTOR_BOOK_ENABLED": bool(C.LLM_SELECTOR_BOOK_ENABLED),
                  "FUNNEL_NEWS_SOURCE_ENABLED": bool(C.FUNNEL_NEWS_SOURCE_ENABLED)},
     }
@@ -83,14 +93,21 @@ def dry_run(data_root: Path, out: Path, now: datetime) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--dry-run", action="store_true")
+    g = ap.add_mutually_exclusive_group()
     g.add_argument("--decide", action="store_true")
     g.add_argument("--freeze-contract", action="store_true")
+    g.add_argument("--register", action="store_true")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="alone: the read-only packet dry run; with --register: print only")
+    ap.add_argument("--decision-date", default=None, help="--register: the decision_date to register")
     ap.add_argument("--data-root", default=str(C.OPTIMUS_LEDGER_DIR))
     ap.add_argument("--out", default=None)
     ap.add_argument("--now", default=None, help="decision instant (UTC ISO); default now")
     a = ap.parse_args(argv)
+    if not (a.decide or a.freeze_contract or a.register or a.dry_run):
+        ap.error("one of --dry-run, --decide, --register, --freeze-contract is required")
+    if a.decide and a.dry_run:
+        ap.error("--decide and --dry-run are different runs")
 
     if a.freeze_contract:
         body = S.contract()
@@ -101,10 +118,31 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     data_root = Path(a.data_root)
-    now = _now(a.now)
-    if a.decide and not C.LLM_SELECTOR_BOOK_ENABLED:
-        print("REFUSED FLAG_OFF: LLM_SELECTOR_BOOK_ENABLED is False; nothing read, called or written")
+    if a.register:
+        if not a.decision_date:
+            print("REFUSED: --register needs --decision-date")
+            return S.EXIT_REFUSED
+        sel = Path(a.out) if a.out else data_root / "llm_selector"
+        try:
+            res = S.register(selector_dir=sel, target=data_root / "llm_portfolio" / "books.jsonl",
+                             decision_date_=a.decision_date, dry_run=a.dry_run)
+        except S.SelectorRefused as exc:
+            print(f"REFUSED {exc.code}: {exc.detail}")
+            return exc.exit_code
+        verb = "WOULD APPEND" if a.dry_run else "APPENDED"
+        print(f"{verb} {len(res['lines'])} rows to {res['target']}:")
+        for ln in res["lines"]:
+            print(ln)
+        return 0
+    if a.decide and a.now:
+        print("REFUSED NOW_NOT_ALLOWED: --decide uses the wall clock; --now is for --dry-run only "
+              "(a back-dated decision is not forward evidence)")
+        return S.EXIT_REFUSED
+    if a.decide and not S.flag_on():
+        print("REFUSED FLAG_OFF: LLM_SELECTOR_BOOK_ENABLED / AEGIS_LLM_SELECTOR_BOOK are off; "
+              "nothing read, called or written")
         return S.EXIT_CODES[S.FLAG_OFF]
+    now = S.wall_clock() if a.decide else _now(a.now)
     out = Path(a.out) if a.out else (S.default_out_dir() if a.decide else None)
     if out is None:
         print("REFUSED: --dry-run needs --out (it never writes into the data folder by default)")

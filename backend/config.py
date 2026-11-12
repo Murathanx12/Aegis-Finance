@@ -1760,11 +1760,14 @@ FUNNEL_NEWS_MAX_ENRICH_FILING = 20
 
 # ── llm-book-ruler (CH-17/CH-11): the LLM selector book (llm_selector_book) ──
 #: OFF by default: with it off `--decide` refuses (exit 4) before any read,
-#: call or write. `--dry-run` is read-only and works with it off. Every value
-#: below is part of the frozen contract (backend/strategy/contracts/
-#: CONTRACT_LLM_SELECTOR_v0.json); changing one is a NEW contract, and
-#: `test_llm_selector_book` fails until it is re-frozen.
-LLM_SELECTOR_BOOK_ENABLED = False
+#: call or write. `--dry-run` is read-only and works with it off. One run is
+#: enabled with the env var `AEGIS_LLM_SELECTOR_BOOK=1` (read again at call
+#: time by `llm_selector_book.flag_on`), so a release clone is never edited.
+#: Every value below except this flag is part of the frozen contract
+#: (backend/strategy/contracts/CONTRACT_LLM_SELECTOR_v0.json); changing one is
+#: a NEW contract, and `test_llm_selector_book` fails until it is re-frozen.
+LLM_SELECTOR_BOOK_ENABLED = os.getenv("AEGIS_LLM_SELECTOR_BOOK", "").strip().lower() in (
+    "1", "true", "yes", "on")
 #: Names the LLM returns; the selection twin and the incumbent hold the same k.
 LLM_SELECTOR_K = 8
 #: Long only: the book engine (`llm_portfolio.freeze`) has no borrow model.

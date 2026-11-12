@@ -80,14 +80,54 @@ WRONG_K = "WRONG_K"
 DUPLICATE_PICK = "DUPLICATE_PICK"
 BAD_DIRECTION = "BAD_DIRECTION"
 MISSING_REASON = "MISSING_REASON"
+BAD_SHAPE = "BAD_SHAPE"
+BAD_REASON = "BAD_REASON"
+REASON_NOT_ENGLISH = "REASON_NOT_ENGLISH"
+TOO_FEW_CANDIDATES = "TOO_FEW_CANDIDATES"
+ALREADY_DECIDED = "ALREADY_DECIDED"
+ALREADY_REGISTERED = "ALREADY_REGISTERED"
+NOTHING_TO_REGISTER = "NOTHING_TO_REGISTER"
+NOW_NOT_ALLOWED = "NOW_NOT_ALLOWED"
+BACKDATED = "BACKDATED"
 BUDGET_REFUSED = "BUDGET_REFUSED"
 PROVIDER_REFUSED = "PROVIDER_REFUSED"
 CONTRACT_DRIFT = "CONTRACT_DRIFT"
 
 #: Reply defects: the whole decision is refused, the reply is KEPT on the
 #: refusal row (its tokens were paid for) and counted. Never repaired.
-REPLY_DEFECTS = (BAD_REPLY, OUT_OF_SET, WRONG_K, DUPLICATE_PICK, BAD_DIRECTION,
-                 MISSING_REASON)
+REPLY_DEFECTS = (BAD_REPLY, BAD_SHAPE, OUT_OF_SET, WRONG_K, DUPLICATE_PICK, BAD_DIRECTION,
+                 MISSING_REASON, BAD_REASON, REASON_NOT_ENGLISH)
+
+#: Bumped whenever the packet CODE changes (stamping, a fact's computation, a
+#: source's admission rule). It is hashed into the contract, so a code change
+#: that a prompt/parameter hash would not see is still a new contract.
+PACKET_SCHEMA_VERSION = "llm_selector_packet/2"
+
+#: The funnel fields copied into a packet (hashed into the contract).
+FUNNEL_FIELDS: tuple = ("sector", "market_cap", "quality", "mom_12_1", "vol_annual",
+                        "median_dollar_vol", "analyst_upside", "n_analysts", "insider_score",
+                        "price", "score", "stage")
+
+#: A decision instant further than this from the wall clock is BACKDATED.
+MAX_CLOCK_SKEW_S = 120
+
+#: The ONE entry rule (prompt and contract say the same sentence).
+ENTRY_RULE = ("entered at the open of the first trading session strictly after the New York "
+              "calendar date of the decision time, so a decision made before the open on day D "
+              "enters at the open of the next session after D, not at D's open")
+
+
+def wall_clock() -> datetime:
+    """The wall clock (a function so a test can pin it)."""
+    return datetime.now(timezone.utc).replace(microsecond=0)
+
+
+def flag_on() -> bool:
+    """The flag: the config literal OR the env var `AEGIS_LLM_SELECTOR_BOOK`
+    (read at call time), so one run can be enabled without editing a file."""
+    import os
+    env = os.getenv("AEGIS_LLM_SELECTOR_BOOK", "").strip().lower()
+    return bool(C.LLM_SELECTOR_BOOK_ENABLED) or env in ("1", "true", "yes", "on")
 
 EXIT_CODES = {FLAG_OFF: 4, BUDGET_REFUSED: 3}
 EXIT_REFUSED = 2
@@ -153,6 +193,17 @@ def decision_date(decision_time: datetime) -> date:
     return decision_time.astimezone(NY).date()
 
 
+def _language_pin() -> str:
+    from backend.services import llm_language as L
+    return L.LANGUAGE_PIN
+
+
+def pinned_system(system: str) -> str:
+    """The system prompt exactly as `model_provider.complete` sends it."""
+    from backend.services import llm_language as L
+    return L.pin(system)
+
+
 # ── the contract ────────────────────────────────────────────────────────────
 
 SYSTEM_PROMPT = (
@@ -163,8 +214,8 @@ SYSTEM_PROMPT = (
     "Use ONLY the facts given; do not use anything you remember about these "
     "companies after the decision time, and do not invent prices, targets or "
     "events. Choose exactly {k} names from the candidate list for a holding "
-    "period of {hold} trading sessions, equal weight, entered at the next "
-    "session's open, and charged the round-trip cost shown per name. Your book "
+    "period of {hold} trading sessions, equal weight, {entry_rule}, and charged "
+    "the round-trip cost shown per name. Your book "
     "will be compared against {k} names drawn at random from the same list and "
     "against the first {k} names of the ranker's own order. Answer with JSON "
     "only, no prose before or after."
@@ -190,9 +241,11 @@ PACKET_FIELDS: dict[str, str] = {
     "price.close/ret_5d/ret_21d/ret_63d/vol_63_annual/vs_52w_high/median_dollar_vol_63/liquidity_band/cost_bps_round_trip/n_bars":
         "daily bars dated before the decision, each bar stamped 21:00 UTC of its date",
     "revisions.revisions_Nd/net_raises_Nd/median_target_change_Nd":
-        "analyst/target_revisions.parquet rows with event_date before the decision (date-only = end of day)",
+        "analyst/target_revisions.parquet rows knowable before the decision: the LATER of event_date "
+        "and the pull stamp (first_seen_utc, else pulled_at); date-only = end of day",
     "digest.theme": "world-digest themes naming the ticker (discovery_autopsy.digest_names), stamped by the digest file",
-    "knowable.item": "news/filing corpus rows naming the ticker (discovery_autopsy.Corpus), stamped by known_at",
+    "knowable.item": "news/filing corpus rows naming the ticker (discovery_autopsy.Corpus), stamped by the "
+                     "LATER of first_seen_utc and a timed published_utc",
     "language": "digest themes and corpus titles above llm_language.NON_LATIN_BAR non-Latin script are left out",
     "source.added_by": "the CH-14a news/filing source that added the name (added_by_source block only)",
 }
@@ -232,8 +285,22 @@ def contract_body() -> dict:
             "max_items_per_name": int(C.LLM_SELECTOR_MAX_ITEMS_PER_NAME),
             "price_lookback_days": int(C.LLM_SELECTOR_PRICE_LOOKBACK_DAYS),
         },
+        "packet_schema_version": PACKET_SCHEMA_VERSION,
+        "funnel_fields": list(FUNNEL_FIELDS),
+        "entry_rule": ENTRY_RULE,
         "prompts": {"system": SYSTEM_PROMPT, "user_template": USER_TEMPLATE},
         "prompt_template_hash": sha16(SYSTEM_PROMPT + "\n" + USER_TEMPLATE),
+        "language_pin_hash": sha16(_language_pin()),
+        "prompt_hashes": ("prompt_hash = sha16(system AS SENT, i.e. with the central language pin, "
+                          "+ newline + user); prompt_hash_rendered = the same without the pin"),
+        "reply_contract": ("STRICT: the whole reply is exactly one JSON object {\"picks\": [...]} with no "
+                           "prose or code fence; each pick has exactly the keys ticker, direction, "
+                           "reason (strings); the ticker matches a candidate exactly after upper-casing "
+                           "only (no trimming); the direction is exactly an allowed one; the reason is "
+                           "one non-empty line of at most 300 characters, at most NON_LATIN_BAR "
+                           "non-Latin script; any defect is a counted refusal of its class"),
+        "min_candidates": "the candidate set must hold MORE than k names, else refused before the call",
+        "one_decision_per_date": "a second decision for a decision_date already in decisions.jsonl is refused before the call",
         "reply_rule": ("exactly k picks, each ticker in the candidate set, no duplicate, an allowed "
                        "direction and a non-empty reason; any defect refuses the WHOLE decision, "
                        "the reply is kept on the refusal row and counted; never repaired"),
@@ -245,7 +312,7 @@ def contract_body() -> dict:
         },
         "seed_base": int(C.LLM_SELECTOR_SEED_BASE),
         "costs": "llm_portfolio.grade charges xs_ranker.round_trip_bps by liquidity band on entry",
-        "fill": "llm_portfolio.entry_session: first session strictly after the decision date, at the open",
+        "fill": "llm_portfolio.entry_session: " + ENTRY_RULE,
         "objective": ("terminal wealth over hold_sessions under the BALANCED personality, read as "
                       "excess over (i) the selection twin and (ii) the incumbent; the CH-11 ruler "
                       "(band twins, rank p with Holm, block t at every origin) grades the book"),
@@ -354,8 +421,7 @@ def admit(facts: Iterable[dict], decision_time: datetime) -> tuple[list[dict], i
 def funnel_facts(member: dict, generated_at: str) -> list[dict]:
     row = member["row"]
     out = []
-    for k in ("sector", "market_cap", "quality", "mom_12_1", "vol_annual", "median_dollar_vol",
-              "analyst_upside", "n_analysts", "insider_score", "price", "score", "stage"):
+    for k in FUNNEL_FIELDS:
         v = row.get(k)
         if v is None:
             continue
@@ -418,7 +484,17 @@ def revision_facts(rev: Optional[pd.DataFrame], ticker: str, decision_time: date
     d = rev[rev["ticker"].astype(str).str.upper() == ticker]
     if d.empty:
         return []
-    st = d["event_date"].map(parse_stamp)
+    ev = d["event_date"].map(parse_stamp)
+    pull_col = next((c for c in ("first_seen_utc", "pulled_at") if c in d.columns), None)
+    if pull_col is not None:
+        pulled = d[pull_col].map(parse_stamp)
+        if pull_col == "first_seen_utc" and "pulled_at" in d.columns:
+            pulled = [a if a is not None else parse_stamp(b)
+                      for a, b in zip(pulled, d["pulled_at"])]
+        st = [max(a, b) if (a is not None and b is not None) else a
+              for a, b in zip(ev, pulled)]
+    else:
+        st = list(ev)
     d = d.assign(_st=st)
     d = d[d["_st"].notna()]
     d = d[(d["_st"] < decision_time) & (d["_st"] >= decision_time - timedelta(days=lookback_days))]
@@ -449,11 +525,21 @@ def digest_facts(by_ticker: dict, ticker: str, max_items: int) -> list[dict]:
             for r in rows]
 
 
+def knowable_stamp(r: dict) -> Any:
+    """The LATER of the corpus row's first-seen and (timed) publication stamps."""
+    cands = [parse_stamp(r.get("first_seen_utc_raw")), parse_stamp(r.get("known_at"))]
+    pub = r.get("published_at")
+    if pub is not None:
+        cands.append(parse_stamp(pub))
+    cands = [c for c in cands if c is not None]
+    return max(cands) if cands else None
+
+
 def knowable_facts(by_ticker: dict, ticker: str, max_items: int) -> list[dict]:
     rows = [r for r in by_ticker.get(ticker, []) if latin_only(str(r.get("title") or ""))]
-    rows = sorted(rows, key=lambda r: r["known_at"])[-max_items:]
+    rows = sorted(rows, key=lambda r: str(knowable_stamp(r)))[-max_items:]
     return [fact("knowable.item", f"[{r.get('source')}] {str(r.get('title') or '')[:200]}",
-                 r.get("known_at"), "news_corpus") for r in rows]
+                 knowable_stamp(r), "news_corpus") for r in rows]
 
 
 def build_packet(ticker: str, facts: list[dict], decision_time: datetime) -> dict:
@@ -472,7 +558,7 @@ def packets_hash(packets: list[dict]) -> str:
 
 def render(cset: dict, packets: list[dict], decision_time: datetime) -> tuple[str, str]:
     k, hold = int(C.LLM_SELECTOR_K), int(C.LLM_SELECTOR_HOLD_SESSIONS)
-    system = SYSTEM_PROMPT.format(k=k, hold=hold)
+    system = SYSTEM_PROMPT.format(k=k, hold=hold, entry_rule=ENTRY_RULE)
     compact = [{"ticker": p["ticker"], "facts": p["facts"]} for p in packets]
     user = USER_TEMPLATE.format(
         decision_time=iso(decision_time), directions=", ".join(C.LLM_SELECTOR_DIRECTIONS),
@@ -482,44 +568,58 @@ def render(cset: dict, packets: list[dict], decision_time: datetime) -> tuple[st
 
 
 def parse_reply(text: str, *, tickers: list[str], k: int, directions: Iterable[str]) -> list[dict]:
-    """Validate the reply. Any defect refuses the whole decision."""
-    raw = (text or "").strip()
-    if raw.startswith("```"):
-        raw = raw.strip("`")
-        raw = raw[raw.find("{"):] if "{" in raw else raw
+    """STRICT validation (see the contract's `reply_contract`). Nothing is
+    repaired: any defect refuses the whole decision with its class."""
+    from backend.services import llm_language as L
+    raw = text if isinstance(text, str) else ""
+    body = raw.strip()
+    if not (body.startswith("{") and body.endswith("}")):
+        raise SelectorRefused(BAD_REPLY, "reply is not exactly one JSON object (prose or a code fence around it)")
     try:
-        obj = json.loads(raw[raw.find("{"): raw.rfind("}") + 1]) if "{" in raw else None
-    except ValueError:
-        obj = None
-    picks = obj.get("picks") if isinstance(obj, dict) else None
-    if not isinstance(picks, list):
-        raise SelectorRefused(BAD_REPLY, "reply is not JSON with a `picks` list")
-    allowed = {d.lower() for d in directions}
+        obj = json.loads(body)
+    except ValueError as exc:
+        raise SelectorRefused(BAD_REPLY, f"reply is not valid JSON: {exc}") from exc
+    if not isinstance(obj, dict) or set(obj) != {"picks"} or not isinstance(obj["picks"], list):
+        raise SelectorRefused(BAD_SHAPE, f"top level must be exactly {{'picks': [...]}}; got keys "
+                              f"{sorted(obj) if isinstance(obj, dict) else type(obj).__name__}")
+    allowed = set(directions)
     universe = set(tickers)
     clean, seen, outside = [], set(), []
-    for p in picks:
-        if not isinstance(p, dict):
-            raise SelectorRefused(BAD_REPLY, f"a pick is not an object: {p!r}")
-        t = str(p.get("ticker") or "").strip().upper()
+    for p in obj["picks"]:
+        if not isinstance(p, dict) or set(p) != {"ticker", "direction", "reason"}:
+            raise SelectorRefused(BAD_SHAPE, f"a pick must have exactly ticker, direction, reason: {p!r}"[:300])
+        if not all(isinstance(p[x], str) for x in ("ticker", "direction", "reason")):
+            raise SelectorRefused(BAD_SHAPE, f"pick fields must be strings: {p!r}"[:300])
+        t = p["ticker"].upper()
         if t not in universe:
-            outside.append(t)
+            outside.append(p["ticker"])
             continue
         if t in seen:
             raise SelectorRefused(DUPLICATE_PICK, f"{t} picked twice")
         seen.add(t)
-        dr = str(p.get("direction") or "").strip().lower()
-        if dr not in allowed:
-            raise SelectorRefused(BAD_DIRECTION, f"{t} direction {dr!r} not in {sorted(allowed)}")
-        reason = " ".join(str(p.get("reason") or "").split())
-        if not reason:
+        if p["direction"] not in allowed:
+            raise SelectorRefused(BAD_DIRECTION, f"{t} direction {p['direction']!r} not in {sorted(allowed)}")
+        reason = p["reason"]
+        if not reason.strip():
             raise SelectorRefused(MISSING_REASON, f"{t} has no reason")
-        clean.append({"ticker": t, "direction": dr, "reason": reason[:300]})
+        if "\n" in reason or "\r" in reason or len(reason) > 300:
+            raise SelectorRefused(BAD_REASON, f"{t} reason is not one line of <= 300 characters")
+        if L.non_latin_share(reason) > L.NON_LATIN_BAR:
+            raise SelectorRefused(REASON_NOT_ENGLISH,
+                                  f"{t} reason is {L.non_latin_share(reason):.0%} non-Latin script")
+        clean.append({"ticker": t, "direction": p["direction"], "reason": reason})
     if outside:
         raise SelectorRefused(OUT_OF_SET, f"{len(outside)} pick(s) outside the candidate set: {outside[:10]}",
                               outside=outside)
     if len(clean) != k:
         raise SelectorRefused(WRONG_K, f"{len(clean)} picks, contract k = {k}")
     return clean
+
+
+def entry_session(decision_time: datetime) -> str:
+    """The session the book enters at (its open), by the engine's own rule."""
+    from backend.services import llm_portfolio as LP
+    return str(LP.entry_session(str(decision_date(decision_time))).date())
 
 
 def selection_seed(day: date) -> int:
@@ -562,29 +662,46 @@ def _call(complete: Complete, system: str, user: str) -> Any:
         raise SelectorRefused(PROVIDER_REFUSED, str(exc)) from exc
 
 
-def decide(cset: dict, packets: list[dict], decision_time: datetime, *,
-           complete: Optional[Complete] = None) -> dict:
-    """One LLM decision -> the decision row (raises SelectorRefused on any defect)."""
-    k = int(C.LLM_SELECTOR_K)
-    system, user = render(cset, packets, decision_time)
-    base = {"schema": SCHEMA, "book": BOOK_NAME, "contract_hash": contract_hash(),
+def decision_context(cset: dict, packets: list[dict], decision_time: datetime) -> dict:
+    return {"schema": SCHEMA, "book": BOOK_NAME, "contract_hash": contract_hash(),
             "decision_time": iso(decision_time), "decision_date": str(decision_date(decision_time)),
             "candidate_set_hash": cset["candidate_set_hash"], "packet_hash": packets_hash(packets),
-            "prompt_hash": sha16(system + "\n" + user),
             "request_model": str(C.LLM_SELECTOR_MODEL)}
-    reply = _call(complete or _default_complete, system, user)
-    text = getattr(reply, "text", reply)
-    model_id = getattr(reply, "model", None) or str(C.LLM_SELECTOR_MODEL)
+
+
+def decide(cset: dict, packets: list[dict], decision_time: datetime, *,
+           complete: Optional[Complete] = None) -> dict:
+    """One LLM decision -> the decision row (raises SelectorRefused on any
+    defect; every refusal carries the decision context in `.extra`)."""
+    k = int(C.LLM_SELECTOR_K)
+    system, user = render(cset, packets, decision_time)
+    base = {**decision_context(cset, packets, decision_time),
+            "prompt_hash": sha16(pinned_system(system) + "\n" + user),
+            "prompt_hash_rendered": sha16(system + "\n" + user)}
     try:
-        picks = parse_reply(str(text), tickers=cset["tickers"], k=k,
-                            directions=C.LLM_SELECTOR_DIRECTIONS)
+        if len(cset["tickers"]) <= k:
+            raise SelectorRefused(TOO_FEW_CANDIDATES, f"{len(cset['tickers'])} candidates; the contract "
+                                  f"needs more than k = {k} (a selection from k names is no selection)")
+        reply = _call(complete or _default_complete, system, user)
+        text = getattr(reply, "text", reply)
+        acct = getattr(reply, "budget_accounting", None) or {}
+        served = {"reply_model_label": getattr(reply, "model", None),
+                  "served_model": getattr(reply, "served_model", None),
+                  "reservation_id": acct.get("reservation_id"),
+                  "billing_status": acct.get("billing_status")}
+        try:
+            picks = parse_reply(text, tickers=cset["tickers"], k=k, directions=C.LLM_SELECTOR_DIRECTIONS)
+        except SelectorRefused as exc:
+            exc.extra.update({**served, "response": text, "cost_usd": acct.get("cost_usd")})
+            raise
     except SelectorRefused as exc:
-        exc.extra.update({**base, "model_id": model_id, "response": text})
+        exc.extra = {**base, **exc.extra}
         raise
     day = decision_date(decision_time)
     seed = selection_seed(day)
-    acct = getattr(reply, "budget_accounting", None) or {}
-    return {**base, "model_id": model_id, "response": text, "picks": picks,
+    return {**base, **served, "model_id": served["served_model"] or "SERVED_MODEL_NOT_REPORTED",
+            "response": text, "picks": picks, "entry_session": entry_session(decision_time),
+            "entry_rule": ENTRY_RULE,
             "candidate_set": {"generated_at": cset["generated_at"], "age_days": cset["age_days"],
                               "n_ranked": cset["n_ranked"], "n_added": cset["n_added"],
                               "added_by_source_included": cset["added_by_source_included"],
@@ -657,33 +774,96 @@ def refusal_counts(out_dir: Path) -> dict:
 
 def record_refusal(out_dir: Path, exc: SelectorRefused, now: datetime) -> dict:
     row = {"schema": SCHEMA, "row_type": "refusal", "code": exc.code, "detail": exc.detail,
-           "at": iso(now), **{k: v for k, v in exc.extra.items()}}
+           "at": iso(now), **{k: v for k, v in exc.extra.items()},
+           "written_utc": iso(wall_clock())}
     _append(Path(out_dir) / "refusals.jsonl", row)
     row["counts_after"] = refusal_counts(out_dir)
     return row
 
 
+def decided_dates(out_dir: Path) -> set:
+    p = Path(out_dir) / "decisions.jsonl"
+    out: set = set()
+    if p.is_file():
+        for line in p.read_text(encoding="utf-8").splitlines():
+            try:
+                out.add(json.loads(line).get("decision_date"))
+            except ValueError:
+                continue
+    return out
+
+
 def run_decision(*, cset: dict, packets: list[dict], decision_time: datetime, out_dir: Path,
                  complete: Optional[Complete] = None, enabled: Optional[bool] = None) -> dict:
     """Flag off -> refuse before anything is written. Flag on -> one decision
-    row + three frozen books, or one counted refusal row."""
-    on = bool(C.LLM_SELECTOR_BOOK_ENABLED if enabled is None else enabled)
+    row + three frozen books, or one counted refusal row. The decision instant
+    must be the wall clock (a back-dated decision is not forward evidence), and
+    one decision per decision_date (a second call would be a paid re-roll)."""
+    on = flag_on() if enabled is None else bool(enabled)
     if not on:
-        raise SelectorRefused(FLAG_OFF, "LLM_SELECTOR_BOOK_ENABLED is False; nothing called, nothing written")
+        raise SelectorRefused(FLAG_OFF, "LLM_SELECTOR_BOOK_ENABLED / AEGIS_LLM_SELECTOR_BOOK are off; "
+                              "nothing called, nothing written")
     check_frozen()
+    wall = wall_clock()
+    skew = abs((wall - decision_time).total_seconds())
+    if skew > MAX_CLOCK_SKEW_S:
+        raise SelectorRefused(BACKDATED, f"decision time {iso(decision_time)} is {skew:.0f} s from the "
+                              f"wall clock {iso(wall)}; a decision is made NOW or not at all")
+    day = str(decision_date(decision_time))
+    if day in decided_dates(out_dir):
+        exc = SelectorRefused(ALREADY_DECIDED, f"decisions.jsonl already holds decision_date {day}; "
+                              "a second decision for the same date would be a paid re-roll",
+                              **decision_context(cset, packets, decision_time))
+        record_refusal(out_dir, exc, decision_time)
+        raise exc
     try:
         row = decide(cset, packets, decision_time, complete=complete)
     except SelectorRefused as exc:
-        if exc.code in REPLY_DEFECTS + (BUDGET_REFUSED, PROVIDER_REFUSED):
+        if exc.code in REPLY_DEFECTS + (BUDGET_REFUSED, PROVIDER_REFUSED, TOO_FEW_CANDIDATES):
             record_refusal(out_dir, exc, decision_time)
         raise
     books = freeze_books(row)
     row["book_ids"] = {"llm": books[0]["book_id"], "selection": books[1]["book_id"],
                        "incumbent": books[2]["book_id"]}
+    row["written_utc"] = iso(wall_clock())
     _append(Path(out_dir) / "decisions.jsonl", row)
     for b in books:
         _append(Path(out_dir) / "books.jsonl", b)
     return {"row": row, "books": books}
+
+
+def register(*, selector_dir: Path, target: Path, decision_date_: str, dry_run: bool) -> dict:
+    """Put one decision's three frozen books on the CH-11 ruler by appending
+    them to `llm_portfolio/books.jsonl` (`target`). Idempotent: a book_id
+    already in the target refuses (nothing written). `dry_run` prints only."""
+    src = Path(selector_dir) / "books.jsonl"
+    dec = [json.loads(x) for x in (Path(selector_dir) / "decisions.jsonl").read_text(encoding="utf-8").splitlines()
+           if x.strip()] if (Path(selector_dir) / "decisions.jsonl").is_file() else []
+    row = next((d for d in dec if d.get("decision_date") == decision_date_), None)
+    if row is None or not src.is_file():
+        raise SelectorRefused(NOTHING_TO_REGISTER, f"no decision for {decision_date_} in {selector_dir}")
+    ids = set(row["book_ids"].values())
+    books = [json.loads(x) for x in src.read_text(encoding="utf-8").splitlines() if x.strip()]
+    rows = [b for b in books if b.get("book_id") in ids]
+    if len(rows) != 3:
+        raise SelectorRefused(NOTHING_TO_REGISTER, f"expected 3 books for {decision_date_}, found {len(rows)}")
+    have = set()
+    if Path(target).is_file():
+        for line in Path(target).read_text(encoding="utf-8").splitlines():
+            try:
+                have.add(json.loads(line).get("book_id"))
+            except ValueError:
+                continue
+    dup = sorted(ids & have)
+    if dup:
+        raise SelectorRefused(ALREADY_REGISTERED, f"{dup} already in {target}; nothing appended")
+    lines = [json.dumps(b, default=str) for b in rows]
+    if not dry_run:
+        Path(target).parent.mkdir(parents=True, exist_ok=True)
+        with Path(target).open("a", encoding="utf-8") as fh:
+            for ln in lines:
+                fh.write(ln + "\n")
+    return {"target": str(target), "dry_run": dry_run, "lines": lines, "book_ids": sorted(ids)}
 
 
 # ── reading the live inputs (read-only) ─────────────────────────────────────
