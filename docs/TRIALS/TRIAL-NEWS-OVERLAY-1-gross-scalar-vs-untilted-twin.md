@@ -3,7 +3,14 @@
 - **Licence:** PRODUCT_EXPERIMENT (internal simulation only: no broker, no order, no LLM authority).
   No significance gate and no preregistration are required for this licence; the four never-relax
   rules hold (public-before-use, no target leakage, costs never omitted, frozen once forward).
-- **Contract (current):** `docs/TRIALS/CONTRACT_NEWS_OVERLAY_v3.json`, **`policy_hash c777f997289240e4`**
+- **Contract (current):** `docs/TRIALS/CONTRACT_NEWS_OVERLAY_v4.json`, **`policy_hash 93a042facf44b157`**
+  (v4, review of PR #133: same mapping and base rule as v3; the first FORWARD row of each month RECORDS the
+  draw in `news_overlay_book/draws.jsonl` and every later step/grade uses the recorded basket, refusing
+  DRAW_MISMATCH unless `--accept-recorded-draw`, which is recorded; eligibility needs a real bar on the
+  session before D; the step refuses STALE_PANEL / DRAW_ROW_MISSING; the contract states the carry rule
+  and its bias, the survivorship of the panel, objects looked at = 3, and the replay finding that the
+  overlay cut exposure into rebounds and was blind (EMPTY digest) before the -4.4% session of 2026-11-05.)
+- **Contract v3 (superseded):** `docs/TRIALS/CONTRACT_NEWS_OVERLAY_v3.json`, `policy_hash c777f997289240e4`
   (pinned by `backend/tests/test_news_overlay_book.py::test_the_committed_contract_is_the_rule_in_code`;
   `test_v3_keeps_every_v2_mapping_parameter` pins that only the base changed).
 - **v3 (2026-11-12, after PR #125):** same mapping and timing as v2; new base **LIQUID-RANDOM-50**
