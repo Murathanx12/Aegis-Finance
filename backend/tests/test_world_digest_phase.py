@@ -262,3 +262,39 @@ def test_run_lock_guard_refuses_a_concurrent_second_run(tmp_path):
     with S.RunLock(lock):                                   # released cleanly
         assert lock.exists()
     assert not lock.exists()
+
+
+def test_run_lock_takes_over_a_marker_whose_pid_is_dead(tmp_path, monkeypatch, capsys):
+    """A restart on 2026-11-12 killed a run and its marker cost the whole slot."""
+    import json as _json
+    from scripts import world_digest as S
+    lock = tmp_path / "run.lock"
+    lock.write_text(_json.dumps({"pid": 424242, "t": "x"}), encoding="utf-8")
+    monkeypatch.setattr(S._SS, "pid_alive", lambda pid: False)
+    with S.RunLock(lock):
+        assert _json.loads(lock.read_text(encoding="utf-8"))["pid"] != 424242
+    assert "TOOK OVER" in capsys.readouterr().out
+    assert not lock.exists()
+
+
+def test_run_lock_still_refuses_a_fresh_marker_whose_pid_is_alive(tmp_path, monkeypatch):
+    import json as _json
+    import pytest as _pytest
+    from scripts import world_digest as S
+    lock = tmp_path / "run.lock"
+    lock.write_text(_json.dumps({"pid": 424242, "t": "x"}), encoding="utf-8")
+    monkeypatch.setattr(S._SS, "pid_alive", lambda pid: True)
+    with _pytest.raises(RuntimeError, match="holds run.lock"):
+        with S.RunLock(lock):
+            pass
+    assert lock.exists()                                   # the live run keeps its marker
+
+
+def test_run_lock_keeps_the_age_rule_for_an_unreadable_marker(tmp_path):
+    import pytest as _pytest
+    from scripts import world_digest as S
+    lock = tmp_path / "run.lock"
+    lock.write_text("not json", encoding="utf-8")
+    with _pytest.raises(RuntimeError, match="holds run.lock"):
+        with S.RunLock(lock):
+            pass
