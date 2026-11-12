@@ -1,0 +1,58 @@
+{
+ "authority": "none: internal simulation book; the LLM has no authority over real capital and none over order sending; nothing here calls a broker",
+ "cadence_sessions": 5,
+ "call_path": "model_provider.complete -> provider_budget.guarded_send",
+ "candidate_set": {
+  "added_by_source": "the CH-14a `added_by_source` block, included iff FUNNEL_NEWS_SOURCE_ENABLED",
+  "source": "opportunity funnel final list (IC_FUNNEL_PATH `candidates`, ranker order)",
+  "stale_limit_days": 10,
+  "undateable": "refused"
+ },
+ "claims": "none: a PRODUCT_EXPERIMENT; no skill claim from this book's results",
+ "contract_hash": "4e6bf24eb5c11e27",
+ "costs": "llm_portfolio.grade charges xs_ranker.round_trip_bps by liquidity band on entry",
+ "directions": [
+  "long"
+ ],
+ "fill": "llm_portfolio.entry_session: first session strictly after the decision date, at the open",
+ "frozen_utc": "2026-11-12T09:19:34+00:00",
+ "hold_sessions": 5,
+ "k": 8,
+ "licence": "PRODUCT_EXPERIMENT",
+ "max_tokens": 1200,
+ "name": "llm_selector_v0",
+ "objective": "terminal wealth over hold_sessions under the BALANCED personality, read as excess over (i) the selection twin and (ii) the incumbent; the CH-11 ruler (band twins, rank p with Holm, block t at every origin) grades the book",
+ "packet": {
+  "admission": "a fact is admitted iff its stamp is strictly before the decision time; a fact without a parseable stamp refuses the packet",
+  "digest_lookback_days": 3,
+  "fields": {
+   "digest.theme": "world-digest themes naming the ticker (discovery_autopsy.digest_names), stamped by the digest file",
+   "funnel.*": "the candidate's own funnel fields, stamped at the funnel's generated_at",
+   "knowable.item": "news/filing corpus rows naming the ticker (discovery_autopsy.Corpus), stamped by known_at",
+   "price.close/ret_5d/ret_21d/ret_63d/vol_63_annual/vs_52w_high/median_dollar_vol_63/liquidity_band/cost_bps_round_trip/n_bars": "daily bars dated before the decision, each bar stamped 21:00 UTC of its date",
+   "revisions.revisions_Nd/net_raises_Nd/median_target_change_Nd": "analyst/target_revisions.parquet rows with event_date before the decision (date-only = end of day)",
+   "source.added_by": "the CH-14a news/filing source that added the name (added_by_source block only)"
+  },
+  "knowable_lookback_days": 5,
+  "max_items_per_name": 5,
+  "price_lookback_days": 400,
+  "revision_lookback_days": 90
+ },
+ "prompt_template_hash": "5659d4bf49aaf555",
+ "prompts": {
+  "system": "You are the selector of an internal SIMULATED paper book. You have no authority over money and no orders are sent. You will be given a list of candidate US stocks and, for each, a packet of facts. Every fact carries the time it became knowable; nothing after the decision time is included. Use ONLY the facts given; do not use anything you remember about these companies after the decision time, and do not invent prices, targets or events. Choose exactly {k} names from the candidate list for a holding period of {hold} trading sessions, equal weight, entered at the next session's open, and charged the round-trip cost shown per name. Your book will be compared against {k} names drawn at random from the same list and against the first {k} names of the ranker's own order. Answer with JSON only, no prose before or after.",
+  "user_template": "Decision time (UTC): {decision_time}\nAllowed directions: {directions}\nReturn exactly this JSON shape:\n{{\"picks\": [{{\"ticker\": \"<a ticker from the list>\", \"direction\": \"<one of the allowed directions>\", \"reason\": \"<one line, citing a fact in its packet>\"}}]}}\nwith exactly {k} picks, no ticker twice, every ticker taken from the candidate list.\n\nCandidate list in the ranker's order ({n} names):\n{tickers}\n\nPackets (one per name; `facts` = [field, value, knowable_at, source]):\n{packets}\n"
+ },
+ "provider": "deepseek",
+ "purpose": "llm_selector_book",
+ "reply_rule": "exactly k picks, each ticker in the candidate set, no duplicate, an allowed direction and a non-empty reason; any defect refuses the WHOLE decision, the reply is kept on the refusal row and counted; never repaired",
+ "request_model": "deepseek-chat",
+ "schema": "llm_selector_book/1",
+ "seed_base": 1700000,
+ "temperature": 0.0,
+ "twins": {
+  "incumbent": "the ranker's own top-k: the first k names of the funnel candidate list",
+  "selection": "k names drawn without replacement from the same candidate set by np.random.default_rng(seed), seed = LLM_SELECTOR_SEED_BASE + the decision date's ordinal; seed and draw recorded"
+ },
+ "weights": "equal weight over the k picks, fully invested, CASH 0 declared"
+}
