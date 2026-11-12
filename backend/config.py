@@ -3067,6 +3067,51 @@ LLM_PURPOSE_PROVIDER: dict[str, str] = {
         if "=" in part)
     if k.strip() and v.strip()
 }
+# ── FEATHERLESS reply classes + attended reconcile (CH-04b follow-up, S66) ──
+#: 2026-11-12: ONE 2xx reply without a `model` field (an error body the openai SDK
+#: still parses) blocked the whole envelope as "unknown returned model", and no
+#: command could clear it. A 2xx with no model (`SERVED_MODEL_MISSING`, or
+#: `EMPTY_2XX` when it has no usage and no choices either) now holds its FULL
+#: reservation and does not block alone; the envelope blocks when MORE than
+#: MAX_IN_WINDOW of the last WINDOW settled calls were such replies, OR more than
+#: MAX_CONSECUTIVE in a row. Money bound: every such call is held at its full
+#: reservation (~$0.0011 for a digest typing call, ~2-4x a settled one), so the
+#: envelope over-holds, never under-holds, and the monthly cap bounds the total.
+FEATHERLESS_MISSING_MODEL_WINDOW = 50
+FEATHERLESS_MISSING_MODEL_MAX_IN_WINDOW = 5
+FEATHERLESS_MISSING_MODEL_MAX_CONSECUTIVE = 3
+#: HTTP statuses after which generation MAY have happened (timeouts, gateways):
+#: the call keeps its full reservation (BILLING_UNKNOWN). Any other observed
+#: 4xx/5xx is released to $0 (Featherless bills successful requests only).
+FEATHERLESS_AMBIGUOUS_HTTP_STATUSES: tuple[int, ...] = (408, 499, 502, 504, 524)
+#: `provider_budget status --provider featherless` exits 1 (DEGRADED) when more
+#: than this share of the last WINDOW settled calls were unbilled or unknown.
+FEATHERLESS_STATUS_MAX_BAD_SHARE = 0.20
+#: Block reasons the attended reconcile may clear on the balance rule alone (the
+#: model-identity blocks; prefix match). Any other block needs
+#: `--clear-reason "<exact reason>" --evidence TEXT`.
+FEATHERLESS_RECONCILE_CLEARABLE_BLOCKS: tuple[str, ...] = (
+    "unknown returned model", "served model missing")
+#: `provider_budget reconcile --provider featherless` (attended): reads the free
+#: balance endpoint with FEATHERLESS_KEY_ENV (no completion call). The opening
+#: balance the first reconcile needs (`--opening-balance`) was measured with the
+#: account's key on 2026-11-11: $74.50. The envelope stores it and every observed
+#: balance; observed spend = opening - observed. The URL is the one the 11-11
+#: measurement named (`/credits/balance`, under /v1); only the official HTTPS host
+#: receives the key. Keys tried, in order, for the USD balance in the JSON reply.
+FEATHERLESS_BALANCE_URL = os.getenv("AEGIS_FEATHERLESS_BALANCE_URL",
+                                    "https://api.featherless.ai/v1/credits/balance")
+#: Accepted dotted field PATHS for the USD balance in the JSON reply; anything
+#: else (a bare number, an unknown shape, a non-USD `currency`) is refused with
+#: the field names seen. A value above FEATHERLESS_BALANCE_MAX_USD is refused
+#: (a unit mix-up, or not this account). Redirects are never followed.
+FEATHERLESS_BALANCE_FIELDS: tuple[str, ...] = ("balance_usd", "balance", "credits_usd",
+                                               "data.balance_usd", "data.balance")
+FEATHERLESS_BALANCE_MAX_USD = 2 * 75.0
+FEATHERLESS_BALANCE_TIMEOUT_S = 20.0
+#: A RESERVED_UNKNOWN row older than this (by its own `started_utc`) whose pid is
+#: dead is settled by the reconcile at its FULL reservation (BILLING_UNKNOWN).
+FEATHERLESS_RECONCILE_STALE_MINUTES = 30.0
 #: A call is only worth its money if it produces something gradeable. If the
 #: share of calls yielding NO prediction and NO hypothesis exceeds this, the
 #: campaign is buying tokens rather than information and should halt for

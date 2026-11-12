@@ -130,14 +130,23 @@ def test_receipt_storage_failure_stays_red_and_nonsecret(isolated, monkeypatch, 
         guard.assert_not_called()
 
 
-@pytest.mark.parametrize('refused', [False, True])
-def test_completed_run_preserves_partial_work_and_reports_budget_status(isolated, monkeypatch, refused):
+@pytest.mark.parametrize('refused,fl', [(False, None), (True, None),
+                                         # S66: Featherless refused/errored, the fallback typed the
+                                         # row: a SERVED slot (no status, rc 0), counts + a loud line
+                                         (False, (5, 2)), (False, (5, 5)), (True, (5, 1))])
+def test_completed_run_preserves_partial_work_and_reports_budget_status(isolated, monkeypatch, refused, fl, capsys):
     from collections import Counter
     from backend.services import belief_state as B
     from backend.services import world_state as WS
 
     root, snap, _ = isolated
     meter = SimpleNamespace(spent=0.001, models={'fake'}, statuses=Counter())
+    if fl:
+        meter.featherless_calls = fl[0]
+        meter.statuses['featherless:OK'] = fl[0] - fl[1]
+        meter.statuses['featherless:ERROR'] = fl[1]
+        meter.featherless_billing = Counter({'SETTLED/OK': fl[0] - fl[1],
+                                             'BILLING_UNKNOWN/NO_RESPONSE': fl[1]})
     meter.summary = lambda: {'spent_usd': meter.spent, 'budget_usd': .9,
                             'calls': 2, 'failed': int(refused),
                             'served_models': {'fake': 1}, 'statuses': dict(meter.statuses)}
@@ -147,7 +156,8 @@ def test_completed_run_preserves_partial_work_and_reports_budget_status(isolated
     monkeypatch.setattr(S.WD, 'Meter', Mock(return_value=meter))
     monkeypatch.setattr(S.WD, 'read_cache', lambda: {})
     monkeypatch.setattr(S.WD, 'extract_items', Mock(return_value={
-        'rows': [{'topic': 'valid fact'}], 'cache_hits': 1}))
+        'rows': [{'topic': 'valid fact', **({'extract_fallback_from': 'featherless:ERROR'} if fl else {})}],
+        'cache_hits': 1}))
     monkeypatch.setattr(S.WD, 'load_closes', lambda: SimpleNamespace(columns=['TEST']))
     monkeypatch.setattr(S.WD, 'stitched_symbols', lambda: set())
     monkeypatch.setattr(S, 'previous_titles', lambda: [])
@@ -177,6 +187,9 @@ def test_completed_run_preserves_partial_work_and_reports_budget_status(isolated
     monkeypatch.setattr(S.WD, 'render_short', lambda digest: 'useful short render')
 
     assert S.main(['--no-sections']) == (2 if refused else 0)
+    out = capsys.readouterr().out
+    if fl:
+        assert f'FEATHERLESS DEGRADED: {fl[1]} refused/errored of {fl[0]}; fallback typed 1' in out
     snap.assert_called_once_with()
     append.assert_called_once_with([record])
     paths = list((root / 'digest').glob('*.json'))
@@ -188,6 +201,11 @@ def test_completed_run_preserves_partial_work_and_reports_budget_status(isolated
     assert digest['world_state']['state'] == 'DETERMINISTIC_ARTIFACT_PRESERVED'
     assert paths[0].with_suffix('.md').read_text().startswith('useful full render')
     assert paths[0].with_suffix('.short.txt').read_text() == 'useful short render'
+    if fl:
+        assert digest['featherless']['calls'] == fl[0]
+        assert digest['featherless']['refused_or_errored'] == fl[1]
+        assert digest['featherless']['fallback_typed'] == 1
+        assert digest['featherless']['by_billing']['BILLING_UNKNOWN/NO_RESPONSE'] == fl[1]
     if refused:
         assert digest['status'] == 'DEGRADED_MODEL_BUDGET'
     else:
