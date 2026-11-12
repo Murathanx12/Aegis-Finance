@@ -47,7 +47,7 @@ import statistics
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence
 from zoneinfo import ZoneInfo
 
 from backend import config as _cfg
