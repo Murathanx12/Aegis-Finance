@@ -373,3 +373,12 @@ def test_dry_run_on_synthetic_inputs_makes_no_call_and_prices_the_decision(tmp_p
     assert rec["candidate_set"]["n_ranked"] == len(TICKERS)
     row = rec["cost"]["by_price_row"]["request_model_list_price"]
     assert row["usd_per_decision"] > 0 and row["usd_per_month"] > row["usd_per_decision"]
+
+
+def test_non_latin_titles_are_left_out_of_the_packet():
+    now = _now()
+    by = {"AAA": [{"source": "rss", "title": "English headline", "known_at": now - timedelta(hours=2)},
+                  {"source": "rss_zh", "title": "黃仁勳若下台亞股殺血海",
+                   "known_at": now - timedelta(hours=1)}]}
+    items = S.knowable_facts(by, "AAA", 5)
+    assert [f["value"] for f in items] == ["[rss] English headline"]

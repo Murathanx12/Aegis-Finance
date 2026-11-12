@@ -9,13 +9,13 @@
   "undateable": "refused"
  },
  "claims": "none: a PRODUCT_EXPERIMENT; no skill claim from this book's results",
- "contract_hash": "4e6bf24eb5c11e27",
+ "contract_hash": "aa87090bf8651688",
  "costs": "llm_portfolio.grade charges xs_ranker.round_trip_bps by liquidity band on entry",
  "directions": [
   "long"
  ],
  "fill": "llm_portfolio.entry_session: first session strictly after the decision date, at the open",
- "frozen_utc": "2026-11-12T09:19:34+00:00",
+ "frozen_utc": "2026-11-12T09:21:57+00:00",
  "hold_sessions": 5,
  "k": 8,
  "licence": "PRODUCT_EXPERIMENT",
@@ -29,6 +29,7 @@
    "digest.theme": "world-digest themes naming the ticker (discovery_autopsy.digest_names), stamped by the digest file",
    "funnel.*": "the candidate's own funnel fields, stamped at the funnel's generated_at",
    "knowable.item": "news/filing corpus rows naming the ticker (discovery_autopsy.Corpus), stamped by known_at",
+   "language": "digest themes and corpus titles above llm_language.NON_LATIN_BAR non-Latin script are left out",
    "price.close/ret_5d/ret_21d/ret_63d/vol_63_annual/vs_52w_high/median_dollar_vol_63/liquidity_band/cost_bps_round_trip/n_bars": "daily bars dated before the decision, each bar stamped 21:00 UTC of its date",
    "revisions.revisions_Nd/net_raises_Nd/median_target_change_Nd": "analyst/target_revisions.parquet rows with event_date before the decision (date-only = end of day)",
    "source.added_by": "the CH-14a news/filing source that added the name (added_by_source block only)"

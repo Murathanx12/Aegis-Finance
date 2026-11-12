@@ -193,6 +193,7 @@ PACKET_FIELDS: dict[str, str] = {
         "analyst/target_revisions.parquet rows with event_date before the decision (date-only = end of day)",
     "digest.theme": "world-digest themes naming the ticker (discovery_autopsy.digest_names), stamped by the digest file",
     "knowable.item": "news/filing corpus rows naming the ticker (discovery_autopsy.Corpus), stamped by known_at",
+    "language": "digest themes and corpus titles above llm_language.NON_LATIN_BAR non-Latin script are left out",
     "source.added_by": "the CH-14a news/filing source that added the name (added_by_source block only)",
 }
 
@@ -433,14 +434,24 @@ def revision_facts(rev: Optional[pd.DataFrame], ticker: str, decision_time: date
             fact(f"revisions.median_target_change_{n}d", _num(med), stamp, "analyst/target_revisions")]
 
 
+def latin_only(text: str) -> bool:
+    """A non-English title in the packet invites a non-English reply, which the
+    central language contract then refuses (a paid, wasted call). Such titles
+    are left out of the packet, by the same bar the reply is judged by."""
+    from backend.services import llm_language as L
+    return L.non_latin_share(text) <= L.NON_LATIN_BAR
+
+
 def digest_facts(by_ticker: dict, ticker: str, max_items: int) -> list[dict]:
-    rows = sorted(by_ticker.get(ticker, []), key=lambda r: str(r.get("stamp")))[-max_items:]
+    rows = [r for r in by_ticker.get(ticker, []) if latin_only(str(r.get("theme") or ""))]
+    rows = sorted(rows, key=lambda r: str(r.get("stamp")))[-max_items:]
     return [fact("digest.theme", str(r.get("theme") or "")[:160], r.get("stamp"), "world_digest")
             for r in rows]
 
 
 def knowable_facts(by_ticker: dict, ticker: str, max_items: int) -> list[dict]:
-    rows = sorted(by_ticker.get(ticker, []), key=lambda r: r["known_at"])[-max_items:]
+    rows = [r for r in by_ticker.get(ticker, []) if latin_only(str(r.get("title") or ""))]
+    rows = sorted(rows, key=lambda r: r["known_at"])[-max_items:]
     return [fact("knowable.item", f"[{r.get('source')}] {str(r.get('title') or '')[:200]}",
                  r.get("known_at"), "news_corpus") for r in rows]
 
