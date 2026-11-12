@@ -67,6 +67,8 @@ NAMES_THE_FILE: dict[str, str] = {
     "scripts/stock_lists_v3_build.py": ("a dated 2026-09-27 one-off document builder that reads rows "
                                         "made 2026-09-26; the frozen legacy file still holds them"),
     "scripts/verify_live_forward_disarm.py": "writes a scratch ledger in a temp dir for its own check",
+    "scripts/source_picks_grade.py": ("read-only grader of source:* rows; --data-root names the "
+                                      "ledger, read via the layer (exists, logical_lines)"),
 }
 
 #: file -> why it may OPEN a ledger-path constant's bytes directly.

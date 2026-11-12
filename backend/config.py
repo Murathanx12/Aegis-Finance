@@ -4822,6 +4822,110 @@ DOWJONES_ARCHIVE_ENABLED = True       # 2026-09-26 23:55 Murat's call (handoff-g
 #: Lines shorter than 60 chars containing one of these are the signed-in
 #: account's name in the page chrome and are stripped from stored text.
 DOWJONES_ACCOUNT_NAME_PATTERNS = ("murat", "murathan", "abdullaev")
+#: ── A MENTION IS NOT A PICK (CH-12 / CH-35, 2026-11-12) ─────────────────────
+#: `dowjones_claims.page_type_of` names the page type of an article: the first
+#: rule below whose marker occurs in the article's URL path or title
+#: (lowercased), else its column. `DOWJONES_PAGE_CLASS` maps every page type to
+#: one class, and a type missing from it is REFUSED by name (never a PICK):
+#:   PICK            -- the publisher recommends buying/selling: rows as before.
+#:   MENTION         -- the page names stocks that moved or matter (market wraps,
+#:                      movers, "Stocks That Explain Today's Market", stocks to
+#:                      watch, calendars, search-result pages): NO directional
+#:                      forecast. There is no attention sink on this path, so the
+#:                      gitignored local claims file keeps the extracted record
+#:                      tagged `page_class: MENTION, forecast_written: false` and
+#:                      nothing reaches the tracked claims ledger or the forecast
+#:                      ledger.
+#:   STANCE_REQUIRED -- ordinary articles: with DOWJONES_STANCE_REQUIRED_ENFORCE
+#:                      a row needs an explicit stance for that ticker; off, rows
+#:                      as before.
+#: Why: Barron's site navigation ("Stock Picks") sits in the first 1,500
+#: characters of most stored pages, so `column_of` labelled market-wrap pages
+#: `barrons_stock_picks`, the column hint then told the model the page was a buy
+#: list, and every named ticker became P(beats SPY) = 0.60.
+DOWJONES_PAGE_TYPE_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("stocks_that_explain_today", ("stocks that explain today", "/stock-movers-")),
+    ("market_movers", ("stock market movers", "today's movers", "todays movers",
+                       "moved the most today", "market-movers", "biggest moves",
+                       "stocks making moves", "stocks on the move")),
+    ("stocks_to_watch", ("stocks to watch", "stocks-to-watch")),
+    ("daily_wrap", ("things-to-know-today", "things to know today", "/stockstoday-",
+                    "review & preview", "barron's daily", "stock-market-today",
+                    "stock market today", "markets-wrap", "market wrap", "/stock-futures",
+                    "stock futures", "dow-jones-today", "what's moving")),
+)
+DOWJONES_PAGE_CLASS: dict[str, str] = {
+    # page types named by DOWJONES_PAGE_TYPE_RULES
+    "stocks_that_explain_today": "MENTION",
+    "market_movers": "MENTION",
+    "stocks_to_watch": "MENTION",
+    "daily_wrap": "MENTION",
+    # a barrons_stock_picks column whose URL/title carries a pick marker
+    "barrons_stock_picks": "PICK",
+    # a barrons_stock_picks column labelled only by the site's navigation bar
+    "barrons_stock_picks_nav": "STANCE_REQUIRED",
+    # a wsj_heard_on_the_street column whose marker is only in the page text
+    "wsj_heard_on_the_street_text_only": "STANCE_REQUIRED",
+    "barrons_big_money_poll": "STANCE_REQUIRED",
+    "wsj_heard_on_the_street": "STANCE_REQUIRED",
+    "wsj_news": "STANCE_REQUIRED",
+    "wsj_other": "STANCE_REQUIRED",
+    "barrons_other": "STANCE_REQUIRED",
+    "marketwatch_other": "STANCE_REQUIRED",
+    "dowjones_other": "STANCE_REQUIRED",
+    "marketwatch_upgrades_downgrades": "STANCE_REQUIRED",
+    "telegram_paste_unknown": "STANCE_REQUIRED",
+    "mw_analyst_estimates": "STANCE_REQUIRED",
+    "marketwatch_earnings_calendar": "MENTION",
+    "marketwatch_economic_calendar": "MENTION",
+    "search_barrons_read_next": "MENTION",
+    "search_wsj_read_next": "MENTION",
+    "search_marketwatch_read_next": "MENTION",
+    "search_barrons_query_planner": "MENTION",
+    "search_wsj_query_planner": "MENTION",
+    "search_marketwatch_query_planner": "MENTION",
+}
+#: URL/title markers that make a `barrons_stock_picks` page a real pick.
+DOWJONES_PICK_MARKERS: tuple[str, ...] = ("/buy-", "-buy-", "/sell-", "-sell-", "stock-pick",
+                                          "stock pick", "barron's picks", "is-a-buy",
+                                          "is a buy", "time to buy", "time-to-buy")
+#: DEFAULT ON (a plain defect): a MENTION page writes no forecast row.
+DOWJONES_MENTION_NO_FORECAST = True
+#: DEFAULT OFF: a STANCE_REQUIRED page writes a row only for a claim with an
+#: explicit stance (a `stance` field from the extractor, else a stance cue in the
+#: paraphrase or quote); no stance -> no row, counted. Also withholds the "this
+#: is a stock pick" column hint from pages that are not PICK.
+DOWJONES_STANCE_REQUIRED_ENFORCE = False
+#: Whole-word regex fragments (`\b(?:...)\b`, case-insensitive).
+DOWJONES_STANCE_CUES: tuple[str, ...] = (
+    r"will", r"would", r"should", r"could", r"expect\w*", r"likely", r"poised", r"set to",
+    r"stands to", r"forecast\w*", r"outlook", r"upside", r"downside", r"targets?",
+    r"undervalued", r"overvalued", r"cheap", r"expensive", r"bullish", r"bearish",
+    r"buy(?:ing)?", r"sell(?!-?off)", r"avoid", r"upgrade[sd]?", r"downgrade[sd]?",
+    r"overweight", r"underweight", r"outperform\w*", r"underperform\w*", r"opportunit\w*",
+    r"recommend\w*")
+#: DEFAULT ON (review round 1): one article (URL without query/fragment) +
+#: ticker + horizon is one forecast row, across runs (read through
+#: `forecast_ledger.logical_lines`) -- the promise `write_claims` already makes.
+DOWJONES_DEDUPE_ARTICLE_TICKER_HORIZON = True
+#: DEFAULT 3 (review round 1): an article first seen more than this many days
+#: before the extraction run writes no forecast and costs no extraction
+#: (`dowjones_claims.precheck`). A stale opinion stamped as fresh is graded from
+#: today's price: on 2026-11-12 pages first seen 10-16 were extracted 27 days
+#: late and entered at the bar after NVDA's -10% open. None switches it off.
+DOWJONES_MAX_EXTRACTION_LAG_DAYS: float | None = 3.0
+#: URL/title markers that make a `wsj_heard_on_the_street` page that column
+#: (measured: 0 of 105 stored pages so labelled carry one; 86 matched only in
+#: page text, 19 had no marker at all).
+DOWJONES_HOTS_MARKERS: tuple[str, ...] = ("heard-on-the-street", "heard on the street")
+#: DEFAULT ON (review round 1): a NEW row's source_id comes from URL/title, not
+#: from page text or the nav bar: these page types are written under the
+#: replacement column. Rows already in the ledger keep their label.
+DOWJONES_COLUMN_FROM_URL_TITLE = True
+DOWJONES_COLUMN_RELABEL: dict[str, str] = {
+    "barrons_stock_picks_nav": "barrons_other",
+    "wsj_heard_on_the_street_text_only": "wsj_other",
+}
 
 # ── Disk guard (2026-09-27, handoff §20: C: reached 0 bytes free) ───────────
 #: `system_health.disk_free`: free space on the volume holding

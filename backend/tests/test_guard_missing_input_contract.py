@@ -1978,6 +1978,14 @@ def _case_owner_calls():
             CallRefused, "log_call() with no price panel to build the twin from")
 
 
+def _case_dowjones_claims():
+    # CH-12/CH-35: the missing input is the PAGE TYPE. A page nobody classified
+    # must be refused by name, never written as a PICK (0.60 bullish rows).
+    from backend.services.dowjones_claims import PageTypeRefused, page_class
+    return (lambda: page_class(""), PageTypeRefused,
+            "page_class() of a page type absent from config.DOWJONES_PAGE_CLASS")
+
+
 def _case_discovery_autopsy():
     # CH-13: with no bars panel there are no movers to autopsy; "no movers"
     # must be a refusal, never an empty receipt.
@@ -2057,6 +2065,7 @@ CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
     "owner_calls": _case_owner_calls,
+    "dowjones_claims": _case_dowjones_claims,
     "issuer_ir_html": _case_issuer_ir_html,
     "issuer_ir_probability_v0": _case_issuer_ir_probability_v0,
     "pc_sleeves": _case_pc_sleeves,
