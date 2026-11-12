@@ -198,3 +198,12 @@ def test_contract_hash_is_stable_and_names_the_mapping_declaration():
 
 def test_flag_is_off_by_default():
     assert cfg.NEWS_OVERLAY_BOOK_ENABLED is False
+
+
+def test_the_committed_contract_is_the_rule_in_code():
+    """Frozen: changing any NEWS_OVERLAY_* parameter or the rule text changes the
+    hash, and this fails. A changed rule is NEWS_OVERLAY_v2, a new file."""
+    from pathlib import Path
+    p = Path(__file__).resolve().parents[2] / "docs" / "TRIALS" / "CONTRACT_NEWS_OVERLAY_v1.json"
+    frozen = json.loads(p.read_text(encoding="utf-8"))
+    assert frozen["policy_hash"] == NO.contract()["policy_hash"]

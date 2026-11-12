@@ -365,6 +365,62 @@ def simulate(sessions: Sequence[date], prices: Mapping[date, Mapping[str, float]
             "holdings_last": {k: dict(v.shares) for k, v in books.items()}}
 
 
-__all__ = ["NewsOverlayRefused", "contract", "params", "cost_rate", "tone_score", "digest_summary",
+# ───────────────────────────── loaders (read-only) ──────────────────────────
+
+CASH = "$CASH"      # book_cadence.CASH, repeated so this reader never imports the stepper
+
+
+def load_base_holdings(db_path: Path, book_id: str) -> list[dict]:
+    """The base book's holdings snapshots, oldest first: [{asof, decided_utc,
+    shares: {sym: n}, cash}]. Opened READ-ONLY (sqlite uri mode=ro)."""
+    import sqlite3
+    p = Path(db_path)
+    if not p.is_file():
+        raise NewsOverlayRefused(f"no paper-book store at {p}")
+    conn = sqlite3.connect(f"file:{p.as_posix()}?mode=ro", uri=True)
+    try:
+        dec = conn.execute("SELECT asof_date, decided_utc FROM paper_book_decisions "
+                           "WHERE book_id = ? ORDER BY decided_utc", (book_id,)).fetchall()
+        pos = conn.execute("SELECT ticker, shares, opened_at FROM paper_positions "
+                           "WHERE portfolio_id = ?", (book_id,)).fetchall()
+    finally:
+        conn.close()
+    if not dec or not pos:
+        raise NewsOverlayRefused(f"base book {book_id} has no decisions or positions in {p}")
+    by_open: dict[str, dict] = {}
+    for tk, sh, opened in pos:
+        by_open.setdefault(str(opened), {})[str(tk)] = float(sh)
+    snaps = []
+    for asof, decided in dec:
+        sh = by_open.get(str(decided))
+        if sh is None:
+            continue
+        cash = sh.pop(CASH, 0.0)
+        snaps.append({"asof": date.fromisoformat(str(asof)[:10]), "decided_utc": str(decided),
+                      "shares": sh, "cash": cash})
+    if not snaps:
+        raise NewsOverlayRefused(f"base book {book_id}: no position set matches a decision stamp")
+    return snaps
+
+
+def base_weights_by_session(snaps: Sequence[Mapping], sessions: Sequence[date],
+                            closes: Mapping[date, Mapping[str, float]]) -> tuple[dict, dict]:
+    """(weights, changed) per session: the base book's own shares x close / its
+    NAV (cash included), from the newest snapshot with asof <= session."""
+    weights, changed = {}, {}
+    for t in sessions:
+        live = [s for s in snaps if s["asof"] <= t]
+        if not live:
+            raise NewsOverlayRefused(f"no base-book holdings on or before {t}")
+        sn = live[-1]
+        px = closes[t]
+        val = {k: n * px[k] for k, n in sn["shares"].items()}
+        nav = sum(val.values()) + float(sn["cash"])
+        weights[t] = {k: v / nav for k, v in val.items()}
+        changed[t] = (sn["asof"] == t)
+    return weights, changed
+
+
+__all__ = ["NewsOverlayRefused", "load_base_holdings", "base_weights_by_session", "contract", "params", "cost_rate", "tone_score", "digest_summary",
            "load_digests", "decision_time", "map_scalar", "compute_scalar", "step", "simulate",
            "decisions_path", "DEGRADATIONS", "NO_DIGEST", "STALE", "EMPTY", "NO_BASELINE"]

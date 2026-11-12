@@ -1989,6 +1989,16 @@ def _case_discovery_autopsy():
             "an autopsy with no bars panel, ledger, funnel or corpus")
 
 
+def _case_news_overlay_book():
+    # CH-14b: an overlay on a base book with no holdings would grade as flat;
+    # it must refuse, never return scalar 1.0 over nothing.
+    from datetime import date as _d
+
+    from backend.services.news_overlay_book import NewsOverlayRefused, step
+    return (lambda: step(_d.today(), digests=[], base_weights={}), NewsOverlayRefused,
+            "a news-overlay decision with no base-book holdings")
+
+
 # -- CH-05 rescue R3 (s65/ch05-r3-prices-contract): staged price admission --
 def _case_global_price_admission():
     from backend.services.global_price_admission import AdmissionError, plan_admission
@@ -2160,6 +2170,7 @@ CASES = {
     "campaign_ledger_startup": _case_campaign_ledger_startup,
     "global_price_admission": _case_global_price_admission,
     "discovery_autopsy": _case_discovery_autopsy,
+    "news_overlay_book": _case_news_overlay_book,
 }
 
 
