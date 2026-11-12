@@ -485,7 +485,8 @@ def test_forward_calendar_labels_on_the_node_not_covered_vs_no_date_vs_stale(tmp
                                                      "first_seen_utc": NOW.isoformat(), "item_key": "k"}]}
         EN.finalize_node(node, {"calendar": cal}, now=NOW)
         assert node["next_dates_label"] == label, sym
-        assert not any(d.startswith("CALENDAR_HORIZON_SHORT") for d in node["degradations"])
+        assert not any(d.startswith(("CALENDAR_HORIZON_SHORT", "CALENDAR_ISSUER_NOT_COVERED"))
+                       for d in node["degradations"])
         flagged = [d for d in node["degradations"] if d.startswith("NEXT_DATES_")]
         assert bool(flagged) == (label in ("NOT_COVERED", "CALENDAR_STALE")), (sym, flagged)
         assert bool(node["next_dates"]) == (label == "DATE_IN_HORIZON")

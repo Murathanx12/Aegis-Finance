@@ -1214,7 +1214,7 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
         # the forward calendar labels every name it was asked about: "no date" is then
         # NO_DATE_IN_HORIZON (looked, nothing scheduled), NOT_COVERED (never looked, or
         # every attempt failed) or CALENDAR_STALE, and the horizon-short guess is moot
-        degr = [d for d in degr if not d.startswith("CALENDAR_HORIZON_SHORT")]
+        degr = [d for d in degr if not d.startswith(("CALENDAR_HORIZON_SHORT", "CALENDAR_ISSUER_NOT_COVERED"))]
         lab = labels.get(sym) or {"label": "NOT_COVERED", "reason": "NOT_ASKED"}
         node["next_dates_label"] = lab["label"]
         node["next_dates_labels"] = {s: (labels.get(s) or {}).get("label", "NOT_COVERED")
