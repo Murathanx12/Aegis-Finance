@@ -1758,6 +1758,38 @@ FUNNEL_NEWS_FILING_ITEMS: tuple = ("1.01", "2.01", "2.02", "2.05", "2.06", "4.02
 FUNNEL_NEWS_MAX_ENRICH_NEWS = 30
 FUNNEL_NEWS_MAX_ENRICH_FILING = 20
 
+# ── llm-book-ruler (CH-17/CH-11): the LLM selector book (llm_selector_book) ──
+#: OFF by default: with it off `--decide` refuses (exit 4) before any read,
+#: call or write. `--dry-run` is read-only and works with it off. One run is
+#: enabled with the env var `AEGIS_LLM_SELECTOR_BOOK=1` (read again at call
+#: time by `llm_selector_book.flag_on`), so a release clone is never edited.
+#: Every value below except this flag is part of the frozen contract
+#: (backend/strategy/contracts/CONTRACT_LLM_SELECTOR_v0.json); changing one is
+#: a NEW contract, and `test_llm_selector_book` fails until it is re-frozen.
+LLM_SELECTOR_BOOK_ENABLED = os.getenv("AEGIS_LLM_SELECTOR_BOOK", "").strip().lower() in (
+    "1", "true", "yes", "on")
+#: Names the LLM returns; the selection twin and the incumbent hold the same k.
+LLM_SELECTOR_K = 8
+#: Long only: the book engine (`llm_portfolio.freeze`) has no borrow model.
+LLM_SELECTOR_DIRECTIONS: tuple = ("long",)
+#: The request model on the DeepSeek path (served as deepseek-flash since 09-14).
+LLM_SELECTOR_MODEL = "deepseek-chat"
+LLM_SELECTOR_MAX_TOKENS = 1200
+LLM_SELECTOR_TEMPERATURE = 0.0
+LLM_SELECTOR_PURPOSE = "llm_selector_book"
+#: Hold and cadence in sessions: one non-overlapping weekly book, the same
+#: 5-session block the CH-11 ruler uses.
+LLM_SELECTOR_HOLD_SESSIONS = 5
+LLM_SELECTOR_CADENCE_SESSIONS = 5
+#: Selection-twin seed = base + the decision date's ordinal (recorded per row).
+LLM_SELECTOR_SEED_BASE = 1_700_000
+#: Packet windows (calendar days before the decision time).
+LLM_SELECTOR_REVISION_LOOKBACK_DAYS = 90
+LLM_SELECTOR_DIGEST_LOOKBACK_DAYS = 3
+LLM_SELECTOR_KNOWABLE_LOOKBACK_DAYS = 5
+LLM_SELECTOR_MAX_ITEMS_PER_NAME = 5
+LLM_SELECTOR_PRICE_LOOKBACK_DAYS = 400
+
 #: Headline capital levels the committee page composes a book for. A subset of
 #: capital_frontier.CAPITAL_LEVELS — the retail-to-small-fund range the page
 #: is answering for.
