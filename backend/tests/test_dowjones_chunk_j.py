@@ -491,8 +491,10 @@ GOOD_REPLY = json.dumps({"claims": [
 
 def test_claims_refuse_an_invented_quote_and_write_a_paraphrase_not_the_text(ledger):
     from scripts import dowjones_pull as DP
+    # CH-12 review: the column now comes from URL/title, so the fixture names it there
     art = {"url": "https://www.wsj.com/finance/stocks/micron-memory-boom-1a2b3c4d",
-           "title": "Micron's Memory Boom", "text": WR.clean_text(ARTICLE_TEXT, None),
+           "title": "Micron's Memory Boom - Heard on the Street",
+           "text": WR.clean_text(ARTICLE_TEXT, None),
            "first_seen_utc": DC.now_iso(), "publisher": "wsj",
            "column": "wsj_heard_on_the_street", "origin": "web_reader"}
     art["sha"] = DC.text_sha(art["text"])

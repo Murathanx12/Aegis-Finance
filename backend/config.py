@@ -4832,6 +4832,8 @@ DOWJONES_PAGE_CLASS: dict[str, str] = {
     "barrons_stock_picks": "PICK",
     # a barrons_stock_picks column labelled only by the site's navigation bar
     "barrons_stock_picks_nav": "STANCE_REQUIRED",
+    # a wsj_heard_on_the_street column whose marker is only in the page text
+    "wsj_heard_on_the_street_text_only": "STANCE_REQUIRED",
     "barrons_big_money_poll": "STANCE_REQUIRED",
     "wsj_heard_on_the_street": "STANCE_REQUIRED",
     "wsj_news": "STANCE_REQUIRED",
@@ -4870,13 +4872,28 @@ DOWJONES_STANCE_CUES: tuple[str, ...] = (
     r"buy(?:ing)?", r"sell(?!-?off)", r"avoid", r"upgrade[sd]?", r"downgrade[sd]?",
     r"overweight", r"underweight", r"outperform\w*", r"underperform\w*", r"opportunit\w*",
     r"recommend\w*")
-#: DEFAULT OFF: one article (URL without query/fragment) + ticker + horizon is
-#: one forecast row, across runs (read through `forecast_ledger.logical_lines`).
-DOWJONES_DEDUPE_ARTICLE_TICKER_HORIZON = False
-#: DEFAULT OFF (None): an article first seen more than this many days before the
-#: extraction run writes no forecast (its claims are still recorded locally).
-#: Measured 2026-11-12: articles first seen 10-15/16 were extracted 27 days late.
-DOWJONES_MAX_EXTRACTION_LAG_DAYS: float | None = None
+#: DEFAULT ON (review round 1): one article (URL without query/fragment) +
+#: ticker + horizon is one forecast row, across runs (read through
+#: `forecast_ledger.logical_lines`) -- the promise `write_claims` already makes.
+DOWJONES_DEDUPE_ARTICLE_TICKER_HORIZON = True
+#: DEFAULT 3 (review round 1): an article first seen more than this many days
+#: before the extraction run writes no forecast and costs no extraction
+#: (`dowjones_claims.precheck`). A stale opinion stamped as fresh is graded from
+#: today's price: on 2026-11-12 pages first seen 10-16 were extracted 27 days
+#: late and entered at the bar after NVDA's -10% open. None switches it off.
+DOWJONES_MAX_EXTRACTION_LAG_DAYS: float | None = 3.0
+#: URL/title markers that make a `wsj_heard_on_the_street` page that column
+#: (measured: 0 of 105 stored pages so labelled carry one; 86 matched only in
+#: page text, 19 had no marker at all).
+DOWJONES_HOTS_MARKERS: tuple[str, ...] = ("heard-on-the-street", "heard on the street")
+#: DEFAULT ON (review round 1): a NEW row's source_id comes from URL/title, not
+#: from page text or the nav bar: these page types are written under the
+#: replacement column. Rows already in the ledger keep their label.
+DOWJONES_COLUMN_FROM_URL_TITLE = True
+DOWJONES_COLUMN_RELABEL: dict[str, str] = {
+    "barrons_stock_picks_nav": "barrons_other",
+    "wsj_heard_on_the_street_text_only": "wsj_other",
+}
 
 # ── Disk guard (2026-09-27, handoff §20: C: reached 0 bytes free) ───────────
 #: `system_health.disk_free`: free space on the volume holding

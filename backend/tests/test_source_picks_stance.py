@@ -111,14 +111,68 @@ def test_stance_required_emits_only_with_a_stance_and_its_direction(ledger, monk
     assert "NVDA" not in {x["ticker"] for x in rows}
 
 
-def test_the_stock_pick_hint_is_withheld_from_a_non_pick_page_under_enforce(monkeypatch):
+def test_the_stock_pick_hint_reaches_only_a_real_pick_page():
     seen: list[str] = []
-    art = {"url": "https://www.barrons.com/articles/nvidia-stock-chips-ai-1ba0b84a",
-           "title": "Why Nvidia Is Rising", "text": "x " * 400, "column": "barrons_stock_picks"}
-    DC.extract_claims(art, llm_fn=lambda s, u: seen.append(u) or '{"claims": []}')
-    monkeypatch.setattr(C, "DOWJONES_STANCE_REQUIRED_ENFORCE", True)
-    DC.extract_claims(art, llm_fn=lambda s, u: seen.append(u) or '{"claims": []}')
-    assert "Column note" in seen[0] and "Column note" not in seen[1]
+    nav = {"url": "https://www.barrons.com/articles/nvidia-stock-chips-ai-1ba0b84a",
+           "title": "Why Nvidia Is Rising", "text": "x " * 400, "column": "barrons_stock_picks",
+           "first_seen_utc": _now()}
+    pick = {**nav, "url": "https://www.barrons.com/articles/buy-citigroup-stock-3da35db6",
+            "title": "Citigroup: Time to Buy"}
+    DC.extract_claims(nav, llm_fn=lambda s, u: seen.append(u) or '{"claims": []}')
+    DC.extract_claims(pick, llm_fn=lambda s, u: seen.append(u) or '{"claims": []}')
+    assert "Column note" not in seen[0] and "Column note" in seen[1]
+
+
+def test_new_rows_take_their_column_from_url_and_title(ledger):
+    nav = {"url": "https://www.barrons.com/articles/nvidia-stock-chips-ai-1ba0b84a",
+           "title": "Why Nvidia Is Rising", "first_seen_utc": _now(), "sha": "n1",
+           "column": "barrons_stock_picks"}
+    hots = {"url": "https://www.wsj.com/tech/ai/ai-is-disrupting-software-a380443a",
+            "title": "AI Is Disrupting Software", "first_seen_utc": _now(), "sha": "n2",
+            "column": "wsj_heard_on_the_street"}
+    assert DC.page_type_of(hots["url"], hots["title"], hots["column"]) == \
+        "wsj_heard_on_the_street_text_only"
+    _write(ledger, nav, [_claim("NVDA")])
+    _write(ledger, hots, [_claim("ORCL")])
+    assert {x["specialist"] for x in _rows(ledger)} == {"source:barrons_other", "source:wsj_other"}
+    hots2 = {**hots, "url": "https://www.wsj.com/finance/heard-on-the-street-x-1a2b3c4d",
+             "sha": "n3"}
+    assert DC.effective_column(hots2["url"], "", hots2["column"]) == "wsj_heard_on_the_street"
+
+
+@pytest.mark.parametrize("url,title,col,status", [
+    ("https://www.barrons.com/articles/stock-movers-8b39c82b", "Movers", "barrons_other",
+     "SKIPPED_MENTION_NO_FORECAST"),
+    ("https://www.barrons.com/articles/buy-frontline-stock-3415119d", "Buy This", "barrons_stock_picks",
+     "SKIPPED_STALE_NO_FORECAST"),
+    ("https://www.barrons.com/articles/x-1", "x", "barrons_lane_nobody_classified",
+     "REFUSED_UNKNOWN_PAGE_TYPE"),
+])
+def test_no_extraction_is_paid_for_a_page_that_will_write_nothing(url, title, col, status):
+    old = (datetime.now(timezone.utc) - timedelta(days=27)).isoformat(timespec="seconds")
+    art = {"url": url, "title": title, "text": "x " * 400, "column": col,
+           "first_seen_utc": old if "STALE" in status else _now()}
+    pc = DC.precheck(art)
+    assert pc["forecast"] is False
+    r = DC.extract_claims(art, llm_fn=lambda s, u: pytest.fail("paid for a page that writes nothing"))
+    assert r["status"] == status and r["claims"] == []
+    assert (status in DC.RETRY_STATUSES) == (status == "REFUSED_UNKNOWN_PAGE_TYPE")
+
+
+def test_a_fresh_pick_page_passes_the_precheck():
+    pc = DC.precheck({"url": "https://www.barrons.com/articles/buy-citigroup-stock-3da35db6",
+                      "title": "Buy", "column": "barrons_stock_picks", "first_seen_utc": _now()})
+    assert pc["forecast"] is True and pc["page_class"] == "PICK"
+
+
+def test_status_census_makes_an_all_zero_backlog_visible():
+    per = [{"status": "SKIPPED_STALE_NO_FORECAST", "forecast_rows": 0},
+           {"status": "REFUSED_UNKNOWN_PAGE_TYPE", "forecast_rows": 0},
+           {"status": "OK", "write_status": "STALE_NO_FORECAST", "forecast_rows": 0}]
+    c = DC.status_census(per)
+    assert c["all_articles_wrote_zero_rows"] is True and c["n_retry"] == 1
+    assert c["extract_status"]["SKIPPED_STALE_NO_FORECAST"] == 1
+    assert c["write_status"] == {"STALE_NO_FORECAST": 1}
 
 
 def test_duplicates_collapse_to_one_row_per_article_ticker_horizon(ledger, monkeypatch):
@@ -139,7 +193,8 @@ def test_duplicates_collapse_to_one_row_per_article_ticker_horizon(ledger, monke
     assert r2["n_rows_written"] == 0
 
 
-def test_dedupe_off_keeps_the_old_behaviour(ledger):
+def test_dedupe_off_keeps_the_old_behaviour(ledger, monkeypatch):
+    monkeypatch.setattr(C, "DOWJONES_DEDUPE_ARTICLE_TICKER_HORIZON", False)
     base = "https://www.barrons.com/articles/ionq-stock-quantum-computing-buy-ce5e2fde"
     seen = datetime.now(timezone.utc)
     a1 = {"url": base, "title": "IonQ Is a Buy", "sha": "x1",
@@ -163,7 +218,8 @@ def test_an_unknown_page_type_is_refused_by_name_never_a_pick(ledger):
 
 def test_every_column_the_code_can_produce_is_classified():
     cols = {sid for sid, _, _ in DC.COLUMN_RULES} | {f"{p}_other" for p in DC.PUBLISHERS}
-    cols |= {"dowjones_other", "barrons_stock_picks_nav"}
+    cols |= {"dowjones_other", "barrons_stock_picks_nav", "wsj_heard_on_the_street_text_only"}
+    cols |= set(C.DOWJONES_COLUMN_RELABEL.values())
     cols |= {ptype for ptype, _ in C.DOWJONES_PAGE_TYPE_RULES}
     for c in cols:
         assert DC.page_class(c) in DC.PAGE_CLASSES
@@ -220,14 +276,20 @@ def test_a_verdict_never_comes_without_an_mde():
                       "t": 9.0, "hit_rate": 0.9}) == "CANNOT_DISTINGUISH"
 
 
-def test_a_stale_extraction_writes_no_forecast_only_when_the_lag_flag_is_on(ledger, monkeypatch):
+def test_a_stale_page_writes_zero_rows_by_default_and_says_so_locally(ledger, monkeypatch):
+    assert C.DOWJONES_MAX_EXTRACTION_LAG_DAYS == 3                 # the default since review 1
+    assert C.DOWJONES_DEDUPE_ARTICLE_TICKER_HORIZON is True
     old = (datetime.now(timezone.utc) - timedelta(days=27)).isoformat(timespec="seconds")
     art = {"url": "https://www.barrons.com/articles/buy-frontline-stock-3415119d",
            "title": "Buy This Tanker Stock", "first_seen_utc": old, "sha": "s5",
            "column": "barrons_stock_picks"}
-    assert _write(ledger, art, [_claim("FRO")])["n_rows_written"] == 3     # default: off
-    monkeypatch.setattr(C, "DOWJONES_MAX_EXTRACTION_LAG_DAYS", 3.0)
-    art2 = {**art, "url": art["url"].replace("frontline", "euronav"), "sha": "s6"}
-    r = DC.write_forecasts(art2, [_claim("EURN")], ledger_path=ledger / "p2.jsonl",
-                           claims_path=ledger / "c2.jsonl", local_path=ledger / "l2.jsonl")
-    assert r["status"] == "STALE_NO_FORECAST" and r["extraction_lag_days"] > 3
+    r = _write(ledger, art, [_claim("FRO"), _claim("EURN")])
+    assert r["status"] == "STALE_NO_FORECAST" and r["n_rows_written"] == 0
+    assert r["extraction_lag_days"] > 3
+    assert _rows(ledger) == [] and not (ledger / "c.jsonl").exists()
+    local = [json.loads(x) for x in (ledger / "local.jsonl").read_text("utf-8").splitlines()]
+    assert len(local) == 2 and all(x["forecast_written"] is False
+                                   and x["no_forecast_why"] == "STALE_NO_FORECAST" for x in local)
+    # None switches the gate off
+    monkeypatch.setattr(C, "DOWJONES_MAX_EXTRACTION_LAG_DAYS", None)
+    assert _write(ledger, {**art, "sha": "s6"}, [_claim("FRO")])["n_rows_written"] == 3

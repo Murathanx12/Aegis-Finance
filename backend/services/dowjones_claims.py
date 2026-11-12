@@ -48,7 +48,8 @@ import logging
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from collections import Counter
+from typing import Any, Callable, Iterable
 
 from backend import config as _config
 
@@ -542,7 +543,23 @@ def page_type_of(url: str = "", title: str = "", column: str | None = None) -> s
     if col == "barrons_stock_picks" and not any(
             m in hay for m in getattr(_config, "DOWJONES_PICK_MARKERS", ())):
         return "barrons_stock_picks_nav"
+    if col == "wsj_heard_on_the_street" and not any(
+            m in hay for m in getattr(_config, "DOWJONES_HOTS_MARKERS", ())):
+        # the label came from page TEXT (a nav link / related box), not the page
+        return "wsj_heard_on_the_street_text_only"
     return col
+
+
+def effective_column(url: str = "", title: str = "", column: str | None = None) -> str:
+    """The `source_id` a NEW row is written under: the stored column, except
+    that a label earned only from page text / the nav bar (no URL/title marker)
+    is replaced per `DOWJONES_COLUMN_RELABEL` while
+    `DOWJONES_COLUMN_FROM_URL_TITLE` is on. Old rows keep their label."""
+    col = str(column or column_of(url, title)).strip()
+    if not bool(getattr(_config, "DOWJONES_COLUMN_FROM_URL_TITLE", False)):
+        return col
+    ptype = page_type_of(url, title, col)
+    return str(dict(getattr(_config, "DOWJONES_COLUMN_RELABEL", {})).get(ptype, col))
 
 
 def page_class(page_type: str) -> str:
@@ -601,6 +618,67 @@ def _existing_article_keys(url: str, ledger_path: Path | None) -> set[tuple[str,
     return out
 
 
+#: statuses a caller must NOT mark as done (the page can be re-tried once the
+#: config classifies it); every other SKIPPED_ / REFUSED_ status is final.
+RETRY_STATUSES: frozenset[str] = frozenset({"LLM_NO_REPLY", "REFUSED_UNKNOWN_PAGE_TYPE"})
+
+
+def extraction_lag_days(first_seen_utc: Any, now: datetime | None = None) -> float | None:
+    try:
+        t = datetime.fromisoformat(str(first_seen_utc).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=timezone.utc)
+    return ((now or datetime.now(timezone.utc)) - t).total_seconds() / 86400
+
+
+def precheck(article: dict, *, now: datetime | None = None) -> dict:
+    """CHEAP, no LLM, no ledger: will this page write a forecast at all?
+
+    From url / title / column / first_seen_utc alone. `forecast` False with a
+    `status` of MENTION_NO_FORECAST (a page that names stocks), STALE_NO_FORECAST
+    (first seen more than `DOWJONES_MAX_EXTRACTION_LAG_DAYS` ago: a stale
+    opinion would be stamped as fresh and graded from today's price) or
+    REFUSED_UNKNOWN_PAGE_TYPE (named; a RETRY status, never "done"). Call it
+    BEFORE paying for claim extraction. Archive pages are decided later (their
+    claims are still recorded locally, by design)."""
+    url = str(article.get("url") or "")
+    title = str(article.get("title") or "")
+    col = str(article.get("column") or column_of(url, title, str(article.get("text") or "")))
+    ptype = page_type_of(url, title, col)
+    out: dict[str, Any] = {"forecast": True, "status": "OK", "page_type": ptype,
+                           "column": col, "page_class": None}
+    try:
+        out["page_class"] = page_class(ptype)
+    except PageTypeRefused as e:
+        return {**out, "forecast": False, "status": "REFUSED_UNKNOWN_PAGE_TYPE",
+                "page_class": "REFUSED", "refused": str(e)}
+    if out["page_class"] == "MENTION" and bool(getattr(_config, "DOWJONES_MENTION_NO_FORECAST",
+                                                      True)):
+        return {**out, "forecast": False, "status": "MENTION_NO_FORECAST"}
+    lag_max = getattr(_config, "DOWJONES_MAX_EXTRACTION_LAG_DAYS", None)
+    if lag_max is not None:
+        lag = extraction_lag_days(article.get("first_seen_utc"), now)
+        out["extraction_lag_days"] = None if lag is None else round(lag, 2)
+        if lag is None or lag > float(lag_max):
+            return {**out, "forecast": False, "status": "STALE_NO_FORECAST"}
+    return out
+
+
+def status_census(per_article: Iterable[dict]) -> dict:
+    """Top-level counts of the extract / write statuses of one claims run, so a
+    backlog that ends as spend > 0, rows 0, rc 0 is visible on the receipt."""
+    per = list(per_article)
+    ex = Counter(str(r.get("status")) for r in per)
+    wr = Counter(str(r.get("write_status")) for r in per if r.get("write_status") is not None)
+    rows = sum(int(r.get("forecast_rows") or 0) for r in per)
+    return {"n_articles": len(per), "extract_status": dict(ex), "write_status": dict(wr),
+            "forecast_rows": rows,
+            "n_retry": sum(ex[s] for s in RETRY_STATUSES),
+            "all_articles_wrote_zero_rows": bool(per) and rows == 0}
+
+
 def default_llm(system: str, user: str) -> str | None:
     from backend.services import llm_analyzer as LA
     return LA._call_llm(system, user, purpose=str(
@@ -613,7 +691,18 @@ def extract_claims(article: dict, *, llm_fn: Callable[[str, str], str | None] | 
     text = str(article.get("text") or "")
     if len(text) < 300:
         return {"claims": [], "refused": [], "status": "SKIPPED_TOO_SHORT"}
-    hint = COLUMN_HINTS.get(str(article.get("column") or ""), "")
+    pc = precheck(article)
+    if not pc["forecast"]:
+        # gate BEFORE paying: no extraction for a page that will write nothing
+        st = pc["status"]
+        if st == "REFUSED_UNKNOWN_PAGE_TYPE":
+            _log.error("dowjones_claims.extract_claims: %s (%s)", pc.get("refused"),
+                       str(article.get("url") or "")[:160])
+        return {"claims": [], "refused": [], "precheck": pc,
+                "status": st if st.startswith("REFUSED_") else f"SKIPPED_{st}"}
+    col_eff = effective_column(str(article.get("url") or ""), str(article.get("title") or ""),
+                               article.get("column"))
+    hint = COLUMN_HINTS.get(col_eff, "")
     if (hint and article.get("column") == "barrons_stock_picks"
             and bool(getattr(_config, "DOWJONES_STANCE_REQUIRED_ENFORCE", False))):
         # a page is told it is a buy list only when it IS a pick
@@ -648,25 +737,22 @@ def write_forecasts(article: dict, claims: list[dict], *, ledger_path: Path | No
     from backend.services import news_registry as NR
     from backend.services import source_registry as SR
     seen = str(article["first_seen_utc"])
-    col = article.get("column") or column_of(article.get("url", ""), article.get("title", ""),
-                                             article.get("text", ""))
+    raw_col = article.get("column") or column_of(article.get("url", ""), article.get("title", ""),
+                                                 article.get("text", ""))
+    url = str(article.get("url") or "")
+    col = effective_column(url, str(article.get("title") or ""), raw_col)
     grade = NR.effective_pit_grade({"published_utc": article.get("published_utc"),
                                     "first_seen_utc": seen, "pit_grade": "first_seen_only"})
     day = seen[:10]
-    # CH-12/CH-35: the page type decides whether a named ticker may become a
-    # directional forecast at all. An unclassified type is refused by name.
-    url = str(article.get("url") or "")
-    ptype = page_type_of(url, str(article.get("title") or ""), col)
-    try:
-        pcls: str | None = page_class(ptype)
-        refused_type = None
-    except PageTypeRefused as e:
-        pcls, refused_type = None, str(e)
-        _log.error("dowjones_claims.write_forecasts: %s (%s)", refused_type, url[:160])
-    mention_off = pcls == "MENTION" and bool(getattr(_config, "DOWJONES_MENTION_NO_FORECAST",
-                                                     True))
-    tag = ({"page_type": ptype, "page_class": pcls or "REFUSED",
-            "forecast_written": False} if (mention_off or refused_type) else {})
+    # CH-12/CH-35: the page type (and the page's age) decide whether a named
+    # ticker may become a directional forecast at all.
+    pc = precheck({**article, "column": raw_col})
+    ptype, pcls = pc["page_type"], pc["page_class"]
+    if pc["status"] == "REFUSED_UNKNOWN_PAGE_TYPE":
+        _log.error("dowjones_claims.write_forecasts: %s (%s)", pc.get("refused"), url[:160])
+    blocked = not pc["forecast"] and grade != NR.ARCHIVE_GRADE
+    tag = ({"page_type": ptype, "page_class": pcls, "forecast_written": False,
+            "no_forecast_why": pc["status"]} if blocked else {})
     lp = Path(local_path) if local_path else local_claims_path(day)
     lp.parent.mkdir(parents=True, exist_ok=True)
     with lp.open("a", encoding="utf-8") as fh:
@@ -678,27 +764,12 @@ def write_forecasts(article: dict, claims: list[dict], *, ledger_path: Path | No
     if grade == NR.ARCHIVE_GRADE:
         return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
                 "n_rows_written": 0, "status": "ARCHIVE_NO_FORECAST"}
-    if refused_type:
-        return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
-                "page_type": ptype, "n_rows_written": 0, "status": "REFUSED_UNKNOWN_PAGE_TYPE",
-                "refused": refused_type}
-    if mention_off:
+    if blocked:
         return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
                 "page_type": ptype, "page_class": pcls, "n_rows_written": 0,
-                "status": "MENTION_NO_FORECAST"}
+                **{k: pc[k] for k in ("refused", "extraction_lag_days") if k in pc},
+                "status": pc["status"]}
     extra: dict[str, Any] = {}
-    lag_max = getattr(_config, "DOWJONES_MAX_EXTRACTION_LAG_DAYS", None)
-    if lag_max is not None:
-        try:
-            lag_d = (datetime.now(timezone.utc)
-                     - datetime.fromisoformat(seen.replace("Z", "+00:00"))).total_seconds() / 86400
-        except ValueError:
-            lag_d = None
-        if lag_d is None or lag_d > float(lag_max):
-            return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
-                    "page_type": ptype, "page_class": pcls, "n_rows_written": 0,
-                    "extraction_lag_days": None if lag_d is None else round(lag_d, 2),
-                    "status": "STALE_NO_FORECAST"}
     if pcls == "STANCE_REQUIRED" and bool(getattr(_config, "DOWJONES_STANCE_REQUIRED_ENFORCE",
                                                   False)):
         kept = []
