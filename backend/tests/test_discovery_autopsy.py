@@ -843,3 +843,139 @@ def test_daily_folder_junction_is_refused_but_a_junctioned_data_root_works(world
     assert "UNCHANGED" in capsys.readouterr().out
     assert _tree(world["dr"] / C.AUTOPSY_DAILY_DIRNAME) == before
     jroot.rmdir()
+
+
+# ── CH-35 slice 2: the event-node join (EVENT_NODES_AUTOPSY_JOIN_ENABLED) ──
+
+def _en_node(eid, primary, fs, built, co=(), graph=()):
+    return {"event_id": eid, "primary_ticker": primary, "first_seen_utc": _iso(fs), "built_now_utc": _iso(built),
+            "content_hash": eid, "version_key": eid, "n_evidence": 1, "parent_id": "par_" + eid[3:],
+            "importance": {"importance_0": 4.0, "facts": {"n_publishers": 2}}, "decay": {"half_life_hours": 72.0},
+            "evidence": [{"item_key": eid + ":k", "title": "LICENSED TITLE"}],
+            "connected_names": {"co_mention": [{"ticker": t, "n_items": 2} for t in co],
+                                "graph": [{"ticker": t, "link": "co_coverage", "weight": 0.6} for t in graph]}}
+
+
+def _en_store(w) -> Path:
+    from backend.services import event_nodes as EN
+    p = w["dr"] / C.EVENT_NODES_DIRNAME / EN.STORE_NAME
+    EN.append_rows(p, [
+        _en_node("ev_upz", "UPZ", PREV_CLOSE + timedelta(hours=1), PREV_CLOSE + timedelta(hours=2)),
+        # someone else's event; DNF is only a CONNECTED name of it
+        _en_node("ev_xyz", "XYZ", PREV_CLOSE + timedelta(hours=2), PREV_CLOSE + timedelta(hours=3), co=("DNF",)),
+        # first seen before the open, but this version was built AFTER it: never used
+        _en_node("ev_dnc", "DNC", PREV_CLOSE + timedelta(hours=3), OPEN + timedelta(minutes=5)),
+    ])
+    return p
+
+
+def test_event_join_flag_off_receipt_is_unchanged_by_the_store(world, monkeypatch):
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_JOIN_ENABLED", False)
+    assert DA.main(_argv(world)) == 0
+    bare = _receipt(world)
+    _en_store(world)
+    world["out"] = world["out"].parent / "out2"
+    assert DA.main(_argv(world)) == 0
+    with_store = _receipt(world)
+    assert "event_nodes" not in bare["summary"] and "event_nodes" not in bare["input_hashes"]
+    assert all("event_node_role" not in m and "event_nodes" not in m["knowable"] for m in bare["movers"])
+    assert bare["input_hash"] == with_store["input_hash"]
+    assert bare["receipt_sha256"] == with_store["receipt_sha256"]
+
+
+def test_event_join_flag_on_primary_and_connected_only(world, monkeypatch):
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_JOIN_ENABLED", True)
+    _en_store(world)
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    ev = rec["summary"]["event_nodes"]
+    assert ev["primary"] == ["UPZ"]
+    assert [c["ticker"] for c in ev["connected_only"]] == ["DNF"]
+    assert ev["connected_only"][0]["via"][0][:3] == ["XYZ", "co_mention", "ev_xyz"]
+    assert ev["n_versions_built_after_open_skipped"] == 1
+    by = {m["ticker"]: m for m in rec["movers"]}
+    assert by["DNC"]["event_node_role"] is None                   # its only version was built after the open
+    assert by["UPZ"]["knowable"]["n_by_kind"]["event_node"] == 1
+    assert "LICENSED TITLE" not in json.dumps(rec)
+    assert "event_nodes" in rec["input_hashes"]
+
+
+def test_event_join_flag_on_without_a_store_is_a_named_degradation(world, monkeypatch):
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_JOIN_ENABLED", True)
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    assert any(d.startswith("EVENT_NODES_STORE_MISSING") for d in rec["summary"]["degradations"])
+    assert rec["summary"]["event_nodes"]["n_movers_with_event"] == 0
+
+
+def test_event_join_refuses_a_node_dated_after_the_open(monkeypatch, tmp_path):
+    from backend.services import event_nodes as EN
+    p = tmp_path / EN.STORE_NAME
+    EN.append_rows(p, [_en_node("ev_bad", "UPZ", PREV_CLOSE, PREV_CLOSE)])
+    monkeypatch.setattr(EN, "events_for", lambda *a, **k: {"UPZ": [{
+        "event_id": "ev_bad", "first_seen_utc": _iso(OPEN + timedelta(hours=1)),
+        "version_built_utc": _iso(OPEN), "role": "primary", "link_quality": "PRIMARY"}]})
+    rows = [{"ticker": "UPZ", "side": "UP", "knowable": {"n_by_kind": {}}}]
+    with pytest.raises(DA.AutopsyRefused) as e:
+        DA.attach_event_nodes(rows, p, OPEN)
+    assert e.value.code == DA.LOOKAHEAD
+
+
+def test_event_join_uses_the_version_known_at_the_open_not_a_later_one(world, monkeypatch):
+    from backend.services import event_nodes as EN
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_JOIN_ENABLED", True)
+    p = world["dr"] / C.EVENT_NODES_DIRNAME / EN.STORE_NAME
+    v1 = _en_node("ev_xyz", "XYZ", PREV_CLOSE + timedelta(hours=2), PREV_CLOSE + timedelta(hours=3))
+    v2 = _en_node("ev_xyz", "XYZ", PREV_CLOSE + timedelta(hours=2), OPEN + timedelta(minutes=10), co=("DNF",))
+    v2["content_hash"] = v2["version_key"] = "v2"
+    EN.append_rows(p, [v1])
+    EN.append_rows(p, [v2])                     # v2 names DNF, but it was built after the open
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    by = {m["ticker"]: m for m in rec["movers"]}
+    assert by["DNF"]["event_node_role"] is None
+    ev = rec["summary"]["event_nodes"]
+    assert ev["n_versions_built_after_open_skipped"] == 1
+    assert ev["store_newest_build_utc"] == _iso(PREV_CLOSE + timedelta(hours=3))
+
+
+def test_event_join_shows_strong_links_only_by_default(world, monkeypatch):
+    from backend.services import event_nodes as EN
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_JOIN_ENABLED", True)
+    p = world["dr"] / C.EVENT_NODES_DIRNAME / EN.STORE_NAME
+    n = _en_node("ev_xyz", "XYZ", PREV_CLOSE + timedelta(hours=2), PREV_CLOSE + timedelta(hours=3), co=("DNF",))
+    n["connected_names"]["co_mention"][0]["n_items"] = 1                 # a one-item co-mention: WEAK
+    EN.append_rows(p, [n])
+    assert DA.main(_argv(world)) == 0
+    ev = _receipt(world)["summary"]["event_nodes"]
+    assert ev["n_connected_only"] == 0 and ev["n_weak_links_hidden"] == 1 and ev["strong_links_only"]
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_STRONG_ONLY", False)
+    world["out"] = world["out"].parent / "out_all"
+    assert DA.main(_argv(world)) == 0
+    assert [c["ticker"] for c in _receipt(world)["summary"]["event_nodes"]["connected_only"]] == ["DNF"]
+
+
+def test_event_join_on_a_torn_or_stale_store_is_a_named_degradation(world, monkeypatch):
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_JOIN_ENABLED", True)
+    p = _en_store(world)
+    p.write_bytes(p.read_bytes() + b'{"row_kind": "node", "ev')
+    world["out"] = world["out"].parent / "out_torn"
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    assert any(d.startswith("STORE_TORN_TAIL") for d in rec["summary"]["degradations"])
+    assert rec["summary"]["event_nodes"]["n_movers_with_event"] == 0
+
+
+def _receipt_after(w):
+    assert DA.main(_argv(w)) == 0
+    return _receipt(w)
+
+
+def test_event_join_names_a_stale_store(world, monkeypatch):
+    from backend.services import event_nodes as EN
+    monkeypatch.setattr(C, "EVENT_NODES_AUTOPSY_JOIN_ENABLED", True)
+    p = world["dr"] / C.EVENT_NODES_DIRNAME / EN.STORE_NAME
+    old = PREV_CLOSE - timedelta(days=3)
+    EN.append_rows(p, [_en_node("ev_old", "UPZ", old, old)])
+    rec = _receipt_after(world)
+    assert any(d.startswith(EN.EVENT_STORE_STALE) for d in rec["summary"]["degradations"])

@@ -6858,6 +6858,80 @@ EVENT_NODES_FILL_TOP_N = 10
 #: Price row used for the PROJECTED cost (measured list price); the reservation
 #: bound comes from provider_budget.quote().
 EVENT_NODES_FILL_PRICE_MODEL = "deepseek-v4-flash"
+# ── CH-35 slice 2: forward calendar, daily caller, three flagged consumers, foreign names ──
+#: The night lab's forward catalyst calendar (scripts/always_on_lab.py loop
+#: `catalyst_calendar`, receipt `lab_catalyst_calendar`), written to
+#: `<optimus>/night_factory_<run date>/lab_catalyst_calendar_<run date>.json`. Its
+#: per-ticker half covers only the tickers it was asked for (the PM book); its macro
+#: half (CPI/NFP from FRED, FOMC from a hand-seeded table) covers everyone.
+EVENT_NODES_CATALYST_GLOB = "night_factory_*/lab_catalyst_calendar_*.json"
+#: Macro dates (CPI, NFP, FOMC) attached to every node when within this many days.
+EVENT_NODES_MACRO_HORIZON_DAYS = 14
+#: `daily` builds this trailing window into the default store on every run.
+EVENT_NODES_DAILY_WINDOW_HOURS = 36.0
+#: Consumers: read-only joins, each OFF by default (main's output byte-identical).
+#: Names deliberately do NOT start with AUTOPSY_ / LLM_SELECTOR_ / FUNNEL_NEWS_: the
+#: autopsy hashes every AUTOPSY_* parameter into its receipt.
+EVENT_NODES_AUTOPSY_JOIN_ENABLED = False
+EVENT_NODES_SELECTOR_PACKET_ENABLED = False
+EVENT_NODES_FUNNEL_SOURCE_ENABLED = False
+#: Selector packet: top-K live nodes per candidate by importance decayed to the decision.
+EVENT_NODES_SELECTOR_TOP_K = 3
+#: The packet schema version when the event block is in the packet (hashed into the contract).
+EVENT_NODES_SELECTOR_PACKET_SCHEMA = "llm_selector_packet/3+event_nodes"
+#: Funnel: an event offers its names when its importance decayed to the build time is
+#: at least this; only these link types offer a connected name (shared sector/theme
+#: membership is a list of peers, not a link, and is not offered).
+EVENT_NODES_FUNNEL_MIN_IMPORTANCE = 4.0
+#: return_response is NOT offered: on the live graph its weights are |w| <= 0.12 and half negative.
+EVENT_NODES_FUNNEL_LINKS: tuple = ("primary", "co_mention", "co_coverage")
+#: The funnel offers a co_coverage name only at or above this weight, and a co-mentioned
+#: name only when it is named in at least this many of the event's evidence items.
+EVENT_NODES_FUNNEL_MIN_CO_COVERAGE = 0.65
+EVENT_NODES_FUNNEL_MIN_COMENTION_ITEMS = 2
+#: link_quality on every connected name (the node keeps ALL links as context): STRONG =
+#: co-mention in >= N evidence items, or co_coverage >= the weight; everything else WEAK.
+EVENT_NODES_STRONG_MIN_COMENTION_ITEMS = 2
+EVENT_NODES_STRONG_MIN_CO_COVERAGE = 0.65
+#: The autopsy join lists only PRIMARY and STRONG links by default.
+EVENT_NODES_AUTOPSY_STRONG_ONLY = True
+#: A store whose newest build (at or before the reader's instant) is older than this is
+#: EVENT_STORE_STALE: an empty join is then a stopped daily, not a quiet market.
+EVENT_NODES_STORE_STALE_HOURS = 6.0
+#: The lab catalyst calendar older than this at the build is EVENT_CALENDAR_STALE.
+EVENT_NODES_CALENDAR_STALE_HOURS = 36.0
+#: daily refuses a --now later than the wall clock by more than this (NOW_IN_FUTURE).
+EVENT_NODES_MAX_CLOCK_SKEW_S = 120
+#: daily_latest.json lists this many top nodes (ids, tickers, importance; never titles).
+EVENT_NODES_DAILY_TOP_N = 10
+#: Event-only names get their own enrichment cap, the same rule as news and filing.
+EVENT_NODES_FUNNEL_MAX_ENRICH = 5
+#: Only nodes first seen within this many hours of the reader's instant are offered/joined.
+EVENT_NODES_CONSUMER_MAX_AGE_HOURS = 120.0
+#: Foreign-language issuer names that recur in the corpus titles (measured over
+#: 2026-11-10..12: 1,546 distinct non-Latin titles; counts in the CH-35 slice-2 report).
+#: alias -> (US symbol, source of the mapping). Substring match (CJK has no word
+#: boundaries). Only names that cannot be a common noun or a person; NOT mapped on
+#: purpose: 蘋果/苹果/アップル/애플 (also the fruit; 애플망고), 아마존 (also the river),
+#: 테슬라 (also the physicist), 黃仁勳 (a person), 삼성/鴻海/騰訊/하이닉스/ソフトバンク
+#: (no US listing in the issuer table), 코어위브 (a press transliteration, no official name).
+EVENT_NODES_FOREIGN_NAME_ALIASES: dict = {
+    "台積電": ("TSM", "TSMC's Traditional-Chinese short name (台灣積體電路製造, TWSE 2330); "
+                     "ADR leg TSM per backend/data/news_entities/asia_adrs.csv (TSM,2330.TW)"),
+    "輝達": ("NVDA", "NVIDIA's official Taiwan name (輝達); 12 zh_tw titles, e.g. with 黃仁勳"),
+    "英伟达": ("NVDA", "NVIDIA's official mainland (Simplified) name; 10 zh_cn titles"),
+    "英偉達": ("NVDA", "NVIDIA's Hong Kong / Traditional form of 英伟达; 2 titles"),
+    "エヌビディア": ("NVDA", "NVIDIA Japan's official katakana name; 8 ja_jp titles"),
+    "엔비디아": ("NVDA", "NVIDIA Korea's official Hangul name; 10 ko_kr titles"),
+    "谷歌": ("GOOGL", "Google's official mainland name (谷歌, since 2006)"),
+    "グーグル": ("GOOGL", "Google Japan's official name (グーグル合同会社)"),
+    "구글": ("GOOGL", "Google Korea's official name (구글코리아)"),
+    "台积电": ("TSM", "TSMC's Simplified-Chinese short name (台积电); ADR leg TSM per asia_adrs.csv"),
+    # Micron only by its fuller forms: the bare two characters also occur in 歐美光伏 / 北美光伏 (solar)
+    "美光科技": ("MU", "Micron Technology's official Chinese name (美光科技)"),
+    "美光公司": ("MU", "Micron's Chinese name with 'company' (美光公司)"),
+    "台灣美光": ("MU", "Micron's Taiwan entity (台灣美光)"),
+}
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
