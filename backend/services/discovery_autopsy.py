@@ -121,8 +121,10 @@ FORECAST_RIGHT_SIGN = "FORECAST_RIGHT_SIGN"
 FORECAST_WRONG_SIGN = "FORECAST_WRONG_SIGN"
 FORECAST_MIXED = "FORECAST_MIXED"
 FORECAST_NON_DIRECTIONAL = "FORECAST_NON_DIRECTIONAL"
+#: forecasts exist, none with a 1-session horizon: nothing is due on D
+FORECAST_NOT_YET_DUE = "FORECAST_NOT_YET_DUE"
 FORECAST_OUTCOMES = (FORECAST_RIGHT_SIGN, FORECAST_WRONG_SIGN, FORECAST_MIXED,
-                     FORECAST_NON_DIRECTIONAL)
+                     FORECAST_NON_DIRECTIONAL, FORECAST_NOT_YET_DUE)
 LADDER_OUTCOMES = (NOT_IN_UNIVERSE, IN_UNIVERSE_NOT_CANDIDATE, CANDIDATE_NOT_FORECAST,
                    *FORECAST_OUTCOMES)
 
@@ -168,6 +170,7 @@ STALE_INPUT = "STALE_INPUT"
 ISSUER_MAP_MISSING = "ISSUER_MAP_MISSING"
 REVISIONS_MISSING = "REVISIONS_MISSING"
 DAILY_WRITE_OUTSIDE = "DAILY_WRITE_OUTSIDE"
+DAILY_INCOMPLETE = "DAILY_INCOMPLETE"
 BAD_ARGS = "BAD_ARGS"
 
 
@@ -661,7 +664,7 @@ def index_forecasts(pred_path: Path, tickers: Iterable[str],
                 "observable": row.get("observable"),
                 "horizon_days": row.get("horizon_days"), "probability": row.get("probability"),
                 "benchmark": row.get("benchmark"), "resolves_after": ra,
-                "info_utc": _iso(info), "info_basis": basis,
+                "info_utc": _iso(info), "info_basis": basis, "claim_key": claim_key(row),
                 "info_age_days_at_made": _r((made - info).total_seconds() / 86400, 2)
                 if info is not None else None})
     return {"by_day": by_day,
@@ -704,25 +707,98 @@ def forecast_info(row: dict) -> tuple[Optional[str], Optional[datetime], str]:
         return src, None, "not recorded on the ledger row"
 
 
-def forecast_quality(fc: list[dict], side: str, open_d: datetime) -> dict:
-    """Every forecast made before the open, its sign against D's residual sign, the
-    age of its information at the open, and the mover's FORECAST_* outcome."""
+def claim_key(row: dict) -> Optional[str]:
+    """One key per underlying claim/article: a source claim writes one row per
+    horizon (1/5/20) and must vote once, not three times."""
+    iu = row.get("inputs_used") if isinstance(row.get("inputs_used"), dict) else {}
+    for k in ("claim_hash", "post_url"):
+        if iu.get(k):
+            return f"{k}:{iu[k]}"
+    if iu.get("digest_id"):
+        return f"digest:{iu.get('digest_id')}:{str(iu.get('theme') or '')[:80]}"
+    return None
+
+
+def banded_direction(row: dict) -> str:
+    """UP / DOWN only outside the neutral band (`AUTOPSY_FORECAST_NEUTRAL_BAND`):
+    p = 0.52 says nothing about a sign and is NON_DIRECTIONAL, never 'wrong'."""
+    d = forecast_direction(row)
+    if d not in ("UP", "DOWN"):
+        return d
+    lo, hi = (float(x) for x in C.AUTOPSY_FORECAST_NEUTRAL_BAND)
+    p = float(row.get("probability"))
+    return "NON_DIRECTIONAL" if lo <= p <= hi else d
+
+
+def _sgn(x: Any) -> Optional[str]:
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return None
+    return "UP" if v > 0 else ("DOWN" if v < 0 else None)
+
+
+def forecast_quality(fc: list[dict], side: str, open_d: datetime,
+                     mover: Optional[dict] = None) -> dict:
+    """Forecasts made before the open, judged PER HORIZON against ONE session.
+
+    Only horizon-1 forecasts are compared with D's move (the headline class);
+    longer horizons are listed as NOT YET DUE, never as wrong. Rows from the same
+    claim/article/digest theme (and specialist) are ONE vote. A probability inside
+    the neutral band is NON_DIRECTIONAL. The headline sign is the RESIDUAL sign
+    (beta-adjusted vs SPY); `beats_benchmark` forecasts are about the raw excess
+    over SPY, so both signs are printed and a vote records agreement with each.
+    """
     stale_days = float(C.AUTOPSY_FORECAST_STALE_INFO_DAYS)
+    m = mover or {}
+    raw_excess = None
+    if m.get("ret_raw") is not None and m.get("ret_spy") is not None:
+        raw_excess = _sgn(float(m["ret_raw"]) - float(m["ret_spy"]))
+    raw_sign = _sgn(m.get("ret_raw"))
     rows = []
     for r in sorted(fc, key=lambda r: (r["made_at"], str(r.get("prediction_id")))):
         made = _utc(r.get("made_at"))
         if made is None or made >= open_d:          # index_forecasts cut already; re-checked
             continue
-        d = forecast_direction(r)
         info = _utc(r.get("info_utc"))
         age = None if info is None else (open_d - info).total_seconds() / 86400
-        rows.append({**r, "direction": d, "realised_resid_sign": side,
-                     "agrees": (d == side) if d in ("UP", "DOWN") else None,
+        try:
+            h = int(r.get("horizon_days"))
+        except (TypeError, ValueError):
+            h = None
+        rows.append({**r, "direction": banded_direction(r), "due_on_d": h == 1,
                      "info_age_days_at_open": _r(age, 2),
                      "stale_source": None if age is None else bool(age > stale_days)})
-    right = sum(1 for x in rows if x["agrees"] is True)
-    wrong = sum(1 for x in rows if x["agrees"] is False)
-    if right and wrong:
+    votes: dict[tuple, dict] = {}
+    for x in rows:
+        if not x["due_on_d"]:
+            continue
+        key = (x.get("specialist"), x.get("claim_key") or f"row:{x.get('prediction_id')}",
+               x.get("observable"))
+        v = votes.setdefault(key, {"specialist": x.get("specialist"), "source": x.get("source"),
+                                   "claim_key": x.get("claim_key"),
+                                   "observable": x.get("observable"),
+                                   "made_at": x["made_at"], "rows": [], "dirs": set(),
+                                   "stale_source": x["stale_source"],
+                                   "info_age_days_at_open": x["info_age_days_at_open"]})
+        v["rows"].append(x.get("prediction_id"))
+        v["dirs"].add(x["direction"])
+    vl = []
+    for v in votes.values():
+        ds = {d for d in v.pop("dirs") if d in ("UP", "DOWN")}
+        d = ds.pop() if len(ds) == 1 else "NON_DIRECTIONAL"
+        cmp_raw = raw_excess if v["observable"] == "beats_benchmark" else raw_sign
+        vl.append({**v, "direction": d, "realised_resid_sign": side,
+                   "agrees": (d == side) if d in ("UP", "DOWN") else None,
+                   "realised_raw_sign": cmp_raw,
+                   "agrees_raw": (d == cmp_raw) if (d in ("UP", "DOWN") and cmp_raw) else None})
+    right = sum(1 for v in vl if v["agrees"] is True)
+    wrong = sum(1 for v in vl if v["agrees"] is False)
+    if not rows:
+        outcome = None
+    elif not vl:
+        outcome = FORECAST_NOT_YET_DUE
+    elif right and wrong:
         outcome = FORECAST_MIXED
     elif right:
         outcome = FORECAST_RIGHT_SIGN
@@ -731,18 +807,26 @@ def forecast_quality(fc: list[dict], side: str, open_d: datetime) -> dict:
     else:
         outcome = FORECAST_NON_DIRECTIONAL
     known_age = [x for x in rows if x["stale_source"] is not None]
-    return {"outcome": outcome if rows else None, "rows": rows, "n": len(rows),
+    return {"outcome": outcome, "votes_h1": vl, "rows": rows, "n": len(rows),
+            "n_votes_h1": len(vl), "n_rows_not_yet_due": sum(1 for x in rows if not x["due_on_d"]),
             "n_right_sign": right, "n_wrong_sign": wrong,
-            "n_non_directional": len(rows) - right - wrong,
+            "n_non_directional": len(vl) - right - wrong,
+            "n_right_sign_raw": sum(1 for v in vl if v["agrees_raw"] is True),
+            "n_wrong_sign_raw": sum(1 for v in vl if v["agrees_raw"] is False),
+            "resid_sign": side, "raw_excess_vs_spy_sign": raw_excess,
+            "signs_differ": bool(raw_excess and raw_excess != side),
             "n_stale_source": sum(1 for x in known_age if x["stale_source"]),
             "n_info_age_unknown": len(rows) - len(known_age),
-            "n_directional_stale_source": sum(1 for x in rows if x["stale_source"]
-                                              and x["agrees"] is not None),
-            "n_wrong_sign_stale_source": sum(1 for x in rows if x["stale_source"]
-                                             and x["agrees"] is False),
-            "n_right_sign_stale_source": sum(1 for x in rows if x["stale_source"]
-                                             and x["agrees"] is True),
-            "stale_after_days": stale_days}
+            "n_directional_stale_source": sum(1 for v in vl if v["stale_source"]
+                                              and v["agrees"] is not None),
+            "n_wrong_sign_stale_source": sum(1 for v in vl if v["stale_source"]
+                                             and v["agrees"] is False),
+            "n_right_sign_stale_source": sum(1 for v in vl if v["stale_source"]
+                                             and v["agrees"] is True),
+            "neutral_band": list(C.AUTOPSY_FORECAST_NEUTRAL_BAND),
+            "stale_after_days": stale_days,
+            "basis": ("horizon-1 forecasts only, one vote per claim/article/digest theme; "
+                      "headline sign = residual vs beta*SPY; longer horizons NOT YET DUE")}
 
 
 # ─────────────────────────────────────────────────── 3. the corpus (knowable)
@@ -982,11 +1066,14 @@ _LISTED_LINE = re.compile(r"^\s*\d{1,2}\.\s+(\S.{6,238}?)\s*$", re.MULTILINE)
 
 # ─────────────────────────────────────────── 3b. analyst revisions (knowable)
 
-def _naive_event_utc(raw: Any) -> Optional[datetime]:
-    """`event_date` is NAIVE ("2026-11-10 16:21:00"). Read conservatively, so the
-    knowable cut can only come out LATER than the truth: a naive time is New York
-    time (later than reading it as UTC), and an exact midnight or a date alone is
-    the END of that New York day."""
+def event_utc(raw: Any) -> Optional[datetime]:
+    """`target_revisions.event_date` is a NAIVE UTC stamp ("2026-11-10 17:16:05").
+
+    Measured (review of #130): since 2026-10-10, 0 of 9,144 rows have first_seen
+    before the event when read as UTC, and 1,237 do when read as New York time,
+    so the table's clock is UTC. A date alone (or an exact midnight written
+    without a time) is the END of that UTC day: the cut can only come out late.
+    """
     s = str(raw or "").strip()
     if not s:
         return None
@@ -996,9 +1083,21 @@ def _naive_event_utc(raw: Any) -> Optional[datetime]:
         return None
     if d.tzinfo is not None:
         return d.astimezone(timezone.utc)
-    if (d.hour, d.minute, d.second) == (0, 0, 0) and len(s) <= 19:
+    if len(s) <= 10:
         d = d.replace(hour=23, minute=59, second=59)
-    return d.replace(tzinfo=NY).astimezone(timezone.utc)
+    return d.replace(tzinfo=timezone.utc)
+
+
+def revision_direction(rec: dict) -> Optional[str]:
+    """The revision's own stated direction: rating action up/down, else target
+    Raises/Lowers; conflicting or absent -> None."""
+    a = str(rec.get("action") or "").strip().lower()
+    ta = str(rec.get("target_action") or "").strip().lower()
+    d = {"up": "UP", "down": "DOWN"}.get(a)
+    t = "UP" if ta.startswith("rais") else ("DOWN" if ta.startswith("lower") else None)
+    if d and t and d != t:
+        return None
+    return d or t
 
 
 def load_revisions(path: Path, tickers: Iterable[str], lo: datetime, hi: datetime) -> dict:
@@ -1008,6 +1107,8 @@ def load_revisions(path: Path, tickers: Iterable[str], lo: datetime, hi: datetim
     (`first_seen_utc`, else `pulled_at`): a revision dated the previous evening
     but first pulled after the open was not knowable before it. The event must
     itself fall inside the window (a backfill pull of a 2022 revision is not news).
+    A row first seen BEFORE its own event time is a clock contradiction: refused
+    and counted, never admitted. Items carry the RAW source stamps.
     """
     p = Path(path)
     if not p.is_file():
@@ -1015,7 +1116,7 @@ def load_revisions(path: Path, tickers: Iterable[str], lo: datetime, hi: datetim
     want = sorted({norm_ticker(t) for t in tickers})
     cols = ["ticker", "event_date", "first_seen_utc", "pulled_at", "firm", "action",
             "from_grade", "to_grade", "target_action", "prior_target", "current_target"]
-    lo_s = (lo - timedelta(days=1)).astimezone(NY).date().isoformat()
+    lo_s = (lo - timedelta(days=1)).date().isoformat()
     raw_want = sorted(set(want) | {t.replace(".", "-") for t in want})
     try:
         df = pd.read_parquet(p, columns=cols, filters=[("event_date", ">=", lo_s),
@@ -1025,17 +1126,25 @@ def load_revisions(path: Path, tickers: Iterable[str], lo: datetime, hi: datetim
     by: dict[str, list[dict]] = {}
     st = {"path": str(p), "n_rows_read": int(len(df)), "n_admitted": 0,
           "n_event_outside_window": 0, "n_seen_at_or_after_open": 0, "n_undated": 0,
+          "n_clock_contradiction": 0, "clock_contradiction_examples": [],
           "lo": _iso(lo), "hi": _iso(hi),
-          "event_date_read_as": "naive -> America/New_York; midnight/date-only -> 23:59:59 NY",
+          "event_date_read_as": "naive UTC (measured); date-only -> 23:59:59 UTC",
           "knowable_at": "later of event_date and first_seen_utc (else pulled_at)"}
     for rec in df.to_dict("records"):
-        ev = _naive_event_utc(rec.get("event_date"))
-        seen = _utc(rec.get("first_seen_utc")) or _utc(rec.get("pulled_at"))
+        ev = event_utc(rec.get("event_date"))
+        seen_raw = rec.get("first_seen_utc") if _utc(rec.get("first_seen_utc")) else rec.get("pulled_at")
+        seen = _utc(seen_raw)
         if ev is None or seen is None:
             st["n_undated"] += 1
             continue
         if not (lo <= ev < hi):
             st["n_event_outside_window"] += 1
+            continue
+        if seen < ev:
+            st["n_clock_contradiction"] += 1
+            if len(st["clock_contradiction_examples"]) < 5:
+                st["clock_contradiction_examples"].append(
+                    [str(rec.get("ticker")), str(rec.get("event_date")), str(seen_raw)])
             continue
         known = max(ev, seen)
         if known >= hi:
@@ -1050,8 +1159,9 @@ def load_revisions(path: Path, tickers: Iterable[str], lo: datetime, hi: datetim
         by.setdefault(t, []).append({
             "source": REVISIONS_SOURCE, "title": " ".join(title.split())[:240],
             "known_at": known, "published_at": ev, "clock": "later of event_date and first_seen_utc",
-            "first_seen_utc_raw": _iso(known), "published_utc_raw": _iso(ev),
-            "event_date_raw": str(rec.get("event_date")),
+            # RAW source stamps: the look-ahead check re-parses these, never a derived one
+            "first_seen_utc_raw": str(seen_raw), "published_utc_raw": str(rec.get("event_date")),
+            "stated_direction": revision_direction(rec),
             "tickers": [t], "tags": ["analyst_revision", f"firm:{firm}"], "url": "",
             "listed": False, "item_key": "rev:" + _sha(t, firm, str(rec.get("event_date")),
                                                        rec.get("to_grade"),
@@ -1114,6 +1224,7 @@ def _evidence(r: dict, tier: str, basis: str) -> dict:
             "known_at": _iso(r["known_at"]), "clock": r["clock"],
             "first_seen_utc": r["first_seen_utc_raw"], "published_utc": r["published_utc_raw"],
             "tier": tier, "tier_basis": basis, "item_key": r["item_key"],
+            "stated_direction": r.get("stated_direction"),
             "items_8k": items, "entity_basis": ebasis, "url": r["url"]}
 
 
@@ -1168,6 +1279,10 @@ def knowable(ticker: str, overnight: dict, earlier: dict, *,
             "n_already_traded": len(traded), "n_untimed": len(untimed),
             "n_published_after_open": sum(1 for e in ev_all if e["tier"] == PUBLISHED_AFTER_OPEN),
             "n_by_kind": kinds,
+            # stated directions (only revisions state one) of the items that make it knowable
+            "fresh_directions": [e.get("stated_direction") for e in fresh],
+            "knowable_directions": [e.get("stated_direction") for e in ev_all
+                                    if e["tier"] in (FRESH, ALREADY_TRADED, UNTIMED)],
             "n_rows": len(news),
             "earliest": ev_all[0] if ev_all else None,
             "latest_before_open": ev_all[-1] if ev_all else None,
@@ -1198,8 +1313,19 @@ def classify(m: dict, *, funnel: dict, contracts: dict, digest: dict,
     dirs = [forecast_direction(r) for r in fc]
     directional = [d for d in dirs if d in ("UP", "DOWN")]
     latest = max(fc, key=lambda r: r["made_at"]) if fc else None
-    q = forecast_quality(fc, m["side"], open_d) if (fc and open_d is not None) else None
-    return {**m, "ladder": rung,
+    q = forecast_quality(fc, m["side"], open_d, mover=m) if (fc and open_d is not None) else None
+    # does what made the name knowable POINT the way it moved? (only revisions state a sign)
+    dset = [d for d in (know.get("fresh_directions") if know["state"] == KNOWABLE_FRESH
+                        else know.get("knowable_directions")) or [] if d in ("UP", "DOWN")]
+    if not dset:
+        kvm = "UNSTATED"
+    elif all(d == m["side"] for d in dset):
+        kvm = "AGREES"
+    elif all(d != m["side"] for d in dset):
+        kvm = "CONTRARY"
+    else:
+        kvm = "MIXED"
+    return {**m, "ladder": rung, "knowable_vs_move": kvm,
             "ladder_outcome": (q["outcome"] if q and q["outcome"] else rung),
             "forecast_quality": q,
             "attention": {"funnel_candidate": in_funnel,
@@ -1241,18 +1367,27 @@ def summarise(rows: list[dict], suspects: Optional[list[dict]] = None) -> dict:
             "forecast_wrong_sign_from_stale_source": [
                 r["ticker"] for r in rows if (r.get("forecast_quality") or {}).get(
                     "n_wrong_sign_stale_source")],
+            "missed_but_knowable_vs_move": {r["ticker"]: r.get("knowable_vs_move")
+                                            for r in rows if r["missed_but_knowable"]},
+            "n_forecast_votes_h1": sum((r.get("forecast_quality") or {}).get("n_votes_h1", 0)
+                                       for r in rows),
+            "n_forecast_rows_not_yet_due": sum((r.get("forecast_quality") or {}).get(
+                "n_rows_not_yet_due", 0) for r in rows),
             "n_forecast_rows": sum((r.get("forecast_quality") or {}).get("n", 0) for r in rows),
-            "n_forecast_rows_right_sign": sum((r.get("forecast_quality") or {}).get(
+            "n_forecast_votes_h1_right_sign": sum((r.get("forecast_quality") or {}).get(
                 "n_right_sign", 0) for r in rows),
-            "n_forecast_rows_wrong_sign": sum((r.get("forecast_quality") or {}).get(
+            "n_forecast_votes_h1_wrong_sign": sum((r.get("forecast_quality") or {}).get(
                 "n_wrong_sign", 0) for r in rows),
             "n_forecast_rows_stale_source": sum((r.get("forecast_quality") or {}).get(
                 "n_stale_source", 0) for r in rows),
             "n_forecast_rows_info_age_unknown": sum((r.get("forecast_quality") or {}).get(
                 "n_info_age_unknown", 0) for r in rows),
-            "forecast_sign_note": ("one session, descriptive: the sign of each forecast made "
-                                   "before the open against D's residual sign; every forecast "
-                                   "resolves on its own horizon. Not a skill claim."),
+            "forecast_sign_note": ("one session, descriptive: horizon-1 forecasts made before "
+                                   "the open, one vote per claim/article, a probability inside "
+                                   "the neutral band is no sign; compared with D's RESIDUAL "
+                                   "sign (beta-adjusted vs SPY; beats_benchmark rows also "
+                                   "carry the raw-excess comparison); longer horizons are "
+                                   "NOT YET DUE. Not a skill claim."),
             "by_knowable_kind": {k: sum(1 for r in rows if r["knowable"].get("n_by_kind", {})
                                         .get(k)) for k in EVIDENCE_KINDS},
             "n_in_universe": sum(1 for r in rows if r["ladder"] != NOT_IN_UNIVERSE),
@@ -1287,7 +1422,14 @@ def assert_no_lookahead(rows: list[dict], open_d: datetime) -> None:
             if not e:
                 continue
             fs = _utc(e.get("first_seen_utc"))
-            pub = timed_utc(e.get("published_utc"))
+            if e.get("kind") == "ANALYST_REVISION":       # raw naive-UTC event_date
+                pub = event_utc(e.get("published_utc"))
+                if pub is None or fs is None:
+                    bad.append((r["ticker"], "revision", e.get("first_seen_utc"),
+                                e.get("published_utc")))
+                    continue
+            else:
+                pub = timed_utc(e.get("published_utc"))
             clock = fs if fs is not None else pub
             if clock is None or clock >= open_d or (pub is not None and pub >= open_d):
                 bad.append((r["ticker"], "corpus", e.get("first_seen_utc"), e.get("published_utc")))
@@ -1334,19 +1476,22 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
     #: what this session's receipt was computed FROM, per component: a re-run
     #: with every hash equal is the same autopsy (daily mode writes nothing).
     #: Ages against `now` and the sizes of growing files are left out on purpose.
+    #: what this session's receipt was computed FROM, per component -- ONLY what was
+    #: ADMITTED into the result (rows dated before the open that reached a mover), so
+    #: a live file that keeps growing after the open (the ledger, the corpus, a new
+    #: analyst pull, the next funnel) does not make an identical autopsy look new.
+    #: A re-run with every hash equal is the same autopsy (daily mode writes nothing).
     input_hashes = {
         "schema": _sha(SCHEMA),
         "params": _sha({k: getattr(C, k) for k in sorted(dir(C)) if k.startswith("AUTOPSY_")}),
         "screen": _sha(scr),
-        "funnel": _sha(_drop_keys(funnel, "staleness")),
-        "contracts": _sha(contracts),
-        "digest": _sha(digest),
-        "forecasts": _sha(forecasts_by_ticker,
-                          fc["stats"]["newest_made_before_open"].get(day.isoformat())),
-        "corpus": _sha([(w["n_rows"], w["per_source"]) for w in (overnight, earlier)],
-                       {norm_ticker(m["ticker"]): r["knowable"] for m, r in zip(scr["movers"], rows)}),
-        "revisions": _sha(revs["stats"], revs["by_ticker"]),
-        "issuers": _sha(getattr(corpus, "entities_fingerprint", None)),
+        "funnel": _sha({k: funnel.get(k) for k in ("state", "path", "generated_at", "tickers")}),
+        "contracts": _sha(contracts["by_ticker"], contracts["files_used"]),
+        "digest": _sha(digest["by_ticker"], digest["digests_used"]),
+        "forecasts": _sha(forecasts_by_ticker),
+        "corpus": _sha({norm_ticker(m["ticker"]): r["knowable"]
+                        for m, r in zip(scr["movers"], rows)}),
+        "revisions": _sha(revs["by_ticker"]),
     }
 
     def _drop(d: dict, *keys: str) -> dict:
@@ -1354,6 +1499,7 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
 
     extra = dict(inputs_extra or {})
     stale: list[str] = list(extra.pop("stale_inputs", []))
+    degr: list[str] = list(extra.pop("degradations", []))
     warn: list[str] = []
     if funnel.get("state") != "PRESENT":
         stale.append("funnel: no snapshot dated before the open")
@@ -1394,6 +1540,7 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
     summary = summarise(rows, scr["suspects"])
     summary["stale_inputs"] = stale
     summary["warnings"] = warn
+    summary["degradations"] = degr
     rec = {
         "schema": SCHEMA, "chunk": "CH-13", "licence": "PRODUCT_EXPERIMENT",
         "session": day.isoformat(), "session_open_utc": _iso(open_d),
@@ -1472,7 +1619,7 @@ def render_md(rec: dict) -> str:
     for r in rec["movers"]:
         e = r["knowable"]["latest_fresh"] or r["knowable"]["earliest"]
         ev = (f"pub {e['published_utc']} seen {e['known_at']} [{e['tier']}] {e['source']}: "
-              f"{e['title'][:80]}") if e else ""
+              f"{(e.get('title') or '[title in the local sidecar, sha ' + str(e.get('title_sha256')) + ']')[:80]}") if e else ""
         q = r.get("forecast_quality") or {}
         fq = (f"{q.get('n_right_sign', 0)}/{q.get('n_wrong_sign', 0)}/"
               f"{q.get('n_non_directional', 0)}, {q.get('n_stale_source', 0)}") if q else ""
@@ -1488,7 +1635,8 @@ def research_seed(r: dict, rec: dict, receipt_path: str) -> dict:
     e = r["knowable"]["latest_fresh"] or r["knowable"]["latest_before_open"] or {}
     seed = {
         "kind": "hypothesis_seed",
-        "title": (f"{str(e.get('kind') or 'item').lower()} before the open -> residual move? "
+        "title": (("[CONTRARY] " if r.get("knowable_vs_move") == "CONTRARY" else "")
+                  + f"{str(e.get('kind') or 'item').lower()} before the open -> residual move? "
                   f"({r['ticker']} {rec['session']} {r['side']})"),
         "mechanism": ("UNSTATED: the autopsy is descriptive. A seed names a precursor observed "
                       "before one large residual move; a mechanism is owed before admission."),
@@ -1504,7 +1652,12 @@ def research_seed(r: dict, rec: dict, receipt_path: str) -> dict:
                        "(matched on liquidity band and sigma)"),
         "target": "return", "family": "discovery_failure_autopsy",
         "source": "discovery_autopsy", "source_ref": receipt_path,
-        "status": "SEED_UNADMITTED",
+        "status": ("SEED_UNADMITTED_CONTRARY" if r.get("knowable_vs_move") == "CONTRARY"
+                   else "SEED_UNADMITTED"),
+        #: AGREES / CONTRARY / MIXED / UNSTATED: does the item's own stated direction
+        #: (a revision up/down) point the way the name moved? CONTRARY is not a precursor
+        #: of THIS move; it is queued only with the mark.
+        "direction_vs_move": r.get("knowable_vs_move"),
         "session": rec["session"], "ticker": r["ticker"], "side": r["side"],
         "ladder": r["ladder"], "knowable": r["knowable"]["state"],
         "resid": r["resid"], "z": r["z"], "created_utc": rec["written_utc"],
@@ -1577,40 +1730,77 @@ def write_outputs(rec: dict, out_dir: Path, run_id: str) -> dict:
             "weekly": wk["path"]}
 
 
+def _is_reparse(p: Path) -> bool:
+    """A symlink, a Windows junction, or any other reparse point."""
+    import os
+    import stat as _stat
+    try:
+        st = os.lstat(p)
+    except OSError:
+        return False
+    if _stat.S_ISLNK(st.st_mode):
+        return True
+    attrs = getattr(st, "st_file_attributes", 0)
+    if attrs & getattr(_stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400):
+        return True
+    isj = getattr(os.path, "isjunction", None)
+    return bool(isj and isj(p))
+
+
 class DailyFolder:
     """The ONLY place `--daily` writes: `<data-root>/<AUTOPSY_DAILY_DIRNAME>/`.
 
-    Every write is checked to land directly in that folder (no subfolders, no
-    `..`, no link pointing elsewhere), and is temp -> verify -> replace: the temp
-    file is read back and compared byte for byte before it replaces the target.
-    The append-only files are rewritten whole the same way (old bytes + new lines),
-    so a reader never sees half a line.
+    The DATA ROOT may itself be reached through a junction (release clones do);
+    the daily folder may not be one: a junction/symlink/reparse point there, or a
+    folder that does not resolve to `resolve(data_root)/<dirname>`, is refused.
+    Every write lands directly in the folder (no subfolders, no `..`, no links),
+    temp -> read back and compare bytes -> replace; append files are rewritten
+    whole the same way. The whole daily write runs under one OS file lock.
     """
+
+    LOCK_NAME = ".autopsy.lock"
 
     def __init__(self, data_root: Path) -> None:
         self.data_root = Path(data_root).resolve()
         self.root = self.data_root / str(C.AUTOPSY_DAILY_DIRNAME)
-        if self.root.exists() and (self.root.is_symlink() or not self.root.is_dir()):
-            raise AutopsyRefused(DAILY_WRITE_OUTSIDE, f"{self.root} is not a plain folder")
         self.written: list[str] = []
+        self._contained()
+
+    def _contained(self) -> None:
+        if self.root.exists() or _is_reparse(self.root):
+            if _is_reparse(self.root) or not self.root.is_dir():
+                raise AutopsyRefused(DAILY_WRITE_OUTSIDE, f"{self.root} is a link, junction or "
+                                                          f"reparse point, or not a folder")
+            if self.root.resolve() != self.root:
+                raise AutopsyRefused(DAILY_WRITE_OUTSIDE, f"{self.root} resolves to "
+                                                          f"{self.root.resolve()}, outside the data root")
 
     def _check(self, path: Path) -> Path:
         p = Path(path)
-        if p.parent.resolve() != self.root.resolve() or p.name in ("", ".", ".."):
+        self._contained()
+        if p.parent != self.root or p.name in ("", ".", ".."):
             raise AutopsyRefused(DAILY_WRITE_OUTSIDE, f"refusing to write {p}: daily mode writes "
                                                       f"only directly inside {self.root}")
-        if p.exists() and p.is_symlink():
+        if _is_reparse(p):
             raise AutopsyRefused(DAILY_WRITE_OUTSIDE, f"refusing to write through a link: {p}")
         return p
 
     def path(self, name: str) -> Path:
         return self._check(self.root / name)
 
+    def lock(self) -> Any:
+        from backend.services import disk_guard
+        self._contained()
+        self.root.mkdir(parents=False, exist_ok=True)
+        self._contained()
+        return disk_guard.file_lock(self.path(self.LOCK_NAME), timeout_s=120.0)
+
     def write(self, path: Path, data: bytes) -> None:
         import os
         import time as _time
         p = self._check(path)
         self.root.mkdir(parents=False, exist_ok=True)
+        self._contained()
         tmp = self._check(p.with_name(f".{p.name}.tmp{os.getpid()}"))
         tmp.write_bytes(data)
         if tmp.read_bytes() != data:
@@ -1641,53 +1831,188 @@ class DailyFolder:
         self.write(p, old + new.encode("utf-8"))
 
 
-def write_daily(rec: dict, folder: DailyFolder, run_id: str) -> dict:
-    """Daily-mode outputs, idempotent on the receipt's `input_hash`.
+def strip_titles(rec: dict) -> tuple[dict, dict]:
+    """Daily mode keeps licensed text out of the receipt: every evidence item's
+    `title` is replaced by `title_sha256`, and the titles go to a LOCAL sidecar
+    (`titles_<stem>.local.json`). Source, publisher (in `source`), stamps and url stay."""
+    titles: dict[str, str] = {}
 
-    * the newest index row for the session has the same `input_hash` -> nothing
-      is written at all (not even the weekly file);
-    * otherwise a new version: v1 is `autopsy_<D>.json`, later ones
-      `autopsy_<D>_v<k>.json` (a quoted receipt is never overwritten), and the
-      index row names the version it supersedes and which input components changed.
+    def walk(o: Any) -> Any:
+        if isinstance(o, dict):
+            if "item_key" in o and isinstance(o.get("title"), str):
+                h = hashlib.sha256(o["title"].encode("utf-8")).hexdigest()[:24]
+                titles[h] = o["title"]
+                o = {**o, "title": None, "title_sha256": h}
+            return {k: walk(v) for k, v in o.items()}
+        if isinstance(o, list):
+            return [walk(v) for v in o]
+        return o
+
+    out = {**rec, "movers": walk(rec["movers"]), "suspects": walk(rec.get("suspects") or []),
+           "licensed_text": ("none in this file: evidence titles are replaced by title_sha256; "
+                             "the titles are in the local sidecar named in `titles_sidecar`")}
+    return out, titles
+
+
+def _versions_on_disk(folder: DailyFolder, session: str) -> dict[int, Path]:
+    out = {}
+    pat = re.compile(rf"^autopsy_{re.escape(session)}(?:_v(\d+))?\.json$")
+    if folder.root.is_dir():
+        for p in folder.root.iterdir():
+            m = pat.match(p.name)
+            if m:
+                out[int(m.group(1) or 1)] = p
+    return out
+
+
+def _stem(session: str, version: int) -> str:
+    return f"autopsy_{session}" + ("" if version == 1 else f"_v{version}")
+
+
+def _missing_artefacts(folder: DailyFolder, rec: dict, version: int) -> list[str]:
+    """What of version `version`'s complete set is not on disk (receipt, md, title
+    sidecar, index row, every seed in the queue, the weekly file naming it)."""
+    stem = _stem(rec["session"], version)
+    miss = []
+    for name in (f"{stem}.json", f"{stem}.md", f"titles_{stem}.local.json"):
+        if not (folder.root / name).is_file():
+            miss.append(name)
+    if not any(r.get("session") == rec["session"] and int(r.get("version") or 1) == version
+               and r.get("summary") is not None
+               for r in _jsonl(folder.root / "index.jsonl")):
+        miss.append("index.jsonl row")
+    have = {r.get("seed_key") for r in _jsonl(folder.root / "research_queue.jsonl")}
+    if any(_sha(rec["session"], r["ticker"]) not in have
+           for r in rec["movers"] if r["missed_but_knowable"]):
+        miss.append("research_queue.jsonl seeds")
+    iy, iw, _ = date.fromisoformat(rec["session"]).isocalendar()
+    wp = folder.root / f"weekly_{iy}-W{iw:02d}.json"
+    try:
+        wk = json.loads(wp.read_text(encoding="utf-8"))
+        ok = any(d.get("session") == rec["session"] and d.get("receipt") == f"{stem}.json"
+                 for d in wk.get("days") or [])
+    except (OSError, ValueError):
+        ok = False
+    if not ok:
+        miss.append(wp.name)
+    return miss
+
+
+def write_daily(rec: dict, folder: DailyFolder, run_id: str) -> dict:
+    """Daily-mode outputs, idempotent on the receipt's `input_hash`, under one lock.
+
+    * the session's newest version has the same `input_hash` and EVERY artefact of
+      it is on disk -> nothing is written (UNCHANGED);
+    * same hash, a partial set (a crash between files) -> the missing artefacts
+      are written and a RECOVERY row is appended to the index naming them;
+    * a receipt file with the same hash but no index row (a crash before the
+      index) is ADOPTED, never rewritten;
+    * otherwise a new version (`autopsy_<D>.json`, then `_v2`, ...; a quoted
+      receipt is never overwritten; a different-hash orphan receipt is skipped
+      over and named in `why`).
+    Write order: receipt, title sidecar, md, queue, index, weekly.
     """
     session = rec["session"]
-    ip = folder.path("index.jsonl")
-    prior = [r for r in _jsonl(ip) if r.get("session") == session]
-    last = max(prior, key=lambda r: int(r.get("version") or 1)) if prior else None
-    if last is not None and last.get("input_hash") == rec["input_hash"]:
-        return {"unchanged": True, "session": session, "version": int(last.get("version") or 1),
-                "receipt": last.get("receipt"), "folder": str(folder.root), "files_written": []}
-    version = 1 if last is None else int(last.get("version") or 1) + 1
-    if last is None:
-        why = ["first autopsy of this session"]
-    else:
-        old = last.get("input_hashes") or {}
-        why = [f"input changed: {k}" for k in sorted(rec["input_hashes"])
-               if old.get(k) != rec["input_hashes"][k]] or ["input_hash changed"]
-    stem = f"autopsy_{session}" + ("" if version == 1 else f"_v{version}")
-    jp, mp = folder.path(f"{stem}.json"), folder.path(f"{stem}.md")
-    if jp.exists():
-        raise AutopsyRefused(DAILY_WRITE_OUTSIDE, f"{jp} exists but the index has no row for it: "
-                                                  f"refusing to overwrite a receipt")
-    rec = {**rec, "run_id": run_id, "version": version, "why": why}
-    body = json.dumps(rec, indent=1, default=str)
-    folder.write_text(jp, body)
-    folder.write_text(mp, render_md(rec))
-    folder.append(ip, [{"session": session, "version": version, "run_id": run_id,
-                        "supersedes": None if last is None else last.get("receipt"),
-                        "why": why, "receipt": jp.name, "receipt_sha256": rec["receipt_sha256"],
-                        "input_hash": rec["input_hash"], "input_hashes": rec["input_hashes"],
-                        "written_utc": rec["written_utc"], "summary": rec["summary"]}])
-    qp = folder.path("research_queue.jsonl")
-    have = {r.get("seed_key") for r in _jsonl(qp)}
-    seeds = [research_seed(r, rec, jp.name) for r in rec["movers"] if r["missed_but_knowable"]]
-    new = [s for s in seeds if s["seed_key"] not in have]
-    folder.append(qp, new)
-    wk = weekly_rollup(folder.root, date.fromisoformat(session), writer=folder.write_text)
-    return {"unchanged": False, "session": session, "version": version, "why": why,
-            "receipt": str(jp), "markdown": str(mp), "index": str(ip), "queue": str(qp),
-            "queue_rows_added": len(new), "queue_rows_already_present": len(seeds) - len(new),
-            "weekly": wk["path"], "folder": str(folder.root), "files_written": folder.written}
+    with folder.lock():
+        ip = folder.path("index.jsonl")
+        idx = [r for r in _jsonl(ip) if r.get("session") == session and r.get("summary") is not None]
+        last = max(idx, key=lambda r: int(r.get("version") or 1)) if idx else None
+        on_disk = _versions_on_disk(folder, session)
+        target, mode = None, "NEW"
+        if last is not None and last.get("input_hash") == rec["input_hash"]:
+            target, mode = int(last.get("version") or 1), "INDEXED"
+        else:
+            for v in sorted(on_disk):
+                if last is not None and v <= int(last.get("version") or 1):
+                    continue
+                try:
+                    old = json.loads(on_disk[v].read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    continue
+                if old.get("input_hash") == rec["input_hash"]:
+                    target, mode = v, "ADOPT"
+                    break
+        if target is not None:
+            stem = _stem(session, target)
+            jp = folder.path(f"{stem}.json")
+            stored = json.loads(jp.read_text(encoding="utf-8")) if jp.is_file() else None
+            if stored is None:
+                raise AutopsyRefused(DAILY_INCOMPLETE, f"index row for {stem} but no receipt file: "
+                                                       f"a receipt is never rewritten from a new run")
+            miss = _missing_artefacts(folder, stored, target)
+            if not miss:
+                return {"unchanged": True, "session": session, "version": target,
+                        "receipt": str(jp), "folder": str(folder.root), "files_written": []}
+            done = _finish(folder, stored, target, strip_titles(rec)[1], miss)
+            folder.append(ip, [{"session": session, "version": target, "event": "RECOVERY",
+                                "mode": mode, "completed": miss, "run_id": run_id,
+                                "written_utc": rec["written_utc"]}])
+            return {"unchanged": False, "recovered": True, "mode": mode, "completed": miss,
+                    "session": session, "version": target, "receipt": str(jp),
+                    "folder": str(folder.root), "files_written": folder.written, **done}
+        top = max([int(last.get("version") or 1) if last else 0, *on_disk.keys()])
+        version = top + 1
+        if last is None:
+            why = ["first autopsy of this session"]
+        else:
+            old = last.get("input_hashes") or {}
+            why = [f"input changed: {k}" for k in sorted(rec["input_hashes"])
+                   if old.get(k) != rec["input_hashes"][k]] or ["input_hash changed"]
+        orphans = [p.name for v, p in sorted(on_disk.items())
+                   if v > (int(last.get("version") or 1) if last else 0)]
+        if orphans:
+            why.append(f"left in place, never indexed, different inputs: {orphans}")
+        stem = _stem(session, version)
+        clean, titles = strip_titles(rec)
+        clean = {**clean, "run_id": run_id, "version": version, "why": why,
+                 "supersedes": None if last is None else last.get("receipt"),
+                 "titles_sidecar": f"titles_{stem}.local.json"}
+        jp = folder.path(f"{stem}.json")
+        if jp.exists():
+            raise AutopsyRefused(DAILY_INCOMPLETE, f"{jp} exists: refusing to overwrite a receipt")
+        folder.write_text(jp, json.dumps(clean, indent=1, default=str))
+        done = _finish(folder, clean, version, titles,
+                       [f"titles_{stem}.local.json", f"{stem}.md", "research_queue.jsonl seeds",
+                        "index.jsonl row", "weekly"])
+        return {"unchanged": False, "recovered": False, "session": session, "version": version,
+                "why": why, "receipt": str(jp), "folder": str(folder.root),
+                "files_written": folder.written, **done}
+
+
+def _finish(folder: DailyFolder, rec: dict, version: int, titles: Optional[dict],
+            todo: list[str]) -> dict:
+    """Write the artefacts named in `todo` for an existing receipt, in order."""
+    session = rec["session"]
+    stem = _stem(session, version)
+    out: dict = {}
+    if f"titles_{stem}.local.json" in todo:
+        if titles is None:          # an adopted receipt: titles are not recoverable from it
+            titles = {}
+        folder.write_text(folder.path(f"titles_{stem}.local.json"),
+                          json.dumps({"licensed_text": "LOCAL ONLY: Dow Jones and other "
+                                      "publishers' headline titles; never publish or commit",
+                                      "titles": titles}, indent=1, ensure_ascii=False))
+    if f"{stem}.md" in todo:
+        folder.write_text(folder.path(f"{stem}.md"), render_md(rec))
+    if any(t.startswith("research_queue") for t in todo):
+        qp = folder.path("research_queue.jsonl")
+        have = {r.get("seed_key") for r in _jsonl(qp)}
+        seeds = [research_seed(r, rec, f"{stem}.json") for r in rec["movers"]
+                 if r["missed_but_knowable"]]
+        new = [s for s in seeds if s["seed_key"] not in have]
+        folder.append(qp, new)
+        out.update(queue_rows_added=len(new), queue_rows_already_present=len(seeds) - len(new))
+    if "index.jsonl row" in todo:
+        folder.append(folder.path("index.jsonl"), [{
+            "session": session, "version": version, "run_id": rec.get("run_id"),
+            "why": rec.get("why"), "supersedes": rec.get("supersedes"), "receipt": f"{stem}.json",
+            "receipt_sha256": rec.get("receipt_sha256"), "input_hash": rec["input_hash"],
+            "input_hashes": rec["input_hashes"], "written_utc": rec["written_utc"],
+            "summary": rec["summary"]}])
+    if any(t.startswith("weekly") for t in todo):
+        out["weekly"] = weekly_rollup(folder.root, date.fromisoformat(session),
+                                      writer=lambda p, t: folder.write_text(folder.path(Path(p).name), t))["path"]
+    return out
 
 
 def weekly_rollup(out_dir: Path, day: date, writer: Any = None) -> dict:
@@ -1701,6 +2026,8 @@ def weekly_rollup(out_dir: Path, day: date, writer: Any = None) -> dict:
         except ValueError:
             continue
         if tuple(sd.isocalendar())[:2] != (iy, iw):
+            continue
+        if not isinstance(row.get("summary"), dict):      # RECOVERY event rows
             continue
         if s not in latest or str(row.get("written_utc")) >= str(latest[s].get("written_utc")):
             latest[s] = row
@@ -1742,18 +2069,28 @@ def default_paths(data_root: Path, funnel_root: Optional[Path] = None) -> dict:
 REQUIRED_INPUTS = (("bars", PANEL_MISSING, "file"), ("predictions", LEDGER_MISSING, "file"),
                    ("funnel", FUNNEL_MISSING, "file"), ("decisions", DECISIONS_MISSING, "dir"),
                    ("digest", DIGEST_MISSING, "dir"), ("corpus", CORPUS_MISSING, "dir"),
-                   ("cik_map", CIK_MAP_MISSING, "file"),
-                   ("issuers", ISSUER_MAP_MISSING, "file"),
+                   ("cik_map", CIK_MAP_MISSING, "file"))
+#: sources that sharpen the knowable rung but without which the autopsy still works
+#: (it falls back to the #119 lookup). Missing in a manual run -> a NAMED DEGRADATION
+#: on the receipt and in the headline. Missing in `--daily` -> a refusal: the scheduled
+#: receipts feed a weekly count, and a day silently read with a weaker lookup would
+#: move "no headline" between days for a reason nobody sees in the count.
+OPTIONAL_INPUTS = (("issuers", ISSUER_MAP_MISSING, "file"),
                    ("revisions", REVISIONS_MISSING, "file"))
 
 
-def check_inputs(paths: dict) -> dict:
-    """Refuse, by name, on the first missing input; else every input's size."""
-    out = {}
-    for key, code, kind in REQUIRED_INPUTS:
+def check_inputs(paths: dict, *, strict_optional: bool = True) -> dict:
+    """Refuse, by name, on the first missing required input; an optional one is
+    refused too when `strict_optional`, else listed under `degradations`."""
+    out: dict = {"degradations": []}
+    for key, code, kind in (*REQUIRED_INPUTS, *OPTIONAL_INPUTS):
         p = Path(paths[key])
         ok = p.is_file() if kind == "file" else p.is_dir()
         if not ok:
+            if (key, code, kind) in OPTIONAL_INPUTS and not strict_optional:
+                out["degradations"].append(f"{code}: `{key}` missing at {p}; the knowable rung "
+                                           f"runs without it")
+                continue
             raise AutopsyRefused(code, f"required input `{key}` is missing: {p}")
         out[key] = input_stat(p)
     return out
@@ -1822,7 +2159,8 @@ def run(data_root: Path, out_dir: Optional[Path], *, funnel_root: Optional[Path]
                 raise AutopsyRefused(OUT_INSIDE_DATA_ROOT, f"--out {out_dir} is inside {root}: the "
                                                            f"autopsy never writes into live data "
                                                            f"(use --daily for its own folder there)")
-    sizes = check_inputs(paths)
+    sizes = check_inputs(paths, strict_optional=bool(daily))
+    degradations = sizes.pop("degradations")
     history = history_counts(paths["bars"])
     facts = panel_facts(history)
     if facts["last_date"] is None:
@@ -1853,21 +2191,28 @@ def run(data_root: Path, out_dir: Optional[Path], *, funnel_root: Optional[Path]
     start = day - timedelta(days=int(C.AUTOPSY_LOAD_CALENDAR_DAYS))
     bars = load_bars(paths["bars"], start, day)
     cik_map = load_cik_map(paths["cik_map"])
-    from backend.services import news_entities as NE
-    ents = NE.tables(issuers=paths["issuers"], adrs=paths["adrs"])
-    if ents.n_issuer_rows == 0:
-        raise AutopsyRefused(ISSUER_MAP_MISSING, f"issuer table {paths['issuers']} holds no rows")
+    ents = None
+    if Path(paths["issuers"]).is_file():
+        from backend.services import news_entities as NE
+        ents = NE.tables(issuers=paths["issuers"], adrs=paths["adrs"])
+        if ents.n_issuer_rows == 0:
+            if daily:
+                raise AutopsyRefused(ISSUER_MAP_MISSING, f"issuer table {paths['issuers']} holds no rows")
+            degradations.append(f"{ISSUER_MAP_MISSING}: {paths['issuers']} holds no rows")
+            ents = None
+    if not Path(paths["revisions"]).is_file():
+        paths = {**paths, "revisions": None}
     corpus = Corpus(paths["corpus"], cik_map=cik_map, entities=ents)
-    corpus.entities_fingerprint = {"issuers": str(paths["issuers"]),
-                                   "issuers_sha256": _file_sha(paths["issuers"]),
-                                   "adrs_sha256": _file_sha(paths["adrs"]),
-                                   "issuer_rows": ents.n_issuer_rows,
-                                   "name_keys": len(ents.name_to_symbol),
-                                   "bare_word_tickers": list(C.AUTOPSY_BARE_WORD_TICKERS)}
+    corpus.entities_fingerprint = None if ents is None else {
+        "issuers": str(paths["issuers"]), "issuers_sha256": _file_sha(paths["issuers"]),
+        "adrs_sha256": _file_sha(paths["adrs"]), "issuer_rows": ents.n_issuer_rows,
+        "name_keys": len(ents.name_to_symbol),
+        "bare_word_tickers": list(C.AUTOPSY_BARE_WORD_TICKERS)}
     extra = {"sizes": sizes, "bars_panel": {**facts, **panel_age,
                                             "survivorship": "panel built from a dated universe "
                                             "file; dead names are under-represented"},
-             "cik_map_rows": len(cik_map), "stale_inputs": stale}
+             "cik_map_rows": len(cik_map), "stale_inputs": stale,
+             "degradations": degradations}
     rec = run_day(day, bars=bars, history=history, paths=paths, corpus=corpus, now=now,
                   inputs_extra=extra, top_k=top_k)
     rec["allow_stale"] = bool(allow_stale)
@@ -1917,6 +2262,7 @@ def headline(rec: dict) -> list[str]:
         f"stale inputs: {s['stale_inputs'] or 'none'}"
         f"{' [ALLOWED by --allow-stale]' if rec.get('allow_stale') and s['stale_inputs'] else ''}",
         f"warnings: {s['warnings'] or 'none'}",
+        f"DEGRADATIONS: {s.get('degradations') or 'none'}",
     ]
 
 
@@ -1957,8 +2303,13 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(ln)
     w = res["written"]
     if a.daily:
-        print(f"daily: {'UNCHANGED (identical input hashes; nothing written)' if w['unchanged'] else 'version ' + str(w['version']) + ' ' + str(w.get('why'))}"
-              f" -> {w['folder']}")
+        if w["unchanged"]:
+            state = "UNCHANGED (identical input hashes, every artefact present; nothing written)"
+        elif w.get("recovered"):
+            state = f"RECOVERED {w.get('mode')} version {w['version']}: completed {w.get('completed')}"
+        else:
+            state = f"version {w['version']} {w.get('why')}"
+        print(f"daily: {state} -> {w['folder']}")
     print(json.dumps(res["written"], indent=1))
     return 0
 

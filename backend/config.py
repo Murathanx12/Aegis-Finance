@@ -4335,6 +4335,9 @@ AUTOPSY_DAILY_DIRNAME = "discovery_autopsy"
 #: is older than this at D's open is "from a stale source" (NVDA 2026-11-12:
 #: beats_benchmark p=0.60 rows made from 27-day-old articles).
 AUTOPSY_FORECAST_STALE_INFO_DAYS = 3.0
+#: a forecast probability inside this band (inclusive) states no sign: it is
+#: NON_DIRECTIONAL, never "wrong" (p = 0.52 is a shrug, not a call).
+AUTOPSY_FORECAST_NEUTRAL_BAND = (0.45, 0.55)
 #: tickers that are also ordinary words or acronyms: never matched from a bare
 #: `(TICK)` token or a collector tag on a general feed; only `$TICK`,
 #: `NYSE: TICK`, an issuer NAME, a CIK, or a per-ticker feed names them.

@@ -185,12 +185,13 @@ def _issuers(fr: Path) -> None:
     (d / "issuers.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _ny_naive(t: datetime) -> str:
-    return t.astimezone(DA.NY).strftime("%Y-%m-%d %H:%M:%S")
+def _utc_naive(t: datetime) -> str:
+    """target_revisions writes event_date as a NAIVE UTC stamp."""
+    return t.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _rev(tk: str, event: datetime, seen: datetime, firm: str = "Synthetic Securities") -> dict:
-    return {"ticker": tk, "pulled_at": _iso(seen), "event_date": _ny_naive(event), "firm": firm,
+    return {"ticker": tk, "pulled_at": _iso(seen), "event_date": _utc_naive(event), "firm": firm,
             "from_grade": "Hold", "to_grade": "Buy", "action": "up", "target_action": "Raises",
             "prior_target": 40.0, "current_target": 55.0, "target_change": 0.375,
             "pit_safe": True, "first_seen_utc": _iso(seen)}
@@ -285,8 +286,6 @@ def test_second_run_keeps_the_first_receipt_and_dedupes_the_queue(world):
     ("optimus/digest", DA.DIGEST_MISSING),
     ("optimus/news_corpus", DA.CORPUS_MISSING),
     ("optimus/official/company_tickers.json", DA.CIK_MAP_MISSING),
-    ("news_entities/issuers.csv", DA.ISSUER_MAP_MISSING),
-    ("optimus/analyst/target_revisions.parquet", DA.REVISIONS_MISSING),
 ])
 def test_a_missing_input_is_a_named_nonzero_exit(world, capsys, rel, code):
     import shutil
@@ -416,10 +415,11 @@ def _ledger(w, rows: list[dict]) -> None:
     _jsonl(w["dr"] / "predictions.jsonl", rows)
 
 
-def _fc(pid: str, tk: str, made: datetime, obs: str, p: float, iu: dict | None = None) -> dict:
+def _fc(pid: str, tk: str, made: datetime, obs: str, p: float, iu: dict | None = None,
+        h: int = 1) -> dict:
     return {"prediction_id": pid, "ticker": tk, "made_at": _iso(made),
             "resolves_after": (D + timedelta(days=20)).isoformat(), "observable": obs,
-            "probability": p, "specialist": "test:sign", "horizon_days": 5,
+            "probability": p, "specialist": "test:sign", "horizon_days": h,
             "benchmark": "SPY", "inputs_used": iu or {}}
 
 
@@ -427,12 +427,15 @@ def test_forecast_sign_is_classified_against_the_residual(world):
     before = OPEN - timedelta(hours=3)
     _ledger(world, [
         _fc("r1", "DNF", before, "beats_benchmark", 0.3),                  # DOWN on a DOWN mover
-        _fc("w1", "UPK", before, "beats_benchmark", 0.3,                    # DOWN on an UP mover,
-            {"source": "source_registry", "source_id": "col_x",            # from a 27-day-old claim
-             "claim_utc": _iso(OPEN - timedelta(days=27))}),
+        # ONE claim written at h=1/5/20 (DOWN on an UP mover, 27-day-old): one vote, two not due
+        *[_fc(f"w1h{h}", "UPK", before, "beats_benchmark", 0.3,
+              {"source": "source_registry", "source_id": "col_x", "claim_hash": "c1",
+               "claim_utc": _iso(OPEN - timedelta(days=27))}, h=h) for h in (1, 5, 20)],
         _fc("m1", "UPLATE", before, "beats_benchmark", 0.7),
         _fc("m2", "UPLATE", before, "return_sign", 0.2),
         _fc("n1", "DNC", before, "abs_move_exceeds", 0.6),                  # no sign
+        _fc("n2", "DNC", before, "beats_benchmark", 0.52),                  # inside the band
+        _fc("d5", "DNNEW", before, "beats_benchmark", 0.2, h=5),            # nothing due on D
         # made AT or AFTER the open: never counted, for UPZ or anyone
         _fc("late", "UPZ", OPEN + timedelta(minutes=1), "beats_benchmark", 0.9),
         _fc("late2", "DNF", OPEN, "beats_benchmark", 0.9),
@@ -447,17 +450,24 @@ def test_forecast_sign_is_classified_against_the_residual(world):
     assert by["UPZ"]["ladder"] == DA.IN_UNIVERSE_NOT_CANDIDATE
     assert by["UPZ"]["forecast_quality"] is None
     assert [f["prediction_id"] for f in by["DNF"]["forecast_quality"]["rows"]] == ["r1"]
-    w = by["UPK"]["forecast_quality"]["rows"][0]
-    assert w["direction"] == "DOWN" and w["realised_resid_sign"] == "UP" and w["agrees"] is False
+    assert by["DNNEW"]["ladder_outcome"] == DA.FORECAST_NOT_YET_DUE
+    q = by["UPK"]["forecast_quality"]
+    assert q["n_votes_h1"] == 1 and q["n_rows_not_yet_due"] == 2 and q["n_wrong_sign"] == 1
+    assert by["DNC"]["forecast_quality"]["n_non_directional"] == 2
+    assert {"resid_sign", "raw_excess_vs_spy_sign", "signs_differ"} <= set(q)
+    v = q["votes_h1"][0]
+    assert v["direction"] == "DOWN" and v["realised_resid_sign"] == "UP" and v["agrees"] is False
+    w = q["rows"][0]
     assert w["source"] == "col_x" and w["info_basis"] == "inputs_used.claim_utc"
     assert w["info_age_days_at_open"] == pytest.approx(27.0, abs=0.01)
-    assert w["stale_source"] is True
+    assert w["stale_source"] is True and v["stale_source"] is True
     assert by["DNF"]["forecast_quality"]["rows"][0]["stale_source"] is None    # age not recorded
     s = rec["summary"]
     assert s["by_ladder_outcome"][DA.FORECAST_RIGHT_SIGN] == 1
     assert s["by_ladder_outcome"][DA.FORECAST_WRONG_SIGN] == 1
     assert s["by_ladder_outcome"][DA.FORECAST_MIXED] == 1
     assert s["by_ladder_outcome"][DA.FORECAST_NON_DIRECTIONAL] == 1
+    assert s["by_ladder_outcome"][DA.FORECAST_NOT_YET_DUE] == 1
     assert s["forecast_wrong_sign"] == ["UPK"] and s["forecast_from_stale_source"] == ["UPK"]
     assert s["forecast_wrong_sign_from_stale_source"] == ["UPK"]
     assert by["UPK"]["forecast_quality"]["n_wrong_sign_stale_source"] == 1
@@ -465,10 +475,10 @@ def test_forecast_sign_is_classified_against_the_residual(world):
 
 
 def test_forecast_quality_unit_ignores_after_open_rows():
-    rows = [{"prediction_id": "a", "made_at": _iso(OPEN - timedelta(hours=1)),
+    rows = [{"prediction_id": "a", "made_at": _iso(OPEN - timedelta(hours=1)), "horizon_days": 1,
              "observable": "beats_benchmark", "probability": 0.8, "info_utc": None},
             {"prediction_id": "b", "made_at": _iso(OPEN), "observable": "beats_benchmark",
-             "probability": 0.1, "info_utc": None}]
+             "horizon_days": 1, "probability": 0.1, "info_utc": None}]
     q = DA.forecast_quality(rows, "UP", OPEN)
     assert q["outcome"] == DA.FORECAST_RIGHT_SIGN and q["n"] == 1
 
@@ -498,13 +508,65 @@ def test_a_revision_known_before_the_open_is_knowable_and_tiered_by_its_event(wo
     assert by["UPK"]["knowable"]["n_by_kind"]["ANALYST_REVISION"] == 0
     assert rec["summary"]["by_knowable_kind"]["ANALYST_REVISION"] == 2
     assert "DNNEW" in rec["summary"]["missed_but_knowable"]
+    # a target RAISE before a DOWN move: knowable, but CONTRARY, and the seed says so
+    assert by["DNNEW"]["knowable_vs_move"] == "CONTRARY"
+    assert rec["summary"]["missed_but_knowable_vs_move"]["DNNEW"] == "CONTRARY"
+    q = [json.loads(x) for x in (world["out"] / "research_queue.jsonl").read_text().splitlines()]
+    seed = next(x for x in q if x["ticker"] == "DNNEW")
+    assert seed["status"] == "SEED_UNADMITTED_CONTRARY" and seed["title"].startswith("[CONTRARY]")
+    # the cited item carries the RAW source stamps, not a derived one
+    e = by["DNNEW"]["knowable"]["earliest"]
+    assert e["first_seen_utc"] == _iso(PREV_CLOSE + timedelta(hours=3))
+    assert e["published_utc"] == _utc_naive(PREV_CLOSE + timedelta(hours=1))
 
 
-def test_naive_revision_event_is_read_late():
-    assert DA._naive_event_utc("2024-03-01 10:00:00") == datetime(2024, 3, 1, 15, 0,
-                                                                  tzinfo=timezone.utc)
-    assert DA._naive_event_utc("2024-03-01") > datetime(2024, 3, 2, 4, 0, tzinfo=timezone.utc)
-    assert DA._naive_event_utc("") is None
+def test_a_revision_mid_previous_session_is_already_traded_and_a_clock_contradiction_is_refused(world):
+    # the ZYME shape: a raise at 17:16 UTC on the previous day (mid-session) is ALREADY_TRADED
+    _revisions(world["dr"], [
+        _rev("DNNEW", PREV_CLOSE - timedelta(hours=3, minutes=44), PREV_CLOSE + timedelta(hours=1)),
+        # first seen BEFORE its own event time: a clock contradiction, refused and counted
+        _rev("UPZ", PREV_CLOSE + timedelta(hours=2), PREV_CLOSE + timedelta(hours=1)),
+    ])
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    by = {m["ticker"]: m for m in rec["movers"]}
+    assert by["DNNEW"]["knowable"]["state"] == DA.KNOWABLE_ALREADY_TRADED
+    assert "DNNEW" not in rec["summary"]["missed_but_knowable"]
+    st = rec["inputs"]["revisions"]
+    assert st["n_clock_contradiction"] == 1 and st["n_admitted"] == 1
+    assert by["UPZ"]["knowable"]["state"] == DA.NO_HEADLINE_IN_CORPUS
+
+
+def test_lookahead_check_reads_raw_revision_stamps():
+    late_seen = {"kind": "ANALYST_REVISION", "first_seen_utc": _iso(OPEN + timedelta(minutes=1)),
+                 "published_utc": _utc_naive(OPEN - timedelta(hours=5))}
+    row = {"ticker": "X", "knowable": {"earliest": late_seen, "evidence": []},
+           "forecasts": {"latest": None}, "attention": {"contract_rows": []}}
+    with pytest.raises(DA.AutopsyRefused):
+        DA.assert_no_lookahead([row], OPEN)
+    ok = {**late_seen, "first_seen_utc": _iso(OPEN - timedelta(minutes=1))}
+    DA.assert_no_lookahead([{**row, "knowable": {"earliest": ok, "evidence": []}}], OPEN)
+
+
+@pytest.mark.parametrize("rel,code", [
+    ("news_entities/issuers.csv", DA.ISSUER_MAP_MISSING),
+    ("optimus/analyst/target_revisions.parquet", DA.REVISIONS_MISSING),
+])
+def test_a_missing_optional_source_degrades_a_manual_run_and_refuses_daily(world, capsys, rel, code):
+    (world["fr"] / rel).unlink()
+    assert DA.main(_argv(world)) == 0
+    assert f"DEGRADATIONS: ['{code}" in capsys.readouterr().out
+    assert any(d.startswith(code) for d in _receipt(world)["summary"]["degradations"])
+    assert DA.main(_daily_argv(world)) == 2
+    assert f"REFUSED {code}" in capsys.readouterr().err
+    assert not (world["dr"] / C.AUTOPSY_DAILY_DIRNAME).exists()
+
+
+def test_revision_event_date_is_naive_utc():
+    assert DA.event_utc("2024-03-01 17:16:05") == datetime(2024, 3, 1, 17, 16, 5,
+                                                          tzinfo=timezone.utc)
+    assert DA.event_utc("2024-03-01") == datetime(2024, 3, 1, 23, 59, 59, tzinfo=timezone.utc)
+    assert DA.event_utc("") is None
 
 
 def test_bare_word_tickers_never_match(tmp_path):
@@ -580,6 +642,7 @@ def test_daily_mode_writes_only_its_folder_and_is_idempotent(world, capsys):
     iy, iw, _ = D.isocalendar()
     names = sorted(p.name for p in folder.iterdir())
     assert names == sorted([f"autopsy_{D.isoformat()}.json", f"autopsy_{D.isoformat()}.md",
+                            f"titles_autopsy_{D.isoformat()}.local.json", DA.DailyFolder.LOCK_NAME,
                             "index.jsonl", "research_queue.jsonl", f"weekly_{iy}-W{iw:02d}.json"])
     idx = [json.loads(x) for x in (folder / "index.jsonl").read_text().splitlines()]
     assert len(idx) == 1 and idx[0]["version"] == 1 and idx[0]["why"]
@@ -629,3 +692,148 @@ def test_daily_folder_refuses_a_path_outside_itself(tmp_path):
         assert e.value.code == DA.DAILY_WRITE_OUTSIDE
     f.write_text(f.root / "ok.json", "{}")
     assert (f.root / "ok.json").read_text() == "{}"
+
+
+
+def _index(folder: Path) -> list[dict]:
+    return [json.loads(x) for x in (folder / "index.jsonl").read_text().splitlines()]
+
+
+def test_daily_rerun_after_unrelated_growth_of_live_files_is_unchanged(world, capsys):
+    folder = world["dr"] / C.AUTOPSY_DAILY_DIRNAME
+    assert DA.main(_daily_argv(world)) == 0
+    after = _tree(folder)
+    # everything below is dated AT/AFTER the open: none of it may make a new version
+    _revisions(world["dr"], [_rev("UPZ", PREV_CLOSE - timedelta(hours=2), OPEN + timedelta(hours=1)),
+                             _rev("DNF", OPEN + timedelta(hours=2), OPEN + timedelta(hours=3))])
+    led = world["dr"] / "predictions.jsonl"
+    led.write_text(led.read_text() + json.dumps(_fc("x", "UPK", OPEN + timedelta(hours=4),
+                                                    "beats_benchmark", 0.9)) + chr(10))
+    (world["fr"] / "funnel_history" / "funnel_later.json").write_text(json.dumps(
+        {"generated_at": _iso(OPEN + timedelta(days=1)), "candidates": [{"ticker": "UPK"}]}))
+    late = OPEN + timedelta(hours=6)
+    _jsonl(world["dr"] / "news_corpus" / "wire" / f"{late.date().isoformat()}-x.jsonl", [])
+    capsys.readouterr()
+    assert DA.main(_daily_argv(world)) == 0
+    assert "UNCHANGED" in capsys.readouterr().out
+    assert _tree(folder) == after
+
+
+def test_daily_crash_before_the_index_row_is_adopted(world, monkeypatch, capsys):
+    folder = world["dr"] / C.AUTOPSY_DAILY_DIRNAME
+    real = DA.DailyFolder.append
+
+    def boom(self, path, rows):
+        if Path(path).name == "index.jsonl":
+            raise OSError("simulated crash before the index row")
+        return real(self, path, rows)
+    monkeypatch.setattr(DA.DailyFolder, "append", boom)
+    with pytest.raises(OSError):
+        DA.main(_daily_argv(world))
+    assert (folder / f"autopsy_{D.isoformat()}.json").is_file()
+    assert not (folder / "index.jsonl").exists()
+    receipt = (folder / f"autopsy_{D.isoformat()}.json").read_bytes()
+    monkeypatch.setattr(DA.DailyFolder, "append", real)
+    capsys.readouterr()
+    assert DA.main(_daily_argv(world)) == 0
+    out = capsys.readouterr().out
+    assert "RECOVERED" in out and "ADOPT" in out
+    assert (folder / f"autopsy_{D.isoformat()}.json").read_bytes() == receipt   # never rewritten
+    assert not (folder / f"autopsy_{D.isoformat()}_v2.json").exists()
+    idx = _index(folder)
+    assert [r.get("version") for r in idx if r.get("summary")] == [1]
+    assert idx[-1]["event"] == "RECOVERY" and "index.jsonl row" in idx[-1]["completed"]
+    capsys.readouterr()
+    assert DA.main(_daily_argv(world)) == 0
+    assert "UNCHANGED" in capsys.readouterr().out
+
+
+def test_daily_crash_after_the_index_row_finishes_the_set(world, capsys):
+    folder = world["dr"] / C.AUTOPSY_DAILY_DIRNAME
+    _revisions(world["dr"], [_rev("DNNEW", PREV_CLOSE + timedelta(hours=1),
+                                  PREV_CLOSE + timedelta(hours=3))])   # one seed to lose
+    assert DA.main(_daily_argv(world)) == 0
+    iy, iw, _ = D.isocalendar()
+    (folder / "research_queue.jsonl").unlink()
+    (folder / f"weekly_{iy}-W{iw:02d}.json").unlink()
+    capsys.readouterr()
+    assert DA.main(_daily_argv(world)) == 0
+    assert "RECOVERED" in capsys.readouterr().out
+    q = [json.loads(x) for x in (folder / "research_queue.jsonl").read_text().splitlines()]
+    assert sorted(x["ticker"] for x in q) == ["DNNEW", "UPK"]
+    assert (folder / f"weekly_{iy}-W{iw:02d}.json").is_file()
+    rec_row = _index(folder)[-1]
+    assert rec_row["event"] == "RECOVERY"
+    assert set(rec_row["completed"]) == {"research_queue.jsonl seeds", f"weekly_{iy}-W{iw:02d}.json"}
+    capsys.readouterr()
+    assert DA.main(_daily_argv(world)) == 0
+    assert "UNCHANGED" in capsys.readouterr().out
+
+
+def test_daily_index_and_queue_are_written_under_the_os_lock(world, monkeypatch):
+    from backend.services import disk_guard
+    held = {"n": 0}
+    real_lock = disk_guard.file_lock
+
+    import contextlib
+
+    @contextlib.contextmanager
+    def spy(path, **kw):
+        with real_lock(path, **kw) as x:
+            held["n"] += 1
+            try:
+                yield x
+            finally:
+                held["n"] -= 1
+    monkeypatch.setattr(disk_guard, "file_lock", spy)
+    real = DA.DailyFolder.append
+    seen = []
+
+    def check(self, path, rows):
+        seen.append((Path(path).name, held["n"]))
+        return real(self, path, rows)
+    monkeypatch.setattr(DA.DailyFolder, "append", check)
+    assert DA.main(_daily_argv(world)) == 0
+    assert seen and all(n == 1 for _, n in seen), seen
+
+
+def test_daily_receipt_holds_no_titles_and_the_sidecar_does(world):
+    seen = PREV_CLOSE + timedelta(hours=2)
+    _jsonl(world["dr"] / "news_corpus" / "wire" / f"{seen.date().isoformat()}-b.jsonl", [])
+    assert DA.main(_daily_argv(world)) == 0
+    folder = world["dr"] / C.AUTOPSY_DAILY_DIRNAME
+    rec = json.loads((folder / f"autopsy_{D.isoformat()}.json").read_text(encoding="utf-8"))
+    body = json.dumps(rec)
+    for t in ("DNF guides lower", "DNC loses contract", "UPLATE EX-99"):
+        assert t not in body
+    side = json.loads((folder / f"titles_autopsy_{D.isoformat()}.local.json").read_text(
+        encoding="utf-8"))
+    assert "DNF guides lower" in side["titles"].values()
+    e = {m["ticker"]: m for m in rec["movers"]}["DNF"]["knowable"]["earliest"]
+    assert e["title"] is None and side["titles"][e["title_sha256"]] == "DNF guides lower"
+    assert "DNF guides lower" not in (folder / f"autopsy_{D.isoformat()}.md").read_text()
+
+
+@pytest.mark.skipif(__import__("os").name != "nt", reason="Windows junctions")
+def test_daily_folder_junction_is_refused_but_a_junctioned_data_root_works(world, tmp_path, capsys):
+    import subprocess
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    link = world["dr"] / C.AUTOPSY_DAILY_DIRNAME
+    r = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(elsewhere)],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert DA.main(_daily_argv(world)) == 2
+    assert "REFUSED DAILY_WRITE_OUTSIDE" in capsys.readouterr().err
+    assert list(elsewhere.iterdir()) == []
+    link.rmdir()                                   # removes the junction, not its target
+    # the DATA ROOT reached through a junction (as release clones do) keeps working
+    jroot = tmp_path / "jroot"
+    r = subprocess.run(["cmd", "/c", "mklink", "/J", str(jroot), str(world["dr"])],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    argv = ["--data-root", str(jroot), "--funnel-root", str(world["fr"]), "--daily",
+            "--now", _iso(world["now"])]
+    assert DA.main(argv) == 0
+    assert (world["dr"] / C.AUTOPSY_DAILY_DIRNAME / f"autopsy_{D.isoformat()}.json").is_file()
+    jroot.rmdir()
