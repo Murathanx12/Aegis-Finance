@@ -233,6 +233,58 @@ def _ledger_row(i: int, sp: str, t: str, h: int, p: float, day: str, outcome, ur
             "inputs_used": {"post_url": url, "claim_utc": f"{day}T00:00:00+00:00"}}
 
 
+def _sessions(root: Path, start: str, n: int) -> list[str]:
+    """A synthetic SPY bar calendar (weekdays) where the grader looks for it."""
+    import pandas as pd
+    d = pd.bdate_range(start, periods=n)
+    (root / "prices_2025_26").mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"symbol": "SPY", "date": d, "close": 1.0}).to_parquet(
+        root / "prices_2025_26" / "bars.parquet")
+    return [x.date().isoformat() for x in d]
+
+
+def test_blocks_are_horizon_windows_keyed_on_the_entry_session(tmp_path):
+    from scripts import source_picks_grade as G
+    sessions = _sessions(tmp_path, (datetime.now(timezone.utc) - timedelta(days=120)).date()
+                         .isoformat(), 70)
+    import pandas as pd
+    sat = next(d for d in pd.date_range(sessions[0], periods=14)
+               if d.weekday() == 5).date().isoformat()
+    mon = (pd.Timestamp(sat) + pd.Timedelta(days=2)).date().isoformat()
+    rows = [{"made_at": f"{sat}T12:00:00+00:00"}, {"made_at": f"{mon}T12:00:00+00:00"}]
+    G.attach_entry(rows, sessions)
+    assert rows[0]["entry"] == rows[1]["entry"] == mon            # weekend shares Monday's entry
+    # 30 rows on 6 consecutive sessions at h=5: at most 2 five-session blocks, never 6
+    rr, i = [], 0
+    for k in range(6):
+        for t in ("A", "B", "C", "D", "E"):
+            i += 1
+            rr.append({"prediction_id": str(i), "ticker": t, "p": 0.6, "outcome": i % 2,
+                       "void": None, "made_at": f"{sessions[k]}T15:00:00+00:00"})
+    G.attach_entry(rr, sessions)
+    c5 = G.cell(rr, 0.5, 5)
+    assert c5["entry_blocks_max"] <= 2 and len(c5["origin_sweep"]) == 5
+    assert c5["verdict"] == "CANNOT_DISTINGUISH" and c5["n_used"] == 30
+    c20 = G.cell(rr, 0.5, 20)
+    assert c20["verdict"] is None and c20["verdict_note"].startswith("ONE_DRAW")
+    c1 = G.cell(rr, 0.5, 1)
+    assert c1["entry_blocks_min"] == 6
+
+
+def test_late_extractions_are_listed_by_id_with_their_lag():
+    from scripts import source_picks_grade as G
+    now = datetime.now(timezone.utc)
+    rows = [{"prediction_id": "late", "specialist": "source:x", "ticker": "A", "h": 5,
+             "made_at": now.isoformat(), "claim_utc": (now - timedelta(days=27)).isoformat(),
+             "void": None, "outcome": None},
+            {"prediction_id": "fresh", "specialist": "source:x", "ticker": "A", "h": 5,
+             "made_at": now.isoformat(), "claim_utc": (now - timedelta(hours=3)).isoformat(),
+             "void": None, "outcome": 1}]
+    le = G.late_extractions(rows)
+    assert le["n"] == 1 and le["n_pending"] == 1 and le["rows"][0]["prediction_id"] == "late"
+    assert le["rows"][0]["lag_days"] > 26 and le["lag_distribution"] == {"14-29d": 1}
+
+
 def test_the_grader_reads_only_through_the_layer_reconciles_and_refuses(tmp_path, capsys):
     from scripts import source_picks_grade as G
     root, out = tmp_path / "optimus", tmp_path / "out"
@@ -248,6 +300,7 @@ def test_the_grader_reads_only_through_the_layer_reconciles_and_refuses(tmp_path
                                         (i + k) % 2,
                                         f"https://www.barrons.com/articles/stock-movers-{k}{t}"))
     rows.append({"prediction_id": "other", "specialist": "investigator", "ticker": "AAA"})
+    _sessions(root, rng_days[0], 60)
     (root / "predictions.jsonl").write_text(
         "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
     before = sorted(x.name for x in root.iterdir())
@@ -256,7 +309,7 @@ def test_the_grader_reads_only_through_the_layer_reconciles_and_refuses(tmp_path
     rec = json.loads((out / "source_picks_grade_t1.json").read_text(encoding="utf-8"))
     sp = rec["per_specialist"]["source:barrons_stock_picks"]
     assert rec["reconciles"] and sp["n_rows"] == sp["ledger_regex_count"] == len(rows) - 1
-    assert sp["date_blocks"] == 12 and sp["tickers"] == 3
+    assert sp["tickers"] == 3 and sp["by_horizon"]["5"]["n_used"] == 36
     c5 = sp["by_horizon"]["5"]
     assert c5["mde"] is not None and sp["verdict"] in (
         "SUPPORTED_IN_SCOPE", "CANNOT_DISTINGUISH", "NOT_SUPPORTED_IN_SCOPE")
@@ -267,6 +320,11 @@ def test_the_grader_reads_only_through_the_layer_reconciles_and_refuses(tmp_path
     empty = tmp_path / "empty"
     empty.mkdir()
     assert G.main(["--data-root", str(empty), "--out", str(out)]) == 2
+    nobars = tmp_path / "nobars"
+    nobars.mkdir()
+    (nobars / "predictions.jsonl").write_text((root / "predictions.jsonl").read_text("utf-8"),
+                                              encoding="utf-8")
+    assert G.main(["--data-root", str(nobars), "--out", str(out)]) == 2   # no session calendar
     assert "REFUSED" in capsys.readouterr().out
 
 

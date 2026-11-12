@@ -10,25 +10,31 @@ lie outside `--data-root`. Never writes into the data folder; prints the file
 count of the data root (top level) and of its `sources/` before and after.
 
 Grading uses the ledger's OWN resolved outcomes (`outcome` 1 = the name beat SPY
-over the horizon, as resolved by belief_state), so no bars are re-read.
+over the horizon, as resolved by belief_state). Bars are read only for the
+session calendar (SPY dates in prices_2025_26/bars.parquet): the ENTRY session of
+a row is the first session on/after its made_at date, as the resolver does.
 
-Per `source:*` specialist and horizon (1/5/20): n rows, n resolved, distinct
-tickers, distinct DATE BLOCKS (decision_date), hit rate (outcome agrees with the
-stated direction) beside the stated confidence (0.60 = max(p, 1-p)), Brier vs
-0.25 and vs the pooled base rate, and the declared primary statistic:
+Per `source:*` specialist and horizon h (1/5/20): n rows, n_used (resolved rows
+the statistic is computed on), tickers, ENTRY BLOCKS, hit rate beside the stated
+confidence (0.60 = max(p, 1-p)), Brier vs 0.25 and vs the pooled base rate, and
+the declared primary statistic:
 
     x_i = hit_i - control_i,  control_i = b if the row says up else 1 - b,
 
-`b` = the pooled share of resolved `source:*` rows at that horizon whose name
-beat SPY (a random-direction call with the same up/down mix scores 0 on x). Its
-mean has a CR1 SE clustered by date block AND by ticker; the coarser (larger)
-SE decides; t = mean / SE; MDE = 2.8 x SE (the source_scorecard convention).
+`b` = the pooled share of resolved `source:*` rows at that horizon whose name beat
+SPY. Blocks (review round 1): NON-OVERLAPPING windows of h sessions keyed on the
+entry session, swept over every origin 0..h-1 (weekend rows share Monday's
+entry; overlapping h-session windows are never separate blocks). Second scheme:
+ticker. At each origin the coarser SE decides; t = mean / SE; MDE = 2.8 x SE.
+The sweep prints min/max t, the MDE range and the share of origins agreeing.
 
-Verdict (declared before the run; headline horizon h=5):
-  CANNOT_DISTINGUISH      resolved < 30, or date blocks < 10, or neither below;
-  SUPPORTED_IN_SCOPE      t >= 2.0 on the coarser SE;
-  NOT_SUPPORTED_IN_SCOPE  the stated edge is rejected: hit + 2 SE < 0.60 AND
-                          MDE <= 0.10 (the test could see the claimed +0.10).
+Verdict (headline h=5), which must hold at EVERY origin:
+  SUPPORTED_IN_SCOPE      t >= 2.0;
+  NOT_SUPPORTED_IN_SCOPE  hit + 2 SE(hit) < 0.60 AND MDE <= 0.10;
+  CANNOT_DISTINGUISH      otherwise, or n_used < 30, or entry blocks < 10;
+  no verdict ("ONE_DRAW") when every resolved entry sits in one window.
+Separately named and WEAKER: `stated_0_60_not_observed` = hit + 2 SE(hit) < 0.60
+in every scheme at every origin.
 """
 from __future__ import annotations
 
@@ -52,6 +58,8 @@ MIN_BLOCKS = 10
 T_SUPPORT = 2.0
 MDE_MULT = 2.8
 STATED_CONF = 0.60
+LATE_DAYS = 2.0
+SESSIONS_BARS = "prices_2025_26/bars.parquet"
 NVIDIA_CASE_TICKERS = ("NVDA", "AVGO", "CRWV")
 _DJ_HOST = re.compile(r"^https?://([a-z0-9-]+\.)*(wsj|barrons|marketwatch)\.com/", re.I)
 _SPEC_RE = re.compile(r'"specialist":\s*"(source:[^"]*)"')
@@ -165,87 +173,188 @@ def _resolved(r: dict) -> bool:
     return r["void"] is None and r["outcome"] in (0, 1, 0.0, 1.0, True, False)
 
 
-def cell(rows: list[dict], b: Optional[float]) -> dict:
-    """The graded statistics of one set of rows (one specialist x horizon)."""
-    res = [r for r in rows if _resolved(r)]
-    out: dict[str, Any] = {
-        "n": len(rows), "n_resolved": len(res), "n_void": sum(r["void"] is not None for r in rows),
-        "n_open": sum(r["void"] is None and not _resolved(r) for r in rows),
-        "tickers": len({r["ticker"] for r in rows}),
-        "date_blocks": len({r["decision_date"] for r in rows}),
-        "date_blocks_resolved": len({r["decision_date"] for r in res}),
-        "tickers_resolved": len({r["ticker"] for r in res}),
-        "n_up": sum(r["p"] > 0.5 for r in rows), "n_down": sum(r["p"] < 0.5 for r in rows)}
-    if not res or b is None:
-        return out
-    o = np.array([float(r["outcome"]) for r in res])
-    p = np.array([r["p"] for r in res])
-    up = p > 0.5
-    hit = np.where(up, o, 1 - o)
-    ctrl = np.where(up, b, 1 - b)
-    x = hit - ctrl
-    se_d = _cse(x, [r["decision_date"] for r in res])
-    se_t = _cse(x, [r["ticker"] for r in res])
-    ses = [s for s in (se_d, se_t) if s is not None]
-    se = max(ses) if ses else None
-    hse_d = _cse(hit, [r["decision_date"] for r in res])
-    hse_t = _cse(hit, [r["ticker"] for r in res])
-    hses = [s for s in (hse_d, hse_t) if s is not None]
-    hse = max(hses) if hses else None
-    brier = float(((p - o) ** 2).mean())
-    out.update({
-        "stated_confidence": _r(float(np.maximum(p, 1 - p).mean())),
-        "hit_rate": _r(float(hit.mean())),
-        "hit_rate_up": _r(float(hit[up].mean())) if up.any() else None,
-        "hit_rate_down": _r(float(hit[~up].mean())) if (~up).any() else None,
-        "base_rate_beats_spy": _r(b), "control_hit": _r(float(ctrl.mean())),
-        "excess_hit_vs_control": _r(float(x.mean())),
-        "se_date_blocks": _r(se_d), "se_ticker": _r(se_t),
-        "coarser_scheme": (None if se is None else ("date" if se == se_d else "ticker")),
-        "se": _r(se), "t": _r(float(x.mean()) / se) if se else None,
-        "mde": _r(MDE_MULT * se) if se else None,
-        "mde_reason": None if se else ("no clustered SE: fewer than 2 date blocks or 2 tickers "
-                                       "among resolved rows, so no MDE exists and no verdict "
-                                       "other than CANNOT_DISTINGUISH is allowed"),
-        "hit_se": _r(hse),
-        "brier": _r(brier), "brier_coin": 0.25,
-        "brier_base_rate": _r(float(((b - o) ** 2).mean())),
-        "brier_skill_vs_coin": _r(1 - brier / 0.25),
-        "brier_skill_vs_base": _r(1 - brier / float(((b - o) ** 2).mean()))
-        if float(((b - o) ** 2).mean()) > 0 else None})
-    return out
+def load_sessions(data_root: Path) -> list[str]:
+    """The exchange sessions (SPY's bar dates) the resolver steps through."""
+    import pandas as pd
+    path = data_root / SESSIONS_BARS
+    if not path.exists():
+        raise GradeRefused(f"NO_SESSION_CALENDAR: {path} (entry sessions cannot be derived)")
+    b = pd.read_parquet(path, columns=["symbol", "date"], filters=[("symbol", "==", "SPY")])
+    if b.empty:
+        raise GradeRefused(f"NO_SESSION_CALENDAR: no SPY bars in {path}")
+    return sorted({pd.Timestamp(d).date().isoformat() for d in b["date"]})
 
 
-def verdict(c: dict) -> str:
-    if c.get("mde") is None:
+def attach_entry(rows: list[dict], sessions: list[str]) -> None:
+    """Entry session = the first session on/after the made_at date (the
+    resolver's `prices.loc[made_at[:10]:]`). Weekend rows share Monday's entry."""
+    import bisect
+    for r in rows:
+        i = bisect.bisect_left(sessions, r["made_at"][:10])
+        r["entry_idx"] = i if i < len(sessions) else None
+        r["entry"] = sessions[i] if i < len(sessions) else None
+
+
+def _stats_at_origin(res: list[dict], x: np.ndarray, hit: np.ndarray, h: int, o: int) -> dict:
+    blk = [(r["entry_idx"] - o) // h for r in res]
+    tk = [r["ticker"] for r in res]
+    se_b, se_t = _cse(x, blk), _cse(x, tk)
+    hse_b, hse_t = _cse(hit, blk), _cse(hit, tk)
+    ses = [v for v in (se_b, se_t) if v is not None]
+    hses = [v for v in (hse_b, hse_t) if v is not None]
+    se = max(ses) if len(ses) == 2 else None          # both schemes, or no statistic
+    hse = max(hses) if len(hses) == 2 else None
+    return {"origin": o, "entry_blocks": len(set(blk)), "se_entry_blocks": _r(se_b),
+            "se_ticker": _r(se_t), "coarser": None if se is None else
+            ("entry_blocks" if se == se_b else "ticker"),
+            "se": se, "hit_se": hse, "t": (float(x.mean()) / se) if se else None,
+            "mde": (MDE_MULT * se) if se else None}
+
+
+def _origin_verdict(st: dict, n_used: int, hit_rate: float) -> str:
+    if st["mde"] is None or n_used < MIN_RESOLVED or st["entry_blocks"] < MIN_BLOCKS:
         return "CANNOT_DISTINGUISH"
-    if c["n_resolved"] < MIN_RESOLVED or c["date_blocks_resolved"] < MIN_BLOCKS:
-        return "CANNOT_DISTINGUISH"
-    if c["t"] is not None and c["t"] >= T_SUPPORT:
+    if st["t"] >= T_SUPPORT:
         return "SUPPORTED_IN_SCOPE"
-    if (c["hit_rate"] + 2 * (c.get("hit_se") or c["se"]) < STATED_CONF
-            and c["mde"] <= 0.10):
+    if hit_rate + 2 * st["hit_se"] < STATED_CONF and st["mde"] <= 0.10:
         return "NOT_SUPPORTED_IN_SCOPE"
     return "CANNOT_DISTINGUISH"
 
 
-def by_month(rows: list[dict], b: Optional[float]) -> dict:
+def cell(rows: list[dict], b: Optional[float], h: int) -> dict:
+    """The graded statistics of one set of rows at horizon h. Blocks are
+    NON-OVERLAPPING windows of h sessions keyed on the ENTRY session, swept over
+    every origin 0..h-1; ticker clustering is the second scheme; at each origin
+    the coarser SE decides, and the verdict must hold at EVERY origin."""
+    res = [r for r in rows if _resolved(r) and r.get("entry_idx") is not None]
+    out: dict[str, Any] = {
+        "n": len(rows), "n_used": len(res), "n_resolved": sum(_resolved(r) for r in rows),
+        "n_void": sum(r["void"] is not None for r in rows),
+        "n_open": sum(r["void"] is None and not _resolved(r) for r in rows),
+        "tickers": len({r["ticker"] for r in rows}),
+        "tickers_used": len({r["ticker"] for r in res}),
+        "entry_sessions_used": len({r["entry"] for r in res}),
+        "entry_span": ([min(r["entry"] for r in res), max(r["entry"] for r in res)]
+                       if res else None),
+        "n_up": sum(r["p"] > 0.5 for r in rows), "n_down": sum(r["p"] < 0.5 for r in rows),
+        "block_rule": f"non-overlapping {h}-session windows keyed on the entry session, "
+                      f"origins 0..{h - 1}; second scheme: ticker"}
+    if not res or b is None:
+        out.update(verdict=None if not res else "CANNOT_DISTINGUISH",
+                   verdict_note="NO_RESOLVED_ROWS" if not res else "NO_BASE_RATE")
+        return out
+    o_ = np.array([float(r["outcome"]) for r in res])
+    p = np.array([r["p"] for r in res])
+    up = p > 0.5
+    hit = np.where(up, o_, 1 - o_)
+    ctrl = np.where(up, b, 1 - b)
+    x = hit - ctrl
+    sweep = [_stats_at_origin(res, x, hit, h, o) for o in range(h)]
+    hit_rate = float(hit.mean())
+    for st in sweep:
+        st["verdict_at_origin"] = _origin_verdict(st, len(res), hit_rate)
+    ts = [st["t"] for st in sweep if st["t"] is not None]
+    mdes = [st["mde"] for st in sweep if st["mde"] is not None]
+    blocks = [st["entry_blocks"] for st in sweep]
+    brier = float(((p - o_) ** 2).mean())
+    bb = float(((b - o_) ** 2).mean())
+    out.update({
+        "stated_confidence": _r(float(np.maximum(p, 1 - p).mean())),
+        "hit_rate": _r(hit_rate),
+        "hit_rate_up": _r(float(hit[up].mean())) if up.any() else None,
+        "hit_rate_down": _r(float(hit[~up].mean())) if (~up).any() else None,
+        "base_rate_beats_spy": _r(b), "control_hit": _r(float(ctrl.mean())),
+        "excess_hit_vs_control": _r(float(x.mean())),
+        "entry_blocks_min": min(blocks), "entry_blocks_max": max(blocks),
+        "t_min": _r(min(ts)) if ts else None, "t_max": _r(max(ts)) if ts else None,
+        "mde_min": _r(min(mdes)) if mdes else None, "mde_max": _r(max(mdes)) if mdes else None,
+        "mde": _r(max(mdes)) if len(mdes) == len(sweep) else None,
+        "brier": _r(brier), "brier_coin": 0.25, "brier_base_rate": _r(bb),
+        "brier_skill_vs_coin": _r(1 - brier / 0.25),
+        "brier_skill_vs_base": _r(1 - brier / bb) if bb > 0 else None,
+        "origin_sweep": [{k: (_r(v) if isinstance(v, float) else v) for k, v in st.items()}
+                         for st in sweep]})
+    idx = [r["entry_idx"] for r in res]
+    out["entry_session_span"] = max(idx) - min(idx) + 1
+    if max(idx) - min(idx) < h:
+        # every resolved entry inside ONE h-session window: overlapping outcomes
+        out.update(verdict=None, verdict_note=(
+            f"ONE_DRAW: all resolved entries lie within {out['entry_session_span']} sessions, "
+            f"inside one {h}-session window, so their outcomes overlap; no verdict"),
+            mde_reason="one draw: no independent blocks, no MDE")
+        out["stated_0_60_not_observed"] = None
+        return out
+    vs = [st["verdict_at_origin"] for st in sweep]
+    if out["mde"] is None:
+        final = "CANNOT_DISTINGUISH"
+        out["mde_reason"] = ("no clustered SE at some origin (fewer than 2 blocks or 2 "
+                             "tickers): no MDE, so no verdict but CANNOT_DISTINGUISH")
+    elif all(v == "SUPPORTED_IN_SCOPE" for v in vs):
+        final = "SUPPORTED_IN_SCOPE"
+    elif all(v == "NOT_SUPPORTED_IN_SCOPE" for v in vs):
+        final = "NOT_SUPPORTED_IN_SCOPE"
+    else:
+        final = "CANNOT_DISTINGUISH"
+    out["verdict"] = final
+    out["share_of_origins_agreeing"] = _r(sum(v == final for v in vs) / len(vs))
+    # the separately named, WEAKER statement: the stated 0.60 was not observed
+    hs = [st["hit_se"] for st in sweep]
+    out["stated_0_60_not_observed"] = (bool(all(v is not None for v in hs)
+                                            and all(hit_rate + 2 * v < STATED_CONF for v in hs)))
+    return out
+
+
+def verdict(c: dict) -> Optional[str]:
+    """The cell's verdict; never anything but CANNOT_DISTINGUISH without an MDE
+    (None only for a ONE_DRAW cell, which carries no verdict at all)."""
+    v = c.get("verdict", "CANNOT_DISTINGUISH")
+    if v is not None and c.get("mde") is None:
+        return "CANNOT_DISTINGUISH"
+    return v
+
+
+def by_month(rows: list[dict], b: Optional[float], h: int) -> dict:
     out = {}
-    for m in sorted({r["decision_date"][:7] for r in rows}):
-        c = cell([r for r in rows if r["decision_date"][:7] == m], b)
-        out[m] = {k: c.get(k) for k in ("n", "n_resolved", "date_blocks_resolved", "hit_rate",
+    for m in sorted({r["entry"][:7] for r in rows if r.get("entry")}):
+        c = cell([r for r in rows if (r.get("entry") or "")[:7] == m], b, h)
+        out[m] = {k: c.get(k) for k in ("n", "n_used", "entry_blocks_min", "hit_rate",
                                         "excess_hit_vs_control", "brier")}
     return out
 
 
-def leave_one_month_out(rows: list[dict], b: Optional[float]) -> dict:
-    months = sorted({r["decision_date"][:7] for r in rows})
+def leave_one_month_out(rows: list[dict], b: Optional[float], h: int) -> dict:
+    months = sorted({r["entry"][:7] for r in rows if r.get("entry")})
     vals = {}
     for m in months:
-        c = cell([r for r in rows if r["decision_date"][:7] != m], b)
+        c = cell([r for r in rows if (r.get("entry") or "")[:7] != m], b, h)
         vals[m] = c.get("excess_hit_vs_control")
     ok = [v for v in vals.values() if v is not None]
-    return {"by_month_dropped": vals, "worst": min(ok) if ok else None}
+    return {"by_entry_month_dropped": vals, "worst": min(ok) if ok else None}
+
+
+def late_extractions(rows: list[dict], *, min_days: float = LATE_DAYS) -> dict:
+    """Rows made more than `min_days` after their article was first seen: a
+    stale opinion stamped as fresh. Listed by id so a grader can exclude them."""
+    late, bins = [], Counter()
+    for r in rows:
+        try:
+            d = (datetime.fromisoformat(r["made_at"])
+                 - datetime.fromisoformat(r["claim_utc"])).total_seconds() / 86400
+        except ValueError:
+            continue
+        if d > min_days:
+            pending = r["void"] is None and not _resolved(r)
+            late.append({"prediction_id": r["prediction_id"], "specialist": r["specialist"],
+                         "ticker": r["ticker"], "h": r["h"], "lag_days": round(d, 2),
+                         "pending": pending})
+            bins[("2-6d" if d < 7 else "7-13d" if d < 14 else "14-29d" if d < 30
+                  else ">=30d")] += 1
+    return {"rule": f"made_at - inputs_used.claim_utc (first seen) > {min_days} days",
+            "n": len(late), "n_pending": sum(x["pending"] for x in late),
+            "n_resolved": sum(not x["pending"] for x in late),
+            "lag_distribution": dict(sorted(bins.items())),
+            "by_specialist": dict(Counter(x["specialist"] for x in late)),
+            "rows": sorted(late, key=lambda x: (x["specialist"], x["prediction_id"]))}
 
 
 def duplicates(rows: list[dict]) -> dict:
@@ -301,41 +410,38 @@ def nvidia_case(rows: list[dict], day: str) -> list[dict]:
 
 def grade(rows: list[dict], indep: Counter) -> dict:
     b = base_rates(rows)
+    H = HEADLINE_H
     specs = sorted({r["specialist"] for r in rows})
     per: dict[str, Any] = {}
     for sp in specs:
         rs = [r for r in rows if r["specialist"] == sp]
-        hz = {}
-        for h in HORIZONS:
-            c = cell([r for r in rs if r["h"] == h], b[h])
-            c["verdict"] = verdict(c)
-            hz[str(h)] = c
-        head = hz[str(HEADLINE_H)]
-        hrows = [r for r in rs if r["h"] == HEADLINE_H]
-        dd = sorted({r["decision_date"] for r in rs})
+        hz = {str(h): cell([r for r in rs if r["h"] == h], b[h], h) for h in HORIZONS}
+        head = hz[str(H)]
+        hrows = [r for r in rs if r["h"] == H]
         cls = Counter(r["page_class"] for r in rs)
+        span = head.get("entry_span") or ["-", "-"]
         per[sp] = {
             "n_rows": len(rs), "ledger_regex_count": indep.get(sp, 0),
             "reconciles": indep.get(sp, 0) == len(rs),
             "n_resolved": sum(_resolved(r) for r in rs),
-            "tickers": len({r["ticker"] for r in rs}), "date_blocks": len(dd),
-            "decision_dates": [dd[0], dd[-1]] if dd else None,
+            "tickers": len({r["ticker"] for r in rs}),
             "rows_by_page_class": dict(cls),
-            "headline_horizon": HEADLINE_H, "verdict": head["verdict"],
-            "scope": (f"{sp}, beats_benchmark vs SPY at h={HEADLINE_H} sessions, decision "
-                      f"dates {dd[0] if dd else '-'}..{dd[-1] if dd else '-'}, "
-                      f"{head['n_resolved']} resolved rows on {head['date_blocks_resolved']} "
-                      f"date blocks, rows as labelled by dowjones_claims.column_of"),
+            "headline_horizon": H, "verdict": head.get("verdict"),
+            "verdict_note": head.get("verdict_note"),
+            "stated_0_60_not_observed_h5": head.get("stated_0_60_not_observed"),
+            "scope": (f"{sp}, beats_benchmark vs SPY at h={H} sessions, RESOLVED rows only: "
+                      f"{head['n_used']} rows entering {span[0]}..{span[1]} "
+                      f"({head.get('entry_blocks_min', 0)}-{head.get('entry_blocks_max', 0)} "
+                      f"non-overlapping {H}-session entry blocks across origins), rows as "
+                      f"labelled by dowjones_claims.column_of"),
             "by_horizon": hz,
-            "by_month_h5": by_month(hrows, b[HEADLINE_H]),
-            "leave_one_month_out_h5": leave_one_month_out(hrows, b[HEADLINE_H]),
+            "by_entry_month_h5": by_month(hrows, b[H], H),
+            "leave_one_month_out_h5": leave_one_month_out(hrows, b[H], H),
             "h5_excluding_mention_rows": cell([r for r in hrows if r["page_class"] != "MENTION"],
-                                              b[HEADLINE_H]),
+                                              b[H], H),
             "h5_mention_rows_only": cell([r for r in hrows if r["page_class"] == "MENTION"],
-                                         b[HEADLINE_H])}
-    pooled = {str(h): cell([r for r in rows if r["h"] == h], b[h]) for h in HORIZONS}
-    for h in HORIZONS:
-        pooled[str(h)]["verdict"] = verdict(pooled[str(h)])
+                                         b[H], H)}
+    pooled = {str(h): cell([r for r in rows if r["h"] == h], b[h], h) for h in HORIZONS}
     return {"base_rate_beats_spy_by_h": {str(h): _r(v) for h, v in b.items()},
             "per_specialist": per, "pooled_all_source": pooled}
 
@@ -350,11 +456,13 @@ def run(data_root: Path, out_dir: Path, *, corpus: Optional[Path] = None,
         raise GradeRefused(f"REFUSED_OUT_INSIDE_DATA_ROOT: {out_dir}")
     ledger = data_root / "predictions.jsonl"
     before = _snapshot(data_root)
+    sessions = load_sessions(data_root)
     rows, indep = load_source_rows(ledger)
     if not rows:
         raise GradeRefused(f"NO_SOURCE_ROWS: {ledger} holds no source:* rows")
     titles = load_titles(corpus)
     classify(rows, titles)
+    attach_entry(rows, sessions)
     g = grade(rows, indep)
     mention = [r for r in rows if r["page_class"] == "MENTION"]
     now = datetime.now(timezone.utc)
@@ -396,6 +504,9 @@ def run(data_root: Path, out_dir: Path, *, corpus: Optional[Path] = None,
         "unclassified_page_types": dict(Counter(r["page_type"] for r in rows
                                                 if r["page_class"] == "UNCLASSIFIED")),
         "duplicates": duplicates(rows),
+        "late_extractions": late_extractions(rows),
+        "session_calendar": {"source": SESSIONS_BARS + " (SPY dates)", "n": len(sessions),
+                             "first": sessions[0], "last": sessions[-1]},
         "extraction_lag_made_minus_first_seen": extraction_lag(rows),
         **g,
         "nvidia_case_day": day,
@@ -411,16 +522,23 @@ def run(data_root: Path, out_dir: Path, *, corpus: Optional[Path] = None,
 def format_table(rec: dict) -> str:
     lines = [f"source_picks_grade {rec['run_id']}  rows {rec['n_source_rows']} "
              f"(regex {rec['n_source_rows_regex_count']}, reconciles {rec['reconciles']})  "
-             f"MENTION rows {rec['mention_rows']['n']}  files unchanged {rec['files_unchanged']}",
-             f"{'specialist':34} {'n':>5} {'res':>5} {'tk':>4} {'blk':>4} | h=5: {'hit':>6} "
-             f"{'conf':>5} {'ctrl':>6} {'brier':>6} {'t':>6} {'MDE':>6}  verdict"]
+             f"MENTION rows {rec['mention_rows']['n']}  late (>2d) rows "
+             f"{rec['late_extractions']['n']} ({rec['late_extractions']['n_pending']} pending)  "
+             f"files unchanged {rec['files_unchanged']}",
+             f"{'specialist':32} {'h':>2} {'n_used':>6} {'blk':>5} {'hit':>6} {'ctrl':>6} "
+             f"{'brier':>6} {'t min..max':>14} {'MDE min..max':>13} {'agree':>5}  verdict"]
     for sp, v in rec["per_specialist"].items():
-        c = v["by_horizon"][str(HEADLINE_H)]
-        f = lambda k: "-" if c.get(k) is None else f"{c[k]:.3f}"  # noqa: E731
-        lines.append(f"{sp:34} {v['n_rows']:>5} {v['n_resolved']:>5} {v['tickers']:>4} "
-                     f"{v['date_blocks']:>4} | {f('hit_rate'):>9} {f('stated_confidence'):>5} "
-                     f"{f('control_hit'):>6} {f('brier'):>6} {f('t'):>6} {f('mde'):>6}  "
-                     f"{v['verdict']}")
+        for h in ("1", "5", "20"):
+            c = v["by_horizon"][h]
+            f = lambda k: "-" if c.get(k) is None else f"{c[k]:.3f}"  # noqa: E731
+            blk = (f"{c.get('entry_blocks_min')}-{c.get('entry_blocks_max')}"
+                   if c.get("entry_blocks_min") is not None else "-")
+            lines.append(f"{sp:32} {h:>2} {c['n_used']:>6} {blk:>5} {f('hit_rate'):>6} "
+                         f"{f('control_hit'):>6} {f('brier'):>6} "
+                         f"{f('t_min') + '..' + f('t_max'):>14} "
+                         f"{f('mde_min') + '..' + f('mde_max'):>13} "
+                         f"{f('share_of_origins_agreeing'):>5}  "
+                         f"{c.get('verdict') or c.get('verdict_note', '')[:9]}")
     return "\n".join(lines)
 
 
