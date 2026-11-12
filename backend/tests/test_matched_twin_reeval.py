@@ -114,14 +114,148 @@ def test_planted_outperformer_beats_its_twins_at_every_origin():
         assert k in ev
 
 
-def test_verdict_needs_every_origin():
+def test_verdict_needs_every_origin_and_the_rank_test():
     sweep = [{"t": 3.0, "t_crit": 2.2}, {"t": 1.0, "t_crit": 2.2}]
-    word, _ = M.verdict_of(sweep, 0.99, 0.05, -0.01, 0.05)
-    assert word == "CANNOT_DISTINGUISH"
-    word, _ = M.verdict_of(sweep, 0.99, 0.05, 0.02, 0.05)
-    assert word == "CANNOT_DISTINGUISH"          # in the twins' tail: not "book ~ twins"
-    word, _ = M.verdict_of(sweep, 0.60, 0.05, 0.02, 0.05)
+    # in the top tail, one origin fails -> the tail word with its side, not CANNOT_DISTINGUISH
+    word, _ = M.verdict_of(sweep, 0.99, 0.01, 0.05, -0.01, 0.05)
+    assert word == "TAIL_BY_RANK_UNCONFIRMED_HIGH"
+    word, _ = M.verdict_of(sweep, 0.60, 0.9, 0.05, 0.02, 0.05)
     assert word == "BAND_EFFECT"
+    word, _ = M.verdict_of(sweep, 0.60, 0.9, -0.05, 0.02, 0.05)
+    assert word == "CANNOT_DISTINGUISH"
+    every = [{"t": 3.0, "t_crit": 2.2}] * 5
+    assert M.verdict_of(every, 0.999, 0.01, 0.05, 0.0, 0.05)[0] == "BEATS_TWINS_IN_SCOPE"
+    # block t at every origin but the Holm-corrected rank p does not clear -> unconfirmed tail
+    assert M.verdict_of(every, 0.999, 0.20, 0.05, 0.0, 0.05)[0] == "TAIL_BY_RANK_UNCONFIRMED_HIGH"
+    down = [{"t": -3.0, "t_crit": 2.2}] * 5
+    assert M.verdict_of(down, 0.001, 0.01, -0.05, 0.0, 0.05)[0] == "LAGS_TWINS_IN_SCOPE"
+    weak = [{"t": -1.0, "t_crit": 2.2}] * 5
+    assert M.verdict_of(weak, 0.001, 0.01, -0.05, 0.0, 0.05)[0] == "TAIL_BY_RANK_UNCONFIRMED_LOW"
+
+
+def test_rank_p_and_holm():
+    tw = np.arange(1000, dtype=float)
+    assert M.rank_p(2000.0, tw) == pytest.approx(2 / 1001)
+    assert M.rank_p(-5.0, tw) == pytest.approx(2 / 1001)
+    assert M.rank_p(500.0, tw) == pytest.approx(1.0)
+    adj = M.holm({"a": 0.01, "b": 0.02, "c": 0.5})
+    assert adj["a"] == pytest.approx(0.03) and adj["b"] == pytest.approx(0.04) and adj["c"] == pytest.approx(0.5)
+    adj = M.holm({"a": 0.02, "b": 0.011})          # monotone: never below an earlier step
+    assert adj["b"] == pytest.approx(0.022) and adj["a"] == pytest.approx(0.022)
+
+
+def test_planted_laggard_lags_its_twins():
+    losers = [f"S{j:02d}" for j in range(10)]
+    bars = _panel_bars(drift={s: -0.005 for s in losers})
+    panel, pools, keep = _setup(bars)
+    ev = M.evaluate_book(_decision(panel, losers, 60), panel, pools, end_row=len(panel.dates) - 1,
+                         rt_bps=lambda s: 18.0, keep=keep, n_twins=200, seed=4, p=_p())
+    assert ev["verdict"] == "LAGS_TWINS_IN_SCOPE", ev["verdict_why"]
+    assert ev["twins"][M.PRIMARY_LEVEL]["rank_p_two_sided"] <= 2 / 201 + 1e-12
+
+
+def test_finalize_applies_holm_across_books():
+    winners = [f"S{j:02d}" for j in range(10)]
+    bars = _panel_bars(drift={s: 0.005 for s in winners})
+    panel, pools, keep = _setup(bars)
+    res = {}
+    for k in range(3):
+        ev = M.evaluate_book(_decision(panel, winners, 60), panel, pools,
+                             end_row=len(panel.dates) - 1, rt_bps=lambda s: 18.0, keep=keep, n_twins=60,
+                             seed=10 + k, p=_p())
+        res[f"b{k}"] = {**ev, "status": "OK"}
+    fam = M.finalize_verdicts(res, 0.05)
+    assert fam[M.PRIMARY_LEVEL]["m"] == 3
+    for r in res.values():
+        lv = r["twins"][M.PRIMARY_LEVEL]
+        assert "_vin" not in lv
+        # raw p floor 2/61 = 0.033; Holm x3 = 0.098 > 0.05 -> cannot be BEATS any more
+        assert lv["rank_p_holm"] == pytest.approx(min(1.0, 3 * lv["rank_p_two_sided"]), abs=1e-6)
+        assert r["verdict"] == "TAIL_BY_RANK_UNCONFIRMED_HIGH"
+
+
+def test_simulate_arithmetic():
+    dates = _dates(4)
+    rows = []
+    for sym, opens, closes in (("SPY", [100, 100, 100, 100], [100, 100, 100, 100]),
+                               ("AAA", [10, 10, 11, 12], [10, 11, 12, 12]),
+                               ("BBB", [20, 20, 20, 20], [20, 20, 20, 18])):
+        for d, o, c in zip(dates, opens, closes):
+            rows.append((sym, d, float(o), float(c), 1e6))
+    panel = M.Panel(pd.DataFrame(rows, columns=["symbol", "date", "open", "close", "volume"]))
+    decs = [{"asof": panel.dates[0], "fill_row": 1, "price": "open",
+             "weights": {"AAA": ("AAA", 0.5), "BBB": ("BBB", 0.4)}}]
+    out = M.simulate(decs, panel, 3, lambda s: 20.0)      # 20 bps round trip -> 10 bps per side
+    cost_in = 0.9 * 10 / 1e4
+    v = 1.0 - cost_in
+    sh_a, sh_b, cash = 0.5 * v / 10, 0.4 * v / 20, v - 0.9 * v
+    assert out["nav"][0] == pytest.approx(cash + sh_a * 11 + sh_b * 20)
+    assert out["nav"][1] == pytest.approx(cash + sh_a * 12 + sh_b * 20)
+    exit_cost = (sh_a * 12 + sh_b * 18) * 10 / 1e4
+    assert out["nav"][2] == pytest.approx(cash + sh_a * 12 + sh_b * 18 - exit_cost)
+    assert out["cost"] == pytest.approx(cost_in + exit_cost)
+    assert out["pnl"]["AAA"] == pytest.approx(sh_a * 2) and out["pnl"]["BBB"] == pytest.approx(sh_b * -2)
+
+
+def test_strategy_accounting_explains_every_row():
+    roi = {"rows": [
+        {"account": "good", "status": "LIVE", "vs_spy_pp": 1.0},
+        {"account": "tw", "status": "LIVE", "vs_spy_pp": 2.0},
+        {"account": "x-control", "status": "LIVE", "vs_spy_pp": 0.1},
+        {"account": "novs", "status": "LIVE", "vs_spy_pp": None},
+        {"account": "dead", "status": "VOIDED", "vs_spy_pp": 3.0}]}
+    dna = {"books": [{"account": "tw", "category": "twin"}, {"account": "good", "category": "strategy"}]}
+    strat, dropped = M.strategy_accounting(roi, dna, ["-control"])
+    assert [r["account"] for r in strat] == ["good"]
+    why = {d["account"]: d["why"] for d in dropped}
+    assert set(why) == {"tw", "x-control", "novs", "dead"}
+    assert "twin" in why["tw"] and "-control" in why["x-control"] and "VOIDED" in why["dead"]
+
+
+def test_twin_may_hold_book_names_but_never_book_only_names():
+    bars = _panel_bars(n_days=90, n_names=4)
+    extra = bars[bars["symbol"] == "S00"].assign(symbol="GLOBALX")
+    allb = pd.concat([bars, extra], ignore_index=True)
+    panel = M.Panel(allb)
+    pools = M.Pools(allb, {}, _p(), eligible=set(bars["symbol"]))
+    decs = [{"asof": panel.dates[60], "fill_row": 61, "price": "open",
+             "weights": {"S00": ("S00", 0.3), "S01": ("S01", 0.3)}}]
+    seen: set = set()
+    rng = np.random.default_rng(5)
+    for _ in range(200):
+        tw, _fb = M.draw_twin(decs, pools, "panel", rng, lambda s: False)
+        names = [s for s, _ in tw[0]["weights"].values()]
+        assert len(set(names)) == len(names)
+        seen |= set(names)
+    assert "S00" in seen and "S01" in seen
+    assert "GLOBALX" not in seen
+
+
+def test_missing_db_is_a_named_refusal(tmp_path):
+    with pytest.raises(M.Refused, match="aegis_pi.db missing"):
+        M.open_db_copy(tmp_path / "aegis_pi.db")
+    import sqlite3
+    db = tmp_path / "x.db"
+    con = sqlite3.connect(str(db))
+    con.execute("CREATE TABLE other (a int)")
+    con.commit()
+    con.close()
+    with pytest.raises(M.Refused, match="paper_book_decisions"):
+        M.open_db_copy(db)
+
+
+def test_panel_membership_flags_a_pool_before_the_membership_date(tmp_path):
+    dates = _dates(60)
+    rows = [("A", d, 1.0, 1.0, 1.0) for d in dates] + [("B", d, 1.0, 1.0, 1.0) for d in dates[:50]]
+    f = tmp_path / "bars.parquet"
+    pd.DataFrame(rows, columns=["symbol", "date", "open", "close", "volume"]).to_parquet(f)
+    early, late = str(dates[10].date()), str(dates[55].date())
+    out = M.panel_membership(f, None, str(dates[0].date()), [early, late])
+    assert out["membership_date"] == str(dates[49].date())
+    assert out["flagged_asofs"] == [early]
+    assert "PRECEDE" in M.survivorship_line(out)
+    clean = M.panel_membership(f, None, str(dates[0].date()), [late])
+    assert clean["flagged_asofs"] == [] and "ON OR AFTER" in M.survivorship_line(clean)
 
 
 def test_all_carried_book_is_not_evaluated():

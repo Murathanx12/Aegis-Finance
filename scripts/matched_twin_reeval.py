@@ -28,10 +28,10 @@ the P&L, the curve of the result as the top contributors are removed, a pairwise
 table of books (holdings Jaccard and daily-excess correlation), and one verdict
 word from VERDICTS with its scope.
 
-Panel caveat printed on the receipt: `prices_2025_26` holds names alive when it
-was built (survivor-selected); dead names are absent from the twin pool, which
-LIFTS the twins. A BEATS verdict is conservative under that bias; a LAGS or
-BAND_EFFECT verdict is not.
+Panel caveat printed on the receipt: the living panel (`prices_deep`, else
+`prices_2025_26`) holds names alive on its membership date; the receipt prints
+that date and flags any pool asof before it (dead names would then be missing
+and the twins LIFTED). bars_delisted is merged when present.
 """
 from __future__ import annotations
 
@@ -62,7 +62,20 @@ LEVELS = ("panel", "band", "band_sector")
 PRIMARY_LEVEL = "band"
 CASH = "CASH"
 FAMILIES_LLM = ("llm_portfolio:personal", "llm_portfolio:lib", "llm_portfolio:competition")
-VERDICTS = ("BEATS_TWINS_IN_SCOPE", "CANNOT_DISTINGUISH", "BAND_EFFECT", "LAGS_TWINS_IN_SCOPE")
+VERDICTS = ("BEATS_TWINS_IN_SCOPE", "CANNOT_DISTINGUISH", "BAND_EFFECT", "LAGS_TWINS_IN_SCOPE",
+            "TAIL_BY_RANK_UNCONFIRMED_HIGH", "TAIL_BY_RANK_UNCONFIRMED_LOW")
+#: The verdict rule as it changed, recorded on every receipt (variants_tried).
+VERDICT_RULE_HISTORY = (
+    {"rule": "v1", "used": "first two full runs, 2026-11-12 ~07:48-07:50Z",
+     "text": "BEATS/LAGS: block t beyond t_crit at every origin AND percentile in the 2.5% tail; BAND_EFFECT: "
+             "otherwise, when book and twin median are both above SPY"},
+    {"rule": "v2", "used": "receipt ch11_out (PR #123 first version), changed AFTER seeing output",
+     "text": "as v1, but BAND_EFFECT also requires the book to be inside its twins' 2.5% tails",
+     "moved": [{"account": "murat_core_satellite_2026-09-27", "from": "BAND_EFFECT", "to": "CANNOT_DISTINGUISH"}]},
+    {"rule": "v3", "used": "this receipt (review round 1, changed after the reviewer read v2's output)",
+     "text": "BEATS/LAGS: block t at every origin AND Holm-corrected two-sided twin-rank p < alpha on the same "
+             "side; a book in a 2.5% tail failing either is TAIL_BY_RANK_UNCONFIRMED_HIGH/LOW; BAND_EFFECT as v2"},
+)
 NOT_EVALUATED = "NOT_EVALUATED"
 INDEX_PROXIES = frozenset({"SPY", "QQQ", "IWM", "RSP", "DIA", "VTI", "VOO"})
 
@@ -78,6 +91,7 @@ def _cfg(name: str, default: Any) -> Any:
 def params() -> dict:
     return {
         "n_twins": int(_cfg("MATCHED_TWIN_REEVAL_N_TWINS", 1000)),
+        "n_twins_primary": int(_cfg("MATCHED_TWIN_REEVAL_N_TWINS_PRIMARY", 20000)),
         "min_twins": int(_cfg("MATCHED_TWIN_REEVAL_MIN_TWINS", 500)),
         "seed": int(_cfg("MATCHED_TWIN_REEVAL_SEED", 20261112)),
         "block_sessions": int(_cfg("MATCHED_TWIN_REEVAL_BLOCK_SESSIONS", 5)),
@@ -107,12 +121,20 @@ def liquidity_band(median_dollar_vol: Optional[float]) -> str:
     return "small"
 
 
+_ETF_FN: Optional[Callable[[str], bool]] = None
+
+
 def is_etf(sym: str) -> bool:
-    try:
-        from backend.services import llm_portfolio as LP
-        return bool(LP.is_etf(sym))
-    except Exception:                                    # pragma: no cover - import failure
-        return False
+    """`llm_portfolio.is_etf`. An import failure is a refusal, never a silent False
+    (a silent False would let ETFs be replaced by stocks in every twin)."""
+    global _ETF_FN
+    if _ETF_FN is None:
+        try:
+            from backend.services import llm_portfolio as LP
+        except Exception as exc:
+            raise Refused(f"llm_portfolio.is_etf unavailable ({type(exc).__name__}: {exc})") from exc
+        _ETF_FN = LP.is_etf
+    return bool(_ETF_FN(sym))
 
 
 # ───────────────────────────── statistics (pure) ────────────────────────────
@@ -232,28 +254,58 @@ def removal_curve(book_contrib: dict, twin_contrib: dict, max_points: int = 16) 
             "curve": curve[:max_points], "names_removed_until_excess_le_zero": k_zero, "n_names": len(sel)}
 
 
-def verdict_of(sweep: list[dict], pctile: Optional[float], book_vs_spy: float, twin_med_vs_spy: float,
-               alpha: float) -> tuple[str, str]:
-    """One word. BEATS/LAGS only when EVERY block origin clears t_crit in the same
-    direction AND the book sits in the matching tail of the twin distribution."""
+def rank_p(x: float, twins: np.ndarray) -> Optional[float]:
+    """Two-sided twin-rank p: 2 x min(#twins >= x, #twins <= x) + 1, over N + 1, capped at 1."""
+    a = np.asarray(twins, dtype=float)
+    a = a[np.isfinite(a)]
+    if len(a) == 0 or not np.isfinite(x):
+        return None
+    r = min(int((a >= x).sum()), int((a <= x).sum()))
+    return float(min(1.0, 2.0 * (r + 1) / (len(a) + 1)))
+
+
+def holm(ps: dict) -> dict:
+    """Holm step-down adjusted p-values over the family `ps` {key: p}."""
+    items = sorted(((v, k) for k, v in ps.items() if v is not None), key=lambda t: (t[0], t[1]))
+    m = len(items)
+    out: dict = {}
+    run = 0.0
+    for i, (v, k) in enumerate(items):
+        run = max(run, min(1.0, (m - i) * v))
+        out[k] = run
+    return out
+
+
+def verdict_of(sweep: list[dict], pctile: Optional[float], p_rank_adj: Optional[float], book_vs_spy: float,
+               twin_med_vs_spy: float, alpha: float) -> tuple[str, str]:
+    """One word (rule v3). BEATS/LAGS need BOTH: t beyond t_crit at EVERY block
+    origin in one direction, AND the Holm-corrected two-sided twin-rank p < alpha
+    on the same side. A book in a 2.5% tail of its twins that fails either is
+    TAIL_BY_RANK_UNCONFIRMED_<HIGH|LOW>, never hidden inside CANNOT_DISTINGUISH."""
     ok = [s for s in sweep if s.get("t") is not None]
-    if len(ok) == len(sweep) and ok:
-        if all(s["t"] >= s["t_crit"] for s in ok) and pctile is not None and pctile >= 1 - alpha / 2:
-            return "BEATS_TWINS_IN_SCOPE", (f"t >= t_crit at all {len(ok)} block origins and the book is at "
-                                            f"percentile {pctile:.3f} of its twins")
-        if all(s["t"] <= -s["t_crit"] for s in ok) and pctile is not None and pctile <= alpha / 2:
-            return "LAGS_TWINS_IN_SCOPE", (f"t <= -t_crit at all {len(ok)} block origins and the book is at "
-                                           f"percentile {pctile:.3f} of its twins")
-    in_tail = pctile is not None and (pctile >= 1 - alpha / 2 or pctile <= alpha / 2)
+    all_up = bool(ok) and len(ok) == len(sweep) and all(s["t"] >= s["t_crit"] for s in ok)
+    all_dn = bool(ok) and len(ok) == len(sweep) and all(s["t"] <= -s["t_crit"] for s in ok)
+    rank_ok = p_rank_adj is not None and p_rank_adj < alpha
+    if all_up and rank_ok and pctile is not None and pctile > 0.5:
+        return "BEATS_TWINS_IN_SCOPE", (f"t >= t_crit at all {len(ok)} block origins and Holm rank p "
+                                        f"{p_rank_adj:.4f} (percentile {pctile:.3f})")
+    if all_dn and rank_ok and pctile is not None and pctile < 0.5:
+        return "LAGS_TWINS_IN_SCOPE", (f"t <= -t_crit at all {len(ok)} block origins and Holm rank p "
+                                       f"{p_rank_adj:.4f} (percentile {pctile:.3f})")
     if not ok:
         why = "too few date blocks for a t"
     elif any(abs(s["t"]) >= s["t_crit"] for s in ok):
-        why = "the t clears at some block origins but not all (or the percentile does not agree)"
+        why = "the block t clears at some origins but not all"
     else:
-        why = "the t is inside t_crit at every block origin"
-    if in_tail:
-        why += f"; the book is in a {alpha / 2:.1%} tail of its twins (percentile {pctile:.3f}) but the time-series test does not agree"
-    if book_vs_spy > 0 and twin_med_vs_spy > 0 and not in_tail:
+        why = "the block t is inside t_crit at every origin"
+    why += "; Holm rank p " + ("n/a" if p_rank_adj is None else f"{p_rank_adj:.4f}")
+    hi = pctile is not None and pctile >= 1 - alpha / 2
+    lo = pctile is not None and pctile <= alpha / 2
+    if hi or lo:
+        return (f"TAIL_BY_RANK_UNCONFIRMED_{'HIGH' if hi else 'LOW'}",
+                f"percentile {pctile:.3f} is in the {'top' if hi else 'bottom'} {alpha / 2:.1%} of its twins but "
+                f"not confirmed by both tests: {why}")
+    if book_vs_spy > 0 and twin_med_vs_spy > 0:
         return "BAND_EFFECT", f"book and twin median both above SPY and the book is inside its twins' distribution; {why}"
     return "CANNOT_DISTINGUISH", why
 
@@ -379,8 +431,12 @@ class Pools:
     """Live names at an asof, keyed by liquidity band x volatility tercile and by
     sector, computed ONLY from bars dated strictly before the asof."""
 
-    def __init__(self, bars: pd.DataFrame, sector_of: dict, p: dict):
+    def __init__(self, bars: pd.DataFrame, sector_of: dict, p: dict, eligible: Optional[set] = None):
+        """`eligible`: the candidate universe (the panel files' symbols). Names that
+        are in the bars only because a book picked them (global_bars) are priced
+        for the book but never drawn for a twin."""
         b = bars[["symbol", "date", "close", "volume"]].copy()
+        self.eligible = None if eligible is None else set(eligible)
         b["date"] = pd.to_datetime(b["date"])
         self.bars = b.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True)
         self.sector_of = sector_of
@@ -416,7 +472,8 @@ class Pools:
             last = b.groupby("symbol", sort=False).tail(1)
             ok = last[(last["date"] >= a - pd.Timedelta(days=self.p["live_days"]))
                       & (last["close"] >= self.p["min_price"])]
-            live = sorted(s for s in ok["symbol"] if s not in INDEX_PROXIES and s != CASH and not is_etf(s))
+            live = sorted(s for s in ok["symbol"] if s not in INDEX_PROXIES and s != CASH and not is_etf(s)
+                          and (self.eligible is None or s in self.eligible))
         by_b: dict = {}
         by_bs: dict = {}
         for s in live:
@@ -450,7 +507,9 @@ def draw_twin(decisions: list[dict], pools: Pools, level: str, rng: np.random.Ge
     on the decision's asof (bars strictly before it), SAME weight, same cash, same
     fill sessions. A slot held across consecutive decisions keeps its replacement
     (sticky), so the twin's turnover is the book's. ETFs, index proxies, CASH and
-    names absent from the panel are carried unchanged (counted).
+    names absent from the panel are carried unchanged (counted). A twin MAY draw
+    one of the book's own names (a random draw from the pool the book drew from);
+    it never holds one name in two slots.
 
     Fallback when a cell is empty: band_sector -> band -> panel (counted)."""
     out = []
@@ -458,7 +517,6 @@ def draw_twin(decisions: list[dict], pools: Pools, level: str, rng: np.random.Ge
     fb = {"band_sector->band": 0, "band->panel": 0, "carried": 0, "drawn": 0}
     for dec in decisions:
         P = pools.at(dec["asof"])
-        own = {sym for sym, _ in dec["weights"].values()}
         used: set = set()
         neww = {}
         for slot in sorted(dec["weights"]):
@@ -467,7 +525,7 @@ def draw_twin(decisions: list[dict], pools: Pools, level: str, rng: np.random.Ge
                 neww[slot] = (sym, w)
                 fb["carried"] += 1
                 continue
-            excl = own | used
+            excl = used
             pick = None
             if slot in prev and prev[slot] in P["live_set"] and prev[slot] not in excl:
                 pick = prev[slot]
@@ -520,8 +578,11 @@ def _sweep_view(sweep: list[dict]) -> list[dict]:
 
 def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row: int,
                   rt_bps: Callable[[str], float], keep: Callable[[str], bool],
-                  n_twins: int, seed: int, p: dict) -> dict:
-    """The full comparison for one book whose decisions are reconstructed."""
+                  n_twins: int, seed: int, p: dict, n_twins_primary: Optional[int] = None) -> dict:
+    """The full comparison for one book whose decisions are reconstructed.
+
+    The verdict here uses the book's OWN rank p (a family of one); `finalize_verdicts`
+    re-reads it with the Holm-corrected p across every evaluated book."""
     first = decisions[0]["fill_row"]
     dates = panel.dates[first:end_row + 1]
     sessions = len(dates)
@@ -537,10 +598,11 @@ def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row:
     slot_means: dict = {}
     for li, level in enumerate(LEVELS):
         rng = np.random.default_rng([int(seed), li])
+        n_lv = int(n_twins_primary or n_twins) if level == PRIMARY_LEVEL else int(n_twins)
         terms, paths = [], []
         slot_pnl: dict = {}
         fb_tot: dict = {}
-        for _ in range(n_twins):
+        for _ in range(n_lv):
             tw, fb = draw_twin(decisions, pools, level, rng, keep)
             for k, v in fb.items():
                 fb_tot[k] = fb_tot.get(k, 0) + v
@@ -549,17 +611,32 @@ def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row:
             paths.append(s["nav"])
             # P&L keyed by SLOT (the book's own name), so twin and book compare slot by slot
             for k, v in s["pnl"].items():
-                slot_pnl[k] = slot_pnl.get(k, 0.0) + v / n_twins
+                slot_pnl[k] = slot_pnl.get(k, 0.0) + v / n_lv
         ta = np.array(terms)
         P = np.vstack(paths)
         med_paths[level] = np.median(P, axis=0)
         mean_paths[level] = np.mean(P, axis=0)
         slot_means[level] = slot_pnl
         med = float(np.median(ta))
+        pr = rank_p(book_ret, ta)
         levels[level] = {
-            "n_twins": int(n_twins),
+            "n_twins": int(n_lv),
+            "rank_p_two_sided": pr,
+            "rank_p_floor": round(2.0 / (n_lv + 1), 6),
+            # POWER of the rank test at this window length: the excess over the twin median a
+            # book needed to reach each side's threshold (uncorrected 2.5%, and Holm's first
+            # step alpha / (2 m) with m = holm_family_size)
+            "rank_detectable_excess_pp": {
+                "uncorrected_high": _round(float(np.quantile(ta, 1 - p["alpha"] / 2)) - med),
+                "uncorrected_low": _round(float(np.quantile(ta, p["alpha"] / 2)) - med),
+                "holm_first_step_high": _round(float(np.quantile(
+                    ta, 1 - p["alpha"] / (2 * max(1, p.get("holm_family_size", 1))))) - med),
+                "holm_first_step_low": _round(float(np.quantile(
+                    ta, p["alpha"] / (2 * max(1, p.get("holm_family_size", 1))))) - med),
+                "holm_family_size": int(p.get("holm_family_size", 1)),
+            },
             "median_pct": _round(med), "mean_pct": _round(float(np.mean(ta))),
-            "sd_pct": _round(float(np.std(ta, ddof=1)) if n_twins > 1 else None),
+            "sd_pct": _round(float(np.std(ta, ddof=1)) if n_lv > 1 else None),
             "p05_pct": _round(float(np.percentile(ta, 5))), "p95_pct": _round(float(np.percentile(ta, 95))),
             "book_percentile": percentile_of(book_ret, ta),
             "excess_over_twin_median_pp": _round(book_ret - med),
@@ -573,8 +650,11 @@ def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row:
     for level in LEVELS:
         diff = nav_diff(book["nav"], med_paths[level])
         sweep = origin_sweep(diff, p["block_sessions"], p["alpha"], p["power"])
-        word, why = verdict_of(sweep, levels[level]["book_percentile"], book_ret - spy_ret,
-                               float(med_paths[level][-1] - spy["nav"][-1]), p["alpha"])
+        vin = {"sweep": [{"t": x["t"], "t_crit": x["t_crit"]} for x in sweep],
+               "pctile": levels[level]["book_percentile"], "book_vs_spy": book_ret - spy_ret,
+               "twin_med_vs_spy": float(med_paths[level][-1] - spy["nav"][-1])}
+        word, why = verdict_of(vin["sweep"], vin["pctile"], levels[level]["rank_p_two_sided"],
+                               vin["book_vs_spy"], vin["twin_med_vs_spy"], p["alpha"])
         mdes = [s["mde"] for s in sweep if s["mde"] is not None]
         out_levels[level] = {**levels[level],
                              "ts_excess_over_median_path_pp": _round(float(np.sum(diff))),
@@ -582,11 +662,11 @@ def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row:
                              "mde_pp_max_over_origins": _round(max(mdes) if mdes else None),
                              "sessions_needed_to_clear_mde": sessions_needed(
                                  float(np.sum(diff)), max(mdes) if mdes else None, sessions),
-                             "verdict": word, "verdict_why": why}
+                             "verdict": word, "verdict_why": why, "_vin": vin}
     prim = out_levels[PRIMARY_LEVEL]
     if not levels[PRIMARY_LEVEL]["fallbacks"].get("drawn"):
         for level in LEVELS:
-            out_levels[level] = {**out_levels[level], "verdict": NOT_EVALUATED,
+            out_levels[level] = {**out_levels[level], "verdict": NOT_EVALUATED, "_vin": None,
                                  "verdict_why": "every holding is an ETF, index proxy, CASH or a name absent from "
                                                 "the panel, carried unchanged into the twins: no stock selection "
                                                 "to compare"}
@@ -630,6 +710,30 @@ def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row:
         "_daily": {"dates": list(dates), "book_ret": daily_returns(book["nav"]).tolist(),
                    "spy_ret": daily_returns(spy["nav"]).tolist()},
     }
+
+
+def finalize_verdicts(results: dict, alpha: float) -> dict:
+    """Holm-correct the twin-rank p across every evaluated book (one family per twin
+    level), write `rank_p_holm` and re-read each verdict with it. Returns the families."""
+    fams: dict = {}
+    for level in LEVELS:
+        ps = {a: r["twins"][level]["rank_p_two_sided"] for a, r in results.items()
+              if r.get("status") == "OK" and r["twins"][level].get("_vin") is not None}
+        adj = holm(ps)
+        fams[level] = {"m": len(ps), "n_holm_lt_alpha": sum(1 for v in adj.values() if v < alpha)}
+        for a, r in results.items():
+            if r.get("status") != "OK":
+                continue
+            lv = r["twins"][level]
+            vin = lv.pop("_vin", None)
+            lv["rank_p_holm"] = None if a not in adj else round(adj[a], 6)
+            if vin is None:
+                continue
+            lv["verdict"], lv["verdict_why"] = verdict_of(vin["sweep"], vin["pctile"], adj.get(a),
+                                                          vin["book_vs_spy"], vin["twin_med_vs_spy"], alpha)
+            if level == PRIMARY_LEVEL:
+                r["verdict"], r["verdict_why"] = lv["verdict"], lv["verdict_why"]
+    return fams
 
 
 # ───────────────────────────── regression-only (lanes) ───────────────────────
@@ -834,6 +938,80 @@ def _stamp_iso(name: str) -> str:
     return f"{t[0:4]}-{t[4:6]}-{t[6:8]}T{t[9:11]}:{t[11:13]}:{t[13:15]}+00:00"
 
 
+def open_db_copy(db_path: Path) -> tuple[sqlite3.Connection, Path]:
+    """Copy aegis_pi.db (+ -wal/-shm) to a temp folder and open the COPY. A missing
+    db or a missing paper_book_decisions table is a named refusal: without it a night
+    book cannot be told from an all-cash one."""
+    if not db_path.exists():
+        raise Refused(f"aegis_pi.db missing at {db_path}: the night books' decisions cannot be read")
+    tmp = Path(tempfile.mkdtemp(prefix="ch11_db_"))
+    dst = tmp / db_path.name
+    shutil.copy2(db_path, dst)
+    for suf in ("-wal", "-shm"):
+        src = Path(str(db_path) + suf)
+        if src.exists():
+            shutil.copy2(src, Path(str(dst) + suf))
+    conn = sqlite3.connect(str(dst))
+    have = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if "paper_book_decisions" not in have:
+        conn.close()
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise Refused(f"{db_path} has no paper_book_decisions table")
+    return conn, tmp
+
+
+def panel_membership(living: Path, delisted: Optional[Path], start: str, asofs: Iterable[str]) -> dict:
+    """When was the living panel's symbol list fixed, and is any twin pool older than that?
+
+    `membership_date` = the earliest last bar of any living-file symbol: no living name
+    stops before it, so a name that died before it can only come from bars_delisted.
+    An asof BEFORE it means names that died between the asof and that date are missing
+    from the pool unless the delisted file carries them (flag POOL_PRECEDES_MEMBERSHIP)."""
+    lv = pd.read_parquet(living, columns=["symbol", "date"], filters=[("date", ">=", pd.Timestamp(start))])
+    last = pd.to_datetime(lv["date"]).groupby(lv["symbol"]).max()
+    mem = last.min()
+    out: dict = {"living_file": str(living), "membership_date": str(mem.date()),
+                 "living_symbols": int(len(last)), "panel_end": str(last.max().date())}
+    dl_last = None
+    if delisted is not None and delisted.exists():
+        dl = pd.read_parquet(delisted, columns=["symbol", "date"], filters=[("date", ">=", pd.Timestamp(start))])
+        dl_last = pd.to_datetime(dl["date"]).groupby(dl["symbol"]).max()
+        out["delisted_symbols_with_bars_after_start"] = int(len(dl_last))
+    stops = last[last < last.max() - pd.Timedelta(days=7)]
+    out["living_names_stopping_before_panel_end"] = int(len(stops))
+    per = []
+    for a in sorted(set(asofs)):
+        ta = pd.Timestamp(a)
+        row = {"asof": a,
+               "living_names_dead_between_membership_and_asof": int(((last >= mem) & (last < ta)).sum()),
+               "living_names_dying_after_asof_inside_panel": int(((last >= ta) & (last < last.max()
+                                                                 - pd.Timedelta(days=7))).sum()),
+               "delisted_names_live_at_asof": (None if dl_last is None else
+                                               int(((dl_last >= ta - pd.Timedelta(days=10))).sum())),
+               "flag": "POOL_PRECEDES_MEMBERSHIP" if ta < mem else None}
+        per.append(row)
+    out["per_asof"] = per
+    out["flagged_asofs"] = [x["asof"] for x in per if x["flag"]]
+    return out
+
+
+def band_cell_table(pools: "Pools", panel: "Panel", asof: str, fill_row: int, end_row: int) -> dict:
+    """Equal-weight return of every live pool name, open of `fill_row` -> close of
+    `end_row`, by liquidity band x volatility tercile (the twins' cells)."""
+    P = pools.at(asof)
+    cells: dict = {}
+    for s in P["live"]:
+        if not panel.has(s):
+            continue
+        c = panel.col[s]
+        o, e = panel.open[fill_row, c], panel.close[end_row, c]
+        if np.isfinite(o) and np.isfinite(e) and o > 0:
+            cells.setdefault(P["bands"].get(s, "small|v?"), []).append(e / o - 1)
+    return {"asof": asof, "from": panel.dates[fill_row], "to": panel.dates[end_row],
+            "cells": {k: {"n": len(v), "mean_pct": _round(float(np.mean(v))), "median_pct": _round(float(np.median(v)))}
+                      for k, v in sorted(cells.items())}}
+
+
 def count_files(folder: Path) -> int:
     return sum(1 for _ in folder.rglob("*")) if folder.exists() else 0
 
@@ -872,10 +1050,11 @@ def strategy_accounting(roi: dict, dna: dict, markers: Iterable[str]) -> tuple[l
 # ───────────────────────────── main ──────────────────────────────────────────
 
 def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, seed: int,
-        only: Optional[set] = None, log: Callable = print) -> dict:
+        only: Optional[set] = None, log: Callable = print, n_twins_primary: Optional[int] = None) -> dict:
     p = params()
-    p["n_twins"], p["seed"] = n_twins, seed
-    if n_twins < p["min_twins"]:
+    n_twins_primary = int(n_twins_primary or p["n_twins_primary"])
+    p["n_twins"], p["seed"], p["n_twins_primary"] = n_twins, seed, n_twins_primary
+    if min(n_twins, n_twins_primary) < p["min_twins"]:
         raise Refused(f"--n-twins {n_twins} < the floor {p['min_twins']} (a percentile needs >= 500 twins)")
     pa_dir = data_root / "paper_accounts"
     if not pa_dir.is_dir():
@@ -913,58 +1092,40 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
     if only:
         strategy = [r for r in strategy if r["account"] in only]
     tickers = {r["account"]: frozenset((dbooks.get(r["account"]) or {}).get("tickers") or []) for r in strategy}
-    bet_of = cluster_bets(tickers, p["bet_jaccard"])
     strategy.sort(key=lambda r: (-float(r["vs_spy_pp"]), str(r["account"])))
-    leaders, seen = [], set()
-    for r in strategy:
-        bet = tuple(bet_of.get(r["account"], [r["account"]]))
-        if bet not in seen:
-            seen.add(bet)
-            leaders.append(r["account"])
     recs = {r.get("book_id"): r for r in read_jsonl(books_p)}
-    tmp = Path(tempfile.mkdtemp(prefix="ch11_db_"))
-    conn = None
-    if db_path.exists():
-        dst = tmp / db_path.name
-        shutil.copy2(db_path, dst)
-        for suf in ("-wal", "-shm"):
-            s = Path(str(db_path) + suf)
-            if s.exists():
-                shutil.copy2(s, Path(str(dst) + suf))
-        conn = sqlite3.connect(str(dst))
+    if any((r.get("family") or (dbooks.get(r["account"]) or {}).get("family")) == "night_books" for r in strategy):
+        conn, tmp = open_db_copy(db_path)
+    else:
+        conn, tmp = None, None
     fleet_snaps: Optional[list] = None
     results: dict = {}
-    plans: list = []
+    adapters: dict = {}          # acct -> (base, decisions, source) for every reconstructable row
+    bases: dict = {}
     for r in strategy:
         acct = r["account"]
         b = dbooks.get(acct) or {}
         fam = r.get("family") or b.get("family")
         base = {"family": fam, "roi_return_pct": r.get("roi_pct"), "roi_spy_pct": r.get("spy_same_window_pct"),
                 "roi_vs_spy_pp": r.get("vs_spy_pp"), "inception": r.get("inception"),
-                "last_mark": r.get("last_mark"), "bet_members": bet_of.get(acct, [acct]),
-                "label": (b.get("evidence") or {}).get("label")}
-        rep = bet_of.get(acct, [acct])
-        if acct not in leaders:
-            results[acct] = {**base, "status": NOT_EVALUATED, "verdict": NOT_EVALUATED,
-                             "why": f"same bet as {[x for x in rep if x in leaders]} (holdings Jaccard >= "
-                                    f"{p['bet_jaccard']}); the bet's best member is evaluated"}
-            continue
+                "last_mark": r.get("last_mark"), "label": (b.get("evidence") or {}).get("label")}
+        bases[acct] = base
         if fam in FAMILIES_LLM:
             rec = recs.get(b.get("book_id"))
             if rec is None:
                 results[acct] = {**base, "status": NOT_EVALUATED, "verdict": NOT_EVALUATED,
                                  "why": f"book_id {b.get('book_id')} not in llm_portfolio/books.jsonl"}
                 continue
-            plans.append((acct, base, llm_decisions(rec, r.get("inception") or rec["asof"]),
-                          "llm_portfolio/books.jsonl frozen entry weights; filled at the inception open"))
+            adapters[acct] = (base, llm_decisions(rec, r.get("inception") or rec["asof"]),
+                              "llm_portfolio/books.jsonl frozen entry weights; filled at the inception open")
         elif fam == "night_books":
-            decs = night_decisions(conn, b.get("book_id")) if conn is not None else []
+            decs = night_decisions(conn, b.get("book_id"))
             if not decs or not any(d["weights"] for d in decs):
                 results[acct] = {**base, "status": NOT_EVALUATED, "verdict": NOT_EVALUATED,
-                                 "why": "aegis_pi.db paper_book_decisions holds no position for this book (all "
-                                        "cash since inception): no selection to compare"}
+                                 "why": "aegis_pi.db (present, copied) paper_book_decisions holds no position for "
+                                        "this book (all cash since inception): no selection to compare"}
                 continue
-            plans.append((acct, base, decs, "aegis_pi.db paper_book_decisions (a copy), filled at the asof close"))
+            adapters[acct] = (base, decs, "aegis_pi.db paper_book_decisions (a copy), filled at the asof close")
         elif fam == "alpaca_fleet":
             if fleet_snaps is None:
                 fleet_snaps = []
@@ -978,8 +1139,8 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
                 results[acct] = {**base, "status": NOT_EVALUATED, "verdict": NOT_EVALUATED,
                                  "why": "no fleet_daily snapshot carries a position for this role"}
                 continue
-            plans.append((acct, base, decs, "fleet_daily EOD broker snapshots (PARTIAL WINDOW from the first "
-                                            "snapshot; trades between snapshots invisible)"))
+            adapters[acct] = (base, decs, "fleet_daily EOD broker snapshots (PARTIAL WINDOW from the first "
+                                          "snapshot; trades between snapshots invisible)")
         elif fam == "website_lane":
             results[acct] = {**base, "status": NOT_EVALUATED, "verdict": NOT_EVALUATED,
                              "why": "a lane's holdings history lives on the Railway deploy and this run makes no "
@@ -990,7 +1151,39 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
                              "why": f"family {fam}: no holdings-history adapter on disk in this script"}
     if conn is not None:
         conn.close()
-    shutil.rmtree(tmp, ignore_errors=True)
+    if tmp is not None:
+        shutil.rmtree(tmp, ignore_errors=True)
+    # distinct bets on the RECONSTRUCTED holdings (names ever held); book_dna tickers only where
+    # no reconstruction exists. book_dna's tickers are printed beside it for the old count.
+    recon_names = {a: frozenset(s for d in ds for s, _ in d["weights"].values()) for a, (_, ds, _) in adapters.items()}
+    names_for_bets = {a: recon_names.get(a) or tickers.get(a) or frozenset() for a in tickers}
+    bet_of = cluster_bets(names_for_bets, p["bet_jaccard"])
+    bet_of_dna = cluster_bets(tickers, p["bet_jaccard"])
+    leaders, seen = [], set()
+    for r in strategy:
+        bet = tuple(bet_of.get(r["account"], [r["account"]]))
+        if bet not in seen:
+            seen.add(bet)
+            leaders.append(r["account"])
+    plans: list = []
+    for r in strategy:
+        acct = r["account"]
+        members = bet_of.get(acct, [acct])
+        bases[acct]["bet_members"] = members
+        if acct in results:
+            results[acct]["bet_members"] = members
+        if acct not in leaders:
+            rep = [x for x in members if x in leaders]
+            jac = {x: round(jaccard(names_for_bets[acct], names_for_bets[x]), 3) for x in rep}
+            results[acct] = {**bases[acct], **{k: v for k, v in results.get(acct, {}).items()
+                                               if k == "regression_on_spy"},
+                             "status": NOT_EVALUATED, "verdict": NOT_EVALUATED,
+                             "why": f"same bet as {rep} (reconstructed holdings Jaccard {jac} >= {p['bet_jaccard']}); "
+                                    f"the bet's best member is evaluated"}
+            continue
+        if acct in adapters:
+            base, decs, src = adapters[acct]
+            plans.append((acct, base, decs, src))
     if not plans:
         raise Refused("no strategy book could be reconstructed from disk")
     start = (pd.Timestamp(min(d["asof"] for _, _, ds, _ in plans for d in ds))
@@ -1006,7 +1199,17 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
         f"{surv['verdict'][:90]}")
     panel = Panel(bars)
     sector_of, sector_src = load_sector_map(data_root / "potential_universe")
-    pools = Pools(bars, sector_of, p)
+    eligible: set = set()
+    for bp in bars_paths:
+        eligible |= set(pd.read_parquet(bp, columns=["symbol"], filters=[("date", ">=", pd.Timestamp(start))])
+                        ["symbol"].unique())
+    leaked = sorted(set(bars["symbol"]) - eligible)
+    pools = Pools(bars, sector_of, p, eligible=eligible)
+    membership = panel_membership(bars_paths[0], delisted if delisted.exists() else None, start,
+                                  [d["asof"] for _, _, ds, _ in plans for d in ds])
+    log(f"panel membership date {membership['membership_date']}; flagged asofs {membership['flagged_asofs']}; "
+        f"{len(leaked)} book-only (global_bars) names kept out of every twin pool")
+    p["holm_family_size"] = len(plans)
 
     def keep(sym: str) -> bool:
         return sym in INDEX_PROXIES or is_etf(sym) or sym == CASH or not panel.has(sym)
@@ -1035,7 +1238,7 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
         log(f"  {acct[:60]:<60} decisions={len(decs)}")
         acct_seed = seed + int(hashlib.sha256(acct.encode()).hexdigest()[:6], 16)
         ev = evaluate_book(decs, panel, pools, end_row=end_row, rt_bps=rt_bps, keep=keep,
-                           n_twins=n_twins, seed=acct_seed, p=p)
+                           n_twins=n_twins, seed=acct_seed, p=p, n_twins_primary=n_twins_primary)
         ref = base.get("roi_return_pct")
         ref_src = "roi roi_pct (inception -> last mark)"
         if decs[0].get("equity") and decs[-1].get("last_equity"):
@@ -1057,7 +1260,43 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
             daily_excess[acct] = {d: x - m for d, x, m in ser}
             names_of[acct] = sorted(tickers.get(acct) or [])
     pairs = pairwise(daily_excess, names_of)
+    holm_families = finalize_verdicts(results, p["alpha"])
     cross = cross_book(results)
+    # the twins' cells over the most common window (fill after the most common first asof)
+    first_asofs = [ds[0]["asof"] for _, _, ds, _ in plans]
+    common = max(set(first_asofs), key=first_asofs.count) if first_asofs else None
+    cell_table = None
+    for acct, r in results.items():
+        if r.get("status") == "OK" and r.get("first_pool", {}).get("asof") == common:
+            fr = panel.session_on_or_after(r["first_fill"])
+            er = panel.session_on_or_before(r["last_mark"])
+            cell_table = band_cell_table(pools, panel, common, fr, er)
+            cell_table["spy_pct"] = r["spy_pct"]
+            break
+    tails = [{"account": a, "percentile": r["twins"][PRIMARY_LEVEL]["book_percentile"],
+              "rank_p": r["twins"][PRIMARY_LEVEL]["rank_p_two_sided"],
+              "rank_p_holm": r["twins"][PRIMARY_LEVEL]["rank_p_holm"], "verdict": r["verdict"]}
+             for a, r in results.items() if r.get("status") == "OK"
+             and r["twins"][PRIMARY_LEVEL]["book_percentile"] is not None
+             and (r["twins"][PRIMARY_LEVEL]["book_percentile"] <= p["alpha"] / 2
+                  or r["twins"][PRIMARY_LEVEL]["book_percentile"] >= 1 - p["alpha"] / 2)]
+    tails.sort(key=lambda x: x["percentile"])
+    recon_flags = [{"account": a, "recon_gap_pp": r["recon_gap_pp"], "reference": r["recon_reference"]}
+                   for a, r in results.items() if r.get("recon_flag")]
+    oks = [r for r in results.values() if r.get("status") == "OK"]
+
+    def _med(vals: list) -> Optional[float]:
+        v = [x for x in vals if x is not None]
+        return None if not v else round(float(np.median(v)), 3)
+    power = {"block_t_mde_pp_origin0_median": _med([r["headline_mde_pp_origin0"] for r in oks]),
+             "rank_holm_first_step_high_pp_median": _med(
+                 [r["twins"][PRIMARY_LEVEL]["rank_detectable_excess_pp"]["holm_first_step_high"] for r in oks]),
+             "rank_holm_first_step_low_pp_median": _med(
+                 [r["twins"][PRIMARY_LEVEL]["rank_detectable_excess_pp"]["holm_first_step_low"] for r in oks]),
+             "sessions_median": _med([r["sessions"] for r in oks]),
+             "statement": "a book needed an excess over its twin median of about the block-t MDE (origin 0, and "
+                          "at every other origin) AND beyond the Holm first-step rank threshold to be called "
+                          "BEATS/LAGS; medians across books here, per book under twins.<level>"}
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     counts: dict = {}
     for r in results.values():
@@ -1067,21 +1306,25 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
         "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "run_id": run_id, "params": p, "primary_level": PRIMARY_LEVEL,
         "variants_tried": {"twin_levels": list(LEVELS), "cost_models": 1, "block_origins": p["block_sessions"],
-                           "note": "three twin constructions, all printed; the verdict level (band) was fixed "
-                                   "before the run; one seed per book from the run seed and the account name"},
+                           "verdict_rules": len(VERDICT_RULE_HISTORY),
+                           "band_effect_rules": 2,
+                           "note": "three twin constructions, all printed; the verdict LEVEL (band) was fixed "
+                                   "before the first run; the verdict RULE changed twice after seeing output "
+                                   "(verdict_rule_history); one seed per book from the run seed and the account"},
+        "verdict_rule_history": list(VERDICT_RULE_HISTORY),
+        "holm_families": holm_families,
+        "power": power,
+        "tails_primary_level": tails,
+        "recon_flags": recon_flags,
+        "band_cell_returns": cell_table,
+        "panel_membership": membership,
+        "book_only_names_excluded_from_pools": leaked,
         "inputs": {"book_dna": file_info(dna_p), "roi": file_info(roi_p), "llm_books": file_info(books_p),
                    "aegis_pi_db": file_info(db_path), "bars": [file_info(x) for x in bars_paths],
                    "global_bars": file_info(gb), "bars_window_start": start, "bars_rows_read": int(len(bars)),
                    "bars_symbols": int(bars["symbol"].nunique()), "panel_last_session": panel.dates[-1],
                    "sector_map": sector_src},
-        "survivorship": {**surv, "direction": (
-            "the living panel holds names alive when it was built; a name that died before that is absent "
-            "from every twin pool, which LIFTS the random twins (dead names are disproportionately losers). "
-            "BEATS is conservative under this bias; LAGS and BAND_EFFECT are not. A name that stops trading "
-            "inside a window is held at its last close (no delisting return)." if not delisted.exists()
-            else "prices_deep/bars_delisted.parquet merged into the pool, so dead names can be drawn; the "
-                 "audit above counts how many stop trading inside the rows read. Residual bias: any name absent "
-                 "from both files is absent from every twin pool, which would LIFT the twins.")},
+        "survivorship": {**surv, "direction": survivorship_line(membership)},
         "conventions": {
             "fill": "llm books at the inception open; night books at the close of the decision asof; fleet "
                     "books at the snapshot session close; twins on exactly the same fill rows",
@@ -1097,7 +1340,10 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
             "by_month": "keyed on the HOLD session of each NAV change"},
         "accounting": {"roi_rows": len(roi.get("rows") or []), "strategy_rows": len(strategy) if not only else None,
                        "dropped_rows": dropped, "n_dropped": len(dropped),
-                       "n_distinct_bets": len(leaders), "verdict_counts": counts},
+                       "n_distinct_bets": len(leaders),
+                       "n_distinct_bets_rule": "reconstructed holdings (names ever held), Jaccard >= bet_jaccard",
+                       "n_distinct_bets_on_book_dna_tickers": len({tuple(v) for v in bet_of_dna.values()}),
+                       "verdict_counts": counts},
         "books": results,
         "pairwise": pairs,
         "cross_book": cross,
@@ -1113,6 +1359,22 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
     md.write_text("\n".join(render_md(receipt)) + "\n", encoding="utf-8")
     receipt["_path"], receipt["_md"] = str(out), str(md)
     return receipt
+
+
+def survivorship_line(m: dict) -> str:
+    per = m.get("per_asof") or []
+    dl = sorted({x["delisted_names_live_at_asof"] for x in per}, key=str)
+    head = (f"The living panel's membership date is {m['membership_date']} (no living-file name stops before it; "
+            f"{m.get('living_names_stopping_before_panel_end')} living names stop before the panel end). ")
+    if not m.get("flagged_asofs"):
+        body = ("Every pool asof is ON OR AFTER it, so the pools are not survivor-selected for these windows: a "
+                "name alive at the asof that dies later is in the living file with bars to its last day. That, "
+                f"not bars_delisted, is why the pools are clean (delisted names live at the asofs: {dl}). ")
+    else:
+        body = (f"Pool asofs {m['flagged_asofs']} PRECEDE it (POOL_PRECEDES_MEMBERSHIP): names that died in between "
+                f"are missing unless bars_delisted carries them ({dl} live), which LIFTS the twins. ")
+    return head + body + ("Names listed after the membership date are absent (missing, not survivor bias). A name "
+                          "that stops trading inside a window is held at its last close (no delisting return).")
 
 
 def cross_book(results: dict) -> dict:
@@ -1173,7 +1435,9 @@ def book_rows(receipt: dict) -> list[dict]:
                      "t_range": (min(ts), max(ts)) if ts else None, "mde": tw["mde_pp_max_over_origins"],
                      "blocks": r["headline_blocks"], "sessions": r["sessions"], "verdict": r["verdict"],
                      "sector_verdict": r["twins"]["band_sector"]["verdict"],
-                     "sector_pct": r["twins"]["band_sector"]["book_percentile"], "recon_gap": r["recon_gap_pp"]})
+                     "sector_pct": r["twins"]["band_sector"]["book_percentile"], "recon_gap": r["recon_gap_pp"],
+                     "rank_p": tw.get("rank_p_two_sided"), "rank_p_holm": tw.get("rank_p_holm"),
+                     "n_twins": tw.get("n_twins"), "recon_flag": r.get("recon_flag")})
     rows.sort(key=lambda x: -(x["excess"] or -1e9))
     return rows
 
@@ -1183,15 +1447,49 @@ def render_md(receipt: dict) -> list[str]:
          f"Licence {receipt['licence']}. Twins per book: {receipt['params']['n_twins']}; verdict level "
          f"`{receipt['primary_level']}` (liquidity band x volatility tercile, bars strictly before each decision). "
          f"Blocks of {receipt['params']['block_sessions']} sessions, every origin swept.", "",
-         "| account | family | book | SPY | vs SPY | twin median [p05, p95] | pctile | over median | t (origin 0; range) "
-         "| MDE origin 0 (max over origins) | blocks | verdict | sector-matched |",
-         "|---|---|---:|---:|---:|---|---:|---:|---|---:|---:|---|---|"]
+         "| account | family | book | SPY | vs SPY | twin median [p05, p95] | pctile | rank p | Holm p | over median "
+         "| t (origin 0; range) | MDE origin 0 (max over origins) | blocks | verdict | sector-matched |",
+         "|---|---|---:|---:|---:|---|---:|---:|---:|---:|---|---:|---:|---|---|"]
     for x in book_rows(receipt):
         tr = "" if not x["t_range"] else f" [{x['t_range'][0]:+.2f}, {x['t_range'][1]:+.2f}]"
         L.append(f"| {x['account'][:48]} | {x['family']} | {_f(x['book'])}% | {_f(x['spy'])}% | {_f(x['excess'])} pp "
                  f"| {_f(x['twin_median'])}% [{_f(x['p05'])}, {_f(x['p95'])}] | {_f(x['pct'], '{:.3f}')} "
+                 f"| {_f(x['rank_p'], '{:.4f}')} | {_f(x['rank_p_holm'], '{:.4f}')} "
                  f"| {_f(x['over_median'])} pp | {_f(x['t'])}{tr} | {_f(x['mde0'], '{:.2f}')} ({_f(x['mde'], '{:.2f}')}) pp | {x['blocks']} "
                  f"| {x['verdict']} | {x['sector_verdict']} ({_f(x['sector_pct'], '{:.3f}')}) |")
+    pw_ = receipt.get("power") or {}
+    L += ["", "## Power at this window length", "",
+          f"{pw_.get('statement')}. Median block-t MDE (origin 0): {pw_.get('block_t_mde_pp_origin0_median')} pp; "
+          f"median excess over the twin median needed for a Holm first-step rank p < alpha: "
+          f"{pw_.get('rank_holm_first_step_high_pp_median')} pp (high side), "
+          f"{pw_.get('rank_holm_first_step_low_pp_median')} pp (low side); median window "
+          f"{pw_.get('sessions_median')} sessions. Twins at the verdict level: {receipt['params'].get('n_twins_primary')}; "
+          f"Holm family {receipt.get('holm_families', {}).get(receipt['primary_level'])}.",
+          "", "## Books in either 2.5% tail of their band twins", "",
+          "| account | percentile | rank p | Holm p | verdict |", "|---|---:|---:|---:|---|"]
+    for t in receipt.get("tails_primary_level") or []:
+        L.append(f"| {t['account'][:50]} | {t['percentile']:.4f} | {_f(t['rank_p'], '{:.4f}')} "
+                 f"| {_f(t['rank_p_holm'], '{:.4f}')} | {t['verdict']} |")
+    ct = receipt.get("band_cell_returns")
+    if ct:
+        L += ["", f"## Twin cells: equal-weight return of every live pool name, {ct['from']} open -> {ct['to']} close "
+                  f"(pool asof {ct['asof']}; SPY {_f(ct.get('spy_pct'))}%)", "",
+              "| liquidity band | v1 low vol mean (n) | v2 mid vol mean (n) | v3 high vol mean (n) | v? (n) |",
+              "|---|---:|---:|---:|---:|"]
+        for band in ("mega", "large", "mid", "small"):
+            cells = []
+            for v in ("v1", "v2", "v3", "v?"):
+                c = ct["cells"].get(f"{band}|{v}")
+                cells.append("-" if not c else f"{_f(c['mean_pct'])}% ({c['n']})")
+            L.append(f"| {band} | " + " | ".join(cells) + " |")
+    rf = receipt.get("recon_flags") or []
+    L += ["", f"## RECON_GAP flags (rebuilt return differs from the reference by > "
+              f"{receipt['params']['max_recon_gap_pp']} pp)", ""]
+    L += [f"- {x['account']}: {_f(x['recon_gap_pp'])} pp vs {x['reference']}" for x in rf] or ["- none"]
+    L += ["", "## Verdict rule history (variants tried)", ""]
+    for h in receipt.get("verdict_rule_history") or []:
+        L.append(f"- {h['rule']} ({h['used']}): {h['text']}"
+                 + (f"; moved: {h['moved']}" if h.get("moved") else ""))
     L += ["", "## Not evaluated (each with why)", ""]
     for acct, r in receipt["books"].items():
         if r.get("status") != "OK":
@@ -1211,6 +1509,9 @@ def render_md(receipt: dict) -> list[str]:
     acc = receipt["accounting"]
     L += ["", f"roi rows {acc['roi_rows']}; strategy rows {acc['strategy_rows']}; dropped {acc['n_dropped']} "
               f"(controls/twins/non-LIVE, each listed in the JSON); distinct bets {acc['n_distinct_bets']}.",
+          f"Distinct bets on reconstructed holdings: {acc['n_distinct_bets']} (on book_dna tickers: "
+          f"{acc.get('n_distinct_bets_on_book_dna_tickers')}). Book-only names kept out of every twin pool: "
+          f"{len(receipt.get('book_only_names_excluded_from_pools') or [])}.",
           "", f"Survivorship: {receipt['survivorship']['verdict']} {receipt['survivorship']['direction']}", "",
           receipt["claim_line"]]
     return L
@@ -1222,7 +1523,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--data-root", default=None,
                     help="the optimus data folder to READ (default: backend.config.OPTIMUS_LEDGER_DIR)")
     ap.add_argument("--run-id", default=None)
-    ap.add_argument("--n-twins", type=int, default=None)
+    ap.add_argument("--n-twins", type=int, default=None, help="twins per book at the panel / band_sector levels")
+    ap.add_argument("--n-twins-primary", type=int, default=None,
+                    help="twins per book at the verdict (band) level; >= 2 m / alpha for a Holm p to clear")
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--books", default=None, help="comma-separated accounts (default: every strategy row)")
     a = ap.parse_args(argv)
@@ -1240,6 +1543,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     try:
         rec = run(data_root=root, out_dir=out, run_id=a.run_id,
                   n_twins=a.n_twins or p["n_twins"], seed=a.seed if a.seed is not None else p["seed"],
+                  n_twins_primary=a.n_twins_primary,
                   only=set(a.books.split(",")) if a.books else None)
     except Refused as exc:
         print(f"REFUSED matched_twin_reeval: {exc}")
@@ -1253,9 +1557,11 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"input bars: {i['path']} bytes={i.get('bytes')} mtime={i.get('mtime_utc')}")
     print(f"bars read from {inp['bars_window_start']}: {inp['bars_rows_read']:,} rows, {inp['bars_symbols']:,} "
           f"symbols, newest session {inp['panel_last_session']}; roi generated {rec['run_id']}")
+    print(f"distinct bets (reconstructed holdings) {rec['accounting']['n_distinct_bets']}; on book_dna tickers "
+          f"{rec['accounting']['n_distinct_bets_on_book_dna_tickers']}; holm families {rec['holm_families']}")
     for x in book_rows(rec):
         print(f"{x['account'][:50]:<50} book {_f(x['book'])}% SPY {_f(x['spy'])}% twin med {_f(x['twin_median'])}% "
-              f"pct {_f(x['pct'], '{:.3f}')} t {_f(x['t'])} MDE {_f(x['mde0'], '{:.2f}')} (max {_f(x['mde'], '{:.2f}')}) blocks {x['blocks']} "
+              f"pct {_f(x['pct'], '{:.3f}')} p {_f(x['rank_p'], '{:.4f}')} holm {_f(x['rank_p_holm'], '{:.4f}')} t {_f(x['t'])} MDE {_f(x['mde0'], '{:.2f}')} (max {_f(x['mde'], '{:.2f}')}) blocks {x['blocks']} "
               f"-> {x['verdict']}")
     print(rec["claim_line"])
     print(f"wrote {rec['_path']} and {rec['_md']}")

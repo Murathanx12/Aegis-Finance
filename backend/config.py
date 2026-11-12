@@ -4970,8 +4970,12 @@ RESULTS_VOICE_MECHANISMS: dict = {
 #: `scripts/matched_twin_reeval.py` re-reads the leaders and the worst books
 #: against N same-band random twins instead of book_dna's single draw.
 #: Three twin levels, in decomposition order: `panel` (any live stock),
-#: `band` (same liquidity band), `band_sector` (same band AND sector).
+#: `band` (same liquidity band x volatility tercile; the verdict level),
+#: `band_sector` (same band AND sector).
 MATCHED_TWIN_REEVAL_N_TWINS = 1000
+#: Twins at the verdict level: a Holm-corrected two-sided rank p needs
+#: N >= 2 m / alpha (m books) to be able to clear alpha at all.
+MATCHED_TWIN_REEVAL_N_TWINS_PRIMARY = 20000
 MATCHED_TWIN_REEVAL_SEED = 20261112
 #: Sessions per date block for the time-series SE; the MDE is computed on the
 #: number of BLOCKS, never on rows.
