@@ -408,3 +408,222 @@ def test_a_midnight_or_date_only_stamp_is_not_a_time():
     assert DA.timed_utc("2024-03-01") is None
     assert DA.timed_utc("2024-03-01T00:00:00+00:00") is None
     assert DA.timed_utc("2024-03-01T11:50:33+00:00") is not None
+
+
+# ───────────────────────────── CH-13 follow-up: forecast sign, revisions, issuers, daily
+
+def _ledger(w, rows: list[dict]) -> None:
+    _jsonl(w["dr"] / "predictions.jsonl", rows)
+
+
+def _fc(pid: str, tk: str, made: datetime, obs: str, p: float, iu: dict | None = None) -> dict:
+    return {"prediction_id": pid, "ticker": tk, "made_at": _iso(made),
+            "resolves_after": (D + timedelta(days=20)).isoformat(), "observable": obs,
+            "probability": p, "specialist": "test:sign", "horizon_days": 5,
+            "benchmark": "SPY", "inputs_used": iu or {}}
+
+
+def test_forecast_sign_is_classified_against_the_residual(world):
+    before = OPEN - timedelta(hours=3)
+    _ledger(world, [
+        _fc("r1", "DNF", before, "beats_benchmark", 0.3),                  # DOWN on a DOWN mover
+        _fc("w1", "UPK", before, "beats_benchmark", 0.3,                    # DOWN on an UP mover,
+            {"source": "source_registry", "source_id": "col_x",            # from a 27-day-old claim
+             "claim_utc": _iso(OPEN - timedelta(days=27))}),
+        _fc("m1", "UPLATE", before, "beats_benchmark", 0.7),
+        _fc("m2", "UPLATE", before, "return_sign", 0.2),
+        _fc("n1", "DNC", before, "abs_move_exceeds", 0.6),                  # no sign
+        # made AT or AFTER the open: never counted, for UPZ or anyone
+        _fc("late", "UPZ", OPEN + timedelta(minutes=1), "beats_benchmark", 0.9),
+        _fc("late2", "DNF", OPEN, "beats_benchmark", 0.9),
+    ])
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    by = {m["ticker"]: m for m in rec["movers"]}
+    assert by["DNF"]["ladder_outcome"] == DA.FORECAST_RIGHT_SIGN
+    assert by["UPK"]["ladder_outcome"] == DA.FORECAST_WRONG_SIGN
+    assert by["UPLATE"]["ladder_outcome"] == DA.FORECAST_MIXED
+    assert by["DNC"]["ladder_outcome"] == DA.FORECAST_NON_DIRECTIONAL
+    assert by["UPZ"]["ladder"] == DA.IN_UNIVERSE_NOT_CANDIDATE
+    assert by["UPZ"]["forecast_quality"] is None
+    assert [f["prediction_id"] for f in by["DNF"]["forecast_quality"]["rows"]] == ["r1"]
+    w = by["UPK"]["forecast_quality"]["rows"][0]
+    assert w["direction"] == "DOWN" and w["realised_resid_sign"] == "UP" and w["agrees"] is False
+    assert w["source"] == "col_x" and w["info_basis"] == "inputs_used.claim_utc"
+    assert w["info_age_days_at_open"] == pytest.approx(27.0, abs=0.01)
+    assert w["stale_source"] is True
+    assert by["DNF"]["forecast_quality"]["rows"][0]["stale_source"] is None    # age not recorded
+    s = rec["summary"]
+    assert s["by_ladder_outcome"][DA.FORECAST_RIGHT_SIGN] == 1
+    assert s["by_ladder_outcome"][DA.FORECAST_WRONG_SIGN] == 1
+    assert s["by_ladder_outcome"][DA.FORECAST_MIXED] == 1
+    assert s["by_ladder_outcome"][DA.FORECAST_NON_DIRECTIONAL] == 1
+    assert s["forecast_wrong_sign"] == ["UPK"] and s["forecast_from_stale_source"] == ["UPK"]
+    assert "not a skill claim" in s["forecast_sign_note"].lower()
+
+
+def test_forecast_quality_unit_ignores_after_open_rows():
+    rows = [{"prediction_id": "a", "made_at": _iso(OPEN - timedelta(hours=1)),
+             "observable": "beats_benchmark", "probability": 0.8, "info_utc": None},
+            {"prediction_id": "b", "made_at": _iso(OPEN), "observable": "beats_benchmark",
+             "probability": 0.1, "info_utc": None}]
+    q = DA.forecast_quality(rows, "UP", OPEN)
+    assert q["outcome"] == DA.FORECAST_RIGHT_SIGN and q["n"] == 1
+
+
+def test_a_revision_pulled_after_the_open_is_not_knowable(world):
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    by = {m["ticker"]: m for m in rec["movers"]}
+    st = rec["inputs"]["revisions"]
+    assert st["n_seen_at_or_after_open"] == 1 and st["n_admitted"] == 0
+    assert by["UPZ"]["knowable"]["state"] == DA.NO_HEADLINE_IN_CORPUS
+
+
+def test_a_revision_known_before_the_open_is_knowable_and_tiered_by_its_event(world):
+    _revisions(world["dr"], [
+        _rev("DNNEW", PREV_CLOSE + timedelta(hours=1), PREV_CLOSE + timedelta(hours=3)),  # fresh
+        _rev("UPZ", PREV_CLOSE - timedelta(days=1), PREV_CLOSE - timedelta(hours=1)),     # traded
+        _rev("UPK", PREV_CLOSE - timedelta(days=200), PREV_CLOSE - timedelta(hours=1)),   # backfill
+    ])
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    by = {m["ticker"]: m for m in rec["movers"]}
+    assert by["DNNEW"]["knowable"]["state"] == DA.KNOWABLE_FRESH
+    assert by["DNNEW"]["knowable"]["n_by_kind"]["ANALYST_REVISION"] == 1
+    assert by["DNNEW"]["knowable"]["earliest"]["kind"] == "ANALYST_REVISION"
+    assert by["UPZ"]["knowable"]["state"] == DA.KNOWABLE_ALREADY_TRADED
+    assert by["UPK"]["knowable"]["n_by_kind"]["ANALYST_REVISION"] == 0
+    assert rec["summary"]["by_knowable_kind"]["ANALYST_REVISION"] == 2
+    assert "DNNEW" in rec["summary"]["missed_but_knowable"]
+
+
+def test_naive_revision_event_is_read_late():
+    assert DA._naive_event_utc("2024-03-01 10:00:00") == datetime(2024, 3, 1, 15, 0,
+                                                                  tzinfo=timezone.utc)
+    assert DA._naive_event_utc("2024-03-01") > datetime(2024, 3, 2, 4, 0, tzinfo=timezone.utc)
+    assert DA._naive_event_utc("") is None
+
+
+def test_bare_word_tickers_never_match(tmp_path):
+    from backend.services import news_entities as NE
+    fr = tmp_path / "data"
+    _issuers(fr)
+    tbl = NE.tables(issuers=fr / "news_entities" / "issuers.csv",
+                    adrs=fr / "news_entities" / "missing.csv")
+    c = DA.Corpus(tmp_path / "none", entities=tbl)
+    for text in ("Artificial intelligence (AI) spending is booming", "IT budgets rise (IT)",
+                 "Lights ON (ON) as markets rally", "ALL (ALL) of it", "NOW (NOW) or never",
+                 "A (A) grade for the economy", "GOLD (GOLD) hits a record as gold rallies",
+                 "AI IT ON ALL NOW A GOLD"):
+        assert c.resolve_text(text) == {}, text
+    assert c.n_bare_word_refused >= 7
+    assert c.resolve_text("$AI jumps") == {"AI": "cashtag"}
+    assert c.resolve_text("ON Semiconductor cuts guidance") == {"ON": "name"}
+    assert c.resolve_text("Shares of Upzeta Dynamics slide") == {"UPZ": "name"}
+    # a collector tag on a GENERAL feed is re-verified for a bare word; a per-ticker feed stands
+    assert c._names("google_news_rss_en_us", ["AI", "UPZ"], [], "AI stocks rally") == {"UPZ"}
+    assert c._names("yfinance_ticker_news", ["AI"], [], "AI stocks rally") == {"AI"}
+
+
+def test_listed_headlines_and_the_reader_store_name_issuers(world):
+    seen = PREV_CLOSE + timedelta(hours=2)
+    page = {"source": "dj_reader_wsj", "first_seen_utc": _iso(seen), "published_utc": "",
+            "url": "https://www.wsj.example/search?q=x", "title": "read_next",
+            "body": "read_next\n1. Upzeta Dynamics Wins a Big Order\n2. Markets Wobble\n"
+                    "3. Artificial Intelligence (AI) Boom Continues\n",
+            "tickers": [], "entity_tags": ["column:search_wsj_read_next"]}
+    _jsonl(world["dr"] / "news_corpus" / "dj_reader_wsj" / f"{seen.date().isoformat()}.jsonl",
+           [page])
+    store = world["dr"] / "news_corpus" / "dowjones" / "wsj" / seen.date().isoformat()
+    store.mkdir(parents=True)
+    (store / "abc.json").write_text(json.dumps({
+        "sha": "abc", "publisher": "wsj", "url": "https://www.wsj.example/articles/dnnew",
+        "title": "Dnnew Robotics Faces Recall", "published_utc": None,
+        "first_seen_utc": _iso(seen), "column": "wsj_tech", "text": "body"}))
+    (store / "late.json").write_text(json.dumps({
+        "sha": "late", "publisher": "wsj", "url": "https://www.wsj.example/articles/dnf-late",
+        "title": "Dnf Holdings Plunges", "published_utc": None,
+        "first_seen_utc": _iso(OPEN + timedelta(minutes=10)), "column": "wsj_tech", "text": ""}))
+    assert DA.main(_argv(world)) == 0
+    rec = _receipt(world)
+    by = {m["ticker"]: m for m in rec["movers"]}
+    assert by["UPZ"]["knowable"]["state"] == DA.KNOWABLE_UNTIMED
+    assert by["UPZ"]["knowable"]["n_by_kind"]["LISTED_HEADLINE"] == 1
+    assert not by["UPZ"]["missed_but_knowable"]
+    assert by["DNNEW"]["knowable"]["state"] == DA.KNOWABLE_FRESH
+    assert by["DNNEW"]["knowable"]["earliest"]["source"] == "dowjones/wsj"
+    assert all(e["title"] != "Dnf Holdings Plunges" for e in by["DNF"]["knowable"]["evidence"])
+    assert rec["inputs"]["corpus_reader_store_rows"] == 2
+    assert rec["summary"]["by_knowable"][DA.KNOWABLE_UNTIMED] == 1
+
+
+def _tree(root: Path) -> dict:
+    return {str(p.relative_to(root)): p.read_bytes() for p in sorted(root.rglob("*")) if p.is_file()}
+
+
+def _daily_argv(w, *extra) -> list[str]:
+    return ["--data-root", str(w["dr"]), "--daily", "--now", _iso(w["now"]), *extra]
+
+
+def test_daily_mode_writes_only_its_folder_and_is_idempotent(world, capsys):
+    root = world["fr"].parent
+    before = _tree(root)
+    assert DA.main(_daily_argv(world)) == 0
+    after = _tree(root)
+    folder = world["dr"] / C.AUTOPSY_DAILY_DIRNAME
+    changed = {k for k in set(before) | set(after) if before.get(k) != after.get(k)}
+    rel = str(folder.relative_to(root))
+    assert changed and all(k.startswith(rel) for k in changed), changed
+    iy, iw, _ = D.isocalendar()
+    names = sorted(p.name for p in folder.iterdir())
+    assert names == sorted([f"autopsy_{D.isoformat()}.json", f"autopsy_{D.isoformat()}.md",
+                            "index.jsonl", "research_queue.jsonl", f"weekly_{iy}-W{iw:02d}.json"])
+    idx = [json.loads(x) for x in (folder / "index.jsonl").read_text().splitlines()]
+    assert len(idx) == 1 and idx[0]["version"] == 1 and idx[0]["why"]
+    capsys.readouterr()
+
+    # the same inputs a few minutes later: nothing is written at all
+    w2 = {**world, "now": world["now"] + timedelta(minutes=7)}
+    assert DA.main(_daily_argv(w2)) == 0
+    assert "UNCHANGED" in capsys.readouterr().out
+    assert _tree(root) == after
+
+    # a changed input: a new VERSIONED receipt, the first is untouched, the index says why
+    v1 = (folder / f"autopsy_{D.isoformat()}.json").read_bytes()
+    t5 = PREV_CLOSE + timedelta(hours=5)
+    extra = world["dr"] / "news_corpus" / "wire2" / f"{t5.date().isoformat()}.jsonl"
+    _jsonl(extra, [{"source": "wire2", "first_seen_utc": _iso(t5),
+                    "published_utc": _iso(t5 - timedelta(hours=1)),
+                    "title": "DNNEW recalls product", "tickers": ["DNNEW"],
+                    "entity_tags": [], "url": "https://example.invalid/new"}])
+    assert DA.main(_daily_argv(w2)) == 0
+    assert (folder / f"autopsy_{D.isoformat()}.json").read_bytes() == v1
+    assert (folder / f"autopsy_{D.isoformat()}_v2.json").is_file()
+    idx = [json.loads(x) for x in (folder / "index.jsonl").read_text().splitlines()]
+    assert [r["version"] for r in idx] == [1, 2]
+    assert any("corpus" in w for w in idx[1]["why"])
+    assert idx[1]["supersedes"] == f"autopsy_{D.isoformat()}.json"
+
+
+def test_daily_mode_args_and_missing_input(world, capsys):
+    assert DA.main(_daily_argv(world, "--out", str(world["out"]))) == 2
+    assert "BAD_ARGS" in capsys.readouterr().err
+    assert DA.main(["--data-root", str(world["dr"]), "--now", _iso(world["now"])]) == 2
+    assert "BAD_ARGS" in capsys.readouterr().err
+    (world["dr"] / "predictions.jsonl").unlink()
+    assert DA.main(_daily_argv(world)) == 2
+    assert "LEDGER_MISSING" in capsys.readouterr().err
+    assert not (world["dr"] / C.AUTOPSY_DAILY_DIRNAME).exists()
+
+
+def test_daily_folder_refuses_a_path_outside_itself(tmp_path):
+    (tmp_path / "optimus").mkdir()
+    f = DA.DailyFolder(tmp_path / "optimus")
+    for bad in (tmp_path / "optimus" / "x.json", tmp_path / "elsewhere.json",
+                f.root / "sub" / "x.json", f.root / ".." / "x.json"):
+        with pytest.raises(DA.AutopsyRefused) as e:
+            f.write_text(bad, "{}")
+        assert e.value.code == DA.DAILY_WRITE_OUTSIDE
+    f.write_text(f.root / "ok.json", "{}")
+    assert (f.root / "ok.json").read_text() == "{}"
