@@ -70,6 +70,9 @@ def _balance(label: str) -> dict:
         return {"error": f"{type(exc).__name__}: {str(exc)[:160]}"}
 
 
+from backend.services import sim_session as _SS  # noqa: E402  (pid_alive)
+
+
 class RunLock:
     """One run at a time. A lock older than 3 h is a dead run's and is taken over."""
 
@@ -99,13 +102,30 @@ class RunLock:
                 age = time.time() - self.path.stat().st_mtime
             except OSError:
                 age = 0
-            if age < 3 * 3600:
+            holder = self._marker_pid()
+            # 2026-11-12: a restart killed the PRE_MARKET run four minutes in; its
+            # marker then refused every tick for two hours and the slot was lost,
+            # because only AGE could free it. This process already holds the OS
+            # guard, so a marker whose recorded PID is gone belongs to a dead run.
+            # An unreadable marker or a live PID keeps the age rule.
+            if holder is not None and not _SS.pid_alive(holder):
+                print(f"TOOK OVER a dead run's {self.path.name}: pid {holder} is not alive "
+                      f"({age / 60:.0f} min old)")
+            elif age < 3 * 3600:
                 raise RuntimeError(f"another world digest run holds {self.path.name} "
                                    f"({age / 60:.0f} min old)")
         self.path.write_text(json.dumps({"pid": os.getpid(),
                                          "t": datetime.now(timezone.utc).isoformat()}),
                              encoding="utf-8")
         return self
+
+    def _marker_pid(self):
+        """The PID the marker names, or None when it cannot be read."""
+        try:
+            pid = json.loads(self.path.read_text(encoding="utf-8")).get("pid")
+            return int(pid) if pid is not None else None
+        except (OSError, ValueError, TypeError, AttributeError):
+            return None
 
     def __exit__(self, *a):
         try:
