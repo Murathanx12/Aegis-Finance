@@ -5442,9 +5442,23 @@ NEWS_OVERLAY_MAX_AGE_HOURS = 36.0
 NEWS_OVERLAY_COST_BPS_PER_SIDE = 5.0
 NEWS_OVERLAY_SLIPPAGE_BPS = 1.0
 NEWS_OVERLAY_NOTIONAL_USD = 100_000.0
-#: The declaration moment of the mapping above, written BEFORE the first replay.
+#: v2 (review of PR #125, 2026-11-12): baseline digests older than this many
+#: days before the digest being mapped do not count (v1 let a month-old
+#: baseline stand after the 10-15..11-03 gap).
+NEWS_OVERLAY_BASELINE_MAX_AGE_DAYS = 7
+#: The forward `step` runs only inside this ET window on a real XNYS session
+#: (early closes: the window ends at the close); outside it, it refuses.
+NEWS_OVERLAY_STEP_WINDOW_ET = ("15:30", "16:00")
+#: A base holding whose last real bar is more than this many sessions old is
+#: STALE: flagged on the receipt and that day's grade is marked DEGRADED.
+NEWS_OVERLAY_STALE_BAR_SESSIONS = 5
+#: The declaration moments, each written BEFORE the replay it governs.
+#: v1 = the SLOPE/DEADBAND mapping (09:13Z); v2 adds only the baseline-age bound
+#: (a reviewer's correctness fix, not chosen from returns).
 NEWS_OVERLAY_MAPPING_DECLARED_UTC = "2026-11-12T09:13:00+00:00"
-NEWS_OVERLAY_MAPPINGS_TRIED = 1
+NEWS_OVERLAY_V2_DECLARED_UTC = "2026-11-12T09:28:00+00:00"
+#: v1 and v2 differ only in the baseline-age bound; both replays are reported.
+NEWS_OVERLAY_MAPPINGS_TRIED = 2
 
 # ── The reader's BROWSE lane: general news beyond Dow Jones (2026-09-29) ─────
 #: Murat, 2026-09-29: "digest the news see what they are implying is there an
