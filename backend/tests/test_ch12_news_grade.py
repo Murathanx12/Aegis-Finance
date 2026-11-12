@@ -122,6 +122,15 @@ def test_block_se_counts_blocks_not_rows():
     assert b["n_blocks"] == 2 and b["mean_of_blocks"] == 2.0
     c = G.coarser({"se": 0.1, "n_blocks": 30}, {"se": 0.2, "n_blocks": 4})
     assert c["n_blocks"] == 4
+    # two blocks at a smaller SE still carry the larger MDE (df 1): they set the bar
+    c = G.coarser({"se": 0.007, "n_blocks": 9}, {"se": 0.006, "n_blocks": 2})
+    assert c["n_blocks"] == 2
+
+
+def test_hit_rate_t_is_against_one_half():
+    rows = [{"made_at": f"d{i % 4}", "_hblock": (5, i % 4)} for i in range(40)]
+    x = G._two_block_se([1.0 if i % 2 else 0.0 for i in range(40)], rows, null=0.5)
+    assert x["t_null"] == 0.5 and (x["t"] is None or abs(x["t"]) < 1e-6)
 
 
 def test_leave_one_out_and_tail():

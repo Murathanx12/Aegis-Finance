@@ -589,12 +589,13 @@ def grade_buys(buys: list[dict], panel: Panel, *, news_by_session: dict, sector_
 
 
 def coarser(*schemes: dict) -> dict:
-    """Of several block_se results, the one with the LARGER SE (the coarser
-    information count), with its block count: that pair sets t, df and MDE."""
-    ok = [x for x in schemes if x.get("se") is not None]
+    """Of several block_se results, the one with the LARGER MDE (SE times the
+    t quantiles at its own df: fewer blocks widen the bar even at a smaller SE),
+    with its block count: that pair sets t, df and MDE."""
+    ok = [x for x in schemes if x.get("se") is not None and (x.get("n_blocks") or 0) >= 2]
     if not ok:
         return {"se": None, "n_blocks": max((x.get("n_blocks") or 0) for x in schemes) if schemes else 0}
-    return max(ok, key=lambda x: x["se"])
+    return max(ok, key=lambda x: mde_of(x["se"], x["n_blocks"]) or 0.0)
 
 
 def leave_one_out(values: Sequence[float], keys: Sequence[Any]) -> dict:
@@ -854,8 +855,8 @@ def run_buys(a) -> int:
                                 "features_known_at": "bars through the session before entry"},
                    "percentile": "share of the buy's own controls with a lower excess (ties half)",
                    "blocks": ("SE of the mean of d with one observation per entry date and, separately, per "
-                              "non-overlapping 5-session block (session index // 5); the coarser (larger) SE and its "
-                              "block count set t, df and MDE"),
+                              "non-overlapping 5-session block (session index // 5); the scheme with the larger MDE "
+                              "(SE x t quantiles at its own df) sets t, df and MDE"),
                    "variants_tried": list(variants),
                    "development_history": ("dev1 (2026-11-11, copies of the inputs) used a 60 h exclusion and z-based "
                                            "MDE; V5 reproduces its exclusion")},
@@ -954,7 +955,7 @@ def _skill_boot(p: np.ndarray, y: np.ndarray, ref: Optional[np.ndarray], blocks:
     return {"skill": _r(full), "se": _r(se), "n_blocks": len(keys)}
 
 
-def _two_block_se(values: Sequence[float], rows: Sequence[dict]) -> dict:
+def _two_block_se(values: Sequence[float], rows: Sequence[dict], null: float = 0.0) -> dict:
     """Block SE of a mean two ways: forecast date, and non-overlapping horizon
     windows (h, entry session // h). Same-horizon windows that overlap share
     their returns, so the date count overstates the information; the coarser
@@ -966,7 +967,8 @@ def _two_block_se(values: Sequence[float], rows: Sequence[dict]) -> dict:
     m = float(np.mean(values)) if len(values) else None
     return {"mean": _r(m), "se_date_blocks": d["se"],
             "n_date_blocks": d["n_blocks"], "se_horizon_blocks": hz["se"], "n_horizon_blocks": hz["n_blocks"],
-            "se_used": _r(se), "n_blocks_used": nb, "t": _r(m / se, 3) if (se and m is not None) else None,
+            "se_used": _r(se), "n_blocks_used": nb, "t_null": null,
+            "t": _r((m - null) / se, 3) if (se and m is not None) else None,
             "mde_80pct_power": mde_of(se, nb)}
 
 
@@ -1006,6 +1008,10 @@ def score_cell(rows: list[dict], *, rng: np.random.Generator, n_boot: int, full:
                 "t": _r(sk / se, 3) if (se and sk is not None) else None, "mde_80pct_power": mde_of(se, nb)}
 
     excess_brier = bs_i - (ref_decl - y) ** 2          # > 0: worse than the declared control on that row
+    bref = float(np.mean((ref_decl - y) ** 2))
+    diff = _two_block_se(list(excess_brier), rows)
+    sk_pt = 1.0 - bs / bref if bref > 0 else None
+    sk_se = (diff["se_used"] / bref) if (diff["se_used"] and bref > 0) else None
     out: dict[str, Any] = {
         "n": int(p.size), "n_date_blocks": len(set(dblocks)), "n_horizon_blocks": len(set(hblocks)),
         "observables": sorted(obs),
@@ -1014,12 +1020,20 @@ def score_cell(rows: list[dict], *, rng: np.random.Generator, n_boot: int, full:
         "brier_minus_0_25": _r(bs - 0.25), "brier_minus_climatology": _r(bs - base * (1 - base)),
         "brier_raw_probability_before_shrink": _r(float(np.mean((raw - y) ** 2))),
         "p_distinct": sorted({_r(x, 4) for x in p})[:12], "p_min": _r(p.min()), "p_max": _r(p.max()),
-        "skill_vs_declared_control": skill(p, ref_decl),
+        "brier_minus_declared_control": diff,
+        "skill_vs_declared_control": {
+            "skill": _r(sk_pt), "se": _r(sk_se), "n_blocks_used": diff["n_blocks_used"],
+            "t": _r(sk_pt / sk_se, 3) if (sk_pt is not None and sk_se) else None,
+            "mde_80pct_power": mde_of(sk_se, diff["n_blocks_used"]),
+            "se_basis": ("analytic block SE of the per-row Brier difference vs the declared control, divided by the "
+                         "control's Brier (delta method); blocks = the coarser of forecast date / non-overlapping "
+                         "horizon window by MDE")},
     }
     if not full:
         return out
     dec = CAL.brier_decomposition(p, y)
     out.update({
+        "skill_vs_declared_control_block_bootstrap": skill(p, ref_decl),
         "skill_vs_climatology": skill(p, None),
         "skill_raw_probability_vs_declared_control": skill(raw, ref_decl),
         "decomposition_murphy_bins": {k: (_r(v) if isinstance(v, float) else v) for k, v in dec.items() if k != "bins"},
@@ -1042,7 +1056,7 @@ def score_cell(rows: list[dict], *, rng: np.random.Generator, n_boot: int, full:
         signed = [sgn[r["prediction_id"]] * float(r["vs_benchmark"]) for r in sg]
         out["direction"] = {
             "n": len(dirn), "n_long": sum(1 for r in dirn if float(r["probability"]) > 0.5),
-            "hit_rate": _two_block_se(hit, dirn),
+            "hit_rate": _two_block_se(hit, dirn, null=0.5),
             "raw_signed_return_gross": (_two_block_se([sgn[r["prediction_id"]] * float(r["resolution_detail"]["realised_return"])
                                                        for r in rw], rw) if rw else None),
             "signed_excess_vs_spy_gross": _two_block_se(signed, sg) if sg else None,
@@ -1320,8 +1334,11 @@ def run_forecasts(a) -> int:
                                                            and (r["_win"]["gap_h"] or -1) > 0],
                                                           rng=rng, n_boot=a.n_boot, full=False)} for f in FAMILIES},
         "verdicts": verdicts,
-        "method": {"mde": (f"(t_0.975 + t_0.80) at df = n_blocks - 1, x block-bootstrap SE ({a.n_boot} resamples, "
-                           f"seed {a.seed}); the coarser of two block schemes sets SE and df"),
+        "method": {"mde": ("(t_0.975 + t_0.80) at df = n_blocks - 1, x the analytic block SE of the per-row Brier "
+                           "difference vs the declared control / the control's Brier; the block scheme with the larger "
+                           "MDE sets SE and df"),
+                   "bootstrap": (f"block-bootstrap SEs ({a.n_boot} resamples, seed {a.seed}) are reported beside it for "
+                                 f"skill vs climatology and as a cross-check; with 2-9 blocks they understate the SE"),
                    "blocks": ("(1) forecast date (made_at[:10]); (2) non-overlapping horizon windows (h, entry session // h): "
                               "5-session windows written on consecutive days overlap, so (2) is the honest count"),
                    "views": ["skill vs declared control (verdict)", "skill vs climatology", "raw probability before shrink",
