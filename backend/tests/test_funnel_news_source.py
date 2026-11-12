@@ -503,3 +503,43 @@ def test_event_source_on_offers_primary_and_linked_names_under_the_same_screens(
     assert d["NEWSA"] == (True, None)
     assert res["receipt"]["caps"]["event"] == 1 and res["receipt"]["offered"]["event_only"] == 3
     assert [c.ticker for c in res["final"]] == [c.ticker for c in s4]
+
+
+def test_event_source_uses_the_version_known_at_the_build_and_names_a_torn_store(tmp_path, monkeypatch):
+    from backend.services import event_nodes as EN
+    now = _now()
+    monkeypatch.setattr(cfg, "EVENT_NODES_FUNNEL_SOURCE_ENABLED", True)
+
+    def node(imp0, built, ver, co):
+        return {"event_id": "ev_q", "primary_ticker": "EVQ", "first_seen_utc": (now - timedelta(hours=3)).isoformat(),
+                "built_now_utc": built.isoformat(), "content_hash": ver, "version_key": ver, "n_evidence": 2,
+                "importance": {"importance_0": imp0, "facts": {"n_publishers": 2}},
+                "decay": {"half_life_hours": 72.0}, "parent_id": "par_q", "evidence": [{"item_key": ver}],
+                "connected_names": {"co_mention": [{"ticker": t, "n_items": 3} for t in co], "graph": []}}
+    p = tmp_path / "ev" / EN.STORE_NAME
+    EN.append_rows(p, [node(2.0, now - timedelta(hours=2), "v1", ())])           # under the threshold then
+    EN.append_rows(p, [node(9.0, now + timedelta(minutes=1), "v2", ("EVZ",))])   # built after the build time
+    ev = FNS.event_names(now, store=p)
+    assert ev["names"] == {} and ev["status"] == "NONE_ABOVE_THRESHOLD"
+    assert ev["n_versions_after_build_skipped"] == 1
+    assert ev["store_newest_build_utc"] == (now - timedelta(hours=2)).isoformat()
+    later = FNS.event_names(now + timedelta(minutes=5), store=p)
+    assert set(later["names"]) == {"EVQ", "EVZ"}
+    p.write_bytes(p.read_bytes() + b'{"row_kind": "no')
+    torn = FNS.event_names(now, store=p)
+    assert torn["status"] == "STORE_TORN_TAIL" and torn["degradations"][0].startswith("STORE_TORN_TAIL")
+    news = _collect(tmp_path, [_theme(["NEWSA"])], _issuers("NEWSA"), event_store=p)
+    assert any(d.startswith("STORE_TORN_TAIL") for d in news["degradations"])
+
+
+def test_event_ranking_puts_link_closeness_before_event_count():
+    names = {"TWO": {"evidence": [{"source": "event", "via": "co_coverage", "link_weight": 0.66,
+                                   "importance_at_build": 5.0},
+                                  {"source": "event", "via": "co_coverage", "link_weight": 0.66,
+                                   "importance_at_build": 5.0}]},
+             "ONE": {"evidence": [{"source": "event", "via": "co_coverage", "link_weight": 0.74,
+                                   "importance_at_build": 5.0}]},
+             "CO": {"evidence": [{"source": "event", "via": "co_mention", "link_weight": 2,
+                                  "importance_at_build": 1.0}]}}
+    order = sorted(names, key=lambda t: FNS._strength(t, names))
+    assert order == ["CO", "ONE", "TWO"]

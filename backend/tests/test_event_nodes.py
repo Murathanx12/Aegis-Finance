@@ -705,3 +705,173 @@ def test_daily_builds_into_the_store_and_reruns_with_a_moving_window_add_nothing
     r3 = EN.daily(tmp_path, now=NOW + timedelta(hours=13), out=out, window_hours=36)
     assert r2["store"]["appended_nodes"] == 0 and r3["store"]["appended_nodes"] == 0
     assert r3["store"]["appended_parents"] == 0 and r3["chain"]["ok"]
+
+
+# ───────────────────────────── CH-35 slice 2, review 1 ─────────────────────────────
+
+def _two_rows(store: Path) -> None:
+    EN.append_rows(store, [_snode("ev_1", "NVDA", NOW - timedelta(hours=5), NOW - timedelta(hours=4)),
+                           _snode("ev_2", "AMD", NOW - timedelta(hours=5), NOW - timedelta(hours=4))])
+
+
+def _tear(store: Path) -> bytes:
+    full = store.read_bytes()
+    row = json.dumps({"row_kind": "node", "event_id": "ev_3", "x": "y" * 40})
+    store.write_bytes(full + row[: len(row) // 2].encode())         # a write cut mid-line
+    return full
+
+
+def test_a_torn_tail_is_named_and_repair_tail_cuts_only_that_line(tmp_path, capsys):
+    from scripts import event_nodes as CLI
+    out = tmp_path / "s"
+    store = out / EN.STORE_NAME
+    _two_rows(store)
+    full = _tear(store)
+    with pytest.raises(EN.EventNodesRefused) as e:
+        EN.read_store(store)
+    assert e.value.code == EN.STORE_TORN_TAIL
+    assert CLI.main(["verify", "--out", str(out)]) == 2
+    assert "STORE_TORN_TAIL" in capsys.readouterr().out                 # named, not a traceback
+    assert CLI.main(["repair-tail", "--out", str(out), "--dry-run"]) == 0
+    assert store.read_bytes() != full and "DRY_RUN" in capsys.readouterr().out   # dry run changed nothing
+    assert CLI.main(["repair-tail", "--out", str(out)]) == 0
+    assert store.read_bytes() == full
+    backups = list(out.glob(EN.STORE_NAME + ".bak_*"))
+    assert len(backups) == 1 and backups[0].read_bytes() != full        # the torn copy is kept beside it
+    assert EN.verify_chain(store) == {"ok": True, "n": 2, "tip": EN.verify_chain(store)["tip"]}
+    assert EN.repair_tail(store, dry_run=False)["status"] == "NO_TORN_TAIL"
+
+
+def test_a_bad_line_before_the_last_is_corrupt_and_never_auto_repaired(tmp_path):
+    store = tmp_path / EN.STORE_NAME
+    _two_rows(store)
+    lines = store.read_bytes().split(b"\n")
+    store.write_bytes(lines[0][:10] + b"\n" + lines[1] + b"\n")
+    with pytest.raises(EN.EventNodesRefused) as e:
+        EN.read_store(store)
+    assert e.value.code == EN.STORE_CORRUPT
+    with pytest.raises(EN.EventNodesRefused):
+        EN.repair_tail(store, dry_run=False)
+
+
+def test_one_batch_is_one_fsynced_write(tmp_path, monkeypatch):
+    store = tmp_path / EN.STORE_NAME
+    calls = []
+    real = EN.os.fsync
+    monkeypatch.setattr(EN.os, "fsync", lambda fd: (calls.append(fd), real(fd)))
+    EN.append_rows(store, [_snode(f"ev_{i}", "NVDA", NOW, NOW) for i in range(5)])
+    assert len(calls) == 1 and len(EN.read_store(store)) == 5
+
+
+def test_a_second_daily_skips_while_the_store_is_locked(tmp_path, monkeypatch, capsys):
+    import threading
+
+    from backend.services import disk_guard
+    from scripts import event_nodes as CLI
+    out = tmp_path / "s"
+    out.mkdir()
+    held, release = threading.Event(), threading.Event()
+
+    def holder():
+        with disk_guard.file_lock(out / EN.LOCK_NAME):
+            held.set()
+            release.wait(10)
+    th = threading.Thread(target=holder)
+    th.start()
+    held.wait(10)
+    built = []
+    monkeypatch.setattr(CLI.EN, "build", lambda *a, **k: built.append(1))
+    try:
+        rc = CLI.main(["daily", "--data-root", str(tmp_path), "--out", str(out), "--now", NOW.isoformat()])
+    finally:
+        release.set()
+        th.join(10)
+    o = capsys.readouterr().out
+    assert rc == 0 and "EVENT_NODES_DAILY SKIP STORE_LOCKED" in o and "another build holds the store" in o
+    assert built == [] and not (out / EN.STORE_NAME).exists()
+
+
+def test_daily_refuses_a_now_in_the_future(tmp_path, capsys):
+    from scripts import event_nodes as CLI
+    fut = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+    assert CLI.main(["daily", "--data-root", str(tmp_path), "--out", str(tmp_path / "o"), "--now", fut]) == 2
+    assert "NOW_IN_FUTURE" in capsys.readouterr().out
+    with pytest.raises(EN.EventNodesRefused) as e:
+        EN.daily(tmp_path, now=NOW + timedelta(minutes=5), wall=NOW, out=tmp_path / "o")
+    assert e.value.code == EN.NOW_IN_FUTURE
+
+
+def _fake_build_factory(tmp_path, rows):
+    def fake_build(data_root, *, since, now, store_path=None, **kw):
+        tbl = _tbl(tmp_path)
+        corpus = tmp_path / "news_corpus"
+        if not corpus.exists():
+            _write(tmp_path, rows)
+        fp = _filings(tmp_path, [])
+        items, stats = EN.read_rows(corpus, fp, since=since, now=now, cik_map={}, tbl=tbl)
+        clusters, cst = EN.cluster_items(items, tbl)
+        nodes = [EN.build_node(c, now=now, build_id=f"b{now:%H%M}") for c in clusters]
+        retire = EN.assign_identity(nodes, EN.latest_nodes(EN.read_store(store_path)), since=since)
+        for n in nodes:
+            EN.finalize_node(n, {}, now=now)
+        nodes.sort(key=lambda n: -n["importance"]["importance_0"])
+        for r, n in enumerate(nodes, 1):
+            n["rank_at_build"] = r
+        return {"build_id": f"b{now:%H%M}", "since": since.isoformat(), "now": now.isoformat(), "read": stats,
+                "nodes": nodes, "retire": retire, "parents": EN.build_parents(nodes, []), "items": items,
+                "graph": {}, "calendar": {}, "catalyst_calendar": {}}
+    return fake_build
+
+
+def test_daily_cli_writes_a_small_rolling_receipt_and_one_line_per_run(tmp_path, monkeypatch, capsys):
+    from scripts import event_nodes as CLI
+    monkeypatch.setattr(CLI.EN, "build", _fake_build_factory(tmp_path, _story(NOW)))
+    out = tmp_path / "s"
+    for k in range(3):
+        t = NOW + timedelta(hours=12, minutes=30 * k)
+        assert CLI.main(["daily", "--data-root", str(tmp_path), "--out", str(out), "--now", t.isoformat()]) == 0
+    runs = [json.loads(x) for x in (out / "daily_runs.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert len(runs) == 3 and runs[0]["appended_versions"] > 0 and runs[1]["appended_versions"] == 0
+    latest = json.loads((out / "daily_latest.json").read_text(encoding="utf-8"))
+    assert latest["build_id"] == runs[2]["build_id"] and latest["appended_event_ids"] == []
+    assert (out / "daily_latest.json").stat().st_size < 20_000
+    assert "title" not in (out / "daily_latest.json").read_text(encoding="utf-8")
+    assert not (out / "receipts").exists()                               # no full dump by default
+    t = NOW + timedelta(hours=14)
+    assert CLI.main(["daily", "--data-root", str(tmp_path), "--out", str(out), "--now", t.isoformat(),
+                     "--full-receipt"]) == 0
+    assert len(list((out / "receipts").glob("*.json"))) == 1
+    assert "receipt_bytes=" in capsys.readouterr().out
+
+
+def test_store_age_is_printed_and_stale_is_named(tmp_path):
+    store = tmp_path / EN.STORE_NAME
+    _two_rows(store)
+    fresh = EN.nodes_known_at(store, NOW)
+    assert fresh["newest_build_utc"] == (NOW - timedelta(hours=4)).isoformat() and fresh["age_hours"] == 4.0
+    assert fresh["stale"] is None
+    old = EN.nodes_known_at(store, NOW + timedelta(hours=EN.C.EVENT_NODES_STORE_STALE_HOURS))
+    assert old["stale"].startswith(EN.EVENT_STORE_STALE)
+
+
+def test_calendar_age_is_named_when_stale(tmp_path):
+    _lab_cal(tmp_path, "d1", NOW - timedelta(hours=EN.C.EVENT_NODES_CALENDAR_STALE_HOURS + 1), ["NVDA"], [])
+    cat = EN.catalyst_dates(tmp_path, {"NVDA"}, NOW)
+    assert cat["degradation"].startswith(EN.EVENT_CALENDAR_STALE)
+    _lab_cal(tmp_path, "d2", NOW - timedelta(hours=1), ["NVDA"], [])
+    assert EN.catalyst_dates(tmp_path, {"NVDA"}, NOW)["degradation"] is None
+
+
+def test_micron_needs_its_fuller_name_and_solar_phrases_do_not_match(tmp_path, monkeypatch):
+    p = tmp_path / "i.csv"
+    p.write_text("symbol,primary_name,aliases,country,is_adr\nMU,Micron Technology Inc.,MU,US,\n"
+                 "TSM,Taiwan Semiconductor Manufacturing,TSM,TW,1\n", encoding="utf-8")
+    a = tmp_path / "a.csv"
+    a.write_text("us_symbol,local_symbol,us_short_name_yfinance\n", encoding="utf-8")
+    tbl = NE._Tables(p, a)
+    al = EN.C.EVENT_NODES_FOREIGN_NAME_ALIASES
+    assert "美光" not in al                                     # bare 美光 is gone
+    for solar in ("歐美光伏市場", "北美光伏裝機"):  # 歐美光伏 / 北美光伏
+        assert EN.strict_tickers(solar, tbl) == {}, solar
+    assert EN.strict_tickers("美光科技財報", tbl) == {"MU": "foreign_alias:美光科技"}
+    assert list(EN.strict_tickers("台积电三季度", tbl)) == ["TSM"]   # 台积电 (simplified)

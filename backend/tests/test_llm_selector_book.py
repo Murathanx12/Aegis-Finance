@@ -683,3 +683,62 @@ def test_event_block_on_carries_ids_and_counts_never_text(monkeypatch):
     assert set(ev[0][1]) == {"event_id", "primary", "role", "link", "age_h", "importance", "n_publishers",
                              "dated_facts"}
     assert not [f for f in pk["BBB"]["facts"] if f[0] == "event_node"]
+
+
+def _sel_world(tmp_path, now):
+    """A real data root on disk: funnel beside it, bars, empty digest/corpus, an event store."""
+    from backend.services import event_nodes as EN
+    dr = tmp_path / "optimus"
+    (dr / "prices_2025_26").mkdir(parents=True)
+    (dr / "digest").mkdir()
+    (dr / "news_corpus").mkdir()
+    (tmp_path / "funnel_night10.json").write_text(json.dumps(_funnel(now, added=False)), encoding="utf-8")
+    _bars(now).to_parquet(dr / "prices_2025_26" / "bars.parquet", index=False)
+
+    def node(imp0, built, ver):
+        fs = now - timedelta(hours=6)
+        return {"event_id": "ev_aaa", "primary_ticker": "AAA", "first_seen_utc": S.iso(fs),
+                "built_now_utc": S.iso(built), "content_hash": ver, "version_key": ver, "n_evidence": 2,
+                "importance": {"importance_0": imp0, "facts": {"n_publishers": 2}},
+                "decay": {"half_life_hours": 72.0}, "parent_id": "par_aaa",
+                "evidence": [{"item_key": "k", "title": "LICENSED TITLE", "url": "https://x.test/a"}],
+                "connected_names": {"co_mention": [{"ticker": "BBB", "n_items": 2}], "graph": []}}
+    store = dr / C.EVENT_NODES_DIRNAME / EN.STORE_NAME
+    EN.append_rows(store, [node(3.0, now - timedelta(hours=2), "v1")])
+    EN.append_rows(store, [node(9.0, now + timedelta(minutes=10), "v2")])     # built AFTER the decision
+    return dr, store
+
+
+def test_load_inputs_with_a_real_store_uses_the_version_known_at_the_decision(tmp_path, monkeypatch):
+    now = _now()
+    monkeypatch.setattr(C, "EVENT_NODES_SELECTOR_PACKET_ENABLED", True)
+    dr, store = _sel_world(tmp_path, now)
+    inp = S.load_inputs(dr, now)
+    assert inp["sizes"]["event_versions_after_decision_skipped"] == 1
+    assert inp["sizes"]["event_store_newest_build_utc"] == S.iso(now - timedelta(hours=2))
+    assert inp["sizes"]["event_store_age_hours"] == 2.0 and inp["sizes"]["event_nodes_degradation"] is None
+    pk = {p["ticker"]: p for p in S.all_packets(inp, now)}
+    ev = [f for f in pk["AAA"]["facts"] if f[0] == "event_node"]
+    assert len(ev) == 1 and ev[0][1]["importance"] < 3.0 and ev[0][2] == S.iso(now - timedelta(hours=2))
+    assert [f[1]["role"] for f in pk["BBB"]["facts"] if f[0] == "event_node"] == ["connected"]
+    assert "LICENSED TITLE" not in json.dumps(pk) and "x.test" not in json.dumps(pk)
+
+
+def test_load_inputs_on_a_torn_store_degrades_by_name(tmp_path, monkeypatch):
+    now = _now()
+    monkeypatch.setattr(C, "EVENT_NODES_SELECTOR_PACKET_ENABLED", True)
+    dr, store = _sel_world(tmp_path, now)
+    store.write_bytes(store.read_bytes() + b'{"row_kind": "no')
+    inp = S.load_inputs(dr, now)
+    assert inp["sizes"]["event_nodes_degradation"].startswith("STORE_TORN_TAIL")
+    assert not [f for p in S.all_packets(inp, now) for f in p["facts"] if f[0] == "event_node"]
+
+
+def test_load_inputs_without_a_store_refuses_when_the_flag_is_on(tmp_path, monkeypatch):
+    now = _now()
+    monkeypatch.setattr(C, "EVENT_NODES_SELECTOR_PACKET_ENABLED", True)
+    dr, store = _sel_world(tmp_path, now)
+    store.unlink()
+    with pytest.raises(S.SelectorRefused) as e:
+        S.load_inputs(dr, now)
+    assert e.value.code == S.INPUT_MISSING
