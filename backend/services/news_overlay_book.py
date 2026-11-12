@@ -3,7 +3,8 @@
 WHAT IT IS
 ==========
 An internal paper book (simulation only: no broker, no order, no LLM call) that
-holds a COPY of one existing paper book (`NEWS_OVERLAY_BASE_BOOK`) scaled by a
+holds a COPY of one base (v3: LIQUID-RANDOM-50, a seeded monthly random draw of
+50 liquid names derived from the bars panel; SPY alone for comparison) scaled by a
 gross-exposure scalar s in [NEWS_OVERLAY_SCALAR_MIN, NEWS_OVERLAY_SCALAR_MAX].
 The scalar comes from the world digest's typed theme TONE, by ONE mapping that
 was declared in `backend/config.py` before any replay was run
