@@ -3096,11 +3096,12 @@ FEATHERLESS_RECONCILE_CLEARABLE_BLOCKS: tuple[str, ...] = (
 #: balance endpoint with FEATHERLESS_KEY_ENV (no completion call). The opening
 #: balance the first reconcile needs (`--opening-balance`) was measured with the
 #: account's key on 2026-11-11: $74.50. The envelope stores it and every observed
-#: balance; observed spend = opening - observed. The URL is the one the 11-11
-#: measurement named (`/credits/balance`, under /v1); only the official HTTPS host
+#: balance; observed spend = opening - observed. The URL was VERIFIED live on
+#: 2026-11-12: `/credits/balance` at the host root answers 200 with `balance_usd`
+#: (a string) and `currency`; `/v1/credits/balance` is 404. Only the official HTTPS host
 #: receives the key. Keys tried, in order, for the USD balance in the JSON reply.
 FEATHERLESS_BALANCE_URL = os.getenv("AEGIS_FEATHERLESS_BALANCE_URL",
-                                    "https://api.featherless.ai/v1/credits/balance")
+                                    "https://api.featherless.ai/credits/balance")
 #: Accepted dotted field PATHS for the USD balance in the JSON reply; anything
 #: else (a bare number, an unknown shape, a non-USD `currency`) is refused with
 #: the field names seen. A value above FEATHERLESS_BALANCE_MAX_USD is refused
