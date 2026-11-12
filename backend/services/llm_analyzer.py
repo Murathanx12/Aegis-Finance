@@ -891,13 +891,27 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
         if provider == "nvidia":
             response, out["n_429"] = _create_with_429_retry(client, provider, **kw)
         elif provider == "featherless":
+            from types import SimpleNamespace
             from backend.services import provider_budget as PB
             n429 = {"n": 0}
+
+            raw_create = getattr(getattr(client.chat.completions, "with_raw_response", None), "create", None)
+
+            def _fl_create(**k):
+                # S66: read the REAL HTTP status from the same client (no second
+                # HTTP client); a client without `with_raw_response` (a test
+                # fake) reports the status as unknown, never assumed.
+                if raw_create is None:
+                    return PB.FeatherlessReply(client.chat.completions.create(**k), None)
+                raw = raw_create(**k)
+                return PB.FeatherlessReply(raw.parse(), getattr(raw, "status_code", None))
 
             def _fl_send():
                 # 429 (concurrency) is retried INSIDE one reservation: Featherless
                 # bills successful requests only, so one success fits the bound.
-                resp, n429["n"] = _create_with_429_retry(client, provider, **kw)
+                resp, n429["n"] = _create_with_429_retry(
+                    SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=_fl_create))),
+                    provider, **kw)
                 return resp
             try:
                 response, accounting = PB.featherless_attempt(kw, purpose=purpose, send=_fl_send)
