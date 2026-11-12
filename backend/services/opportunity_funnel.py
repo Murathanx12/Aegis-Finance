@@ -460,7 +460,7 @@ def stage3(cands: list[Candidate], *, keep: int = STAGE3_KEEP,
     half the names, the stage returns fewer candidates and says so, rather than
     walking further down the list until it has filled a quota.
     """
-    from backend.services import signal_registry as SR
+    from backend.services import pm_engine, signal_registry as SR  # noqa: F401
 
     reg = SR.load()
     assert reg.permits("profitability_small", "PICKER"), (
