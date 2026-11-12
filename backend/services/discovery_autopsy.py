@@ -596,10 +596,11 @@ class Corpus:
     The clock is `first_seen_utc` (when Aegis held the row). A row with no
     first-seen stamp falls back to `published_utc` and is flagged.
 
-    SEC 8-K rows carry `tickers: []` and a `cik:<10 digits>` entity tag; without
-    `cik_map` (int CIK -> ticker, `official/company_tickers.json`) no filing
-    could ever name a company, and every filing-led move would read as
-    NO_HEADLINE_IN_CORPUS.
+    Many SEC 8-K rows carry `tickers: []` and only a `cik:<10 digits>` entity
+    tag (newer rows are also name-resolved by the collector); without `cik_map`
+    (int CIK -> ticker, `official/company_tickers.json`) those filings name no
+    company and their moves read as NO_HEADLINE_IN_CORPUS. On 2026-11-11 the
+    map added a ticker to 1,097 corpus rows in the windows read.
     """
 
     def __init__(self, root: Path, cik_map: Optional[dict[int, str]] = None) -> None:
