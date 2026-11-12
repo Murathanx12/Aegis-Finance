@@ -204,6 +204,9 @@ def cell(rows: list[dict], b: Optional[float]) -> dict:
         "coarser_scheme": (None if se is None else ("date" if se == se_d else "ticker")),
         "se": _r(se), "t": _r(float(x.mean()) / se) if se else None,
         "mde": _r(MDE_MULT * se) if se else None,
+        "mde_reason": None if se else ("no clustered SE: fewer than 2 date blocks or 2 tickers "
+                                       "among resolved rows, so no MDE exists and no verdict "
+                                       "other than CANNOT_DISTINGUISH is allowed"),
         "hit_se": _r(hse),
         "brier": _r(brier), "brier_coin": 0.25,
         "brier_base_rate": _r(float(((b - o) ** 2).mean())),
