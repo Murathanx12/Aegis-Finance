@@ -304,7 +304,7 @@ def _blocked_envelope(p, *, held_usd, now, extra_rows=None, block="unknown retur
 
 
 def _reader(balance):
-    return lambda: {"balance_usd": balance, "read_utc": "stub", "source": "GET /v1/credits/balance"}
+    return lambda: {"balance_usd": balance, "read_utc": "stub", "source": "GET /credits/balance"}
 
 
 def _no_reader():
@@ -531,7 +531,7 @@ def test_a_reservation_during_reconcile_waits_on_the_lock_and_is_not_lost(envelo
 # ── the balance reader (stubbed HTTP) ────────────────────────────────────────
 
 class _Resp(io.BytesIO):
-    def __init__(self, data, url="https://api.featherless.ai/v1/credits/balance"):
+    def __init__(self, data, url="https://api.featherless.ai/credits/balance"):
         super().__init__(data)
         self._url = url
 

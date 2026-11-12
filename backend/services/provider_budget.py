@@ -1448,7 +1448,7 @@ def featherless_read_balance(*, opener=None, url=None, api_key=None):
     import urllib.error
     import urllib.request
     C = _cfg()
-    url = str(url or getattr(C, "FEATHERLESS_BALANCE_URL", f"https://{FEATHERLESS_HOST}/v1/credits/balance"))
+    url = str(url or getattr(C, "FEATHERLESS_BALANCE_URL", f"https://{FEATHERLESS_HOST}/credits/balance"))
     u = urlsplit(url)
     if (u.scheme != "https" or u.hostname != FEATHERLESS_HOST or u.port not in (None, 443)
             or u.username or u.password):
