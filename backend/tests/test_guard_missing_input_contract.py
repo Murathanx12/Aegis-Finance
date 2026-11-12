@@ -2008,6 +2008,18 @@ def _case_event_nodes():
             "an event-node build with no corpus, filings, graph or calendar")
 
 
+def _case_forward_calendar():
+    # CH-35/CH-08: with no data root there is no universe to pull a calendar for;
+    # that must be a named refusal (rc 2), never an empty pull that reads green.
+    from datetime import datetime, timezone
+    from pathlib import Path as _P
+
+    from backend.services.forward_calendar import ForwardCalendarRefused, build_universe
+    nowhere = _P("does/not/exist/forward_calendar")
+    return (lambda: build_universe(nowhere, datetime.now(timezone.utc)), ForwardCalendarRefused,
+            "a forward-calendar pull with no data root to build a universe from")
+
+
 def _case_llm_selector_book():
     # llm-book-ruler (CH-17/CH-11): with no funnel snapshot and no bars panel
     # there is no candidate set to choose from; that must be a refusal (red
@@ -2206,6 +2218,7 @@ CASES = {
     "event_nodes": _case_event_nodes,
     "llm_selector_book": _case_llm_selector_book,
     "news_overlay_book": _case_news_overlay_book,
+    "forward_calendar": _case_forward_calendar,
 }
 
 

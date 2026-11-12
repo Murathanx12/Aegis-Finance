@@ -451,6 +451,49 @@ def test_graph_and_calendar_built_after_now_are_refused(tmp_path):
     assert any(d.startswith("CALENDAR_HORIZON_SHORT") for d in node["degradations"])
 
 
+def test_forward_calendar_labels_on_the_node_not_covered_vs_no_date_vs_stale(tmp_path):
+    """CH-35/CH-08: event nodes read next dates from the forward catalyst calendar, and
+    a node says WHICH kind of 'no date' it has. Dates derived from NOW, no literal."""
+    from backend.services import forward_calendar as FC
+
+    def q(sym, d):
+        ts = int(datetime(d.year, d.month, d.day, 21, tzinfo=timezone.utc).timestamp())
+        return {"symbol": sym, "quoteType": "EQUITY", "earningsTimestamp": ts,
+                "earningsTimestampStart": ts, "earningsTimestampEnd": ts,
+                "isEarningsDateEstimate": False}
+
+    def pull(tbl, at):
+        clock = iter(at + timedelta(seconds=i) for i in range(1, 1000))
+        FC.pull(list(tbl), tmp_path, fetch=lambda syms: {s: tbl[s] for s in syms if s in tbl},
+                macro=False, now_fn=lambda: next(clock), sleep_fn=lambda s: None)
+
+    day = FC.market_date(NOW)
+    pull({"OLDCO": q("OLDCO", day + timedelta(days=10))}, NOW - timedelta(days=30))
+    pull({"NVDA": q("NVDA", day + timedelta(days=5)),
+          "QUIET": q("QUIET", day + timedelta(days=200))}, NOW - timedelta(hours=2))
+    store = tmp_path / str(EN.C.FORWARD_CALENDAR_DIRNAME)
+    assert EN.default_paths(tmp_path)["calendar"] == store
+    cal = EN.calendar_dates(store, {"NVDA", "QUIET", "OLDCO", "NEVER"}, NOW)
+    assert cal["status"] == "OK" and cal["writer"] == "scripts/forward_calendar.py pull"
+    assert cal["dates"]["NVDA"][0]["date"] == (day + timedelta(days=5)).isoformat()
+    assert cal["dates"]["QUIET"] == [] and "OLDCO" not in cal["dates"] and "NEVER" not in cal["dates"]
+    want = {"NVDA": "DATE_IN_HORIZON", "QUIET": "NO_DATE_IN_HORIZON", "NEVER": "NOT_COVERED",
+            "OLDCO": "CALENDAR_STALE"}
+    for sym, label in want.items():
+        node = {"primary_ticker": sym, "evidence": [{"publisher": "X", "regions": [], "kind": "article",
+                                                     "items_8k": [], "title": "t", "title_tickers": {},
+                                                     "first_seen_utc": NOW.isoformat(), "item_key": "k"}]}
+        EN.finalize_node(node, {"calendar": cal}, now=NOW)
+        assert node["next_dates_label"] == label, sym
+        assert not any(d.startswith("CALENDAR_HORIZON_SHORT") for d in node["degradations"])
+        flagged = [d for d in node["degradations"] if d.startswith("NEXT_DATES_")]
+        assert bool(flagged) == (label in ("NOT_COVERED", "CALENDAR_STALE")), (sym, flagged)
+        assert bool(node["next_dates"]) == (label == "DATE_IN_HORIZON")
+    # before the first pull nothing is covered: no look-ahead into a later snapshot
+    early = EN.calendar_dates(store, {"NVDA"}, NOW - timedelta(days=31))
+    assert early["status"] == "NO_CALENDAR_BY_NOW" and early["labels"]["NVDA"]["label"] == "NOT_COVERED"
+
+
 def test_forecasts_are_bounded_by_first_seen():
     rows = [{"made_at": (NOW - timedelta(hours=2)).isoformat()},
             {"made_at": (NOW + timedelta(hours=1)).isoformat()}]

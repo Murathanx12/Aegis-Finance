@@ -908,12 +908,53 @@ def _forecasts_before(rows: list, first_seen: datetime) -> list:
     return [r for r in rows if lo <= _utc(r["made_at"]) <= first_seen]
 
 
+def forward_dates(store_dir: Path, syms: set, now: datetime) -> dict:
+    """Next dates for `syms` from the forward catalyst calendar
+    (`backend/services/forward_calendar.py`, written by `scripts/forward_calendar.py
+    pull` under `<data root>/forward_calendar/`): per name the newest snapshot row
+    pulled at or before `now`, never a later one. Same shape as `calendar_dates`
+    plus `labels`: {sym: {label, reason, ...}} with label DATE_IN_HORIZON /
+    NO_DATE_IN_HORIZON / NOT_COVERED / CALENDAR_STALE. A covered name with no date
+    in the horizon gets an EMPTY list in `dates` (covered, nothing scheduled); a
+    stale row's date is NOT put in `dates` (it is in its label, flagged)."""
+    from backend.services import forward_calendar as FC
+    root = Path(store_dir).parent
+    hz = int(C.EVENT_NODES_NEXT_DATES_HORIZON_DAYS)
+    res = FC.next_dates(sorted(syms), now, hz, root=root)
+    nr = FC.newest_receipt(root, now)
+    dates: dict[str, list] = {}
+    for s, v in res["tickers"].items():
+        if v["label"] == FC.DATE_IN_HORIZON:
+            dates[s] = [{"date": v["date"], "kind": "earnings", "status": v["confirmation"],
+                         "timing": v["timing"], "days_away": v["days_away"],
+                         "source": f"{v['pull_id']}:{v['source']}"}]
+        elif v["label"] == FC.NO_DATE_IN_HORIZON:
+            dates[s] = []
+    mac = FC.next_macro(now, hz, root=root)
+    macro = [{"date": m["date"], "kind": m["kind"], "status": "scheduled",
+              "source": f"{mac.get('pull_id')}:{m.get('source')}"} for m in mac.get("dates") or []]
+    fomc_status = (mac.get("fomc_table") or {}).get("status") or mac.get("status")
+    end = (FC.market_date(now) + timedelta(days=hz)).isoformat()
+    return {"status": "OK" if nr is not None else "NO_CALENDAR_BY_NOW",
+            "file": nr[1].name if nr else None, "written_utc": _iso(nr[0]) if nr else None,
+            "window": [FC.market_date(now).isoformat(), end], "coverage_end": end,
+            "dates": dates, "labels": res["tickers"], "label_counts": res["counts"],
+            "macro": macro, "fomc_status": fomc_status,
+            "skipped_after_now": [f"{res['n_snapshots_after_now_skipped']} snapshot(s), "
+                                  f"{res['n_rows_after_now_skipped']} row(s) pulled after now"],
+            "writer": "scripts/forward_calendar.py pull"}
+
+
 def calendar_dates(calendar_dir: Path, syms: set, now: datetime) -> dict:
     """Upcoming earnings rows for `syms` from the newest stored calendar WRITTEN by
     `now` (its receipt's `written_utc`; a file written later is skipped and named),
     with the calendar's own window. The writer is `scripts/contest_calendar.py
     calendar`, whose window is the contest's (2026-10-12..2026-11-13): a date
-    after the window end is NOT COVERED, never 'nothing scheduled'."""
+    after the window end is NOT COVERED, never 'nothing scheduled'.
+    A directory named `FORWARD_CALENDAR_DIRNAME` (the default since CH-35/CH-08) is
+    the forward catalyst calendar and is read by `forward_dates` instead."""
+    if Path(calendar_dir).name == str(C.FORWARD_CALENDAR_DIRNAME):
+        return forward_dates(Path(calendar_dir), syms, now)
     import pandas as pd
     files = sorted(Path(calendar_dir).glob("calendar_*.parquet"))
     skipped = []
@@ -1167,6 +1208,20 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
         degr.append(str(ctx.get("graph_meta", {}).get("status")))
     if ctx.get("held_degradation"):
         degr.append(ctx["held_degradation"])
+
+    labels = cal.get("labels")
+    if labels is not None:
+        # the forward calendar labels every name it was asked about: "no date" is then
+        # NO_DATE_IN_HORIZON (looked, nothing scheduled), NOT_COVERED (never looked, or
+        # every attempt failed) or CALENDAR_STALE, and the horizon-short guess is moot
+        degr = [d for d in degr if not d.startswith("CALENDAR_HORIZON_SHORT")]
+        lab = labels.get(sym) or {"label": "NOT_COVERED", "reason": "NOT_ASKED"}
+        node["next_dates_label"] = lab["label"]
+        node["next_dates_labels"] = {s: (labels.get(s) or {}).get("label", "NOT_COVERED")
+                                     for s in sorted(seen)}
+        if lab["label"] in ("NOT_COVERED", "CALENDAR_STALE"):
+            degr.append(f"NEXT_DATES_{lab['label']}: {sym} ({lab.get('reason')}; newest row "
+                        f"{lab.get('pulled_utc')}, said {lab.get('date')}) in {cal.get('writer')}")
     imp = importance(ev, sym, ctx, first)
     pr = price_reaction(sym, first, ctx["bars"]) if ctx.get("bars") else {"status": "NO_BARS", "z": None}
     node.update({
@@ -1412,7 +1467,7 @@ def default_paths(data_root: Path) -> dict:
             "filings": dr / "official" / "tables" / "filing_events.jsonl",
             "cik_map": dr / "official" / "company_tickers.json",
             "graph": dr / "universe_graph",
-            "calendar": dr / "contest" / "calendar",
+            "calendar": dr / str(C.FORWARD_CALENDAR_DIRNAME),
             "bars": dr / "prices_2025_26" / "bars.parquet",
             "positions": dr / "pc_book" / "state_latest.json",
             "predictions": dr / "predictions.jsonl",
