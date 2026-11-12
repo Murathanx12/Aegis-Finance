@@ -6563,6 +6563,43 @@ EVENT_NODES_SOURCE_BOILERPLATE_SHARE = 0.30
 #: ("first", "people") and then needs a corporate cue nearby to connect.
 EVENT_NODES_COMMON_WORD_LOWER_SHARE = 0.5
 EVENT_NODES_COMMON_WORD_MIN_LOWER = 2
+#: Single-word issuer names that are ordinary words or common surnames (review of
+#: #128: "Since Ouster" -> OUST, "Block AI Agents" -> XYZ, "Quantum Chip" -> QMCO,
+#: cricketers Marsh / Cummins, David Tennant, a Ferrari crash, "Crown Prince",
+#: "Oracle of Omaha"). They connect only with a cue ATTACHED to the name ("Ouster
+#: Inc", "Oracle shares", "Block (XYZ)") or the issuer's full legal name in the
+#: same sentence; every refusal is counted on the receipt.
+EVENT_NODES_COMMON_WORD_NAMES: tuple = (
+    "ouster", "block", "quantum", "marsh", "cummins", "tennant", "ferrari", "crown", "oracle",
+    "strategy", "first", "people", "general", "united", "american", "national", "public",
+    "global", "progressive", "southern", "dominion", "graham", "lowe", "morgan", "stanley",
+    "johnson", "williams", "carter", "jacobs", "hershey", "harley", "kellogg", "prince",
+    "royal", "liberty", "pioneer", "frontier", "summit", "pinnacle", "atlas", "apollo",
+    "phoenix", "mercury", "genesis", "nexus", "vista", "horizon", "spirit", "alliance",
+    "carnival", "brown", "black", "green", "white", "smith", "taylor", "allen", "wells")
+#: Capitalised pairs that are not people ("White House"); a person bigram must also
+#: appear in titles from at least this many publishers to join titles.
+EVENT_NODES_BIGRAM_STOP: tuple = (
+    "white house", "wall street", "supreme court", "hong kong", "new york", "united states",
+    "federal reserve", "silicon valley", "south korea", "north korea", "middle east",
+    "european union", "artificial intelligence", "prime minister", "data center", "data centers",
+    "interest rates", "stock exchange", "breaking news", "live updates", "morning risk",
+    "risk report", "earnings call", "south china", "china morning", "big tech")
+EVENT_NODES_BIGRAM_MIN_PUBLISHERS = 2
+#: Identity across rebuilds: a new cluster is a VERSION of the stored node it shares
+#: the largest evidence overlap with, when overlap / the smaller node >= this.
+EVENT_NODES_IDENTITY_MIN_OVERLAP = 0.5
+#: ISSUER-DAY PARENT: an issuer's children whose spans lie within this many hours
+#: of each other share one parent.
+EVENT_NODES_PARENT_GAP_HOURS = 24.0
+#: 8-K weight by item code (the `filing` component = the highest item in the node);
+#: unknown items take the default. 9.01 (exhibits) and 5.07 (votes) are routine.
+EVENT_NODES_8K_ITEM_WEIGHTS: dict = {
+    "5.02": 1.0, "2.02": 1.0, "1.01": 0.9, "2.01": 0.9, "4.02": 1.0, "1.03": 1.0,
+    "2.05": 0.8, "2.06": 0.7, "3.01": 0.7, "1.02": 0.6, "2.03": 0.4, "4.01": 0.5,
+    "8.01": 0.3, "7.01": 0.2, "5.03": 0.15, "5.07": 0.1, "9.01": 0.0,
+}
+EVENT_NODES_8K_ITEM_DEFAULT_WEIGHT = 0.3
 #: Symbols that are also English words: an explicit `(AI)` parenthesis is NOT
 #: enough for these (only `$AI` or `NASDAQ: AI` is); a bare word never is.
 EVENT_NODES_BAREWORD_SYMBOLS: tuple = ("A", "AI", "ALL", "ARE", "BE", "CAN", "CEO", "FOR",
@@ -6575,10 +6612,11 @@ EVENT_NODES_DROP_NAME_KEYS: tuple = ("target", "nasdaq")
 EVENT_NODES_IMPORTANCE_WEIGHTS: dict = {
     "publishers": 1.0,      # log1p(distinct publishers)
     "regions": 0.5,         # distinct feed regions (capped below)
-    "items": 0.5,           # log1p(distinct evidence items)
-    "filing": 1.0,          # 1 if an SEC filing is in the evidence
+    "items": 0.5,           # log(distinct evidence items): a single item scores 0
+    "filing": 1.0,          # highest 8-K item weight in the evidence (EVENT_NODES_8K_ITEM_WEIGHTS)
     "size_rank": 1.0,       # issuer's 63-session median dollar-volume percentile, 0..1
-    "price_reaction": 1.0,  # min(|market-adjusted z|, cap) / cap, first session after first_seen
+    # the price move is OBSERVED AFTER the event and is stored beside importance_0
+    # (`observed_after`), never inside it: importance is computable at the event.
     "held": 0.5,            # the PC book holds the issuer
     "forecast": 0.5,        # a forecast row on the issuer inside the lookback
 }
@@ -6598,7 +6636,11 @@ EVENT_NODES_NEXT_DATES_HORIZON_DAYS = 45
 EVENT_NODES_FILL_PURPOSE = "event_node_fill"
 EVENT_NODES_FILL_MAX_TOKENS = 900
 EVENT_NODES_FILL_MAX_EVIDENCE = 12
-EVENT_NODES_FILL_BODY_CHARS = 1500
+#: Body characters per evidence item sent in the fill prompt. Checked 2026-11-12:
+#: llm_telemetry persists only prompt/context HASHES and provider_budget only
+#: purpose/model/token bounds -- no prompt text -- so this limit bounds what leaves
+#: the machine, not what is written; this module writes no body text anywhere.
+EVENT_NODES_FILL_BODY_CHARS = 600
 EVENT_NODES_FILL_TOP_N = 10
 #: Price row used for the PROJECTED cost (measured list price); the reservation
 #: bound comes from provider_budget.quote().

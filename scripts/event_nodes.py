@@ -54,7 +54,13 @@ def table(res: dict, top: int, now: datetime) -> list[str]:
              f"rows read {r['rows_read']} in {r['files']} files -> {r['items']} evidence items; "
              f"dropped: after-now {r['dropped_after_now']}, published-after-now "
              f"{r['dropped_published_after_now']}, undated {r['dropped_undated']}, not-news "
-             f"{r['dropped_not_news']}; rows naming no issuer {r['rows_unresolved']}",
+             f"{r['dropped_not_news']}; rows naming no issuer {r['rows_unresolved']}; bad JSON lines "
+             f"{r['bad_json_lines']}; filing rows without first_seen {r['filing_rows_without_first_seen']}; "
+             f"date-only publications {r['rows_date_only_publication']}; alias map import failed: "
+             f"{r.get('alias_map_import_failed')}",
+             f"OLD_CONTEXT items (published before since - gap; listed, never joined): "
+             f"{r.get('items_old_context')}; refused name matches {r.get('n_refused_name_matches')}: "
+             f"{dict(list((r.get('refused_name_matches') or {}).items())[:15])}",
              "rows per source (newest known-at stamp):"]
     for s in sorted(r["per_source"]):
         lines.append(f"  {s:32s} {r['per_source'][s]:5d}  {r['newest_per_source'].get(s)}")
@@ -63,14 +69,19 @@ def table(res: dict, top: int, now: datetime) -> list[str]:
                  f"{cl['n_unclustered_no_title_issuer']}); join gap {cl['join_gap_hours']}h, "
                  f"min similarity {cl['join_threshold']}")
     lines.append(f"graph {res['graph']}; bars last session {res['bars_last_session']}; "
-                 f"calendar {res['calendar']}")
+                 f"calendar {res['calendar']}; positions {res['positions']}")
+    idn = res["identity"]
+    lines.append(f"identity: {idn['n_stored_latest']} stored latest nodes, {idn['n_versions']} new versions, "
+                 f"{len(idn['retire'])} retirements; parents {len(res['parents'])}; "
+                 f"person-bigram joins {cl.get('bigram_joins')}")
     lines.append(f"TOP {top} by importance_0 (importance_now decays, half-life "
                  f"{C.EVENT_NODES_HALF_LIFE_HOURS}h):")
     for n in res["nodes"][:top]:
         lines.append(f"  #{n['rank_at_build']:<3d} {n['primary_ticker']:6s} imp0 "
                      f"{n['importance']['importance_0']:.3f} now {EN.importance_now(n, now):.3f} "
-                     f"n_ev {n['n_evidence']:3d} pubs {n['importance']['facts']['n_publishers']} "
-                     f"| {_components(n)} | {n['timeline'][0]['title'][:70]}")
+                     f"n_ev {n['n_evidence']:3d} old {n['n_old_context']:2d} pubs "
+                     f"{n['importance']['facts']['n_publishers']} | {_components(n)} | observed_after z "
+                     f"{n['observed_after']['price_reaction'].get('z')} | {n['timeline'][0]['title'][:70]}")
     return lines
 
 
@@ -102,16 +113,17 @@ def cmd_build(a: argparse.Namespace) -> int:
     since, now = _window(a)
     data_root = Path(a.data_root)
     out = Path(a.out) if a.out else data_root / C.EVENT_NODES_DIRNAME
-    res = EN.build(data_root, since=since, now=now)
+    res = EN.build(data_root, since=since, now=now, store_path=out / EN.STORE_NAME)
     for line in table(res, a.top, now):
         print(line)
     if res["read"]["rows_read"] == 0:
-        print("WINDOW_EMPTY: no corpus rows in the window; nothing built")
-        return 0
+        # zero rows across EVERY source is a dead collector until shown otherwise
+        raise EN.EventNodesRefused(EN.NO_CORPUS_ROWS, f"no corpus or filing row in {res['since']} .. "
+                                                      f"{res['now']} across all sources; nothing built")
     if not res["nodes"]:
         raise EN.EventNodesRefused(EN.NO_EVENTS_FROM_ROWS,
                                    f"{res['read']['rows_read']} rows read and no event built")
-    store = EN.append_nodes(out / EN.STORE_NAME, res["nodes"])
+    store = EN.append_rows(out / EN.STORE_NAME, res["nodes"], retire=res["retire"], parents=res["parents"])
     rec_dir = out / "receipts"
     rec_dir.mkdir(parents=True, exist_ok=True)
     rec = _strip(res)
@@ -127,11 +139,12 @@ def cmd_build(a: argparse.Namespace) -> int:
 
 def cmd_fill(a: argparse.Namespace) -> int:
     since, now = _window(a)
-    res = EN.build(Path(a.data_root), since=since, now=now)
+    out_dir = Path(a.out) if a.out else Path(a.data_root) / C.EVENT_NODES_DIRNAME
+    res = EN.build(Path(a.data_root), since=since, now=now, store_path=out_dir / EN.STORE_NAME)
     by_key = {i.key: i for i in res["items"]}
     top = res["nodes"][:a.top]
     if not a.dry_run:
-        out = Path(a.out) if a.out else Path(a.data_root) / C.EVENT_NODES_DIRNAME
+        out = out_dir
         for n in top:
             fill = EN.fill_event(n, EN.evidence_texts(n, by_key))
             EN.append_fill(out / EN.STORE_NAME, fill)
