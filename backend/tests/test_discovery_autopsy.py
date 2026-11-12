@@ -159,9 +159,48 @@ def world(tmp_path, monkeypatch):
     (dr / "official").mkdir()
     (dr / "official" / "company_tickers.json").write_text(json.dumps(
         {"t": _iso(OPEN), "map": {"12345": "UPK"}}))
+    _issuers(fr)
+    # a revision dated BEFORE the previous close but first pulled AFTER the open: not knowable
+    _revisions(dr, [_rev("UPZ", PREV_CLOSE - timedelta(hours=2), OPEN + timedelta(hours=1))])
     out = tmp_path / "out"
     now = _at(D + timedelta(days=1), 2)
     return {"dr": dr, "fr": fr, "out": out, "now": now}
+
+
+#: synthetic issuer table: names that never occur in the fixture's headlines,
+#: plus bare-word symbols and two names the reader tests resolve.
+ISSUERS = [("UPZ", "Upzeta Dynamics Inc."), ("UPK", "Upkappa Corp"), ("DNF", "Dnf Holdings"),
+           ("DNC", "Dncharlie Inc."), ("DNNEW", "Dnnew Robotics Inc."), ("UPLATE", "Uplate Ltd"),
+           ("AI", "C3.ai, Inc."), ("ON", "ON Semiconductor Corporation"),
+           ("ALL", "Allstate Corporation (The)"), ("NOW", "ServiceNow, Inc."),
+           ("IT", "Gartner, Inc."), ("A", "Agilent Technologies, Inc."), ("GOLD", "Gold.com, Inc.")]
+
+
+def _issuers(fr: Path) -> None:
+    d = fr / "news_entities"
+    d.mkdir(parents=True, exist_ok=True)
+    lines = ["symbol,primary_name,aliases,country,is_adr"]
+    for s, n in ISSUERS:
+        lines.append(f'{s},"{n}","{s}|{n}",US,')
+    (d / "issuers.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _ny_naive(t: datetime) -> str:
+    return t.astimezone(DA.NY).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _rev(tk: str, event: datetime, seen: datetime, firm: str = "Synthetic Securities") -> dict:
+    return {"ticker": tk, "pulled_at": _iso(seen), "event_date": _ny_naive(event), "firm": firm,
+            "from_grade": "Hold", "to_grade": "Buy", "action": "up", "target_action": "Raises",
+            "prior_target": 40.0, "current_target": 55.0, "target_change": 0.375,
+            "pit_safe": True, "first_seen_utc": _iso(seen)}
+
+
+def _revisions(dr: Path, rows: list[dict]) -> None:
+    (dr / "analyst").mkdir(parents=True, exist_ok=True)
+    cols = list(_rev("X", OPEN, OPEN))
+    pd.DataFrame(rows, columns=cols).to_parquet(dr / "analyst" / "target_revisions.parquet",
+                                                index=False)
 
 
 def _argv(w, *extra) -> list[str]:
@@ -246,6 +285,8 @@ def test_second_run_keeps_the_first_receipt_and_dedupes_the_queue(world):
     ("optimus/digest", DA.DIGEST_MISSING),
     ("optimus/news_corpus", DA.CORPUS_MISSING),
     ("optimus/official/company_tickers.json", DA.CIK_MAP_MISSING),
+    ("news_entities/issuers.csv", DA.ISSUER_MAP_MISSING),
+    ("optimus/analyst/target_revisions.parquet", DA.REVISIONS_MISSING),
 ])
 def test_a_missing_input_is_a_named_nonzero_exit(world, capsys, rel, code):
     import shutil

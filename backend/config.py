@@ -4327,6 +4327,30 @@ AUTOPSY_SUSPECT_DOWN = -0.45
 #: the forecast ledger counts as frozen when its newest row made before D's
 #: open is older than this; a frozen ledger turns every mover into "missed".
 AUTOPSY_LEDGER_MAX_AGE_DAYS = 3
+#: CH-13 follow-up (2026-11-12). `--daily` writes ONLY into this folder under
+#: the data root (where the night lab, hyp_lab and the desktop app read); the
+#: rest of the data root stays read-only for the module.
+AUTOPSY_DAILY_DIRNAME = "discovery_autopsy"
+#: a forecast whose information (`inputs_used.claim_utc`, else the digest stamp)
+#: is older than this at D's open is "from a stale source" (NVDA 2026-11-12:
+#: beats_benchmark p=0.60 rows made from 27-day-old articles).
+AUTOPSY_FORECAST_STALE_INFO_DAYS = 3.0
+#: tickers that are also ordinary words or acronyms: never matched from a bare
+#: `(TICK)` token or a collector tag on a general feed; only `$TICK`,
+#: `NYSE: TICK`, an issuer NAME, a CIK, or a per-ticker feed names them.
+AUTOPSY_BARE_WORD_TICKERS = ("A", "AI", "IT", "ON", "ALL", "NOW", "GOLD", "ARE", "CAN", "FOR",
+                             "ONE", "BE", "GO", "SO", "NEW", "OUT", "SEE", "TWO", "YOU", "CEO",
+                             "EV", "US", "UK", "EU", "BIG", "LOW", "KEY", "CAR", "PLAY", "REAL",
+                             "TRUE", "LIFE", "CASH", "MAIN", "HOPE", "WELL", "SAFE", "OPEN",
+                             "FAST", "BEST", "GOOD", "LOVE", "PEAK", "NEXT", "RUN", "FLY", "AIR",
+                             "HAS", "AN", "AS", "AT", "BY", "DO", "IF", "IN", "IS", "ME", "MY",
+                             "NO", "OF", "OR", "TO", "UP", "WE", "HE", "AM", "PM", "TECH", "HOME")
+#: feeds whose rows are fetched PER TICKER: their `tickers` tag is the query,
+#: not a word match, and stands even for a bare-word symbol.
+AUTOPSY_TICKER_QUERIED_SOURCES = ("yfinance_ticker_news", "alpaca_benzinga_news")
+#: a numbered list in a reader page body ("1. Jensen Huang Affair Revives...")
+#: is a list of HEADLINES; at most this many lines per page are resolved.
+AUTOPSY_LISTED_HEADLINES_MAX = 40
 
 # ── u_forecast: the sim's daily investigator forecasts (Builder O1, 2026-09-25) ──
 #: Hard ceiling on names asked per UTC day. The union (Murat's book, every
