@@ -85,6 +85,7 @@ import numpy as np
 import pandas as pd
 
 from backend import config as C
+from backend.services import forecast_ledger as FL
 
 NY = ZoneInfo("America/New_York")
 SCHEMA = "discovery-autopsy/1"
@@ -557,7 +558,7 @@ def index_forecasts(pred_path: Path, tickers: Iterable[str],
     never loaded whole). `windows` maps a session id -> (open_utc, session date).
     Returns {"by_day": {day: {ticker: [rows]}}, "stats": {...}}."""
     p = Path(pred_path)
-    if not p.is_file():
+    if not FL.exists(p):
         raise AutopsyRefused(LEDGER_MISSING, f"no forecast ledger at {p}: the FORECAST rung "
                                              f"cannot be told from CANDIDATE_NOT_FORECAST")
     lb = timedelta(days=int(C.AUTOPSY_FORECAST_LOOKBACK_DAYS if lookback_days is None
@@ -567,46 +568,46 @@ def index_forecasts(pred_path: Path, tickers: Iterable[str],
     newest_before: dict[str, Optional[datetime]] = {k: None for k in windows}
     n = bad = no_stamp = 0
     newest: Optional[datetime] = None
-    size = p.stat().st_size
-    with p.open(encoding="utf-8", errors="replace") as fh:
-        for line in fh:
-            n += 1
-            try:
-                row = json.loads(line)
-            except ValueError:
-                bad += 1
+    size = p.stat().st_size if p.is_file() else None
+    # Through the ledger layer: after the monthly split a direct read sees a frozen file.
+    for line in FL.logical_lines(p):
+        n += 1
+        try:
+            row = json.loads(line)
+        except ValueError:
+            bad += 1
+            continue
+        if not isinstance(row, dict):
+            bad += 1
+            continue
+        made = _utc(row.get("made_at"))
+        if made is None:
+            no_stamp += 1
+            continue
+        if newest is None or made > newest:
+            newest = made
+        for k, (op, _d) in windows.items():
+            if made < op and (newest_before[k] is None or made > newest_before[k]):
+                newest_before[k] = made
+        t = norm_ticker(row.get("ticker"))
+        if t not in want:
+            continue
+        ra = str(row.get("resolves_after") or "")[:10] or None
+        for k, (op, d) in windows.items():
+            if not (op - lb <= made < op):
                 continue
-            if not isinstance(row, dict):
-                bad += 1
+            if ra is not None and ra < d.isoformat():
                 continue
-            made = _utc(row.get("made_at"))
-            if made is None:
-                no_stamp += 1
-                continue
-            if newest is None or made > newest:
-                newest = made
-            for k, (op, _d) in windows.items():
-                if made < op and (newest_before[k] is None or made > newest_before[k]):
-                    newest_before[k] = made
-            t = norm_ticker(row.get("ticker"))
-            if t not in want:
-                continue
-            ra = str(row.get("resolves_after") or "")[:10] or None
-            for k, (op, d) in windows.items():
-                if not (op - lb <= made < op):
-                    continue
-                if ra is not None and ra < d.isoformat():
-                    continue
-                by_day[k].setdefault(t, []).append({
-                    "prediction_id": row.get("prediction_id"), "made_at": _iso(made),
-                    "specialist": row.get("specialist"), "observable": row.get("observable"),
-                    "horizon_days": row.get("horizon_days"), "probability": row.get("probability"),
-                    "benchmark": row.get("benchmark"), "resolves_after": ra})
+            by_day[k].setdefault(t, []).append({
+                "prediction_id": row.get("prediction_id"), "made_at": _iso(made),
+                "specialist": row.get("specialist"), "observable": row.get("observable"),
+                "horizon_days": row.get("horizon_days"), "probability": row.get("probability"),
+                "benchmark": row.get("benchmark"), "resolves_after": ra})
     return {"by_day": by_day,
             "stats": {"path": str(p), "bytes": size, "lines": n, "unparseable": bad,
                       "no_made_at": no_stamp, "newest_made_at": _iso(newest),
                       "newest_made_before_open": {k: _iso(v) for k, v in newest_before.items()},
-                      "lookback_days": lb.days, "read": "streamed line by line, read-only"}}
+                      "lookback_days": lb.days, "read": "forecast_ledger.logical_lines, streamed, read-only"}}
 
 
 def forecast_direction(row: dict) -> str:
