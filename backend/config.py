@@ -5410,8 +5410,9 @@ NEWS_TILT_KEY1_MIN_TRUST = 0.05
 #: tone, applied to a COPY of one internal paper book and graded daily against
 #: the untilted copy (its twin = the same book at scalar 1.0). Simulation only:
 #: no broker, no order. `backend/services/news_overlay_book.py`. OFF by default;
-#: turning it on is an attended seeding step (seed-a-lane), never a builder's.
-NEWS_OVERLAY_BOOK_ENABLED = False
+#: turning it on is an attended seeding step (seed-a-lane), never a builder's:
+#: the owner sets AEGIS_NEWS_OVERLAY_BOOK=1 for the scheduled step only.
+NEWS_OVERLAY_BOOK_ENABLED = os.getenv("AEGIS_NEWS_OVERLAY_BOOK", "0").strip() == "1"
 #: The base book (paper_books id): the random_universe twin of the BHJ book,
 #: 50 names EW drawn from the US $3M+ dollar-volume band, monthly.
 NEWS_OVERLAY_BASE_BOOK = "book:9d62cc74239b435d"

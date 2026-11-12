@@ -207,3 +207,61 @@ def test_the_committed_contract_is_the_rule_in_code():
     p = Path(__file__).resolve().parents[2] / "docs" / "TRIALS" / "CONTRACT_NEWS_OVERLAY_v1.json"
     frozen = json.loads(p.read_text(encoding="utf-8"))
     assert frozen["policy_hash"] == NO.contract()["policy_hash"]
+
+
+def _synthetic_data_dir(tmp_path, sessions):
+    """A data folder with the three inputs the CLI reads, all synthetic."""
+    import sqlite3
+
+    import pandas as pd
+    d = tmp_path / "data"
+    dig = d / "optimus" / "digest"
+    dig.mkdir(parents=True)
+    syms = ["AAA", "BBB", "CCC"]
+    for i, t in enumerate(sessions):
+        for h in (4, 3):
+            stamp = NO.decision_time(t) - timedelta(hours=h)
+            fg = -0.3 if (i % 3 == 2 and h == 3) else 0.0
+            (dig / f"world_digest_{stamp:%Y%m%dT%H%M%SZ}.json").write_text(
+                json.dumps(_digest(stamp, [fg, fg, fg])), encoding="utf-8")
+    bars = d / "optimus" / "prices_2025_26"
+    bars.mkdir(parents=True)
+    pd.DataFrame([{"symbol": s, "date": pd.Timestamp(t), "close": 10.0 + j + 0.1 * i}
+                  for i, t in enumerate(sessions) for j, s in enumerate(syms)]).to_parquet(bars / "bars.parquet")
+    c = sqlite3.connect(d / "aegis_pi.db")
+    c.execute("CREATE TABLE paper_book_decisions (book_id TEXT, asof_date TEXT, decided_utc TEXT)")
+    c.execute("CREATE TABLE paper_positions (portfolio_id TEXT, ticker TEXT, shares REAL, opened_at TEXT)")
+    stamp = f"{sessions[0].isoformat()}T23:00:00+00:00"
+    c.execute("INSERT INTO paper_book_decisions VALUES (?,?,?)", (cfg.NEWS_OVERLAY_BASE_BOOK, sessions[0].isoformat(), stamp))
+    for s in syms:
+        c.execute("INSERT INTO paper_positions VALUES (?,?,?,?)", (cfg.NEWS_OVERLAY_BASE_BOOK, s, 100.0, stamp))
+    c.execute("INSERT INTO paper_positions VALUES (?,?,?,?)", (cfg.NEWS_OVERLAY_BASE_BOOK, NO.CASH, 50.0, stamp))
+    c.commit()
+    c.close()
+    return d
+
+
+def test_cli_replay_step_and_grade_end_to_end(tmp_path, monkeypatch):
+    from scripts import news_overlay_book as CLI
+    ss = _sessions(10)
+    d = _synthetic_data_dir(tmp_path, ss)
+    out = tmp_path / "out"
+    assert CLI.main(["replay", "--out", str(out), "--data-dir", str(d)]) == 0
+    rc = json.loads(next(out.glob("news_overlay_replay_*.json")).read_text(encoding="utf-8"))
+    assert rc["headline"]["LABEL"].startswith("BACKFILL")
+    assert all(r["label"] == "BACKFILL" for r in rc["decision_rows"])
+    assert rc["live_folder_counts"]["unchanged"] is True
+    assert CLI.main(["replay", "--out", str(d / "optimus" / "x"), "--data-dir", str(d)]) == 2
+    # flag off: the step writes nothing
+    monkeypatch.setattr(cfg, "NEWS_OVERLAY_BOOK_ENABLED", False)
+    assert CLI.main(["step", "--date", ss[-2].isoformat(), "--data-dir", str(d)]) == 0
+    assert not NO.decisions_path(d / "optimus").exists()
+    assert CLI.main(["grade", "--out", str(out), "--data-dir", str(d)]) == 2
+    # flag on: two forward rows, then a grade
+    monkeypatch.setattr(cfg, "NEWS_OVERLAY_BOOK_ENABLED", True)
+    for t in ss[-3:-1]:
+        assert CLI.main(["step", "--date", t.isoformat(), "--data-dir", str(d)]) == 0
+    rows = [json.loads(x) for x in NO.decisions_path(d / "optimus").read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 2 and all(r["digest_id"] and r["label"] == "FORWARD" for r in rows)
+    assert CLI.main(["grade", "--out", str(out), "--data-dir", str(d)]) == 0
+    assert list(out.glob("news_overlay_grade_*.json"))

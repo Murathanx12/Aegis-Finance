@@ -3,6 +3,7 @@
     python -m scripts.news_overlay_book contract --out DIR
     python -m scripts.news_overlay_book replay --out DIR [--data-dir D]
     python -m scripts.news_overlay_book step [--date YYYY-MM-DD] [--data-dir D]
+    python -m scripts.news_overlay_book grade --out DIR [--data-dir D]
 
 `replay` is BACKFILL over the digests already on disk: it proves the mechanism
 and is NOT forward evidence. It writes only under --out and refuses an --out
@@ -278,6 +279,50 @@ def cmd_step(a) -> int:
     return 0
 
 
+def cmd_grade(a) -> int:
+    """Mark the FORWARD decision rows (label FORWARD, this contract only) as
+    overlay vs twin. Read-only on the data folder; writes under --out."""
+    P = _paths(a.data_dir)
+    out = Path(a.out)
+    _guard_out(out, P["data"])
+    c = NO.contract()
+    dp = NO.decisions_path(P["data"] / "optimus")
+    if not dp.is_file():
+        raise NO.NewsOverlayRefused(f"no forward decision file at {dp} (the book is not seeded)")
+    rows = [json.loads(x) for x in dp.read_text(encoding="utf-8").splitlines() if x.strip()]
+    rows = [r for r in rows if r.get("label") == "FORWARD" and r.get("policy_hash") == c["policy_hash"]]
+    if len(rows) < 2:
+        raise NO.NewsOverlayRefused(f"{len(rows)} forward rows under {c['policy_hash']}; need >= 2 to grade")
+    snaps = NO.load_base_holdings(P["db"], c["base_book_id"])
+    syms = sorted({s for sn in snaps for s in sn["shares"]})
+    from datetime import timedelta
+    first = date.fromisoformat(rows[0]["session"])
+    wide = _closes(P["bars"], syms, first - timedelta(days=60)).ffill()
+    scal = {date.fromisoformat(r["session"]): float(r["scalar"]) for r in rows}
+    sessions = [d for d in wide.index if d >= first and d <= max(scal)]
+    closes = {d: {s: float(v) for s, v in wide.loc[d].items() if v == v} for d in sessions}
+    weights, changed = NO.base_weights_by_session(snaps, sessions, closes)
+    changed[sessions[0]] = False
+    prev, full = 1.0, {}
+    for d in sessions:                                   # a session with no row holds the last scalar
+        prev = scal.get(d, prev)
+        full[d] = prev
+    sim = NO.simulate(sessions, closes, weights, changed, full)
+    sr = sim["rows"]
+    ov, tw = sr[-1]["overlay_nav"] / sim["notional"] - 1, sr[-1]["twin_nav"] / sim["notional"] - 1
+    out.mkdir(parents=True, exist_ok=True)
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    rp = out / f"news_overlay_grade_{run_id}.json"
+    _write_json(rp, {"schema": "news_overlay_book_grade/v1", "run_id": run_id, "label": "FORWARD",
+                     "policy_hash": c["policy_hash"], "sessions": len(sessions),
+                     "overlay_total_pct": 100 * ov, "twin_total_pct": 100 * tw,
+                     "overlay_cost_usd": sum(r["overlay_cost"] for r in sr),
+                     "twin_cost_usd": sum(r["twin_cost"] for r in sr), "daily": sr})
+    print(f"FORWARD {len(sessions)} sessions {sessions[0]}..{sessions[-1]}: RAW overlay {100 * ov:+.3f}% "
+          f"twin {100 * tw:+.3f}% diff {100 * (ov - tw):+.3f} pp -> {rp}")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -289,9 +334,13 @@ def main(argv=None) -> int:
     c3 = sub.add_parser("step")
     c3.add_argument("--date", default=None)
     c3.add_argument("--data-dir", default=None)
+    c4 = sub.add_parser("grade")
+    c4.add_argument("--out", required=True)
+    c4.add_argument("--data-dir", default=None)
     a = ap.parse_args(argv)
     try:
-        return {"contract": cmd_contract, "replay": cmd_replay, "step": cmd_step}[a.cmd](a)
+        return {"contract": cmd_contract, "replay": cmd_replay, "step": cmd_step,
+                "grade": cmd_grade}[a.cmd](a)
     except NO.NewsOverlayRefused as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2
