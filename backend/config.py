@@ -4206,6 +4206,74 @@ MISSED_OPP_CURRICULUM_MIN_NAMES = 3
 #: the difference accumulates across nights.
 MISSED_OPP_PAIRED_ALPHA = 0.05
 
+# ── CH-13 daily discovery-failure autopsy (2026-11-12) ──────────────────────
+# `backend/services/discovery_autopsy.py` + `scripts/discovery_autopsy.py`.
+# J2 above screens a 21-session window once a night (it ran once, 2026-09-22);
+# this one asks, for ONE session D, which names moved most against the market
+# and whether Aegis had looked at them, or held a dated headline, before D's open.
+
+#: sessions of trailing returns (ending D-1) the market beta and the name's own
+#: residual sigma are estimated over; fewer than the minimum -> beta 1.0 and the
+#: basis is printed (a new listing can be the day's biggest mover).
+AUTOPSY_BETA_WINDOW_SESSIONS = 60
+AUTOPSY_BETA_MIN_OBS = 40
+#: below this many trailing returns there is no sigma to scale by: excluded, counted.
+AUTOPSY_SIGMA_MIN_OBS = 15
+#: tradability floors, on data dated BEFORE D: close of D-1 and the median daily
+#: dollar volume over the trailing sessions. Without them the list is penny noise.
+AUTOPSY_MIN_PRICE = 5.0
+AUTOPSY_MIN_DOLLAR_VOL = 5_000_000.0
+AUTOPSY_DOLLAR_VOL_SESSIONS = 20
+#: a mover must clear BOTH: |residual / own sigma| (the event size for THIS name)
+#: and |residual| (the economic size). Ranked by `AUTOPSY_RANK_BY` ("z" | "resid").
+AUTOPSY_MIN_ABS_Z = 2.0
+AUTOPSY_MIN_ABS_RESID = 0.03
+AUTOPSY_RANK_BY = "z"
+#: movers kept per side; rule 4: losers are studied as hard as winners.
+AUTOPSY_TOP_K_PER_SIDE = 15
+#: the refusal floor: fewer names than this with a bar on D is a thin or partial
+#: panel, and a thin panel must not print "no movers".
+AUTOPSY_MIN_NAMES_ON_DAY = 1500
+#: calendar days before D's open that a forecast, a decision contract or a world
+#: digest theme may date from and still count as "Aegis generated the name".
+AUTOPSY_FORECAST_LOOKBACK_DAYS = 7
+AUTOPSY_CONTRACT_LOOKBACK_DAYS = 7
+AUTOPSY_DIGEST_LOOKBACK_DAYS = 3
+#: a headline first seen in [prev close, D open) is OVERNIGHT; one in the
+#: preceding `AUTOPSY_KNOWABLE_LOOKBACK_DAYS` is EARLIER. Both are "knowable".
+AUTOPSY_KNOWABLE_LOOKBACK_DAYS = 5
+#: corpus rows (any name) first seen in a window below which a name with no
+#: headline is UNKNOWN, not "nothing was knowable": an empty corpus day says
+#: nothing about the world.
+AUTOPSY_MIN_CORPUS_ROWS = 200
+#: corpus pages that are a name's QUOTE or ESTIMATES page rather than news: the
+#: reader visiting it is attention, not a precursor, so it never makes a name KNOWABLE.
+AUTOPSY_NOT_NEWS_TAGS = ("column:mw_analyst_estimates", "column:marketwatch_earnings_calendar",
+                         "column:marketwatch_economic_calendar",
+                         "column:marketwatch_upgrades_downgrades")
+#: the bars panel is flagged STALE (printed, not refused: D is still the newest
+#: session it holds) when it ends more than this many XNYS sessions before the
+#: latest closed session. 1 tolerates the gap between the close and the refresh.
+AUTOPSY_PANEL_MAX_SESSIONS_BEHIND = 1
+#: calendar days of bars loaded before D: enough for the 63-session dollar-volume
+#: floor and the 60-session beta window, with holidays.
+AUTOPSY_LOAD_CALENDAR_DAYS = 120
+#: the ranker-eligibility approximation: median daily dollar volume over this
+#: many sessions before D, computed only with at least the minimum observations
+#: (xs_ranker's 63-session window).
+AUTOPSY_RANKER_DV_SESSIONS = 63
+AUTOPSY_RANKER_DV_MIN_OBS = 40
+#: a one-bar raw move beyond these bounds, on a name whose previous close was
+#: at least AUTOPSY_MIN_PRICE, is far more often a split, spin-off or bad bar
+#: than an event (the review found CTVA -83.8% on 2026-10-01, AZN +103% on
+#: 2026-02-02; 137 such bars in the panel). It is classed
+#: SUSPECT_CORPORATE_ACTION, listed and counted, and never ranked or seeded.
+AUTOPSY_SUSPECT_UP = 0.90
+AUTOPSY_SUSPECT_DOWN = -0.45
+#: the forecast ledger counts as frozen when its newest row made before D's
+#: open is older than this; a frozen ledger turns every mover into "missed".
+AUTOPSY_LEDGER_MAX_AGE_DAYS = 3
+
 # ── u_forecast: the sim's daily investigator forecasts (Builder O1, 2026-09-25) ──
 #: Hard ceiling on names asked per UTC day. The union (Murat's book, every
 #: frozen llm_portfolio book, the funnel shortlist, the top revision names) is

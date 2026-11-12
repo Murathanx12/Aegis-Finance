@@ -1978,6 +1978,17 @@ def _case_owner_calls():
             CallRefused, "log_call() with no price panel to build the twin from")
 
 
+def _case_discovery_autopsy():
+    # CH-13: with no bars panel there are no movers to autopsy; "no movers"
+    # must be a refusal, never an empty receipt.
+    from pathlib import Path as _P
+
+    from backend.services.discovery_autopsy import AutopsyRefused, check_inputs, default_paths
+    nowhere = _P("does/not/exist/discovery_autopsy")
+    return (lambda: check_inputs(default_paths(nowhere)), AutopsyRefused,
+            "an autopsy with no bars panel, ledger, funnel or corpus")
+
+
 # -- CH-05 rescue R3 (s65/ch05-r3-prices-contract): staged price admission --
 def _case_global_price_admission():
     from backend.services.global_price_admission import AdmissionError, plan_admission
@@ -2148,6 +2159,7 @@ CASES = {
     "forecast_ledger": _case_forecast_ledger,
     "campaign_ledger_startup": _case_campaign_ledger_startup,
     "global_price_admission": _case_global_price_admission,
+    "discovery_autopsy": _case_discovery_autopsy,
 }
 
 
