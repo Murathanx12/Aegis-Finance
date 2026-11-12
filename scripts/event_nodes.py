@@ -164,8 +164,8 @@ def cmd_fill(a: argparse.Namespace) -> int:
             print("SYSTEM:", d["system"])
             user = d["user"]
             if not a.show_bodies:
-                user = "\n".join(l for l in user.splitlines()
-                                 if l.startswith(("EVENT", "CONNECTED", "EVIDENCE", "[")))
+                user = "\n".join(ln for ln in user.splitlines()
+                                 if ln.startswith(("EVENT", "CONNECTED", "EVIDENCE", "[")))
                 user += "\n[article body excerpts not printed: licensed content]"
             print("USER:", user)
     print(f"TOTAL top {len(top)}: projected ${total:.5f}, reservation bound ${total_bound:.5f}; "
