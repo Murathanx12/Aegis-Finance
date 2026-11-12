@@ -274,11 +274,14 @@ def collect(build_time: datetime, *, digest_root: Optional[Path] = None,
             "names": dict(sorted(per.items())), "degradations": degr}
 
 
-def _priority(t: str, names: dict) -> tuple:
+def _priority(t: str, names: dict, salt: str = "") -> tuple:
     """Order among news names when a cap binds: more evidence rows first, then
-    filings-and-news, then ticker. A tie-break for admission, never a weight."""
+    filings-and-news, then a hash of (ticker, build time) -- not the alphabet, which
+    would always favour names starting with A, and not size, which the funnel
+    refuses as a picker. A tie-break for admission, never a weight."""
     row = names[t]
-    return (-len(row["evidence"]), -len(row["sources"]), t)
+    h = hashlib.sha256(f"{t}|{salt}".encode("utf-8")).hexdigest()
+    return (-len(row["evidence"]), -len(row["sources"]), h)
 
 
 ScreenFn = Callable[[list], dict]        # names -> {ticker: (Candidate|None, screen)}
@@ -315,7 +318,8 @@ def admit(news: dict, ranker_s3: list, ranker_s4: list, *, universe: Iterable[st
             dropped[t] = screen or "no_price_history"
         else:
             passed.append(cand)
-    passed.sort(key=lambda c: _priority(c.ticker, names))
+    salt = str(news.get("build_time") or "")
+    passed.sort(key=lambda c: _priority(c.ticker, names, salt))
     for c in passed[max_enrich:]:
         dropped[c.ticker] = "news_enrich_cap"
     to_enrich = passed[:max_enrich]
@@ -339,7 +343,7 @@ def admit(news: dict, ranker_s3: list, ranker_s4: list, *, universe: Iterable[st
     # the reserved slots (enriched news-only names + news names the ranker kept at
     # stage 3 but cut at stage 4).
     pool = [c for c in stage3 if c.ticker in names and c.ticker not in s4_set]
-    pool.sort(key=lambda c: _priority(c.ticker, names))
+    pool.sort(key=lambda c: _priority(c.ticker, names, salt))
     reserved = pool[:max_slots]
     for c in pool[max_slots:]:
         dropped[c.ticker] = "final_slot_cap"
