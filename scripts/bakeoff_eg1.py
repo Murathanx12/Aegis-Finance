@@ -34,7 +34,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import date
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -76,10 +75,13 @@ def main(argv: list[str] | None = None) -> int:
     if bad:
         print(f"REFUSED: unknown arm(s) {bad}; have {MR.BAKEOFF_ARMS}")
         return 2
-    fl_bad = MR.bakeoff_arm_refusals(arms)
-    if fl_bad:
-        for line in fl_bad:
-            print(f"REFUSED featherless arm {line}")
+    arm_bad = MR.bakeoff_arm_refusals(arms)
+    if not a.dry_run:
+        # a paid arm without its key is refused BEFORE sampling or any spend
+        arm_bad += MR.bakeoff_key_refusals(arms)
+    if arm_bad:
+        for line in arm_bad:
+            print(f"REFUSED arm {line}")
         return 2
     fl_arms = [x for x in arms if MR.featherless_arm_model(x) is not None]
     n = a.n or int(_cfg.MODEL_ROUTING_BAKEOFF_N)
@@ -100,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if fl_arms:
         print("BEFORE " + _featherless_status())
-    out = Path(a.out) if a.out else (MR.receipt_dir() / f"bakeoff_{MR.BAKEOFF_ID}_{date.today()}.json")
+    out = Path(a.out) if a.out else MR.receipt_dir() / MR.default_receipt_name()
     res = MR.run_bakeoff(items, arms=arms, call_fn=_call_named, out_path=out,
                          cap_usd=a.cap_usd, census=census)
     print(json.dumps({k: res[k] for k in ("path", "n_rows", "spent_deepseek_usd",
@@ -108,20 +110,29 @@ def main(argv: list[str] | None = None) -> int:
     receipt = json.loads(Path(res["path"]).read_text(encoding="utf-8"))
     for line in MR.bakeoff_table(receipt):
         print(line)
+    rc = 0
     if fl_arms:
         print(json.dumps({"spent_featherless_usd": res.get("spent_featherless_usd")}, default=str))
         print("AFTER " + _featherless_status())
         # a guard's refusal is red: a Featherless arm that was refused (envelope,
-        # missing key) is rc 2, never a quiet row in a green run
+        # missing key) or stopped by its batch cap is rc 2, never a quiet row in a green run
         refused = {}
         for r in receipt.get("rows") or []:
-            if r.get("arm") in fl_arms and r.get("status") in ("BUDGET_REFUSED", "NOT_CONFIGURED"):
+            if r.get("arm") in fl_arms and r.get("status") in ("BUDGET_REFUSED", "NOT_CONFIGURED",
+                                                                "BUDGET_CAP"):
                 k = f"{r['arm']}:{r['status']}"
                 refused[k] = refused.get(k, 0) + 1
         if refused:
             print(f"REFUSED: featherless arm rows refused {refused} -- see the receipt's `error` fields")
-            return 2
-    return 0
+            rc = 2
+    # an arm that answered NOTHING measured nothing: red, with its reasons
+    for arm in arms:
+        rs = [r for r in receipt.get("rows") or [] if r.get("arm") == arm]
+        if not any(r.get("pred") for r in rs):
+            why = sorted({str(r.get("refusal") or r.get("status")) for r in rs}) or ["no rows"]
+            print(f"FAILED: arm {arm!r} answered 0 of {len(rs)} rows ({', '.join(why)})")
+            rc = 2
+    return rc
 
 
 if __name__ == "__main__":

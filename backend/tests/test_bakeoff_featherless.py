@@ -109,7 +109,7 @@ def test_a_non_listed_featherless_model_is_refused_red(arm, why, monkeypatch, ca
     monkeypatch.setattr(MR, "bakeoff_sample", _no_sample)
     rc = CLI.main(["--dry-run", "--arms", f"rules,{arm}"])
     out = capsys.readouterr().out
-    assert rc == 2 and why in out and "REFUSED featherless arm" in out
+    assert rc == 2 and why in out and "REFUSED arm" in out
 
 
 def test_a_listed_but_unpriced_model_and_a_duplicate_are_refused(monkeypatch, capsys):
@@ -160,6 +160,7 @@ def test_the_per_arm_batch_cap_stops_a_featherless_arm(tmp_path, fake_fl, attemp
 
 def test_a_featherless_refusal_during_the_run_is_rc_2(tmp_path, fake_fl, attempts, monkeypatch,
                                                       capsys):
+    monkeypatch.setenv("FEATHERLESS_API_KEY", "fake-key-for-the-test")
     monkeypatch.setattr(C, "FEATHERLESS_MONTHLY_CAP_USD", 1e-6)          # envelope refuses
     monkeypatch.setattr(MR, "bakeoff_sample",
                         lambda **k: ([_item(i) for i in range(2)], {"n": 2}))
@@ -241,6 +242,8 @@ def test_the_summary_and_table_print_every_pair_with_n_paired(tmp_path):
 # ── the dry-run plan ──────────────────────────────────────────────────────────
 
 def test_the_dry_run_prints_a_cost_per_arm_and_calls_nothing(monkeypatch, capsys, envelope):
+    for k in ("DEEPSEEK_API_KEY", "FEATHERLESS_API_KEY", "NVIDIA_API_KEY"):
+        monkeypatch.delenv(k, raising=False)                # the dry run needs no key
     def never(*a, **k):
         raise AssertionError("the dry run reached a provider")
     monkeypatch.setattr(LA, "call_named", never)
@@ -262,3 +265,57 @@ def test_the_dry_run_prints_a_cost_per_arm_and_calls_nothing(monkeypatch, capsys
     # 10 calls x 150 output tokens at $0.45/M is the output floor of the 30B projection
     assert float(plan[A30].split("projected $")[1].split()[0]) > 10 * 150 * 0.45 / 1e6
     assert "FEATHERLESS BUDGET OK" in out
+
+
+# ── review round 1 (PR #121) ─────────────────────────────────────────────────
+
+def _live(monkeypatch, tmp_path, arms, n=3):
+    monkeypatch.setenv("FEATHERLESS_API_KEY", "fake-key-for-the-test")
+    monkeypatch.setattr(MR, "bakeoff_sample",
+                        lambda **k: ([_item(i) for i in range(n)], {"n": n}))
+    return CLI.main(["--arms", arms, "--out", str(tmp_path / "b.json")])
+
+
+def test_a_featherless_arm_stopped_by_its_batch_cap_is_rc_2(tmp_path, fake_fl, attempts,
+                                                             monkeypatch, capsys):
+    monkeypatch.setattr(C, "MODEL_ROUTING_BAKEOFF_FEATHERLESS_CAP_USD", 1e-9)
+    rc = _live(monkeypatch, tmp_path, f"rules,{A30}")
+    out = capsys.readouterr().out
+    assert rc == 2 and f"{A30}:BUDGET_CAP" in out and len(attempts) == 1
+
+
+def test_an_arm_that_answers_nothing_is_rc_2_with_its_reason(tmp_path, fake_fl, attempts,
+                                                              monkeypatch, capsys):
+    fake_fl.text = "I cannot help with that."                  # never parses
+    rc = _live(monkeypatch, tmp_path, f"rules,{A30}")
+    out = capsys.readouterr().out
+    assert rc == 2 and f"FAILED: arm {A30!r} answered 0 of 3 rows" in out
+    assert "FAILED: arm 'rules'" not in out and len(attempts) == 3
+
+
+def test_a_missing_key_is_refused_before_sampling_and_the_key_is_never_printed(monkeypatch, capsys):
+    monkeypatch.setattr(MR, "bakeoff_sample", _no_sample)
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    monkeypatch.setenv("FEATHERLESS_API_KEY", "sk-SECRET-VALUE-123")
+    rc = CLI.main(["--arms", f"rules,deepseek,nvidia,local,{A30}"])
+    out = capsys.readouterr().out
+    assert rc == 2 and "'deepseek': NO_KEY -- DEEPSEEK_API_KEY" in out
+    assert "'nvidia': NO_KEY -- NVIDIA_API_KEY" in out
+    assert "FEATHERLESS_API_KEY" not in out and "sk-SECRET-VALUE-123" not in out
+    assert "'local'" not in out and "'rules'" not in out       # unpaid arms need no key
+
+
+def test_a_duplicate_arm_of_any_provider_is_refused(monkeypatch, capsys):
+    monkeypatch.setattr(MR, "bakeoff_sample", _no_sample)
+    assert CLI.main(["--dry-run", "--arms", "rules,deepseek,deepseek"]) == 2
+    assert "'deepseek': DUPLICATE_ARM" in capsys.readouterr().out
+
+
+def test_the_default_receipt_name_carries_a_utc_run_id_and_sorts_after_the_old_one():
+    from datetime import datetime, timedelta, timezone
+    t = datetime(2026, 11, 12, 7, 5, 9, tzinfo=timezone.utc)
+    a = MR.default_receipt_name(t)
+    b = MR.default_receipt_name(t + timedelta(seconds=1))
+    assert a == "bakeoff_E-G1_2026-11-12T070509Z.json" and a != b
+    assert sorted(["bakeoff_E-G1_2026-09-26.json", a, b, "bakeoff_E-G1_2026-11-12.json"])[-2:] == [a, b]

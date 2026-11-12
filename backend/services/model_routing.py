@@ -843,13 +843,13 @@ def bakeoff_arm_refusals(arms: tuple[str, ...]) -> list[str]:
     listed = tuple(getattr(_cfg, "FEATHERLESS_MODELS", ()) or ())
     out, seen = [], set()
     for a in arms:
-        m = featherless_arm_model(a)
-        if m is None:
-            continue
-        if a in seen:
+        if a in seen:                               # any provider: `deepseek,deepseek` too
             out.append(f"{a!r}: DUPLICATE_ARM -- named twice")
             continue
         seen.add(a)
+        m = featherless_arm_model(a)
+        if m is None:
+            continue
         if not m:
             out.append(f"{a!r}: NO_MODEL -- write featherless:<id>, ids in config.FEATHERLESS_MODELS: "
                        f"{list(listed)}")
@@ -862,6 +862,34 @@ def bakeoff_arm_refusals(arms: tuple[str, ...]) -> list[str]:
             except PB.BudgetRefused as exc:
                 out.append(f"{a!r}: UNPRICED -- {exc}")
     return out
+
+
+def _arm_key_env(arm: str) -> str | None:
+    """The env var holding the key a PAID arm needs; None for rules/local."""
+    if featherless_arm_model(arm) is not None:
+        return str(getattr(_cfg, "FEATHERLESS_KEY_ENV", "FEATHERLESS_API_KEY"))
+    return {"deepseek": "DEEPSEEK_API_KEY", "nvidia": "NVIDIA_API_KEY"}.get(arm)
+
+
+def bakeoff_key_refusals(arms: tuple[str, ...]) -> list[str]:
+    """A named refusal per paid arm whose key env var is empty -- checked BEFORE
+    sampling, so no arm spends while another is doomed. Names the variable,
+    never prints a value."""
+    import os
+    out = []
+    for a in arms:
+        env = _arm_key_env(a)
+        if env and not os.getenv(env, "").strip():
+            out.append(f"{a!r}: NO_KEY -- {env} is not set in the environment")
+    return out
+
+
+def default_receipt_name(now: datetime | None = None) -> str:
+    """`bakeoff_E-G1_<UTC date>T<HHMMSS>Z.json`: a second run the same day
+    gets its own file. Sorts after the date-only 2026-09-26 receipt, so
+    `compare_text`'s `_latest(bakeoff_E-G1_*.json)` still finds the newest."""
+    t = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    return f"bakeoff_{BAKEOFF_ID}_{t.strftime('%Y-%m-%dT%H%M%SZ')}.json"
 
 
 def _arm_call(arm: str, item: dict, system: str, call_fn) -> dict:
@@ -1082,7 +1110,7 @@ def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call
     every = int(flush_every or getattr(_cfg, "MODEL_ROUTING_BAKEOFF_FLUSH_EVERY", 20))
     gap = float(nvidia_gap_s if nvidia_gap_s is not None
                 else getattr(_cfg, "MODEL_ROUTING_BAKEOFF_NVIDIA_MIN_GAP_S", 2.0))
-    out_path = Path(out_path or receipt_dir() / f"bakeoff_{BAKEOFF_ID}_{date.today()}.json")
+    out_path = Path(out_path or receipt_dir() / default_receipt_name())
     out_path.parent.mkdir(parents=True, exist_ok=True)
     rows: list[dict] = []
     lock = threading.Lock()
@@ -1333,7 +1361,8 @@ def route(cmd: str, args: list[str], *, call_fn=None, quest_fn=None,
 __all__ = ["ROUTES", "DETERMINISTIC", "route", "ask", "deep", "research", "evidence",
            "evidence_text", "compare_text", "bakeoff_sample", "run_bakeoff", "bakeoff_system",
            "parse_extraction", "rules_arm", "grade_extraction", "grade_promises_daily",
-           "featherless_arm_model", "bakeoff_arm_refusals", "bakeoff_plan", "cohen_kappa",
+           "featherless_arm_model", "bakeoff_arm_refusals", "bakeoff_key_refusals",
+           "default_receipt_name", "bakeoff_plan", "cohen_kappa",
            "pairwise_agreement", "pairwise_lines",
            "nav_text", "status_text", "books_text", "forecasts_text", "footer",
            "deep_provider"]
