@@ -493,7 +493,7 @@ docker compose up --build
 
 ## Discipline Skills (.claude/skills/)
 
-Five project skills codify the disciplines that keep getting skipped — invoke
+Six project skills codify the disciplines that keep getting skipped — invoke
 them at their trigger points, don't re-derive the procedure:
 
 | Skill | Trigger |
@@ -502,6 +502,7 @@ them at their trigger points, don't re-derive the procedure:
 | `lane-integrity-check` | before/after any change near lanes, lane YAMLs, rebalance, or NAV tables |
 | `seed-a-lane` | any new paper lane (attended, env-gated; human flips flags) |
 | `pre-register-trial` | before any new signal/strategy/hypothesis accrues or is evaluated on data |
+| `run-a-chunk` | executing roadmap rows with agents: brain, builders in worktrees, adversarial reviewer, merge by the brain only; resuming interrupted builders |
 | `silent-fragility-audit` | after adding collectors/fetchers/loaders/try-except; "audit X" requests |
 
 ## Rules

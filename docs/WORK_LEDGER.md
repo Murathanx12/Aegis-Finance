@@ -15,12 +15,17 @@ removed when that chunk merges.
 
 | Chunk | Agent / session | Worktree | Files claimed | Opened | Status | Receipt / PR |
 |---|---|---|---|---|---|---|
+| CH-13 autopsy | none (builder stopped 11-12; brief a fresh one) | `aegis-wt/ch13-autopsy` | `backend/services/discovery_autopsy.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch13-autopsy` `19cb296b` |
+| CH-11 twins | none (builder stopped 11-12) | `aegis-wt/ch11-twins` | `scripts/matched_twin_reeval.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch11-twins` `d6c2979d` |
+| CH-12 news grade | none (builder stopped 11-12) | `aegis-wt/ch12-news-grade` | `scripts/ch12_news_grade.py`, its tests | 2026-11-11 | interrupted, unreviewed | branch `s65/ch12-news-grade` `97039739` |
+| CH-28 CI minutes | Claude S65 (brain) | `aegis-wt/ch28-ci` | `scripts/ci_minutes.py`, its tests, `.github/workflows/*` | 2026-11-12 | measured; design and tests owed | branch `s65/ch28-ci` `340d2544` |
 | setup | Claude S63 | `aegis-docs-setup-20261109` (sparse) | `docs/ROADMAP_2026-11-09_*`, `docs/ASKED_VS_DELIVERED_2026-11-09.md`, `docs/WORK_LEDGER.md`, `docs/INDEX.md`, `CLAUDE.md`, `AGENTS.md`, `CITATION.cff`, `CONTRIBUTING.md` | 2026-11-09 | closed | `b8007f5c` |
 
 ## Closed
 
 | Chunk | Agent | Closed | Outcome |
 |---|---|---|---|
+| S65 handoff: CH-02 safety snapshot (no repo file; evidence folder, bundle, keep refs, two pushed branches); `run-a-chunk` skill (`.claude/skills/run-a-chunk/*`); roadmap and ledger amendments | Claude S65 | 2026-11-12 | done; #117 merged before it |
 | S65 late night: CH-01 owner calls (`backend/services/owner_calls.py`, `scripts/owner_calls.py`, `backend/tests/test_owner_calls.py`, `docs/TRIALS/OWNER-CALLS-CONTRACT-v1.json`, three `docs/TRIALS/TRIAL-OWNER-CALL-*` documents) | Claude S65 | 2026-11-11 | frozen and pushed before the 11-12 UTC inception; owner signature, three probabilities and `register` pending (OD-13); `record` has no scheduled caller yet, so forward days are pinned by hand until a later release |
 | S65 night: CH-31 typed 8-K family + `--no-write` writes nothing (`backend/services/one_event.py`, `scripts/one_event.py`) | Claude S65 | 2026-11-11 | done; chain still DEGRADED by measured verdict; OD-12 open (what counts as the finished state) |
 | S65 night: pinned-source restores for the SEC raw collector and the T04 monitor (runtime bytes only, no repo file); public assets test (`backend/tests/test_public_assets.py`, #115) | Claude S65 | 2026-11-11 | pins restored and hash-verified, each job's own next receipt still to be read; publication worktree repair waits for the owner |
