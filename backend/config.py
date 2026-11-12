@@ -4245,6 +4245,21 @@ AUTOPSY_PANEL_MAX_SESSIONS_BEHIND = 1
 #: calendar days of bars loaded before D: enough for the 63-session dollar-volume
 #: floor and the 60-session beta window, with holidays.
 AUTOPSY_LOAD_CALENDAR_DAYS = 120
+#: the ranker-eligibility approximation: median daily dollar volume over this
+#: many sessions before D, computed only with at least the minimum observations
+#: (xs_ranker's 63-session window).
+AUTOPSY_RANKER_DV_SESSIONS = 63
+AUTOPSY_RANKER_DV_MIN_OBS = 40
+#: a one-bar raw move beyond these bounds, on a name whose previous close was
+#: at least AUTOPSY_MIN_PRICE, is far more often a split, spin-off or bad bar
+#: than an event (the review found CTVA -83.8% on 2026-10-01, AZN +103% on
+#: 2026-02-02; 137 such bars in the panel). It is classed
+#: SUSPECT_CORPORATE_ACTION, listed and counted, and never ranked or seeded.
+AUTOPSY_SUSPECT_UP = 0.90
+AUTOPSY_SUSPECT_DOWN = -0.45
+#: the forecast ledger counts as frozen when its newest row made before D's
+#: open is older than this; a frozen ledger turns every mover into "missed".
+AUTOPSY_LEDGER_MAX_AGE_DAYS = 3
 
 # ── u_forecast: the sim's daily investigator forecasts (Builder O1, 2026-09-25) ──
 #: Hard ceiling on names asked per UTC day. The union (Murat's book, every
