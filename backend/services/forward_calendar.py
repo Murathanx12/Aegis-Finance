@@ -10,15 +10,20 @@ the one: every universe name, every pull kept.
 
 THE STORE (append-only, never rewritten)
     <root>/forward_calendar/snapshots/fc_<YYYYmmddTHHMMSSZ>_<h6>.jsonl
-        one row per ticker per pull (`row_kind: earnings`) with `pulled_utc`, the
-        date, the vendor's confirmation flag, the time of day, the source and the
-        raw vendor fields; plus the macro half (`row_kind: macro` / `macro_refusal`)
-        from `macro_calendar.macro_block()`, stored the same way.
+        a `pull_header` row (ticker-list hash, requested count, scope), then one row
+        per ticker per pull (`row_kind: earnings`) with `pulled_utc`, the date, the
+        vendor's confirmation flag, the time of day, whether the event TIME is known,
+        the last reported event, the source and the raw vendor fields; plus the macro
+        half (`row_kind: macro` / `macro_refusal`) from `macro_calendar.macro_block()`.
     <root>/forward_calendar/snapshots/fc_<...>_receipt.json
-        requested / fetched / failed / no-date counts and the share covered.
-    A pull writes `fc_<...>.partial.jsonl` batch by batch (resumable), and is
-    renamed to its final name once, at the end. A final file or receipt that
-    already exists is never replaced: the pull REFUSES.
+        requested / answered / with-date / failed counts, both shares, the scope.
+    <root>/forward_calendar/snapshots/fc_<...>_index.json
+        file, pulled_utc range, row counts, the tickers in it: the reader decides from
+        the index which files it must open, and a file shorter than its index is DAMAGED.
+    A pull holds `forward_calendar/.pull.lock` (disk_guard.file_lock) for its whole
+    run, writes `fc_<...>.partial.jsonl` batch by batch (resumable only by a pull with
+    the SAME ticker list), and is renamed to its final name once, at the end. A final
+    file or receipt that already exists is never replaced: the pull REFUSES.
 
 POINT IN TIME
     Earnings dates are revised. "What did we believe on day D about ticker T's
@@ -26,18 +31,25 @@ POINT IN TIME
     `pulled_utc` is at or before D, never a later one. A ticker with no row by D
     is NOT_COVERED, which is a different fact from NO_DATE_IN_HORIZON (we looked
     and the vendor had no date inside the horizon), and a row older than
-    `FORWARD_CALENDAR_STALE_DAYS` is CALENDAR_STALE, never served as fresh.
+    `FORWARD_CALENDAR_STALE_DAYS` is CALENDAR_STALE, never served as fresh. A date
+    that has HAPPENED by `now` (the event time when known, else the close of its New
+    York session) is never "next": it is returned as `last_reported`. When a newer
+    snapshot is damaged (unparseable lines, or fewer rows than its index), a ticker
+    served from an older one is labelled FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED.
 
 RED WHEN BROKEN
-    `check_coverage(receipt)` raises `ForwardCalendarRefused(LOW_COVERAGE)` when
-    fewer than `FORWARD_CALENDAR_MIN_DATE_SHARE` of the issuers asked for came
-    back with a date; the CLI turns that into rc 2. `p_forward_calendar` is the
-    `system_health` row: UNKNOWN with no receipt, STALE when the newest receipt is
-    old or was a low-coverage pull, dated by the receipt's own stamp (never mtime).
+    `check_coverage(receipt)` raises when fewer than FORWARD_CALENDAR_MIN_ANSWERED_SHARE
+    of the names got any vendor answer (LOW_COVERAGE), or fewer than
+    FORWARD_CALENDAR_MIN_DATE_SHARE of the issuers got a date (LOW_DATE_SHARE); the CLI
+    turns either into rc 2. `p_forward_calendar` is the `system_health` row: UNKNOWN
+    with no full-universe receipt, STALE when it is old, low, or its snapshot is
+    damaged; dated by the receipt's own stamp (never mtime). `--tickers`/`--limit`
+    pulls are PARTIAL and never count for freshness.
 
 CLOCKS
     `pulled_utc` is UTC at the moment the batch answered. "Today" for a report
-    date is the America/New_York date (the market's), not the PC's (UTC+8).
+    date is the America/New_York date (the market's), never the PC's (UTC+8);
+    nothing here calls `date.today()`.
 """
 from __future__ import annotations
 
@@ -53,10 +65,11 @@ from zoneinfo import ZoneInfo
 
 from backend import config as C
 
-SCHEMA = "forward-calendar/1"
+SCHEMA = "forward-calendar/2"
 SNAPSHOT_SUBDIR = "snapshots"
 SOURCE = "yahoo/v7/finance/quote (yfinance YfData transport)"
 NY = ZoneInfo("America/New_York")
+LOCK_NAME = ".pull.lock"
 
 # row status (what one pull saw)
 DATE = "DATE"
@@ -68,18 +81,30 @@ DATE_IN_HORIZON = "DATE_IN_HORIZON"
 NO_DATE_IN_HORIZON = "NO_DATE_IN_HORIZON"
 NOT_COVERED = "NOT_COVERED"
 CALENDAR_STALE = "CALENDAR_STALE"
-LABELS = (DATE_IN_HORIZON, NO_DATE_IN_HORIZON, NOT_COVERED, CALENDAR_STALE)
+FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED = "FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED"
+LABELS = (DATE_IN_HORIZON, NO_DATE_IN_HORIZON, NOT_COVERED, CALENDAR_STALE,
+          FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED)
+#: reason on a NO_DATE_IN_HORIZON whose stored date has already happened at `now`
+LAST_REPORTED = "LAST_REPORTED"
+
+# pull scope: only a full-universe pull counts for freshness
+FULL_UNIVERSE = "FULL_UNIVERSE"
+PARTIAL = "PARTIAL"
 
 # refusal codes
 LOW_COVERAGE = "LOW_COVERAGE"
+LOW_DATE_SHARE = "LOW_DATE_SHARE"
 UNIVERSE_EMPTY = "UNIVERSE_EMPTY"
 DATA_ROOT_MISSING = "DATA_ROOT_MISSING"
 SNAPSHOT_EXISTS = "SNAPSHOT_EXISTS"
+RESUME_MISMATCH = "RESUME_MISMATCH"
+PULL_LOCKED = "SKIP_PULL_LOCKED"
 
 _FINAL_RE = re.compile(r"^fc_(\d{8}T\d{6}Z)_([0-9a-f]{6})\.jsonl$")
 _PARTIAL_RE = re.compile(r"^fc_(\d{8}T\d{6}Z)_([0-9a-f]{6})\.partial\.jsonl$")
 _RECEIPT_RE = re.compile(r"^fc_(\d{8}T\d{6}Z)_([0-9a-f]{6})_receipt\.json$")
 _TICKER_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,11}$")
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 #: Raw vendor fields kept on every row (the rest of the quote is not calendar data).
 RAW_FIELDS = ("earningsTimestamp", "earningsTimestampStart", "earningsTimestampEnd",
               "isEarningsDateEstimate", "earningsCallTimestampStart",
@@ -300,7 +325,26 @@ def build_universe(data_root: Path, now: datetime, *, funnel_path: Optional[Path
             "sources": {k: m for k, (_s, m) in parts.items()}}
 
 
-# ─────────────────────────────────────────────── 2. parsing one vendor quote
+
+# ─────────────────────────────────────────────── 2. when has an event happened
+
+def session_close_utc(d: date) -> datetime:
+    """16:00 New York on `d`, in UTC (DST-aware)."""
+    return datetime(d.year, d.month, d.day, 16, 0, tzinfo=NY).astimezone(timezone.utc)
+
+
+def event_passed(day: Any, event_utc: Any, time_known: bool, now: datetime) -> bool:
+    """True once the event has HAPPENED at `now`: at its own time when that is known,
+    else once the New York session of its date has closed. Never a date-only compare
+    against the New York date (a Tokyo 06:00 UTC report is over by New York's open)."""
+    d = day if isinstance(day, date) else date.fromisoformat(str(day)[:10])
+    t = _utc(event_utc) if time_known else None
+    if t is not None:
+        return t <= now
+    return now >= session_close_utc(d)
+
+
+# ─────────────────────────────────────────────── 3. parsing one vendor quote
 
 def _ts(v: Any) -> Optional[datetime]:
     try:
@@ -312,33 +356,43 @@ def _ts(v: Any) -> Optional[datetime]:
     return datetime.fromtimestamp(f, tz=timezone.utc)
 
 
-def _day_and_timing(t: datetime, *, us: bool, tz_name: Optional[str]) -> tuple[date, str]:
-    """(report day, BMO/AMC/INTRA/UNKNOWN). A stamp at exactly 00:00:00 UTC is how
-    the vendor writes 'time not supplied' (contest_calendar.is_untimed_stamp): its
-    day is the UTC date and its time UNKNOWN."""
+def _tz(us: bool, tz_name: Optional[str]) -> Any:
+    if us:
+        return NY
+    try:
+        return ZoneInfo(tz_name) if tz_name else timezone.utc
+    except Exception:                                                  # noqa: BLE001
+        return timezone.utc
+
+
+def _day_and_timing(t: datetime, *, us: bool, tz_name: Optional[str]) -> tuple[date, str, bool]:
+    """(report day, BMO/AMC/INTRA/UNKNOWN, time_known). A stamp at exactly 00:00:00
+    UTC is how the vendor writes 'time not supplied' (contest_calendar.is_untimed_stamp):
+    its day is the UTC date and its time unknown; so is a local-midnight stamp. Non-US
+    listings keep the real event time (time_known) but timing is UNKNOWN: only the US
+    09:30/16:00 session rule is applied."""
     if (t.hour, t.minute, t.second) == (0, 0, 0):
-        return t.date(), "UNKNOWN"
+        return t.date(), "UNKNOWN", False
+    loc = t.astimezone(_tz(us, tz_name))
+    if (loc.hour, loc.minute, loc.second) == (0, 0, 0):
+        return loc.date(), "UNKNOWN", False
     if not us:
-        try:
-            tz = ZoneInfo(tz_name) if tz_name else timezone.utc
-        except Exception:                                              # noqa: BLE001
-            tz = timezone.utc
-        return t.astimezone(tz).date(), "UNKNOWN"
-    loc = t.astimezone(NY)
-    if (loc.hour, loc.minute) == (0, 0):
-        return loc.date(), "UNKNOWN"
+        return loc.date(), "UNKNOWN", True
     mins = loc.hour * 60 + loc.minute
     timing = "AMC" if mins >= 16 * 60 else "BMO" if mins < 9 * 60 + 30 else "INTRA"
-    return loc.date(), timing
+    return loc.date(), timing, True
 
 
 def parse_quote(ticker: str, ysym: str, q: Optional[dict], *, pulled_utc: datetime,
                 pull_id: str) -> dict:
-    """One snapshot row from one vendor quote (None = the symbol was not in the reply)."""
+    """One snapshot row from one vendor quote (None = the symbol was not in the reply).
+    A candidate date that has already happened at `pulled_utc` is the LAST reported
+    event, never the next one."""
     base = {"schema": SCHEMA, "row_kind": "earnings", "pull_id": pull_id,
             "pulled_utc": _iso(pulled_utc), "ticker": ticker, "yahoo_symbol": ysym,
             "source": SOURCE, "next_date": None, "date_end": None, "timing": None,
-            "confirmation": None, "event_utc": None, "call_utc": None,
+            "confirmation": None, "event_utc": None, "event_time_known": False,
+            "call_utc": None, "last_reported_date": None, "last_reported_utc": None,
             "no_date_reason": None, "error": None}
     if q is None:
         return {**base, "status": FAILED, "error": "NOT_IN_RESPONSE", "raw": None}
@@ -347,7 +401,6 @@ def parse_quote(ticker: str, ysym: str, q: Optional[dict], *, pulled_utc: dateti
     qt = str(q.get("quoteType") or "").upper()
     if qt in _NOT_ISSUER_TYPES:
         return {**base, "status": NO_DATE, "no_date_reason": f"NOT_AN_ISSUER ({qt})"}
-    today = market_date(pulled_utc)
     cands = []
     for k in ("earningsTimestampStart", "earningsTimestamp"):
         t = _ts(q.get(k))
@@ -357,21 +410,23 @@ def parse_quote(ticker: str, ysym: str, q: Optional[dict], *, pulled_utc: dateti
         return {**base, "status": NO_DATE, "no_date_reason": "VENDOR_HAS_NO_EARNINGS_FIELDS"}
     us = "." not in ysym                    # no exchange suffix: a US listing
     tz_name = q.get("exchangeTimezoneName")
-    future = []
+    est = q.get("isEarningsDateEstimate")
+    future, past = [], []
     for t in sorted(set(cands)):
-        d, tim = _day_and_timing(t, us=us, tz_name=tz_name)
-        if d >= today:
-            future.append((d, tim, t))
+        d, tim, known = _day_and_timing(t, us=us, tz_name=tz_name)
+        known = known and est is not True   # an estimated date's time is not information
+        (past if event_passed(d, t, known, pulled_utc) else future).append((d, tim, t, known))
+    if past:
+        d, _tim, t, known = past[-1]
+        base["last_reported_date"] = d.isoformat()
+        base["last_reported_utc"] = _iso(t) if known else None
     if not future:
-        return {**base, "status": NO_DATE, "no_date_reason": "ONLY_PAST_DATES",
-                "event_utc": _iso(max(cands))}
-    d, tim, t = future[0]
+        return {**base, "status": NO_DATE, "no_date_reason": "ONLY_PAST_DATES"}
+    d, tim, t, known = future[0]
     end = _ts(q.get("earningsTimestampEnd"))
     end_d = _day_and_timing(end, us=us, tz_name=tz_name)[0] if end is not None else None
-    est = q.get("isEarningsDateEstimate")
     if est is True or (end_d is not None and end_d != d):
-        conf = "VENDOR_ESTIMATE"
-        tim = "UNKNOWN"                     # an estimated date's time is not information
+        conf, tim, known = "VENDOR_ESTIMATE", "UNKNOWN", False
     elif est is False:
         conf = "VENDOR_ANNOUNCED"
     else:
@@ -379,10 +434,11 @@ def parse_quote(ticker: str, ysym: str, q: Optional[dict], *, pulled_utc: dateti
     call = _ts(q.get("earningsCallTimestampStart"))
     return {**base, "status": DATE, "next_date": d.isoformat(),
             "date_end": end_d.isoformat() if end_d else None, "timing": tim,
-            "confirmation": conf, "event_utc": _iso(t), "call_utc": _iso(call)}
+            "confirmation": conf, "event_utc": _iso(t), "event_time_known": bool(known),
+            "call_utc": _iso(call)}
 
 
-# ─────────────────────────────────────────────── 3. the default fetcher (network)
+# ─────────────────────────────────────────────── 4. the default fetcher (network)
 
 def yahoo_quote_batch(symbols: list[str]) -> dict[str, dict]:
     """{yahoo symbol: quote} for one batch, through yfinance's own transport. Raises on
@@ -405,27 +461,68 @@ def _is_rate_limit(exc: Exception) -> bool:
     return "too many requests" in text or "rate limit" in text or "429" in text
 
 
-# ─────────────────────────────────────────────── 4. the pull (append-only, resumable)
+# ─────────────────────────────────────────────── 5. reading a snapshot (damage counted)
+
+def _valid_row(r: Any) -> bool:
+    if not isinstance(r, dict):
+        return False
+    if r.get("row_kind") != "earnings":
+        return True
+    if not isinstance(r.get("ticker"), str) or _utc(r.get("pulled_utc")) is None:
+        return False
+    for k in ("next_date", "last_reported_date"):
+        v = r.get(k)
+        if v is not None:
+            if not isinstance(v, str) or not _DATE_RE.match(v):
+                return False
+            try:
+                date.fromisoformat(v)
+            except ValueError:
+                return False
+    if r.get("status") not in (DATE, NO_DATE, FAILED):
+        return False
+    return not (r.get("status") == DATE and not r.get("next_date"))
+
+
+def read_snapshot(p: Path) -> tuple[list[dict], int]:
+    """(rows, n_bad): every line that is not valid UTF-8, not JSON, not an object, or an
+    earnings row with a malformed date/stamp/status is COUNTED as bad, never dropped
+    silently. A file that cannot be read at all is (rows=[], n_bad=-1)."""
+    try:
+        data = Path(p).read_bytes()
+    except OSError:
+        return [], -1
+    rows, bad = [], 0
+    for line in data.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            r = json.loads(line.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            bad += 1
+            continue
+        if not _valid_row(r):
+            bad += 1
+            continue
+        rows.append(r)
+    return rows, bad
+
 
 def _read_jsonl(p: Path) -> list[dict]:
-    out = []
-    with Path(p).open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                out.append(json.loads(line))
-            except ValueError:
-                continue
-    return out
+    return read_snapshot(p)[0]
 
+
+# ─────────────────────────────────────────────── 6. the pull (locked, append-only, resumable)
 
 def _append(fh: Any, rows: Iterable[dict]) -> None:
     for r in rows:
         fh.write(json.dumps(r, sort_keys=True, ensure_ascii=True, default=str) + "\n")
     fh.flush()
     os.fsync(fh.fileno())
+
+
+def tickers_sha(tickers: list[str]) -> str:
+    return hashlib.sha256(json.dumps(sorted(tickers)).encode()).hexdigest()
 
 
 def _resumable_partial(snap: Path, now: datetime) -> Optional[Path]:
@@ -443,17 +540,17 @@ def _resumable_partial(snap: Path, now: datetime) -> Optional[Path]:
 def pull(tickers: list[str], out_root: Path, *, fetch: Optional[Callable[[list[str]], dict]] = None,
          macro: Any = None, now_fn: Callable[[], datetime] = _utcnow,
          sleep_fn: Callable[[float], None] = time.sleep, batch_size: Optional[int] = None,
-         universe_meta: Optional[dict] = None, resume: bool = True) -> dict:
-    """Fetch the next earnings date for every ticker and append ONE snapshot.
+         universe_meta: Optional[dict] = None, resume: bool = True,
+         scope: str = PARTIAL) -> dict:
+    """Fetch the next earnings date for every ticker and append ONE snapshot, holding
+    the store's OS lock for the whole run (a second pull refuses SKIP_PULL_LOCKED).
 
-    Returns the receipt (also written beside the snapshot). Every requested ticker
-    gets a row: DATE, NO_DATE (looked, vendor had none) or FAILED (with the error).
-    Low coverage is NOT raised here (the rows are true observations and are kept);
-    `check_coverage(receipt)` is the red exit."""
-    fetch = fetch or yahoo_quote_batch
-    bs = int(batch_size or _cfg("FORWARD_CALENDAR_BATCH_SIZE", 50))
-    gap = float(_cfg("FORWARD_CALENDAR_BATCH_SLEEP_S", 2.0))
-    backoff = float(_cfg("FORWARD_CALENDAR_RATE_LIMIT_BACKOFF_S", 60.0))
+    `scope` is FULL_UNIVERSE only when the CLI pulled the whole universe; only such a
+    receipt counts for freshness. Every requested ticker gets a row: DATE, NO_DATE
+    (looked, vendor had none) or FAILED (with the error). Low coverage is NOT raised
+    here (the rows are true observations and are kept); `check_coverage(receipt)` is
+    the red exit."""
+    from backend.services import disk_guard as DG                      # noqa: PLC0415
     want = []
     for t in tickers:
         s = norm_ticker(t)
@@ -463,19 +560,47 @@ def pull(tickers: list[str], out_root: Path, *, fetch: Optional[Callable[[list[s
         raise ForwardCalendarRefused(UNIVERSE_EMPTY, "no valid ticker to pull")
     snap = snapshots_dir(out_root)
     snap.mkdir(parents=True, exist_ok=True)
+    try:
+        with DG.file_lock(store_dir(out_root) / LOCK_NAME, timeout_s=0):
+            return _pull_locked(want, out_root, snap, fetch=fetch or yahoo_quote_batch, macro=macro,
+                                now_fn=now_fn, sleep_fn=sleep_fn, batch_size=batch_size,
+                                universe_meta=universe_meta, resume=resume, scope=scope)
+    except DG.FileLockTimeout as exc:
+        raise ForwardCalendarRefused(PULL_LOCKED, f"another forward-calendar pull holds "
+                                                  f"{store_dir(out_root) / LOCK_NAME}: {exc}") from exc
+
+
+def _pull_locked(want: list[str], out_root: Path, snap: Path, *, fetch: Callable, macro: Any,
+                 now_fn: Callable[[], datetime], sleep_fn: Callable[[float], None],
+                 batch_size: Optional[int], universe_meta: Optional[dict], resume: bool,
+                 scope: str) -> dict:
+    bs = int(batch_size or _cfg("FORWARD_CALENDAR_BATCH_SIZE", 50))
+    gap = float(_cfg("FORWARD_CALENDAR_BATCH_SLEEP_S", 2.0))
+    backoff = float(_cfg("FORWARD_CALENDAR_RATE_LIMIT_BACKOFF_S", 60.0))
+    sha = tickers_sha(want)
     started = now_fn()
     part = _resumable_partial(snap, started) if resume else None
     done: set = set()
     resumed_from = None
     if part is not None:
+        rows0, _bad0 = read_snapshot(part)
+        hdr = next((r for r in rows0 if r.get("row_kind") == "pull_header"), None)
+        if hdr is None or hdr.get("tickers_sha") != sha or hdr.get("n_requested") != len(want):
+            raise ForwardCalendarRefused(
+                RESUME_MISMATCH,
+                f"{part.name} was started for {((hdr or {}).get('n_requested'))} tickers "
+                f"(list {str((hdr or {}).get('tickers_sha'))[:12]}), this pull asks for {len(want)} "
+                f"(list {sha[:12]}): not adopted. Re-run with the same list, or `--no-resume` "
+                f"to start a new pull (the partial is left in place)")
         resumed_from = part.name
         m = _PARTIAL_RE.match(part.name)
         pull_id = f"fc_{m.group(1)}_{m.group(2)}"
-        for r in _read_jsonl(part):
+        scope = hdr.get("scope") or scope
+        for r in rows0:
             if r.get("row_kind") == "earnings" and r.get("status") in (DATE, NO_DATE):
                 done.add(r.get("ticker"))
     else:
-        h = hashlib.sha256(json.dumps([_iso(started), want]).encode()).hexdigest()[:6]
+        h = hashlib.sha256(json.dumps([_iso(started), sha]).encode()).hexdigest()[:6]
         pull_id = f"fc_{_stamp(started)}_{h}"
         part = snap / f"{pull_id}.partial.jsonl"
     final = snap / f"{pull_id}.jsonl"
@@ -486,6 +611,10 @@ def pull(tickers: list[str], out_root: Path, *, fetch: Optional[Callable[[list[s
     batches = [todo[i:i + bs] for i in range(0, len(todo), bs)]
     n_requests, n_rate_limited, stopped = 0, 0, None
     with part.open("a", encoding="utf-8", newline="\n") as fh:
+        if resumed_from is None:
+            _append(fh, [{"schema": SCHEMA, "row_kind": "pull_header", "pull_id": pull_id,
+                          "started_utc": _iso(started), "tickers_sha": sha,
+                          "n_requested": len(want), "scope": scope}])
         for bi, batch in enumerate(batches):
             ymap = {yahoo_symbol(t): t for t in batch}
             if stopped:
@@ -522,26 +651,42 @@ def pull(tickers: list[str], out_root: Path, *, fetch: Optional[Callable[[list[s
         macro_rows = _macro_rows(macro, pull_id, now_fn) if macro is not False else []
         if macro_rows:
             _append(fh, macro_rows)
-    rows = _read_jsonl(part)
+    rows, n_bad = read_snapshot(part)
     receipt = _receipt(rows, want, pull_id=pull_id, started=started, finished=now_fn(),
                        n_requests=n_requests, n_rate_limited=n_rate_limited, stopped=stopped,
-                       resumed_from=resumed_from, universe_meta=universe_meta, batch_size=bs)
+                       resumed_from=resumed_from, universe_meta=universe_meta, batch_size=bs,
+                       scope=scope, tickers_sha=sha, n_bad_lines=n_bad)
     if final.exists():
         raise ForwardCalendarRefused(SNAPSHOT_EXISTS, f"{final.name} appeared during the pull")
     os.replace(part, final)
-    tmp = rec_p.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(receipt, indent=1, sort_keys=True, default=str), encoding="utf-8")
-    os.replace(tmp, rec_p)
+    _write_json(rec_p, receipt)
+    _write_json(snap / f"{pull_id}_index.json", _index(final, rows, scope))
     receipt["snapshot_path"] = str(final)
     receipt["receipt_path"] = str(rec_p)
     return receipt
 
 
-def _macro_rows(macro: Optional[Callable[[], dict]], pull_id: str,
-                now_fn: Callable[[], datetime]) -> list[dict]:
+def _write_json(p: Path, obj: dict) -> None:
+    tmp = p.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(obj, indent=1, sort_keys=True, default=str), encoding="utf-8")
+    os.replace(tmp, p)
+
+
+def _index(final: Path, rows: list[dict], scope: str) -> dict:
+    ear = [r for r in rows if r.get("row_kind") == "earnings"]
+    pts = sorted(str(r["pulled_utc"]) for r in rows if r.get("pulled_utc"))
+    return {"schema": SCHEMA, "file": final.name, "scope": scope, "n_rows": len(rows),
+            "n_earnings_rows": len(ear),
+            "first_pulled_utc": pts[0] if pts else None, "last_pulled_utc": pts[-1] if pts else None,
+            "usable_tickers": sorted({r["ticker"] for r in ear if r.get("status") in (DATE, NO_DATE)}),
+            "failed_tickers": sorted({r["ticker"] for r in ear if r.get("status") == FAILED})}
+
+
+def _macro_rows(macro: Any, pull_id: str, now_fn: Callable[[], datetime]) -> list[dict]:
     """The macro half, from `macro_calendar.macro_block()` (CPI/NFP via FRED, FOMC from
     the seeded table). A refused leg is stored as a `macro_refusal` row, never as an
-    empty calendar."""
+    empty calendar. NOTE: macro_calendar dates its horizon by the PC's `date.today()`
+    (not this module's clock); its rows are stored as it returns them."""
     if macro is None:
         from backend.services import macro_calendar as MC              # noqa: PLC0415
         macro = MC.macro_block
@@ -579,11 +724,17 @@ def _receipt(rows: list[dict], want: list[str], **kw: Any) -> dict:
     n_fail = sum(1 for v in st.values() if v == FAILED or v is None)
     not_issuer = sum(1 for t in want if str((latest.get(t) or {}).get("no_date_reason") or "")
                      .startswith("NOT_AN_ISSUER"))
-    denom = max(n_req - not_issuer, 0)
-    share = round(n_date / denom, 4) if denom else 0.0
-    min_share = float(_cfg("FORWARD_CALENDAR_MIN_DATE_SHARE", 0.60))
+    answered = n_date + n_no
+    answered_share = round(answered / n_req, 4) if n_req else 0.0
+    issuers = max(n_req - not_issuer, 0)
+    date_share = round(n_date / issuers, 4) if issuers else 0.0
+    min_ans = float(_cfg("FORWARD_CALENDAR_MIN_ANSWERED_SHARE", 0.90))
+    min_date = float(_cfg("FORWARD_CALENDAR_MIN_DATE_SHARE", 0.40))
+    status = (LOW_COVERAGE if answered_share < min_ans else
+              LOW_DATE_SHARE if date_share < min_date else "OK")
     reasons: dict[str, int] = {}
     errors: dict[str, int] = {}
+    conf: dict[str, int] = {}
     for t in want:
         r = latest.get(t) or {}
         if r.get("status") == NO_DATE:
@@ -591,22 +742,22 @@ def _receipt(rows: list[dict], want: list[str], **kw: Any) -> dict:
         if r.get("status") == FAILED:
             e = str(r.get("error") or "")[:60]
             errors[e] = errors.get(e, 0) + 1
-    conf: dict[str, int] = {}
-    for t in want:
-        r = latest.get(t) or {}
         if r.get("status") == DATE:
             conf[str(r.get("confirmation"))] = conf.get(str(r.get("confirmation")), 0) + 1
     macro = [r for r in rows if r.get("row_kind") == "macro"]
     mref = [r for r in rows if r.get("row_kind") == "macro_refusal"]
     return {"schema": SCHEMA, "receipt": "forward_calendar_pull", "pull_id": kw["pull_id"],
+            "scope": kw["scope"], "tickers_sha": kw["tickers_sha"],
             "started_utc": _iso(kw["started"]), "finished_utc": _iso(kw["finished"]),
             "source": SOURCE, "batch_size": kw["batch_size"], "n_requests": kw["n_requests"],
             "n_rate_limited": kw["n_rate_limited"], "stopped": kw["stopped"],
-            "resumed_from": kw["resumed_from"],
-            "requested": n_req, "fetched": n_date + n_no, "with_date": n_date, "no_date": n_no,
-            "failed": n_fail, "not_an_issuer": not_issuer,
-            "share_covered": share, "min_share": min_share,
-            "status": "OK" if share >= min_share else LOW_COVERAGE,
+            "resumed_from": kw["resumed_from"], "n_bad_lines": kw["n_bad_lines"],
+            "requested": n_req, "answered": answered, "fetched": answered, "with_date": n_date,
+            "no_date": n_no, "failed": n_fail, "not_an_issuer": not_issuer,
+            "answered_share": answered_share, "min_answered_share": min_ans,
+            "date_share": date_share, "min_date_share": min_date,
+            "share_covered": date_share,
+            "status": status,
             "no_date_reasons": reasons, "failure_errors": errors, "confirmation_counts": conf,
             "failed_tickers": sorted(t for t, v in st.items() if v in (FAILED, None))[:200],
             "macro": {"n_dates": len(macro), "n_refusals": len(mref),
@@ -615,17 +766,28 @@ def _receipt(rows: list[dict], want: list[str], **kw: Any) -> dict:
 
 
 def check_coverage(receipt: dict) -> None:
-    """Red when the pull returned (almost) nothing: raise with the counts."""
+    """Red when the pull returned (almost) nothing: raise with BOTH shares and the counts."""
     if receipt.get("status") != "OK":
         raise ForwardCalendarRefused(
-            LOW_COVERAGE,
-            f"{receipt.get('with_date')} of {receipt.get('requested')} names returned a date "
-            f"(share {receipt.get('share_covered')} < {receipt.get('min_share')}); "
-            f"failed {receipt.get('failed')}, no-date {receipt.get('no_date')}, "
+            str(receipt.get("status")),
+            f"answered {receipt.get('answered')} of {receipt.get('requested')} (share "
+            f"{receipt.get('answered_share')}, floor {receipt.get('min_answered_share')}); "
+            f"{receipt.get('with_date')} with a date (date share {receipt.get('date_share')}, floor "
+            f"{receipt.get('min_date_share')}); failed {receipt.get('failed')}, "
+            f"no-date {receipt.get('no_date')} {receipt.get('no_date_reasons')}, "
             f"errors {receipt.get('failure_errors')}")
 
 
-# ─────────────────────────────────────────────── 5. the reader (point in time)
+# ─────────────────────────────────────────────── 7. the reader (point in time)
+
+def _load_index(snap: Path, pull_id: str) -> Optional[dict]:
+    p = snap / f"{pull_id}_index.json"
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeDecodeError):
+        return None
+    return d if isinstance(d, dict) else None
+
 
 def _final_snapshots(root: Path, now: datetime) -> tuple[list[tuple[datetime, Path]], int]:
     snap = snapshots_dir(root)
@@ -642,72 +804,155 @@ def _final_snapshots(root: Path, now: datetime) -> tuple[list[tuple[datetime, Pa
     return sorted(out), skipped
 
 
+_SESSION_MEMO: dict = {}
+
+
+def sessions_away(today: date, d: date) -> tuple[Optional[int], str]:
+    """XNYS sessions s with today < s <= d (a report today = 0), via the project's
+    `counterfactual_prices.sessions_between` / `sessions_after` (exchange_calendars,
+    weekday arithmetic when absent; the basis is returned beside the count)."""
+    if d < today:
+        return None, "PASSED"
+    key = (today, d)
+    if key not in _SESSION_MEMO:
+        from backend.services import counterfactual_prices as CP            # noqa: PLC0415
+        n, basis = CP.sessions_between(today, d)
+        is_session = CP.sessions_after(today - timedelta(days=1), 1)[0] == today
+        _SESSION_MEMO[key] = (n if is_session else n + 1, basis)
+    return _SESSION_MEMO[key]
+
+
 def next_dates(tickers: Iterable[str], now: datetime, horizon_days: Optional[int] = None, *,
                root: Path, stale_days: Optional[float] = None) -> dict:
     """As of `now`: per ticker the newest row whose own `pulled_utc` <= `now` (a later
     row is never used), labelled DATE_IN_HORIZON / NO_DATE_IN_HORIZON / NOT_COVERED /
-    CALENDAR_STALE, with the row's age. `root` is the data root holding
+    CALENDAR_STALE / FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED, with its age. A stored date
+    that has happened by `now` is `last_reported`, never `date`.
+
+    Snapshots are read NEWEST FIRST; a file is opened only when its index says it holds
+    a ticker still unresolved (or it has no index / straddles `now`), and reading stops
+    once every ticker has a usable row. `root` is the data root holding
     `forward_calendar/`."""
     now = _utc(now)
     if now is None:
         raise ForwardCalendarRefused("NOW_INVALID", "now must be a datetime")
     hz = int(horizon_days if horizon_days is not None else _cfg("FORWARD_CALENDAR_HORIZON_DAYS", 120))
     sd = float(stale_days if stale_days is not None else _cfg("FORWARD_CALENDAR_STALE_DAYS", 3.0))
-    want = {}
+    want: dict[str, None] = {}
     for t in tickers:
         s = norm_ticker(t)
         if s:
             want[s] = None
+    snap = snapshots_dir(root)
     files, skipped = _final_snapshots(root, now)
-    usable: dict[str, dict] = {}
+    need = set(want)
+    usable: dict[str, tuple[dict, datetime]] = {}
     failed: dict[str, dict] = {}
-    n_rows_after_now = 0
-    for _t, f in files:
-        for r in _read_jsonl(f):
-            if r.get("row_kind") != "earnings" or r.get("ticker") not in want:
+    damaged: list[dict] = []
+    n_opened, n_rows_after_now = 0, 0
+    for stamp, f in reversed(files):
+        if not need:
+            break
+        m = _FINAL_RE.match(f.name)
+        idx = _load_index(snap, f"fc_{m.group(1)}_{m.group(2)}")
+        idx_tickers = None
+        if idx is not None:
+            idx_tickers = set(idx.get("usable_tickers") or []) | set(idx.get("failed_tickers") or [])
+            last = _utc(idx.get("last_pulled_utc"))
+            if last is not None and last <= now and not (need & idx_tickers):
+                continue                                   # nothing we still need: not opened
+        rows, n_bad = read_snapshot(f)
+        n_opened += 1
+        n_ear = sum(1 for r in rows if r.get("row_kind") == "earnings")
+        short = (idx is not None and isinstance(idx.get("n_earnings_rows"), int)
+                 and n_ear < idx["n_earnings_rows"])
+        if n_bad or short:
+            damaged.append({"file": f.name, "stamp_utc": _iso(stamp), "n_bad_lines": n_bad,
+                            "rows_missing_vs_index": (idx["n_earnings_rows"] - n_ear) if short else 0,
+                            "tickers": idx_tickers})
+        found: dict[str, dict] = {}
+        for r in rows:
+            if r.get("row_kind") != "earnings" or r.get("ticker") not in need:
                 continue
             pu = _utc(r.get("pulled_utc"))
-            if pu is None:
-                continue
             if pu > now:
                 n_rows_after_now += 1
                 continue
-            bucket = failed if r.get("status") == FAILED else usable
-            old = bucket.get(r["ticker"])
+            if r.get("status") == FAILED:
+                old = failed.get(r["ticker"])
+                if old is None or pu > _utc(old["pulled_utc"]):
+                    failed[r["ticker"]] = r
+                continue
+            old = found.get(r["ticker"])
             if old is None or pu >= _utc(old["pulled_utc"]):
-                bucket[r["ticker"]] = r
+                found[r["ticker"]] = r
+        for t, r in found.items():
+            usable[t] = (r, stamp)
+        need -= set(found)
     today = market_date(now)
     out: dict[str, dict] = {}
     for t in want:
-        u, fl = usable.get(t), failed.get(t)
+        u = usable.get(t)
+        fl = failed.get(t)
+        newer_damage = [d for d in damaged
+                        if (u is None or _utc(d["stamp_utc"]) > u[1])
+                        and (d["tickers"] is None or t in d["tickers"])]
         if u is None:
             out[t] = {"label": NOT_COVERED,
-                      "reason": "ONLY_FAILED_ATTEMPTS" if fl else "NO_ROW_BY_NOW",
+                      "reason": ("NEWEST_SNAPSHOT_DAMAGED" if newer_damage else
+                                 "ONLY_FAILED_ATTEMPTS" if fl else "NO_ROW_BY_NOW"),
+                      "damaged_snapshot": newer_damage[0]["file"] if newer_damage else None,
                       "last_error": (fl or {}).get("error"), "last_attempt_utc": (fl or {}).get("pulled_utc")}
             continue
-        pu = _utc(u["pulled_utc"])
+        u_row, u_stamp = u
+        pu = _utc(u_row["pulled_utc"])
         age = round((now - pu).total_seconds() / 86400, 3)
-        rec = {"pulled_utc": u["pulled_utc"], "pull_id": u.get("pull_id"), "age_days": age,
-               "date": u.get("next_date"), "date_end": u.get("date_end"), "timing": u.get("timing"),
-               "confirmation": u.get("confirmation"), "source": u.get("source"),
-               "row_status": u.get("status"), "no_date_reason": u.get("no_date_reason"),
-               "last_attempt_failed": bool(fl and _utc(fl["pulled_utc"]) > pu)}
-        d = date.fromisoformat(u["next_date"]) if u.get("next_date") else None
-        rec["days_away"] = (d - today).days if d else None
-        if age > sd:
+        rec = {"pulled_utc": u_row["pulled_utc"], "pull_id": u_row.get("pull_id"), "age_days": age,
+               "date": None, "date_end": u_row.get("date_end"), "timing": u_row.get("timing"),
+               "confirmation": u_row.get("confirmation"), "event_utc": u_row.get("event_utc"),
+               "event_time_known": bool(u_row.get("event_time_known")),
+               "source": u_row.get("source"), "row_status": u_row.get("status"),
+               "no_date_reason": u_row.get("no_date_reason"),
+               "last_reported": ({"date": u_row.get("last_reported_date"),
+                                  "event_utc": u_row.get("last_reported_utc")}
+                                 if u_row.get("last_reported_date") else None),
+               "last_attempt_failed": bool(fl and _utc(fl["pulled_utc"]) > pu),
+               "days_away": None, "days_away_basis": "calendar days from the New York date",
+               "sessions_away": None, "sessions_away_basis": None}
+        nd = u_row.get("next_date")
+        happened = bool(nd) and event_passed(nd, u_row.get("event_utc"),
+                                             bool(u_row.get("event_time_known")), now)
+        if happened:
+            rec["last_reported"] = {"date": nd, "event_utc": u_row.get("event_utc")
+                                    if u_row.get("event_time_known") else None}
+        elif nd:
+            d = date.fromisoformat(nd)
+            rec["date"] = nd
+            rec["days_away"] = (d - today).days
+            rec["sessions_away"], rec["sessions_away_basis"] = sessions_away(today, d)
+        if newer_damage:
+            dm = newer_damage[0]
+            out[t] = {"label": FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED,
+                      "reason": f"{dm['file']} damaged ({dm['n_bad_lines']} bad line(s), "
+                                f"{dm['rows_missing_vs_index']} row(s) missing vs its index); served "
+                                f"from the older snapshot pulled {u_row['pulled_utc']}",
+                      "damaged_snapshot": dm["file"], "damaged_snapshot_utc": dm["stamp_utc"], **rec}
+        elif age > sd:
             out[t] = {"label": CALENDAR_STALE, "reason": f"newest row {age} d old > {sd} d", **rec}
-        elif u.get("status") == NO_DATE:
-            out[t] = {"label": NO_DATE_IN_HORIZON, "reason": u.get("no_date_reason"), **rec}
-        elif d is None or d < today:
-            out[t] = {"label": NO_DATE_IN_HORIZON, "reason": "DATE_PASSED", **rec}
-        elif (d - today).days > hz:
+        elif u_row.get("status") == NO_DATE:
+            out[t] = {"label": NO_DATE_IN_HORIZON, "reason": u_row.get("no_date_reason"), **rec}
+        elif happened:
+            out[t] = {"label": NO_DATE_IN_HORIZON, "reason": LAST_REPORTED, **rec}
+        elif rec["days_away"] > hz:
             out[t] = {"label": NO_DATE_IN_HORIZON, "reason": "BEYOND_HORIZON", **rec}
         else:
             out[t] = {"label": DATE_IN_HORIZON, "reason": None, **rec}
     counts = {lab: sum(1 for v in out.values() if v["label"] == lab) for lab in LABELS}
     return {"as_of": _iso(now), "market_date": today.isoformat(), "horizon_days": hz,
-            "stale_days": sd, "store": str(snapshots_dir(root)), "n_snapshots_read": len(files),
+            "stale_days": sd, "store": str(snap), "n_snapshots_available": len(files),
+            "n_snapshots_opened": n_opened,
             "n_snapshots_after_now_skipped": skipped, "n_rows_after_now_skipped": n_rows_after_now,
+            "damaged_snapshots": [{k: v for k, v in d.items() if k != "tickers"} for d in damaged],
             "counts": counts, "tickers": out}
 
 
@@ -717,57 +962,82 @@ def next_macro(now: datetime, horizon_days: Optional[int] = None, *, root: Path)
     hz = int(horizon_days if horizon_days is not None else _cfg("FORWARD_CALENDAR_HORIZON_DAYS", 120))
     files, _ = _final_snapshots(root, now)
     for _t, f in reversed(files):
-        rows = [r for r in _read_jsonl(f) if str(r.get("row_kind", "")).startswith("macro")
+        rows = [r for r in read_snapshot(f)[0] if str(r.get("row_kind", "")).startswith("macro")
                 and (_utc(r.get("pulled_utc")) or now) <= now]
         if not rows:
             continue
         today = market_date(now)
         lo, hi = today.isoformat(), (today + timedelta(days=hz)).isoformat()
         legs = next((r for r in rows if r["row_kind"] == "macro_legs"), {})
+        dates = []
+        for r in rows:
+            ds = str(r.get("date") or "")[:10]
+            if r["row_kind"] == "macro" and _DATE_RE.match(ds) and lo <= ds <= hi:
+                dates.append({"date": ds, "kind": r.get("kind"), "what": r.get("what"),
+                              "source": r.get("source"), "days_away": (date.fromisoformat(ds) - today).days})
         return {"status": "OK", "pull_id": rows[0].get("pull_id"), "pulled_utc": rows[0].get("pulled_utc"),
-                "dates": [{"date": r["date"], "kind": r.get("kind"), "what": r.get("what"),
-                           "source": r.get("source"),
-                           "days_away": (date.fromisoformat(r["date"][:10]) - today).days}
-                          for r in rows if r["row_kind"] == "macro" and lo <= str(r.get("date"))[:10] <= hi],
+                "dates": dates,
                 "refusals": [{"kind": r.get("kind"), "refusal": r.get("refusal")}
                              for r in rows if r["row_kind"] == "macro_refusal"],
                 "legs": legs.get("legs"), "fomc_table": legs.get("fomc_table")}
     return {"status": "NO_MACRO_SNAPSHOT_BY_NOW", "dates": [], "refusals": []}
 
 
-# ─────────────────────────────────────────────── 6. freshness (the health row)
+# ─────────────────────────────────────────────── 8. freshness (the health row)
 
-def newest_receipt(root: Path, now: datetime) -> Optional[tuple[datetime, Path]]:
+def _receipts(root: Path, now: datetime) -> list[tuple[datetime, Path, dict]]:
     snap = snapshots_dir(root)
-    best = None
+    out = []
     for f in snap.glob("fc_*_receipt.json") if snap.is_dir() else []:
         m = _RECEIPT_RE.match(f.name)
         t = _parse_stamp(m.group(1)) if m else None
-        if t is not None and t <= now and (best is None or t > best[0]):
-            best = (t, f)
-    return best
+        if t is None or t > now:
+            continue
+        try:
+            rec = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError, UnicodeDecodeError):
+            rec = {"_unreadable": True}
+        out.append((t, f, rec if isinstance(rec, dict) else {"_unreadable": True}))
+    return sorted(out, key=lambda x: x[0])
+
+
+def newest_receipt(root: Path, now: datetime, *, full_only: bool = False) -> Optional[tuple[datetime, Path]]:
+    for t, f, rec in reversed(_receipts(root, now)):
+        if not full_only or rec.get("scope") == FULL_UNIVERSE:
+            return t, f
+    return None
 
 
 def freshness(root: Path, now: datetime, *, stale_days: Optional[float] = None) -> dict:
-    """{verdict ALIVE/STALE/UNKNOWN, evidence_utc, age_s, detail} from the newest pull
-    receipt, dated by the receipt's OWN `finished_utc` (else the stamp in its name),
-    never a file mtime."""
+    """{verdict ALIVE/STALE/UNKNOWN, evidence_utc, age_s, detail} from the newest
+    FULL-UNIVERSE pull receipt (a `--tickers`/`--limit` receipt is PARTIAL: counted in
+    the detail, never evidence), dated by its OWN `finished_utc` (never mtime). STALE
+    when old, when its status is not OK, or when its snapshot is DAMAGED."""
     sd = float(stale_days if stale_days is not None else _cfg("FORWARD_CALENDAR_STALE_DAYS", 3.0))
-    nr = newest_receipt(root, now)
-    if nr is None:
+    recs = _receipts(root, now)
+    full = [x for x in recs if x[2].get("scope") == FULL_UNIVERSE]
+    n_partial = len(recs) - len(full)
+    if not full:
         return {"verdict": "UNKNOWN", "evidence_utc": None, "age_s": None,
-                "detail": f"no forward-calendar pull receipt under {snapshots_dir(root)}: "
-                          "the calendar has never been pulled here, so no next date is known"}
-    name_t, p = nr
-    try:
-        rec = json.loads(p.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        return {"verdict": "UNKNOWN", "evidence_utc": _iso(name_t), "age_s": None,
-                "detail": f"{p.name} unreadable ({type(exc).__name__})"}
+                "detail": f"no FULL-UNIVERSE forward-calendar receipt under {snapshots_dir(root)} "
+                          f"({n_partial} partial/unscoped receipt(s) ignored): no next date is known "
+                          "for the universe"}
+    name_t, p, rec = full[-1]
     t = _utc(rec.get("finished_utc")) or name_t
     age_s = round((now - t).total_seconds(), 1)
-    counts = (f"{rec.get('with_date')}/{rec.get('requested')} with a date (share "
-              f"{rec.get('share_covered')}, min {rec.get('min_share')}), failed {rec.get('failed')}")
+    snap_p = snapshots_dir(root) / f"{rec.get('pull_id')}.jsonl"
+    rows, n_bad = read_snapshot(snap_p)
+    idx = _load_index(snapshots_dir(root), str(rec.get("pull_id")))
+    n_ear = sum(1 for r in rows if r.get("row_kind") == "earnings")
+    short = idx is not None and isinstance(idx.get("n_earnings_rows"), int) and n_ear < idx["n_earnings_rows"]
+    counts = (f"answered {rec.get('answered')}/{rec.get('requested')} (share {rec.get('answered_share')}, "
+              f"floor {rec.get('min_answered_share')}), with a date {rec.get('with_date')} (date share "
+              f"{rec.get('date_share')}, floor {rec.get('min_date_share')}), failed {rec.get('failed')}; "
+              f"{n_partial} partial receipt(s) ignored")
+    if n_bad or short:
+        return {"verdict": "STALE", "evidence_utc": _iso(t), "age_s": age_s,
+                "detail": f"{snap_p.name} DAMAGED: {n_bad} bad line(s)"
+                          + (f", {idx['n_earnings_rows'] - n_ear} row(s) missing vs its index" if short else "")}
     if rec.get("status") != "OK":
         return {"verdict": "STALE", "evidence_utc": _iso(t), "age_s": age_s,
                 "detail": f"{p.name}: {rec.get('status')} - {counts}"}
@@ -781,11 +1051,13 @@ def p_forward_calendar(ctx: Any) -> Any:
     from backend.services.system_health import ProbeResult                # noqa: PLC0415
     f = freshness(Path(ctx.optimus_dir), ctx.now)
     return ProbeResult(f["verdict"], f["evidence_utc"], f["age_s"], f["detail"],
-                       proof="forward_calendar/snapshots/fc_<stamp>_receipt.json: finished_utc, "
-                             "status, share_covered; never mtime")
+                       proof="forward_calendar/snapshots/fc_<stamp>_receipt.json (scope FULL_UNIVERSE): "
+                             "finished_utc, status, both shares; the snapshot's bad lines vs its index; "
+                             "never mtime")
 
 
-__all__ = ["CALENDAR_STALE", "DATE_IN_HORIZON", "ForwardCalendarRefused", "LABELS", "LOW_COVERAGE",
-           "NOT_COVERED", "NO_DATE_IN_HORIZON", "build_universe", "check_coverage", "freshness",
-           "next_dates", "next_macro", "p_forward_calendar", "parse_quote", "pull",
-           "yahoo_quote_batch"]
+__all__ = ["CALENDAR_STALE", "DATE_IN_HORIZON", "FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED",
+           "ForwardCalendarRefused", "LABELS", "LAST_REPORTED", "LOW_COVERAGE", "LOW_DATE_SHARE",
+           "NOT_COVERED", "NO_DATE_IN_HORIZON", "build_universe", "check_coverage", "event_passed",
+           "freshness", "next_dates", "next_macro", "p_forward_calendar", "parse_quote", "pull",
+           "read_snapshot", "yahoo_quote_batch"]

@@ -11,9 +11,10 @@ import pytest
 
 from backend.services import forward_calendar as FC
 
-#: 15:00 UTC on the test day: 10:00/11:00 in New York, far from either midnight.
-NOW = datetime.combine(date.today(), time(15, 0), tzinfo=timezone.utc)
-TODAY = NOW.date()
+#: 15:00 UTC on the current UTC day (never the PC's local date.today()): 10:00/11:00
+#: in New York, far from either midnight and before the 16:00 close.
+NOW = datetime.now(timezone.utc).replace(hour=15, minute=0, second=0, microsecond=0)
+TODAY = FC.market_date(NOW)
 
 
 def _ts(d: date, hh: int = 21, mm: int = 0) -> int:
@@ -50,6 +51,10 @@ def _stub(table: dict):
 def _pull(tmp_path, tickers, table, at, **kw):
     return FC.pull(tickers, tmp_path, fetch=_stub(table), macro=False, now_fn=Clock(at),
                    sleep_fn=lambda s: None, **kw)
+
+
+def _ear(path):
+    return [r for r in FC._read_jsonl(Path(path)) if r.get("row_kind") == "earnings"]
 
 
 # ─────────────────────────────────────────── append-only, never overwritten
@@ -97,7 +102,7 @@ def test_rows_pulled_after_now_inside_a_file_started_before_now_are_not_used(tmp
     d = TODAY + timedelta(days=4)
     r = _pull(tmp_path, ["NVDA", "AMD"], {"NVDA": _q("NVDA", d), "AMD": _q("AMD", d)}, NOW,
               batch_size=1)
-    rows = FC._read_jsonl(Path(r["snapshot_path"]))
+    rows = _ear(r["snapshot_path"])
     first_t = FC._utc(rows[0]["pulled_utc"])
     res = FC.next_dates(["NVDA", "AMD"], first_t, root=tmp_path)
     labels = {t: v["label"] for t, v in res["tickers"].items()}
@@ -120,7 +125,7 @@ def test_a_failed_ticker_is_recorded(tmp_path):
     rec = FC.pull(["NVDA", "GHOST", "BAD"], tmp_path, fetch=fetch, macro=False, now_fn=Clock(NOW),
                   sleep_fn=lambda s: None, batch_size=2)
     assert rec["requested"] == 3 and rec["failed"] == 2 and rec["with_date"] == 1
-    rows = {r["ticker"]: r for r in FC._read_jsonl(Path(rec["snapshot_path"]))}
+    rows = {r["ticker"]: r for r in _ear(rec["snapshot_path"])}
     assert rows["GHOST"]["status"] == FC.FAILED and rows["GHOST"]["error"] == "NOT_IN_RESPONSE"
     assert rows["BAD"]["status"] == FC.FAILED and "BATCH_FAILED ConnectionError" in rows["BAD"]["error"]
     assert set(rec["failed_tickers"]) == {"GHOST", "BAD"}
@@ -139,13 +144,13 @@ def test_rate_limit_backs_off_once_then_stops_and_records_the_rest(tmp_path):
     assert rec["stopped"] == "RATE_LIMITED_PULL_STOPPED" and rec["failed"] == 3
     assert rec["n_requests"] == 2                          # one batch, one retry, then stop
     assert slept == [FC._cfg("FORWARD_CALENDAR_RATE_LIMIT_BACKOFF_S", 60.0)]
-    rows = FC._read_jsonl(Path(rec["snapshot_path"]))
+    rows = _ear(rec["snapshot_path"])
     assert {r["ticker"] for r in rows} == {"A", "B", "C"}
     assert all(r["status"] == FC.FAILED for r in rows)
 
 
 def test_low_coverage_pull_is_kept_but_red(tmp_path):
-    rec = _pull(tmp_path, ["A", "B", "C", "D"], {}, NOW)
+    rec = _pull(tmp_path, ["A", "B", "C", "D"], {}, NOW, scope=FC.FULL_UNIVERSE)
     assert rec["status"] == FC.LOW_COVERAGE and rec["share_covered"] == 0.0
     assert Path(rec["snapshot_path"]).is_file()            # the failure is itself a record
     with pytest.raises(FC.ForwardCalendarRefused) as e:
@@ -246,8 +251,11 @@ def test_an_interrupted_pull_resumes_and_skips_done_tickers(tmp_path):
     snap.mkdir(parents=True)
     start = NOW - timedelta(hours=1)
     pid = f"fc_{FC._stamp(start)}_abcdef"
+    hdr = {"row_kind": "pull_header", "pull_id": pid, "tickers_sha": FC.tickers_sha(["NVDA", "AMD"]),
+           "n_requested": 2, "scope": FC.FULL_UNIVERSE}
     done = FC.parse_quote("NVDA", "NVDA", _q("NVDA", d), pulled_utc=start, pull_id=pid)
-    (snap / f"{pid}.partial.jsonl").write_text(json.dumps(done) + "\n", encoding="utf-8")
+    (snap / f"{pid}.partial.jsonl").write_text(json.dumps(hdr) + "\n" + json.dumps(done) + "\n",
+                                               encoding="utf-8")
     fetch = _stub({"AMD": _q("AMD", d), "NVDA": _q("NVDA", d)})
     rec = FC.pull(["NVDA", "AMD"], tmp_path, fetch=fetch, macro=False, now_fn=Clock(NOW),
                   sleep_fn=lambda s: None)
@@ -303,7 +311,11 @@ def test_health_row_unknown_alive_stale_and_registered(tmp_path, monkeypatch):
     ctx = SH.ProbeCtx(optimus_dir=tmp_path, now=NOW, repo=tmp_path, allow_proc=False)
     assert FC.p_forward_calendar(ctx).verdict == "UNKNOWN"
     d = TODAY + timedelta(days=5)
-    _pull(tmp_path, ["NVDA"], {"NVDA": _q("NVDA", d)}, NOW - timedelta(hours=2))
+    _pull(tmp_path, ["NVDA"], {"NVDA": _q("NVDA", d)}, NOW - timedelta(hours=3))
+    assert FC.p_forward_calendar(ctx).verdict == "UNKNOWN"     # a PARTIAL receipt is never evidence
+    _pull(tmp_path, ["NVDA"], {"NVDA": _q("NVDA", d)}, NOW - timedelta(hours=2), scope=FC.FULL_UNIVERSE)
+    assert FC.p_forward_calendar(ctx).verdict == "ALIVE"
+    _pull(tmp_path, ["NVDA"], {}, NOW - timedelta(hours=1))   # a later failed PARTIAL changes nothing
     assert FC.p_forward_calendar(ctx).verdict == "ALIVE"
     later = SH.ProbeCtx(optimus_dir=tmp_path, now=NOW + timedelta(days=10), repo=tmp_path, allow_proc=False)
     assert FC.p_forward_calendar(later).verdict == "STALE"
@@ -324,5 +336,4 @@ def test_the_real_fetcher_is_blocked_offline_and_the_pull_goes_red(tmp_path):
         FC.yahoo_quote_batch(["NVDA"])
     rec = FC.pull(["NVDA", "AMD"], tmp_path, macro=False, now_fn=Clock(NOW), sleep_fn=lambda s: None)
     assert rec["failed"] == 2 and rec["status"] == FC.LOW_COVERAGE
-    assert all("BATCH_FAILED" in (r.get("error") or "")
-               for r in FC._read_jsonl(Path(rec["snapshot_path"])))
+    assert all("BATCH_FAILED" in (r.get("error") or "") for r in _ear(rec["snapshot_path"]))

@@ -6722,10 +6722,16 @@ FORWARD_CALENDAR_BATCH_SIZE = 50
 FORWARD_CALENDAR_BATCH_SLEEP_S = 2.0
 FORWARD_CALENDAR_RATE_LIMIT_BACKOFF_S = 60.0
 FORWARD_CALENDAR_TIMEOUT_S = 30
-#: A pull where fewer than this share of the issuers asked for returned a date is
+#: RED floor on what the VENDOR ANSWERED: a pull where fewer than this share of the
+#: names asked for got any row back (DATE or NO_DATE; FAILED does not count) is
 #: LOW_COVERAGE: the CLI exits 2 and the health row is STALE (a collector that returns
-#: nothing must not be green). ETFs/indices are not issuers and are not counted.
-FORWARD_CALENDAR_MIN_DATE_SHARE = 0.60
+#: nothing must not be green).
+FORWARD_CALENDAR_MIN_ANSWERED_SHARE = 0.90
+#: Separate floor on the share of ISSUERS (ETFs/indices excluded) with a next date:
+#: names that reported in the last ~3 weeks legitimately have none (9 of 39 issuers in
+#: the 2026-11-12 sample), so this is lower and is TO BE CALIBRATED on the first full
+#: receipt; below it the receipt is LOW_DATE_SHARE (also rc 2).
+FORWARD_CALENDAR_MIN_DATE_SHARE = 0.40
 #: A ticker's newest row older than this is CALENDAR_STALE (dates get revised; the
 #: pull is daily). The health row goes STALE past the same age.
 FORWARD_CALENDAR_STALE_DAYS = 3.0

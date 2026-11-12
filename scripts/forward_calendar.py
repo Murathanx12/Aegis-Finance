@@ -9,8 +9,11 @@
 
 `--data-root` is where the universe is READ from (the optimus folder). `--out` is
 the root the store is written under (`<out>/forward_calendar/`); without it the
-store lives under `--data-root`. Exit codes: 0 ok; 2 refused (low coverage, empty
-universe, a snapshot that would be overwritten); `status` exits 2 unless ALIVE.
+store lives under `--data-root`. A pull with `--tickers` or `--limit` is PARTIAL and
+never counts for the health row; only a plain `pull` is FULL_UNIVERSE.
+Exit codes: 0 ok; 2 refused (LOW_COVERAGE, LOW_DATE_SHARE, empty universe, a snapshot
+that would be overwritten, RESUME_MISMATCH); 3 SKIP_PULL_LOCKED (another pull holds
+the lock); `status` exits 2 unless ALIVE.
 """
 from __future__ import annotations
 
@@ -60,6 +63,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             p.add_argument("--tickers", default=None)
         if name == "pull":
             p.add_argument("--no-macro", action="store_true")
+            p.add_argument("--no-resume", action="store_true",
+                           help="start a new pull even if a young .partial exists (it is left in place)")
             p.add_argument("--batch-size", type=int, default=None)
         if name == "show":
             p.add_argument("--horizon-days", type=int, default=None)
@@ -77,11 +82,14 @@ def main(argv: Optional[list[str]] = None) -> int:
                     "limited_to": u.get("limited_to")}
             print(f"forward_calendar pull: {len(u['tickers'])} tickers -> {FC.snapshots_dir(out_root)}",
                   flush=True)
-            rec = FC.pull(u["tickers"], out_root, universe_meta=meta,
-                          macro=False if a.no_macro else None, batch_size=a.batch_size)
-            _print({k: rec.get(k) for k in ("pull_id", "status", "requested", "fetched", "with_date",
-                                            "no_date", "failed", "not_an_issuer", "share_covered",
-                                            "min_share", "n_requests", "n_rate_limited", "stopped",
+            scope = FC.PARTIAL if (a.tickers or a.limit) else FC.FULL_UNIVERSE
+            rec = FC.pull(u["tickers"], out_root, universe_meta=meta, scope=scope,
+                          macro=False if a.no_macro else None, batch_size=a.batch_size,
+                          resume=not a.no_resume)
+            _print({k: rec.get(k) for k in ("pull_id", "scope", "status", "requested", "answered",
+                                            "with_date", "no_date", "failed", "not_an_issuer",
+                                            "answered_share", "min_answered_share", "date_share",
+                                            "min_date_share", "n_bad_lines", "resumed_from", "n_requests", "n_rate_limited", "stopped",
                                             "no_date_reasons", "failure_errors", "confirmation_counts",
                                             "macro", "started_utc", "finished_utc",
                                             "snapshot_path", "receipt_path")})
@@ -101,6 +109,9 @@ def main(argv: Optional[list[str]] = None) -> int:
             _print(f)
             return 0 if f["verdict"] == "ALIVE" else 2
     except FC.ForwardCalendarRefused as exc:
+        if exc.code == FC.PULL_LOCKED:
+            print(f"SKIPPED {exc}", flush=True)
+            return 3
         print(f"REFUSED {exc}", flush=True)
         return 2
     return 2
