@@ -116,7 +116,7 @@ def worst_case_lines(sessions, closes, weights, sim) -> dict:
     notional = sim["notional"]
     sr = sim["rows"]
     nav_prev = {sessions[i]: sr[i - 1]["twin_nav"] for i in range(1, len(sessions))}
-    worst = None
+    worst, losses = None, []
     for i in range(1, len(sessions)):
         t0, t1 = sessions[i - 1], sessions[i]
         for s, w in weights[t0].items():
@@ -125,6 +125,7 @@ def worst_case_lines(sessions, closes, weights, sim) -> dict:
                 continue
             r = p1 / p0 - 1.0
             usd = w * nav_prev[t1] * r          # signed: only a LOSS can set it
+            losses.append((usd, s, t1.isoformat(), w, r))
             if worst is None or usd < worst["usd"]:
                 worst = {"usd": usd, "symbol": s, "session": t1.isoformat(), "weight": w, "move": r}
     worst_day = {k: min(sr[1:], key=lambda r: r[f"{k}_ret"]) for k in ("overlay", "twin")}
@@ -133,7 +134,11 @@ def worst_case_lines(sessions, closes, weights, sim) -> dict:
         "worst_single_name_loss": {
             "what": "the worst one-day dollar loss of ONE holding at its actual weight in the twin (signed)",
             "usd": round(worst["usd"], 2), "symbol": worst["symbol"], "session": worst["session"],
-            "weight": round(worst["weight"], 5), "move": round(worst["move"], 5)},
+            "weight": round(worst["weight"], 5), "move": round(worst["move"], 5),
+            "top5": [{"usd": round(u, 2), "symbol": sy, "session": se, "weight": round(w, 5),
+                      "move": round(r, 5)} for u, sy, se, w, r in sorted(losses)[:5]],
+            "caveat": ("bars are read as stored; a one-day move near -50% can be an unadjusted "
+                       "split rather than a loss, and it hits the twin and the overlay alike")},
         "worst_observed_basket_day": {
             "what": "the worst observed one-day change of the whole book in the replay",
             **{k: {"usd": round(v[f"{k}_ret"] * notional, 2), "pct": round(100 * v[f"{k}_ret"], 4),
