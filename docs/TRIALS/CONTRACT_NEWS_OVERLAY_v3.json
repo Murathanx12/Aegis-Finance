@@ -1,0 +1,91 @@
+{
+ "base_book_id": "LIQUID-RANDOM-50",
+ "base_definition": "LIQUID-RANDOM-50, derived from the bars panel, never stored. Draw date D = the first XNYS session of each calendar month; holdings for every session t are the draw dated D(t) = the first session of t's month. Eligible on D, using ONLY bars dated strictly before D: median close x volume over the last LIQUID_DV_SESSIONS sessions >= LIQUID_MIN_DOLLAR_VOL; last close >= LIQUID_MIN_PRICE; >= LIQUID_MIN_HISTORY real bars; newest bar no more than LIQUID_MAX_BAR_AGE sessions before the last session before D; no SUSPECT_CORPORATE_ACTION in the last LIQUID_SUSPECT_LOOKBACK sessions (discovery_autopsy's rule: a one-bar raw move, last real bar to next real bar, above AUTOPSY_SUSPECT_UP or below AUTOPSY_SUSPECT_DOWN on a name whose previous close is >= AUTOPSY_MIN_PRICE); not an ETF or index proxy (LIQUID_EXCLUDE_ETFS: xs_ranker.INDEX_PROXIES + llm_portfolio.is_etf). Eligible symbols are sorted and LIQUID_N are drawn by paper_books._draw (np.random.default_rng, without replacement) with seed int(sha256('LIQUID_SEED:D')[:8], 16), recorded on every draw. Equal weight at D's close (the fill), then held as shares (drifting) until the next draw; a draw re-targets at its D's close. Costs: the engine's standard 5 + 1 bps per side.",
+ "comparison_base": {
+  "id": "SPY",
+  "role": "COMPARISON ONLY, never graded: the same scalars applied to SPY alone (scalar x SPY vs 1.0 x SPY), so the overlay's effect can be read on the index too"
+ },
+ "costs": "one-way rate = (COST_BPS_PER_SIDE + SLIPPAGE_BPS) / 1e4 on every traded dollar, including the overlay's own scalar turnover; cash earns 0",
+ "disclosure": {
+  "bases_tried": 2,
+  "mappings_tried": 2,
+  "seen_before_choosing": "the range of the per-run source-weighted tone input (about -0.21 .. +0.05 over 2026-09-29..11-11) had been seen before SLOPE and DEADBAND were chosen; no return of any kind had been seen",
+  "v2_change": "only the baseline-age bound and the forward-path fixes; chosen by a reviewer's correctness finding, not from replay returns",
+  "v3_change": "only the base (and the stale-bar flag becoming a refusal). The tone->scalar rule (SLOPE, DEADBAND, STEP, bounds, MIN_THEMES, BASELINE_N/MIN/MAX_AGE_DAYS, timing) is v2's, unchanged. Base choice is a SECOND LOOK at this design: bases tried = 2 (the $3M random draw, then LIQUID-RANDOM-50); tone mappings tried = 1 functional form with one parameter set (v2's MAPPINGS_TRIED = 2 counts the v2 baseline-age bound as a second variant and is kept). The v2 replay had been seen (overlay -0.84 pp vs twin) before v3 was declared; the v3 base was chosen for readability (stale bars, splits, small caps), not from that number, and its seed was declared in config before any v3 replay ran"
+ },
+ "grading": "only FORWARD rows of this policy_hash; a session with no row -> scalar 1.0, reason NO_DECISION_ROW (never the last scalar held); a session where a base holding's last real bar is more than STALE_BAR_SESSIONS sessions old is also marked DEGRADED on the grade and the holdings are listed",
+ "history": [
+  {
+   "declared_utc": "2026-11-12T09:13:00+00:00",
+   "name": "NEWS_OVERLAY_v1",
+   "policy_hash": "ce686058847fdbc7",
+   "replay_run": "20261112T091714Z",
+   "superseded_because": "review of PR #125: the baseline's age was unbounded (on 2026-11-10 the baseline was 12 digests from 2026-10-12..14); a session with no decision row held the last scalar instead of 1.0; the forward step dated sessions by the machine's local date; early closes were not handled. v1 was never seeded and has no forward rows."
+  },
+  {
+   "declared_utc": "2026-11-12T09:28:00+00:00",
+   "name": "NEWS_OVERLAY_v2",
+   "policy_hash": "2d85fa126b83f4ac",
+   "replay_run": "20261112T093355Z",
+   "superseded_because": "its base book:9d62cc74239b435d (a random 50 from the $3M+ band) was unreadable: 30 of 32 replay days DEGRADED on stale base bars (HLX 22 days without a bar), a 70% one-day move, and a probable unadjusted 2:1 split (XP) as the largest single-name loss. The brain session decided not to seed on it. v3 keeps the mapping and changes the base. v2 was never seeded and has no forward rows."
+  }
+ ],
+ "inputs": {
+  "base_holdings": "derived, never stored: LIQUID-RANDOM-50 from OPTIMUS_LEDGER_DIR/prices_2025_26/bars.parquet (close, volume) dated strictly before each monthly draw date",
+  "digests": "OPTIMUS_LEDGER_DIR/digest/world_digest_<YYYYMMDDTHHMMSSZ>.json (world_digest.out_dir); fields themes[].tone.fear_greed and themes[].tone.n_independent_sources; dry runs ignored",
+  "prices": "OPTIMUS_LEDGER_DIR/prices_2025_26/bars.parquet close"
+ },
+ "licence": "PRODUCT_EXPERIMENT (internal simulation only: no broker, no order, no LLM authority)",
+ "mapping": "F = sum_i n_i * fear_greed_i / sum_i n_i over themes with numeric tone.fear_greed, n_i = max(1, n_independent_sources); fewer than MIN_THEMES -> EMPTY. B = median F over the previous BASELINE_N valid digests stamped strictly before this digest AND no more than BASELINE_MAX_AGE_DAYS older than it; fewer than BASELINE_MIN -> NO_BASELINE. d = F - B; raw = 1 - SLOPE * max(0, -d - DEADBAND); scalar = clip(round(raw / STEP) * STEP, SCALAR_MIN, SCALAR_MAX). Any degradation -> 1.0.",
+ "name": "NEWS_OVERLAY_v3",
+ "objective": "terminal NAV of the overlay vs its twin under the BALANCED personality (same notional, same costs); read daily, by date block, raw lines first",
+ "params": {
+  "AUTOPSY_MIN_PRICE": 5.0,
+  "AUTOPSY_SUSPECT_DOWN": -0.45,
+  "AUTOPSY_SUSPECT_UP": 0.9,
+  "NEWS_OVERLAY_BASELINE_MAX_AGE_DAYS": 7,
+  "NEWS_OVERLAY_BASELINE_MIN": 4,
+  "NEWS_OVERLAY_BASELINE_N": 12,
+  "NEWS_OVERLAY_BASES_TRIED": 2,
+  "NEWS_OVERLAY_BASE_BOOK": "LIQUID-RANDOM-50",
+  "NEWS_OVERLAY_COMPARISON_BASE": "SPY",
+  "NEWS_OVERLAY_COST_BPS_PER_SIDE": 5.0,
+  "NEWS_OVERLAY_DEADBAND": 0.02,
+  "NEWS_OVERLAY_DECISION_ET": "15:30",
+  "NEWS_OVERLAY_LIQUID_DV_SESSIONS": 63,
+  "NEWS_OVERLAY_LIQUID_EXCLUDE_ETFS": true,
+  "NEWS_OVERLAY_LIQUID_MAX_BAR_AGE": 3,
+  "NEWS_OVERLAY_LIQUID_MIN_DOLLAR_VOL": 50000000.0,
+  "NEWS_OVERLAY_LIQUID_MIN_HISTORY": 252,
+  "NEWS_OVERLAY_LIQUID_MIN_PRICE": 5.0,
+  "NEWS_OVERLAY_LIQUID_N": 50,
+  "NEWS_OVERLAY_LIQUID_SEED": 20261112,
+  "NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK": 252,
+  "NEWS_OVERLAY_MAPPINGS_TRIED": 2,
+  "NEWS_OVERLAY_MAPPING_DECLARED_UTC": "2026-11-12T09:13:00+00:00",
+  "NEWS_OVERLAY_MAX_AGE_HOURS": 36.0,
+  "NEWS_OVERLAY_MIN_THEMES": 3,
+  "NEWS_OVERLAY_NOTIONAL_USD": 100000.0,
+  "NEWS_OVERLAY_SCALAR_MAX": 1.0,
+  "NEWS_OVERLAY_SCALAR_MIN": 0.5,
+  "NEWS_OVERLAY_SLIPPAGE_BPS": 1.0,
+  "NEWS_OVERLAY_SLOPE": 5.0,
+  "NEWS_OVERLAY_STALE_BAR_SESSIONS": 5,
+  "NEWS_OVERLAY_STALE_REFUSE_SHARE": 0.1,
+  "NEWS_OVERLAY_STEP": 0.05,
+  "NEWS_OVERLAY_STEP_WINDOW_ET": [
+   "15:30",
+   "16:00"
+  ],
+  "NEWS_OVERLAY_V2_DECLARED_UTC": "2026-11-12T09:28:00+00:00",
+  "NEWS_OVERLAY_V3_DECLARED_UTC": "2026-11-12T17:48:00+00:00"
+ },
+ "policy_hash": "c777f997289240e4",
+ "rebalance": "a book re-targets at a session close only when its scalar changed or the base book's holdings changed (a base rebalance dated on a non-session day takes effect at the first session after it); otherwise it holds its shares",
+ "schema": "news_overlay_book/v3",
+ "stale_bar_refusal": "v3: at decision time for session t, the base's holdings for t are weighted at the last close before t; if more than STALE_REFUSE_SHARE of that weight sits on names whose newest bar (as of the session before t) is more than STALE_BAR_SESSIONS sessions old, the decision is REFUSED: scalar 1.0, degradation STALE_BASE_BARS, holdings named (v2 only flagged this)",
+ "timing": "session t = an XNYS session dated in America/New_York; decision time = min(DECISION_ET, the session's real close - 30 min) on t; read only digests stamped strictly before it; newest older than MAX_AGE_HOURS -> STALE; fill = close of t (the next close after the digest's own stamp); the scalar earns close t -> close t+1. The forward step runs only inside STEP_WINDOW_ET on a real session (refused otherwise); a --date other than today's ET session is BACKDATED and never graded; one FORWARD row per session (a repeat is a no-op)",
+ "twin": "the base book at scalar 1.0: identical names, relative weights, re-target moments and cost rate; only the scalar differs",
+ "why_random_base": "Why a random liquid base and not a strategy book: CH-11 (2026-11-12) found the strategy books are mostly ONE bet (momentum and revision-flow correlate 0.95-0.99; overlap 54-84%) and that the volatility band explains much of their results. An overlay on one of them would mix the scalar with that bet. A random draw from the liquid ($50M+/day) band holds no selection, so the one thing this book tests is HOW MUCH is held. A random liquid book is not a strategy, and its own return vs SPY is a property of the draw, not of the overlay.",
+ "written_utc": "2026-11-12T17:52:06+00:00"
+}

@@ -3,8 +3,29 @@
 - **Licence:** PRODUCT_EXPERIMENT (internal simulation only: no broker, no order, no LLM authority).
   No significance gate and no preregistration are required for this licence; the four never-relax
   rules hold (public-before-use, no target leakage, costs never omitted, frozen once forward).
-- **Contract (current):** `docs/TRIALS/CONTRACT_NEWS_OVERLAY_v2.json`, **`policy_hash 2d85fa126b83f4ac`**
-  (pinned by `backend/tests/test_news_overlay_book.py::test_the_committed_contract_is_the_rule_in_code`).
+- **Contract (current):** `docs/TRIALS/CONTRACT_NEWS_OVERLAY_v4.json`, **`policy_hash 93a042facf44b157`**
+  (v4, review of PR #133: same mapping and base rule as v3; the first FORWARD row of each month RECORDS the
+  draw in `news_overlay_book/draws.jsonl` and every later step/grade uses the recorded basket, refusing
+  DRAW_MISMATCH unless `--accept-recorded-draw`, which is recorded; eligibility needs a real bar on the
+  session before D; the step refuses STALE_PANEL / DRAW_ROW_MISSING; the contract states the carry rule
+  and its bias, the survivorship of the panel, objects looked at = 3, and the replay finding that the
+  overlay cut exposure into rebounds and was blind (EMPTY digest) before the -4.4% session of 2026-11-05.)
+- **Contract v3 (superseded):** `docs/TRIALS/CONTRACT_NEWS_OVERLAY_v3.json`, `policy_hash c777f997289240e4`
+  (pinned by `backend/tests/test_news_overlay_book.py::test_the_committed_contract_is_the_rule_in_code`;
+  `test_v3_keeps_every_v2_mapping_parameter` pins that only the base changed).
+- **v3 (2026-11-12, after PR #125):** same mapping and timing as v2; new base **LIQUID-RANDOM-50**
+  (derived from the bars panel, never stored: on the first XNYS session D of each month, 50 names drawn by
+  `paper_books._draw` with a recorded seed int(sha256("20261112:D")[:8], 16) from names with median
+  63-session dollar volume >= $50M, price >= $5, >= 252 bars, newest bar <= 3 sessions old, no
+  SUSPECT_CORPORATE_ACTION in 252 sessions, not an ETF; all from bars strictly before D; equal weight at D's
+  close). Why random: CH-11 showed the strategy books are mostly one bet and the volatility band explains
+  their results; a random liquid base isolates how much is held. It is not a strategy. A second base,
+  **SPY alone, is for comparison only** and never graded. Stale base bars now REFUSE the day at 1.0
+  (STALE_BASE_BARS) when > 10% of base weight is on names with a newest bar > 5 sessions old (v2 only
+  flagged). v2 `2d85fa126b83f4ac` was superseded because its base was unreadable (30 of 32 replay days
+  on stale bars, a probable unadjusted split as its largest loss). Bases tried = 2; tone mapping declared
+  once (v2's MAPPINGS_TRIED = 2 counts its age bound and is kept). The v2 replay had been seen before v3.
+- **Contract v2 (superseded):** `docs/TRIALS/CONTRACT_NEWS_OVERLAY_v2.json`, `policy_hash 2d85fa126b83f4ac`.
 - **History:** v1 `ce686058847fdbc7` (`CONTRACT_NEWS_OVERLAY_v1.json`, declared 2026-11-12T09:13Z, replay
   `20261112T091714Z`) was superseded the same day by the review of PR #125: unbounded baseline age, a
   missed session held the last scalar, the forward step dated sessions by the machine's local date, no
@@ -12,9 +33,8 @@
 - **Disclosure (also in the contract):** mappings tried = 2 (v1, and v2 = v1 + the baseline-age bound,
   chosen from a reviewer's correctness finding, not from returns). The range of the tone input
   (about -0.21 .. +0.05) had been seen before SLOPE and DEADBAND were chosen; no return had been seen.
-- **Base book:** `book:9d62cc74239b435d` (random_universe twin of the BHJ book; 50 names EW from the
-  US $3M+ dollar-volume band, monthly, 5+1 bps per side). Small-cap inclusive and noisy; a macro-tone
-  overlay may be swamped by it.
+- **Base book (v1/v2 only):** `book:9d62cc74239b435d` (random_universe twin of the BHJ book; 50 names EW
+  from the US $3M+ dollar-volume band, monthly, 5+1 bps per side). Replaced in v3 by LIQUID-RANDOM-50.
 - **Twin:** the same book at scalar 1.0 (identical names, relative weights, re-target moments, costs).
 - **Rule:** F = source-weighted mean `themes[].tone.fear_greed` of the newest world digest stamped
   strictly before min(15:30 ET, close - 30 min) on XNYS session t; B = median F of the previous 12 valid
