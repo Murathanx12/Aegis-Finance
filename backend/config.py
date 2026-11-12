@@ -5047,6 +5047,28 @@ RESULTS_VOICE_MECHANISMS: dict = {
                  "threshold, monthly"),
     "hack2": "Alpaca paper broker mirroring the frozen revision_flow_v0 book (v2)",
 }
+# ── CH-11 matched-twin re-evaluation (2026-11-12) ─────────────────────────────
+#: `scripts/matched_twin_reeval.py` re-reads the leaders and the worst books
+#: against N same-band random twins instead of book_dna's single draw.
+#: Three twin levels, in decomposition order: `panel` (any live stock),
+#: `band` (same liquidity band x volatility tercile; the verdict level),
+#: `band_sector` (same band AND sector).
+MATCHED_TWIN_REEVAL_N_TWINS = 1000
+#: Twins at the verdict level: a Holm-corrected two-sided rank p needs
+#: N >= 2 m / alpha (m books) to be able to clear alpha at all.
+MATCHED_TWIN_REEVAL_N_TWINS_PRIMARY = 20000
+MATCHED_TWIN_REEVAL_SEED = 20261112
+#: Sessions per date block for the time-series SE; the MDE is computed on the
+#: number of BLOCKS, never on rows.
+MATCHED_TWIN_REEVAL_BLOCK_SESSIONS = 5
+MATCHED_TWIN_REEVAL_ALPHA = 0.05
+MATCHED_TWIN_REEVAL_POWER = 0.80
+#: Bars read this many calendar days before the earliest decision (63-session
+#: liquidity band window plus margin).
+MATCHED_TWIN_REEVAL_LOOKBACK_DAYS = 140
+#: A reconstruction that misses the receipt's own return by more than this is
+#: flagged RECON_GAP (the twins are still computed on the reconstruction).
+MATCHED_TWIN_REEVAL_MAX_RECON_GAP_PP = 1.0
 
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
