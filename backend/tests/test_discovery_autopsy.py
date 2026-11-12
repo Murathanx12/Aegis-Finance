@@ -836,4 +836,10 @@ def test_daily_folder_junction_is_refused_but_a_junctioned_data_root_works(world
             "--now", _iso(world["now"])]
     assert DA.main(argv) == 0
     assert (world["dr"] / C.AUTOPSY_DAILY_DIRNAME / f"autopsy_{D.isoformat()}.json").is_file()
+    # the same data through the real path is the SAME autopsy (no path in any input hash)
+    before = _tree(world["dr"] / C.AUTOPSY_DAILY_DIRNAME)
+    capsys.readouterr()
+    assert DA.main(_daily_argv(world)) == 0
+    assert "UNCHANGED" in capsys.readouterr().out
+    assert _tree(world["dr"] / C.AUTOPSY_DAILY_DIRNAME) == before
     jroot.rmdir()

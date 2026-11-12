@@ -1485,9 +1485,14 @@ def run_day(day: date, *, bars: pd.DataFrame, history: Optional[pd.DataFrame],
         "schema": _sha(SCHEMA),
         "params": _sha({k: getattr(C, k) for k in sorted(dir(C)) if k.startswith("AUTOPSY_")}),
         "screen": _sha(scr),
-        "funnel": _sha({k: funnel.get(k) for k in ("state", "path", "generated_at", "tickers")}),
-        "contracts": _sha(contracts["by_ticker"], contracts["files_used"]),
-        "digest": _sha(digest["by_ticker"], digest["digests_used"]),
+        # file NAMES, never full paths: the same data reached through a junction
+        # (a release clone) or another drive letter is the same input
+        "funnel": _sha({**{k: funnel.get(k) for k in ("state", "generated_at", "tickers")},
+                        "file": Path(str(funnel.get("path") or "")).name}),
+        "contracts": _sha(contracts["by_ticker"],
+                          [{**f, "path": Path(f["path"]).name} for f in contracts["files_used"]]),
+        "digest": _sha(digest["by_ticker"],
+                       [{**f, "path": Path(f["path"]).name} for f in digest["digests_used"]]),
         "forecasts": _sha(forecasts_by_ticker),
         "corpus": _sha({norm_ticker(m["ticker"]): r["knowable"]
                         for m, r in zip(scr["movers"], rows)}),
