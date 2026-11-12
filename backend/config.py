@@ -5576,9 +5576,11 @@ NEWS_TILT_KEY1_MIN_TRUST = 0.05
 #: turning it on is an attended seeding step (seed-a-lane), never a builder's:
 #: the owner sets AEGIS_NEWS_OVERLAY_BOOK=1 for the scheduled step only.
 NEWS_OVERLAY_BOOK_ENABLED = os.getenv("AEGIS_NEWS_OVERLAY_BOOK", "0").strip() == "1"
-#: The base book (paper_books id): the random_universe twin of the BHJ book,
-#: 50 names EW drawn from the US $3M+ dollar-volume band, monthly.
-NEWS_OVERLAY_BASE_BOOK = "book:9d62cc74239b435d"
+#: The base. v1/v2: paper_books id "book:9d62cc74239b435d" (the random_universe
+#: twin of the BHJ book, 50 names EW from the US $3M+ band; unreadable: 30 of
+#: 32 replay days on stale bars). v3: LIQUID-RANDOM-50, defined below and
+#: derived from the bars panel inside `news_overlay_book` (no store write).
+NEWS_OVERLAY_BASE_BOOK = "LIQUID-RANDOM-50"
 NEWS_OVERLAY_SCALAR_MIN = 0.5
 NEWS_OVERLAY_SCALAR_MAX = 1.0
 #: The ONE declared mapping (v1). Per digest: F = sum_i n_i x fear_greed_i /
@@ -5622,6 +5624,34 @@ NEWS_OVERLAY_MAPPING_DECLARED_UTC = "2026-11-12T09:13:00+00:00"
 NEWS_OVERLAY_V2_DECLARED_UTC = "2026-11-12T09:28:00+00:00"
 #: v1 and v2 differ only in the baseline-age bound; both replays are reported.
 NEWS_OVERLAY_MAPPINGS_TRIED = 2
+#: v3 (2026-11-12, brain decision after PR #125): SAME mapping, NEW base. The
+#: base is LIQUID-RANDOM-50: on the first XNYS session D of each calendar month,
+#: LIQUID_N names drawn with np.random.default_rng (paper_books._draw, the
+#: engine's own twin draw) from the names that, on bars dated STRICTLY before D,
+#: have median close x volume over the last LIQUID_DV_SESSIONS sessions >=
+#: LIQUID_MIN_DOLLAR_VOL, last close >= LIQUID_MIN_PRICE, >= LIQUID_MIN_HISTORY
+#: real bars, a newest bar no more than LIQUID_MAX_BAR_AGE sessions old, no
+#: SUSPECT_CORPORATE_ACTION one-bar move (discovery_autopsy's AUTOPSY_SUSPECT_*
+#: bounds) in the last LIQUID_SUSPECT_LOOKBACK sessions, and are not an ETF /
+#: index proxy. Equal weight at D's close; held (drifting) until the next D.
+#: Draw seed = int(sha256(f"{LIQUID_SEED}:{D}")[:8], 16), recorded per draw.
+NEWS_OVERLAY_V3_DECLARED_UTC = "2026-11-12T17:48:00+00:00"
+NEWS_OVERLAY_BASES_TRIED = 2
+NEWS_OVERLAY_LIQUID_N = 50
+NEWS_OVERLAY_LIQUID_MIN_DOLLAR_VOL = 50_000_000.0
+NEWS_OVERLAY_LIQUID_DV_SESSIONS = 63
+NEWS_OVERLAY_LIQUID_MIN_PRICE = 5.0
+NEWS_OVERLAY_LIQUID_MIN_HISTORY = 252
+NEWS_OVERLAY_LIQUID_MAX_BAR_AGE = 3
+NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK = 252
+NEWS_OVERLAY_LIQUID_SEED = 20261112
+NEWS_OVERLAY_LIQUID_EXCLUDE_ETFS = True
+#: v3: a decision is REFUSED at scalar 1.0 (reason STALE_BASE_BARS) when more
+#: than this share of the base's weight (holdings at the last close before the
+#: decision) has a newest bar more than STALE_BAR_SESSIONS sessions old.
+NEWS_OVERLAY_STALE_REFUSE_SHARE = 0.10
+#: A second base for COMPARISON ONLY (never graded): the overlay on SPY alone.
+NEWS_OVERLAY_COMPARISON_BASE = "SPY"
 
 # ── The reader's BROWSE lane: general news beyond Dow Jones (2026-09-29) ─────
 #: Murat, 2026-09-29: "digest the news see what they are implying is there an

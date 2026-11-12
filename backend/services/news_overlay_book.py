@@ -53,8 +53,8 @@ from zoneinfo import ZoneInfo
 from backend import config as _cfg
 
 LICENCE = "PRODUCT_EXPERIMENT"
-SCHEMA = "news_overlay_book/v2"
-CONTRACT_NAME = "NEWS_OVERLAY_v2"
+SCHEMA = "news_overlay_book/v3"
+CONTRACT_NAME = "NEWS_OVERLAY_v3"
 ET = ZoneInfo("America/New_York")
 
 #: Degradation names. Every one of them forces scalar 1.0.
@@ -63,7 +63,8 @@ STALE = "STALE_DIGEST"
 EMPTY = "EMPTY_DIGEST"
 NO_BASELINE = "NO_BASELINE"
 NO_DECISION_ROW = "NO_DECISION_ROW"       # grade: a session with no forward row -> 1.0
-DEGRADATIONS = (NO_DIGEST, STALE, EMPTY, NO_BASELINE, NO_DECISION_ROW)
+STALE_BASE = "STALE_BASE_BARS"            # v3: too much base weight on stale bars -> REFUSED at 1.0
+DEGRADATIONS = (NO_DIGEST, STALE, EMPTY, NO_BASELINE, NO_DECISION_ROW, STALE_BASE)
 #: Row labels. Only FORWARD rows are graded; BACKDATED (a --date other than
 #: today's ET session) and BACKFILL (the replay) never are.
 FORWARD, BACKDATED, BACKFILL = "FORWARD", "BACKDATED", "BACKFILL"
@@ -77,12 +78,46 @@ HISTORY = (
                             "decision row held the last scalar instead of 1.0; the forward step "
                             "dated sessions by the machine's local date; early closes were not "
                             "handled. v1 was never seeded and has no forward rows.")},
+    {"name": "NEWS_OVERLAY_v2", "policy_hash": "2d85fa126b83f4ac",
+     "declared_utc": "2026-11-12T09:28:00+00:00", "replay_run": "20261112T093355Z",
+     "superseded_because": ("its base book:9d62cc74239b435d (a random 50 from the $3M+ band) was "
+                            "unreadable: 30 of 32 replay days DEGRADED on stale base bars (HLX 22 "
+                            "days without a bar), a 70% one-day move, and a probable unadjusted 2:1 "
+                            "split (XP) as the largest single-name loss. The brain session decided "
+                            "not to seed on it. v3 keeps the mapping and changes the base. v2 was "
+                            "never seeded and has no forward rows.")},
 )
 
 
 class NewsOverlayRefused(RuntimeError):
     """A required input (base holdings, prices, digest folder) is missing, or the
     decision file is frozen under a different contract. Never a quiet 1.0."""
+
+
+#: v3's base, in words. The parameters it names are in `params()` (and so in the hash).
+BASE_DEFINITION = (
+    "LIQUID-RANDOM-50, derived from the bars panel, never stored. Draw date D = the first XNYS "
+    "session of each calendar month; holdings for every session t are the draw dated D(t) = the "
+    "first session of t's month. Eligible on D, using ONLY bars dated strictly before D: median "
+    "close x volume over the last LIQUID_DV_SESSIONS sessions >= LIQUID_MIN_DOLLAR_VOL; last close "
+    ">= LIQUID_MIN_PRICE; >= LIQUID_MIN_HISTORY real bars; newest bar no more than "
+    "LIQUID_MAX_BAR_AGE sessions before the last session before D; no SUSPECT_CORPORATE_ACTION in "
+    "the last LIQUID_SUSPECT_LOOKBACK sessions (discovery_autopsy's rule: a one-bar raw move, last "
+    "real bar to next real bar, above AUTOPSY_SUSPECT_UP or below AUTOPSY_SUSPECT_DOWN on a name "
+    "whose previous close is >= AUTOPSY_MIN_PRICE); not an ETF or index proxy "
+    "(LIQUID_EXCLUDE_ETFS: xs_ranker.INDEX_PROXIES + llm_portfolio.is_etf). Eligible symbols are "
+    "sorted and LIQUID_N are drawn by paper_books._draw (np.random.default_rng, without "
+    "replacement) with seed int(sha256('LIQUID_SEED:D')[:8], 16), recorded on every draw. Equal "
+    "weight at D's close (the fill), then held as shares (drifting) until the next draw; a draw "
+    "re-targets at its D's close. Costs: the engine's standard 5 + 1 bps per side.")
+
+WHY_RANDOM = (
+    "Why a random liquid base and not a strategy book: CH-11 (2026-11-12) found the strategy books "
+    "are mostly ONE bet (momentum and revision-flow correlate 0.95-0.99; overlap 54-84%) and that "
+    "the volatility band explains much of their results. An overlay on one of them would mix the "
+    "scalar with that bet. A random draw from the liquid ($50M+/day) band holds no selection, so "
+    "the one thing this book tests is HOW MUCH is held. A random liquid book is not a strategy, "
+    "and its own return vs SPY is a property of the draw, not of the overlay.")
 
 
 # ───────────────────────────── the contract ─────────────────────────────────
@@ -97,7 +132,14 @@ def params() -> dict:
         "NEWS_OVERLAY_NOTIONAL_USD", "NEWS_OVERLAY_MAPPING_DECLARED_UTC",
         "NEWS_OVERLAY_V2_DECLARED_UTC", "NEWS_OVERLAY_MAPPINGS_TRIED",
         "NEWS_OVERLAY_BASELINE_MAX_AGE_DAYS", "NEWS_OVERLAY_STEP_WINDOW_ET",
-        "NEWS_OVERLAY_STALE_BAR_SESSIONS")}
+        "NEWS_OVERLAY_STALE_BAR_SESSIONS",
+        "NEWS_OVERLAY_V3_DECLARED_UTC", "NEWS_OVERLAY_BASES_TRIED", "NEWS_OVERLAY_LIQUID_N",
+        "NEWS_OVERLAY_LIQUID_MIN_DOLLAR_VOL", "NEWS_OVERLAY_LIQUID_DV_SESSIONS",
+        "NEWS_OVERLAY_LIQUID_MIN_PRICE", "NEWS_OVERLAY_LIQUID_MIN_HISTORY",
+        "NEWS_OVERLAY_LIQUID_MAX_BAR_AGE", "NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK",
+        "NEWS_OVERLAY_LIQUID_SEED", "NEWS_OVERLAY_LIQUID_EXCLUDE_ETFS",
+        "NEWS_OVERLAY_STALE_REFUSE_SHARE", "NEWS_OVERLAY_COMPARISON_BASE",
+        "AUTOPSY_SUSPECT_UP", "AUTOPSY_SUSPECT_DOWN", "AUTOPSY_MIN_PRICE")}
 
 
 def cost_rate() -> float:
@@ -117,18 +159,21 @@ def contract() -> dict:
         "schema": SCHEMA,
         "licence": f"{LICENCE} (internal simulation only: no broker, no order, no LLM authority)",
         "base_book_id": p["NEWS_OVERLAY_BASE_BOOK"],
-        "base_book_note": ("a RANDOM 50-name equal-weight draw from the US $3M+ dollar-volume band "
-                           "(the random_universe twin of the BHJ book): small-cap inclusive, names "
-                           "that move 70% in a day, ~8% of it on stale bars in October 2026. A "
-                           "macro-tone overlay may be swamped by this basket's idiosyncratic noise."),
+        "base_definition": BASE_DEFINITION,
+        "why_random_base": WHY_RANDOM,
+        "comparison_base": {"id": p["NEWS_OVERLAY_COMPARISON_BASE"],
+                            "role": ("COMPARISON ONLY, never graded: the same scalars applied to SPY "
+                                     "alone (scalar x SPY vs 1.0 x SPY), so the overlay's effect can "
+                                     "be read on the index too")},
         "twin": "the base book at scalar 1.0: identical names, relative weights, re-target moments "
                 "and cost rate; only the scalar differs",
         "inputs": {
             "digests": "OPTIMUS_LEDGER_DIR/digest/world_digest_<YYYYMMDDTHHMMSSZ>.json "
                        "(world_digest.out_dir); fields themes[].tone.fear_greed and "
                        "themes[].tone.n_independent_sources; dry runs ignored",
-            "base_holdings": "DATA_DIR/aegis_pi.db paper_positions (shares, opened_at, closed_at) "
-                             "+ paper_book_decisions (asof_date, decided_utc) for base_book_id",
+            "base_holdings": ("derived, never stored: LIQUID-RANDOM-50 from "
+                              "OPTIMUS_LEDGER_DIR/prices_2025_26/bars.parquet (close, volume) dated "
+                              "strictly before each monthly draw date"),
             "prices": "OPTIMUS_LEDGER_DIR/prices_2025_26/bars.parquet close",
         },
         "mapping": ("F = sum_i n_i * fear_greed_i / sum_i n_i over themes with numeric "
@@ -145,10 +190,16 @@ def contract() -> dict:
                    "close t -> close t+1. The forward step runs only inside STEP_WINDOW_ET on a "
                    "real session (refused otherwise); a --date other than today's ET session is "
                    "BACKDATED and never graded; one FORWARD row per session (a repeat is a no-op)"),
+        "stale_bar_refusal": ("v3: at decision time for session t, the base's holdings for t are "
+                              "weighted at the last close before t; if more than STALE_REFUSE_SHARE "
+                              "of that weight sits on names whose newest bar (as of the session "
+                              "before t) is more than STALE_BAR_SESSIONS sessions old, the decision "
+                              "is REFUSED: scalar 1.0, degradation STALE_BASE_BARS, holdings named "
+                              "(v2 only flagged this)"),
         "grading": ("only FORWARD rows of this policy_hash; a session with no row -> scalar 1.0, "
                     "reason NO_DECISION_ROW (never the last scalar held); a session where a base "
                     "holding's last real bar is more than STALE_BAR_SESSIONS sessions old is "
-                    "marked DEGRADED and the holdings are listed"),
+                    "also marked DEGRADED on the grade and the holdings are listed"),
         "rebalance": ("a book re-targets at a session close only when its scalar changed or the "
                       "base book's holdings changed (a base rebalance dated on a non-session day "
                       "takes effect at the first session after it); otherwise it holds its shares"),
@@ -162,7 +213,19 @@ def contract() -> dict:
                                                 "seen before SLOPE and DEADBAND were chosen; no return "
                                                 "of any kind had been seen"),
                        "v2_change": ("only the baseline-age bound and the forward-path fixes; chosen "
-                                     "by a reviewer's correctness finding, not from replay returns")},
+                                     "by a reviewer's correctness finding, not from replay returns"),
+                       "bases_tried": p["NEWS_OVERLAY_BASES_TRIED"],
+                       "v3_change": ("only the base (and the stale-bar flag becoming a refusal). The "
+                                     "tone->scalar rule (SLOPE, DEADBAND, STEP, bounds, MIN_THEMES, "
+                                     "BASELINE_N/MIN/MAX_AGE_DAYS, timing) is v2's, unchanged. Base "
+                                     "choice is a SECOND LOOK at this design: bases tried = 2 (the "
+                                     "$3M random draw, then LIQUID-RANDOM-50); tone mappings tried = 1 "
+                                     "functional form with one parameter set (v2's MAPPINGS_TRIED = 2 "
+                                     "counts the v2 baseline-age bound as a second variant and is kept). "
+                                     "The v2 replay had been seen (overlay -0.84 pp vs twin) before "
+                                     "v3 was declared; the v3 base was chosen for readability (stale "
+                                     "bars, splits, small caps), not from that number, and its seed "
+                                     "was declared in config before any v3 replay ran")},
         "history": list(HISTORY),
         "params": p,
     }
@@ -334,7 +397,8 @@ def decisions_path(root: Optional[Path] = None) -> Path:
 def step(session: date, *, digests: Sequence[Mapping], base_weights: Mapping[str, float],
          prev_scalar: Optional[float] = None, enabled: Optional[bool] = None,
          out_path: Optional[Path] = None, write: bool = True, label: str = FORWARD,
-         now: Optional[datetime] = None) -> dict:
+         now: Optional[datetime] = None,
+         stale: Optional[Mapping[str, Any]] = None) -> dict:
     """One decision row for `session`. Writes only when the flag is ON and
     `write` is True; with the flag OFF it computes and writes NOTHING.
     Every row carries `written_utc` (the wall clock, `now`). A second FORWARD
@@ -347,6 +411,13 @@ def step(session: date, *, digests: Sequence[Mapping], base_weights: Mapping[str
     on = bool(_cfg.NEWS_OVERLAY_BOOK_ENABLED if enabled is None else enabled)
     c = contract()
     sc = compute_scalar(digests, decision_time(session))
+    if stale is not None:
+        sc["stale_weight_share"] = round(float(stale.get("share") or 0.0), 6)
+        sc["stale_names"] = dict(stale.get("names") or {})
+        if float(stale.get("share") or 0.0) > float(_cfg.NEWS_OVERLAY_STALE_REFUSE_SHARE):
+            sc["tone_degradation"] = sc["degradation"]
+            sc["tone_scalar"] = sc["scalar"]
+            sc.update({"scalar": 1.0, "degradation": STALE_BASE, "refused": True})
     g = sum(float(w) for w in base_weights.values())
     prev = 1.0 if prev_scalar is None else float(prev_scalar)
     row = {"schema": SCHEMA, "label": label, "session": session.isoformat(),
@@ -567,7 +638,163 @@ def base_weights_by_session(snaps: Sequence[Mapping], sessions: Sequence[date],
     return weights, changed
 
 
-__all__ = ["forward_session", "read_forward_rows", "grade_scalars", "stale_holdings",
+# ───────────────────────────── v3: the LIQUID-RANDOM-50 base ────────────────
+#
+# Why here and not in paper_books: `paper_books.create` persists the book and its
+# twins into aegis_pi.db and `book_cadence` writes positions and NAV there (a live
+# store a builder may not write), and the engine's random twin screens on a
+# 21-session median with no history, stale-bar or corporate-action rule. So the
+# base is a deterministic, replayable DEFINITION: holdings are derived from the
+# bars panel on each draw date from bars strictly before it. The draw itself is
+# the engine's (`paper_books._draw`), so the randomness is the engine's.
+
+def month_draw_date(t: date) -> date:
+    """D(t): the first XNYS session of t's calendar month."""
+    d = date(t.year, t.month, 1)
+    for _ in range(31):
+        if is_session(d):
+            return d
+        d += timedelta(days=1)
+    raise NewsOverlayRefused(f"no XNYS session found in {t:%Y-%m}")
+
+
+def draw_seed(asof: date, base: Optional[int] = None) -> int:
+    b = int(_cfg.NEWS_OVERLAY_LIQUID_SEED if base is None else base)
+    return int(hashlib.sha256(f"{b}:{asof.isoformat()}".encode()).hexdigest()[:8], 16)
+
+
+def excluded_symbols() -> set:
+    """ETFs and index proxies kept out of the liquid draw. An import failure
+    refuses (a silent empty set would let SPY into a 'stock' draw)."""
+    if not bool(_cfg.NEWS_OVERLAY_LIQUID_EXCLUDE_ETFS):
+        return set()
+    try:
+        from backend.services import xs_ranker as XR
+    except Exception as exc:                                   # noqa: BLE001
+        raise NewsOverlayRefused(f"xs_ranker.INDEX_PROXIES unavailable ({exc})") from exc
+    out = {str(s).upper() for s in XR.INDEX_PROXIES}
+    out |= {str(s).upper() for s in getattr(_cfg, "BOOK_KNOWN_ETFS", ())}
+    out |= {str(s).upper() for s in dict(getattr(_cfg, "THEME_ETF_MAP", {}) or {}).values()}
+    if getattr(_cfg, "BOOK_WLS_PROXY", None):
+        out.add(str(_cfg.BOOK_WLS_PROXY).upper())
+    return out
+
+
+def bar_ages(close, upto: date) -> dict:
+    """{symbol: sessions from its newest real bar to the last session <= upto}
+    (None = no bar at all). `close` is a wide frame (index = session dates)."""
+    import numpy as np
+    idx = [d for d in close.index if d <= upto]
+    if not idx:
+        return {}
+    notna = close.loc[idx].notna().to_numpy()[::-1]
+    anyv = notna.any(axis=0)
+    first = notna.argmax(axis=0)
+    return {str(s): (int(first[j]) if anyv[j] else None) for j, s in enumerate(close.columns)}
+
+
+def eligibility(close, volume, asof: date) -> dict:
+    """The LIQUID-RANDOM-50 rules on `asof`, from rows dated STRICTLY before it.
+    `close`/`volume`: wide frames, index = XNYS session dates, NaN = no bar."""
+    import numpy as np
+    idx = [d for d in close.index if d < asof]
+    if len(idx) < 2:
+        raise NewsOverlayRefused(f"fewer than 2 sessions of bars before {asof}")
+    c = close.loc[idx]
+    v = volume.reindex(index=idx, columns=c.columns)
+    n_hist = c.notna().sum(axis=0)
+    ages = bar_ages(c, idx[-1])
+    last_close = c.ffill().iloc[-1]
+    W = int(_cfg.NEWS_OVERLAY_LIQUID_DV_SESSIONS)
+    dv = (c * v).iloc[-W:].median(axis=0, skipna=True)
+    L = int(_cfg.NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK)
+    cc = c.iloc[-(L + 1):]
+    prev = cc.ffill().shift(1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        r = (cc / prev - 1.0).where(cc.notna())
+    sus = ((prev >= float(_cfg.AUTOPSY_MIN_PRICE))
+           & ((r > float(_cfg.AUTOPSY_SUSPECT_UP)) | (r < float(_cfg.AUTOPSY_SUSPECT_DOWN)))).iloc[1:]
+    suspect = sus.any(axis=0)
+    excl = excluded_symbols()
+    fails = {"dollar_vol": set(), "price": set(), "history": set(), "stale": set(),
+             "suspect": set(), "etf": set()}
+    pool = []
+    for s in c.columns:
+        sym = str(s)
+        bad = False
+        if not (dv.get(s) == dv.get(s)) or float(dv[s]) < float(_cfg.NEWS_OVERLAY_LIQUID_MIN_DOLLAR_VOL):
+            fails["dollar_vol"].add(sym); bad = True
+        if not (last_close.get(s) == last_close.get(s)) or float(last_close[s]) < float(_cfg.NEWS_OVERLAY_LIQUID_MIN_PRICE):
+            fails["price"].add(sym); bad = True
+        if int(n_hist[s]) < int(_cfg.NEWS_OVERLAY_LIQUID_MIN_HISTORY):
+            fails["history"].add(sym); bad = True
+        a = ages.get(sym)
+        if a is None or a > int(_cfg.NEWS_OVERLAY_LIQUID_MAX_BAR_AGE):
+            fails["stale"].add(sym); bad = True
+        if bool(suspect.get(s, False)):
+            fails["suspect"].add(sym); bad = True
+        if sym.upper() in excl:
+            fails["etf"].add(sym); bad = True
+        if not bad:
+            pool.append(sym)
+    return {"asof": asof, "last_bar_date_used": idx[-1], "n_symbols": int(c.shape[1]),
+            "pool": sorted(pool), "fails": fails}
+
+
+def draw_liquid_base(close, volume, asof: date, *, n: Optional[int] = None,
+                     seed: Optional[int] = None) -> dict:
+    """One recorded draw. Refuses when the pool holds fewer than n names."""
+    from backend.services import paper_books as PB
+    el = eligibility(close, volume, asof)
+    k = int(_cfg.NEWS_OVERLAY_LIQUID_N if n is None else n)
+    sd = draw_seed(asof) if seed is None else int(seed)
+    if len(el["pool"]) < k:
+        raise NewsOverlayRefused(f"LIQUID-RANDOM-{k} on {asof}: only {len(el['pool'])} eligible names")
+    names = PB._draw(el["pool"], k, sd)
+    if el["last_bar_date_used"] >= asof:                       # belt and braces: never a bar on/after D
+        raise NewsOverlayRefused(f"draw on {asof} used a bar dated {el['last_bar_date_used']}")
+    return {"asof": asof.isoformat(), "seed": sd, "base_seed": int(_cfg.NEWS_OVERLAY_LIQUID_SEED),
+            "pool_size": len(el["pool"]), "n_symbols_in_panel": el["n_symbols"],
+            "fail_counts": {k2: len(v) for k2, v in el["fails"].items()},
+            "last_bar_date_used": el["last_bar_date_used"].isoformat(), "names": names,
+            "pool_sha16": hashlib.sha256(",".join(el["pool"]).encode()).hexdigest()[:16]}
+
+
+def liquid_snapshots(draws: Sequence[Mapping], close_ff) -> list[dict]:
+    """Snapshots for `base_weights_by_session`: equal weight at each D's close."""
+    snaps = []
+    for dr in draws:
+        D = date.fromisoformat(dr["asof"])
+        if D not in close_ff.index:
+            raise NewsOverlayRefused(f"no bar row for draw date {D}: cannot fill the draw at its close")
+        row = close_ff.loc[D]
+        k = len(dr["names"])
+        sh = {}
+        for s in dr["names"]:
+            px = row.get(s)
+            if not (px == px) or not px:
+                raise NewsOverlayRefused(f"no close for drawn {s} at {D}")
+            sh[s] = (1.0 / k) / float(px)
+        snaps.append({"asof": D, "shares": sh, "cash": 0.0, "draw": dict(dr)})
+    return snaps
+
+
+def stale_weight_share(shares: Mapping[str, float], close_prev: Mapping[str, float],
+                       ages_prev: Mapping[str, Optional[int]], limit: Optional[int] = None) -> dict:
+    """{share, names}: the share of the base's weight (shares x last close before
+    the decision) on names whose newest bar is more than `limit` sessions old."""
+    lim = int(_cfg.NEWS_OVERLAY_STALE_BAR_SESSIONS if limit is None else limit)
+    w = {s: float(n) * float(close_prev.get(s) or 0.0) for s, n in shares.items()}
+    tot = sum(w.values())
+    bad = {s: ages_prev.get(s) for s in shares
+           if ages_prev.get(s) is None or int(ages_prev.get(s)) > lim}
+    share = (sum(w[s] for s in bad) / tot) if tot > 0 else (1.0 if bad else 0.0)
+    return {"share": share, "names": bad}
+
+
+__all__ = ["month_draw_date", "draw_seed", "eligibility", "draw_liquid_base", "liquid_snapshots",
+           "stale_weight_share", "bar_ages", "STALE_BASE", "BASE_DEFINITION", "WHY_RANDOM",
+           "forward_session", "read_forward_rows", "grade_scalars", "stale_holdings",
            "FORWARD", "BACKDATED", "BACKFILL", "NO_DECISION_ROW", "HISTORY", "NewsOverlayRefused", "load_base_holdings", "base_weights_by_session", "contract", "params", "cost_rate", "tone_score", "digest_summary",
            "load_digests", "decision_time", "map_scalar", "compute_scalar", "step", "simulate",
            "decisions_path", "DEGRADATIONS", "NO_DIGEST", "STALE", "EMPTY", "NO_BASELINE"]

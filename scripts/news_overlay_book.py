@@ -79,36 +79,75 @@ def _guard_out(out: Path, data: Path) -> None:
                                     f"writes there")
 
 
+def _wide(bars: Path, start: date, end: Optional[date] = None):
+    """(close, volume) wide frames over XNYS sessions in [start, end], read-only,
+    four columns only. Index = datetime.date; NaN = no bar."""
+    import pandas as pd
+    if not bars.is_file():
+        raise NO.NewsOverlayRefused(f"no bars panel at {bars}")
+    df = pd.read_parquet(bars, columns=["symbol", "date", "close", "volume"])
+    df["date"] = pd.to_datetime(df["date"]).dt.date
+    df = df[(df["date"] >= start) & ((df["date"] <= end) if end else True)]
+    if df.empty:
+        raise NO.NewsOverlayRefused(f"no bars in {start}..{end} in {bars}")
+    close = df.pivot_table(index="date", columns="symbol", values="close", aggfunc="last").sort_index()
+    vol = df.pivot_table(index="date", columns="symbol", values="volume", aggfunc="last").sort_index()
+    keep = [d for d in close.index if NO.is_session(d)]
+    return close.loc[keep], vol.reindex(index=keep, columns=close.columns)
+
+
 def _base_panel(P: dict, c: dict, first: date, last: Optional[date] = None) -> dict:
-    """Base holdings, closes, weights, re-target flags and stale holdings over
-    the bar sessions in [first, last]. Read-only."""
-    snaps = NO.load_base_holdings(P["db"], c["base_book_id"])
-    held = sorted({s for sn in snaps for s in sn["shares"]})
-    wide = _closes(P["bars"], held, min(first, min(sn["asof"] for sn in snaps)) - timedelta(days=60))
-    no_bars = [s for s in held if s not in wide.columns]
-    if no_bars:
-        raise NO.NewsOverlayRefused(f"held symbols with no bars at all: {no_bars}")
-    sessions = [d for d in wide.index if d >= first and (last is None or d <= last)]
+    """v3: the LIQUID-RANDOM-50 base derived from the bars panel (every draw from
+    bars strictly before its date), closes, weights, re-target flags, the
+    decision-time stale share per session, and the SPY comparison base. Read-only."""
+    lookback_days = int(1.6 * (int(_cfg.NEWS_OVERLAY_LIQUID_MIN_HISTORY)
+                               + int(_cfg.NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK))) // 2 + 60
+    d0 = NO.month_draw_date(first)
+    close, vol = _wide(P["bars"], d0 - timedelta(days=lookback_days), last)
+    spy = str(_cfg.NEWS_OVERLAY_COMPARISON_BASE)
+    if spy not in close.columns:
+        raise NO.NewsOverlayRefused(f"no {spy} bars: the comparison base cannot be marked")
+    sessions = [d for d in close.index if d >= first and (last is None or d <= last)]
     if not sessions:
         raise NO.NewsOverlayRefused(f"no bar sessions in {first}..{last}")
-    # distance (in panel sessions) from each session to the symbol's last real bar
-    idx = {d: i for i, d in enumerate(wide.index)}
-    last_pos: dict = {}
-    for s in held:
-        col = wide[s]
+    draw_dates = sorted({NO.month_draw_date(t) for t in sessions})
+    draws = [NO.draw_liquid_base(close, vol, D) for D in draw_dates]
+    held = sorted({s for dr in draws for s in dr["names"]})
+    cols = held + ([spy] if spy not in held else [])
+    sub = close[cols]
+    ages_by_day = {}
+    idx = list(sub.index)
+    notna = sub.notna()
+    for s in cols:
         lastreal, m = None, {}
-        for d, v in col.items():
-            if v == v:
-                lastreal = idx[d]
-            m[d] = None if lastreal is None else idx[d] - lastreal
-        last_pos[s] = m
-    carried = {s: int(wide.loc[sessions, s].isna().sum()) for s in held if wide.loc[sessions, s].isna().any()}
-    wide = wide.ffill()
-    closes = {d: {s: float(v) for s, v in wide.loc[d].items() if v == v} for d in sessions}
+        for i, d in enumerate(idx):
+            if bool(notna.iat[i, cols.index(s)]):
+                lastreal = i
+            m[d] = None if lastreal is None else i - lastreal
+        ages_by_day[s] = m
+    carried = {s: int(sub.loc[sessions, s].isna().sum()) for s in held if sub.loc[sessions, s].isna().any()}
+    ff = sub.ffill()
+    snaps = NO.liquid_snapshots(draws, ff)
+    closes = {d: {s: float(v) for s, v in ff.loc[d].items() if v == v} for d in sessions}
     weights, changed = NO.base_weights_by_session(snaps, sessions, closes)
-    stale = NO.stale_holdings(last_pos, sessions, weights)
-    return {"snaps": snaps, "sessions": sessions, "closes": closes, "weights": weights,
-            "changed": changed, "stale": stale, "carried": carried, "n_symbols": len(held)}
+    stale = NO.stale_holdings(ages_by_day, sessions, weights)
+    # decision-time stale share: holdings for t, weighted and aged at the session before t
+    dec_stale = {}
+    for t in sessions:
+        sn = [x for x in snaps if x["asof"] <= t][-1]
+        prior = [d for d in idx if d < t]
+        if not prior:
+            dec_stale[t] = {"share": 0.0, "names": {}}
+            continue
+        pd_ = prior[-1]
+        cp = {s: float(ff.at[pd_, s]) for s in sn["shares"] if ff.at[pd_, s] == ff.at[pd_, s]}
+        dec_stale[t] = NO.stale_weight_share(sn["shares"], cp, {s: ages_by_day[s].get(pd_) for s in sn["shares"]})
+    spy_w = {t: {spy: 1.0} for t in sessions}
+    spy_changed = {t: False for t in sessions}
+    return {"snaps": snaps, "draws": draws, "sessions": sessions, "closes": closes, "weights": weights,
+            "changed": changed, "stale": stale, "dec_stale": dec_stale, "carried": carried,
+            "n_symbols": len(held), "spy": {"weights": spy_w, "changed": spy_changed},
+            "panel": {"close": close, "volume": vol}}
 
 
 def worst_case_lines(sessions, closes, weights, sim) -> dict:
@@ -179,7 +218,7 @@ def cmd_replay(a) -> int:
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     before = {"digest": _count(P["digest"]), "data_top": _count(P["data"])}
     print("INPUTS (read-only):")
-    for k in ("digest", "db", "bars"):
+    for k in ("digest", "bars"):
         if not P[k].exists():
             raise NO.NewsOverlayRefused(f"missing input {k}: {P[k]}")
         print("  ", _describe(P[k]))
@@ -193,14 +232,18 @@ def cmd_replay(a) -> int:
     sessions, closes, weights, changed = B["sessions"], B["closes"], B["weights"], B["changed"]
     if len(sessions) < 2:
         raise NO.NewsOverlayRefused("fewer than 2 sessions with bars after the first digest")
-    print(f"  bars: {B['n_symbols']} base symbols, sessions {sessions[0]} .. {sessions[-1]} ({len(sessions)}), "
-          f"closes CARRIED (last bar forward-filled, as the base book's own mark does): {B['carried']}")
+    print(f"  bars: {B['n_symbols']} base symbols over {len(B['draws'])} draws, sessions {sessions[0]} .. "
+          f"{sessions[-1]} ({len(sessions)}), closes CARRIED (last bar forward-filled): {B['carried']}")
+    for dr in B["draws"]:
+        print(f"  DRAW {dr['asof']} seed {dr['seed']} (base {dr['base_seed']}) pool {dr['pool_size']} of "
+              f"{dr['n_symbols_in_panel']} (fails {dr['fail_counts']}), last bar used {dr['last_bar_date_used']}: "
+              f"{' '.join(dr['names'])}")
 
     rows, scal = [], {}
     prev = None
     for t in sessions:
         r = NO.step(t, digests=digests, base_weights=weights[t], prev_scalar=prev,
-                    enabled=False, write=False, label=NO.BACKFILL)
+                    enabled=False, write=False, label=NO.BACKFILL, stale=B["dec_stale"][t])
         if r["digest_stamped_utc"] and datetime.fromisoformat(r["digest_stamped_utc"]) >= NO.decision_time(t):
             raise NO.NewsOverlayRefused(f"look-ahead: {t} read digest {r['digest_id']}")
         r["grade_status"] = "DEGRADED" if t in B["stale"] else "OK"
@@ -212,6 +255,11 @@ def cmd_replay(a) -> int:
     sr = sim["rows"]
     for r, d in zip(sr, rows):
         r["grade_status"] = d["grade_status"]
+    spy_sim = NO.simulate(sessions, closes, B["spy"]["weights"], B["spy"]["changed"], scal)
+    ssr = spy_sim["rows"]
+    spy_ov = ssr[-1]["overlay_nav"] / spy_sim["notional"] - 1.0
+    spy_tw = ssr[-1]["twin_nav"] / spy_sim["notional"] - 1.0
+    wc_spy = worst_case_lines(sessions, closes, B["spy"]["weights"], spy_sim)
 
     notional = sim["notional"]
     wc = worst_case_lines(sessions, closes, weights, sim)
@@ -256,6 +304,29 @@ def cmd_replay(a) -> int:
                               "overlay_cost_usd": round(ov_cost, 2), "twin_cost_usd": round(tw_cost, 2),
                               "overlay_cost_on_scalar_only_days_usd": round(scalar_cost, 2)},
         "base_rebalance_sessions": [t.isoformat() for t in sessions if changed.get(t)],
+        "base": {"id": c["base_book_id"], "definition": c["base_definition"],
+                 "draws": B["draws"],
+                 "own_return_vs_spy": {"base_twin_total_pct": round(100 * tw_tot, 4),
+                                       "spy_total_pct": round(100 * spy_tw, 4),
+                                       "base_minus_spy_pp": round(100 * (tw_tot - spy_tw), 4),
+                                       "statement": ("a random liquid book is not a strategy: this "
+                                                     "difference is a property of one draw, not of "
+                                                     "the overlay, and claims nothing")}},
+        "comparison_spy_base": {"role": "COMPARISON ONLY, never graded",
+                                "overlay_total_pct": round(100 * spy_ov, 4),
+                                "twin_total_pct": round(100 * spy_tw, 4),
+                                "overlay_minus_twin_pp": round(100 * (spy_ov - spy_tw), 4),
+                                "overlay_cost_usd": round(sum(r["overlay_cost"] for r in ssr), 2),
+                                "twin_cost_usd": round(sum(r["twin_cost"] for r in ssr), 2),
+                                "overlay_traded_usd": round(sum(r["overlay_traded"] for r in ssr), 2),
+                                "worst_case_first": wc_spy},
+        "decision_status": dict(Counter(("REFUSED " if r.get("refused") else "") + (r["degradation"] or "MAPPED")
+                                        for r in rows)),
+        "stale_refusals": {"n_days_refused": sum(1 for r in rows if r.get("refused")),
+                           "rule": (f"> {_cfg.NEWS_OVERLAY_STALE_REFUSE_SHARE:.0%} of base weight on names "
+                                    f"whose newest bar is > {_cfg.NEWS_OVERLAY_STALE_BAR_SESSIONS} sessions "
+                                    f"old at the session before t -> REFUSED at 1.0"),
+                           "max_stale_weight_share": max(r.get("stale_weight_share", 0.0) for r in rows)},
         "stale_bar_days": {"n_days_degraded": len(stale_days),
                            "rule": f"a holding whose last real bar is > {_cfg.NEWS_OVERLAY_STALE_BAR_SESSIONS} "
                                    f"sessions old", "by_day": stale_days},
@@ -263,14 +334,16 @@ def cmd_replay(a) -> int:
                     "history": c["history"]},
         "honesty": ("BACKFILL; digests carried 0 themes 2026-10-15..2026-11-03 (provider_budget block) and "
                     "none 11-04..11-09, so mapped days fall in two short windows: this cannot distinguish "
-                    "the overlay from its twin and says nothing about skill"),
+                    "the overlay from its twin and says nothing about skill. The bars panel is "
+                    "survivor-selected (symbols alive on 2026-09-01), which touches the base and its twin "
+                    "alike"),
     }
-    receipt = {"schema": "news_overlay_book_replay/v2", "run_id": run_id, "licence": NO.LICENCE,
+    receipt = {"schema": "news_overlay_book_replay/v3", "run_id": run_id, "licence": NO.LICENCE,
                "contract": c, "headline": head,
-               "inputs": {k: str(P[k]) for k in ("digest", "db", "bars")},
+               "inputs": {k: str(P[k]) for k in ("digest", "bars")},
                "carried_closes_by_symbol": B["carried"],
                "live_folder_counts": {"before": before, "after": after, "unchanged": before == after},
-               "decision_rows": rows, "daily": sr}
+               "decision_rows": rows, "daily": sr, "daily_spy_comparison": ssr}
     rp = out / f"news_overlay_replay_{run_id}.json"
     _write_json(rp, receipt)
     dp = out / f"news_overlay_backfill_decisions_{run_id}.jsonl"
@@ -283,7 +356,16 @@ def cmd_replay(a) -> int:
           f"degradations {dict(deg)}; grade DEGRADED (stale base bars) on {len(stale_days)} days")
     print(f"scalar min {min(sc_vals)} max {max(sc_vals)} mean {head['scalar_distribution']['mean']} "
           f"counts {head['scalar_distribution']['counts']}; moved on {moved} days")
-    print(f"RAW overlay {100 * ov_tot:+.3f}%  twin {100 * tw_tot:+.3f}%  diff {100 * (ov_tot - tw_tot):+.3f} pp")
+    print(f"decision status {head['decision_status']}; REFUSED for stale base bars on "
+          f"{head['stale_refusals']['n_days_refused']} of {len(sessions)} days (max stale weight share "
+          f"{head['stale_refusals']['max_stale_weight_share']:.3f})")
+    print(f"RAW LIQUID-RANDOM-50: overlay {100 * ov_tot:+.3f}%  twin {100 * tw_tot:+.3f}%  "
+          f"diff {100 * (ov_tot - tw_tot):+.3f} pp")
+    print(f"RAW SPY (comparison only): overlay {100 * spy_ov:+.3f}%  twin {100 * spy_tw:+.3f}%  "
+          f"diff {100 * (spy_ov - spy_tw):+.3f} pp; SPY overlay cost "
+          f"${head['comparison_spy_base']['overlay_cost_usd']:,.2f}")
+    print(f"BASE vs SPY: base (twin) {100 * tw_tot:+.3f}% vs SPY {100 * spy_tw:+.3f}% = "
+          f"{100 * (tw_tot - spy_tw):+.3f} pp -- a random liquid book is not a strategy")
     print(f"by month {by_month}")
     print(f"cost overlay ${ov_cost:,.2f} (scalar-only days ${scalar_cost:,.2f}) twin ${tw_cost:,.2f}; "
           f"traded overlay ${head['turnover_and_cost']['overlay_traded_usd']:,.0f} twin "
@@ -316,23 +398,36 @@ def cmd_step(a, now: Optional[datetime] = None) -> int:
         t, label = today, NO.FORWARD
     c = NO.contract()
     digests = NO.load_digests(P["digest"])
-    snaps = NO.load_base_holdings(P["db"], c["base_book_id"])
-    syms = sorted({s for sn in snaps for s in sn["shares"]})
-    wide = _closes(P["bars"], syms, min(sn["asof"] for sn in snaps)).ffill()
-    days = [d for d in wide.index if d <= t]
-    if not days:
-        raise NO.NewsOverlayRefused(f"no bars on or before {t}")
-    last = days[-1]
-    closes = {last: {s: float(v) for s, v in wide.loc[last].items() if v == v}}
-    w, _ = NO.base_weights_by_session(snaps, [last], closes)
+    # holdings for t = the draw dated D(t), from bars strictly before D(t); weights and
+    # stale ages at the last bar strictly before t (today's bar is not known at 15:45 ET)
+    D = NO.month_draw_date(t)
+    lookback_days = int(1.6 * (int(_cfg.NEWS_OVERLAY_LIQUID_MIN_HISTORY)
+                               + int(_cfg.NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK))) // 2 + 60
+    close, vol = _wide(P["bars"], D - timedelta(days=lookback_days), t - timedelta(days=1))
+    dr = NO.draw_liquid_base(close, vol, D)
+    prior = [d for d in close.index if d < t]
+    if not prior:
+        raise NO.NewsOverlayRefused(f"no bars before {t}")
+    last = prior[-1]
+    ff = close[dr["names"]].ffill()
+    if D in ff.index:
+        shares = NO.liquid_snapshots([dr], ff)[0]["shares"]
+    else:                       # t is the draw date itself: equal weight is the target
+        shares = {s: 1.0 / float(ff.at[last, s]) / len(dr["names"]) for s in dr["names"]}
+    cp = {s: float(ff.at[last, s]) for s in shares}
+    nav = sum(n * cp[s] for s, n in shares.items())
+    w = {last: {s: n * cp[s] / nav for s, n in shares.items()}}
+    ages = NO.bar_ages(close[dr["names"]], last)
+    stale = NO.stale_weight_share(shares, cp, ages)
     dp = NO.decisions_path(P["data"] / "optimus")
     fwd = NO.read_forward_rows(dp, c["policy_hash"]) if dp.exists() else []
     prev = fwd[-1]["scalar"] if fwd else None
     row = NO.step(t, digests=digests, base_weights=w[last], prev_scalar=prev, out_path=dp,
-                  label=label, now=now)
+                  label=label, now=now, stale=stale)
     print(json.dumps({k: row.get(k) for k in ("session", "label", "scalar", "degradation", "digest_id",
                                                "decision_utc", "written_utc", "policy_hash", "written",
-                                               "duplicate")}, default=str))
+                                               "duplicate", "stale_weight_share", "refused")}, default=str))
+    print(f"base draw {dr['asof']} seed {dr['seed']} pool {dr['pool_size']}: {' '.join(dr['names'])}")
     return 0
 
 
@@ -367,7 +462,7 @@ def cmd_grade(a) -> int:
     rp = out / f"news_overlay_grade_{run_id}.json"
     n_missing = sum(1 for v in why.values() if v == NO.NO_DECISION_ROW)
     n_deg = sum(1 for r in sr if r["grade_status"] == "DEGRADED")
-    _write_json(rp, {"schema": "news_overlay_book_grade/v2", "run_id": run_id, "label": NO.FORWARD,
+    _write_json(rp, {"schema": "news_overlay_book_grade/v3", "draws": B["draws"], "run_id": run_id, "label": NO.FORWARD,
                      "policy_hash": c["policy_hash"], "sessions": len(sessions),
                      "no_decision_row_sessions": n_missing, "degraded_sessions": n_deg,
                      "worst_case_first": worst_case_lines(sessions, B["closes"], B["weights"], sim),
