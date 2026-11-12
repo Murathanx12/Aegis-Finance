@@ -535,10 +535,10 @@ def load_sector_map(path: Optional[Path]) -> dict[str, str]:
         return {}
     m = {}
     with Path(path).open(encoding="utf-8") as fh:
-        for l in fh:
-            if not l.strip():
+        for ln in fh:
+            if not ln.strip():
                 continue
-            r = json.loads(l)
+            r = json.loads(ln)
             s = (r.get("identity") or {}).get("sector")
             if s and r.get("symbol"):
                 m[str(r["symbol"]).upper()] = s
@@ -800,11 +800,11 @@ def load_news_buys(fm_dir: Path, *, role: str, before: Optional[str],
     file holds and the sample does not is accounted for."""
     text = (Path(fm_dir) / "decisions.jsonl").read_text(encoding="utf-8").splitlines()
     rows, bad = [], 0
-    for l in text:
-        if not l.strip():
+    for ln in text:
+        if not ln.strip():
             continue
         try:
-            rows.append(json.loads(l))
+            rows.append(json.loads(ln))
         except json.JSONDecodeError:
             bad += 1
     steps = [("role", lambda r: r.get("role") == role), ("row=decision", lambda r: r.get("row") == "decision"),
@@ -854,7 +854,10 @@ def run_buys(a) -> int:
     sector_of = load_sector_map(Path(a.universe) if a.universe else None)
     cost_rt = 2.0 * a.cost_bps_side / 1e4
     common = dict(sector_of=sector_of, k=a.k, seed=a.seed, h=a.h, cost_rt=cost_rt, k_sector=a.k_sector)
-    has_sec = (lambda b: bool(sector_of.get(str(b["symbol"]).upper())))
+
+    def has_sec(b: dict) -> bool:
+        return bool(sector_of.get(str(b["symbol"]).upper()))
+
     n_new = sum(1 for b in buys if b["entry_kind"] == "new_entry")
     variants = {
         "V1_primary_all_buys_close_entry": dict(no_chase=2.0, use_fill=False, news=news_by, sel=lambda b: True),
