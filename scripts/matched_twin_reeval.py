@@ -1055,6 +1055,7 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
             daily_excess[acct] = {d: x - m for d, x, m in ser}
             names_of[acct] = sorted(tickers.get(acct) or [])
     pairs = pairwise(daily_excess, names_of)
+    cross = cross_book(results)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     counts: dict = {}
     for r in results.values():
@@ -1097,6 +1098,7 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
                        "n_distinct_bets": len(leaders), "verdict_counts": counts},
         "books": results,
         "pairwise": pairs,
+        "cross_book": cross,
         "claim_line": "CLAIMS PROMOTED: none",
     }
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1109,6 +1111,32 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
     md.write_text("\n".join(render_md(receipt)) + "\n", encoding="utf-8")
     receipt["_path"], receipt["_md"] = str(out), str(md)
     return receipt
+
+
+def cross_book(results: dict) -> dict:
+    """How much of the cross-section of book-vs-SPY the twins' band explains. The
+    books share windows, so they are NOT independent draws: a description, not a test."""
+    ok = [r for r in results.values() if r.get("status") == "OK"]
+    if len(ok) < 3:
+        return {"n_books": len(ok), "why": "fewer than 3 evaluated books"}
+    ex = np.array([r["excess_vs_spy_pp"] for r in ok], float)
+    out: dict = {"n_books": len(ok), "n_book_above_spy": int((ex > 0).sum()),
+                 "note": "books share windows (most llm books 2026-09-28 -> last mark): not independent draws"}
+    for lv in LEVELS:
+        tm = np.array([r["twins"][lv]["twin_median_vs_spy_pp"] for r in ok], float)
+        om = np.array([r["twins"][lv]["excess_over_twin_median_pp"] for r in ok], float)
+        pc = np.array([r["twins"][lv]["book_percentile"] for r in ok], float)
+        out[lv] = {"twin_median_vs_spy_pp_median": round(float(np.median(tm)), 3),
+                   "share_books_whose_twin_median_beats_spy": round(float((tm > 0).mean()), 3),
+                   "book_over_twin_median_pp_median": round(float(np.median(om)), 3),
+                   "corr_book_vs_spy_with_twin_median_vs_spy": round(float(np.corrcoef(ex, tm)[0, 1]), 3),
+                   "mean_book_percentile": round(float(np.mean(pc)), 3),
+                   "n_at_or_above_0975": int((pc >= 0.975).sum()), "n_at_or_below_0025": int((pc <= 0.025).sum()),
+                   "expected_each_tail_if_books_were_twins": round(0.025 * len(pc), 2)}
+    D = np.array([[r["decomposition_pp"][k] for k in ("cash", "panel", "band", "sector", "selection")] for r in ok])
+    out["decomposition_median_pp"] = dict(zip(("cash", "panel", "band", "sector", "selection"),
+                                              np.round(np.median(D, 0), 3).tolist()))
+    return out
 
 
 def load_sector_map(universe_dir: Path) -> tuple[dict, str]:
