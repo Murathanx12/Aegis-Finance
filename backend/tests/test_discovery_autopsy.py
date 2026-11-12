@@ -852,7 +852,7 @@ def _en_node(eid, primary, fs, built, co=(), graph=()):
             "content_hash": eid, "version_key": eid, "n_evidence": 1, "parent_id": "par_" + eid[3:],
             "importance": {"importance_0": 4.0, "facts": {"n_publishers": 2}}, "decay": {"half_life_hours": 72.0},
             "evidence": [{"item_key": eid + ":k", "title": "LICENSED TITLE"}],
-            "connected_names": {"co_mention": [{"ticker": t, "n_items": 1} for t in co],
+            "connected_names": {"co_mention": [{"ticker": t, "n_items": 2} for t in co],
                                 "graph": [{"ticker": t, "link": "co_coverage", "weight": 0.6} for t in graph]}}
 
 
@@ -914,7 +914,7 @@ def test_event_join_refuses_a_node_dated_after_the_open(monkeypatch, tmp_path):
     EN.append_rows(p, [_en_node("ev_bad", "UPZ", PREV_CLOSE, PREV_CLOSE)])
     monkeypatch.setattr(EN, "events_for", lambda *a, **k: {"UPZ": [{
         "event_id": "ev_bad", "first_seen_utc": _iso(OPEN + timedelta(hours=1)),
-        "version_built_utc": _iso(OPEN), "role": "primary"}]})
+        "version_built_utc": _iso(OPEN), "role": "primary", "link_quality": "PRIMARY"}]})
     rows = [{"ticker": "UPZ", "side": "UP", "knowable": {"n_by_kind": {}}}]
     with pytest.raises(DA.AutopsyRefused) as e:
         DA.attach_event_nodes(rows, p, OPEN)

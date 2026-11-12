@@ -448,7 +448,7 @@ def test_graph_and_calendar_built_after_now_are_refused(tmp_path):
                                                     "items_8k": [], "title": "t", "title_tickers": {},
                                                     "first_seen_utc": NOW.isoformat(), "item_key": "k"}]}
     EN.finalize_node(node, {"calendar": {"file": "c", "coverage_end": day, "dates": {}}}, now=NOW)
-    assert any(d.startswith("CALENDAR_HORIZON_SHORT") for d in node["degradations"])
+    assert any(d.startswith("CALENDAR_ISSUER_NOT_COVERED") for d in node["degradations"])
 
 
 def test_forecasts_are_bounded_by_first_seen():
@@ -477,6 +477,7 @@ def test_cli_zero_rows_everywhere_is_rc2(tmp_path, monkeypatch, capsys):
             "graph": {}, "bars_last_session": None, "calendar": {}, "positions": {},
             "identity": {"n_stored_latest": 0, "n_versions": 0, "retire": []}, "parents": [], "nodes": []}
     monkeypatch.setattr(CLI.EN, "build", lambda *a, **k: fake)
+    monkeypatch.setattr(CLI.EN, "check_inputs", lambda *a, **k: {})
     rc = CLI.main(["build", "--data-root", str(tmp_path), "--out", str(tmp_path / "o"),
                    "--now", NOW.isoformat()])
     assert rc == 2 and "NO_CORPUS_ROWS" in capsys.readouterr().out
@@ -536,7 +537,7 @@ def test_lab_catalyst_calendar_dates_from_its_own_stamp_never_after_now(tmp_path
     assert none["status"] == "NO_CATALYST_CALENDAR_BY_NOW" and none["dates"] == {}
 
 
-def test_horizon_short_only_when_no_calendar_covers_the_issuer(tmp_path):
+def test_issuer_not_covered_vs_horizon_short(tmp_path):
     rows = _story(NOW)
     store = tmp_path / "s" / EN.STORE_NAME
     nodes, _s, _r = _pipeline(tmp_path, rows, since=NOW - timedelta(hours=6), now=NOW + timedelta(hours=12),
@@ -547,13 +548,16 @@ def test_horizon_short_only_when_no_calendar_covers_the_issuer(tmp_path):
                             "dates": {"NVDA": [{"date": d1, "kind": "earnings", "source": "lab"}]}, "macro": []}}
     EN.finalize_node(n, covered, now=NOW + timedelta(hours=12))
     assert n["next_dates"][0]["date"] == d1 and not any("HORIZON_SHORT" in x for x in n["degradations"])
-    # covered by the lab calendar, no date inside its horizon: NOT a short horizon
+    # covered by the lab calendar, no date inside its window: a SHORT HORIZON, not "not covered"
     EN.finalize_node(n, {"catalyst": {**covered["catalyst"], "dates": {}}}, now=NOW + timedelta(hours=12))
-    assert not any("HORIZON_SHORT" in x for x in n["degradations"])
+    assert any(x.startswith("CALENDAR_HORIZON_SHORT") for x in n["degradations"])
+    assert not any("ISSUER_NOT_COVERED" in x for x in n["degradations"])
     assert n["next_dates_coverage"]["issuer_covered_by"] == ["lab.json"]
+    # the lab checked other tickers only, the contest calendar has no row: NOT COVERED
     EN.finalize_node(n, {"catalyst": {"file": "lab.json", "covered": {"AMD"}, "dates": {}}},
                      now=NOW + timedelta(hours=12))
-    assert any(x.startswith("CALENDAR_HORIZON_SHORT") for x in n["degradations"])
+    assert any(x.startswith("CALENDAR_ISSUER_NOT_COVERED") for x in n["degradations"])
+    assert not any("HORIZON_SHORT" in x for x in n["degradations"])
 
 
 def test_version_key_ignores_score_drift_and_a_moved_window_adds_nothing(tmp_path):
@@ -620,11 +624,20 @@ def test_nodes_known_at_never_uses_a_version_built_after_t(tmp_path):
     assert "title" not in b and "url" not in b and "SECRET" not in json.dumps(b)
 
 
-def test_roles_primary_beats_co_mention_beats_graph():
-    n = _snode("ev_1", "NVDA", NOW, NOW, co=("INTC",), graph=("INTC", "AMD"))
+def test_roles_and_link_quality():
+    n = _snode("ev_1", "NVDA", NOW, NOW, co=("INTC", "MORN"), graph=("INTC", "AMD"))
+    n["connected_names"]["co_mention"][0]["n_items"] = 3            # INTC named in 3 items: STRONG
+    n["connected_names"]["graph"].append({"ticker": "PINS", "link": "return_response", "weight": -0.05})
+    n["connected_names"]["graph"].append({"ticker": "MCD", "link": "co_coverage", "weight": 0.63})
     r = EN.roles_of(n)
-    assert r["NVDA"]["role"] == "primary" and r["INTC"]["link"] == "co_mention"
-    assert r["AMD"] == {"role": "connected", "link": "co_coverage", "weight": 0.7}
+    assert r["NVDA"]["quality"] == "PRIMARY"
+    assert r["INTC"]["link"] == "co_mention" and r["INTC"]["quality"] == "STRONG"
+    assert r["MORN"]["quality"] == "WEAK"                            # one item
+    assert r["AMD"] == {"role": "connected", "link": "co_coverage", "weight": 0.7, "quality": "STRONG"}
+    assert r["PINS"]["quality"] == "WEAK" and r["MCD"]["quality"] == "WEAK"
+    # a weak one-item co-mention is replaced by a STRONG graph link to the same name
+    m = _snode("ev_2", "NVDA", NOW, NOW, co=("AMD",), graph=("AMD",))
+    assert EN.roles_of(m)["AMD"]["link"] == "co_coverage"
 
 
 def test_foreign_alias_maps_only_listed_names(tmp_path, monkeypatch):
@@ -660,7 +673,8 @@ def test_daily_refuses_zero_rows_itself(tmp_path, monkeypatch):
                                                       "read": {"rows_read": 0}, "nodes": []})
     with pytest.raises(EN.EventNodesRefused) as e:
         EN.daily(tmp_path, now=NOW, out=tmp_path / "o")
-    assert e.value.code == EN.NO_CORPUS_ROWS and not (tmp_path / "o").exists()
+    assert e.value.code == EN.NO_CORPUS_ROWS
+    assert [f.name for f in (tmp_path / "o").iterdir()] == [EN.LOCK_NAME]     # only the lock sidecar
 
 
 def test_daily_builds_into_the_store_and_reruns_with_a_moving_window_add_nothing(tmp_path, monkeypatch):

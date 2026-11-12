@@ -451,12 +451,14 @@ def _ev_store(tmp_path, now):
                 "importance": {"importance_0": imp0, "facts": {"n_publishers": 4}},
                 "decay": {"half_life_hours": 72.0}, "parent_id": "par_" + eid[3:],
                 "evidence": [{"item_key": eid, "title": "LICENSED TITLE"}],
-                "connected_names": {"co_mention": [{"ticker": t, "n_items": 1} for t in co],
+                "connected_names": {"co_mention": [{"ticker": t, "n_items": 1 if t == "EVW" else 2}
+                                                   for t in co],
                                     "graph": [{"ticker": t, "link": lk, "weight": w} for t, lk, w in graph]}}
     p = tmp_path / "ev" / EN.STORE_NAME
     EN.append_rows(p, [
-        node("ev_big", "EVA", 9.0, now - timedelta(hours=1), co=("EVB",),
-             graph=(("EVC", "co_coverage", 0.7), ("EVD", "shared_sector", None))),
+        node("ev_big", "EVA", 9.0, now - timedelta(hours=1), co=("EVB", "EVW"),
+             graph=(("EVC", "co_coverage", 0.7), ("EVD", "shared_sector", None),
+                    ("EVR", "return_response", -0.1), ("EVF", "co_coverage", 0.6))),
         node("ev_small", "EVS", 1.0, now - timedelta(hours=1), co=("EVT",)),         # under the threshold
         node("ev_late", "EVL", 9.0, now + timedelta(minutes=5)),                       # built after the build
     ])
@@ -481,7 +483,11 @@ def test_event_source_on_offers_primary_and_linked_names_under_the_same_screens(
     store = _ev_store(tmp_path, now)
     news = _collect(tmp_path, [_theme(["NEWSA"])], _issuers("NEWSA"), event_store=store)
     assert news["events"]["n_events_offering"] == 1 and news["events"]["n_versions_after_build_skipped"] == 1
-    assert set(news["names"]) == {"NEWSA", "EVA", "EVB", "EVC"}        # shared_sector EVD is not a link
+    # not offered: shared_sector EVD, return_response EVR, co_coverage 0.6 EVF, one-item co-mention EVW
+    assert set(news["names"]) == {"NEWSA", "EVA", "EVB", "EVC"}
+    assert news["events"]["links_refused"] == {"co_coverage_below_floor": 1, "co_mention_too_few_items": 1,
+                                               "link:return_response": 1, "link:shared_sector": 1}
+    assert news["events"]["offered_links"]["EVC"] == [("co_coverage", 0.7, "ev_big")]
     assert news["names"]["EVB"]["sources"] == ["event"]
     e = news["names"]["EVA"]["evidence"][0]
     assert e["event_id"] == "ev_big" and e["via"] == "primary" and "title" not in e

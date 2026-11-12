@@ -6846,7 +6846,27 @@ EVENT_NODES_SELECTOR_PACKET_SCHEMA = "llm_selector_packet/3+event_nodes"
 #: at least this; only these link types offer a connected name (shared sector/theme
 #: membership is a list of peers, not a link, and is not offered).
 EVENT_NODES_FUNNEL_MIN_IMPORTANCE = 4.0
-EVENT_NODES_FUNNEL_LINKS: tuple = ("primary", "co_mention", "co_coverage", "return_response")
+#: return_response is NOT offered: on the live graph its weights are |w| <= 0.12 and half negative.
+EVENT_NODES_FUNNEL_LINKS: tuple = ("primary", "co_mention", "co_coverage")
+#: The funnel offers a co_coverage name only at or above this weight, and a co-mentioned
+#: name only when it is named in at least this many of the event's evidence items.
+EVENT_NODES_FUNNEL_MIN_CO_COVERAGE = 0.65
+EVENT_NODES_FUNNEL_MIN_COMENTION_ITEMS = 2
+#: link_quality on every connected name (the node keeps ALL links as context): STRONG =
+#: co-mention in >= N evidence items, or co_coverage >= the weight; everything else WEAK.
+EVENT_NODES_STRONG_MIN_COMENTION_ITEMS = 2
+EVENT_NODES_STRONG_MIN_CO_COVERAGE = 0.65
+#: The autopsy join lists only PRIMARY and STRONG links by default.
+EVENT_NODES_AUTOPSY_STRONG_ONLY = True
+#: A store whose newest build (at or before the reader's instant) is older than this is
+#: EVENT_STORE_STALE: an empty join is then a stopped daily, not a quiet market.
+EVENT_NODES_STORE_STALE_HOURS = 6.0
+#: The lab catalyst calendar older than this at the build is EVENT_CALENDAR_STALE.
+EVENT_NODES_CALENDAR_STALE_HOURS = 36.0
+#: daily refuses a --now later than the wall clock by more than this (NOW_IN_FUTURE).
+EVENT_NODES_MAX_CLOCK_SKEW_S = 120
+#: daily_latest.json lists this many top nodes (ids, tickers, importance; never titles).
+EVENT_NODES_DAILY_TOP_N = 10
 #: Event-only names get their own enrichment cap, the same rule as news and filing.
 EVENT_NODES_FUNNEL_MAX_ENRICH = 5
 #: Only nodes first seen within this many hours of the reader's instant are offered/joined.
@@ -6869,7 +6889,11 @@ EVENT_NODES_FOREIGN_NAME_ALIASES: dict = {
     "谷歌": ("GOOGL", "Google's official mainland name (谷歌, since 2006)"),
     "グーグル": ("GOOGL", "Google Japan's official name (グーグル合同会社)"),
     "구글": ("GOOGL", "Google Korea's official name (구글코리아)"),
-    "美光": ("MU", "Micron's official Chinese name (美光科技; Taiwan entity 台灣美光)"),
+    "台积电": ("TSM", "TSMC's Simplified-Chinese short name (台积电); ADR leg TSM per asia_adrs.csv"),
+    # Micron only by its fuller forms: the bare two characters also occur in 歐美光伏 / 北美光伏 (solar)
+    "美光科技": ("MU", "Micron Technology's official Chinese name (美光科技)"),
+    "美光公司": ("MU", "Micron's Chinese name with 'company' (美光公司)"),
+    "台灣美光": ("MU", "Micron's Taiwan entity (台灣美光)"),
 }
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at

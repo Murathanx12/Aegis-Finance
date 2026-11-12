@@ -52,6 +52,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import re
 from collections import Counter
 from dataclasses import dataclass, field
@@ -85,6 +86,13 @@ NO_EVENTS_FROM_ROWS = "NO_EVENTS_FROM_ROWS"
 CHAIN_BROKEN = "CHAIN_BROKEN"
 UNKNOWN_EVENT = "UNKNOWN_EVENT"
 NO_CORPUS_ROWS = "NO_CORPUS_ROWS"
+STORE_TORN_TAIL = "STORE_TORN_TAIL"          # the last line of the store is incomplete
+STORE_CORRUPT = "STORE_CORRUPT"              # a line BEFORE the last does not parse
+STORE_LOCKED = "STORE_LOCKED"                # another build holds the store (a SKIP, rc 0)
+NOW_IN_FUTURE = "NOW_IN_FUTURE"
+EVENT_STORE_STALE = "EVENT_STORE_STALE"
+EVENT_CALENDAR_STALE = "EVENT_CALENDAR_STALE"
+LOCK_NAME = ".event_nodes.lock"
 
 # fill refusal codes
 FILL_BUDGET_REFUSED = "BUDGET_REFUSED"
@@ -970,6 +978,13 @@ def calendar_dates(calendar_dir: Path, syms: set, now: datetime) -> dict:
             "writer": "scripts/contest_calendar.py calendar (window = contest dates)"}
 
 
+def forward_calendars(P: dict, data_root: Path, syms: set, now: datetime) -> tuple[dict, dict]:
+    """THE one place next dates are read (contest calendar, lab catalyst calendar),
+    so a universe-wide forward calendar can replace it without touching the node."""
+    return (calendar_dates(Path(P["calendar"]), syms, now),
+            catalyst_dates(Path(P.get("catalyst_root") or data_root), syms, now))
+
+
 def catalyst_dates(data_root: Path, syms: set, now: datetime) -> dict:
     """Forward dates from the night lab's catalyst calendar (`lab_catalyst_calendar`,
     written by scripts/always_on_lab.py `catalyst_calendar`): the newest receipt whose
@@ -1028,7 +1043,12 @@ def catalyst_dates(data_root: Path, syms: set, now: datetime) -> dict:
                           "status": r.get("expectedness"),
                           "days_away": (date.fromisoformat(d) - now.date()).days,
                           "source": f"{f.parent.name}/{f.name}:{r.get('source')}"})
+    age_h = round((now - w).total_seconds() / 3600.0, 2)
+    lim = float(C.EVENT_NODES_CALENDAR_STALE_HOURS)
     return {"status": "OK", "file": f"{f.parent.name}/{f.name}", "written_utc": _iso(w),
+            "age_hours": age_h, "stale_after_hours": lim,
+            "degradation": (f"{EVENT_CALENDAR_STALE}: lab catalyst calendar {f.parent.name}/{f.name} written "
+                            f"{_iso(w)}, {age_h} h before now (limit {lim:g} h)") if age_h > lim else None,
             "covered": covered, "n_tickers_checked": len(covered), "dates": dates, "macro": macro,
             "macro_legs": rec.get("legs"), "macro_horizon_days": int(C.EVENT_NODES_MACRO_HORIZON_DAYS),
             "earnings_horizon_days": rec.get("horizon_days"),
@@ -1214,7 +1234,10 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
     comention = sorted(co.values(), key=lambda r: (-r["n_items"], r["ticker"]))[:int(C.EVENT_NODES_MAX_COMENTIONS)]
     for r in comention:
         r["where"], r["rules"] = sorted(r["where"]), sorted(r["rules"])
+        r["link_quality"] = link_quality("co_mention", r["n_items"])
     graph = graph_neighbours(ctx.get("graph"), sym, ctx.get("graph_meta"))
+    for g in graph:
+        g["link_quality"] = link_quality(g["link"], g.get("weight"))
     gset = {g["ticker"] for g in graph}
     for r in comention:
         r["also_graph_linked"] = r["ticker"] in gset
@@ -1238,11 +1261,17 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
     # it (contest); only when none does is "no date" a short horizon, not "nothing found"
     covered_by = [n for n, ok in ((cat.get("file"), sym in (cat.get("covered") or set())),
                                   (cal.get("file"), sym in (cal.get("dates") or {}))) if ok]
-    if not any(d["ticker"] == sym for d in nd) and not covered_by:
-        degr.append(f"CALENDAR_HORIZON_SHORT: no calendar covers {sym}: lab catalyst calendar "
-                    f"{cat.get('file')} checked {cat.get('n_tickers_checked', 0)} tickers, not {sym}; "
-                    f"{cal.get('file')} coverage ends {cal.get('coverage_end')} "
-                    f"(writer {cal.get('writer')})")
+    if not any(d["ticker"] == sym for d in nd):
+        if not covered_by:
+            degr.append(f"CALENDAR_ISSUER_NOT_COVERED: no calendar covers {sym}: lab catalyst calendar "
+                        f"{cat.get('file')} checked {cat.get('n_tickers_checked', 0)} tickers, not {sym}; "
+                        f"{cal.get('file')} holds no row for it (coverage ends {cal.get('coverage_end')})")
+        else:
+            degr.append(f"CALENDAR_HORIZON_SHORT: {sym} is covered by {covered_by} but has no date inside "
+                        f"the window (lab horizon {cat.get('earnings_horizon_days')} d, contest coverage ends "
+                        f"{cal.get('coverage_end')}, node horizon {C.EVENT_NODES_NEXT_DATES_HORIZON_DAYS} d)")
+    if cat.get("degradation"):
+        degr.append(cat["degradation"])
     if ctx.get("graph_meta", {}).get("status") != "OK":
         degr.append(str(ctx.get("graph_meta", {}).get("status")))
     if ctx.get("held_degradation"):
@@ -1309,19 +1338,63 @@ def _row_hash(row: dict) -> str:
 
 
 def read_store(path: Path) -> list[dict]:
+    """Every row. An incomplete LAST line (a write cut mid-line: no newline, or a
+    final line that does not parse) is STORE_TORN_TAIL -- `repair-tail` removes
+    exactly that line after a backup. A bad line before the last is STORE_CORRUPT
+    and is never repaired automatically."""
     p = Path(path)
     if not p.is_file():
         return []
+    raw = p.read_bytes()
+    lines = raw.decode("utf-8", errors="replace").split("\n")
+    nonempty = [i for i, ln in enumerate(lines) if ln.strip()]
+    last = nonempty[-1] if nonempty else -1
     out = []
-    for line in p.read_text(encoding="utf-8").splitlines():
-        if line.strip():
-            out.append(json.loads(line))
+    for i in nonempty:
+        try:
+            out.append(json.loads(lines[i]))
+        except ValueError:
+            if i == last and not raw.endswith(b"\n"):
+                raise EventNodesRefused(STORE_TORN_TAIL, f"{p}: the last line ({len(lines[i])} chars) is "
+                                                         f"incomplete; run `python -m scripts.event_nodes "
+                                                         f"repair-tail --out {p.parent} --dry-run`") from None
+            raise EventNodesRefused(STORE_CORRUPT, f"{p}: line {i + 1} does not parse") from None
+    return out
+
+
+def repair_tail(path: Path, *, dry_run: bool = True, stamp: Optional[str] = None) -> dict:
+    """Remove ONLY an incomplete final line: copy the store to a timestamped backup
+    beside it, truncate at the last newline, re-verify the chain. A store without a
+    torn tail, or with a bad line before the last, is left untouched."""
+    import shutil
+    p = Path(path)
+    raw = p.read_bytes()
+    try:
+        read_store(p)
+        return {"status": "NO_TORN_TAIL", "store": str(p), "changed": False}
+    except EventNodesRefused as exc:
+        if exc.code != STORE_TORN_TAIL:
+            raise
+    cut = raw.rfind(b"\n") + 1                     # 0 when the only line is torn
+    tail = raw[cut:]
+    out = {"status": "DRY_RUN" if dry_run else "REPAIRED", "store": str(p), "bytes_before": len(raw),
+           "bytes_after": cut, "torn_tail_bytes": len(tail), "torn_tail_head": tail[:80].decode("utf-8", "replace"),
+           "changed": False}
+    if dry_run:
+        return out
+    bak = p.with_name(f"{p.name}.bak_{stamp or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}")
+    shutil.copy2(p, bak)
+    with p.open("r+b") as fh:
+        fh.truncate(cut)
+        fh.flush()
+        os.fsync(fh.fileno())
+    out.update({"backup": str(bak), "changed": True, "chain": verify_chain(p)})
     return out
 
 
 def verify_chain(path: Path) -> dict:
     prev = GENESIS
-    rows = read_store(path)
+    rows = read_store(path)          # STORE_TORN_TAIL / STORE_CORRUPT raise, named
     for i, r in enumerate(rows):
         if r.get("prev_row_hash") != prev:
             return {"ok": False, "n": len(rows), "first_bad": i, "why": "prev_row_hash mismatch"}
@@ -1448,12 +1521,40 @@ def append_rows(path: Path, nodes: list[dict], *, retire: Iterable[dict] = (),
         n_par += 1
     if new:
         p.parent.mkdir(parents=True, exist_ok=True)
-        with p.open("a", encoding="utf-8", newline="\n") as fh:
-            for r in new:
-                fh.write(json.dumps(r, sort_keys=True, ensure_ascii=True) + "\n")
+        _append_once(p, new)
     return {"appended_nodes": len([r for r in new if r["row_kind"] == "node"]), "unchanged": same,
+            "appended_ids": [r["event_id"] for r in new if r["row_kind"] == "node"],
+            "retired_ids": [r["event_id"] for r in new if r["row_kind"] == "retire"],
             "retired": len(list(retire)) if not isinstance(retire, list) else len(retire),
             "appended_parents": n_par, "store": str(p), "tip": prev}
+
+
+def _append_once(p: Path, rows: list[dict]) -> None:
+    """The whole batch in ONE buffered write, then flush + fsync: a crash leaves at
+    most one torn final line, which `read_store` names and `repair_tail` removes."""
+    data = "".join(json.dumps(r, sort_keys=True, ensure_ascii=True) + "\n" for r in rows).encode("utf-8")
+    with p.open("ab") as fh:
+        fh.write(data)
+        fh.flush()
+        os.fsync(fh.fileno())
+
+
+def store_lock(store_path: Path, timeout_s: float = 0.0):
+    """The project's OS file lock around read -> compute -> append (sidecar
+    `.event_nodes.lock` beside the store). Raises EventNodesRefused(STORE_LOCKED)
+    when another build holds it."""
+    from contextlib import contextmanager
+
+    from backend.services import disk_guard
+
+    @contextmanager
+    def _cm():
+        try:
+            with disk_guard.file_lock(Path(store_path).parent / LOCK_NAME, timeout_s=timeout_s):
+                yield
+        except disk_guard.FileLockTimeout:
+            raise EventNodesRefused(STORE_LOCKED, f"another build holds the store {store_path}") from None
+    return _cm()
 
 
 def append_nodes(path: Path, nodes: list[dict]) -> dict:
@@ -1585,8 +1686,7 @@ def build(data_root: Path, *, since: datetime, now: datetime,
     if graph is not None:
         for s in list(syms):
             cal_syms.update(g["ticker"] for g in graph_neighbours(graph, s, gmeta))
-    cal = calendar_dates(Path(P["calendar"]), cal_syms, now)
-    cat = catalyst_dates(Path(P.get("catalyst_root") or data_root), cal_syms, now)
+    cal, cat = forward_calendars(P, data_root, cal_syms, now)
     ctx = {"graph": graph, "graph_meta": gmeta, "held": held, "held_degradation": held_deg,
            "forecasts": fc, "bars": bars, "calendar": cal, "catalyst": cat}
     build_id = f"en_{now.strftime('%Y%m%dT%H%M%SZ')}_{_sha([_iso(since), _iso(now)])[:6]}"
@@ -1849,8 +1949,7 @@ def append_fill(path: Path, fill: dict) -> dict:
                                                f"version that is no longer the latest")
     row = {"row_kind": "fill", **fill, "prev_row_hash": v.get("tip", GENESIS)}
     row["row_hash"] = _row_hash(row)
-    with p.open("a", encoding="utf-8", newline="\n") as fh:
-        fh.write(json.dumps(row, sort_keys=True, ensure_ascii=True) + "\n")
+    _append_once(p, [row])
     return {"appended": 1, "tip": row["row_hash"]}
 
 
@@ -1868,6 +1967,7 @@ def nodes_known_at(store_path: Path, t: datetime) -> dict:
     out: dict[str, dict] = {}
     retired: set = set()
     pending: list[str] = []
+    newest: Optional[datetime] = None
     n_after, n_unstamped_retire = 0, 0
     fills: dict[str, dict] = {}
     for r in rows:
@@ -1894,6 +1994,7 @@ def nodes_known_at(store_path: Path, t: datetime) -> dict:
         if st is None or st > t:
             n_after += 1
             continue
+        newest = st if newest is None or st > newest else newest
         out[r["event_id"]] = r
         retired.discard(r["event_id"])          # a later version brings a retired id back
     n_unstamped_retire = len(pending)
@@ -1901,9 +2002,34 @@ def nodes_known_at(store_path: Path, t: datetime) -> dict:
     for eid, f in fills.items():
         if eid in live:
             live[eid] = {**live[eid], "_fill_dated_facts": len(f.get("dated_facts") or [])}
+    age_h = None if newest is None else round((t - newest).total_seconds() / 3600.0, 2)
+    lim = float(C.EVENT_NODES_STORE_STALE_HOURS)
+    stale = (f"{EVENT_STORE_STALE}: newest build in {store_path} at or before {_iso(t)} is "
+             f"{_iso(newest)} ({age_h} h old; limit {lim:g} h) -- an empty join here is a stopped "
+             f"`daily`, not a quiet market") if (newest is None or age_h > lim) else None
     return {"nodes": live, "n_versions_after_t_skipped": n_after,
+            "newest_build_utc": _iso(newest), "age_hours": age_h, "stale_after_hours": lim, "stale": stale,
             "n_retire_rows_unapplied": n_unstamped_retire, "n_retired": len(retired & set(out)),
             "store": str(store_path), "t": _iso(t)}
+
+
+def link_quality(link: str, weight: Any) -> str:
+    """STRONG / WEAK for a connected name. STRONG: a co-mention in at least
+    EVENT_NODES_STRONG_MIN_COMENTION_ITEMS evidence items, or a co_coverage link
+    with weight >= EVENT_NODES_STRONG_MIN_CO_COVERAGE. Everything else (one-item
+    co-mentions, return_response, shared sector/theme) is WEAK. Computed from the
+    stored link and weight, so slice-1 rows get a tier on read too."""
+    if link == "primary":
+        return "PRIMARY"
+    try:
+        w = abs(float(weight))
+    except (TypeError, ValueError):
+        return "WEAK"
+    if link == "co_mention":
+        return "STRONG" if w >= int(C.EVENT_NODES_STRONG_MIN_COMENTION_ITEMS) else "WEAK"
+    if link == "co_coverage":
+        return "STRONG" if w >= float(C.EVENT_NODES_STRONG_MIN_CO_COVERAGE) else "WEAK"
+    return "WEAK"
 
 
 def roles_of(node: dict) -> dict[str, dict]:
@@ -1911,12 +2037,17 @@ def roles_of(node: dict) -> dict[str, dict]:
     role = {"role": "primary" | "connected", "link": "primary" | "co_mention" |
     <graph link type>, "weight": graph weight or co-mention item count}. A ticker
     connected several ways keeps the strongest: primary > co_mention > graph."""
-    out: dict[str, dict] = {node["primary_ticker"]: {"role": "primary", "link": "primary", "weight": None}}
+    out: dict[str, dict] = {node["primary_ticker"]: {"role": "primary", "link": "primary", "weight": None,
+                                                     "quality": "PRIMARY"}}
     cn = node.get("connected_names") or {}
     for r in cn.get("co_mention") or []:
-        out.setdefault(r["ticker"], {"role": "connected", "link": "co_mention", "weight": r.get("n_items")})
+        out.setdefault(r["ticker"], {"role": "connected", "link": "co_mention", "weight": r.get("n_items"),
+                                     "quality": link_quality("co_mention", r.get("n_items"))})
     for g in sorted(cn.get("graph") or [], key=lambda g: (g.get("weight") is None, -abs(g.get("weight") or 0.0))):
-        out.setdefault(g["ticker"], {"role": "connected", "link": g["link"], "weight": g.get("weight")})
+        q = link_quality(g["link"], g.get("weight"))
+        cur = out.get(g["ticker"])
+        if cur is None or (cur["quality"] == "WEAK" and q == "STRONG"):
+            out[g["ticker"]] = {"role": "connected", "link": g["link"], "weight": g.get("weight"), "quality": q}
     return out
 
 
@@ -1928,6 +2059,7 @@ def node_brief(node: dict, ticker: str, at: datetime, role: dict) -> dict:
     return {"event_id": node["event_id"], "parent_id": node.get("parent_id"),
             "primary_ticker": node["primary_ticker"], "ticker": ticker,
             "role": role["role"], "link": role["link"], "link_weight": role.get("weight"),
+            "link_quality": role.get("quality") or link_quality(role["link"], role.get("weight")),
             "first_seen_utc": node["first_seen_utc"], "version_built_utc": node.get("built_now_utc"),
             "node_version": node.get("node_version"),
             "age_hours": round((at - fs).total_seconds() / 3600.0, 2),
@@ -1962,14 +2094,23 @@ def events_for(tickers: Iterable[str], known: dict, at: datetime, *,
 # ─────────────────────────────────────────────── 11. the daily caller
 
 def daily(data_root: Path, *, now: datetime, out: Optional[Path] = None,
-          window_hours: Optional[float] = None) -> dict:
+          window_hours: Optional[float] = None, wall: Optional[datetime] = None,
+          lock_timeout_s: float = 0.0) -> dict:
     """Build the trailing window into the store and append what changed. Safe to
     run every 30-60 minutes: identity holds across windows (`assign_identity`) and a
     version is added only when its `version_key` changed. Raises
     EventNodesRefused(NO_CORPUS_ROWS) when every source is empty."""
     hours = float(C.EVENT_NODES_DAILY_WINDOW_HOURS if window_hours is None else window_hours)
+    wall = wall or datetime.now(timezone.utc)
+    if now > wall + timedelta(seconds=int(C.EVENT_NODES_MAX_CLOCK_SKEW_S)):
+        raise EventNodesRefused(NOW_IN_FUTURE, f"--now {_iso(now)} is after the wall clock {_iso(wall)}")
     out_dir = Path(out) if out else Path(data_root) / C.EVENT_NODES_DIRNAME
     store = out_dir / STORE_NAME
+    with store_lock(store, timeout_s=lock_timeout_s):         # the lock sidecar is the only file made on a refusal
+        return _daily_locked(data_root, now=now, store=store, hours=hours)
+
+
+def _daily_locked(data_root: Path, *, now: datetime, store: Path, hours: float) -> dict:
     since = now - timedelta(hours=hours)
     res = build(Path(data_root), since=since, now=now, store_path=store)
     if res["read"]["rows_read"] == 0:
@@ -1982,6 +2123,7 @@ def daily(data_root: Path, *, now: datetime, out: Optional[Path] = None,
     chain = verify_chain(store)
     new_ids = sum(1 for n in res["nodes"] if n["identity"] == "NEW")
     return {"res": res, "store": st, "chain": chain, "rows_before": before, "window_hours": hours,
+            "new_ids": new_ids,
             "summary": (f"EVENT_NODES_DAILY ok build={res['build_id']} window={hours:g}h "
                         f"rows={res['read']['rows_read']} events={len(res['nodes'])} new_ids={new_ids} "
                         f"+versions={st['appended_nodes']} unchanged={st['unchanged']} "

@@ -388,10 +388,22 @@ def event_names(build_time: datetime, *, store: Optional[Path] = None) -> dict:
     if not p.is_file():
         out["degradations"].append(f"EVENT_NODES_STORE_MISSING: {p} does not exist")
         return out
-    known = EN.nodes_known_at(p, build_time)
+    try:
+        known = EN.nodes_known_at(p, build_time)
+    except EN.EventNodesRefused as exc:          # torn / corrupt store: named, never a traceback
+        out["status"] = exc.code
+        out["degradations"].append(f"{exc.code}: {exc.detail}")
+        return out
+    out.update({"store_newest_build_utc": known["newest_build_utc"], "store_age_hours": known["age_hours"]})
+    if known["stale"]:
+        out["degradations"].append(known["stale"])
     out["n_nodes_known"] = len(known["nodes"])
     out["n_versions_after_build_skipped"] = known["n_versions_after_t_skipped"]
     links = set(_cfg.EVENT_NODES_FUNNEL_LINKS)
+    min_cov = float(_cfg.EVENT_NODES_FUNNEL_MIN_CO_COVERAGE)
+    min_co = int(_cfg.EVENT_NODES_FUNNEL_MIN_COMENTION_ITEMS)
+    out.update({"min_co_coverage": min_cov, "min_comention_items": min_co})
+    refused: Counter = Counter()
     thr = float(_cfg.EVENT_NODES_FUNNEL_MIN_IMPORTANCE)
     mx = float(_cfg.EVENT_NODES_CONSUMER_MAX_AGE_HOURS)
     names: dict[str, list] = {}
@@ -406,6 +418,14 @@ def event_names(build_time: datetime, *, store: Optional[Path] = None) -> dict:
         out["n_events_offering"] += 1
         for t, role in roles.items():
             if role["link"] not in links or not _TICKER.match(t):
+                refused[f"link:{role['link']}"] += 1
+                continue
+            w = abs(float(role.get("weight") or 0.0))
+            if role["link"] == "co_coverage" and w < min_cov:
+                refused["co_coverage_below_floor"] += 1
+                continue
+            if role["link"] == "co_mention" and w < min_co:
+                refused["co_mention_too_few_items"] += 1
                 continue
             b = EN.node_brief(n, t, build_time, role)
             names.setdefault(t, []).append(
@@ -417,6 +437,8 @@ def event_names(build_time: datetime, *, store: Optional[Path] = None) -> dict:
     for t in names:
         names[t].sort(key=lambda e: (-e["importance_at_build"], e["event_id"]))
     out["names"] = dict(sorted(names.items()))
+    out["links_refused"] = dict(sorted(refused.items()))
+    out["offered_links"] = {t: [(e["via"], e["link_weight"], e["event_id"]) for e in ev] for t, ev in out["names"].items()}
     out["status"] = "FRESH" if names else "NONE_ABOVE_THRESHOLD"
     if not names:
         out["degradations"].append(f"EVENTS_NONE_ABOVE_THRESHOLD: 0 of {out['n_nodes_known']} known nodes at "
@@ -476,12 +498,13 @@ def _strength(t: str, names: dict) -> tuple:
     ev = names[t]["evidence"]
     news = [e for e in ev if e["source"] == SOURCE_NEWS]
     if ev and all(e["source"] == SOURCE_EVENT for e in ev):
-        # strongest event first, then more events, then the closest link (primary <
-        # co-mention < graph link by |weight|), then the ticker
+        # the CLOSEST link first (primary < co-mention < co_coverage by |weight|), then the
+        # strongest event, then more events, then the ticker: two weak links to two events
+        # must not outrank one close link (PINS over AMD in the first replay)
         imp = max((float(e.get("importance_at_build") or 0.0) for e in ev), default=0.0)
         link = min((0.0 if e.get("via") == "primary" else 1.0 if e.get("via") == "co_mention"
                     else 2.0 - min(1.0, abs(float(e.get("link_weight") or 0.0)))) for e in ev)
-        return (-imp, -len(ev), link, t)
+        return (link, -imp, -len(ev), t)
     if news:
         conf = max((float(e.get("confidence") or 0.0) for e in news), default=0.0)
         return (-sum(1 for e in news if e.get("mentioned")), -len(news), -conf, t)
@@ -797,8 +820,12 @@ def main(argv: Optional[list] = None) -> int:
         print(f"DEGRADED: {d}")
     if ns.get("events"):
         e = ns["events"]
-        print(f"events {e.get('status')}: nodes known {e.get('n_nodes_known')}, events offering "
-              f"{e.get('n_events_offering')} (importance >= {e.get('min_importance')}), names {e.get('n_names')}")
+        print(f"events {e.get('status')}: store newest build {e.get('store_newest_build_utc')} "
+              f"({e.get('store_age_hours')} h old); nodes known {e.get('n_nodes_known')}, events offering "
+              f"{e.get('n_events_offering')} (importance >= {e.get('min_importance')}), names {e.get('n_names')}; "
+              f"links refused {e.get('links_refused')}")
+        for t, lk in (e.get("offered_links") or {}).items():
+            print(f"  event name {t}: {lk}")
     print(f"ranker final unchanged: {ns['final']['unchanged']}")
     print(ns["both_numbers"])
     print(f"added: {[(r['ticker'], '+'.join(r['sources']), r['net_direction']) for r in ns['added_by_source']['added']]}")

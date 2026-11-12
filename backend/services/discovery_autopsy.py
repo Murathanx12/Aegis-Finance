@@ -1467,8 +1467,30 @@ def attach_event_nodes(rows: list[dict], store: Optional[Path], open_d: datetime
         out.update({"n_movers_with_event": 0, "n_primary": 0, "n_connected_only": 0,
                     "connected_only": [], "primary": []})
         return out
-    known = EN.nodes_known_at(Path(store), open_d)
+    try:
+        known = EN.nodes_known_at(Path(store), open_d)
+    except EN.EventNodesRefused as exc:          # a torn / corrupt store: named, never a traceback
+        out["degradations"].append(f"{exc.code}: {exc.detail}; no event_node items joined")
+        for r in rows:
+            r["knowable"]["event_nodes"] = []
+            r["knowable"].setdefault("n_by_kind", {})["event_node"] = 0
+            r["event_node_role"] = None
+        out.update({"n_movers_with_event": 0, "n_primary": 0, "n_connected_only": 0,
+                    "connected_only": [], "primary": []})
+        return out
+    out.update({"store_newest_build_utc": known["newest_build_utc"], "store_age_hours_at_open": known["age_hours"],
+                "store_stale_after_hours": known["stale_after_hours"]})
+    if known["stale"]:
+        out["degradations"].append(known["stale"])
     ev = EN.events_for([r["ticker"] for r in rows], known["nodes"], open_d)
+    strong_only = bool(C.EVENT_NODES_AUTOPSY_STRONG_ONLY)
+    n_weak_hidden = 0
+    if strong_only:
+        for t in list(ev):
+            keep = [b for b in ev[t] if b["link_quality"] in ("PRIMARY", "STRONG")]
+            n_weak_hidden += len(ev[t]) - len(keep)
+            ev[t] = keep
+    out.update({"strong_links_only": strong_only, "n_weak_links_hidden": n_weak_hidden})
     bad = []
     for r in rows:
         lst = ev.get(norm_ticker(r["ticker"]), [])
@@ -2349,7 +2371,9 @@ def headline(rec: dict) -> list[str]:
     ] + ([f"event nodes (CH-35, context only): {s['event_nodes'].get('n_movers_with_event')} movers on a "
           f"node known at the open; primary {s['event_nodes'].get('primary')}; CONNECTED ONLY "
           f"{s['event_nodes'].get('n_connected_only')} "
-          f"{[c['ticker'] for c in s['event_nodes'].get('connected_only') or []]}"]
+          f"{[c['ticker'] for c in s['event_nodes'].get('connected_only') or []]}; store newest build "
+          f"{s['event_nodes'].get('store_newest_build_utc')} ({s['event_nodes'].get('store_age_hours_at_open')} h "
+          f"before the open)"]
          if "event_nodes" in s else [])
 
 

@@ -948,11 +948,19 @@ def load_inputs(data_root: Path, decision_time: datetime, *,
         if not st.is_file():
             raise SelectorRefused(INPUT_MISSING, f"event_nodes store missing at {st} "
                                                  f"(EVENT_NODES_SELECTOR_PACKET_ENABLED is on)")
-        known = EN.nodes_known_at(st, decision_time)
-        out["event_by_ticker"] = EN.events_for(cset["tickers"], known["nodes"], decision_time)
         out["paths"]["event_nodes"] = str(st)
+        try:
+            known = EN.nodes_known_at(st, decision_time)
+        except EN.EventNodesRefused as exc:      # torn / corrupt store: a named degradation, no event block
+            out["event_by_ticker"] = {}
+            out["sizes"].update({"event_nodes_known": 0, "event_nodes_degradation": f"{exc.code}: {exc.detail}"})
+            return out
+        out["event_by_ticker"] = EN.events_for(cset["tickers"], known["nodes"], decision_time)
         out["sizes"].update({"event_nodes_known": len(known["nodes"]),
-                             "event_versions_after_decision_skipped": known["n_versions_after_t_skipped"]})
+                             "event_versions_after_decision_skipped": known["n_versions_after_t_skipped"],
+                             "event_store_newest_build_utc": known["newest_build_utc"],
+                             "event_store_age_hours": known["age_hours"],
+                             "event_nodes_degradation": known["stale"]})
     return out
 
 
