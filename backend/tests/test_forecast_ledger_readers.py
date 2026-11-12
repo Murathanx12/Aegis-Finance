@@ -43,6 +43,7 @@ NAMES_THE_FILE: dict[str, str] = {
     "backend/services/accrual_canary.py": "via the layer (forecast_accrual)",
     "backend/services/daily_review.py": "via the layer (_tail_rows -> tail_lines)",
     "backend/services/discovery_autopsy.py": "via the layer (exists, logical_lines); the default path only",
+    "backend/services/event_nodes.py": "via the layer (exists, logical_lines); the default path only",
     "backend/services/expected_return.py": "via the layer (forecast_reputation.load_ledger)",
     "backend/services/fast_mover_forensics.py": "via the layer (logical_lines)",
     "backend/services/forecast_reputation.py": "via the layer (load_ledger -> read_rows)",
