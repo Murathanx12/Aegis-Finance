@@ -471,9 +471,7 @@ def test_forward_calendar_labels_on_the_node_not_covered_vs_no_date_vs_stale(tmp
     pull({"OLDCO": q("OLDCO", day + timedelta(days=10))}, NOW - timedelta(days=30))
     pull({"NVDA": q("NVDA", day + timedelta(days=5)),
           "QUIET": q("QUIET", day + timedelta(days=200))}, NOW - timedelta(hours=2))
-    store = tmp_path / str(EN.C.FORWARD_CALENDAR_DIRNAME)
-    assert EN.default_paths(tmp_path)["calendar"] == store
-    cal = EN.calendar_dates(store, {"NVDA", "QUIET", "OLDCO", "NEVER"}, NOW)
+    cal = EN.forward_dates(tmp_path, {"NVDA", "QUIET", "OLDCO", "NEVER"}, NOW)
     assert cal["status"] == "OK" and cal["writer"] == "scripts/forward_calendar.py pull"
     assert cal["dates"]["NVDA"][0]["date"] == (day + timedelta(days=5)).isoformat()
     assert cal["dates"]["QUIET"] == [] and "OLDCO" not in cal["dates"] and "NEVER" not in cal["dates"]
@@ -491,8 +489,94 @@ def test_forward_calendar_labels_on_the_node_not_covered_vs_no_date_vs_stale(tmp
         assert bool(flagged) == (label in ("NOT_COVERED", "CALENDAR_STALE")), (sym, flagged)
         assert bool(node["next_dates"]) == (label == "DATE_IN_HORIZON")
     # before the first pull nothing is covered: no look-ahead into a later snapshot
-    early = EN.calendar_dates(store, {"NVDA"}, NOW - timedelta(days=31))
+    early = EN.forward_dates(tmp_path, {"NVDA"}, NOW - timedelta(days=31))
     assert early["status"] == "NO_CALENDAR_BY_NOW" and early["labels"]["NVDA"]["label"] == "NOT_COVERED"
+
+
+def _build_world(tmp_path, monkeypatch):
+    """Every REQUIRED input present (minimal), the forward calendar NOT created here."""
+    root = tmp_path / "opt"
+    _write(root, _story(NOW - timedelta(hours=10)))
+    (root / "official" / "tables").mkdir(parents=True)
+    (root / "official" / "tables" / "filing_events.jsonl").write_text("", encoding="utf-8")
+    (root / "official" / "company_tickers.json").write_text(
+        json.dumps({"t": (NOW - timedelta(days=1)).isoformat(), "map": {"1045810": "NVDA"}}), encoding="utf-8")
+    _tbl(tmp_path)
+    (root / "universe_graph").mkdir()
+    (root / "universe_graph" / "latest.json").write_text("{}", encoding="utf-8")
+    (root / "contest" / "calendar").mkdir(parents=True)
+    (root / "prices_2025_26").mkdir()
+    (root / "prices_2025_26" / "bars.parquet").write_bytes(b"")
+    (root / "pc_book").mkdir()
+    (root / "pc_book" / "state_latest.json").write_text(
+        json.dumps({"t": (NOW - timedelta(hours=1)).isoformat(), "positions": []}), encoding="utf-8")
+    (root / "predictions.jsonl").write_text("", encoding="utf-8")
+    monkeypatch.setattr(EN, "load_size_and_moves", lambda p, now: {})
+    monkeypatch.setattr(EN, "forecasts_for", lambda *a, **k: {})
+    paths = {**EN.default_paths(root), "issuers": tmp_path / "issuers.csv"}
+    return root, paths
+
+
+def _nvda_build(root, paths):
+    out = EN.build(root, since=NOW - timedelta(days=1), now=NOW, paths=paths, load_graph=False)
+    nv = [n for n in out["nodes"] if n["primary_ticker"] == "NVDA"]
+    assert nv, [n["primary_ticker"] for n in out["nodes"]]
+    return out, nv[0]
+
+
+def _fc_pull(root, tbl, at):
+    from backend.services import forward_calendar as FC
+    clock = iter(at + timedelta(seconds=i) for i in range(1, 1000))
+    return FC.pull(list(tbl), root, fetch=lambda syms: {s: tbl[s] for s in syms if s in tbl},
+                   macro=False, now_fn=lambda: next(clock), sleep_fn=lambda s: None,
+                   scope=FC.FULL_UNIVERSE)
+
+
+def _nvda_quote(d):
+    ts = int(datetime(d.year, d.month, d.day, 21, tzinfo=timezone.utc).timestamp())
+    return {"symbol": "NVDA", "quoteType": "EQUITY", "earningsTimestamp": ts,
+            "earningsTimestampStart": ts, "earningsTimestampEnd": ts, "isEarningsDateEstimate": False}
+
+
+def test_the_event_build_runs_with_no_forward_calendar_folder(tmp_path, monkeypatch):
+    root, paths = _build_world(tmp_path, monkeypatch)
+    assert not (root / "forward_calendar").exists()
+    out, nv = _nvda_build(root, paths)                      # no CALENDAR_MISSING refusal
+    assert out["calendar"]["status"] == "NO_CALENDAR_BY_NOW"
+    assert nv["next_dates_label"] == "NOT_COVERED" and nv["next_dates"] == []
+    assert any(d.startswith("NEXT_DATES_NOT_COVERED") for d in nv["degradations"])
+
+
+def test_the_event_build_with_a_healthy_forward_calendar_shows_the_date(tmp_path, monkeypatch):
+    from backend.services import forward_calendar as FC
+    root, paths = _build_world(tmp_path, monkeypatch)
+    d = FC.market_date(NOW) + timedelta(days=5)
+    _fc_pull(root, {"NVDA": _nvda_quote(d)}, NOW - timedelta(hours=2))
+    out, nv = _nvda_build(root, paths)
+    assert out["calendar"]["status"] == "OK"
+    assert nv["next_dates_label"] == "DATE_IN_HORIZON"
+    mine = [x for x in nv["next_dates"] if x["ticker"] == "NVDA"]
+    assert mine and mine[0]["date"] == d.isoformat() and mine[0]["timing"] == "AMC"
+    assert mine[0]["status"] == "VENDOR_ANNOUNCED"
+    assert not any(x.startswith("NEXT_DATES_") for x in nv["degradations"])
+
+
+def test_the_event_build_with_a_corrupt_forward_snapshot_continues_with_a_named_degradation(
+        tmp_path, monkeypatch):
+    from backend.services import forward_calendar as FC
+    root, paths = _build_world(tmp_path, monkeypatch)
+    rec = _fc_pull(root, {"NVDA": _nvda_quote(FC.market_date(NOW) + timedelta(days=5))},
+                   NOW - timedelta(hours=2))
+    p = Path(rec["snapshot_path"])
+    p.write_bytes(p.read_bytes() + b"\xff\xfe\n[1]\n")     # invalid UTF-8 and a non-object line
+    out, nv = _nvda_build(root, paths)
+    assert any(x.startswith("NEXT_DATES_CALENDAR_UNREADABLE") for x in nv["degradations"])
+    # and a reader that raises outright is caught at the calendar boundary
+    monkeypatch.setattr(FC, "next_dates", lambda *a, **k: (_ for _ in ()).throw(ValueError("bad date")))
+    out2, nv2 = _nvda_build(root, paths)
+    assert out2["calendar"]["status"] == "CALENDAR_UNREADABLE"
+    assert nv2["next_dates_label"] == "CALENDAR_UNREADABLE"
+    assert any(x.startswith("NEXT_DATES_CALENDAR_UNREADABLE: ValueError") for x in nv2["degradations"])
 
 
 def test_forecasts_are_bounded_by_first_seen():

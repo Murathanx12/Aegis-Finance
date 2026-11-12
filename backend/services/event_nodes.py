@@ -908,41 +908,58 @@ def _forecasts_before(rows: list, first_seen: datetime) -> list:
     return [r for r in rows if lo <= _utc(r["made_at"]) <= first_seen]
 
 
-def forward_dates(store_dir: Path, syms: set, now: datetime) -> dict:
+#: The node-level degradation for a forward calendar that could not be read, or whose
+#: snapshot is damaged (unparseable lines, rows missing vs its index).
+NEXT_DATES_CALENDAR_UNREADABLE = "NEXT_DATES_CALENDAR_UNREADABLE"
+
+
+def forward_dates(data_root: Path, syms: set, now: datetime) -> dict:
     """Next dates for `syms` from the forward catalyst calendar
     (`backend/services/forward_calendar.py`, written by `scripts/forward_calendar.py
     pull` under `<data root>/forward_calendar/`): per name the newest snapshot row
     pulled at or before `now`, never a later one. Same shape as `calendar_dates`
-    plus `labels`: {sym: {label, reason, ...}} with label DATE_IN_HORIZON /
-    NO_DATE_IN_HORIZON / NOT_COVERED / CALENDAR_STALE. A covered name with no date
-    in the horizon gets an EMPTY list in `dates` (covered, nothing scheduled); a
-    stale row's date is NOT put in `dates` (it is in its label, flagged)."""
+    plus `labels`: {sym: {label, reason, ...}}. A covered name with no date in the
+    horizon gets an EMPTY list in `dates` (covered, nothing scheduled); a stale or
+    damaged-fallback row's date is NOT put in `dates` (it is in its label, flagged).
+
+    NOT a required input and NEVER raises: a new collector must not take down this
+    build. No folder / no snapshot by `now` -> NO_CALENDAR_BY_NOW with every name
+    NOT_COVERED; anything unreadable -> status CALENDAR_UNREADABLE (the node carries
+    NEXT_DATES_CALENDAR_UNREADABLE) and the build continues."""
     from backend.services import forward_calendar as FC
-    root = Path(store_dir).parent
     hz = int(C.EVENT_NODES_NEXT_DATES_HORIZON_DAYS)
-    res = FC.next_dates(sorted(syms), now, hz, root=root)
-    nr = FC.newest_receipt(root, now)
+    root = Path(data_root)
+    base = {"writer": "scripts/forward_calendar.py pull", "file": None, "written_utc": None,
+            "window": None, "coverage_end": None, "macro": [], "fomc_status": None,
+            "skipped_after_now": [], "damaged_snapshots": []}
+    try:
+        res = FC.next_dates(sorted(syms), now, hz, root=root)
+        nr = FC.newest_receipt(root, now)
+        mac = FC.next_macro(now, hz, root=root)
+    except Exception as exc:                                           # noqa: BLE001
+        return {**base, "status": "CALENDAR_UNREADABLE", "dates": {}, "labels": {},
+                "error": f"{type(exc).__name__}: {str(exc)[:200]}"}
     dates: dict[str, list] = {}
     for s, v in res["tickers"].items():
         if v["label"] == FC.DATE_IN_HORIZON:
             dates[s] = [{"date": v["date"], "kind": "earnings", "status": v["confirmation"],
                          "timing": v["timing"], "days_away": v["days_away"],
+                         "sessions_away": v.get("sessions_away"),
                          "source": f"{v['pull_id']}:{v['source']}"}]
         elif v["label"] == FC.NO_DATE_IN_HORIZON:
             dates[s] = []
-    mac = FC.next_macro(now, hz, root=root)
     macro = [{"date": m["date"], "kind": m["kind"], "status": "scheduled",
               "source": f"{mac.get('pull_id')}:{m.get('source')}"} for m in mac.get("dates") or []]
-    fomc_status = (mac.get("fomc_table") or {}).get("status") or mac.get("status")
     end = (FC.market_date(now) + timedelta(days=hz)).isoformat()
-    return {"status": "OK" if nr is not None else "NO_CALENDAR_BY_NOW",
+    status = "OK" if nr is not None else "NO_CALENDAR_BY_NOW"
+    return {**base, "status": status,
             "file": nr[1].name if nr else None, "written_utc": _iso(nr[0]) if nr else None,
             "window": [FC.market_date(now).isoformat(), end], "coverage_end": end,
             "dates": dates, "labels": res["tickers"], "label_counts": res["counts"],
-            "macro": macro, "fomc_status": fomc_status,
+            "macro": macro, "fomc_status": (mac.get("fomc_table") or {}).get("status") or mac.get("status"),
+            "damaged_snapshots": res.get("damaged_snapshots") or [],
             "skipped_after_now": [f"{res['n_snapshots_after_now_skipped']} snapshot(s), "
-                                  f"{res['n_rows_after_now_skipped']} row(s) pulled after now"],
-            "writer": "scripts/forward_calendar.py pull"}
+                                  f"{res['n_rows_after_now_skipped']} row(s) pulled after now"]}
 
 
 def calendar_dates(calendar_dir: Path, syms: set, now: datetime) -> dict:
@@ -950,11 +967,7 @@ def calendar_dates(calendar_dir: Path, syms: set, now: datetime) -> dict:
     `now` (its receipt's `written_utc`; a file written later is skipped and named),
     with the calendar's own window. The writer is `scripts/contest_calendar.py
     calendar`, whose window is the contest's (2026-10-12..2026-11-13): a date
-    after the window end is NOT COVERED, never 'nothing scheduled'.
-    A directory named `FORWARD_CALENDAR_DIRNAME` (the default since CH-35/CH-08) is
-    the forward catalyst calendar and is read by `forward_dates` instead."""
-    if Path(calendar_dir).name == str(C.FORWARD_CALENDAR_DIRNAME):
-        return forward_dates(Path(calendar_dir), syms, now)
+    after the window end is NOT COVERED, never 'nothing scheduled'."""
     import pandas as pd
     files = sorted(Path(calendar_dir).glob("calendar_*.parquet"))
     skipped = []
@@ -1215,13 +1228,23 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
         # NO_DATE_IN_HORIZON (looked, nothing scheduled), NOT_COVERED (never looked, or
         # every attempt failed) or CALENDAR_STALE, and the horizon-short guess is moot
         degr = [d for d in degr if not d.startswith(("CALENDAR_HORIZON_SHORT", "CALENDAR_ISSUER_NOT_COVERED"))]
-        lab = labels.get(sym) or {"label": "NOT_COVERED", "reason": "NOT_ASKED"}
+        if cal.get("status") == "CALENDAR_UNREADABLE":
+            lab = {"label": "CALENDAR_UNREADABLE", "reason": cal.get("error")}
+            degr.append(f"{NEXT_DATES_CALENDAR_UNREADABLE}: {cal.get('error')} ({cal.get('writer')})")
+        else:
+            lab = labels.get(sym) or {"label": "NOT_COVERED", "reason": "NOT_ASKED"}
         node["next_dates_label"] = lab["label"]
-        node["next_dates_labels"] = {s: (labels.get(s) or {}).get("label", "NOT_COVERED")
+        node["next_dates_labels"] = {s: (labels.get(s) or {}).get("label", lab["label"]
+                                                               if not labels else "NOT_COVERED")
                                      for s in sorted(seen)}
-        if lab["label"] in ("NOT_COVERED", "CALENDAR_STALE"):
+        for dm in cal.get("damaged_snapshots") or []:
+            degr.append(f"{NEXT_DATES_CALENDAR_UNREADABLE}: {dm.get('file')} damaged "
+                        f"({dm.get('n_bad_lines')} bad line(s), {dm.get('rows_missing_vs_index')} "
+                        f"row(s) missing vs its index)")
+        if lab["label"] in ("NOT_COVERED", "CALENDAR_STALE", "FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED"):
             degr.append(f"NEXT_DATES_{lab['label']}: {sym} ({lab.get('reason')}; newest row "
-                        f"{lab.get('pulled_utc')}, said {lab.get('date')}) in {cal.get('writer')}")
+                        f"{lab.get('pulled_utc')}, said {lab.get('date')}) in {cal.get('writer')} "
+                        f"[{cal.get('status')}]")
     imp = importance(ev, sym, ctx, first)
     pr = price_reaction(sym, first, ctx["bars"]) if ctx.get("bars") else {"status": "NO_BARS", "z": None}
     node.update({
@@ -1467,7 +1490,7 @@ def default_paths(data_root: Path) -> dict:
             "filings": dr / "official" / "tables" / "filing_events.jsonl",
             "cik_map": dr / "official" / "company_tickers.json",
             "graph": dr / "universe_graph",
-            "calendar": dr / str(C.FORWARD_CALENDAR_DIRNAME),
+            "calendar": dr / "contest" / "calendar",
             "bars": dr / "prices_2025_26" / "bars.parquet",
             "positions": dr / "pc_book" / "state_latest.json",
             "predictions": dr / "predictions.jsonl",
@@ -1530,7 +1553,7 @@ def build(data_root: Path, *, since: datetime, now: datetime,
     if graph is not None:
         for s in list(syms):
             cal_syms.update(g["ticker"] for g in graph_neighbours(graph, s, gmeta))
-    cal = calendar_dates(Path(P["calendar"]), cal_syms, now)
+    cal = forward_dates(Path(P.get("forward_calendar_root") or data_root), cal_syms, now)
     ctx = {"graph": graph, "graph_meta": gmeta, "held": held, "held_degradation": held_deg,
            "forecasts": fc, "bars": bars, "calendar": cal}
     build_id = f"en_{now.strftime('%Y%m%dT%H%M%SZ')}_{_sha([_iso(since), _iso(now)])[:6]}"
