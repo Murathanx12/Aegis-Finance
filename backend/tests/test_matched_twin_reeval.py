@@ -119,7 +119,18 @@ def test_verdict_needs_every_origin():
     word, _ = M.verdict_of(sweep, 0.99, 0.05, -0.01, 0.05)
     assert word == "CANNOT_DISTINGUISH"
     word, _ = M.verdict_of(sweep, 0.99, 0.05, 0.02, 0.05)
+    assert word == "CANNOT_DISTINGUISH"          # in the twins' tail: not "book ~ twins"
+    word, _ = M.verdict_of(sweep, 0.60, 0.05, 0.02, 0.05)
     assert word == "BAND_EFFECT"
+
+
+def test_all_carried_book_is_not_evaluated():
+    bars = _panel_bars(n_days=90, n_names=10)
+    panel, pools, _ = _setup(bars)
+    decs = [{"asof": panel.dates[40], "fill_row": 41, "price": "open", "weights": {"SPY": ("SPY", 0.9)}}]
+    ev = M.evaluate_book(decs, panel, pools, end_row=len(panel.dates) - 1, rt_bps=lambda s: 6.0,
+                         keep=lambda s: s == "SPY", n_twins=20, seed=1, p=_p())
+    assert ev["verdict"] == M.NOT_EVALUATED
 
 
 def test_block_sums_origin_shifts_the_cut_and_keeps_the_total():

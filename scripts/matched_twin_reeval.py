@@ -244,14 +244,17 @@ def verdict_of(sweep: list[dict], pctile: Optional[float], book_vs_spy: float, t
         if all(s["t"] <= -s["t_crit"] for s in ok) and pctile is not None and pctile <= alpha / 2:
             return "LAGS_TWINS_IN_SCOPE", (f"t <= -t_crit at all {len(ok)} block origins and the book is at "
                                            f"percentile {pctile:.3f} of its twins")
+    in_tail = pctile is not None and (pctile >= 1 - alpha / 2 or pctile <= alpha / 2)
     if not ok:
         why = "too few date blocks for a t"
     elif any(abs(s["t"]) >= s["t_crit"] for s in ok):
         why = "the t clears at some block origins but not all (or the percentile does not agree)"
     else:
-        why = "the excess over the twin median is inside its MDE at every block origin"
-    if book_vs_spy > 0 and twin_med_vs_spy > 0:
-        return "BAND_EFFECT", f"book and twin median both above SPY; {why}"
+        why = "the t is inside t_crit at every block origin"
+    if in_tail:
+        why += f"; the book is in a {alpha / 2:.1%} tail of its twins (percentile {pctile:.3f}) but the time-series test does not agree"
+    if book_vs_spy > 0 and twin_med_vs_spy > 0 and not in_tail:
+        return "BAND_EFFECT", f"book and twin median both above SPY and the book is inside its twins' distribution; {why}"
     return "CANNOT_DISTINGUISH", why
 
 
@@ -581,6 +584,11 @@ def evaluate_book(decisions: list[dict], panel: Panel, pools: Pools, *, end_row:
                                  float(np.sum(diff)), max(mdes) if mdes else None, sessions),
                              "verdict": word, "verdict_why": why}
     prim = out_levels[PRIMARY_LEVEL]
+    if not levels[PRIMARY_LEVEL]["fallbacks"].get("drawn"):
+        prim = {**prim, "verdict": NOT_EVALUATED,
+                "verdict_why": "every holding is an ETF, index proxy, CASH or a name absent from the panel, carried "
+                               "unchanged into the twins: no stock selection to compare"}
+        out_levels[PRIMARY_LEVEL] = prim
     diff_p = nav_diff(book["nav"], med_paths[PRIMARY_LEVEL])
     book_daily_pnl = np.diff(np.concatenate([[1.0], book["nav"]]))
     chain_paths = [("cash", spy["nav"], cash_spy["nav"]),
@@ -1068,7 +1076,9 @@ def run(*, data_root: Path, out_dir: Path, run_id: Optional[str], n_twins: int, 
             "from every twin pool, which LIFTS the random twins (dead names are disproportionately losers). "
             "BEATS is conservative under this bias; LAGS and BAND_EFFECT are not. A name that stops trading "
             "inside a window is held at its last close (no delisting return)." if not delisted.exists()
-            else "delisted bars merged")},
+            else "prices_deep/bars_delisted.parquet merged into the pool, so dead names can be drawn; the "
+                 "audit above counts how many stop trading inside the rows read. Residual bias: any name absent "
+                 "from both files is absent from every twin pool, which would LIFT the twins.")},
         "conventions": {
             "fill": "llm books at the inception open; night books at the close of the decision asof; fleet "
                     "books at the snapshot session close; twins on exactly the same fill rows",
@@ -1126,6 +1136,7 @@ def book_rows(receipt: dict) -> list[dict]:
         sw = tw["origin_sweep"]
         ts = [s["t"] for s in sw if s["t"] is not None]
         rows.append({"account": acct, "family": r["family"], "book": r["book_pct"], "spy": r["spy_pct"],
+                     "mde0": r["headline_mde_pp_origin0"],
                      "excess": r["excess_vs_spy_pp"], "twin_median": tw["median_pct"], "p05": tw["p05_pct"],
                      "p95": tw["p95_pct"], "pct": tw["book_percentile"],
                      "over_median": tw["excess_over_twin_median_pp"], "t": r["headline_t_origin0"],
@@ -1143,18 +1154,30 @@ def render_md(receipt: dict) -> list[str]:
          f"`{receipt['primary_level']}` (liquidity band x volatility tercile, bars strictly before each decision). "
          f"Blocks of {receipt['params']['block_sessions']} sessions, every origin swept.", "",
          "| account | family | book | SPY | vs SPY | twin median [p05, p95] | pctile | over median | t (origin 0; range) "
-         "| MDE (max) | blocks | verdict | sector-matched |",
+         "| MDE origin 0 (max over origins) | blocks | verdict | sector-matched |",
          "|---|---|---:|---:|---:|---|---:|---:|---|---:|---:|---|---|"]
     for x in book_rows(receipt):
         tr = "" if not x["t_range"] else f" [{x['t_range'][0]:+.2f}, {x['t_range'][1]:+.2f}]"
         L.append(f"| {x['account'][:48]} | {x['family']} | {_f(x['book'])}% | {_f(x['spy'])}% | {_f(x['excess'])} pp "
                  f"| {_f(x['twin_median'])}% [{_f(x['p05'])}, {_f(x['p95'])}] | {_f(x['pct'], '{:.3f}')} "
-                 f"| {_f(x['over_median'])} pp | {_f(x['t'])}{tr} | {_f(x['mde'], '{:.2f}')} pp | {x['blocks']} "
+                 f"| {_f(x['over_median'])} pp | {_f(x['t'])}{tr} | {_f(x['mde0'], '{:.2f}')} ({_f(x['mde'], '{:.2f}')}) pp | {x['blocks']} "
                  f"| {x['verdict']} | {x['sector_verdict']} ({_f(x['sector_pct'], '{:.3f}')}) |")
     L += ["", "## Not evaluated (each with why)", ""]
     for acct, r in receipt["books"].items():
         if r.get("status") != "OK":
             L.append(f"- {acct} ({r.get('family')}, vs SPY {_f(r.get('roi_vs_spy_pp'))} pp): {r.get('why')}")
+    pw = [x for x in receipt.get("pairwise") or [] if x.get("corr_daily_excess") is not None]
+    if pw:
+        cs = np.array([x["corr_daily_excess"] for x in pw])
+        js = np.array([x["jaccard"] for x in pw])
+        L += ["", "## Pairwise (input to joining books later)", "",
+              f"{len(pw)} pairs with >= 10 common days: daily-excess correlation median {np.median(cs):+.2f}, "
+              f"{(cs > 0.5).mean():.0%} of pairs above +0.5; holdings Jaccard median {np.median(js):.2f}, "
+              f"{(js > 0).mean():.0%} of pairs share at least one name.", "",
+              "| a | b | Jaccard | corr daily excess | days |", "|---|---|---:|---:|---:|"]
+        for x in sorted(pw, key=lambda x: -x["corr_daily_excess"])[:15]:
+            L.append(f"| {x['a'][:40]} | {x['b'][:40]} | {x['jaccard']:.2f} | {x['corr_daily_excess']:+.2f} "
+                     f"| {x['n_common_days']} |")
     acc = receipt["accounting"]
     L += ["", f"roi rows {acc['roi_rows']}; strategy rows {acc['strategy_rows']}; dropped {acc['n_dropped']} "
               f"(controls/twins/non-LIVE, each listed in the JSON); distinct bets {acc['n_distinct_bets']}.",
@@ -1192,9 +1215,17 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"REFUSED matched_twin_reeval: {exc}")
         return 2
     after = {str(w): count_files(w) for w in watch}
+    inp = rec["inputs"]
+    for k in ("roi", "book_dna", "llm_books", "aegis_pi_db", "global_bars"):
+        i = inp[k]
+        print(f"input {k}: {i['path']} bytes={i.get('bytes')} mtime={i.get('mtime_utc')}")
+    for i in inp["bars"]:
+        print(f"input bars: {i['path']} bytes={i.get('bytes')} mtime={i.get('mtime_utc')}")
+    print(f"bars read from {inp['bars_window_start']}: {inp['bars_rows_read']:,} rows, {inp['bars_symbols']:,} "
+          f"symbols, newest session {inp['panel_last_session']}; roi generated {rec['run_id']}")
     for x in book_rows(rec):
         print(f"{x['account'][:50]:<50} book {_f(x['book'])}% SPY {_f(x['spy'])}% twin med {_f(x['twin_median'])}% "
-              f"pct {_f(x['pct'], '{:.3f}')} t {_f(x['t'])} MDE {_f(x['mde'], '{:.2f}')} blocks {x['blocks']} "
+              f"pct {_f(x['pct'], '{:.3f}')} t {_f(x['t'])} MDE {_f(x['mde0'], '{:.2f}')} (max {_f(x['mde'], '{:.2f}')}) blocks {x['blocks']} "
               f"-> {x['verdict']}")
     print(rec["claim_line"])
     print(f"wrote {rec['_path']} and {rec['_md']}")
