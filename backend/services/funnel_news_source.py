@@ -411,7 +411,7 @@ def event_names(build_time: datetime, *, store: Optional[Path] = None) -> dict:
             names.setdefault(t, []).append(
                 {"source": SOURCE_EVENT, "via": role["link"], "event_id": b["event_id"],
                  "parent_id": b["parent_id"], "event_primary": b["primary_ticker"], "role": b["role"],
-                 "importance_at_build": b["importance_at"], "direction": None,
+                 "importance_at_build": b["importance_at"], "link_weight": b["link_weight"], "direction": None,
                  "mentioned": role["link"] in ("primary", "co_mention"),
                  "first_seen_utc": b["first_seen_utc"], "stamp_used": b["version_built_utc"]})
     for t in names:
@@ -476,8 +476,12 @@ def _strength(t: str, names: dict) -> tuple:
     ev = names[t]["evidence"]
     news = [e for e in ev if e["source"] == SOURCE_NEWS]
     if ev and all(e["source"] == SOURCE_EVENT for e in ev):
+        # strongest event first, then more events, then the closest link (primary <
+        # co-mention < graph link by |weight|), then the ticker
         imp = max((float(e.get("importance_at_build") or 0.0) for e in ev), default=0.0)
-        return (-imp, -len(ev), 0.0, t)
+        link = min((0.0 if e.get("via") == "primary" else 1.0 if e.get("via") == "co_mention"
+                    else 2.0 - min(1.0, abs(float(e.get("link_weight") or 0.0)))) for e in ev)
+        return (-imp, -len(ev), link, t)
     if news:
         conf = max((float(e.get("confidence") or 0.0) for e in news), default=0.0)
         return (-sum(1 for e in news if e.get("mentioned")), -len(news), -conf, t)
