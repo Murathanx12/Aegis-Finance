@@ -815,6 +815,83 @@ def bakeoff_sample(*, n: int | None = None, n_matched: int | None = None,
     return items, census
 
 
+# ── CH-04b: Featherless-hosted models as arms ──────────────────────────────
+# An arm `featherless:<model id>` is sent through `call_named("featherless",
+# model_override=<id>)`, which reserves EVERY call against
+# `provider_budget.featherless_attempt` (monthly cap, lifetime ceiling, an
+# unpriced model refused before dispatch). Only ids in
+# `config.FEATHERLESS_MODELS` with a price row are admitted; anything else is
+# refused by `bakeoff_arm_refusals` before a single item is sampled.
+
+FEATHERLESS_ARM_PREFIX = "featherless:"
+BAKEOFF_MAX_TOKENS = 150
+
+
+def featherless_arm_model(arm: str) -> str | None:
+    """The Featherless model id an arm names, or None for a non-Featherless arm."""
+    return arm[len(FEATHERLESS_ARM_PREFIX):] if str(arm).startswith(FEATHERLESS_ARM_PREFIX) else None
+
+
+def bakeoff_arm_refusals(arms: tuple[str, ...]) -> list[str]:
+    """One named reason per refused Featherless arm (empty = all admitted).
+
+    Non-Featherless arms are judged by the caller against BAKEOFF_ARMS exactly
+    as before. A Featherless arm must name a model in FEATHERLESS_MODELS AND
+    pass the envelope's own price check (`featherless_quote`), so the CLI
+    refuses what the envelope would refuse on the first call."""
+    from backend.services import provider_budget as PB
+    listed = tuple(getattr(_cfg, "FEATHERLESS_MODELS", ()) or ())
+    out, seen = [], set()
+    for a in arms:
+        if a in seen:                               # any provider: `deepseek,deepseek` too
+            out.append(f"{a!r}: DUPLICATE_ARM -- named twice")
+            continue
+        seen.add(a)
+        m = featherless_arm_model(a)
+        if m is None:
+            continue
+        if not m:
+            out.append(f"{a!r}: NO_MODEL -- write featherless:<id>, ids in config.FEATHERLESS_MODELS: "
+                       f"{list(listed)}")
+        elif m not in listed:
+            out.append(f"{a!r}: NOT_ALLOW_LISTED -- {m!r} is not in config.FEATHERLESS_MODELS "
+                       f"{list(listed)}")
+        else:
+            try:
+                PB.featherless_quote("s", "u", BAKEOFF_MAX_TOKENS, m)
+            except PB.BudgetRefused as exc:
+                out.append(f"{a!r}: UNPRICED -- {exc}")
+    return out
+
+
+def _arm_key_env(arm: str) -> str | None:
+    """The env var holding the key a PAID arm needs; None for rules/local."""
+    if featherless_arm_model(arm) is not None:
+        return str(getattr(_cfg, "FEATHERLESS_KEY_ENV", "FEATHERLESS_API_KEY"))
+    return {"deepseek": "DEEPSEEK_API_KEY", "nvidia": "NVIDIA_API_KEY"}.get(arm)
+
+
+def bakeoff_key_refusals(arms: tuple[str, ...]) -> list[str]:
+    """A named refusal per paid arm whose key env var is empty -- checked BEFORE
+    sampling, so no arm spends while another is doomed. Names the variable,
+    never prints a value."""
+    import os
+    out = []
+    for a in arms:
+        env = _arm_key_env(a)
+        if env and not os.getenv(env, "").strip():
+            out.append(f"{a!r}: NO_KEY -- {env} is not set in the environment")
+    return out
+
+
+def default_receipt_name(now: datetime | None = None) -> str:
+    """`bakeoff_E-G1_<UTC date>T<HHMMSS>Z.json`: a second run the same day
+    gets its own file. Sorts after the date-only 2026-09-26 receipt, so
+    `compare_text`'s `_latest(bakeoff_E-G1_*.json)` still finds the newest."""
+    t = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    return f"bakeoff_{BAKEOFF_ID}_{t.strftime('%Y-%m-%dT%H%M%SZ')}.json"
+
+
 def _arm_call(arm: str, item: dict, system: str, call_fn) -> dict:
     t0 = time.perf_counter()
     if arm == "rules":
@@ -822,18 +899,28 @@ def _arm_call(arm: str, item: dict, system: str, call_fn) -> dict:
         return {"arm": arm, "model": "rules:v1", "status": "OK", "cost_usd": 0.0,
                 "cost_status": "LISTED", "latency_s": round(time.perf_counter() - t0, 4),
                 "pred": pred, "refusal": None, "raw": None}
-    r = _call(arm, system, bakeoff_user(item), purpose=f"bakeoff:{BAKEOFF_ID}:{arm}",
-              call_fn=call_fn, max_tokens=150, temperature=0.0,
+    fl_model = featherless_arm_model(arm)
+    provider, extra = arm, {}
+    if fl_model is not None:
+        # the ONLY route: call_named -> provider_budget.featherless_attempt
+        provider = "featherless"
+        extra = {"model_override": fl_model,
+                 "json_object": bool(getattr(_cfg, "MODEL_ROUTING_BAKEOFF_FEATHERLESS_JSON", False))}
+    r = _call(provider, system, bakeoff_user(item), purpose=f"bakeoff:{BAKEOFF_ID}:{arm}",
+              call_fn=call_fn, max_tokens=BAKEOFF_MAX_TOKENS, temperature=0.0,
               ensure_reason=f"bakeoff:{BAKEOFF_ID}",
-              validate=lambda txt: parse_extraction(txt)[0] is not None)
+              validate=lambda txt: parse_extraction(txt)[0] is not None, **extra)
     pred, why = (parse_extraction(r.get("text")) if r.get("ok")
                  else (None, str(r.get("status"))))
-    return {"arm": arm, "model": r.get("served_model") or r.get("model"),
-            "requested_model": r.get("model"), "status": r.get("status"),
-            "cost_usd": r.get("cost_usd"), "cost_status": r.get("cost_status"),
-            "latency_s": r.get("latency_s"), "n_429": r.get("n_429"),
-            "pred": pred, "refusal": why, "raw": (r.get("text") or "")[:300] or None,
-            "error": r.get("error")}
+    row = {"arm": arm, "model": r.get("served_model") or r.get("model"),
+           "requested_model": r.get("model"), "status": r.get("status"),
+           "cost_usd": r.get("cost_usd"), "cost_status": r.get("cost_status"),
+           "latency_s": r.get("latency_s"), "n_429": r.get("n_429"),
+           "pred": pred, "refusal": why, "raw": (r.get("text") or "")[:300] or None,
+           "error": r.get("error")}
+    if fl_model is not None:
+        row.update({k: r.get(k) for k in ("budget_charge_usd", "billing_status", "reservation_id")})
+    return row
 
 
 _NO_WIRE = frozenset({"LOCAL_UNAVAILABLE", "NOT_CONFIGURED", "BUDGET_REFUSED",
@@ -892,7 +979,118 @@ def _summarise(rows: list[dict], arms: tuple[str, ...]) -> dict:
         "nvidia_right_on_disagreements": (round(sum(1 for _, nv in dis if nv["grade"]["event_type"])
                                                 / len(dis), 4) if dis else None),
         "rule": "NVIDIA stays adjudicator only if right on > 50% of disagreements"}
+    out["_pairwise"] = pairwise_agreement(rows, arms)
     return out
+
+
+def cohen_kappa(x: list, y: list) -> dict:
+    """Cohen's kappa for two raters over the SAME paired items.
+
+    `kappa` is None (with `undefined`) when there are no pairs, or when either
+    arm gave ONE value on every paired row: chance agreement then equals
+    observed agreement by construction, so kappa carries no information about
+    the arms and is not reported as 0."""
+    n = len(x)
+    if n != len(y):
+        raise ValueError("cohen_kappa needs paired lists")
+    if n == 0:
+        return {"agreement": None, "kappa": None, "undefined": "no paired rows"}
+    po = sum(1 for a, b in zip(x, y) if a == b) / n
+    if len(set(x)) < 2 or len(set(y)) < 2:
+        return {"agreement": round(po, 4), "kappa": None,
+                "undefined": "an arm gave one value on every paired row"}
+    from collections import Counter
+    cx, cy = Counter(x), Counter(y)
+    pe = sum(cx[c] * cy[c] for c in set(cx) | set(cy)) / (n * n)
+    if pe >= 1.0:                                   # unreachable after the check above
+        return {"agreement": round(po, 4), "kappa": None, "undefined": "chance agreement is 1"}
+    return {"agreement": round(po, 4), "kappa": round((po - pe) / (1.0 - pe), 4), "undefined": None}
+
+
+def pairwise_agreement(rows: list[dict], arms: tuple[str, ...]) -> list[dict]:
+    """Per pair of arms: n paired (BOTH arms answered the item), raw agreement
+    and Cohen's kappa on event_type and on direction. A refusal on either side
+    removes the item from that pair -- never counted as a disagreement."""
+    by_item: dict[str, dict] = {}
+    for x in rows:
+        by_item.setdefault(x["item_id"], {})[x["arm"]] = x
+    out = []
+    present = [a for a in arms if any(a in v for v in by_item.values())]
+    for i, a in enumerate(present):
+        for b in present[i + 1:]:
+            both = [(v[a]["pred"], v[b]["pred"]) for v in by_item.values()
+                    if a in v and b in v and v[a].get("pred") and v[b].get("pred")]
+            n_items = sum(1 for v in by_item.values() if a in v and b in v)
+            out.append({"a": a, "b": b, "n_items": n_items, "n_paired": len(both),
+                        "event_type": cohen_kappa([p["event_type"] for p, _ in both],
+                                                  [q["event_type"] for _, q in both]),
+                        "direction": cohen_kappa([int(p["direction"]) for p, _ in both],
+                                                 [int(q["direction"]) for _, q in both])})
+    return out
+
+
+def _k(d: dict | None) -> str:
+    d = d or {}
+    ag = "-" if d.get("agreement") is None else f"{float(d['agreement']) * 100:.1f}%"
+    k = "undefined" if d.get("kappa") is None else f"{float(d['kappa']):+.3f}"
+    return f"agree {ag} kappa {k}"
+
+
+def pairwise_lines(summary: dict) -> list[str]:
+    return [f"pair `{p['a']}` vs `{p['b']}`: n_paired {p['n_paired']} of {p['n_items']} · "
+            f"event_type {_k(p.get('event_type'))} · direction {_k(p.get('direction'))}"
+            for p in (summary or {}).get("_pairwise") or []]
+
+
+def _price_row(model: str) -> dict | None:
+    row = (getattr(_cfg, "LLM_PRICE_PER_MTOK", {}) or {}).get(str(model))
+    return row if isinstance(row, dict) and all(isinstance(row.get(k), (int, float))
+                                                for k in ("in", "out")) else None
+
+
+def bakeoff_plan(items: list[dict], arms: tuple[str, ...], *, cap_usd: float | None = None) -> list[str]:
+    """The dry-run plan: one line per arm with the model, the number of calls,
+    a projected cost and the reservation-bound worst case in USD, from
+    `config.LLM_PRICE_PER_MTOK`. Reads config only; calls nothing."""
+    from backend.services import llm_language as _lang
+    pin = str(getattr(_lang, "LANGUAGE_PIN", ""))
+    system = bakeoff_system() + pin
+    cpt = float(getattr(_cfg, "MODEL_ROUTING_BAKEOFF_CHARS_PER_TOKEN", 4.0))
+    est_in = sum(len(system) + len(bakeoff_user(it)) for it in items) / cpt
+    bound_in = sum(len((system + bakeoff_user(it)).encode("utf-8")) + 1024 for it in items)
+    n = len(items)
+    out_tok = n * BAKEOFF_MAX_TOKENS
+    ds_cap = float(cap_usd if cap_usd is not None else getattr(_cfg, "MODEL_ROUTING_BAKEOFF_CAP_USD", 0.15))
+    fl_cap = float(getattr(_cfg, "MODEL_ROUTING_BAKEOFF_FEATHERLESS_CAP_USD", 0.50))
+    routes = getattr(_cfg, "MODEL_ROUTING_PROVIDERS", {}) or {}
+    lines = [f"PLAN ({n} items x {len(arms)} arms; projected = chars/{cpt:g} input tokens + "
+             f"{BAKEOFF_MAX_TOKENS} output tokens per call (an output upper bound); worst = bytes+1024 "
+             f"input, the reservation bound; prices config.LLM_PRICE_PER_MTOK):"]
+    total = 0.0
+    for a in arms:
+        fl = featherless_arm_model(a)
+        if a == "rules":
+            lines.append(f"  {a:<46} model rules:v1   calls 0   projected $0.0000 (no model)")
+            continue
+        model = fl if fl is not None else str((routes.get(a) or {}).get("model") or a)
+        if a == "local":
+            lines.append(f"  {a:<46} model {model}   calls {n}   projected $0.0000 "
+                         f"(local llama-server, not metered)")
+            continue
+        row = _price_row(model)
+        if row is None:
+            lines.append(f"  {a:<46} model {model}   calls {n}   projected UNPRICED "
+                         f"(no LLM_PRICE_PER_MTOK row)")
+            continue
+        proj = (est_in * row["in"] + out_tok * row["out"]) / 1e6
+        worst = (bound_in * row["in"] + out_tok * row["out"]) / 1e6
+        cap = (f"; batch cap ${ds_cap:.2f}" if a == "deepseek"
+               else f"; batch cap ${fl_cap:.2f} + featherless envelope" if fl is not None else "")
+        total += proj
+        lines.append(f"  {a:<46} model {model}   calls {n}   projected ${proj:.4f}   "
+                     f"worst ${worst:.4f}   (in ${row['in']}/M, out ${row['out']}/M{cap})")
+    lines.append(f"  projected total ${total:.4f}")
+    return lines
 
 
 def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call_fn=None,
@@ -912,11 +1110,14 @@ def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call
     every = int(flush_every or getattr(_cfg, "MODEL_ROUTING_BAKEOFF_FLUSH_EVERY", 20))
     gap = float(nvidia_gap_s if nvidia_gap_s is not None
                 else getattr(_cfg, "MODEL_ROUTING_BAKEOFF_NVIDIA_MIN_GAP_S", 2.0))
-    out_path = Path(out_path or receipt_dir() / f"bakeoff_{BAKEOFF_ID}_{date.today()}.json")
+    out_path = Path(out_path or receipt_dir() / default_receipt_name())
     out_path.parent.mkdir(parents=True, exist_ok=True)
     rows: list[dict] = []
     lock = threading.Lock()
     spent = {"deepseek": 0.0}
+    fl_arms = [a for a in arms if featherless_arm_model(a) is not None]
+    fl_cap = float(getattr(_cfg, "MODEL_ROUTING_BAKEOFF_FEATHERLESS_CAP_USD", 0.50))
+    fl_spent = {a: 0.0 for a in fl_arms}
     state = {"flushes": 0, "started_utc": _now()}
 
     def doc(final: bool) -> dict:
@@ -932,6 +1133,11 @@ def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call
                               "direction = sign(net); unmatched: no analyst words, no revision "
                               "of any kind -> not analyst_*; ticker: one of the tagged tickers"),
                 "census": census, "summary": _summarise(rows, arms),
+                **({"featherless_cap_usd_per_arm": fl_cap,
+                    "featherless_json_mode": bool(getattr(_cfg, "MODEL_ROUTING_BAKEOFF_FEATHERLESS_JSON",
+                                                          False)),
+                    "spent_featherless_usd": {a: round(v, 6) for a, v in fl_spent.items()}}
+                   if fl_arms else {}),
                 "rows": rows}
 
     def flush(final: bool = False) -> None:
@@ -960,6 +1166,14 @@ def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call
                              "cost_status": "LISTED", "latency_s": None, "pred": None,
                              "refusal": "BUDGET_CAP", "raw": None})
                     continue
+            if arm in fl_spent:
+                with lock:
+                    over = fl_spent[arm] >= fl_cap
+                if over:
+                    add(it, {"arm": arm, "model": None, "status": "BUDGET_CAP", "cost_usd": 0.0,
+                             "cost_status": "LISTED", "latency_s": None, "pred": None,
+                             "refusal": "BUDGET_CAP", "raw": None})
+                    continue
             if arm == "nvidia" and gap > 0:
                 wait = last + gap - time.monotonic()
                 if wait > 0:
@@ -974,6 +1188,13 @@ def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call
             if arm == "deepseek" and res.get("cost_usd") is not None:
                 with lock:
                     spent["deepseek"] += float(res["cost_usd"])
+            if arm in fl_spent:
+                # the envelope's charge (an unknown outcome holds the full
+                # reservation) counts against the batch cap; no charge = no wire
+                c = res.get("budget_charge_usd")
+                c = res.get("cost_usd") if c is None else c
+                with lock:
+                    fl_spent[arm] += float(c if c is not None else 0.0)
             add(it, res)
 
     flush()                                     # the system prompt is on disk before any call
@@ -991,7 +1212,8 @@ def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call
     tmp.write_text(json.dumps(d, indent=1, default=str), encoding="utf-8")
     tmp.replace(out_path)
     return {"path": str(out_path), "summary": d["summary"], "n_rows": len(rows),
-            "spent_deepseek_usd": d["spent_deepseek_usd"], "local_server_after": local_stop}
+            "spent_deepseek_usd": d["spent_deepseek_usd"], "local_server_after": local_stop,
+            "spent_featherless_usd": d.get("spent_featherless_usd", {})}
 
 
 def _sha(s: str) -> str:
@@ -1026,7 +1248,7 @@ def bakeoff_table(receipt: dict) -> list[str]:
                      f"(tk {_p(x.get('ticker_acc'))} ev {_p(x.get('event_type_acc'))} "
                      f"dir {_p(x.get('direction_acc'))}) · refuse {_p(x.get('refusal_rate'))} · "
                      f"{cost} · p50 {x.get('latency_median_s')}s")
-    return lines
+    return lines + pairwise_lines(s)
 
 
 def _p(x: Any) -> str:
@@ -1139,5 +1361,8 @@ def route(cmd: str, args: list[str], *, call_fn=None, quest_fn=None,
 __all__ = ["ROUTES", "DETERMINISTIC", "route", "ask", "deep", "research", "evidence",
            "evidence_text", "compare_text", "bakeoff_sample", "run_bakeoff", "bakeoff_system",
            "parse_extraction", "rules_arm", "grade_extraction", "grade_promises_daily",
+           "featherless_arm_model", "bakeoff_arm_refusals", "bakeoff_key_refusals",
+           "default_receipt_name", "bakeoff_plan", "cohen_kappa",
+           "pairwise_agreement", "pairwise_lines",
            "nav_text", "status_text", "books_text", "forecasts_text", "footer",
            "deep_provider"]

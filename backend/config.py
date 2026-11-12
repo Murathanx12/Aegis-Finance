@@ -3859,6 +3859,19 @@ MODEL_ROUTING_BAKEOFF_FLUSH_EVERY = 20
 MODEL_ROUTING_BAKEOFF_SESSIONS_AFTER = 5        # revision window: sessions after first_seen
 MODEL_ROUTING_BAKEOFF_DAYS_BEFORE = 2           # ... and calendar days before published
 MODEL_ROUTING_BAKEOFF_NVIDIA_MIN_GAP_S = 2.0    # ~30 RPM, under the ~40 RPM free tier
+#: CH-04b (2026-11-12): Featherless-hosted models as E-G1 arms, named
+#: `featherless:<id in FEATHERLESS_MODELS>`. Every call goes through
+#: `llm_analyzer.call_named("featherless")` -> `provider_budget.featherless_attempt`
+#: (the monthly/lifetime envelope binds as always); THIS is the batch's own cap
+#: PER featherless arm, like MODEL_ROUTING_BAKEOFF_CAP_USD is for DeepSeek.
+MODEL_ROUTING_BAKEOFF_FEATHERLESS_CAP_USD = 0.50
+#: JSON mode OFF in the bake-off so every arm gets the identical request (the
+#: other arms have no JSON mode); the digest's production route keeps
+#: FEATHERLESS_JSON_MODE. Recorded on the receipt.
+MODEL_ROUTING_BAKEOFF_FEATHERLESS_JSON = False
+#: Dry-run projection: input tokens estimated as characters / this (the
+#: reservation bound beside it is bytes + 1024, `provider_budget.quote`).
+MODEL_ROUTING_BAKEOFF_CHARS_PER_TOKEN = 4.0
 
 #: The Telegram daily digest grades numbered promises once per UTC day from this
 #: date on (MU's FQ4 print, 2026-09-30, is the first due promise). Nothing else
