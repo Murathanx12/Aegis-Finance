@@ -1989,6 +1989,19 @@ def _case_discovery_autopsy():
             "an autopsy with no bars panel, ledger, funnel or corpus")
 
 
+def _case_llm_selector_book():
+    # llm-book-ruler (CH-17/CH-11): with no funnel snapshot and no bars panel
+    # there is no candidate set to choose from; that must be a refusal (red
+    # exit 2), never an empty decision.
+    from datetime import datetime, timezone
+    from pathlib import Path as _P
+
+    from backend.services.llm_selector_book import SelectorRefused, load_inputs
+    nowhere = _P("does/not/exist/llm_selector_book/optimus")
+    return (lambda: load_inputs(nowhere, datetime.now(timezone.utc)), SelectorRefused,
+            "an LLM selector decision with no funnel snapshot or bars panel")
+
+
 def _case_news_overlay_book():
     # CH-14b: an overlay on a base book with no holdings would grade as flat;
     # it must refuse, never return scalar 1.0 over nothing.
@@ -2170,6 +2183,7 @@ CASES = {
     "campaign_ledger_startup": _case_campaign_ledger_startup,
     "global_price_admission": _case_global_price_admission,
     "discovery_autopsy": _case_discovery_autopsy,
+    "llm_selector_book": _case_llm_selector_book,
     "news_overlay_book": _case_news_overlay_book,
 }
 

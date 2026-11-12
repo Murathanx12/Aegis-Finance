@@ -164,6 +164,10 @@ class Reply:
     #: The host DeepSeek envelope's settlement (`provider_budget`); None for
     #: other providers and where the envelope is not required (cloud).
     budget_accounting: dict | None = None
+    #: The model the provider SAYS served the call (`payload["model"]`), which
+    #: can differ from the requested `model` (deepseek-chat is served as
+    #: deepseek-flash). None when the payload carries no model.
+    served_model: str | None = None
 
     @property
     def total_tokens(self) -> int | None:
@@ -275,7 +279,9 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
     reply = Reply(provider=name, model=body["model"], text=text, latency_s=round(dt, 3),
                   prompt_tokens=usage.get("prompt_tokens"),
                   completion_tokens=usage.get("completion_tokens"),
-                  budget_accounting=accounting)
+                  budget_accounting=accounting,
+                  served_model=(str(payload.get("model")) if isinstance(payload, dict)
+                                and payload.get("model") else None))
     # THE RESPONSE HALF OF THE LANGUAGE CONTRACT, applied here and nowhere else.
     # A pin is a REQUEST; a model that ignores it is precisely the failure being
     # guarded, so a wire path that pins and then trusts whatever came back has
