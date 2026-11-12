@@ -29,6 +29,7 @@ def _tbl(tmp_path: Path):
         "NVDA,NVIDIA Corporation,NVDA|NVIDIA Corporation,US,\n"
         "ON,ON Semiconductor Corporation,ON,US,\n"
         "TGT,Target Corporation,TGT|Target,US,\n"
+        "PPLI,People Incorporated,PPLI|People Incorporated,US,\n"
         "A,\"Agilent Technologies, Inc.\",A|Agilent Technologies,US,\n",
         encoding="utf-8")
     a = tmp_path / "adrs.csv"
@@ -111,7 +112,7 @@ def test_same_issuer_story_joins_and_a_different_story_stays_apart(tmp_path):
     assert sizes == [1, 3], [[m.title for m in c.members] for c in nv]
     big = max(nv, key=lambda c: len(c.members))
     assert all("unveils" not in m.title for m in big.members)
-    assert all(j["score"] is None or j["score"] >= EN.C.EVENT_NODES_JOIN_MIN_SIMILARITY for j in big.joins)
+    assert all(j["joined"] and j["score"] >= EN.C.EVENT_NODES_JOIN_MIN_SIMILARITY for j in big.joins)
 
 
 def test_rows_after_now_are_never_read(tmp_path):
@@ -154,6 +155,12 @@ def test_bare_words_never_connect(tmp_path):
     assert got.get("AI") == "cashtag" and got.get("ON") == "venue_ticker"
     assert got.get("INTC", "").startswith("name:") and got.get("NVDA", "")
     assert got.get("MRVL", "").startswith("alias_map:")
+    # a single-word issuer name the window writes in lowercase is a word
+    assert EN.strict_tickers("six people killed in shooting", tbl) == {}
+    common = EN.common_word_keys(["six people killed", "people trapped", "People flee"], tbl)
+    assert "people" in common
+    assert EN.strict_tickers("People trapped after building collapse", tbl, common) == {}
+    assert "PPLI" in EN.strict_tickers("People Incorporated shares jump", tbl, common)
 
 
 def test_chain_verifies_and_detects_a_tampered_row(tmp_path):

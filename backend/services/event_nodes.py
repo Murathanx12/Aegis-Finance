@@ -207,7 +207,28 @@ def _alias_regex(tbl: Any) -> tuple[Optional[re.Pattern], dict[str, str]]:
     return rx, m
 
 
-def strict_tickers(text: str, tbl: Any) -> dict[str, str]:
+def common_word_keys(texts: Iterable[str], tbl: Any) -> dict[str, dict]:
+    """Single-word issuer-name keys the window itself writes in LOWERCASE ("first",
+    "people"): ordinary words, not names. Such a key then needs a corporate cue
+    nearby, exactly like `news_entities._AMBIGUOUS_NAMES`. Derived from the window,
+    printed in the receipt."""
+    low: Counter = Counter()
+    cap: Counter = Counter()
+    for t in texts:
+        for _sym, key, pos in tbl.name_matches(t or ""):
+            if " " in key or "." in key:
+                continue
+            surf = t[pos:pos + len(key)]
+            (low if surf.islower() else cap)[key] += 1
+    share = float(C.EVENT_NODES_COMMON_WORD_LOWER_SHARE)
+    out = {}
+    for k, n in low.items():
+        if n >= int(C.EVENT_NODES_COMMON_WORD_MIN_LOWER) and n / (n + cap[k]) >= share:
+            out[k] = {"lower": n, "capitalised": cap[k]}
+    return out
+
+
+def strict_tickers(text: str, tbl: Any, common: Optional[dict] = None) -> dict[str, str]:
     """{symbol: rule} named by `text`, first-appearance order.
 
     The news_entities rules, with two stricter guards (module docstring §2).
@@ -232,17 +253,21 @@ def strict_tickers(text: str, tbl: Any) -> dict[str, str]:
             if rule == "paren_ticker" and sym in bare:
                 continue
             hits.append((m.start(), sym, rule))
+    common = common or {}
     for sym, key, pos in tbl.name_matches(text):
         if key in drop:
             continue
-        if key in NE._AMBIGUOUS_NAMES and not NE._cue_near(low, pos, len(key)):
+        if text[pos:pos + len(key)].islower():
+            continue                      # a name written in lowercase is a word
+        if ((key in NE._AMBIGUOUS_NAMES or key in common)
+                and not NE._cue_near(low, pos, len(key))):
             continue
         hits.append((pos, sym, f"name:{key}"))
     rx, amap = _alias_regex(tbl)
     if rx is not None:
         for m in rx.finditer(text):
             k = " ".join(m.group(1).lower().split())
-            if k in amap:
+            if k in amap and not m.group(1).islower():
                 hits.append((m.start(), amap[k], f"alias_map:{k}"))
     out: dict[str, str] = {}
     for _pos, sym, rule in sorted(hits, key=lambda h: h[0]):
@@ -252,6 +277,29 @@ def strict_tickers(text: str, tbl: Any) -> dict[str, str]:
 
 
 # ─────────────────────────────────────────────── 3. reading the corpus
+
+_TAG = re.compile(r"<[^>]+>")
+_URLS = re.compile(r"https?://\S+|www\.\S+")
+
+
+def clean_text(s: str) -> str:
+    """Bodies as text: HTML tags, entities and URLs removed (Google News bodies are
+    an HTML list of links)."""
+    s = _URLS.sub(" ", _TAG.sub(" ", s or ""))
+    s = re.sub(r"&[a-z#0-9]+;", " ", s)
+    return " ".join(s.split())
+
+
+#: 8-K item -> the words a headline about it uses (similarity only; the filing's
+#: own item text is not always in the row). Vocabulary, not a parameter.
+_ITEM_WORDS = {
+    "1.01": "agreement deal contract", "1.02": "agreement terminated", "1.03": "bankruptcy",
+    "2.01": "acquisition deal completed", "2.02": "earnings results quarter revenue",
+    "2.03": "debt notes bonds", "2.05": "restructuring layoffs job cuts", "2.06": "impairment writedown",
+    "3.01": "delisting nasdaq nyse notice", "4.01": "auditor", "4.02": "restatement",
+    "5.02": "ceo chief executive officer director board departure resigns ousted appointed interim",
+    "5.03": "bylaws", "5.07": "shareholder vote", "7.01": "", "8.01": "", "9.01": "",
+}
 
 @dataclass
 class Item:
@@ -304,6 +352,8 @@ def read_rows(corpus_root: Path, filings_path: Path, *, since: datetime, now: da
                              "rows_unresolved": 0, "files": 0}
     not_news = set(getattr(C, "AUTOPSY_NOT_NEWS_TAGS", ()))
     items: dict[str, Item] = {}
+    pending: list[tuple] = []
+    common: dict = {}
 
     def add(src: str, o: dict, fs: Optional[datetime], pub: Optional[datetime],
             tickers_sec: list[str], items_8k: list[str], acc: Optional[str]) -> None:
@@ -327,12 +377,13 @@ def read_rows(corpus_root: Path, filings_path: Path, *, since: datetime, now: da
         raw_title = str(o.get("title") or "")
         url = str(o.get("url") or o.get("index_url") or "")
         publisher, region, title, basis = publisher_region(src, raw_title, url)
-        body = str(o.get("body") or "")
+        body = clean_text(str(o.get("body") or ""))
         kind = kind_of(src)
-        tt = strict_tickers(title, tbl)
+        # a filing names its issuer by CIK; its title is a company name, not a headline
+        tt = {} if kind == "filing" else strict_tickers(title, tbl, common)
         for t in tickers_sec:
             tt.setdefault(DA.norm_ticker(t), "sec_cik")
-        bt = {k: v for k, v in strict_tickers(body[:20000], tbl).items() if k not in tt}
+        bt = {k: v for k, v in strict_tickers(body[:20000], tbl, common).items() if k not in tt}
         if not tt and not bt:
             stats["rows_unresolved"] += 1
         if acc:
@@ -364,6 +415,8 @@ def read_rows(corpus_root: Path, filings_path: Path, *, since: datetime, now: da
         if len(body) > len(it.body):
             it.body = body[:C.EVENT_NODES_FILL_BODY_CHARS * 2]
             it.lead = body[:C.EVENT_NODES_LEAD_CHARS]
+        if it.items_8k:
+            it.lead = " ".join([it.lead] + [_ITEM_WORDS.get(x, "") for x in it.items_8k])
 
     for src, f in _day_files(Path(corpus_root), since, now):
         stats["files"] += 1
@@ -396,7 +449,7 @@ def read_rows(corpus_root: Path, filings_path: Path, *, since: datetime, now: da
                     sec += [DA.norm_ticker(t) for t in _as_list(o.get("tickers")) if t]
                     k = DA.item_key(src, tags, str(o.get("url") or ""), o.get("raw_id"), o.get("title"))
                     acc = k[4:] if k.startswith("acc:") else None
-                add(src, o, fs, pub, sec, items_8k, acc)
+                pending.append((src, o, fs, pub, sec, items_8k, acc))
     fp = Path(filings_path)
     lo_s = _iso(since - timedelta(days=2)) or ""
     with fp.open(encoding="utf-8", errors="replace") as fh:
@@ -418,8 +471,13 @@ def read_rows(corpus_root: Path, filings_path: Path, *, since: datetime, now: da
             items_8k = [str(x) for x in _as_list(o.get("items"))]
             title = (f"{o.get('form_type')} - {o.get('company') or ''} items {', '.join(items_8k)}"
                      f" ({', '.join(str(x) for x in _as_list(o.get('event_types')))})")
-            add("filing_events", {"title": title, "url": o.get("index_url"), "body": ""},
-                fs, pub, [t] if t else [], items_8k, str(o.get("accession") or "") or None)
+            pending.append(("filing_events", {"title": title, "url": o.get("index_url"), "body": ""},
+                            fs, pub, [t] if t else [], items_8k, str(o.get("accession") or "") or None))
+    common.update(common_word_keys(
+        (str(p[1].get("title") or "") for p in pending if kind_of(p[0]) != "filing"), tbl))
+    stats["common_word_keys"] = common
+    for args in pending:
+        add(*args)
     out = sorted(items.values(), key=lambda i: (i.first_seen, i.key))
     stats["items"] = len(out)
     return out, stats
@@ -474,6 +532,17 @@ def cluster_items(items: list[Item], tbl: Any) -> tuple[list[Cluster], dict]:
         all_syms.update(it.title_tickers)
     names = _name_words(tbl, all_syms)
     toks = [_tokens(f"{it.title} {it.lead}", names) for it in items]
+    # per-source boilerplate ("Reprints", "Gift Article", a byline): a stem in at
+    # least EVENT_NODES_SOURCE_BOILERPLATE_SHARE of one source's items says
+    # nothing about the story and would tie that source's items to each other
+    src_n: Counter = Counter(it.source for it in items)
+    src_df: dict[str, Counter] = {}
+    for it, t in zip(items, toks):
+        src_df.setdefault(it.source, Counter()).update(t)
+    share = float(C.EVENT_NODES_SOURCE_BOILERPLATE_SHARE)
+    boiler = {s: {w for w, c in df_.items() if c / src_n[s] >= share}
+              for s, df_ in src_df.items() if src_n[s] >= 5}
+    toks = [t - boiler.get(it.source, set()) for it, t in zip(items, toks)]
     df: Counter = Counter()
     for t in toks:
         df.update(t)
@@ -493,40 +562,59 @@ def cluster_items(items: list[Item], tbl: Any) -> tuple[list[Cluster], dict]:
         den = min(sum(idf.get(w, 0.0) for w in a), sum(idf.get(w, 0.0) for w in b))
         return inter / den if den > 0 else 0.0
 
-    clusters: list[Cluster] = []
+    # single link over ALL same-issuer pairs (order-independent): union-find
     by_issuer: dict[str, list[int]] = {}
     unclustered = 0
     for i, it in enumerate(items):
-        issuers = list(it.title_tickers)
-        if not issuers:
+        if not it.title_tickers:
             unclustered += 1
-            continue
-        best, best_s, best_via = None, -1.0, None
-        for s in issuers:
-            for ci in by_issuer.get(s, []):
-                c = clusters[ci]
-                for m, mt in zip(c.members, c.tokens):
-                    if abs(it.first_seen - m.first_seen) > gap:
-                        continue
-                    sc = sim(toks[i], mt)
-                    if sc > best_s or (sc == best_s and best is not None and ci < best):
-                        best, best_s, best_via = ci, sc, s
-        if best is not None and best_s >= thr:
-            c = clusters[best]
-            c.joins.append({"item": it.key, "score": round(best_s, 4), "via": best_via})
-        else:
-            c = Cluster(cid=len(clusters))
-            clusters.append(c)
-            c.joins.append({"item": it.key, "score": None, "via": "seed",
-                            "best_rejected_score": round(best_s, 4) if best is not None else None})
-        c.members.append(it)
-        c.tokens.append(toks[i])
-        c.issuers.update(issuers)
-        for s in issuers:
-            lst = by_issuer.setdefault(s, [])
-            if c.cid not in lst:
-                lst.append(c.cid)
+        for s in it.title_tickers:
+            by_issuer.setdefault(s, []).append(i)
+    parent = list(range(len(items)))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    best: dict[int, tuple] = {}
+    for s in sorted(by_issuer):
+        idx = by_issuer[s]
+        for a_ in range(len(idx)):
+            i = idx[a_]
+            for b_ in range(a_ + 1, len(idx)):
+                j = idx[b_]
+                if abs(items[i].first_seen - items[j].first_seen) > gap:
+                    continue
+                sc = sim(toks[i], toks[j])
+                for x, y in ((i, j), (j, i)):
+                    if x not in best or sc > best[x][0]:
+                        best[x] = (sc, y, s)
+                if sc >= thr:
+                    ri, rj = find(i), find(j)
+                    if ri != rj:
+                        parent[max(ri, rj)] = min(ri, rj)
+    comps: dict[int, list[int]] = {}
+    for i, it in enumerate(items):
+        if it.title_tickers:
+            comps.setdefault(find(i), []).append(i)
+    clusters: list[Cluster] = []
+    for root in sorted(comps, key=lambda r: (items[comps[r][0]].first_seen, r)):
+        c = Cluster(cid=len(clusters))
+        for i in comps[root]:
+            it = items[i]
+            sc, j, via = best.get(i, (None, None, None))
+            joined = sc is not None and sc >= thr
+            c.joins.append({"item": it.key, "score": round(sc, 4) if sc is not None else None,
+                            "nearest": items[j].key if j is not None else None, "via": via,
+                            "joined": bool(joined) if len(comps[root]) > 1 else False})
+            c.members.append(it)
+            c.tokens.append(toks[i])
+            c.issuers.update(it.title_tickers)
+        clusters.append(c)
     return clusters, {"n_items": len(items), "n_unclustered_no_title_issuer": unclustered,
+                      "boilerplate_stems_by_source": {k: sorted(v) for k, v in sorted(boiler.items()) if v},
                       "n_clusters": len(clusters), "join_threshold": thr, "join_min_shared_tokens": min_shared,
                       "join_gap_hours": float(C.EVENT_NODES_JOIN_GAP_HOURS)}
 

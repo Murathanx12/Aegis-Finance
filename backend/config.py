@@ -6523,6 +6523,14 @@ EVENT_NODES_JOIN_MIN_SHARED_TOKENS = 2
 EVENT_NODES_LEAD_CHARS = 400
 #: Token stem length for the similarity (cheap, deterministic stemming).
 EVENT_NODES_STEM_CHARS = 4
+#: A stem in at least this share of ONE source's items (>= 5 items) is that
+#: source's boilerplate ("Reprints", "Gift Article") and is not used to join.
+EVENT_NODES_SOURCE_BOILERPLATE_SHARE = 0.30
+#: A single-word issuer name the window writes in lowercase in at least this
+#: share of its uses (and at least this many times) is an ordinary word
+#: ("first", "people") and then needs a corporate cue nearby to connect.
+EVENT_NODES_COMMON_WORD_LOWER_SHARE = 0.5
+EVENT_NODES_COMMON_WORD_MIN_LOWER = 2
 #: Symbols that are also English words: an explicit `(AI)` parenthesis is NOT
 #: enough for these (only `$AI` or `NASDAQ: AI` is); a bare word never is.
 EVENT_NODES_BAREWORD_SYMBOLS: tuple = ("A", "AI", "ALL", "ARE", "BE", "CAN", "CEO", "FOR",
