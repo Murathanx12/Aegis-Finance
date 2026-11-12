@@ -6711,6 +6711,31 @@ ONE_EVENT_FUNNEL_STALE_DAYS = 10
 #: evidence (review 2 S65, B1: a back-dated --now must not mint a 'frozen' hit).
 ONE_EVENT_REPLAY_TOLERANCE_S = 300
 
+# ── FORWARD CATALYST CALENDAR (ROADMAP CH-35 next dates, CH-08 freshness, M2) ──
+#: `backend/services/forward_calendar.py` + `scripts/forward_calendar.py`: the NEXT
+#: earnings date for every universe name, one append-only point-in-time snapshot per
+#: pull under `<data root>/forward_calendar/snapshots/`.
+FORWARD_CALENDAR_DIRNAME = "forward_calendar"
+#: Symbols per Yahoo v7 quote request (one request answers the whole batch).
+FORWARD_CALENDAR_BATCH_SIZE = 50
+#: Pause between batches, and after a 429 before the one retry of that batch.
+FORWARD_CALENDAR_BATCH_SLEEP_S = 2.0
+FORWARD_CALENDAR_RATE_LIMIT_BACKOFF_S = 60.0
+FORWARD_CALENDAR_TIMEOUT_S = 30
+#: A pull where fewer than this share of the issuers asked for returned a date is
+#: LOW_COVERAGE: the CLI exits 2 and the health row is STALE (a collector that returns
+#: nothing must not be green). ETFs/indices are not issuers and are not counted.
+FORWARD_CALENDAR_MIN_DATE_SHARE = 0.60
+#: A ticker's newest row older than this is CALENDAR_STALE (dates get revised; the
+#: pull is daily). The health row goes STALE past the same age.
+FORWARD_CALENDAR_STALE_DAYS = 3.0
+#: Reader default horizon (matches pm_catalysts / macro_calendar HORIZON_DAYS).
+FORWARD_CALENDAR_HORIZON_DAYS = 120
+#: A `.partial.jsonl` left by an interrupted pull is resumed if started within this.
+FORWARD_CALENDAR_RESUME_MAX_AGE_HOURS = 12.0
+#: LLM-selector books (llm_portfolio/books.jsonl) frozen within this many days join the universe.
+FORWARD_CALENDAR_BOOK_LOOKBACK_DAYS = 30
+
 # ── EVENT NODES (ROADMAP CH-35, slice 1) ─────────────────────────────────────
 #: `backend/services/event_nodes.py`: corpus rows -> deterministic event clusters
 #: -> one versioned, hash-chained EVENT NODE per event. No LLM in the build; the

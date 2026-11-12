@@ -2158,6 +2158,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("openclaw_temp_builds", "pc", timedelta(minutes=10), "count + time-boxed size of %TEMP%/openclaw-plugin-build-* vs OPENCLAW_TEMP_DEGRADED_COUNT / _GB", lambda ctx: __import__("backend.services.openclaw_temp", fromlist=["p_openclaw_temp_builds"]).p_openclaw_temp_builds(ctx), True),
     Probe("backtest_leaderboard", "pc", timedelta(days=7), "strategy_library/leaderboard_<run id>.json: run id in the name vs BACKTEST_LEADERBOARD_STALE_DAYS", lambda ctx: __import__("backend.services.backtest_staleness", fromlist=["p_backtest_leaderboard"]).p_backtest_leaderboard(ctx)),
     Probe("public_assets", "pc", timedelta(days=7), "scripts/render_public_assets.py RESULTS_RUN_ID vs PUBLIC_ASSETS_MAX_PIN_AGE_DAYS; never a file mtime", lambda ctx: __import__("backend.services.public_assets_staleness", fromlist=["p_public_assets"]).p_public_assets(ctx)),
+    Probe("forward_calendar", "pc", D1, "forward_calendar/snapshots/fc_<stamp>_receipt.json: finished_utc, status, share_covered vs FORWARD_CALENDAR_STALE_DAYS / _MIN_DATE_SHARE; never mtime", lambda ctx: __import__("backend.services.forward_calendar", fromlist=["p_forward_calendar"]).p_forward_calendar(ctx)),
 )
 
 
