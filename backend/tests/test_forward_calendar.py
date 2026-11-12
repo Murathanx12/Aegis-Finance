@@ -288,6 +288,10 @@ def test_universe_union_and_a_source_stamped_after_now_contributes_nothing(tmp_p
     assert u["tickers"] == ["MU", "NVDA", "SPY", "TXRH"]
     assert u["sources"]["universe_graph"]["status"] == "MISSING"
     assert u["sources"]["funnel"]["age_days"] == 2.0
+    # without --funnel, the snapshot BESIDE the data root is read (backend/data/funnel_night10.json),
+    # not the code checkout's tracked copy
+    (tmp_path / "funnel_night10.json").write_text(fun.read_text(encoding="utf-8"), encoding="utf-8")
+    assert FC.build_universe(dr, NOW)["sources"]["funnel"]["path"] == str(tmp_path / "funnel_night10.json")
     with pytest.raises(FC.ForwardCalendarRefused) as e:
         FC.build_universe(tmp_path / "empty_root_does_not_exist", NOW)
     assert e.value.code == FC.DATA_ROOT_MISSING

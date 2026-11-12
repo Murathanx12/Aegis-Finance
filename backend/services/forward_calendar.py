@@ -281,7 +281,10 @@ def build_universe(data_root: Path, now: datetime, *, funnel_path: Optional[Path
     dr = Path(data_root)
     if not dr.is_dir():
         raise ForwardCalendarRefused(DATA_ROOT_MISSING, f"data root {dr} is not a directory")
-    fp = Path(funnel_path) if funnel_path else Path(_cfg("IC_FUNNEL_PATH", dr.parent / "funnel_night10.json"))
+    # the funnel snapshot lives beside the data root (backend/data/funnel_night10.json);
+    # config.IC_FUNNEL_PATH is the code checkout's copy, used only when that is absent
+    sib = dr.parent / "funnel_night10.json"
+    fp = Path(funnel_path) if funnel_path else (sib if sib.is_file() else Path(_cfg("IC_FUNNEL_PATH", sib)))
     parts = {"universe_graph": _graph_companies(dr, now), "funnel": _funnel(fp, now),
              "pc_book": _pc_book(dr, now), "paper_accounts": _book_dna(dr, now),
              "llm_books": _llm_books(dr, now)}
