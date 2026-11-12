@@ -44,12 +44,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
 from backend import config as _config
+
+_log = logging.getLogger(__name__)
 
 #: Column source ids, and the evidence that assigns an article to one. Checked
 #: in order; the first match wins.
@@ -511,6 +514,93 @@ def write_big_money_rows(article: dict, *, path: Path | None = None) -> dict:
             "bearish_pct": p["bearish_pct"], "n_spx_levels": len(p["spx_forecasts"])}
 
 
+# ─────────────── page type: a mention is not a pick (CH-12 / CH-35) ──────────
+
+PAGE_CLASSES: tuple[str, ...] = ("PICK", "MENTION", "STANCE_REQUIRED")
+
+
+class PageTypeRefused(ValueError):
+    """A page type that `config.DOWJONES_PAGE_CLASS` does not classify. Never
+    treated as a PICK: the article writes no forecast row and is named."""
+
+
+def _url_path(url: str) -> str:
+    """Lowercased URL without query or fragment (`?mod=...` varies per link)."""
+    return re.sub(r"[?#].*$", "", str(url or "")).strip().lower()
+
+
+def page_type_of(url: str = "", title: str = "", column: str | None = None) -> str:
+    """PURE. The first `DOWJONES_PAGE_TYPE_RULES` rule whose marker occurs in
+    the URL path or the title, else the column. A `barrons_stock_picks` column
+    is a pick only when the URL/title carries a pick marker; otherwise its label
+    came from the site's navigation bar (`barrons_stock_picks_nav`)."""
+    hay = f"{_url_path(url)} {(title or '').lower()}".replace("’", "'")
+    for ptype, markers in getattr(_config, "DOWJONES_PAGE_TYPE_RULES", ()):
+        if any(m in hay for m in markers):
+            return ptype
+    col = str(column or column_of(url, title)).strip()
+    if col == "barrons_stock_picks" and not any(
+            m in hay for m in getattr(_config, "DOWJONES_PICK_MARKERS", ())):
+        return "barrons_stock_picks_nav"
+    return col
+
+
+def page_class(page_type: str) -> str:
+    """PICK / MENTION / STANCE_REQUIRED from `config.DOWJONES_PAGE_CLASS`;
+    raises `PageTypeRefused` (named) for a type the table does not hold."""
+    cls = dict(getattr(_config, "DOWJONES_PAGE_CLASS", {})).get(str(page_type))
+    if cls not in PAGE_CLASSES:
+        raise PageTypeRefused(
+            f"REFUSED_UNKNOWN_PAGE_TYPE: {page_type!r} is not in config.DOWJONES_PAGE_CLASS "
+            f"(class {cls!r}); classify it as PICK, MENTION or STANCE_REQUIRED there")
+    return str(cls)
+
+
+def _stance_re() -> re.Pattern:
+    cues = getattr(_config, "DOWJONES_STANCE_CUES", ())
+    return re.compile(r"\b(?:" + "|".join(cues) + r")\b", re.I) if cues else re.compile(r"(?!)")
+
+
+def explicit_stance(claim: dict) -> str | None:
+    """'up' / 'down' when the claim carries an explicit stance for its ticker,
+    else None. An extractor `stance` field decides when present (its direction
+    is used); otherwise the claim's up/down direction counts only when the
+    paraphrase or quote carries a stance cue (`DOWJONES_STANCE_CUES`)."""
+    st = str(claim.get("stance") or "").strip().lower()
+    if st:
+        return {"up": "up", "bullish": "up", "buy": "up", "long": "up", "down": "down",
+                "bearish": "down", "sell": "down", "short": "down"}.get(st)
+    d = str(claim.get("direction") or "").strip().lower()
+    if d not in ("up", "down"):
+        return None
+    text = f"{claim.get('paraphrase') or ''} {claim.get('quote') or ''}"
+    return d if _stance_re().search(text) else None
+
+
+def _existing_article_keys(url: str, ledger_path: Path | None) -> set[tuple[str, int]]:
+    """(ticker, horizon) of `source:*` rows already written for this article
+    (URL without query), streamed through `forecast_ledger.logical_lines` with
+    the URL path as the substring filter (never a whole-ledger load)."""
+    from backend.services import forecast_ledger as FL
+    path = _url_path(url)
+    if not path:
+        return set()
+    lp = Path(ledger_path) if ledger_path else FL.default_legacy_path()
+    out: set[tuple[str, int]] = set()
+    needle = re.sub(r"^https?://", "", path)
+    for line in FL.logical_lines(lp, contains=needle):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if not str(r.get("specialist") or "").startswith("source:"):
+            continue
+        u = (r.get("inputs_used") or {}).get("post_url") or r.get("next_observable") or ""
+        if _url_path(u) == path:
+            out.add((str(r.get("ticker") or "").upper(), int(r.get("horizon_days") or 0)))
+    return out
+
+
 def default_llm(system: str, user: str) -> str | None:
     from backend.services import llm_analyzer as LA
     return LA._call_llm(system, user, purpose=str(
@@ -524,6 +614,16 @@ def extract_claims(article: dict, *, llm_fn: Callable[[str, str], str | None] | 
     if len(text) < 300:
         return {"claims": [], "refused": [], "status": "SKIPPED_TOO_SHORT"}
     hint = COLUMN_HINTS.get(str(article.get("column") or ""), "")
+    if (hint and article.get("column") == "barrons_stock_picks"
+            and bool(getattr(_config, "DOWJONES_STANCE_REQUIRED_ENFORCE", False))):
+        # a page is told it is a buy list only when it IS a pick
+        try:
+            if page_class(page_type_of(str(article.get("url") or ""),
+                                       str(article.get("title") or ""),
+                                       article.get("column"))) != "PICK":
+                hint = ""
+        except PageTypeRefused:
+            hint = ""
     user = (f"Title: {article.get('title') or ''}\nURL: {article.get('url') or ''}\n"
             f"Published: {article.get('published') or 'unknown'}\n"
             + (f"Column note: {hint}\n" if hint else "") + f"\n{text[:12000]}")
@@ -553,6 +653,20 @@ def write_forecasts(article: dict, claims: list[dict], *, ledger_path: Path | No
     grade = NR.effective_pit_grade({"published_utc": article.get("published_utc"),
                                     "first_seen_utc": seen, "pit_grade": "first_seen_only"})
     day = seen[:10]
+    # CH-12/CH-35: the page type decides whether a named ticker may become a
+    # directional forecast at all. An unclassified type is refused by name.
+    url = str(article.get("url") or "")
+    ptype = page_type_of(url, str(article.get("title") or ""), col)
+    try:
+        pcls: str | None = page_class(ptype)
+        refused_type = None
+    except PageTypeRefused as e:
+        pcls, refused_type = None, str(e)
+        _log.error("dowjones_claims.write_forecasts: %s (%s)", refused_type, url[:160])
+    mention_off = pcls == "MENTION" and bool(getattr(_config, "DOWJONES_MENTION_NO_FORECAST",
+                                                     True))
+    tag = ({"page_type": ptype, "page_class": pcls or "REFUSED",
+            "forecast_written": False} if (mention_off or refused_type) else {})
     lp = Path(local_path) if local_path else local_claims_path(day)
     lp.parent.mkdir(parents=True, exist_ok=True)
     with lp.open("a", encoding="utf-8") as fh:
@@ -560,10 +674,58 @@ def write_forecasts(article: dict, claims: list[dict], *, ledger_path: Path | No
             fh.write(json.dumps({"source_id": col, "article_sha": article.get("sha"),
                                  "url": article.get("url"), "first_seen_utc": seen,
                                  "published_utc": article.get("published_utc"),
-                                 "pit_grade": grade, **c}, ensure_ascii=False) + "\n")
+                                 "pit_grade": grade, **c, **tag}, ensure_ascii=False) + "\n")
     if grade == NR.ARCHIVE_GRADE:
         return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
                 "n_rows_written": 0, "status": "ARCHIVE_NO_FORECAST"}
+    if refused_type:
+        return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
+                "page_type": ptype, "n_rows_written": 0, "status": "REFUSED_UNKNOWN_PAGE_TYPE",
+                "refused": refused_type}
+    if mention_off:
+        return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
+                "page_type": ptype, "page_class": pcls, "n_rows_written": 0,
+                "status": "MENTION_NO_FORECAST"}
+    extra: dict[str, Any] = {}
+    lag_max = getattr(_config, "DOWJONES_MAX_EXTRACTION_LAG_DAYS", None)
+    if lag_max is not None:
+        try:
+            lag_d = (datetime.now(timezone.utc)
+                     - datetime.fromisoformat(seen.replace("Z", "+00:00"))).total_seconds() / 86400
+        except ValueError:
+            lag_d = None
+        if lag_d is None or lag_d > float(lag_max):
+            return {"source_id": col, "pit_grade": grade, "n_claims": len(claims),
+                    "page_type": ptype, "page_class": pcls, "n_rows_written": 0,
+                    "extraction_lag_days": None if lag_d is None else round(lag_d, 2),
+                    "status": "STALE_NO_FORECAST"}
+    if pcls == "STANCE_REQUIRED" and bool(getattr(_config, "DOWJONES_STANCE_REQUIRED_ENFORCE",
+                                                  False)):
+        kept = []
+        for c in claims:
+            st = explicit_stance(c)
+            if st is not None:
+                kept.append({**c, "direction": st})
+        extra["n_no_stance"] = len(claims) - len(kept)
+        claims = kept
+    if bool(getattr(_config, "DOWJONES_DEDUPE_ARTICLE_TICKER_HORIZON", False)):
+        from backend.services import source_registry as _SR
+        have = _existing_article_keys(url, ledger_path)
+        hs_all = tuple(int(h) for h in _SR.SCORE_HORIZONS)
+        kept, seen_t, n_dup = [], set(), 0
+        for c in claims:
+            t = str(c.get("ticker") or "").upper()
+            hs = tuple(h for h in hs_all if (t, h) not in have)
+            if t in seen_t or not hs:
+                n_dup += 1
+                continue
+            seen_t.add(t)
+            kept.append({**c, "_horizons": hs})
+        extra["n_duplicate_article_ticker"] = n_dup
+        claims = kept
+    if extra and not claims:
+        return {"source_id": col, "pit_grade": grade, "page_type": ptype, "page_class": pcls,
+                "n_claims": 0, "n_rows_written": 0, **extra, "status": "OK"}
     # 2026-10-06 (C7 review F2): the reader lane that fetched the page travels
     # onto the claim, so a query planner page (`qp:<query_id>`) is attributed
     # when the claim is WRITTEN, never guessed later by URL
@@ -573,11 +735,12 @@ def write_forecasts(article: dict, claims: list[dict], *, ledger_path: Path | No
         {"query_id": rb.get("query_id") or lane[3:]} if lane.startswith("qp:") else {})
     rows = [{"source_id": col, "source_kind": "journalist", "ticker": c["ticker"],
              "claim_text": f"[{col}] {c['paraphrase']}", "claim_utc": seen,
-             "direction": c["direction"], "post_url": str(article.get("url") or ""), **via}
+             "direction": c["direction"], "post_url": str(article.get("url") or ""), **via,
+             **({"horizon_days": c["_horizons"]} if "_horizons" in c else {})}
             for c in claims]
     res = SR.write_claims(rows, path=ledger_path, claims_path=claims_path)
-    return {"source_id": col, "pit_grade": grade, "n_claims": len(claims), **res,
-            "status": "OK"}
+    return {"source_id": col, "pit_grade": grade, "n_claims": len(claims), **res, **extra,
+            "page_type": ptype, "page_class": pcls, "status": "OK"}
 
 
 def text_sha(text: str) -> str:
