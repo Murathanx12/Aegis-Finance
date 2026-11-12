@@ -6502,6 +6502,67 @@ ONE_EVENT_FUNNEL_STALE_DAYS = 10
 #: REAL write time is a REPLAY row: written, sealed, and never graded as forward
 #: evidence (review 2 S65, B1: a back-dated --now must not mint a 'frozen' hit).
 ONE_EVENT_REPLAY_TOLERANCE_S = 300
+
+# ── EVENT NODES (ROADMAP CH-35, slice 1) ─────────────────────────────────────
+#: `backend/services/event_nodes.py`: corpus rows -> deterministic event clusters
+#: -> one versioned, hash-chained EVENT NODE per event. No LLM in the build; the
+#: LLM fill step is a separate, capped DeepSeek call (`fill_event`).
+#: Default output folder under the data root (the CLI's `--out` overrides it).
+EVENT_NODES_DIRNAME = "event_nodes"
+#: `--since` default: this many hours before `--now`.
+EVENT_NODES_DEFAULT_LOOKBACK_HOURS = 24.0
+#: A row joins a cluster of the same issuer only when it was first seen within
+#: this many hours of the cluster's nearest member ...
+EVENT_NODES_JOIN_GAP_HOURS = 24.0
+#: ... and its title+lead stems overlap the best-scoring member by at least this
+#: IDF-weighted overlap coefficient, sharing at least this many stems (single
+#: link; the score is printed per join).
+EVENT_NODES_JOIN_MIN_SIMILARITY = 0.20
+EVENT_NODES_JOIN_MIN_SHARED_TOKENS = 2
+#: Characters of a body used for the similarity lead (bodies are never written).
+EVENT_NODES_LEAD_CHARS = 400
+#: Token stem length for the similarity (cheap, deterministic stemming).
+EVENT_NODES_STEM_CHARS = 4
+#: Symbols that are also English words: an explicit `(AI)` parenthesis is NOT
+#: enough for these (only `$AI` or `NASDAQ: AI` is); a bare word never is.
+EVENT_NODES_BAREWORD_SYMBOLS: tuple = ("A", "AI", "ALL", "ARE", "BE", "CAN", "CEO", "FOR",
+                                       "GOLD", "IT", "NOW", "ON", "ONE", "OUT", "SO", "US",
+                                       "AM", "PM", "TV", "EV", "IPO", "ETF", "GDP", "CPI")
+#: Name keys that never connect a name in an event node, even with a corporate
+#: cue nearby: "price target" and "the Nasdaq" (the index) are the 11-12 cases.
+EVENT_NODES_DROP_NAME_KEYS: tuple = ("target", "nasdaq")
+#: Importance = sum(weight x component); every component is printed.
+EVENT_NODES_IMPORTANCE_WEIGHTS: dict = {
+    "publishers": 1.0,      # log1p(distinct publishers)
+    "regions": 0.5,         # distinct feed regions (capped below)
+    "items": 0.5,           # log1p(distinct evidence items)
+    "filing": 1.0,          # 1 if an SEC filing is in the evidence
+    "size_rank": 1.0,       # issuer's 63-session median dollar-volume percentile, 0..1
+    "price_reaction": 1.0,  # min(|market-adjusted z|, cap) / cap, first session after first_seen
+    "held": 0.5,            # the PC book holds the issuer
+    "forecast": 0.5,        # a forecast row on the issuer inside the lookback
+}
+EVENT_NODES_REGIONS_CAP = 6
+EVENT_NODES_PRICE_Z_CAP = 4.0
+EVENT_NODES_SIGMA_SESSIONS = 60
+EVENT_NODES_DOLLAR_VOL_SESSIONS = 63
+EVENT_NODES_FORECAST_LOOKBACK_DAYS = 3
+#: importance_now = importance_0 x 0.5 ** (age_hours / half_life); computed on read.
+EVENT_NODES_HALF_LIFE_HOURS = 72.0
+#: Connected names: graph neighbours kept per link type, and co-mentions kept.
+EVENT_NODES_GRAPH_TOP_K_PER_TYPE = 8
+EVENT_NODES_MAX_COMENTIONS = 25
+#: Next dates looked up this many days ahead.
+EVENT_NODES_NEXT_DATES_HORIZON_DAYS = 45
+#: The LLM fill step (DeepSeek only, through llm_analyzer.call_named / provider_budget).
+EVENT_NODES_FILL_PURPOSE = "event_node_fill"
+EVENT_NODES_FILL_MAX_TOKENS = 900
+EVENT_NODES_FILL_MAX_EVIDENCE = 12
+EVENT_NODES_FILL_BODY_CHARS = 1500
+EVENT_NODES_FILL_TOP_N = 10
+#: Price row used for the PROJECTED cost (measured list price); the reservation
+#: bound comes from provider_budget.quote().
+EVENT_NODES_FILL_PRICE_MODEL = "deepseek-v4-flash"
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
