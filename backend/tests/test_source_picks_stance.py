@@ -169,6 +169,57 @@ def test_every_column_the_code_can_produce_is_classified():
         assert DC.page_class(c) in DC.PAGE_CLASSES
 
 
+def _ledger_row(i: int, sp: str, t: str, h: int, p: float, day: str, outcome, url: str) -> dict:
+    return {"prediction_id": f"id{i}", "ticker": t, "specialist": sp,
+            "observable": "beats_benchmark", "horizon_days": h, "probability": p,
+            "made_at": f"{day}T00:00:00+00:00", "decision_date": day, "thesis": f"[{sp}] x",
+            "next_observable": url, "outcome": outcome, "void_reason": None,
+            "inputs_used": {"post_url": url, "claim_utc": f"{day}T00:00:00+00:00"}}
+
+
+def test_the_grader_reads_only_through_the_layer_reconciles_and_refuses(tmp_path, capsys):
+    from scripts import source_picks_grade as G
+    root, out = tmp_path / "optimus", tmp_path / "out"
+    root.mkdir()
+    rng_days = [(datetime.now(timezone.utc) - timedelta(days=40 - k)).date().isoformat()
+                for k in range(12)]
+    rows, i = [], 0
+    for k, day in enumerate(rng_days):
+        for t in ("AAA", "BBB", "CCC"):
+            for h in (1, 5, 20):
+                i += 1
+                rows.append(_ledger_row(i, "source:barrons_stock_picks", t, h, 0.6, day,
+                                        (i + k) % 2,
+                                        f"https://www.barrons.com/articles/stock-movers-{k}{t}"))
+    rows.append({"prediction_id": "other", "specialist": "investigator", "ticker": "AAA"})
+    (root / "predictions.jsonl").write_text(
+        "".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    before = sorted(x.name for x in root.iterdir())
+    assert G.main(["--data-root", str(root), "--out", str(out), "--run-id", "t1"]) == 0
+    assert sorted(x.name for x in root.iterdir()) == before          # nothing written there
+    rec = json.loads((out / "source_picks_grade_t1.json").read_text(encoding="utf-8"))
+    sp = rec["per_specialist"]["source:barrons_stock_picks"]
+    assert rec["reconciles"] and sp["n_rows"] == sp["ledger_regex_count"] == len(rows) - 1
+    assert sp["date_blocks"] == 12 and sp["tickers"] == 3
+    c5 = sp["by_horizon"]["5"]
+    assert c5["mde"] is not None and sp["verdict"] in (
+        "SUPPORTED_IN_SCOPE", "CANNOT_DISTINGUISH", "NOT_SUPPORTED_IN_SCOPE")
+    assert rec["mention_rows"]["n"] == len(rows) - 1                 # every page is a mover page
+    # refusals are red, never rc 0
+    assert G.main(["--data-root", str(tmp_path / "missing"), "--out", str(out)]) == 2
+    assert G.main(["--data-root", str(root), "--out", str(root / "x")]) == 2
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert G.main(["--data-root", str(empty), "--out", str(out)]) == 2
+    assert "REFUSED" in capsys.readouterr().out
+
+
+def test_a_verdict_never_comes_without_an_mde():
+    from scripts import source_picks_grade as G
+    assert G.verdict({"mde": None, "n_resolved": 500, "date_blocks_resolved": 50,
+                      "t": 9.0, "hit_rate": 0.9}) == "CANNOT_DISTINGUISH"
+
+
 def test_a_stale_extraction_writes_no_forecast_only_when_the_lag_flag_is_on(ledger, monkeypatch):
     old = (datetime.now(timezone.utc) - timedelta(days=27)).isoformat(timespec="seconds")
     art = {"url": "https://www.barrons.com/articles/buy-frontline-stock-3415119d",
