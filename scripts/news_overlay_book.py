@@ -96,7 +96,8 @@ def _wide(bars: Path, start: date, end: Optional[date] = None):
     return close.loc[keep], vol.reindex(index=keep, columns=close.columns)
 
 
-def _base_panel(P: dict, c: dict, first: date, last: Optional[date] = None) -> dict:
+def _base_panel(P: dict, c: dict, first: date, last: Optional[date] = None, *,
+                recorded: Optional[dict] = None, accept: bool = False) -> dict:
     """v3: the LIQUID-RANDOM-50 base derived from the bars panel (every draw from
     bars strictly before its date), closes, weights, re-target flags, the
     decision-time stale share per session, and the SPY comparison base. Read-only."""
@@ -111,7 +112,19 @@ def _base_panel(P: dict, c: dict, first: date, last: Optional[date] = None) -> d
     if not sessions:
         raise NO.NewsOverlayRefused(f"no bar sessions in {first}..{last}")
     draw_dates = sorted({NO.month_draw_date(t) for t in sessions})
-    draws = [NO.draw_liquid_base(close, vol, D) for D in draw_dates]
+    derived = [NO.draw_liquid_base(close, vol, D) for D in draw_dates]
+    draws, events, unrecorded = [], [], []
+    for dv in derived:
+        if recorded is None:
+            draws.append(dv)
+            continue
+        rec = recorded.get(dv["asof"])
+        if rec is None:
+            unrecorded.append(dv["asof"])
+        use, ev = NO.resolve_draw(rec, dv, accept=accept)
+        draws.append(use)
+        if ev:
+            events.append(ev)
     held = sorted({s for dr in draws for s in dr["names"]})
     cols = held + ([spy] if spy not in held else [])
     sub = close[cols]
@@ -147,6 +160,7 @@ def _base_panel(P: dict, c: dict, first: date, last: Optional[date] = None) -> d
     return {"snaps": snaps, "draws": draws, "sessions": sessions, "closes": closes, "weights": weights,
             "changed": changed, "stale": stale, "dec_stale": dec_stale, "carried": carried,
             "n_symbols": len(held), "spy": {"weights": spy_w, "changed": spy_changed},
+            "draw_events": events, "unrecorded_draws": unrecorded,
             "panel": {"close": close, "volume": vol}}
 
 
@@ -235,7 +249,8 @@ def cmd_replay(a) -> int:
     print(f"  bars: {B['n_symbols']} base symbols over {len(B['draws'])} draws, sessions {sessions[0]} .. "
           f"{sessions[-1]} ({len(sessions)}), closes CARRIED (last bar forward-filled): {B['carried']}")
     for dr in B["draws"]:
-        print(f"  DRAW {dr['asof']} seed {dr['seed']} (base {dr['base_seed']}) pool {dr['pool_size']} of "
+        print(f"  DRAW {dr['asof']} seed {dr['seed']} (base {dr['base_seed']}) pool {dr['pool_size']} "
+              f"pool_sha16 {dr['pool_sha16']} of "
               f"{dr['n_symbols_in_panel']} (fails {dr['fail_counts']}), last bar used {dr['last_bar_date_used']}: "
               f"{' '.join(dr['names'])}")
 
@@ -305,7 +320,7 @@ def cmd_replay(a) -> int:
                               "overlay_cost_on_scalar_only_days_usd": round(scalar_cost, 2)},
         "base_rebalance_sessions": [t.isoformat() for t in sessions if changed.get(t)],
         "base": {"id": c["base_book_id"], "definition": c["base_definition"],
-                 "draws": B["draws"],
+                 "draws": [{k: v for k, v in dr.items() if k != "pool"} for dr in B["draws"]],
                  "own_return_vs_spy": {"base_twin_total_pct": round(100 * tw_tot, 4),
                                        "spy_total_pct": round(100 * spy_tw, 4),
                                        "base_minus_spy_pp": round(100 * (tw_tot - spy_tw), 4),
@@ -338,10 +353,11 @@ def cmd_replay(a) -> int:
                     "survivor-selected (symbols alive on 2026-09-01), which touches the base and its twin "
                     "alike"),
     }
-    receipt = {"schema": "news_overlay_book_replay/v3", "run_id": run_id, "licence": NO.LICENCE,
+    receipt = {"schema": "news_overlay_book_replay/v4", "run_id": run_id, "licence": NO.LICENCE,
                "contract": c, "headline": head,
                "inputs": {k: str(P[k]) for k in ("digest", "bars")},
                "carried_closes_by_symbol": B["carried"],
+               "draw_pools": {dr["asof"]: dr["pool"] for dr in B["draws"]},
                "live_folder_counts": {"before": before, "after": after, "unchanged": before == after},
                "decision_rows": rows, "daily": sr, "daily_spy_comparison": ssr}
     rp = out / f"news_overlay_replay_{run_id}.json"
@@ -404,30 +420,49 @@ def cmd_step(a, now: Optional[datetime] = None) -> int:
     lookback_days = int(1.6 * (int(_cfg.NEWS_OVERLAY_LIQUID_MIN_HISTORY)
                                + int(_cfg.NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK))) // 2 + 60
     close, vol = _wide(P["bars"], D - timedelta(days=lookback_days), t - timedelta(days=1))
-    dr = NO.draw_liquid_base(close, vol, D)
     prior = [d for d in close.index if d < t]
     if not prior:
         raise NO.NewsOverlayRefused(f"no bars before {t}")
     last = prior[-1]
+    want = NO.previous_session(t)
+    if last != want:
+        raise NO.NewsOverlayRefused(f"STALE_PANEL: the bars panel's last bar is {last}, not {want} (the "
+                                    f"session before {t}); bar ages would be measured against a stale "
+                                    f"panel. Refresh the bars first.")
+    if D < t and D not in close.index:
+        raise NO.NewsOverlayRefused(f"DRAW_ROW_MISSING: the draw date {D} has no bar row in the panel, so "
+                                    f"the draw cannot be filled at its close")
+    dp = NO.decisions_path(P["data"] / "optimus")
+    drp = NO.draws_path(P["data"] / "optimus")
+    recorded = NO.read_recorded_draws(drp, c["policy_hash"]).get(D.isoformat())
+    derived = NO.draw_liquid_base(close, vol, D)
+    dr, event = NO.resolve_draw(recorded, derived, accept=bool(getattr(a, "accept_recorded_draw", False)))
     ff = close[dr["names"]].ffill()
-    if D in ff.index:
+    if D < t:
         shares = NO.liquid_snapshots([dr], ff)[0]["shares"]
-    else:                       # t is the draw date itself: equal weight is the target
+    else:                       # t IS the draw date: the target is equal weight filled at this close
         shares = {s: 1.0 / float(ff.at[last, s]) / len(dr["names"]) for s in dr["names"]}
     cp = {s: float(ff.at[last, s]) for s in shares}
     nav = sum(n * cp[s] for s, n in shares.items())
     w = {last: {s: n * cp[s] / nav for s, n in shares.items()}}
     ages = NO.bar_ages(close[dr["names"]], last)
     stale = NO.stale_weight_share(shares, cp, ages)
-    dp = NO.decisions_path(P["data"] / "optimus")
     fwd = NO.read_forward_rows(dp, c["policy_hash"]) if dp.exists() else []
     prev = fwd[-1]["scalar"] if fwd else None
     row = NO.step(t, digests=digests, base_weights=w[last], prev_scalar=prev, out_path=dp,
                   label=label, now=now, stale=stale)
+    if row.get("written") and label == NO.FORWARD:
+        if recorded is None:
+            NO.append_draw_row(drp, {"kind": NO.DRAW, "session": t.isoformat(), **dr}, c["policy_hash"], now=now)
+            print(f"RECORDED draw {D} pool_sha16 {dr['pool_sha16']} -> {drp}")
+        if event:
+            NO.append_draw_row(drp, {**event, "session": t.isoformat()}, c["policy_hash"], now=now)
+            print(f"ACCEPTED_RECORDED_DRAW for {D} recorded in {drp}: {json.dumps(event)[:400]}")
     print(json.dumps({k: row.get(k) for k in ("session", "label", "scalar", "degradation", "digest_id",
                                                "decision_utc", "written_utc", "policy_hash", "written",
                                                "duplicate", "stale_weight_share", "refused")}, default=str))
-    print(f"base draw {dr['asof']} seed {dr['seed']} pool {dr['pool_size']}: {' '.join(dr['names'])}")
+    print(f"base draw {dr['asof']} seed {dr['seed']} pool {dr['pool_size']} pool_sha16 {dr['pool_sha16']} "
+          f"({'RECORDED' if recorded else 'derived'}): {' '.join(dr['names'])}")
     return 0
 
 
@@ -446,7 +481,13 @@ def cmd_grade(a) -> int:
         raise NO.NewsOverlayRefused(f"no FORWARD rows under {c['policy_hash']} in {dp}")
     first = date.fromisoformat(rows[0]["session"])
     lastd = date.fromisoformat(rows[-1]["session"])
-    B = _base_panel(P, c, first, lastd)
+    drp = NO.draws_path(P["data"] / "optimus")
+    if not drp.is_file():
+        raise NO.NewsOverlayRefused(f"no recorded draws at {drp}: forward rows exist but their baskets "
+                                    f"were never recorded")
+    recorded = NO.read_recorded_draws(drp, c["policy_hash"])
+    B = _base_panel(P, c, first, lastd, recorded=recorded,
+                    accept=bool(getattr(a, "accept_recorded_draw", False)))
     sessions = B["sessions"]
     scal, why = NO.grade_scalars(sessions, rows)
     sim = NO.simulate(sessions, B["closes"], B["weights"], B["changed"], scal)
@@ -462,7 +503,10 @@ def cmd_grade(a) -> int:
     rp = out / f"news_overlay_grade_{run_id}.json"
     n_missing = sum(1 for v in why.values() if v == NO.NO_DECISION_ROW)
     n_deg = sum(1 for r in sr if r["grade_status"] == "DEGRADED")
-    _write_json(rp, {"schema": "news_overlay_book_grade/v3", "draws": B["draws"], "run_id": run_id, "label": NO.FORWARD,
+    _write_json(rp, {"schema": "news_overlay_book_grade/v4",
+                     "draws": [{k: v for k, v in dr.items() if k != "pool"} for dr in B["draws"]],
+                     "accepted_recorded_draw": B["draw_events"],
+                     "unrecorded_draws_derived_at_grade": B["unrecorded_draws"], "run_id": run_id, "label": NO.FORWARD,
                      "policy_hash": c["policy_hash"], "sessions": len(sessions),
                      "no_decision_row_sessions": n_missing, "degraded_sessions": n_deg,
                      "worst_case_first": worst_case_lines(sessions, B["closes"], B["weights"], sim),
@@ -486,9 +530,11 @@ def main(argv=None, *, now: Optional[datetime] = None) -> int:
     c3 = sub.add_parser("step")
     c3.add_argument("--date", default=None)
     c3.add_argument("--data-dir", default=None)
+    c3.add_argument("--accept-recorded-draw", action="store_true")
     c4 = sub.add_parser("grade")
     c4.add_argument("--out", required=True)
     c4.add_argument("--data-dir", default=None)
+    c4.add_argument("--accept-recorded-draw", action="store_true")
     a = ap.parse_args(argv)
     cmds: dict[str, Callable] = {"contract": cmd_contract, "replay": cmd_replay,
                                  "step": lambda x: cmd_step(x, now=now), "grade": cmd_grade}

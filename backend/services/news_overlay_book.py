@@ -54,8 +54,8 @@ from zoneinfo import ZoneInfo
 from backend import config as _cfg
 
 LICENCE = "PRODUCT_EXPERIMENT"
-SCHEMA = "news_overlay_book/v3"
-CONTRACT_NAME = "NEWS_OVERLAY_v3"
+SCHEMA = "news_overlay_book/v4"
+CONTRACT_NAME = "NEWS_OVERLAY_v4"
 ET = ZoneInfo("America/New_York")
 
 #: Degradation names. Every one of them forces scalar 1.0.
@@ -87,6 +87,16 @@ HISTORY = (
                             "split (XP) as the largest single-name loss. The brain session decided "
                             "not to seed on it. v3 keeps the mapping and changes the base. v2 was "
                             "never seeded and has no forward rows.")},
+    {"name": "NEWS_OVERLAY_v3", "policy_hash": "c777f997289240e4",
+     "declared_utc": "2026-11-12T17:48:00+00:00", "replay_run": "20261112T175256Z",
+     "superseded_because": ("adversarial review of PR #133: the forward draw was re-derived on every "
+                            "step and grade and never recorded (removing one name from a 1,300-name "
+                            "pool changed 10-26 of the 50 names, so a bars re-pull could silently "
+                            "change a past basket); eligibility read forward-filled closes; a stale "
+                            "panel blinded the stale-bar check; a missing draw-date row fell back to "
+                            "equal weight silently; the contract lacked the carry rule, the "
+                            "survivorship statement, the objects-looked-at count and the replay's "
+                            "mapping finding. v3 was never seeded and has no forward rows.")},
 )
 
 
@@ -101,8 +111,9 @@ BASE_DEFINITION = (
     "session of each calendar month; holdings for every session t are the draw dated D(t) = the "
     "first session of t's month. Eligible on D, using ONLY bars dated strictly before D: median "
     "close x volume over the last LIQUID_DV_SESSIONS sessions >= LIQUID_MIN_DOLLAR_VOL; last close "
-    ">= LIQUID_MIN_PRICE; >= LIQUID_MIN_HISTORY real bars; newest bar no more than "
-    "LIQUID_MAX_BAR_AGE sessions before the last session before D; no SUSPECT_CORPORATE_ACTION in "
+    ">= LIQUID_MIN_PRICE taken from a REAL bar on the last session before D (no forward fill for "
+    "eligibility: a name without a bar on that session is ineligible, which also satisfies "
+    "LIQUID_MAX_BAR_AGE); >= LIQUID_MIN_HISTORY real bars; no SUSPECT_CORPORATE_ACTION in "
     "the last LIQUID_SUSPECT_LOOKBACK sessions (discovery_autopsy's rule: a one-bar raw move, last "
     "real bar to next real bar, above AUTOPSY_SUSPECT_UP or below AUTOPSY_SUSPECT_DOWN on a name "
     "whose previous close is >= AUTOPSY_MIN_PRICE); not an ETF or index proxy "
@@ -110,7 +121,41 @@ BASE_DEFINITION = (
     "sorted and LIQUID_N are drawn by paper_books._draw (np.random.default_rng, without "
     "replacement) with seed int(sha256('LIQUID_SEED:D')[:8], 16), recorded on every draw. Equal "
     "weight at D's close (the fill), then held as shares (drifting) until the next draw; a draw "
-    "re-targets at its D's close. Costs: the engine's standard 5 + 1 bps per side.")
+    "re-targets at its D's close. Costs: the engine's standard 5 + 1 bps per side. FORWARD: the "
+    "first FORWARD row of each month RECORDS the draw (seed, pool, pool_sha16, names, D, last bar "
+    "used) in the append-only draws.jsonl; every later step and grade of that month uses the "
+    "recorded basket and refuses (DRAW_MISMATCH) when a re-derivation from the current panel gives "
+    "a different pool hash, unless --accept-recorded-draw, which proceeds on the recorded basket and "
+    "records that it did. The BACKFILL replay re-derives every month and prints each pool hash.")
+
+#: v4: how a held name that stops trading is valued.
+CARRY_RULE = (
+    "A held name with no new bar is carried at its last real close (forward fill for MARKING only), "
+    "flagged per day on the receipt, and counts toward the stale-weight refusal once its newest bar "
+    "is more than STALE_BAR_SESSIONS sessions old. Direction of the bias: UPWARD for a failure "
+    "(the true exit is below the last close), roughly NEUTRAL for a cash acquisition (the last close "
+    "is near the deal price), and IDENTICAL for the overlay and its twin (both carry the same "
+    "names), so it moves both lines and not their difference except through the scalar.")
+
+#: v4: what the bars panel's membership does to the draws.
+SURVIVORSHIP = (
+    "prices_2025_26/bars.parquet was built from a universe file dated 2026-09-01: it keeps names "
+    "that stopped trading after that date (24 symbols have a last bar before the panel's end, 23 of "
+    "them between 2026-09-01 and 2026-11-01; KVUE's last bar is 2026-10-30), so the 2026-09 .. "
+    "2026-11 draws are NOT survivor-filtered beyond the one session between the membership date "
+    "and the first draw. A panel rebuilt with a LATER membership date would survivor-filter every "
+    "earlier draw: a rebuild changes the pool hash and the recorded-draw check refuses.")
+
+#: v4: the BACKFILL replay's finding about the mapping, stated, NOT acted on (no retune).
+REPLAY_FINDING = (
+    "Finding from the v3 BACKFILL replay (20261112T175256Z), stated and NOT fixed (the mapping was "
+    "declared before any replay and stays as declared): on the five days the scalar was below 1.0 "
+    "(2026-10-01 0.7, 10-02 0.5, 10-08 0.95, 10-09 0.6, 10-14 0.95) SPY's next sessions were "
+    "+0.74%, +0.67%, +0.60%, -0.06%, +0.28%: the overlay cut exposure into rebounds (reviewer's "
+    "count: -0.67 pp missed, about $115 extra cost on the SPY comparison). On 2026-11-04 the digest "
+    "was EMPTY, so the scalar was 1.0 into the -4.4% SPY session of 2026-11-05: the overlay never "
+    "had the chance to help on the one day that mattered. An EMPTY digest is the overlay's blind "
+    "spot: it holds full exposure exactly when the news pipeline is down.")
 
 WHY_RANDOM = (
     "Why a random liquid base and not a strategy book: CH-11 (2026-11-12) found the strategy books "
@@ -140,6 +185,7 @@ def params() -> dict:
         "NEWS_OVERLAY_LIQUID_MAX_BAR_AGE", "NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK",
         "NEWS_OVERLAY_LIQUID_SEED", "NEWS_OVERLAY_LIQUID_EXCLUDE_ETFS",
         "NEWS_OVERLAY_STALE_REFUSE_SHARE", "NEWS_OVERLAY_COMPARISON_BASE",
+        "NEWS_OVERLAY_V4_DECLARED_UTC", "NEWS_OVERLAY_OBJECTS_LOOKED_AT",
         "AUTOPSY_SUSPECT_UP", "AUTOPSY_SUSPECT_DOWN", "AUTOPSY_MIN_PRICE")}
 
 
@@ -162,6 +208,17 @@ def contract() -> dict:
         "base_book_id": p["NEWS_OVERLAY_BASE_BOOK"],
         "base_definition": BASE_DEFINITION,
         "why_random_base": WHY_RANDOM,
+        "carry_rule": CARRY_RULE,
+        "survivorship": SURVIVORSHIP,
+        "replay_finding": REPLAY_FINDING,
+        "recorded_draw": ("draws.jsonl beside decisions.jsonl, append-only, one DRAW row per month "
+                          "written with that month's first FORWARD row; ACCEPTED_RECORDED_DRAW rows "
+                          "record every --accept-recorded-draw use with the pool diff"),
+        "stale_panel_refusal": ("the forward step REFUSES (STALE_PANEL) when the bars panel's last "
+                                "bar is not the XNYS session before the decision session, and "
+                                "(DRAW_ROW_MISSING) when the draw date is before the session but "
+                                "has no bar row; on the draw date itself the target is equal "
+                                "weight filled at that close, by definition"),
         "comparison_base": {"id": p["NEWS_OVERLAY_COMPARISON_BASE"],
                             "role": ("COMPARISON ONLY, never graded: the same scalars applied to SPY "
                                      "alone (scalar x SPY vs 1.0 x SPY), so the overlay's effect can "
@@ -226,7 +283,15 @@ def contract() -> dict:
                                      "The v2 replay had been seen (overlay -0.84 pp vs twin) before "
                                      "v3 was declared; the v3 base was chosen for readability (stale "
                                      "bars, splits, small caps), not from that number, and its seed "
-                                     "was declared in config before any v3 replay ran")},
+                                     "was declared in config before any v3 replay ran"),
+                       "objects_looked_at": p["NEWS_OVERLAY_OBJECTS_LOOKED_AT"],
+                       "objects_looked_at_note": ("3 = two graded bases tried ($3M random draw, "
+                                                  "LIQUID-RANDOM-50) plus the SPY comparison base "
+                                                  "whose replay was seen"),
+                       "v4_change": ("no mapping or base-rule parameter changed; eligibility now "
+                                     "needs a real bar on the last session before D (no forward "
+                                     "fill), the forward draw is recorded and checked, a stale "
+                                     "panel refuses, and the wording above was added")},
         "history": list(HISTORY),
         "params": p,
     }
@@ -659,6 +724,16 @@ def month_draw_date(t: date) -> date:
     raise NewsOverlayRefused(f"no XNYS session found in {t:%Y-%m}")
 
 
+def previous_session(t: date) -> date:
+    """The XNYS session strictly before `t`."""
+    d = t - timedelta(days=1)
+    for _ in range(15):
+        if is_session(d):
+            return d
+        d -= timedelta(days=1)
+    raise NewsOverlayRefused(f"no XNYS session in the 15 days before {t}")
+
+
 def draw_seed(asof: date, base: Optional[int] = None) -> int:
     b = int(_cfg.NEWS_OVERLAY_LIQUID_SEED if base is None else base)
     return int(hashlib.sha256(f"{b}:{asof.isoformat()}".encode()).hexdigest()[:8], 16)
@@ -705,7 +780,7 @@ def eligibility(close, volume, asof: date) -> dict:
     v = volume.reindex(index=idx, columns=c.columns)
     n_hist = c.notna().sum(axis=0)
     ages = bar_ages(c, idx[-1])
-    last_close = c.ffill().iloc[-1]
+    last_close = c.iloc[-1]                 # a REAL bar on the last session before D, no forward fill
     W = int(_cfg.NEWS_OVERLAY_LIQUID_DV_SESSIONS)
     dv = (c * v).iloc[-W:].median(axis=0, skipna=True)
     L = int(_cfg.NEWS_OVERLAY_LIQUID_SUSPECT_LOOKBACK)
@@ -718,14 +793,16 @@ def eligibility(close, volume, asof: date) -> dict:
     suspect = sus.any(axis=0)
     excl = excluded_symbols()
     fails = {"dollar_vol": set(), "price": set(), "history": set(), "stale": set(),
-             "suspect": set(), "etf": set()}
+             "suspect": set(), "etf": set(), "no_bar_last_session": set()}
     pool = []
     for s in c.columns:
         sym = str(s)
         bad = False
         if not (dv.get(s) == dv.get(s)) or float(dv[s]) < float(_cfg.NEWS_OVERLAY_LIQUID_MIN_DOLLAR_VOL):
             fails["dollar_vol"].add(sym); bad = True
-        if not (last_close.get(s) == last_close.get(s)) or float(last_close[s]) < float(_cfg.NEWS_OVERLAY_LIQUID_MIN_PRICE):
+        if not (last_close.get(s) == last_close.get(s)):
+            fails["no_bar_last_session"].add(sym); bad = True
+        elif float(last_close[s]) < float(_cfg.NEWS_OVERLAY_LIQUID_MIN_PRICE):
             fails["price"].add(sym); bad = True
         if int(n_hist[s]) < int(_cfg.NEWS_OVERLAY_LIQUID_MIN_HISTORY):
             fails["history"].add(sym); bad = True
@@ -758,7 +835,68 @@ def draw_liquid_base(close, volume, asof: date, *, n: Optional[int] = None,
             "pool_size": len(el["pool"]), "n_symbols_in_panel": el["n_symbols"],
             "fail_counts": {k2: len(v) for k2, v in el["fails"].items()},
             "last_bar_date_used": el["last_bar_date_used"].isoformat(), "names": names,
-            "pool_sha16": hashlib.sha256(",".join(el["pool"]).encode()).hexdigest()[:16]}
+            "pool_sha16": pool_hash(el["pool"]), "pool": list(el["pool"])}
+
+
+def pool_hash(pool: Sequence[str]) -> str:
+    return hashlib.sha256(",".join(sorted(pool)).encode()).hexdigest()[:16]
+
+
+# ── v4: the recorded forward draw ──
+
+DRAW, ACCEPTED = "DRAW", "ACCEPTED_RECORDED_DRAW"
+
+
+def draws_path(root: Optional[Path] = None) -> Path:
+    return decisions_path(root).parent / "draws.jsonl"
+
+
+def read_recorded_draws(p: Path, policy_hash: str) -> dict:
+    """{draw_date: DRAW row} (first wins) under `policy_hash`; a foreign row refuses."""
+    out: dict = {}
+    for r in _refuse_foreign_contract(Path(p), policy_hash):
+        if r.get("kind") == DRAW and r.get("asof") not in out:
+            out[r["asof"]] = r
+    return out
+
+
+def draw_diff(recorded: Mapping, derived: Mapping) -> dict:
+    rp, dp = set(recorded.get("pool") or ()), set(derived.get("pool") or ())
+    rn, dn = set(recorded["names"]), set(derived["names"])
+    return {"recorded_pool_sha16": recorded.get("pool_sha16"), "derived_pool_sha16": derived.get("pool_sha16"),
+            "pool_removed": sorted(rp - dp), "pool_added": sorted(dp - rp),
+            "names_recorded_not_derived": sorted(rn - dn), "names_derived_not_recorded": sorted(dn - rn)}
+
+
+def resolve_draw(recorded: Optional[Mapping], derived: Mapping, *, accept: bool = False
+                 ) -> tuple[dict, Optional[dict]]:
+    """(draw to use, ACCEPTED event or None). No record -> the derivation. A record
+    whose pool hash matches -> the RECORDED basket. A mismatch REFUSES
+    (DRAW_MISMATCH, diff printed) unless `accept`, which keeps the recorded basket
+    and returns the event to record."""
+    if recorded is None:
+        return dict(derived), None
+    use = {k: v for k, v in recorded.items() if k not in ("kind", "policy_hash", "recorded_utc", "session")}
+    if recorded.get("pool_sha16") == derived.get("pool_sha16") and list(recorded["names"]) == list(derived["names"]):
+        return use, None
+    diff = draw_diff(recorded, derived)
+    if not accept:
+        raise NewsOverlayRefused(f"DRAW_MISMATCH for the {recorded['asof']} draw: the current panel gives "
+                                 f"pool {diff['derived_pool_sha16']}, recorded {diff['recorded_pool_sha16']}; "
+                                 f"diff {json.dumps(diff)[:1500]}. Re-run with --accept-recorded-draw to "
+                                 f"proceed on the RECORDED basket (that use is recorded).")
+    return use, {"kind": ACCEPTED, "asof": recorded["asof"], **diff}
+
+
+def append_draw_row(p: Path, row: Mapping, policy_hash: str, *, now: Optional[datetime] = None) -> dict:
+    p = Path(p)
+    _refuse_foreign_contract(p, policy_hash)
+    out = {**row, "policy_hash": policy_hash,
+           "recorded_utc": (now or datetime.now(timezone.utc)).astimezone(timezone.utc).isoformat(timespec="seconds")}
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(out, sort_keys=True, default=str) + "\n")
+    return out
 
 
 def liquid_snapshots(draws: Sequence[Mapping], close_ff) -> list[dict]:
@@ -793,7 +931,9 @@ def stale_weight_share(shares: Mapping[str, float], close_prev: Mapping[str, flo
     return {"share": share, "names": bad}
 
 
-__all__ = ["month_draw_date", "draw_seed", "eligibility", "draw_liquid_base", "liquid_snapshots",
+__all__ = ["pool_hash", "draws_path", "read_recorded_draws", "draw_diff", "resolve_draw",
+           "append_draw_row", "DRAW", "ACCEPTED", "CARRY_RULE", "SURVIVORSHIP", "REPLAY_FINDING",
+           "month_draw_date", "draw_seed", "eligibility", "draw_liquid_base", "liquid_snapshots",
            "stale_weight_share", "bar_ages", "STALE_BASE", "BASE_DEFINITION", "WHY_RANDOM",
            "forward_session", "read_forward_rows", "grade_scalars", "stale_holdings",
            "FORWARD", "BACKDATED", "BACKFILL", "NO_DECISION_ROW", "HISTORY", "NewsOverlayRefused", "load_base_holdings", "base_weights_by_session", "contract", "params", "cost_rate", "tone_score", "digest_summary",

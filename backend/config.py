@@ -5652,6 +5652,12 @@ NEWS_OVERLAY_LIQUID_EXCLUDE_ETFS = True
 NEWS_OVERLAY_STALE_REFUSE_SHARE = 0.10
 #: A second base for COMPARISON ONLY (never graded): the overlay on SPY alone.
 NEWS_OVERLAY_COMPARISON_BASE = "SPY"
+#: v4 (2026-11-12, review of PR #133): no mapping or base parameter changes; the
+#: forward draw is recorded and checked, eligibility needs a real bar on the
+#: session before D, a stale panel refuses. Objects looked at = 3 (two graded
+#: bases tried + the SPY comparison whose replay was seen).
+NEWS_OVERLAY_V4_DECLARED_UTC = "2026-11-12T18:40:00+00:00"
+NEWS_OVERLAY_OBJECTS_LOOKED_AT = 3
 
 # ── The reader's BROWSE lane: general news beyond Dow Jones (2026-09-29) ─────
 #: Murat, 2026-09-29: "digest the news see what they are implying is there an

@@ -193,13 +193,18 @@ def test_missing_inputs_refuse(tmp_path):
 def test_contract_carries_disclosure_history_and_hash():
     a, b = NO.contract(), NO.contract()
     assert a["policy_hash"] == b["policy_hash"] and len(a["policy_hash"]) == 16
-    assert a["name"] == "NEWS_OVERLAY_v3"
+    assert a["name"] == "NEWS_OVERLAY_v4"
     assert a["disclosure"]["mappings_tried"] == cfg.NEWS_OVERLAY_MAPPINGS_TRIED
     assert "-0.21" in a["disclosure"]["seen_before_choosing"]
     assert "no return" in a["disclosure"]["seen_before_choosing"]
     assert a["history"][0]["policy_hash"] == "ce686058847fdbc7"
     assert a["history"][1]["policy_hash"] == "2d85fa126b83f4ac"
-    assert a["policy_hash"] not in ("ce686058847fdbc7", "2d85fa126b83f4ac")
+    assert a["history"][2]["policy_hash"] == "c777f997289240e4"
+    assert a["policy_hash"] not in ("ce686058847fdbc7", "2d85fa126b83f4ac", "c777f997289240e4")
+    assert a["disclosure"]["objects_looked_at"] == 3
+    assert "blind spot" in a["replay_finding"] and "+0.74%" in a["replay_finding"]
+    assert "UPWARD" in a["carry_rule"] and "NOT survivor-filtered" in a["survivorship"]
+    assert "STALE_PANEL" in a["stale_panel_refusal"] and "draws.jsonl" in a["recorded_draw"]
     assert "NO_DECISION_ROW" in a["grading"] and "LIQUID-RANDOM-50" in a["base_definition"]
     assert a["disclosure"]["bases_tried"] == 2 and "SECOND LOOK" in a["disclosure"]["v3_change"]
     assert "not a strategy" in a["why_random_base"] and a["comparison_base"]["id"] == "SPY"
@@ -214,15 +219,15 @@ def test_the_committed_contract_is_the_rule_in_code():
     """Frozen: changing any NEWS_OVERLAY_* parameter or the rule text changes the
     hash, and this fails. A changed rule is a new version, a new file."""
     from pathlib import Path
-    p = Path(__file__).resolve().parents[2] / "docs" / "TRIALS" / "CONTRACT_NEWS_OVERLAY_v3.json"
+    p = Path(__file__).resolve().parents[2] / "docs" / "TRIALS" / "CONTRACT_NEWS_OVERLAY_v4.json"
     frozen = json.loads(p.read_text(encoding="utf-8"))
-    assert frozen["policy_hash"] == NO.contract()["policy_hash"] == V3_HASH
+    assert frozen["policy_hash"] == NO.contract()["policy_hash"] == V4_HASH
 
 
-V3_HASH = "c777f997289240e4"
+V4_HASH = "93a042facf44b157"
 
 
-def test_v3_keeps_every_v2_mapping_parameter():
+def test_v4_keeps_every_v2_mapping_parameter():
     """FAILURE value of the v3 brief: any mapping parameter changed from v2."""
     from pathlib import Path
     v2 = json.loads((Path(__file__).resolve().parents[2] / "docs" / "TRIALS"
@@ -231,6 +236,10 @@ def test_v3_keeps_every_v2_mapping_parameter():
     changed = {k for k, v in v2["params"].items() if now.get(k) != (tuple(v) if isinstance(v, list) else v)}
     assert changed == {"NEWS_OVERLAY_BASE_BOOK"}
     assert v2["policy_hash"] != NO.contract()["policy_hash"]
+    v3 = json.loads((Path(__file__).resolve().parents[2] / "docs" / "TRIALS"
+                     / "CONTRACT_NEWS_OVERLAY_v3.json").read_text(encoding="utf-8"))
+    assert {k for k, v in v3["params"].items()
+            if now.get(k) != (tuple(v) if isinstance(v, list) else v)} == set()
     assert v2["mapping"] == NO.contract()["mapping"] and v2["timing"] == NO.contract()["timing"]
 
 
@@ -396,9 +405,13 @@ def _all_sessions(n: int) -> list[date]:
     return pool[-n:]
 
 
-def _synthetic_data_dir(tmp_path, sessions):
+def _synthetic_data_dir(tmp_path, sessions, *, low_vol=(), stop_after=None, drop_dates=(),
+                        drop_last: int = 0):
     """A data folder with the inputs the CLI reads, all synthetic: digests over
-    `sessions` and a bars panel (close, volume) with history before them."""
+    `sessions` and a bars panel (close, volume) with history before them.
+    low_vol: symbols below the dollar-volume floor; stop_after: {sym: date} last
+    bar; drop_dates: dates with no bar for anyone; drop_last: drop the panel's
+    last k sessions for everyone."""
     import pandas as pd
     d = tmp_path / "data"
     dig = d / "optimus" / "digest"
@@ -412,10 +425,15 @@ def _synthetic_data_dir(tmp_path, sessions):
     bars = d / "optimus" / "prices_2025_26"
     bars.mkdir(parents=True)
     allss = _all_sessions(len(sessions) + 80)
+    if drop_last:
+        allss = allss[:-drop_last]
     syms = [f"S{j:02d}" for j in range(8)] + ["SPY"]
+    stop_after = stop_after or {}
     pd.DataFrame([{"symbol": s, "date": pd.Timestamp(t), "close": 20.0 + j + 0.05 * (i % 7),
-                   "volume": 5_000_000.0}
-                  for i, t in enumerate(allss) for j, s in enumerate(syms)]).to_parquet(bars / "bars.parquet")
+                   "volume": 100_000.0 if s in low_vol else 5_000_000.0}
+                  for i, t in enumerate(allss) for j, s in enumerate(syms)
+                  if t not in drop_dates and (s not in stop_after or t <= stop_after[s])]
+                 ).to_parquet(bars / "bars.parquet")
     return d
 
 
@@ -573,3 +591,113 @@ def test_the_flag_is_an_env_var_read_without_editing_config():
         outs[v] = subprocess.run([sys.executable, "-c", code], cwd=root, env=env, capture_output=True,
                                  text=True, timeout=120).stdout.strip().splitlines()[-1]
     assert outs == {"1": "True", "0": "False", None: "False"}
+
+
+# -- v4: recorded draws, no forward fill, stale panel, stale weight end to end ----
+
+def _month_group(min_after_first: int = 1) -> list[date]:
+    """All sessions of the latest past calendar month group (from the first
+    session of the month) holding more than `min_after_first` sessions before today."""
+    allss = _all_sessions(80)
+    months = {}
+    for d in allss:
+        months.setdefault((d.year, d.month), []).append(d)
+    for key in sorted(months, reverse=True):
+        g = months[key]
+        if g[0] == NO.month_draw_date(g[0]) and len(g) > min_after_first + 1:
+            return g
+    raise AssertionError("no month group")
+
+
+def test_eligibility_needs_a_real_bar_on_the_session_before_the_draw(monkeypatch):
+    _small_liquid_rules(monkeypatch)
+    idx, close, vol = _panel()
+    close["GONE"] = 25.0
+    vol["GONE"] = 5_000_000.0
+    close.loc[idx[-1], "GONE"] = float("nan")        # one missing bar: age 1 <= MAX_BAR_AGE, still out
+    asof = idx[-1] + timedelta(days=1)
+    while not NO.is_session(asof):
+        asof += timedelta(days=1)
+    el = NO.eligibility(close, vol, asof)
+    assert "GONE" in el["fails"]["no_bar_last_session"] and "GONE" not in el["pool"]
+    assert "GONE" not in el["fails"]["stale"]        # the age rule alone would have let it in
+
+
+def test_recorded_draw_is_reused_and_a_changed_pool_refuses_unless_accepted(tmp_path, monkeypatch, capsys):
+    import pandas as pd
+    from scripts import news_overlay_book as CLI
+    _small_liquid_rules(monkeypatch)
+    monkeypatch.setattr(cfg, "NEWS_OVERLAY_BOOK_ENABLED", True)
+    g = _month_group(3)
+    t1, t2, t3 = g[1], g[2], g[3]
+    d = _synthetic_data_dir(tmp_path, [t1, t2, t3])
+    drp = NO.draws_path(d / "optimus")
+    assert CLI.main(["step", "--data-dir", str(d)], now=_at_et(t1, 15, 45)) == 0
+    rows = [json.loads(x) for x in drp.read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 1 and rows[0]["kind"] == NO.DRAW and rows[0]["asof"] == g[0].isoformat()
+    rec = rows[0]
+    assert len(rec["names"]) == 3 and rec["pool_size"] == 8 and rec["seed"] == NO.draw_seed(g[0])
+    assert rec["last_bar_date_used"] < rec["asof"] and rec["pool_sha16"] == NO.pool_hash(rec["pool"])
+    # same panel, later session of the month: reuses the record, writes no new DRAW row
+    assert CLI.main(["step", "--data-dir", str(d)], now=_at_et(t2, 15, 45)) == 0
+    assert "(RECORDED)" in capsys.readouterr().out
+    assert len(drp.read_text(encoding="utf-8").splitlines()) == 1
+    # a bars re-pull drops one pool name that was NOT drawn: the pool hash changes
+    gone = next(x for x in rec["pool"] if x not in rec["names"])
+    bp = d / "optimus" / "prices_2025_26" / "bars.parquet"
+    df = pd.read_parquet(bp)
+    df[df["symbol"] != gone].to_parquet(bp)
+    assert CLI.main(["step", "--data-dir", str(d)], now=_at_et(t3, 15, 45)) == 2
+    err = capsys.readouterr().err
+    assert "DRAW_MISMATCH" in err and gone in err
+    assert CLI.main(["grade", "--out", str(tmp_path / "o"), "--data-dir", str(d)]) == 2
+    # the accept flag proceeds on the RECORDED basket and records that it did
+    assert CLI.main(["step", "--accept-recorded-draw", "--data-dir", str(d)], now=_at_et(t3, 15, 45)) == 0
+    out = capsys.readouterr().out
+    assert " ".join(rec["names"]) in out
+    rows = [json.loads(x) for x in drp.read_text(encoding="utf-8").splitlines()]
+    assert [r["kind"] for r in rows] == [NO.DRAW, NO.ACCEPTED]
+    assert rows[1]["pool_removed"] == [gone] and rows[1]["session"] == t3.isoformat()
+    assert CLI.main(["grade", "--accept-recorded-draw", "--out", str(tmp_path / "o"), "--data-dir", str(d)]) == 0
+    gr = json.loads(next((tmp_path / "o").glob("news_overlay_grade_*.json")).read_text(encoding="utf-8"))
+    assert gr["accepted_recorded_draw"] and gr["accepted_recorded_draw"][0]["pool_removed"] == [gone]
+    assert gr["draws"][0]["names"] == rec["names"]
+
+
+def test_a_stale_panel_and_a_missing_draw_row_refuse_the_step(tmp_path, monkeypatch, capsys):
+    from scripts import news_overlay_book as CLI
+    _small_liquid_rules(monkeypatch)
+    monkeypatch.setattr(cfg, "NEWS_OVERLAY_BOOK_ENABLED", True)
+    g = _month_group(3)
+    t = g[3]
+    after = [x for x in _all_sessions(80) if x >= NO.previous_session(t)]
+    d = _synthetic_data_dir(tmp_path / "a", [t], drop_last=len(after) + 1)
+    assert CLI.main(["step", "--data-dir", str(d)], now=_at_et(t, 15, 45)) == 2
+    assert "STALE_PANEL" in capsys.readouterr().err
+    assert not NO.decisions_path(d / "optimus").exists() and not NO.draws_path(d / "optimus").exists()
+    d2 = _synthetic_data_dir(tmp_path / "b", [t], drop_dates={g[0]})
+    assert CLI.main(["step", "--data-dir", str(d2)], now=_at_et(t, 15, 45)) == 2
+    assert "DRAW_ROW_MISSING" in capsys.readouterr().err
+    assert not NO.decisions_path(d2 / "optimus").exists()
+
+
+def test_stale_weight_refusal_end_to_end_through_step_and_grade(tmp_path, monkeypatch):
+    from scripts import news_overlay_book as CLI
+    _small_liquid_rules(monkeypatch)
+    monkeypatch.setattr(cfg, "NEWS_OVERLAY_BOOK_ENABLED", True)
+    g = _month_group(10)
+    t1, t2 = g[9], g[10]
+    low = [f"S{j:02d}" for j in range(3, 8)]                       # pool = S00, S01, S02: all drawn
+    d = _synthetic_data_dir(tmp_path, [t1, t2], low_vol=set(low), stop_after={"S02": g[1]})
+    for t in (t1, t2):
+        assert CLI.main(["step", "--data-dir", str(d)], now=_at_et(t, 15, 45)) == 0
+    rows = [json.loads(x) for x in NO.decisions_path(d / "optimus").read_text(encoding="utf-8").splitlines()]
+    assert [r["degradation"] for r in rows] == [NO.STALE_BASE, NO.STALE_BASE]
+    assert all(r["scalar"] == 1.0 and r["refused"] and "S02" in r["stale_names"] for r in rows)
+    assert all(r["stale_weight_share"] > cfg.NEWS_OVERLAY_STALE_REFUSE_SHARE for r in rows)
+    out = tmp_path / "o"
+    assert CLI.main(["grade", "--out", str(out), "--data-dir", str(d)]) == 0
+    gr = json.loads(next(out.glob("news_overlay_grade_*.json")).read_text(encoding="utf-8"))
+    assert {r["reason"] for r in gr["daily"]} == {NO.STALE_BASE}
+    assert all(r["grade_status"] == "DEGRADED" and "S02" in r["stale_holdings"] for r in gr["daily"])
+    assert gr["overlay_total_pct"] == pytest.approx(gr["twin_total_pct"], abs=1e-12)
