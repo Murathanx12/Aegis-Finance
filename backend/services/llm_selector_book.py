@@ -103,6 +103,17 @@ REPLY_DEFECTS = (BAD_REPLY, BAD_SHAPE, OUT_OF_SET, WRONG_K, DUPLICATE_PICK, BAD_
 #: that a prompt/parameter hash would not see is still a new contract.
 PACKET_SCHEMA_VERSION = "llm_selector_packet/2"
 
+
+def event_packet_on() -> bool:
+    """CH-35 slice 2: the event-node block in each packet (default OFF)."""
+    return bool(C.EVENT_NODES_SELECTOR_PACKET_ENABLED)
+
+
+def packet_schema_version() -> str:
+    """The packet schema in force: bumped ONLY when the event block is on, so the
+    contract hash with the flag off is exactly main's."""
+    return str(C.EVENT_NODES_SELECTOR_PACKET_SCHEMA) if event_packet_on() else PACKET_SCHEMA_VERSION
+
 #: The funnel fields copied into a packet (hashed into the contract).
 FUNNEL_FIELDS: tuple = ("sector", "market_cap", "quality", "mom_12_1", "vol_annual",
                         "median_dollar_vol", "analyst_upside", "n_analysts", "insider_score",
@@ -255,7 +266,7 @@ def contract_body() -> dict:
     """Everything that defines the book. Any change here changes the hash."""
     from backend.services import investment_committee as IC
     k = int(C.LLM_SELECTOR_K)
-    return {
+    body = {
         "name": BOOK_NAME, "schema": SCHEMA,
         "licence": "PRODUCT_EXPERIMENT",
         "authority": ("none: internal simulation book; the LLM has no authority over real "
@@ -285,7 +296,7 @@ def contract_body() -> dict:
             "max_items_per_name": int(C.LLM_SELECTOR_MAX_ITEMS_PER_NAME),
             "price_lookback_days": int(C.LLM_SELECTOR_PRICE_LOOKBACK_DAYS),
         },
-        "packet_schema_version": PACKET_SCHEMA_VERSION,
+        "packet_schema_version": packet_schema_version(),
         "funnel_fields": list(FUNNEL_FIELDS),
         "entry_rule": ENTRY_RULE,
         "prompts": {"system": SYSTEM_PROMPT, "user_template": USER_TEMPLATE},
@@ -318,6 +329,19 @@ def contract_body() -> dict:
                       "(band twins, rank p with Holm, block t at every origin) grades the book"),
         "claims": "none: a PRODUCT_EXPERIMENT; no skill claim from this book's results",
     }
+    if event_packet_on():
+        body["packet"]["event_nodes"] = {
+            "source": "event_nodes.nodes_known_at(store, decision_time): the latest version of each "
+                      "node BUILT at or before the decision, retired nodes removed",
+            "top_k": int(C.EVENT_NODES_SELECTOR_TOP_K),
+            "max_age_hours": float(C.EVENT_NODES_CONSUMER_MAX_AGE_HOURS),
+            "rank": "importance decayed to the decision time, highest first",
+            "fields": ["event_id", "primary", "role", "link", "age_h", "importance", "n_publishers",
+                       "dated_facts"],
+            "no_text": "no title, body or URL (licensed text) is in the event block",
+            "stamp": "the version's built_now_utc; admitted iff strictly before the decision",
+        }
+    return body
 
 
 def contract_hash(body: Optional[dict] = None) -> str:
@@ -540,6 +564,19 @@ def knowable_facts(by_ticker: dict, ticker: str, max_items: int) -> list[dict]:
     rows = sorted(rows, key=lambda r: str(knowable_stamp(r)))[-max_items:]
     return [fact("knowable.item", f"[{r.get('source')}] {str(r.get('title') or '')[:200]}",
                  knowable_stamp(r), "news_corpus") for r in rows]
+
+
+def event_facts(by_ticker: dict, ticker: str) -> list[dict]:
+    """The top-K event nodes for `ticker` (event_nodes.events_for, already ranked by
+    importance decayed to the decision). Ids, roles, counts and stamps only."""
+    out = []
+    for b in (by_ticker.get(ticker) or [])[:int(C.EVENT_NODES_SELECTOR_TOP_K)]:
+        out.append(fact("event_node", {"event_id": b["event_id"], "primary": b["primary_ticker"],
+                                       "role": b["role"], "link": b["link"], "age_h": b["age_hours"],
+                                       "importance": b["importance_at"], "n_publishers": b["n_publishers"],
+                                       "dated_facts": b["dated_facts_filled"]},
+                        b["version_built_utc"], "event_nodes"))
+    return out
 
 
 def build_packet(ticker: str, facts: list[dict], decision_time: datetime) -> dict:
@@ -878,7 +915,7 @@ def paths(data_root: Path) -> dict:
 
 
 def load_inputs(data_root: Path, decision_time: datetime, *,
-                include_added: Optional[bool] = None) -> dict:
+                include_added: Optional[bool] = None, event_store: Optional[Path] = None) -> dict:
     """Read the funnel, bars (filtered to the candidates), revisions, digest
     and corpus. A missing funnel or bars panel is a refusal."""
     from backend.services import discovery_autopsy as DA
@@ -900,11 +937,23 @@ def load_inputs(data_root: Path, decision_time: datetime, *,
                           lookback_days=int(C.LLM_SELECTOR_DIGEST_LOOKBACK_DAYS))
     corpus = DA.Corpus(p["corpus"], cik_map=DA.load_cik_map(p["cik_map"]) if p["cik_map"].is_file() else {})
     win = corpus.window(decision_time - timedelta(days=int(C.LLM_SELECTOR_KNOWABLE_LOOKBACK_DAYS)), decision_time)
-    return {"paths": {k: str(v) for k, v in p.items()}, "cset": cset, "bars": bars, "rev": rev,
-            "digest_by_ticker": dig["by_ticker"], "digests_used": dig["digests_used"],
-            "corpus_by_ticker": win["by_ticker"], "corpus_rows": win["n_rows"],
-            "sizes": {"bars_rows": int(len(bars)), "revision_rows": 0 if rev is None else int(len(rev)),
-                      "digests_used": len(dig["digests_used"]), "corpus_rows": int(win["n_rows"])}}
+    out = {"paths": {k: str(v) for k, v in p.items()}, "cset": cset, "bars": bars, "rev": rev,
+           "digest_by_ticker": dig["by_ticker"], "digests_used": dig["digests_used"],
+           "corpus_by_ticker": win["by_ticker"], "corpus_rows": win["n_rows"],
+           "sizes": {"bars_rows": int(len(bars)), "revision_rows": 0 if rev is None else int(len(rev)),
+                     "digests_used": len(dig["digests_used"]), "corpus_rows": int(win["n_rows"])}}
+    if event_packet_on():
+        from backend.services import event_nodes as EN
+        st = Path(event_store) if event_store else Path(data_root) / str(C.EVENT_NODES_DIRNAME) / EN.STORE_NAME
+        if not st.is_file():
+            raise SelectorRefused(INPUT_MISSING, f"event_nodes store missing at {st} "
+                                                 f"(EVENT_NODES_SELECTOR_PACKET_ENABLED is on)")
+        known = EN.nodes_known_at(st, decision_time)
+        out["event_by_ticker"] = EN.events_for(cset["tickers"], known["nodes"], decision_time)
+        out["paths"]["event_nodes"] = str(st)
+        out["sizes"].update({"event_nodes_known": len(known["nodes"]),
+                             "event_versions_after_decision_skipped": known["n_versions_after_t_skipped"]})
+    return out
 
 
 def all_packets(inputs: dict, decision_time: datetime) -> list[dict]:
@@ -918,6 +967,8 @@ def all_packets(inputs: dict, decision_time: datetime) -> list[dict]:
                  + revision_facts(inputs["rev"], t, decision_time, int(C.LLM_SELECTOR_REVISION_LOOKBACK_DAYS))
                  + digest_facts(inputs["digest_by_ticker"], t, mx)
                  + knowable_facts(inputs["corpus_by_ticker"], t, mx))
+        if event_packet_on():
+            facts += event_facts(inputs.get("event_by_ticker") or {}, t)
         out.append(build_packet(t, facts, decision_time))
     return out
 
