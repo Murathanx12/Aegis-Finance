@@ -1989,6 +1989,17 @@ def _case_discovery_autopsy():
             "an autopsy with no bars panel, ledger, funnel or corpus")
 
 
+def _case_event_nodes():
+    # CH-35: with no corpus there are no events; that must be a named refusal,
+    # never an empty node list.
+    from pathlib import Path as _P
+
+    from backend.services.event_nodes import EventNodesRefused, check_inputs, default_paths
+    nowhere = _P("does/not/exist/event_nodes")
+    return (lambda: check_inputs(default_paths(nowhere)), EventNodesRefused,
+            "an event-node build with no corpus, filings, graph or calendar")
+
+
 def _case_llm_selector_book():
     # llm-book-ruler (CH-17/CH-11): with no funnel snapshot and no bars panel
     # there is no candidate set to choose from; that must be a refusal (red
@@ -2183,6 +2194,7 @@ CASES = {
     "campaign_ledger_startup": _case_campaign_ledger_startup,
     "global_price_admission": _case_global_price_admission,
     "discovery_autopsy": _case_discovery_autopsy,
+    "event_nodes": _case_event_nodes,
     "llm_selector_book": _case_llm_selector_book,
     "news_overlay_book": _case_news_overlay_book,
 }

@@ -6534,6 +6534,117 @@ ONE_EVENT_FUNNEL_STALE_DAYS = 10
 #: REAL write time is a REPLAY row: written, sealed, and never graded as forward
 #: evidence (review 2 S65, B1: a back-dated --now must not mint a 'frozen' hit).
 ONE_EVENT_REPLAY_TOLERANCE_S = 300
+
+# ── EVENT NODES (ROADMAP CH-35, slice 1) ─────────────────────────────────────
+#: `backend/services/event_nodes.py`: corpus rows -> deterministic event clusters
+#: -> one versioned, hash-chained EVENT NODE per event. No LLM in the build; the
+#: LLM fill step is a separate, capped DeepSeek call (`fill_event`).
+#: Default output folder under the data root (the CLI's `--out` overrides it).
+EVENT_NODES_DIRNAME = "event_nodes"
+#: `--since` default: this many hours before `--now`.
+EVENT_NODES_DEFAULT_LOOKBACK_HOURS = 24.0
+#: A row joins a cluster of the same issuer only when it was first seen within
+#: this many hours of the cluster's nearest member ...
+EVENT_NODES_JOIN_GAP_HOURS = 24.0
+#: ... and its title+lead stems overlap the best-scoring member by at least this
+#: IDF-weighted overlap coefficient, sharing at least this many stems (single
+#: link; the score is printed per join).
+EVENT_NODES_JOIN_MIN_SIMILARITY = 0.20
+EVENT_NODES_JOIN_MIN_SHARED_TOKENS = 2
+#: Characters of a body used for the similarity lead (bodies are never written).
+EVENT_NODES_LEAD_CHARS = 400
+#: Token stem length for the similarity (cheap, deterministic stemming).
+EVENT_NODES_STEM_CHARS = 4
+#: A stem in at least this share of ONE source's items (>= 5 items) is that
+#: source's boilerplate ("Reprints", "Gift Article") and is not used to join.
+EVENT_NODES_SOURCE_BOILERPLATE_SHARE = 0.30
+#: A single-word issuer name the window writes in lowercase in at least this
+#: share of its uses (and at least this many times) is an ordinary word
+#: ("first", "people") and then needs a corporate cue nearby to connect.
+EVENT_NODES_COMMON_WORD_LOWER_SHARE = 0.5
+EVENT_NODES_COMMON_WORD_MIN_LOWER = 2
+#: Single-word issuer names that are ordinary words or common surnames (review of
+#: #128: "Since Ouster" -> OUST, "Block AI Agents" -> XYZ, "Quantum Chip" -> QMCO,
+#: cricketers Marsh / Cummins, David Tennant, a Ferrari crash, "Crown Prince",
+#: "Oracle of Omaha"). They connect only with a cue ATTACHED to the name ("Ouster
+#: Inc", "Oracle shares", "Block (XYZ)") or the issuer's full legal name in the
+#: same sentence; every refusal is counted on the receipt.
+EVENT_NODES_COMMON_WORD_NAMES: tuple = (
+    "ouster", "block", "quantum", "marsh", "cummins", "tennant", "ferrari", "crown", "oracle",
+    "strategy", "first", "people", "general", "united", "american", "national", "public",
+    "global", "progressive", "southern", "dominion", "graham", "lowe", "morgan", "stanley",
+    "johnson", "williams", "carter", "jacobs", "hershey", "harley", "kellogg", "prince",
+    "royal", "liberty", "pioneer", "frontier", "summit", "pinnacle", "atlas", "apollo",
+    "phoenix", "mercury", "genesis", "nexus", "vista", "horizon", "spirit", "alliance",
+    "carnival", "brown", "black", "green", "white", "smith", "taylor", "allen", "wells")
+#: Capitalised pairs that are not people ("White House"); a person bigram must also
+#: appear in titles from at least this many publishers to join titles.
+EVENT_NODES_BIGRAM_STOP: tuple = (
+    "white house", "wall street", "supreme court", "hong kong", "new york", "united states",
+    "federal reserve", "silicon valley", "south korea", "north korea", "middle east",
+    "european union", "artificial intelligence", "prime minister", "data center", "data centers",
+    "interest rates", "stock exchange", "breaking news", "live updates", "morning risk",
+    "risk report", "earnings call", "south china", "china morning", "big tech")
+EVENT_NODES_BIGRAM_MIN_PUBLISHERS = 2
+#: Identity across rebuilds: a new cluster is a VERSION of the stored node it shares
+#: the largest evidence overlap with, when overlap / the smaller node >= this.
+EVENT_NODES_IDENTITY_MIN_OVERLAP = 0.5
+#: ISSUER-DAY PARENT: an issuer's children whose spans lie within this many hours
+#: of each other share one parent.
+EVENT_NODES_PARENT_GAP_HOURS = 24.0
+#: 8-K weight by item code (the `filing` component = the highest item in the node);
+#: unknown items take the default. 9.01 (exhibits) and 5.07 (votes) are routine.
+EVENT_NODES_8K_ITEM_WEIGHTS: dict = {
+    "5.02": 1.0, "2.02": 1.0, "1.01": 0.9, "2.01": 0.9, "4.02": 1.0, "1.03": 1.0,
+    "2.05": 0.8, "2.06": 0.7, "3.01": 0.7, "1.02": 0.6, "2.03": 0.4, "4.01": 0.5,
+    "8.01": 0.3, "7.01": 0.2, "5.03": 0.15, "5.07": 0.1, "9.01": 0.0,
+}
+EVENT_NODES_8K_ITEM_DEFAULT_WEIGHT = 0.3
+#: Symbols that are also English words: an explicit `(AI)` parenthesis is NOT
+#: enough for these (only `$AI` or `NASDAQ: AI` is); a bare word never is.
+EVENT_NODES_BAREWORD_SYMBOLS: tuple = ("A", "AI", "ALL", "ARE", "BE", "CAN", "CEO", "FOR",
+                                       "GOLD", "IT", "NOW", "ON", "ONE", "OUT", "SO", "US",
+                                       "AM", "PM", "TV", "EV", "IPO", "ETF", "GDP", "CPI")
+#: Name keys that never connect a name in an event node, even with a corporate
+#: cue nearby: "price target" and "the Nasdaq" (the index) are the 11-12 cases.
+EVENT_NODES_DROP_NAME_KEYS: tuple = ("target", "nasdaq")
+#: Importance = sum(weight x component); every component is printed.
+EVENT_NODES_IMPORTANCE_WEIGHTS: dict = {
+    "publishers": 1.0,      # log1p(distinct publishers)
+    "regions": 0.5,         # distinct feed regions (capped below)
+    "items": 0.5,           # log(distinct evidence items): a single item scores 0
+    "filing": 1.0,          # highest 8-K item weight in the evidence (EVENT_NODES_8K_ITEM_WEIGHTS)
+    "size_rank": 1.0,       # issuer's 63-session median dollar-volume percentile, 0..1
+    # the price move is OBSERVED AFTER the event and is stored beside importance_0
+    # (`observed_after`), never inside it: importance is computable at the event.
+    "held": 0.5,            # the PC book holds the issuer
+    "forecast": 0.5,        # a forecast row on the issuer inside the lookback
+}
+EVENT_NODES_REGIONS_CAP = 6
+EVENT_NODES_PRICE_Z_CAP = 4.0
+EVENT_NODES_SIGMA_SESSIONS = 60
+EVENT_NODES_DOLLAR_VOL_SESSIONS = 63
+EVENT_NODES_FORECAST_LOOKBACK_DAYS = 3
+#: importance_now = importance_0 x 0.5 ** (age_hours / half_life); computed on read.
+EVENT_NODES_HALF_LIFE_HOURS = 72.0
+#: Connected names: graph neighbours kept per link type, and co-mentions kept.
+EVENT_NODES_GRAPH_TOP_K_PER_TYPE = 8
+EVENT_NODES_MAX_COMENTIONS = 25
+#: Next dates looked up this many days ahead.
+EVENT_NODES_NEXT_DATES_HORIZON_DAYS = 45
+#: The LLM fill step (DeepSeek only, through llm_analyzer.call_named / provider_budget).
+EVENT_NODES_FILL_PURPOSE = "event_node_fill"
+EVENT_NODES_FILL_MAX_TOKENS = 900
+EVENT_NODES_FILL_MAX_EVIDENCE = 12
+#: Body characters per evidence item sent in the fill prompt. Checked 2026-11-12:
+#: llm_telemetry persists only prompt/context HASHES and provider_budget only
+#: purpose/model/token bounds -- no prompt text -- so this limit bounds what leaves
+#: the machine, not what is written; this module writes no body text anywhere.
+EVENT_NODES_FILL_BODY_CHARS = 600
+EVENT_NODES_FILL_TOP_N = 10
+#: Price row used for the PROJECTED cost (measured list price); the reservation
+#: bound comes from provider_budget.quote().
+EVENT_NODES_FILL_PRICE_MODEL = "deepseek-v4-flash"
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
