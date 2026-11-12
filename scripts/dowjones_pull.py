@@ -1978,7 +1978,8 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
         if stop:
             break
         ex = DC.extract_claims(art, llm_fn=llm_fn)
-        n_calls += ex["status"] not in ("SKIPPED_TOO_SHORT",)
+        # #127: a page stopped by the pre-pay gate (mention / stale / unknown type) made no call
+        n_calls += ex["status"] not in ({"SKIPPED_TOO_SHORT"} | DC.PREPAY_SKIP)
         w = (DC.write_forecasts(art, ex["claims"], ledger_path=ledger_path,
                                 claims_path=claims_path)
              if ex["claims"] else {"n_rows_written": 0, "source_id": art.get("column")})
@@ -1988,7 +1989,7 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
                     "directions": [c["direction"] for c in ex["claims"]],
                     "source_id": w.get("source_id"), "forecast_rows": w.get("n_rows_written", 0),
                     "write_status": w.get("status")})
-        if ex["status"] != "LLM_NO_REPLY":
+        if ex["status"] not in DC.RETRY_STATUSES:        # an unknown page type is retried once classified
             dp.parent.mkdir(parents=True, exist_ok=True)
             with dp.open("a", encoding="utf-8") as fh:
                 fh.write(str(art.get("sha")) + "\n")
@@ -2008,6 +2009,7 @@ def run_claims(day: str | None = None, *, cap_usd: float | None = None, llm_fn: 
                 "per_article": polls},
             "structured_rows_where": "gitignored news_corpus/dowjones/_structured/ (counts only here)",
             "purpose": purpose, "cap_usd": cap, "spent_usd": final, "n_llm_calls": n_calls,
+            "status_census": DC.status_census(per),
             "stopped": stop, "n_articles": len(per),
             "n_claims": sum(r["n_claims"] for r in per),
             "forecast_rows_by_source_id": by_src,
