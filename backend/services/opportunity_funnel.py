@@ -47,7 +47,7 @@ import os
 import math
 import time
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -220,7 +220,6 @@ def universe(*, force: bool = False, extra: list[str] | None = None) -> dict:
 
 def _batch_history(tickers: list[str], *, period: str = "1y") -> dict:
     """BATCH price history. One call per BATCH_SIZE names, never per name."""
-    import numpy as np
     import pandas as pd
     import yfinance as yf
 
@@ -263,9 +262,55 @@ def _batch_history(tickers: list[str], *, period: str = "1y") -> dict:
             "failed_batches": failed_batches}
 
 
+#: The stage-1 eligibility screens, in the order `eligibility` applies them.
+#: A news/filing name that fails one is reported as dropped by that name.
+ELIGIBILITY_SCREENS = ("no_price_history", "min_history_days", "price_band",
+                       "no_volume", "min_median_dollar_vol", "retail_ticket_share_of_adv")
+
+
+def eligibility(t: Any, close: Any, volume: Any) -> tuple[Optional[Candidate], str]:
+    """One name through the stage-1 screens: (Candidate, "") or (None, screen).
+
+    Factored out of `stage1` unchanged (same checks, same order) so the news
+    source (CH-14a) applies exactly the screens every other name faces.
+    """
+    import numpy as np
+
+    if t not in close.columns:
+        return None, "no_price_history"
+    px = close[t].dropna()
+    if len(px) < MIN_HISTORY_DAYS:
+        return None, "min_history_days"
+    last = float(px.iloc[-1])
+    if not math.isfinite(last) or not (MIN_PRICE <= last <= MAX_PRICE):
+        return None, "price_band"
+    vol_series = volume[t].dropna() if t in volume.columns else None
+    if vol_series is None or vol_series.empty:
+        return None, "no_volume"
+    dollar = (px * vol_series.reindex(px.index).fillna(0)).tail(60)
+    mdv = float(dollar.median()) if len(dollar) else 0.0
+    if not math.isfinite(mdv) or mdv < MIN_MEDIAN_DOLLAR_VOL:
+        return None, "min_median_dollar_vol"
+    # The retail bar, stated as the mandate states it.
+    if RETAIL_TICKET_MAX > MAX_TICKET_SHARE_OF_ADV * mdv:
+        return None, "retail_ticket_share_of_adv"
+
+    rets = px.pct_change().dropna()
+    ann_vol = float(rets.std() * np.sqrt(252)) if len(rets) > 60 else None
+    mom = None
+    if len(px) >= 250:
+        mom = float(px.iloc[-21] / px.iloc[-250] - 1.0)
+
+    c = Candidate(ticker=str(t), price=last, median_dollar_vol=mdv,
+                  vol_annual=ann_vol, mom_12_1=mom, stage=1)
+    c.why.append(f"liquid: median 60d dollar volume ${mdv/1e6:.1f}m, so a "
+                 f"${RETAIL_TICKET_MAX:,.0f} ticket is "
+                 f"{100*RETAIL_TICKET_MAX/mdv:.2f}% of a day")
+    return c, ""
+
+
 def stage1(tickers: list[str], *, keep: int = STAGE1_KEEP) -> list[Candidate]:
     """Cheap eligibility: priceable, liquid enough for a retail ticket, alive."""
-    import numpy as np
 
     hist = _batch_history(tickers)
     close, volume = hist["close"], hist["volume"]
@@ -277,35 +322,9 @@ def stage1(tickers: list[str], *, keep: int = STAGE1_KEEP) -> list[Candidate]:
 
     out: list[Candidate] = []
     for t in close.columns:
-        px = close[t].dropna()
-        if len(px) < MIN_HISTORY_DAYS:
-            continue
-        last = float(px.iloc[-1])
-        if not math.isfinite(last) or not (MIN_PRICE <= last <= MAX_PRICE):
-            continue
-        vol_series = volume[t].dropna() if t in volume.columns else None
-        if vol_series is None or vol_series.empty:
-            continue
-        dollar = (px * vol_series.reindex(px.index).fillna(0)).tail(60)
-        mdv = float(dollar.median()) if len(dollar) else 0.0
-        if not math.isfinite(mdv) or mdv < MIN_MEDIAN_DOLLAR_VOL:
-            continue
-        # The retail bar, stated as the mandate states it.
-        if RETAIL_TICKET_MAX > MAX_TICKET_SHARE_OF_ADV * mdv:
-            continue
-
-        rets = px.pct_change().dropna()
-        ann_vol = float(rets.std() * np.sqrt(252)) if len(rets) > 60 else None
-        mom = None
-        if len(px) >= 250:
-            mom = float(px.iloc[-21] / px.iloc[-250] - 1.0)
-
-        c = Candidate(ticker=str(t), price=last, median_dollar_vol=mdv,
-                      vol_annual=ann_vol, mom_12_1=mom, stage=1)
-        c.why.append(f"liquid: median 60d dollar volume ${mdv/1e6:.1f}m, so a "
-                     f"${RETAIL_TICKET_MAX:,.0f} ticket is "
-                     f"{100*RETAIL_TICKET_MAX/mdv:.2f}% of a day")
-        out.append(c)
+        c, _screen = eligibility(t, close, volume)
+        if c is not None:
+            out.append(c)
 
     out.sort(key=lambda c: -(c.median_dollar_vol or 0))
     logger.info("funnel stage 1: %d of %d priced names pass eligibility",
@@ -441,7 +460,7 @@ def stage3(cands: list[Candidate], *, keep: int = STAGE3_KEEP,
     half the names, the stage returns fewer candidates and says so, rather than
     walking further down the list until it has filled a quota.
     """
-    from backend.services import pm_engine, signal_registry as SR
+    from backend.services import pm_engine, signal_registry as SR  # noqa: F401
 
     reg = SR.load()
     assert reg.permits("profitability_small", "PICKER"), (
@@ -684,6 +703,7 @@ def run(*, extra: list[str] | None = None, force_universe: bool = False,
     """Run all five stages and report the funnel, not just its output."""
     STAGE_FAILURES.clear()
     t0 = time.time()
+    build_time = datetime.now(timezone.utc)
 
     u = universe(force=force_universe, extra=extra)
     tickers = u["tickers"]
@@ -699,7 +719,12 @@ def run(*, extra: list[str] | None = None, force_universe: bool = False,
     s3 = stage3(s2, keep=stage3_keep)
     s4 = stage4(s3, keep=stage4_keep)
 
-    return {
+    news_on = _news_source_enabled()
+    news_block = None
+    if news_on:
+        news_block, added = _news_source(build_time, tickers, s3, s4)
+
+    payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "runtime_secs": round(time.time() - t0, 1),
         "universe": {"n": u["n"], "source": u["source"],
@@ -716,6 +741,70 @@ def run(*, extra: list[str] | None = None, force_universe: bool = False,
         "candidates": [c.to_dict() for c in s4],
         "evidence_basis": _evidence_basis(),
     }
+    if news_on:
+        # CH-14a: only with the flag on does the payload change shape.
+        # The candidate list above is the ranker's own, unchanged in names, order
+        # and scores (ranker names news also mentions carry an extra `sources`
+        # tag). News/filing names live ONLY in the separate block below, so no
+        # consumer that reads `candidates` by position can take one.
+        payload["stages"]["added_by_source"] = news_block["added_by_source"]["n_added"]
+        payload["stage3_candidates"] = [{"ticker": c.ticker, "sources": c.sources} for c in s3]
+        payload["added_by_source"] = added
+        payload["news_source"] = news_block
+    return payload
+
+
+def _news_source_enabled() -> bool:
+    from backend import config as _cfg
+    return bool(getattr(_cfg, "FUNNEL_NEWS_SOURCE_ENABLED", False))
+
+
+def _news_source(build_time: datetime, tickers: list[str], s3: list[Candidate],
+                 s4: list[Candidate]) -> tuple[dict, list[dict]]:
+    """CH-14a: tag the ranker's lists (no move, no re-score) and screen every
+    other news/filing name through the SAME stage-0/1/3 screens into a separate
+    `added_by_source` block. Per-ticker calls stay bounded: one batch history
+    call for the news names, at most 2 x (news cap + filing cap) enrichment calls.
+    """
+    from backend.services import funnel_news_source as FNS
+
+    news = FNS.collect(build_time)
+
+    def screen(names: list[str]) -> dict:
+        saved = STAGE_FAILURES.pop("stage1_batches", None)     # never overwrite the ranker's
+        hist = _batch_history(names)
+        if "stage1_batches" in STAGE_FAILURES:
+            STAGE_FAILURES["news_stage1_batches"] = STAGE_FAILURES.pop("stage1_batches")
+        if saved is not None:
+            STAGE_FAILURES["stage1_batches"] = saved
+        failed = int(hist.get("failed_batches") or 0)
+        out = {}
+        for t in names:
+            c, scr = eligibility(t, hist["close"], hist["volume"])
+            if c is None and scr == "no_price_history" and failed:
+                scr = "news_price_fetch_failed"
+            out[t] = (c, scr)
+        if failed:
+            news["degradations"].append(
+                f"NEWS_PRICE_FETCH_FAILED: {failed} batch(es) of news-name prices failed; "
+                f"names without history are dropped as news_price_fetch_failed")
+        return out
+
+    def enrich(cands: list[Candidate]) -> list[Candidate]:
+        saved = STAGE_FAILURES.pop("stage3", None)
+        n = len(cands)
+        got = stage3(cands, keep=n, budget=2 * n)
+        if "stage3" in STAGE_FAILURES:
+            STAGE_FAILURES["news_stage3"] = STAGE_FAILURES.pop("stage3")
+        if saved is not None:
+            STAGE_FAILURES["stage3"] = saved
+        return got
+
+    res = FNS.admit(news, s3, s4, universe=tickers, screen_fn=screen, enrich_fn=enrich)
+    block = {**{k: v for k, v in news.items() if k != "names"}, **res["receipt"]}
+    if news["degradations"]:
+        STAGE_FAILURES["news_source"] = " | ".join(news["degradations"])
+    return block, res["added"]
 
 
 def _evidence_basis() -> dict:
@@ -828,6 +917,13 @@ def main(argv=None) -> int:
           f"in {payload['runtime_secs']}s")
     if payload["failures"]:
         print(f"stage failures: {payload['failures']}")
+    ns = payload.get("news_source")
+    if ns:
+        dg = ns["digest"]
+        print(f"news source: digest {dg.get('digest_id')} age {dg.get('age_hours')} h, "
+              f"{dg.get('n_typed_rows')} typed rows, {dg.get('status')}; "
+              f"{ns['both_numbers']}; dropped by screen "
+              f"{ {k: len(v) for k, v in ns['added_by_source']['dropped_by_screen'].items()} }")
     if a.dry_run:
         print("--dry-run: nothing written")
         return 0

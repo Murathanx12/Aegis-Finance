@@ -1736,6 +1736,28 @@ IC_FUNNEL_PATH = BACKEND_DIR / "data" / "funnel_night10.json"
 #: funnel is a nightly artifact; composition itself is computed per request.
 IC_FUNNEL_TTL = 3600
 
+# ── CH-14a: news and filings ADD names to the funnel (funnel_news_source) ──
+#: OFF by default: with it off the funnel output is byte-identical to before.
+#: On, the ranker's candidate list is emitted UNCHANGED (same names, order and
+#: scores; a ranker name news also mentions gets an extra `sources` tag). News /
+#: filing names go ONLY to a separate `added_by_source` block, after stage 0,
+#: the stage-1 eligibility screens and stage-3 fundamentals; they never face the
+#: ranker-only stages (1,500 truncation, stage-2 shortlist, stage-3 order cut,
+#: stage-4 profitability rank), and the block says so per name. No weight, no
+#: score, no position in the candidate list.
+FUNNEL_NEWS_SOURCE_ENABLED = False
+#: A digest older than this (hours, from its own as_of, never mtime) is STALE.
+FUNNEL_NEWS_DIGEST_MAX_AGE_HOURS = 36.0
+#: Also add fresh overnight 8-K filers (official/tables/filing_events.jsonl).
+FUNNEL_NEWS_FILINGS_ENABLED = True
+#: 8-K items that offer a name (9.01 exhibits and 5.07 vote results do not).
+FUNNEL_NEWS_FILING_ITEMS: tuple = ("1.01", "2.01", "2.02", "2.05", "2.06", "4.02",
+                                   "5.02", "7.01", "8.01")
+#: Per-source caps on stage-3 enrichment (per-ticker calls are bounded; the
+#: stage-3 budget is twice the names), so filings cannot crowd out news.
+FUNNEL_NEWS_MAX_ENRICH_NEWS = 30
+FUNNEL_NEWS_MAX_ENRICH_FILING = 20
+
 #: Headline capital levels the committee page composes a book for. A subset of
 #: capital_frontier.CAPITAL_LEVELS — the retail-to-small-fund range the page
 #: is answering for.
