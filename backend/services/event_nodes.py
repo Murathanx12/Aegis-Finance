@@ -1332,12 +1332,17 @@ def verify_chain(path: Path) -> dict:
 
 
 def latest_nodes(rows: list[dict], kind: str = "node") -> dict[str, dict]:
-    """The latest version of every node that is not retired."""
+    """The latest version of every node that is not retired. ORDER matters: a node
+    row written after its retire row brings the id back (an event whose items moved
+    away and later returned); without that, the returned id was invisible here and
+    `daily` re-appended it as NEW on every run."""
     latest: dict[str, dict] = {}
     retired: set = set()
     for r in rows:
         if r.get("row_kind") == kind:
-            latest[r["event_id"] if kind == "node" else r["parent_id"]] = r
+            k = r["event_id"] if kind == "node" else r["parent_id"]
+            latest[k] = r
+            retired.discard(k)
         elif r.get("row_kind") == "retire" and kind == "node":
             retired.add(r["event_id"])
     return {k: v for k, v in latest.items() if k not in retired}
@@ -1890,6 +1895,7 @@ def nodes_known_at(store_path: Path, t: datetime) -> dict:
             n_after += 1
             continue
         out[r["event_id"]] = r
+        retired.discard(r["event_id"])          # a later version brings a retired id back
     n_unstamped_retire = len(pending)
     live = {k: v for k, v in out.items() if k not in retired}
     for eid, f in fills.items():

@@ -1491,6 +1491,14 @@ def attach_event_nodes(rows: list[dict], store: Optional[Path], open_d: datetime
         "n_movers_with_event": sum(1 for r in rows if r["event_node_role"]),
         "n_primary": sum(1 for r in rows if r["event_node_role"] == "primary"),
         "n_connected_only": len(conn),
+        #: movers that were a CONNECTED name of at least one earlier event (whether or
+        #: not they also had their own node), with the events that connect them
+        "n_connected_any": sum(1 for r in rows if any(b["role"] == "connected" for b in
+                                                      ev.get(norm_ticker(r["ticker"]), []))),
+        "connected_any": [{"ticker": r["ticker"], "side": r.get("side"),
+                           "via": [(b["primary_ticker"], b["link"], b["event_id"], b["importance_at"])
+                                   for b in ev.get(norm_ticker(r["ticker"]), []) if b["role"] == "connected"][:5]}
+                          for r in rows if any(b["role"] == "connected" for b in ev.get(norm_ticker(r["ticker"]), []))],
         "primary": [r["ticker"] for r in rows if r["event_node_role"] == "primary"],
         "connected_only": [{"ticker": r["ticker"], "side": r.get("side"),
                             "via": [(b["primary_ticker"], b["link"], b["event_id"], b["importance_at"])
