@@ -63,6 +63,23 @@ SUSPECT_CORPORATE_ACTION -- a one-bar raw move beyond `AUTOPSY_SUSPECT_UP/DOWN`
 on a name priced over the floor: listed and counted, never ranked, counted as
 missed, or seeded (a split, spin-off or bad bar until shown otherwise).
 
+FOLLOW-UP (2026-11-12, schema discovery-autopsy/2)
+=================================================
+* FORECAST movers are split by sign: every forecast made before the open is
+  compared with the sign of D's residual (FORECAST_RIGHT_SIGN / _WRONG_SIGN /
+  _MIXED / _NON_DIRECTIONAL in `ladder_outcome`; `ladder` keeps FORECAST), with
+  each forecast's source and the AGE of its information (`inputs_used.claim_utc`,
+  else the digest stamp; "not recorded" otherwise). One session, descriptive.
+* Headlines are named through the issuer table (`news_entities.resolve` over
+  `news_entities/issuers.csv`, the table CH-14a and the universe graph read),
+  including headlines LISTED in reader page bodies (tier UNTIMED: no publication
+  time) and the reader's article store `news_corpus/dowjones/<pub>/<day>/*.json`.
+  Bare-word symbols (`AUTOPSY_BARE_WORD_TICKERS`) need `$TICK`, `NYSE: TICK`, a
+  name, a CIK or a per-ticker feed.
+* Analyst revisions (`analyst/target_revisions.parquet`) are knowable items, cut
+  on the LATER of the event time and the first-seen stamp.
+* `--daily` writes only `<data-root>/discovery_autopsy/`, idempotent on input hashes.
+
 DESCRIPTIVE ONLY. Nothing here says a move was predictable: a headline that
 preceded a move is the seed of a hypothesis (written to the research queue in
 hyp_lab's field shape), and the matched non-mover is owed before it is one.
@@ -721,6 +738,10 @@ def forecast_quality(fc: list[dict], side: str, open_d: datetime) -> dict:
             "n_info_age_unknown": len(rows) - len(known_age),
             "n_directional_stale_source": sum(1 for x in rows if x["stale_source"]
                                               and x["agrees"] is not None),
+            "n_wrong_sign_stale_source": sum(1 for x in rows if x["stale_source"]
+                                             and x["agrees"] is False),
+            "n_right_sign_stale_source": sum(1 for x in rows if x["stale_source"]
+                                             and x["agrees"] is True),
             "stale_after_days": stale_days}
 
 
@@ -1215,6 +1236,11 @@ def summarise(rows: list[dict], suspects: Optional[list[dict]] = None) -> dict:
             "forecast_from_stale_source": [
                 r["ticker"] for r in rows if (r.get("forecast_quality") or {}).get(
                     "n_directional_stale_source")],
+            #: ... and one of those stale forecasts pointed the WRONG way (a MIXED
+            #: outcome can hide it: NVDA-shaped, p=0.60 up from 27-day-old articles)
+            "forecast_wrong_sign_from_stale_source": [
+                r["ticker"] for r in rows if (r.get("forecast_quality") or {}).get(
+                    "n_wrong_sign_stale_source")],
             "n_forecast_rows": sum((r.get("forecast_quality") or {}).get("n", 0) for r in rows),
             "n_forecast_rows_right_sign": sum((r.get("forecast_quality") or {}).get(
                 "n_right_sign", 0) for r in rows),
@@ -1883,7 +1909,9 @@ def headline(rec: dict) -> list[str]:
         f"{s['suspect_corporate_action'][:10]}",
         f"ladder outcome {s.get('by_ladder_outcome')} | wrong sign {s.get('forecast_wrong_sign')} "
         f"| mixed {s.get('forecast_mixed')} | directional forecast from a stale source "
-        f"{s.get('forecast_from_stale_source')} (descriptive, one session; not a skill claim)",
+        f"{s.get('forecast_from_stale_source')} (wrong sign among them "
+        f"{s.get('forecast_wrong_sign_from_stale_source')}; descriptive, one session; "
+        f"not a skill claim)",
         f"knowable by kind {s.get('by_knowable_kind')} | bare-word matches refused "
         f"{rec['inputs'].get('corpus_bare_word_matches_refused')}",
         f"stale inputs: {s['stale_inputs'] or 'none'}"

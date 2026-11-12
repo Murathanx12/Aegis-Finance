@@ -459,6 +459,8 @@ def test_forecast_sign_is_classified_against_the_residual(world):
     assert s["by_ladder_outcome"][DA.FORECAST_MIXED] == 1
     assert s["by_ladder_outcome"][DA.FORECAST_NON_DIRECTIONAL] == 1
     assert s["forecast_wrong_sign"] == ["UPK"] and s["forecast_from_stale_source"] == ["UPK"]
+    assert s["forecast_wrong_sign_from_stale_source"] == ["UPK"]
+    assert by["UPK"]["forecast_quality"]["n_wrong_sign_stale_source"] == 1
     assert "not a skill claim" in s["forecast_sign_note"].lower()
 
 
