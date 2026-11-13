@@ -177,3 +177,75 @@ def test_missing_input_refuses_red(tmp_path: Path, capsys):
     (root / "wrds").mkdir(parents=True)
     rc = S.main(["--data-root", str(root), "--out", str(tmp_path / "elsewhere"), "--run-id", "t", "--no-oop"])
     assert rc == 2 and "REFUSED" in capsys.readouterr().out
+
+
+def _stats(mean: float, t: float = 1.0) -> dict:
+    return {"mean": mean, "t_min": t, "t_max": t, "mde_max": 0.02, "min_blocks": 10,
+            "loo": {"worst": mean - 0.001, "best": mean + 0.001, "worst_dropped": "2009", "best_dropped": "2002"},
+            "years": 10, "years_positive": 6, "by_year": {}, "share_by_date": {"top_5pct_of_months": 0.4}}
+
+
+def _receipt() -> dict:
+    p = S.params()
+    p["horizons"] = list(p["horizons"])
+    prim, spec = {}, {}
+    for arm in S.ARMS:
+        for cell in ("v1", "all"):
+            for h in p["horizons"]:
+                k = f"{arm}|{cell}|{h}"
+                good = arm == S.ARMS[0] and cell == "v1" and h == 21
+                prim[k] = {"n_dates": 12, "mean_names_per_date": 5.0, "raw_net_mean": 0.01 if good else -0.01,
+                           "basket_beta_mean": 1.2, "beta_share_of_raw_excess_over_cash": 0.5 if good else None,
+                           "excess_vs_twin": _stats(0.01 if good else -0.01, 2.5 if good else -2.5),
+                           "excess_vs_beta_line": _stats(0.003 if good else -0.01),
+                           "stop_vs_hold": {"mean": -0.002}, "share_stopped": 0.4, "stop_label": "STOP_BELOW_HOLD",
+                           "verdict": "ADMIT" if good else "REJECT"}
+                spec[k] = {"excess_vs_twin": {"mean": 0.005}, "excess_vs_beta_line": {"mean": -0.001 if good else -0.02}}
+    return {"run_id": "t", "declaration_sha16": "x", "params": p, "primary": prim,
+            "sweep_dip_drawdown": {"0.20": spec, "0.40": spec}, "sweep_market_drawdown": {"0.05": spec, "0.15": spec},
+            "sensitivity_nominal_20m": spec}
+
+
+def test_final_reading_keeps_declared_verdicts_and_prints_fragility():
+    rec = _receipt()
+    fr = S.final_reading(rec, None)
+    assert fr["admitted"] == [f"{S.ARMS[0]}|v1|21"]
+    row = [x for x in fr["cells"] if x["cell"] == f"{S.ARMS[0]}|v1|21"][0]
+    assert row["verdict"] == "ADMIT"                           # the declared rule's, never re-decided
+    assert row["sens_beta_nonpositive"] == 5 and row["sens_n"] == 5
+    assert fr["variants"]["crsp_specifications"] == 6
+    assert fr["variants"]["crsp_cell_readings"] == 6 * len(fr["cells"])
+    assert fr["arms"][S.ARMS[0]]["stop"]["below_hold"] == fr["arms"][S.ARMS[0]]["stop"]["cells"]
+    md = "\n".join(S.render_final(fr, rec))
+    assert md.startswith(S.FINAL_MARK) and "Variants tried" in md and "Stop versus hold" in md
+
+
+def test_episode_snapshot_counts_dips_and_names_the_arm():
+    C, M = _panel(T=420, N=30)
+    M[300:] *= 0.85
+    W = _W(C, M)
+    s = S.episode_snapshot(W, 310, _p(liquid_top_n=30))
+    assert s["n_dip_0.30"] == 3 and s["arm"] == S.ARMS[0]
+    assert sum(s["by_vol_tercile"].values()) == 3
+    assert {n["symbol"] for n in s["_names"]} == {"000001", "000002", "000003"}
+    calm = S.episode_snapshot(_W(C, np.linspace(100.0, 140.0, C.shape[0])), 310, _p(liquid_top_n=30))
+    assert calm["arm"] == S.ARMS[1]
+
+
+def test_addendum_refuses_without_a_receipt_and_never_overwrites(tmp_path: Path, capsys):
+    out = tmp_path / "out"
+    out.mkdir()
+    rc = S.main(["--data-root", str(tmp_path / "root"), "--out", str(out), "--run-id", "t", "--addendum"])
+    assert rc == 2 and "REFUSED" in capsys.readouterr().out
+    import json
+    (out / "ch38_dip_study_t.json").write_text(json.dumps(_receipt()), encoding="utf-8")
+    (out / "ch38_dip_study_t.md").write_text("# receipt\n", encoding="utf-8")
+    rc = S.main(["--data-root", str(tmp_path / "root"), "--out", str(out), "--run-id", "t", "--addendum",
+                 "--no-episode"])
+    assert rc == 0
+    assert S.FINAL_MARK in (out / "ch38_dip_study_t.md").read_text(encoding="utf-8")
+    assert (out / "ch38_dip_study_t_ADDENDUM.json").exists()
+    rc = S.main(["--data-root", str(tmp_path / "root"), "--out", str(out), "--run-id", "t", "--addendum",
+                 "--no-episode"])
+    assert rc == 2                                             # second run refuses, nothing appended twice
+    assert (out / "ch38_dip_study_t.md").read_text(encoding="utf-8").count(S.FINAL_MARK) == 1

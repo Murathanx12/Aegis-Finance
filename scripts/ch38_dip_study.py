@@ -1116,6 +1116,220 @@ def render_md(r: dict) -> list[str]:
     return L
 
 
+# ───────────────────────────── addendum (reads a finished receipt) ──────────
+
+FINAL_MARK = "## ADMITTED CELLS FOR THE CONTRACT — final reading"
+EPISODE_PRE = "2026-10-27"          # the last session before the 10-28 .. 11-05 slide
+EPISODE_END = "2026-11-05"
+
+
+def _row_on_or_before(dates: pd.DatetimeIndex, day: str) -> int:
+    k = int(np.searchsorted(dates.values, np.datetime64(pd.Timestamp(day)), side="right")) - 1
+    if k < 0:
+        raise Refused(f"no session on or before {day}")
+    return k
+
+
+def episode_snapshot(W: dict, i: int, p: dict) -> dict:
+    """Liquid dips at row i (the study's own features, rows <= i only): who, which vol
+    tercile, which arm. Descriptive: there are no forward returns for this date."""
+    f = date_features(W, i, p)
+    liq = np.flatnonzero(f["liquid"])
+    off = f["off"][liq]
+    vt = tercile_labels(f["vol"][liq])
+    out = {"date": str(pd.Timestamp(W["dates"][i]).date()), "market_drawdown": round(f["mkt_dd"], 4),
+           "arm": ARMS[0] if f["mkt_dd"] <= -p["market_drawdown"] else ARMS[1],
+           "n_liquid": int(len(liq)), "mdv_cut_usd": f["mdv_cut"]}
+    for thr in [p["dip_drawdown"], *p["sweep_dip_drawdown"]]:
+        d = off <= -thr
+        out[f"n_dip_{thr:.2f}"] = int(d.sum())
+    d = off <= -p["dip_drawdown"]
+    out["by_vol_tercile"] = {f"v{k}": int((d & (vt == k)).sum()) for k in ("1", "2", "3")}
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        b = f["beta"][liq][d]
+        out["dip_beta_median"] = float(np.nanmedian(b)) if np.isfinite(b).any() else None
+    out["_dip_symbols"] = [str(s) for s in W["symbols"][liq][d]]
+    out["_names"] = [{"symbol": str(s), "off_high": round(float(o), 4), "vol_tercile": f"v{v}",
+                      "daily_sigma": round(float(sg), 4), "beta": None if not np.isfinite(bb) else round(float(bb), 2)}
+                     for s, o, v, sg, bb in zip(W["symbols"][liq][d], off[d], vt[d], f["vol"][liq][d], f["beta"][liq][d])]
+    return out
+
+
+def current_episode(root: Path, p: dict) -> dict:
+    """prices_deep on the session before the slide, the slide's last session and the last
+    session on file: liquid names >= the dip threshold below their 252-close high."""
+    wait_ram()
+    W, src = wide_deep(root, "2025-06-01")
+    snaps = {}
+    for tag, day in (("pre_slide", EPISODE_PRE), ("slide_end", EPISODE_END),
+                     ("latest", str(pd.Timestamp(W["dates"][-1]).date()))):
+        snaps[tag] = episode_snapshot(W, _row_on_or_before(W["dates"], day), p)
+    pre = set(snaps["pre_slide"].pop("_dip_symbols"))
+    for tag in ("slide_end", "latest"):
+        now = snaps[tag].pop("_dip_symbols")
+        snaps[tag]["n_new_since_pre_slide"] = int(sum(1 for s in now if s not in pre))
+        for nm in snaps[tag]["_names"]:
+            nm["new_since_pre_slide"] = nm["symbol"] not in pre
+    snaps["pre_slide"].pop("_names", None)
+    return {"label": "CURRENT EPISODE on prices_deep (survivor-selected membership, no forward returns: "
+                     "descriptive, decides nothing); market = SPY drawdown from its 252-session high",
+            "source": src, "snapshots": snaps}
+
+
+def _cell_line(key: str, r: dict, sens: dict) -> dict:
+    tw, bl = r["excess_vs_twin"], r["excess_vs_beta_line"]
+    s_tw = [v for v in sens["twin"] if v is not None]
+    s_bl = [v for v in sens["beta"] if v is not None]
+    return {"cell": key, "verdict": r.get("verdict"), "n_dates": r["n_dates"],
+            "names_per_date": r["mean_names_per_date"], "raw_net": r["raw_net_mean"],
+            "twin": tw["mean"], "twin_t_min": tw["t_min"], "twin_mde": tw["mde_max"], "twin_loo_worst": tw["loo"]["worst"],
+            "twin_years": f"{tw['years_positive']}/{tw['years']}", "twin_top5pct_share": (tw.get("share_by_date") or {})
+            .get("top_5pct_of_months"),
+            "beta_line": bl["mean"], "beta_t_min": bl["t_min"], "beta_mde": bl["mde_max"],
+            "beta_loo_worst": bl["loo"]["worst"], "beta_years": f"{bl['years_positive']}/{bl['years']}",
+            "twin_12_1": (r.get("excess_vs_twin_band_vol_mom") or {}).get("mean"),
+            "twin_draw_percentile": (r.get("twin_draws") or {}).get("cell_percentile"),
+            "sens_twin_min": min(s_tw) if s_tw else None, "sens_beta_min": min(s_bl) if s_bl else None,
+            "sens_beta_nonpositive": int(sum(1 for v in s_bl if v <= 0)), "sens_n": len(s_bl),
+            "beta": r["basket_beta_mean"], "beta_share": r.get("beta_share_of_raw_excess_over_cash"),
+            "stop_minus_hold": (r.get("stop_vs_hold") or {}).get("mean"), "share_stopped": r.get("share_stopped"),
+            "stop_label": r.get("stop_label")}
+
+
+def final_reading(rec: dict, episode: Optional[dict]) -> dict:
+    """The contract-facing reading of a finished receipt. Verdicts are the DECLARED rule's,
+    unchanged; this adds the beta-line stability and the sensitivities beside each one."""
+    specs = ([rec["sweep_dip_drawdown"][k] for k in rec["sweep_dip_drawdown"]]
+             + [rec["sweep_market_drawdown"][k] for k in rec["sweep_market_drawdown"]]
+             + [rec["sensitivity_nominal_20m"]])
+    lines = []
+    for key, r in rec["primary"].items():
+        if not r.get("n_dates"):
+            continue
+        sens = {"twin": [s.get(key, {}).get("excess_vs_twin", {}).get("mean") for s in specs],
+                "beta": [s.get(key, {}).get("excess_vs_beta_line", {}).get("mean") for s in specs]}
+        lines.append(_cell_line(key, r, sens))
+    arms = {}
+    for arm in ARMS:
+        al = [x for x in lines if x["cell"].startswith(arm + "|all|")]
+        arms[arm] = {x["cell"].split("|")[2]: {"raw": x["raw_net"], "beta_line_excess": x["beta_line"],
+                                               "twin": x["twin"], "beta": x["beta"], "beta_share": x["beta_share"]}
+                     for x in al}
+        st = [x for x in lines if x["cell"].startswith(arm + "|")]
+        arms[arm]["stop"] = {"cells": len(st), "below_hold": sum(1 for x in st if (x["stop_minus_hold"] or 0) < 0),
+                             "labels": sorted({x["stop_label"] for x in st}),
+                             "min": min(x["stop_minus_hold"] for x in st), "max": max(x["stop_minus_hold"] for x in st)}
+    n_spec = 1 + len(specs)
+    variants = {"crsp_specifications": n_spec, "cells_per_specification": len(lines),
+                "crsp_cell_readings": n_spec * len(lines), "verdict_cells": len(lines),
+                "out_of_panel_specifications": 1 + len(rec["sweep_dip_drawdown"]) + len(rec["sweep_market_drawdown"]),
+                "smoke_runs": 1, "exit_rules": 1, "control_levels": 2,
+                "note": "1 primary + 2 dip sweeps (20%/40%) + 2 market sweeps (5%/15%) + 1 nominal 20 M USD floor on "
+                        "CRSP; the same primary + dip sweeps and an arm-A market sweep on prices_deep (descriptive); one "
+                        "1995-only debugging smoke run (seen, decides nothing); this reading adds no return variant"}
+    return {"cells": lines, "arms": arms, "variants": variants, "episode": episode,
+            "admitted": [x["cell"] for x in lines if x["verdict"] == "ADMIT"]}
+
+
+def _p2(x: Optional[float]) -> str:
+    return "n/a" if x is None else f"{x * 100:+.2f}%"
+
+
+def render_final(fr: dict, rec: dict) -> list[str]:
+    p = rec["params"]
+    L = [FINAL_MARK, "",
+         f"Read from `ch38_dip_study_{rec['run_id']}.json` (declaration sha {rec['declaration_sha16']}). Verdicts are "
+         "the declared rule's and were not re-decided; the columns after the verdict are the beta-line stability "
+         "and the five labelled sensitivities, printed so the contract can see how thin each margin is.", "",
+         f"Fixed before any return was read: dip {p['dip_drawdown']:.0%} below the 252-close high; arm A = market "
+         f">= {p['market_drawdown']:.0%} below its 252-session high; price >= {p['min_price']:.0f} and top "
+         f"{p['liquid_top_n']} by 63-session median dollar volume; horizons {p['horizons']} sessions; stop "
+         f"{p['stop_sigma']:.0f} x trailing 63-session daily sigma; {p['twin_draws']} twin draws; seed {p['seed']}; "
+         f"costs max(Corwin-Schultz capped {p['cs_cap']:.0%}, flat {p['cost_bps_by_band']} bps).", "",
+         "| cell | verdict | dates | vs twins (LOO worst, yrs+) | twin t / MDE | vs beta line (LOO worst, yrs+) | "
+         "beta t / MDE | sens. worst twin / beta (beta<=0 in) | 12-1 twin | stop - hold (stopped) |",
+         "|---|---|---|---|---|---|---|---|---|---|"]
+    for x in fr["cells"]:
+        L.append(f"| {x['cell']} | **{x['verdict']}** | {x['n_dates']} | {_p2(x['twin'])} ({_p2(x['twin_loo_worst'])}, "
+                 f"{x['twin_years']}) | {_fmt(x['twin_t_min'])} / {_p2(x['twin_mde'])} | {_p2(x['beta_line'])} "
+                 f"({_p2(x['beta_loo_worst'])}, {x['beta_years']}) | {_fmt(x['beta_t_min'])} / {_p2(x['beta_mde'])} | "
+                 f"{_p2(x['sens_twin_min'])} / {_p2(x['sens_beta_min'])} ({x['sens_beta_nonpositive']}/{x['sens_n']}) | "
+                 f"{_p2(x['twin_12_1'])} | {_p2(x['stop_minus_hold'])} "
+                 f"({'n/a' if x['share_stopped'] is None else format(x['share_stopped'], '.0%')}) |")
+    L += ["", "**Beta, per arm** (the `all` cell; raw = net of costs; beta line = rf + basket beta x (market - rf)):", ""]
+    for arm, a in fr["arms"].items():
+        parts = []
+        for h in (str(h) for h in p["horizons"]):
+            v = a.get(h)
+            if not v:
+                continue
+            share = ("n/a (raw at or below cash)" if v["beta_share"] is None else
+                     f"{v['beta_share']:.0%}" + (" = more than all of it" if v["beta_share"] > 1 else ""))
+            parts.append(f"{h}d raw {_p2(v['raw'])}, beta line excess {_p2(v['beta_line_excess'])}, beta share {share}")
+        L.append(f"- {arm} (basket beta {a[str(p['horizons'][0])]['beta']:.2f}): " + "; ".join(parts) + ".")
+    L += ["", "**Stop versus hold:**", ""]
+    for arm, a in fr["arms"].items():
+        s = a["stop"]
+        L.append(f"- {arm}: the {p['stop_sigma']:.0f}-sigma stop is below holding in {s['below_hold']} of {s['cells']} "
+                 f"cells (stop - hold {_p2(s['min'])} .. {_p2(s['max'])}); labels {', '.join(s['labels'])}.")
+    v = fr["variants"]
+    L += ["", f"**Variants tried:** {v['crsp_specifications']} CRSP specifications x {v['cells_per_specification']} cells "
+              f"= {v['crsp_cell_readings']} cell readings; verdicts on the {v['verdict_cells']} primary cells only; "
+              f"{v['out_of_panel_specifications']} descriptive prices_deep specifications; {v['smoke_runs']} smoke run; "
+              f"{v['exit_rules']} exit rule; {v['control_levels']} twin levels. {v['note']}.", ""]
+    ep = fr.get("episode")
+    if ep:
+        L += ["## CURRENT EPISODE (descriptive, decides nothing)", "", ep["label"], "",
+              "| snapshot | date | market drawdown | arm | liquid | dips >=30% (v1/v2/v3) | >=20% | >=40% | "
+              "new since pre-slide | dip beta median |", "|---|---|---|---|---|---|---|---|---|---|"]
+        k0 = f"n_dip_{p['dip_drawdown']:.2f}"
+        k1, k2 = (f"n_dip_{t:.2f}" for t in p["sweep_dip_drawdown"])
+        for tag, s in ep["snapshots"].items():
+            bv = s["by_vol_tercile"]
+            L.append(f"| {tag} | {s['date']} | {s['market_drawdown'] * 100:+.1f}% | {s['arm']} | {s['n_liquid']} | "
+                     f"{s[k0]} ({bv['v1']}/{bv['v2']}/{bv['v3']}) | "
+                     f"{s[k1]} | {s[k2]} | {s.get('n_new_since_pre_slide', '')} | "
+                     f"{_fmt(s['dip_beta_median'])} |")
+        lat = ep["snapshots"]["latest"]
+        L += ["", f"Per-name list ({len(lat['_names'])} names on {lat['date']}) is in the addendum JSON, not here."]
+    return L
+
+
+def addendum(data_root: Path, out_dir: Path, run_id: str, with_episode: bool) -> int:
+    jp = out_dir / f"ch38_dip_study_{run_id}.json"
+    mp = out_dir / f"ch38_dip_study_{run_id}.md"
+    ap_ = out_dir / f"ch38_dip_study_{run_id}_ADDENDUM.json"
+    for q in (jp, mp):
+        if not q.exists():
+            raise Refused(f"missing {q}: the addendum reads a finished receipt")
+    if ap_.exists():
+        raise Refused(f"{ap_.name} exists; a receipt is never overwritten")
+    md_text = mp.read_text(encoding="utf-8")
+    if FINAL_MARK in md_text:
+        raise Refused(f"{mp.name} already carries the final reading")
+    raw = jp.read_bytes()
+    rec = json.loads(raw)
+    live = {"prices_deep": data_root / "prices_deep"}
+    before = {k: count_files(v) for k, v in live.items()}
+    ep = current_episode(data_root, params()) if with_episode else None
+    after = {k: count_files(v) for k, v in live.items()}
+    fr = final_reading(rec, ep)
+    body = render_final(fr, rec)
+    out = {"schema": SCHEMA + "/addendum", "run_id": run_id, "written_utc": _now(),
+           "receipt": jp.name, "receipt_sha256": hashlib.sha256(raw).hexdigest(),
+           "md_sha256_before_append": hashlib.sha256(mp.read_bytes()).hexdigest(),
+           "declaration_sha16": rec.get("declaration_sha16"), "final_reading": fr,
+           "live_folder_files": {"before": before, "after": after, "unchanged": before == after}}
+    ap_.write_text(json.dumps(_clean(out), indent=1, default=str), encoding="utf-8")
+    (out_dir / f"ch38_dip_study_{run_id}_ADDENDUM.md").write_text("\n".join(body) + "\n", encoding="utf-8")
+    with mp.open("a", encoding="utf-8") as fh:
+        fh.write("\n\n" + "\n".join(body) + "\n")
+    say(f"admitted: {fr['admitted']}; live folder unchanged {before == after} ({before} -> {after})")
+    say(f"-> {ap_}\n-> {mp} (final reading appended)")
+    return 0 if before == after else 4
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--data-root", required=True, type=Path, help="the optimus data folder (read-only)")
@@ -1123,8 +1337,21 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--run-id", default=None)
     ap.add_argument("--years", default=None, help="e.g. 1991-2024 (default: config)")
     ap.add_argument("--no-oop", action="store_true", help="skip the 2025-2026 out-of-panel section")
+    ap.add_argument("--addendum", action="store_true",
+                    help="read the finished receipt <out>/ch38_dip_study_<run-id>.json, write _ADDENDUM.json/.md "
+                         "(final reading + current episode) and append the final reading to the .md")
+    ap.add_argument("--no-episode", action="store_true", help="with --addendum: skip the prices_deep episode")
     a = ap.parse_args(argv)
     p = params()
+    if a.addendum:
+        if not a.run_id:
+            say("REFUSED: --addendum needs --run-id")
+            return 2
+        try:
+            return addendum(a.data_root, a.out, a.run_id, not a.no_episode)
+        except Refused as exc:
+            say(f"REFUSED: {exc}")
+            return 2
     years = (p["first_year"], p["last_year"])
     if a.years:
         lo, hi = a.years.split("-")
