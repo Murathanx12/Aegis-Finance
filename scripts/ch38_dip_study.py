@@ -311,7 +311,7 @@ def beta_cols(R: np.ndarray, m: np.ndarray, min_obs: int) -> np.ndarray:
 
 def date_features(W: dict, i: int, p: dict) -> dict:
     """Features of every column at row i (the signal date), from rows <= i only."""
-    C, Cf, R, DV, P, dl = W["C"], W["Cf"], W["R"], W["DV"], W["P"], W["dl"]
+    C, R, DV, P, dl = W["C"], W["R"], W["DV"], W["P"], W["dl"]
     hw, vw, bw = p["high_window"], p["vol_window"], p["beta_window"]
     lo = i - hw + 1
     if lo < 0:
