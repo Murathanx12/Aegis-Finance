@@ -15,6 +15,7 @@ removed when that chunk merges.
 
 | Chunk | Agent / session | Worktree | Files claimed | Opened | Status | Receipt / PR |
 |---|---|---|---|---|---|---|
+| roadmap S67 council amendment (docs/ROADMAP.md only): CH-40..44, CH-20 a/b/c, notes on CH-01/11/13/14b/15/18/26/35/38, §5.8–5.10 | Claude S67 + three council experts | 2026-11-13 | docs only; no code, order or schedule change; positions in `aegis-recovery-evidence\s67-council-20261113\` |
 | CH-13 autopsy | none (builder stopped 11-12; brief a fresh one) | `aegis-wt/ch13-autopsy` | `backend/services/discovery_autopsy.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch13-autopsy` `19cb296b` |
 | CH-11 twins | none (builder stopped 11-12) | `aegis-wt/ch11-twins` | `scripts/matched_twin_reeval.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch11-twins` `d6c2979d` |
 | CH-12 news grade | none (builder stopped 11-12) | `aegis-wt/ch12-news-grade` | `scripts/ch12_news_grade.py`, its tests | 2026-11-11 | interrupted, unreviewed | branch `s65/ch12-news-grade` `97039739` |
