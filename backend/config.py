@@ -5248,6 +5248,10 @@ BOOK_DNA_LANE_FAMILY_CORR = 0.85
 BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
 #: How many tickers name a cluster's shared basket on the collapse line.
 BOOK_DNA_BASKET_TOP = 5
+#: CH-11 note (2026-11-13, "the books won only because the market was rising"):
+#: up-capture / down-capture need at least this many SPY-up AND SPY-down periods
+#: in the book's period-return series; below it they say CANNOT DETERMINE.
+BOOK_DNA_MIN_CAPTURE_OBS = 8
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +

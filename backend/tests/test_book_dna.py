@@ -335,3 +335,82 @@ def test_beta_of_a_date_stamp_lagged_series_is_not_credible_with_both_numbers():
     assert out["why"].startswith("beta: NOT_CREDIBLE (date stamp lag)")
     assert f"{out['corr_vs_spy_lag_minus_1']:+.2f}" in out["why"] and f"{out['corr_vs_spy']:+.2f}" in out["why"]
     assert "beta_same_day" in out           # the uncredible number is kept, labelled, never served as the beta
+
+
+# ── CH-11 note (2026-11-13): how much of a book's return is plain SPY exposure ──
+def _dated_series(n: int = 60, beta: float = 1.5, alpha: float = 0.0005, seed: int = 11) -> list:
+    """A same-day series on real weekday dates derived from today (spans >= 2 months)."""
+    rng = np.random.default_rng(seed)
+    dates = _sessions(n)
+    spy = rng.normal(0.0003, 0.01, n)
+    book = alpha + beta * spy + rng.normal(0.0, 0.002, n)
+    return [(d, float(b), float(s)) for d, b, s in zip(dates, book, spy)]
+
+
+def test_market_exposure_on_a_high_beta_book():
+    s = _dated_series()
+    beta = D.beta_of(s, 20)
+    assert isinstance(beta["value"], float) and 1.35 < beta["value"] < 1.65
+    me = D.market_exposure(s, beta, return_pct=12.0, spy_leg_pct=6.0, min_capture_obs=8)
+    b = beta["value"]
+    assert me["beta"]["value"] == round(b, 3)
+    # return - beta x SPY leg, beside the raw excess, on the receipt's own window
+    assert me["beta_adjusted_excess_pp"]["value"] == round(12.0 - b * 6.0, 3)
+    assert me["beta_adjusted_excess_pp"]["raw_excess_pp"] == 6.0
+    # a beta-1.5 book captures ~1.5x of SPY on both sides
+    assert 1.3 < me["up_capture"]["value"] < 1.8 and 1.3 < me["down_capture"]["value"] < 1.8
+    assert me["up_capture"]["n_periods"] + me["down_capture"]["n_periods"] <= len(s)
+    # by month: every period lands in exactly one month, residual compounded per month
+    bm = me["by_month"]
+    assert len(bm) >= 2 and sum(m["n_periods"] for m in bm) == len(s)
+    first = [(x, y) for d, x, y in s if d[:7] == bm[0]["month"]]
+    want = 100 * (np.prod([1 + x - b * y for x, y in first]) - 1)
+    assert abs(bm[0]["beta_adjusted_pp"] - want) < 1e-2
+    assert me["series_beta_adjusted_pp"]["n_periods"] == len(s)
+
+
+def test_market_exposure_is_cannot_determine_on_a_lagged_series():
+    s = _series_lagged(1)
+    beta = D.beta_of(s, 20)
+    assert beta["value"] == D.NOT_CREDIBLE
+    me = D.market_exposure(s, beta, return_pct=5.0, spy_leg_pct=2.0, min_capture_obs=8)
+    for k in ("beta", "up_capture", "down_capture", "beta_adjusted_excess_pp", "by_month",
+              "series_beta_adjusted_pp"):
+        assert me[k]["value"] == D.CANNOT_DETERMINE, k
+        assert "NOT_CREDIBLE (date stamp lag)" in me[k]["why"], k
+
+
+def test_market_exposure_is_cannot_determine_on_a_short_series():
+    s = _dated_series(n=12)
+    beta = D.beta_of(s, 20)
+    me = D.market_exposure(s, beta, return_pct=5.0, spy_leg_pct=2.0, min_capture_obs=8)
+    assert me["beta_adjusted_excess_pp"]["value"] == D.CANNOT_DETERMINE
+    assert "12 period returns < 20" in me["beta_adjusted_excess_pp"]["why"]
+
+
+def test_capture_needs_enough_periods_on_each_side():
+    rng = np.random.default_rng(5)
+    spy = np.abs(rng.normal(0.0, 0.01, 40)) + 0.001
+    spy[[3, 11, 19, 27]] *= -1                                    # 4 SPY-down periods
+    s = [(d, float(1.2 * x + rng.normal(0, 0.001)), float(x)) for d, x in zip(_sessions(40), spy)]
+    beta = D.beta_of(s, 20)
+    me = D.market_exposure(s, beta, return_pct=1.0, spy_leg_pct=1.0, min_capture_obs=8)
+    assert isinstance(me["up_capture"]["value"], float)
+    assert me["down_capture"]["value"] == D.CANNOT_DETERMINE
+    assert me["down_capture"]["why"] == "4 SPY-down periods < 8"
+
+
+def test_market_exposure_without_a_spy_leg_says_so():
+    s = _dated_series()
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=3.0, spy_leg_pct=None, min_capture_obs=8)
+    assert me["beta_adjusted_excess_pp"]["value"] == D.CANNOT_DETERMINE
+    assert isinstance(me["up_capture"]["value"], float)
+
+
+def test_every_book_row_carries_market_exposure_never_blank(world):
+    rc, inputs, px = world
+    dna = D.build(rc, inputs, px)
+    for b in dna["books"]:
+        me = b["market_exposure"]
+        v = me["beta_adjusted_excess_pp"]["value"]
+        assert v == D.CANNOT_DETERMINE and me["beta_adjusted_excess_pp"]["why"], b["account"]

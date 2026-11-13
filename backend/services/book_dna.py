@@ -22,6 +22,9 @@ it before writing) plus each book's holdings and return series, and writes
   from this module), the TAIL check (top-1 / top-2 holdings' share of the excess),
   top sector weight and HHI, beta vs SPY where a long enough series exists, cash
   fraction, `one_name_dependence`;
+* per book (CH-11 note, 2026-11-13): `market_exposure` -- up-capture, down-capture,
+  the beta-adjusted excess (return - beta x SPY leg) and the residual by month, from
+  the same series as the beta; CANNOT DETERMINE with a reason when it is not answerable;
 * clusters of the non-twin books ahead: holdings Jaccard (threshold in config,
   with the count at every sensitivity threshold printed) plus return correlation
   where series exist; members, shared basket, cluster excess;
@@ -57,6 +60,9 @@ SCHEMA = "book_dna/1"
 NOT_COMPUTABLE = "NOT_COMPUTABLE"
 #: a number that computes but is not believed (C15: beta on a date-stamp-lagged series)
 NOT_CREDIBLE = "NOT_CREDIBLE"
+#: CH-11 note (2026-11-13): a market-exposure field that cannot be answered (series too
+#: short, beta not credible, no SPY leg) -- printed with its reason, never 0 or blank.
+CANNOT_DETERMINE = "CANNOT DETERMINE"
 #: The ladder from roadmap section 7. This module may award only the first three.
 LABEL_LADDER = ("OBSERVED", "EARLY_EVIDENCE", "REPLICATED", "VALIDATED_EDGE")
 LABEL_CEILING = "REPLICATED"
@@ -99,6 +105,7 @@ def params() -> dict:
         "corr_threshold": float(_cfg("BOOK_DNA_CORR_THRESHOLD", 0.80)),
         "min_corr_obs": int(_cfg("BOOK_DNA_MIN_CORR_OBS", 15)),
         "min_beta_obs": int(_cfg("BOOK_DNA_MIN_BETA_OBS", 20)),
+        "min_capture_obs": int(_cfg("BOOK_DNA_MIN_CAPTURE_OBS", 8)),
         "early_min_sessions": int(_cfg("BOOK_DNA_EARLY_MIN_SESSIONS", 21)),
         "fair_twin_kinds": list(_cfg("BOOK_DNA_FAIR_TWIN_KINDS",
                                      ("matched_twin21", "matched_random", "random_same_band"))),
@@ -421,6 +428,89 @@ def beta_of(series: Optional[list], min_obs: int) -> Any:
                    why=(f"beta: NOT_CREDIBLE (date stamp lag): corr vs SPY lag -1 "
                         f"{lag:+.2f} beats same-day {(corr if corr is not None else float('nan')):+.2f} "
                         f"over {len(pts)} periods; the series looks stamped a period late"))
+    return out
+
+
+def _cd(why: str) -> dict:
+    return {"value": CANNOT_DETERMINE, "why": why}
+
+
+def _capture(pts: list, side: str, min_obs: int) -> dict:
+    """Mean book period return / mean SPY period return over the periods where SPY
+    went `side` (up: > 0, down: < 0). Down-capture < 1 = the book lost less than SPY
+    on SPY's down periods; > 1 = it lost more."""
+    sel = [(b, s) for b, s in pts if (s > 0 if side == "up" else s < 0)]
+    if len(sel) < min_obs:
+        return {**_cd(f"{len(sel)} SPY-{side} periods < {min_obs}"), "n_periods": len(sel)}
+    ms = float(np.mean([s for _, s in sel]))
+    mb = float(np.mean([b for b, _ in sel]))
+    return {"value": round(mb / ms, 3), "n_periods": len(sel),
+            "mean_book_pct": round(100 * mb, 4), "mean_spy_pct": round(100 * ms, 4)}
+
+
+def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_leg_pct: Any,
+                    min_capture_obs: int) -> dict:
+    """CH-11 note (2026-11-13): how much of a book's return is plain SPY exposure.
+
+    From the SAME period-return series `beta_of` used and the beta it returned:
+    up-capture, down-capture, the beta-adjusted excess over the receipt's own window
+    (`return - beta x SPY leg`, directly comparable with the raw excess
+    `return - SPY leg`), and the residual `r_book - beta x r_SPY` compounded per
+    calendar month of the series. rf = 0 by declaration (cash earns nothing here), and
+    the beta is in-sample over the same window: a description of the book's exposure,
+    not a forecast of it. A beta that is NOT_COMPUTABLE or NOT_CREDIBLE (date-stamp
+    lag) makes every field CANNOT DETERMINE with that reason -- the lag that corrupts
+    the beta corrupts the same-day up/down split too."""
+    method = ("beta: OLS slope of book period returns on SPY period returns (same periods); "
+              "capture: mean book / mean SPY return over SPY-up (SPY-down) periods; "
+              "beta-adjusted excess: receipt return - beta x receipt SPY leg; by month: "
+              "compound(1 + r_book - beta x r_SPY) - 1; rf = 0 declared")
+    bval = beta.get("value") if isinstance(beta, dict) else None
+    rp, sp = _num(return_pct), _num(spy_leg_pct)
+    out: dict = {"method": method, "n_obs": (beta or {}).get("n_obs", 0)}
+    if not isinstance(bval, (int, float)) or isinstance(bval, bool):
+        why = f"beta {bval}: {(beta or {}).get('why') or 'no beta'}"
+        out.update(beta=_cd(why), up_capture=_cd(why), down_capture=_cd(why),
+                   beta_adjusted_excess_pp=_cd(why), by_month=_cd(why),
+                   series_beta_adjusted_pp=_cd(why))
+        return out
+    b = float(bval)
+    pts = [(float(x), float(y)) for _, x, y in series or [] if _num(x) is not None and _num(y) is not None]
+    out["beta"] = {"value": round(b, 3), "n_obs": len(pts)}
+    if np.std([x for x, _ in pts]) == 0:
+        out["note"] = ("the book's period returns are constant (a flat NAV: all cash, or a NAV "
+                       "that did not update); beta and capture are 0 by arithmetic")
+    out["up_capture"] = _capture(pts, "up", min_capture_obs)
+    out["down_capture"] = _capture(pts, "down", min_capture_obs)
+    if rp is None or sp is None:
+        out["beta_adjusted_excess_pp"] = _cd("the receipt row has no return or no SPY leg")
+    else:
+        out["beta_adjusted_excess_pp"] = {"value": round(rp - b * sp, 3),
+                                          "raw_excess_pp": round(rp - sp, 3),
+                                          "beta_part_pp": round((b - 1.0) * sp, 3),
+                                          "basis": "receipt window"}
+    months: dict = {}
+    for d, x, y in series or []:
+        if _num(x) is None or _num(y) is None:
+            continue
+        months.setdefault(str(d)[:7], []).append((float(x), float(y)))
+    bm = []
+    for m, v in sorted(months.items()):
+        cb = float(np.prod([1 + x for x, _ in v]) - 1)
+        cs = float(np.prod([1 + y for _, y in v]) - 1)
+        cr = float(np.prod([1 + x - b * y for x, y in v]) - 1)
+        bm.append({"month": m, "n_periods": len(v), "book_pct": round(100 * cb, 3),
+                   "spy_pct": round(100 * cs, 3), "raw_excess_pp": round(100 * (cb - cs), 3),
+                   "beta_adjusted_pp": round(100 * cr, 3)})
+    out["by_month"] = bm
+    cb = float(np.prod([1 + x for x, _ in pts]) - 1)
+    cs = float(np.prod([1 + y for _, y in pts]) - 1)
+    out["series_beta_adjusted_pp"] = {
+        "value": round(100 * (float(np.prod([1 + x - b * y for x, y in pts])) - 1), 3),
+        "series_book_pct": round(100 * cb, 3), "series_spy_pct": round(100 * cs, 3),
+        "from": (series or [[None]])[0][0], "to": (series or [[None]])[-1][0], "n_periods": len(pts),
+        "note": "compounded over the series' own periods; differs from the receipt window when "
+                "the series starts late or skips sessions (compare series_spy_pct with the SPY leg)"}
     return out
 
 
@@ -810,6 +900,8 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
         e["one_name_dependence"], e["one_name_why"] = _one_name(e, tail, p)
         e["concentration"] = concentration(weights, smap)
         e["beta_vs_spy"] = beta_of(series, p["min_beta_obs"])
+        e["market_exposure"] = market_exposure(series, e["beta_vs_spy"], return_pct=e["return_pct"],
+                                               spy_leg_pct=spy_leg, min_capture_obs=p["min_capture_obs"])
         e["cash_fraction"] = cash
         e["n_series_periods"] = len(series)
         sub = subwindows(series, sessions)
@@ -1412,7 +1504,8 @@ def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd
     return dna, path
 
 
-__all__ = ["SCHEMA", "LABEL_LADDER", "LABEL_CEILING", "ERROR_TYPES", "NOT_COMPUTABLE",
+__all__ = ["SCHEMA", "LABEL_LADDER", "LABEL_CEILING", "ERROR_TYPES", "NOT_COMPUTABLE", "CANNOT_DETERMINE",
+           "market_exposure",
            "Prices", "build", "classify_loser", "cluster", "collapse_line", "evidence_label",
            "exante_bets", "participation_ratio", "top_line",
            "jaccard", "lanes_block", "load_inputs", "params", "refused_summary", "run",
