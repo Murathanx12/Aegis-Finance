@@ -477,6 +477,24 @@ def test_answered_share_is_the_red_floor_and_date_share_is_reported_separately(t
     assert ok["status"] == "OK" and 0.4 <= ok["date_share"] < 0.6        # red under the old 0.60 floor
 
 
+def test_a_post_season_pull_is_green_and_a_vendor_without_earnings_fields_is_red(tmp_path):
+    # Just after a reporting season most issuers carry only a past date: healthy, not red.
+    past = {f"P{i}": _q(f"P{i}", TODAY - timedelta(days=7)) for i in range(7)}
+    nxt = {f"N{i}": _q(f"N{i}", TODAY + timedelta(days=4)) for i in range(3)}
+    season = _full(tmp_path, {**past, **nxt}, NOW)
+    assert season["date_share"] == 0.3 and season["earnings_fields_share"] == 1.0
+    assert season["status"] == "OK"
+    # The same date share with the fields gone from most rows is a vendor fault.
+    bare = {f"B{i}": {"symbol": f"B{i}", "quoteType": "EQUITY",
+                      "exchangeTimezoneName": "America/New_York"} for i in range(7)}
+    broken = _full(tmp_path / "b", {**bare, **nxt}, NOW)
+    assert broken["date_share"] == 0.3 and broken["earnings_fields_share"] == 0.3
+    assert broken["status"] == FC.LOW_DATE_SHARE
+    with pytest.raises(FC.ForwardCalendarRefused) as e:
+        FC.check_coverage(broken)
+    assert "earnings-fields share 0.3" in str(e.value)
+
+
 def test_the_reader_opens_only_the_snapshots_it_needs(tmp_path):
     d = TODAY + timedelta(days=9)
     for k in range(5, 0, -1):
