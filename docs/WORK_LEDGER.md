@@ -15,6 +15,10 @@ removed when that chunk merges.
 
 | Chunk | Agent / session | Worktree | Files claimed | Opened | Status | Receipt / PR |
 |---|---|---|---|---|---|---|
+| CH-38 dip study | builder (Opus), S68 | `aegis-wt/ch38-dip-study` | `scripts/ch38_dip_study.py`, its tests, one block in `backend/config.py` | 2026-11-13 | building | branch `s68/ch38-dip-study` |
+| CH-20a hedge replay | builder (Opus), S68 | `aegis-wt/ch20a-hedge-replay` | `scripts/ch20a_hedge_replay.py`, its tests, one block in `backend/config.py` | 2026-11-13 | building | branch `s68/ch20a-hedge-replay` |
+| CH-11 note: beta print | builder (Opus), S68 | `aegis-wt/ch11-beta-print` | `backend/services/book_dna.py`, `scripts/results_voice.py`, their tests | 2026-11-13 | building | branch `s68/ch11-beta-print` |
+| CH-35 wiring, CH-14b observe-only runs, roadmap and ledger | Claude S68 (brain) | `aegis-wt/s68-docs` | `docs/ROADMAP.md`, `docs/WORK_LEDGER.md`; runtime-side steps | 2026-11-13 | in progress | PR #136 first |
 | CH-13 autopsy | none (builder stopped 11-12; brief a fresh one) | `aegis-wt/ch13-autopsy` | `backend/services/discovery_autopsy.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch13-autopsy` `19cb296b` |
 | CH-11 twins | none (builder stopped 11-12) | `aegis-wt/ch11-twins` | `scripts/matched_twin_reeval.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch11-twins` `d6c2979d` |
 | CH-12 news grade | none (builder stopped 11-12) | `aegis-wt/ch12-news-grade` | `scripts/ch12_news_grade.py`, its tests | 2026-11-11 | interrupted, unreviewed | branch `s65/ch12-news-grade` `97039739` |
