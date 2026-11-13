@@ -1016,7 +1016,11 @@ def out_of_panel(root: Path, p: dict) -> dict:
                      "permno map); descriptive only, never admits",
             "source": src, "signal_dates": int(len(dates)),
             "mkt_dd_by_date": {str(r["date"].date()): round(float(r["mkt_dd"]), 4) for _, r in dates.iterrows()},
-            "cells": {k: _slim(v) for k, v in prim.items()}}
+            "cells": {k: _slim(v) for k, v in prim.items()},
+            "sweep_market_drawdown_arm_A": {
+                f"{t:.2f}": {k: _slim(v) for k, v in evaluate(ev, dates, p, mkt_thr=t, dip_thr=p["dip_drawdown"]).items()
+                             if k.startswith(ARMS[0])}
+                for t in p["sweep_market_drawdown"]}}
 
 
 def _slim(r: dict) -> dict:
