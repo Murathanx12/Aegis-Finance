@@ -920,6 +920,60 @@ def _forecasts_before(rows: list, first_seen: datetime) -> list:
     return [r for r in rows if lo <= _utc(r["made_at"]) <= first_seen]
 
 
+#: The node-level degradation for a forward calendar that could not be read, or whose
+#: snapshot is damaged (unparseable lines, rows missing vs its index).
+NEXT_DATES_CALENDAR_UNREADABLE = "NEXT_DATES_CALENDAR_UNREADABLE"
+
+
+def forward_dates(data_root: Path, syms: set, now: datetime) -> dict:
+    """Next dates for `syms` from the forward catalyst calendar
+    (`backend/services/forward_calendar.py`, written by `scripts/forward_calendar.py
+    pull` under `<data root>/forward_calendar/`): per name the newest snapshot row
+    pulled at or before `now`, never a later one. Same shape as `calendar_dates`
+    plus `labels`: {sym: {label, reason, ...}}. A covered name with no date in the
+    horizon gets an EMPTY list in `dates` (covered, nothing scheduled); a stale or
+    damaged-fallback row's date is NOT put in `dates` (it is in its label, flagged).
+
+    NOT a required input and NEVER raises: a new collector must not take down this
+    build. No folder / no snapshot by `now` -> NO_CALENDAR_BY_NOW with every name
+    NOT_COVERED; anything unreadable -> status CALENDAR_UNREADABLE (the node carries
+    NEXT_DATES_CALENDAR_UNREADABLE) and the build continues."""
+    from backend.services import forward_calendar as FC
+    hz = int(C.EVENT_NODES_NEXT_DATES_HORIZON_DAYS)
+    root = Path(data_root)
+    base = {"writer": "scripts/forward_calendar.py pull", "file": None, "written_utc": None,
+            "window": None, "coverage_end": None, "macro": [], "fomc_status": None,
+            "skipped_after_now": [], "damaged_snapshots": []}
+    try:
+        res = FC.next_dates(sorted(syms), now, hz, root=root)
+        nr = FC.newest_receipt(root, now)
+        mac = FC.next_macro(now, hz, root=root)
+    except Exception as exc:                                           # noqa: BLE001
+        return {**base, "status": "CALENDAR_UNREADABLE", "dates": {}, "labels": {},
+                "error": f"{type(exc).__name__}: {str(exc)[:200]}"}
+    dates: dict[str, list] = {}
+    for s, v in res["tickers"].items():
+        if v["label"] == FC.DATE_IN_HORIZON:
+            dates[s] = [{"date": v["date"], "kind": "earnings", "status": v["confirmation"],
+                         "timing": v["timing"], "days_away": v["days_away"],
+                         "sessions_away": v.get("sessions_away"),
+                         "source": f"{v['pull_id']}:{v['source']}"}]
+        elif v["label"] == FC.NO_DATE_IN_HORIZON:
+            dates[s] = []
+    macro = [{"date": m["date"], "kind": m["kind"], "status": "scheduled",
+              "source": f"{mac.get('pull_id')}:{m.get('source')}"} for m in mac.get("dates") or []]
+    end = (FC.market_date(now) + timedelta(days=hz)).isoformat()
+    status = "OK" if nr is not None else "NO_CALENDAR_BY_NOW"
+    return {**base, "status": status,
+            "file": nr[1].name if nr else None, "written_utc": _iso(nr[0]) if nr else None,
+            "window": [FC.market_date(now).isoformat(), end], "coverage_end": end,
+            "dates": dates, "labels": res["tickers"], "label_counts": res["counts"],
+            "macro": macro, "fomc_status": (mac.get("fomc_table") or {}).get("status") or mac.get("status"),
+            "damaged_snapshots": res.get("damaged_snapshots") or [],
+            "skipped_after_now": [f"{res['n_snapshots_after_now_skipped']} snapshot(s), "
+                                  f"{res['n_rows_after_now_skipped']} row(s) pulled after now"]}
+
+
 def calendar_dates(calendar_dir: Path, syms: set, now: datetime) -> dict:
     """Upcoming earnings rows for `syms` from the newest stored calendar WRITTEN by
     `now` (its receipt's `written_utc`; a file written later is skipped and named),
@@ -979,9 +1033,11 @@ def calendar_dates(calendar_dir: Path, syms: set, now: datetime) -> dict:
 
 
 def forward_calendars(P: dict, data_root: Path, syms: set, now: datetime) -> tuple[dict, dict]:
-    """THE one place next dates are read (contest calendar, lab catalyst calendar),
+    """THE one place next dates are read (forward calendar, lab catalyst calendar),
     so a universe-wide forward calendar can replace it without touching the node."""
-    return (calendar_dates(Path(P["calendar"]), syms, now),
+    # S66: the universe-wide forward calendar (forward_calendar.py) is the first source;
+    # the lab catalyst calendar stays as the second. The contest calendar is no longer read.
+    return (forward_dates(Path(P.get("forward_calendar_root") or data_root), syms, now),
             catalyst_dates(Path(P.get("catalyst_root") or data_root), syms, now))
 
 
@@ -1276,6 +1332,30 @@ def finalize_node(node: dict, ctx: dict, *, now: datetime) -> dict:
         degr.append(str(ctx.get("graph_meta", {}).get("status")))
     if ctx.get("held_degradation"):
         degr.append(ctx["held_degradation"])
+
+    labels = cal.get("labels")
+    if labels is not None:
+        # the forward calendar labels every name it was asked about: "no date" is then
+        # NO_DATE_IN_HORIZON (looked, nothing scheduled), NOT_COVERED (never looked, or
+        # every attempt failed) or CALENDAR_STALE, and the horizon-short guess is moot
+        degr = [d for d in degr if not d.startswith(("CALENDAR_HORIZON_SHORT", "CALENDAR_ISSUER_NOT_COVERED"))]
+        if cal.get("status") == "CALENDAR_UNREADABLE":
+            lab = {"label": "CALENDAR_UNREADABLE", "reason": cal.get("error")}
+            degr.append(f"{NEXT_DATES_CALENDAR_UNREADABLE}: {cal.get('error')} ({cal.get('writer')})")
+        else:
+            lab = labels.get(sym) or {"label": "NOT_COVERED", "reason": "NOT_ASKED"}
+        node["next_dates_label"] = lab["label"]
+        node["next_dates_labels"] = {s: (labels.get(s) or {}).get("label", lab["label"]
+                                                               if not labels else "NOT_COVERED")
+                                     for s in sorted(seen)}
+        for dm in cal.get("damaged_snapshots") or []:
+            degr.append(f"{NEXT_DATES_CALENDAR_UNREADABLE}: {dm.get('file')} damaged "
+                        f"({dm.get('n_bad_lines')} bad line(s), {dm.get('rows_missing_vs_index')} "
+                        f"row(s) missing vs its index)")
+        if lab["label"] in ("NOT_COVERED", "CALENDAR_STALE", "FROM_OLDER_SNAPSHOT_NEWEST_DAMAGED"):
+            degr.append(f"NEXT_DATES_{lab['label']}: {sym} ({lab.get('reason')}; newest row "
+                        f"{lab.get('pulled_utc')}, said {lab.get('date')}) in {cal.get('writer')} "
+                        f"[{cal.get('status')}]")
     imp = importance(ev, sym, ctx, first)
     pr = price_reaction(sym, first, ctx["bars"]) if ctx.get("bars") else {"status": "NO_BARS", "z": None}
     node.update({
@@ -1632,7 +1712,7 @@ def default_paths(data_root: Path) -> dict:
 
 REQUIRED_INPUTS = (("corpus", CORPUS_MISSING, "dir"), ("filings", FILINGS_MISSING, "file"),
                    ("cik_map", CIK_MAP_MISSING, "file"), ("issuers", ISSUERS_MISSING, "file"),
-                   ("graph", GRAPH_MISSING, "graph"), ("calendar", CALENDAR_MISSING, "dir"),
+                   ("graph", GRAPH_MISSING, "graph"),  # the contest calendar dir is no longer read or required (S66)
                    ("bars", BARS_MISSING, "file"), ("positions", POSITIONS_MISSING, "file"),
                    ("predictions", LEDGER_MISSING, "ledger"))
 
