@@ -6765,10 +6765,16 @@ FORWARD_CALENDAR_TIMEOUT_S = 30
 #: nothing must not be green).
 FORWARD_CALENDAR_MIN_ANSWERED_SHARE = 0.90
 #: Separate floor on the share of ISSUERS (ETFs/indices excluded) with a next date:
-#: names that reported in the last ~3 weeks legitimately have none (9 of 39 issuers in
-#: the 2026-11-12 sample), so this is lower and is TO BE CALIBRATED on the first full
-#: receipt; below it the receipt is LOW_DATE_SHARE (also rc 2).
-FORWARD_CALENDAR_MIN_DATE_SHARE = 0.40
+#: names that reported in the last weeks legitimately have none. CALIBRATED on the first
+#: full receipt (fc_20261113T093334Z_d5c977, two weeks after the Q3 peak): 676 of 1,856
+#: issuers had a next date (0.3642) while 1,152 carried only a past one, so the 0.40
+#: first guess was red on a healthy pull and would be every quarter. Below this floor
+#: the receipt is LOW_DATE_SHARE (rc 2).
+FORWARD_CALENDAR_MIN_DATE_SHARE = 0.20
+#: The floor that does not move with the season: issuers whose row has the vendor's
+#: earnings fields at all (a next date OR only a past one). 0.985 on the same receipt.
+#: A vendor that stops sending the fields drops this; also LOW_DATE_SHARE (rc 2).
+FORWARD_CALENDAR_MIN_FIELDS_SHARE = 0.80
 #: A ticker's newest row older than this is CALENDAR_STALE (dates get revised; the
 #: pull is daily). The health row goes STALE past the same age.
 FORWARD_CALENDAR_STALE_DAYS = 3.0

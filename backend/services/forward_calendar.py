@@ -728,10 +728,17 @@ def _receipt(rows: list[dict], want: list[str], **kw: Any) -> dict:
     answered_share = round(answered / n_req, 4) if n_req else 0.0
     issuers = max(n_req - not_issuer, 0)
     date_share = round(n_date / issuers, 4) if issuers else 0.0
+    # Issuers whose row carries the vendor's earnings fields at all: a next date, or only a
+    # past one (it reported recently and the next date is not posted yet). The second kind is
+    # seasonal, not a fault; a vendor that stops sending the fields lowers THIS share.
+    n_past_only = sum(1 for t in want if (latest.get(t) or {}).get("status") == NO_DATE
+                      and (latest.get(t) or {}).get("no_date_reason") == "ONLY_PAST_DATES")
+    fields_share = round((n_date + n_past_only) / issuers, 4) if issuers else 0.0
     min_ans = float(_cfg("FORWARD_CALENDAR_MIN_ANSWERED_SHARE", 0.90))
-    min_date = float(_cfg("FORWARD_CALENDAR_MIN_DATE_SHARE", 0.40))
+    min_date = float(_cfg("FORWARD_CALENDAR_MIN_DATE_SHARE", 0.20))
+    min_fields = float(_cfg("FORWARD_CALENDAR_MIN_FIELDS_SHARE", 0.80))
     status = (LOW_COVERAGE if answered_share < min_ans else
-              LOW_DATE_SHARE if date_share < min_date else "OK")
+              LOW_DATE_SHARE if (date_share < min_date or fields_share < min_fields) else "OK")
     reasons: dict[str, int] = {}
     errors: dict[str, int] = {}
     conf: dict[str, int] = {}
@@ -756,6 +763,7 @@ def _receipt(rows: list[dict], want: list[str], **kw: Any) -> dict:
             "no_date": n_no, "failed": n_fail, "not_an_issuer": not_issuer,
             "answered_share": answered_share, "min_answered_share": min_ans,
             "date_share": date_share, "min_date_share": min_date,
+            "earnings_fields_share": fields_share, "min_earnings_fields_share": min_fields,
             "share_covered": date_share,
             "status": status,
             "no_date_reasons": reasons, "failure_errors": errors, "confirmation_counts": conf,
@@ -773,7 +781,9 @@ def check_coverage(receipt: dict) -> None:
             f"answered {receipt.get('answered')} of {receipt.get('requested')} (share "
             f"{receipt.get('answered_share')}, floor {receipt.get('min_answered_share')}); "
             f"{receipt.get('with_date')} with a date (date share {receipt.get('date_share')}, floor "
-            f"{receipt.get('min_date_share')}); failed {receipt.get('failed')}, "
+            f"{receipt.get('min_date_share')}; earnings-fields share "
+            f"{receipt.get('earnings_fields_share')}, floor "
+            f"{receipt.get('min_earnings_fields_share')}); failed {receipt.get('failed')}, "
             f"no-date {receipt.get('no_date')} {receipt.get('no_date_reasons')}, "
             f"errors {receipt.get('failure_errors')}")
 

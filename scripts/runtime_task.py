@@ -119,6 +119,9 @@ SQLITE_MAGIC = b"SQLite format 3\x00"
 SETTABLE: frozenset[str] = frozenset({
     "AEGIS_PERSONAL_MODE", "AEGIS_IGNORE_DOTENV", "AEGIS_PUBLIC_RECEIPTS_DIR",
     "AEGIS_PUBLICATION_ROOT", "AEGIS_TELEGRAM_AGENT_MODE",
+    # Per-book switches of two PRODUCT_EXPERIMENT paper books (no broker, no order). Each is
+    # set on that book's own task only, so every other task keeps the book off.
+    "AEGIS_NEWS_OVERLAY_BOOK", "AEGIS_LLM_SELECTOR_BOOK",
 })
 #: Inherited variables that would make the child import or read something other than the clone.
 CLEARED: tuple[str, ...] = ("PYTHONPATH", "PYTHONHOME")
