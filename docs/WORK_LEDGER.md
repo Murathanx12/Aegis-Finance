@@ -25,6 +25,7 @@ removed when that chunk merges.
 
 | Chunk | Agent | Closed | Outcome |
 |---|---|---|---|
+| roadmap S67 council amendment (docs/ROADMAP.md only): CH-40..44, CH-20 a/b/c, notes on CH-01/11/13/14b/15/18/26/35/38, §5.8–5.10 | Claude S67 + three council experts | 2026-11-13 | docs only; no code, order or schedule change; positions in `aegis-recovery-evidence\s67-council-20261113\` |
 | S65 handoff: CH-02 safety snapshot (no repo file; evidence folder, bundle, keep refs, two pushed branches); `run-a-chunk` skill (`.claude/skills/run-a-chunk/*`); roadmap and ledger amendments | Claude S65 | 2026-11-12 | done; #117 merged before it |
 | S65 late night: CH-01 owner calls (`backend/services/owner_calls.py`, `scripts/owner_calls.py`, `backend/tests/test_owner_calls.py`, `docs/TRIALS/OWNER-CALLS-CONTRACT-v1.json`, three `docs/TRIALS/TRIAL-OWNER-CALL-*` documents) | Claude S65 | 2026-11-11 | frozen and pushed before the 11-12 UTC inception; owner signature, three probabilities and `register` pending (OD-13); `record` has no scheduled caller yet, so forward days are pinned by hand until a later release |
 | S65 night: CH-31 typed 8-K family + `--no-write` writes nothing (`backend/services/one_event.py`, `scripts/one_event.py`) | Claude S65 | 2026-11-11 | done; chain still DEGRADED by measured verdict; OD-12 open (what counts as the finished state) |
