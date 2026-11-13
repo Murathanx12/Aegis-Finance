@@ -730,6 +730,12 @@ def main(argv: list[str] | None = None) -> int:
           f"years by symbol {inv['years_by_symbol']}")
     for y in inv["years"]:
         print(f"  {y['year']}: quote rows {y.get('quote_rows')}  {y.get('quote_rows_by_symbol')}")
+    if not any(y.get("quotes_file") and y.get("under_file") for y in inv["years"]):
+        # A worktree carries only the tracked .meta.json files; the parquet lives in the
+        # runtime checkout. Refuse BEFORE writing, so an empty receipt is never filed.
+        print(f"REFUSED: no quotes_YYYY.parquet + under_YYYY.parquet pair in {data_dir} "
+              f"(pass --data-dir to the folder that holds them)")
+        return 2
 
     sym_res: dict[str, Any] = {}
     try:

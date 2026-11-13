@@ -200,8 +200,21 @@ def test_main_writes_receipt_and_leaves_data_folder_unchanged(synth, tmp_path: P
     assert "Verdicts" in md and "hold_less" in md
 
 
-def test_unknown_symbol_is_a_red_exit(tmp_path: Path):
+def test_empty_data_dir_is_a_red_exit_and_files_nothing(tmp_path: Path):
     data = tmp_path / "q"
     data.mkdir()
+    (data / "quotes_2001.meta.json").write_text("{}", encoding="utf-8")   # a worktree's view
+    out = tmp_path / "o"
+    assert R.main(["--out", str(out), "--data-dir", str(data), "--symbols", "SPY"]) != 0
+    assert not list(out.glob("ch20a_hedge_replay_*"))
+
+
+def test_unknown_symbol_is_a_red_exit(synth, tmp_path: Path):
+    under, quotes = synth
+    data = tmp_path / "q"
+    data.mkdir()
+    y = pd.to_datetime(under["date"]).dt.year.iloc[0]
+    under[pd.to_datetime(under["date"]).dt.year == y].to_parquet(data / f"under_{y}.parquet")
+    quotes[pd.to_datetime(quotes["date"]).dt.year == y].to_parquet(data / f"quotes_{y}.parquet")
     assert R.main(["--out", str(tmp_path / "o"), "--data-dir", str(data),
                    "--symbols", "NVDA"]) != 0
