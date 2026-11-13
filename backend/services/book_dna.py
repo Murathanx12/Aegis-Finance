@@ -239,9 +239,11 @@ def _session_date_of_stamp(t: str) -> Optional[str]:
 
 
 def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
-                fetch_lanes: bool = True) -> dict:
+                fetch_lanes: bool = True, read_only_db: bool = False) -> dict:
     """Read every holdings / series source this module uses. Each source that
-    fails is recorded in `inputs["gaps"]`, never raised."""
+    fails is recorded in `inputs["gaps"]`, never raised. `read_only_db=True` (an
+    out-of-band rebuild against the live data root) opens the paper-books database
+    with `mode=ro` instead of through `init_db`."""
     gaps: dict = {}
     inp: dict = {"gaps": gaps}
     recs = [r for r in _read_jsonl(LLM_DIR / "books.jsonl") if r.get("schema") != "llm_portfolio/void"]
@@ -308,7 +310,18 @@ def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
     # night books
     try:
         from backend.services import paper_books as PB
-        inp["night_nav"] = PB.nav_series()
+        if read_only_db:
+            # a reader must not run init_db (schema DDL) against the live database
+            import sqlite3
+            from backend import db as _db
+            ro = sqlite3.connect(f"file:{Path(_db.DB_PATH).as_posix()}?mode=ro", uri=True)
+            ro.row_factory = sqlite3.Row
+            try:
+                inp["night_nav"] = PB.nav_series(conn=ro)
+            finally:
+                ro.close()
+        else:
+            inp["night_nav"] = PB.nav_series()
     except Exception as e:
         inp["night_nav"] = {}
         gaps["paper_books.nav_series"] = f"{type(e).__name__}: {e}"[:200]
@@ -1485,11 +1498,13 @@ def write(dna: dict, out_dir: Path, run_id: str) -> Path:
 
 def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd.DataFrame] = None,
         inputs: Optional[dict] = None, http_get: Optional[Callable] = None,
-        fetch_lanes: bool = True, today: Optional[date] = None) -> tuple[dict, Path]:
+        fetch_lanes: bool = True, today: Optional[date] = None,
+        read_only_db: bool = False) -> tuple[dict, Path]:
     """Load, build, write. Raises on failure: the caller turns that into a REFUSED
     summary on the ROI receipt (never a silent absence)."""
     inputs = inputs if inputs is not None else load_inputs(receipt, http_get=http_get,
-                                                            fetch_lanes=fetch_lanes)
+                                                            fetch_lanes=fetch_lanes,
+                                                            read_only_db=read_only_db)
     syms: set = set()
     for b in inputs.get("books") or []:
         syms |= {str(x.get("ticker")) for x in b.get("positions") or [] if x.get("ticker")}

@@ -232,3 +232,104 @@ def test_telegram_results_block(folder):
     txt = TC.results_block(root)
     assert txt.splitlines()[0].startswith("RESULTS ") and f"results_voice_{RID}.md" in txt
     assert "revision\\_flow\\_v0" in TC.results_block(root, markdown=True)
+
+
+# ── CH-11 note (2026-11-13): every book row prints its market exposure ─────
+
+def test_a_receipt_older_than_the_fields_says_cannot_determine_with_why(voice):
+    for x in voice["leaders"] + voice["losers"]:
+        e = x["market_exposure"]
+        assert e["beta_adjusted_excess_pp"] == DNA.CANNOT_DETERMINE
+        assert "predates the market_exposure fields" in e["beta_adjusted_excess_pp_why"]
+        assert x["exposure_line"].startswith("beta CANNOT DETERMINE, up-capture CANNOT DETERMINE, "
+                                             "down-capture CANNOT DETERMINE, beta-adjusted excess CANNOT DETERMINE")
+    lines = voice["headline_lines"]
+    assert len(lines) == 6
+    assert "beta-adjusted excess CANNOT DETERMINE" in lines[1] and "beta-adjusted excess" in lines[4]
+    rk = voice["beta_adjusted_ranking"]
+    assert rk["n_determined"] == 0 and rk["n_cannot_determine"] == voice["headline"]["n_strategy_accounts"]
+
+
+def _with_exposure(folder: Path) -> dict:
+    """Give every book in the fixture's book_dna a synthetic market_exposure block; one
+    strategy account gets a NOT_CREDIBLE beta instead."""
+    p = folder / f"book_dna_{RID}.json"
+    d = json.loads(p.read_text(encoding="utf-8"))
+    want = {}
+    for i, b in enumerate(d["books"]):
+        if b["account"] == "hack4":
+            why = "beta NOT_CREDIBLE: beta: NOT_CREDIBLE (date stamp lag): synthetic"
+            b["market_exposure"] = {k: {"value": DNA.CANNOT_DETERMINE, "why": why}
+                                    for k in ("beta", "up_capture", "down_capture", "beta_adjusted_excess_pp")}
+            continue
+        beta = 0.5 + 0.1 * i
+        bax = round(float(b.get("excess_pp") or 0.0) - 0.37 * i, 3)
+        want[b["account"]] = (beta, bax)
+        b["market_exposure"] = {"beta": {"value": beta}, "up_capture": {"value": beta + 0.1},
+                                "down_capture": {"value": beta - 0.1},
+                                "beta_adjusted_excess_pp": {"value": bax}, "n_obs": 25}
+    p.write_text(json.dumps(d), encoding="utf-8")
+    return want
+
+
+def test_rows_print_beta_capture_and_beta_adjusted_excess(folder):
+    want = _with_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    top = v["leaders"][0]
+    beta, bax = want[top["account"]]
+    assert top["exposure_line"] == (f"beta {beta:.2f}, up-capture {beta + 0.1:.2f}, down-capture "
+                                    f"{beta - 0.1:.2f}, beta-adjusted excess {bax:+.2f} pp")
+    assert top["exposure_line"] in v["headline_lines"][1]
+    hack4 = next(x for x in v["losers"] if x["account"] == "hack4")
+    assert "CANNOT DETERMINE: beta NOT_CREDIBLE" in hack4["exposure_line"]
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "- hack4 — CANNOT DETERMINE (beta, up-capture, down-capture, beta-adjusted excess)" in md
+
+
+def test_ranking_by_beta_adjusted_excess_excludes_controls_like_the_headline(folder):
+    want = _with_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    rk = v["beta_adjusted_ranking"]
+    accs = [x["account"] for x in rk["rows"]]
+    excluded = {x["account"] for x in v["excluded_controls"]}
+    assert len(accs) == v["headline"]["n_strategy_accounts"] and not (set(accs) & excluded)
+    det = [a for a in accs if a != "hack4"]
+    assert [want[a][1] for a in det] == sorted((want[a][1] for a in det), reverse=True)
+    assert accs[-1] == "hack4" and rk["n_cannot_determine"] == 1
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "## Books ranked by beta-adjusted excess" in md
+    assert "Ranked after the fact" in md and f"range {rk['sessions_min']}–{rk['sessions_max']}" in md
+
+
+def test_rebuild_dna_refuses_to_write_beside_the_receipts(folder):
+    with pytest.raises(RV.ResultsVoiceRefused):
+        RV.run(RID, folder, rebuild_dna=True)
+    with pytest.raises(RV.ResultsVoiceRefused):
+        RV.run(RID, folder, rebuild_dna=True, out_dir=folder)
+
+
+def test_rebuild_dna_writes_only_into_out_dir_and_reads_read_only(folder, tmp_path, monkeypatch):
+    import pandas as pd
+    from datetime import date, timedelta
+    seen = {}
+
+    def fake_inputs(receipt, *, http_get=None, fetch_lanes=True, read_only_db=False):
+        seen.update(fetch_lanes=fetch_lanes, read_only_db=read_only_db)
+        return {"books": [], "leaderboards": [], "fleet_positions": {}, "fleet_manager_last_run": {},
+                "fleet_grades": {}, "pc_state": None, "pc_nav": [], "pc_manager_last_run": None,
+                "night_nav": {}, "lane_positions": {}, "lane_caps": {}, "sector_map": {},
+                "sector_source": "test", "gaps": {}}
+    monkeypatch.setattr(DNA, "load_inputs", fake_inputs)
+    days = [date.today() - timedelta(days=k) for k in range(60, 0, -1)]
+    bars = pd.DataFrame([{"symbol": "SPY", "date": pd.Timestamp(d), "open": 100 + i * 0.1, "close": 100 + i * 0.1}
+                         for i, d in enumerate(x for x in days if x.weekday() < 5)])
+    before = sorted(p.name for p in folder.iterdir())
+    out = tmp_path / "out"
+    res = RV.run(RID, folder, out_dir=out, rebuild_dna=True, bars=bars)
+    assert sorted(p.name for p in folder.iterdir()) == before
+    assert seen == {"fetch_lanes": False, "read_only_db": True}
+    names = sorted(p.name for p in out.iterdir())
+    assert names == [f"book_dna_{RID}.json", f"results_voice_{RID}.json", f"results_voice_{RID}.md"]
+    assert res["run_id"] == RID
+    for x in res["voice"]["leaders"] + res["voice"]["losers"]:
+        assert "market_exposure" in x and x["market_exposure"]["beta_adjusted_excess_pp"] is not None
