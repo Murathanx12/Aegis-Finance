@@ -385,7 +385,8 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
     def row_view(a: str) -> dict:
         r, b = by_acc[a], books.get(a) or {}
         ex = exposure_view(books.get(a), dna_name)
-        return {"market_exposure": ex, "exposure_line": exposure_line(ex), "account": a, "family": r.get("family"), "roi_pct": _r(r.get("roi_pct")),
+        return {"market_exposure": ex, "exposure_line": exposure_line(ex),
+                "account": a, "family": r.get("family"), "roi_pct": _r(r.get("roi_pct")),
                 "spy_same_window_pct": _r(r.get("spy_same_window_pct")), "vs_spy_pp": _r(r.get("vs_spy_pp")),
                 "inception": r.get("inception"), "last_mark": r.get("last_mark"),
                 "sessions_graded": b.get("sessions_graded"),
