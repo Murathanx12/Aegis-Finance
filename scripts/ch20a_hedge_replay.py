@@ -499,7 +499,9 @@ def compare(pr: pd.DataFrame, spec: dict) -> dict:
                        "inverse_weight": w, "inverse_add_gap": werr,
                        "target_avg_drawdown": target},
             "metrics": m, "by_year": by_year, "crash_vs_calm": split, "loyo": loyo,
-            "years": years, "notes": notes, "verdict": verdict}
+            "years": years, "notes": notes, "verdict": verdict,
+            "hedge_cost_per_year": float(pr["cost_pct"].sum() / years) if years > 0 else float("nan"),
+            "hedge_payoff_per_year": float(pr["pay_pct"].sum() / years) if years > 0 else float("nan")}
 
 
 def decide(m: dict, loyo: dict) -> dict:
@@ -520,17 +522,23 @@ def decide(m: dict, loyo: dict) -> dict:
 
 def plain_sentence(sym: str, res: dict) -> str:
     m, v, sc = res["metrics"], res["verdict"], res["scales"]
-    cost = np.mean([r["hedge_cost_pct_equity"] for r in res["by_year"]])
+    cost = res["hedge_cost_per_year"]
     h = m["hedged"]["terminal_wealth"]
     hl = m["hold_less"]["terminal_wealth"]
-    base = (f"{sym}: the monthly put spread cost about {cost:.1%} of the book a year; "
-            f"$1 hedged became ${h:.2f}, while simply holding {sc['hold_less_gross']:.0%} "
-            f"in {sym} and the rest in cash (same average drawdown) became ${hl:.2f}")
+    if sc["hold_less_gross"] >= 0.999:
+        alt = (f"holding {sym} unhedged, which had no more average drawdown than the hedged "
+               f"book, turned $1 into ${hl:.2f}")
+    else:
+        alt = (f"simply holding {sc['hold_less_gross']:.0%} in {sym} and the rest in cash "
+               f"(same average drawdown) turned $1 into ${hl:.2f}")
+    base = (f"{sym}: the monthly put spread cost about {cost:.1%} of the book a year and "
+            f"turned $1 into ${h:.2f}; {alt}")
     if v["label"] == "HEDGE_BEATS_TWINS":
         return base + " -- the hedge came out ahead of every cheaper alternative in every year-dropped check."
     if v["label"] == "TWIN_WINS":
-        return (base + f" -- the cheaper '{v['twin']}' alternative ended with more money, "
-                f"and stayed ahead whichever single year is removed.")
+        tw = m[v["twin"]]["terminal_wealth"]
+        return (base + f" -- the cheaper '{v['twin']}' alternative (${tw:.2f}) ended with more "
+                f"money and stayed ahead whichever single year is removed.")
     return base + " -- the gap is not stable when single years are removed, so the data cannot tell them apart."
 
 
@@ -603,7 +611,8 @@ def render_md(rec: dict) -> str:
     L = [f"# CH-20a hedge replay -- run {rec['run_id']}", "",
          "Observations on real OptionMetrics quotes; no skill claim. Leaders chosen after the fact "
          "are not evidence of an edge. CLAIMS PROMOTED: none.", ""]
-    L.append("## Verdicts (base spec; judged on terminal wealth at equal average drawdown)")
+    L.append("## Verdicts (base spec and the one budget variant; judged on terminal wealth "
+             "at equal average drawdown)")
     for s, r in rec["symbols"].items():
         if r.get("status") != "OK":
             L.append(f"- **{s}**: {r.get('status')}")
@@ -634,7 +643,7 @@ def render_md(rec: dict) -> str:
               f"**{r['skipped_quote_days_in_window']}** {r['skipped_by_reason']}; "
               f"before first roll {r['skipped_days_before_first_roll']}; splits inside a hold "
               f"{r['n_split_in_hold']}. Median DTE {r['dte_median']:.0f}, long strike "
-              f"{r['long_moneyness_median']:.3f} x spot, short {r['short_moneyness_median']} x "
+              f"{r['long_moneyness_median']:.3f} x spot, short {(r['short_moneyness_median'] or float('nan')):.3f} x "
               f"spot, median spread debit {_pct(r['cost_pct_spot_median'], 2)} of spot. "
               f"Dividends: total minus price return {_pct(r['dividends_check']['total_return_minus_price_return_per_year'], 2)}/yr. "
               f"One contract = ${r['last_spot_contract_notional_usd']:,.0f} notional at the last "
@@ -646,6 +655,8 @@ def render_md(rec: dict) -> str:
                   f"Target average drawdown {_pct(sc['target_avg_drawdown'], 2)}; hold_less gross "
                   f"{sc['hold_less_gross']:.3f}; trend scale {sc['trend_scale']:.3f}; inverse weight "
                   f"{sc['inverse_weight']:.3f}; mean hedge ratio {res['mean_hedge_ratio']:.2f}; "
+                  f"hedge spend {_pct(res['hedge_cost_per_year'], 2)}/yr of equity, payoff "
+                  f"{_pct(res['hedge_payoff_per_year'], 2)}/yr; "
                   f"periods {res['n_periods']} over {res['years']:.1f} y. "
                   + (" ".join(res["notes"])), "",
                   "| construction | terminal $1 | CAGR | vol | max DD | avg DD | worst period | "
