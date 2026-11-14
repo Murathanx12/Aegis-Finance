@@ -382,7 +382,15 @@ def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
             # a reader must not run init_db (schema DDL) against the live database
             import sqlite3
             from backend import db as _db
-            ro = sqlite3.connect(f"file:{Path(_db.DB_PATH).as_posix()}?mode=ro", uri=True)
+            # claims-none (2026-11-14): with no WAL content there is nothing a mode=ro open could
+            # read that the main file lacks, so open it immutable -- mode=ro CREATED an empty -wal
+            # and a -shm beside the live database on the 2026-11-14 rebuild. With a non-empty WAL,
+            # mode=ro (immutable would miss the rows still in it; it only moves the -shm mtime).
+            dbp = Path(_db.DB_PATH)
+            wal = dbp.with_name(dbp.name + "-wal")
+            imm = not wal.exists() or wal.stat().st_size == 0
+            ro = sqlite3.connect(f"file:{dbp.as_posix()}?{'immutable=1' if imm else 'mode=ro'}", uri=True)
+            inp["db_open_mode"] = "immutable=1 (no WAL content)" if imm else "mode=ro (WAL present)"
             ro.row_factory = sqlite3.Row
             try:
                 inp["night_nav"] = PB.nav_series(conn=ro)
@@ -1059,37 +1067,45 @@ def idle_flags(e: dict, gp: dict, p: dict) -> tuple[dict, dict, dict]:
         if gp.get("proxy") or "no decision recorded" in gp["basis"]:
             never["note"] = "read from a NAV that never moved / no recorded decision, not from holdings"
     # excess while idle
+    ex = _num(e.get("excess_pp"))
+    if never.get("status") == FLAG_SET:
+        return idle, never, {"status": "OK", "idle_sessions": len(per), "excess_while_idle_pp": ex,
+                             "receipt_excess_pp": ex, "from_cash": bool(ex),
+                             "basis": "never invested: the whole excess is cash against SPY"}
     gross_at = dict(per)
     ser = e.get("_series") or []
-    idle_days = {d for d, g in per if g is not None and g < thr}
+    sess_sorted = [d for d, _ in per]
+    proxy = bool(gp.get("proxy"))
+    # a session is idle-HELD when the book carried cash from its close into the next session;
+    # the window's last session holds nothing inside the window (proxy: the period itself)
+    idle_days = {d for d, g in per if g is not None and g < thr and (proxy or d != sess_sorted[-1])}
     if not idle_days:
         wi = {"status": "OK", "idle_sessions": 0, "excess_while_idle_pp": 0.0, "from_cash": False}
         return idle, never, wi
     if not ser:
         return idle, never, _fcd("no period-return series to split the excess by idle periods")
     prev, pb, ps, covered = None, 1.0, 1.0, set()
-    sess_sorted = [d for d, _ in per]
     for d, b, s in ser:
         d = str(d)[:10]
-        start = prev if prev is not None else None
+        start = prev
         prev = d
         if start is None:
             continue
-        g0 = gross_at.get(start)
-        if gp.get("proxy"):
-            g0 = gross_at.get(d)
+        g0 = gross_at.get(d) if proxy else gross_at.get(start)
         if g0 is not None and g0 < thr:
             pb *= 1 + float(b)
             ps *= 1 + float(s)
-            covered |= {x for x in sess_sorted if start < x <= d}
-    ex = _num(e.get("excess_pp"))
+            covered |= ({x for x in sess_sorted if start < x <= d} if proxy
+                        else {x for x in sess_sorted if start <= x < d})
     wi_pp = 100 * (pb - ps)
-    unc = len(idle_days - covered - {sess_sorted[0]})
+    unc = len(idle_days - covered - ({sess_sorted[0]} if proxy else set()))
     wi = {"status": "OK", "idle_sessions": len(idle_days), "idle_sessions_not_in_series": unc,
-          "excess_while_idle_pp": round(wi_pp, 3), "receipt_excess_pp": ex}
+          "excess_while_idle_pp": round(wi_pp, 3), "receipt_excess_pp": ex,
+          "basis": ("periods whose NAV did not move" if proxy else
+                    "periods that START with gross below the threshold (holdings at the period's start)")}
     if unc > 0.2 * len(idle_days):
-        return idle, never, _fcd(f"{unc} of {len(idle_days)} idle sessions are not in the period-return "
-                                 f"series", **wi)
+        return idle, never, {**wi, **_fcd(f"{unc} of {len(idle_days)} idle sessions are not in the "
+                                          f"period-return series")}
     wi["from_cash"] = bool(ex is not None and ex != 0 and wi_pp * ex > 0
                            and abs(wi_pp) > float(p["flag_from_cash_share"]) * abs(ex))
     return idle, never, wi
@@ -1334,10 +1350,15 @@ def high_beta_flag(e: dict, p: dict) -> dict:
             "se": b.get("se"), "threshold": float(p["flag_high_beta"])}
 
 
-def same_bet_peers(books: list[dict], p: dict) -> dict:
+def same_bet_peers(books: list[dict], p: dict, never: Optional[set] = None) -> dict:
     """{account: {status, peers: [{account, corr, n}]}}: daily-excess (r_book - r_SPY) correlation
     >= flag_same_bet_corr on >= flag_same_bet_min_obs common period dates, among the non-twin
-    books. Periods are matched on their end date (the convention of `_series_corr`)."""
+    books. Periods are matched on their end date (the convention of `_series_corr`).
+
+    A NEVER_INVESTED book (`never`) is a peer only of another never-invested book: its excess is
+    exactly -SPY, so every low-beta book's excess correlates with it (tsmom-overlay at 0.97 on
+    2026-11-14) -- that says "under-exposed to SPY", not "the same bet as cash"."""
+    never = never or set()
     thr, mo = float(p["flag_same_bet_corr"]), int(p["flag_same_bet_min_obs"])
     cols = {}
     for b in books:
@@ -1364,6 +1385,8 @@ def same_bet_peers(books: list[dict], p: dict) -> dict:
                 if c == a:
                     continue
                 v = cm.at[a, c]
+                if (a in never) != (c in never):
+                    continue
                 if v == v and v >= thr and nmat.at[a, c] >= mo:
                     peers.append({"account": c, "corr": round(float(v), 3), "n": int(nmat.at[a, c])})
             out[a] = {"status": "OK", "peers": sorted(peers, key=lambda q: (-q["corr"], q["account"])),
@@ -1375,7 +1398,11 @@ def attach_flags(books: list[dict], inputs: dict, px: Prices, p: dict) -> None:
     """Every book gets `flags` (FLAG_ORDER keys). Twins get them too (cheap), but only the
     non-twin books are compared for SAME_BET."""
     spy_dates = px.dates("SPY")
-    peers = same_bet_peers(books, p)
+    idles = {}
+    for e in books:
+        sess = _spy_sessions(px, e.get("inception"), e.get("last_mark"))
+        idles[e["account"]] = idle_flags(e, gross_path(e, inputs, sess), p)
+    peers = same_bet_peers(books, p, {a for a, v in idles.items() if v[1].get("status") == FLAG_SET})
     hashes = {b["account"]: holdings_hash(b, inputs) for b in books}
     markers = list(p["flag_control_name_markers"])
     twins_by_parent: dict = {}
@@ -1383,8 +1410,7 @@ def attach_flags(books: list[dict], inputs: dict, px: Prices, p: dict) -> None:
         if b.get("twin_of"):
             twins_by_parent.setdefault(b["twin_of"], []).append(b)
     for e in books:
-        sess = _spy_sessions(px, e.get("inception"), e.get("last_mark"))
-        idle, never, wi = idle_flags(e, gross_path(e, inputs, sess), p)
+        idle, never, wi = idles[e["account"]]
         mde = mde_flag(e, spy_dates, p)
         ew = next((t for t in twins_by_parent.get(e["account"], []) if t.get("twin_kind") == "ew"), None)
         e["flags"] = {
