@@ -79,6 +79,65 @@ class RollingCohortRefused(RuntimeError):
     """
 
 
+REPO = Path(__file__).resolve().parents[3]
+CONTRACT_REL = "docs/TRIALS/TRIAL-ROLLING-COHORTS-20261114.md"
+#: Health/operations knobs: changing these does not change how a book is graded.
+_OPERATIONAL_KEYS = frozenset({"ROLLING_COHORT_LOCK_WAIT_S", "ROLLING_COHORT_PRICE_GRACE_H",
+                               "ROLLING_COHORT_STALE_CADENCES"})
+
+
+# ──────────────────────── grading config and versions ───────────────────────
+
+def _sha_lf(path: Path) -> Optional[str]:
+    p = Path(path)
+    return hashlib.sha256(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest() if p.is_file() else None
+
+
+def config_snapshot() -> dict:
+    """Everything that decides how a book is built and graded, JSON-normalised.
+
+    Bound into `declaration.json` at the first run; a later run whose snapshot
+    differs is refused with the differing keys named (born books must keep
+    being graded under the rules they were born under)."""
+    from backend.services import xs_ranker as XR
+    snap: dict = {k: getattr(_config, k) for k in sorted(dir(_config))
+                  if k.startswith("ROLLING_COHORT_") and k not in _OPERATIONAL_KEYS}
+    snap["xs_ranker.COST_BPS_BY_BAND"] = dict(XR.COST_BPS_BY_BAND)
+    snap["xs_ranker.MIN_PRICE"] = XR.MIN_PRICE
+    snap["contract_sha256_lf"] = _sha_lf(REPO / CONTRACT_REL)
+    return json.loads(json.dumps(snap, sort_keys=True, default=list))
+
+
+def check_costs(snap: dict) -> bool:
+    """Refuse any cost <= 0 unless the zero-cost diagnostic is declared. Returns the flag."""
+    diag = bool(snap.get("ROLLING_COHORT_ZERO_COST_DIAGNOSTIC"))
+    bad = [f"band {k}={v}" for k, v in snap["xs_ranker.COST_BPS_BY_BAND"].items() if not v > 0]
+    for k in ("ROLLING_COHORT_SPY_COST_BPS", "ROLLING_COHORT_SHORT_BORROW_BPS_YR"):
+        if not snap[k] > 0:
+            bad.append(f"{k}={snap[k]}")
+    if bad and not diag:
+        raise RollingCohortRefused(f"a cost <= 0 is refused ({', '.join(bad)}); set "
+                                   f"ROLLING_COHORT_ZERO_COST_DIAGNOSTIC=True for a diagnostic run, "
+                                   f"and every row will say so")
+    return diag
+
+
+_CODE_VERSION: dict = {}
+
+
+def code_version() -> Optional[str]:
+    """`git rev-parse HEAD` of the checkout this module runs from; None when unknowable."""
+    if "v" not in _CODE_VERSION:
+        import subprocess
+        try:
+            r = subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"], capture_output=True,
+                               text=True, timeout=5)
+            _CODE_VERSION["v"] = r.stdout.strip() if r.returncode == 0 and len(r.stdout.strip()) == 40 else None
+        except (OSError, subprocess.SubprocessError):
+            _CODE_VERSION["v"] = None
+    return _CODE_VERSION["v"]
+
+
 # ─────────────────────────────── specs (v2) ─────────────────────────────────
 
 def rolling_semantic(spec: dict) -> dict:
@@ -596,17 +655,28 @@ class Store:
 
     def declare(self, *, manifest: str, specs_path: str, now: datetime) -> dict:
         d = self.declaration()
+        snap = config_snapshot()
         if d is not None:
             if d["spec_manifest_sha256"] != manifest:
                 raise RollingCohortRefused(
                     f"the spec manifest changed after birth ({d['spec_manifest_sha256'][:12]} -> "
                     f"{manifest[:12]}). Born books are immutable: a changed spec grid is a NEW "
                     f"population with its own --out, never an edit of this one")
+            if "config_hash" not in d:
+                raise RollingCohortRefused("this population was declared before its grading config was "
+                                           "bound; start a new --out")
+            old = d["config"]
+            diff = sorted(k for k in set(old) | set(snap) if old.get(k) != snap.get(k))
+            if diff:
+                raise RollingCohortRefused(
+                    f"the grading config differs from the one this population was declared under: "
+                    f"{', '.join(f'{k} {old.get(k)!r} -> {snap.get(k)!r}' for k in diff)}. Born books keep "
+                    f"their rules; a changed config is a new population with its own --out")
             return d
-        d = {"schema": "rolling_population_declaration/1", "task": TASK_NAME,
+        d = {"schema": "rolling_population_declaration/2", "task": TASK_NAME,
              "declared_utc": now.isoformat(), "spec_manifest_sha256": manifest, "specs_path": specs_path,
-             "license": "PRODUCT_EXPERIMENT", "contract": "docs/TRIALS/TRIAL-ROLLING-COHORTS-20261114.md",
-             "config": {k: getattr(_config, k) for k in dir(_config) if k.startswith("ROLLING_COHORT_")}}
+             "license": "PRODUCT_EXPERIMENT", "contract": CONTRACT_REL,
+             "config": snap, "config_hash": digest(snap), "code_version": code_version()}
         self.out.mkdir(parents=True, exist_ok=True)
         _write_once(self.out / "declaration.json", json.dumps(d, sort_keys=True, default=list, indent=1))
         return d
@@ -1058,7 +1128,10 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
     cal = calendar or XnysCalendar()
     run_id = now.strftime("%Y%m%dT%H%M%S%fZ") + "-" + uuid.uuid4().hex[:6]
     specs, manifest = load_specs(specs_path)
+    zero_diag = check_costs(config_snapshot())             # before anything is declared or written
     decl = store.declare(manifest=manifest, specs_path=str(specs_path), now=now)
+    versions = {"config_hash": decl["config_hash"], "code_version": code_version(),
+                "zero_cost_diagnostic": zero_diag}
     anchor = pd.Timestamp(_config.ROLLING_COHORT_ANCHOR)
     cadence = int(_config.ROLLING_COHORT_CADENCE_SESSIONS)
     through = pd.Timestamp(asof).normalize() if asof is not None else pd.Timestamp(now.date())
@@ -1084,6 +1157,7 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
                            cohort=d, entry=entry)
         rec = birth(specs, manifest, inp, backfilled=backfilled, born_utc=now.isoformat(),
                     k_controls=int(_config.ROLLING_COHORT_RANDOM_CONTROLS))
+        rec.update(versions)
         store.write_cohort(rec, inp, manifest)
         existing[rec["cohort_id"]] = rec
         born.append({"cohort_id": rec["cohort_id"], "backfilled": backfilled, "books": rec["n_books"],
@@ -1129,6 +1203,8 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
     have = store.marks(columns=["book_id", "mark_k"])
     keys = set(zip(have["book_id"], have["mark_k"])) if len(have) else set()
     rows = mark_rows(cohorts, bars, through=last_bar, existing=keys, run_id=run_id)
+    for r in rows:
+        r.update(versions)
     part = store.append_marks(rows, run_id)
     marks = store.marks()
     boards = {str(k): scoreboard(marks, cohorts, mark_k=k, sessions=sessions)

@@ -4565,6 +4565,9 @@ ROLLING_COHORT_SEED_TAG = "rolling-cohorts-v2|2026-11-14"
 #: session; cash and short collateral earn nothing (conservative).
 ROLLING_COHORT_SPY_COST_BPS = 6.0
 ROLLING_COHORT_SHORT_BORROW_BPS_YR = 30.0
+#: Any cost <= 0 (bands, SPY, borrow) is REFUSED unless this is True; then
+#: every cohort and mark row carries `zero_cost_diagnostic: true`.
+ROLLING_COHORT_ZERO_COST_DIAGNOSTIC = False
 #: Below these a family is WAIT_INPUT for the cohort (a row with the count),
 #: never entered on thin or stale input.
 ROLLING_COHORT_REVISION_MIN_EVENTS = 200        # revision events in the 90-day window
