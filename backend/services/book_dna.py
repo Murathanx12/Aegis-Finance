@@ -45,8 +45,10 @@ it cannot compute says NOT_COMPUTABLE with a reason -- never 0, never absent.
 """
 from __future__ import annotations
 
+import bisect
 import json
 import math
+import re
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
@@ -106,6 +108,13 @@ def params() -> dict:
         "min_corr_obs": int(_cfg("BOOK_DNA_MIN_CORR_OBS", 15)),
         "min_beta_obs": int(_cfg("BOOK_DNA_MIN_BETA_OBS", 20)),
         "min_capture_obs": int(_cfg("BOOK_DNA_MIN_CAPTURE_OBS", 8)),
+        "stamp_month_min_obs": int(_cfg("BOOK_DNA_STAMP_MONTH_MIN_OBS", 8)),
+        "stamp_month_z": float(_cfg("BOOK_DNA_STAMP_MONTH_Z", 1.645)),
+        "exposure_min_cover": float(_cfg("BOOK_DNA_EXPOSURE_MIN_COVER", 0.80)),
+        "exposure_max_return_gap_pp": float(_cfg("BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP", 2.0)),
+        "max_capture_se": float(_cfg("BOOK_DNA_MAX_CAPTURE_SE", 0.25)),
+        "mde_z": float(_cfg("BOOK_DNA_MDE_Z", 2.8)),
+        "rf_annual_assumed": float(_cfg("BOOK_DNA_RF_ANNUAL_ASSUMED", 0.04)),
         "early_min_sessions": int(_cfg("BOOK_DNA_EARLY_MIN_SESSIONS", 21)),
         "fair_twin_kinds": list(_cfg("BOOK_DNA_FAIR_TWIN_KINDS",
                                      ("matched_twin21", "matched_random", "random_same_band"))),
@@ -179,15 +188,17 @@ def load_prices(symbols: Iterable[str], bars: Optional[pd.DataFrame] = None) -> 
     if bars is None:
         try:
             from backend.services import xs_ranker
-            b = xs_ranker.load_bars()
+            # review m6 (PR #140): a parquet filter, never the whole deep panel in RAM
+            b = xs_ranker.load_bars(symbols=sorted(want))
             frames.append(b[b["symbol"].isin(want)])
-            srcs.append("xs_ranker.load_bars()")
+            srcs.append("xs_ranker.load_bars(symbols=)")
         except Exception as e:                      # a missing panel is a named gap
             srcs.append(f"xs_ranker.load_bars() FAILED: {type(e).__name__}: {e}"[:200])
         g = LLM_DIR / "global_bars.parquet"
         if g.exists():
             try:
-                gb = pd.read_parquet(g, columns=["symbol", "date", "open", "close"])
+                gb = pd.read_parquet(g, columns=["symbol", "date", "open", "close"],
+                                     filters=[("symbol", "in", sorted(want))])
                 frames.append(gb[gb["symbol"].isin(want)])
                 srcs.append("llm_portfolio/global_bars.parquet")
             except Exception as e:
@@ -444,86 +455,248 @@ def beta_of(series: Optional[list], min_obs: int) -> Any:
     return out
 
 
-def _cd(why: str) -> dict:
-    return {"value": CANNOT_DETERMINE, "why": why}
+def _cd(why: str, **extra: Any) -> dict:
+    return {"value": CANNOT_DETERMINE, "why": why, **extra}
 
 
-def _capture(pts: list, side: str, min_obs: int) -> dict:
+_ISO_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}")
+
+
+def stamp_screen(series: Optional[list], *, min_month_obs: int, z: float) -> tuple[dict, list]:
+    """CH-11 fix B1 (review of PR #140): the C15 date-stamp test per CALENDAR MONTH.
+
+    `beta_of` compares lag -1 with same-day correlation over the whole series. A series
+    stamped a session late in one stretch and on the right day in another (the website
+    lanes: late June-August, right from September) averages out and passes. Here each
+    month with >= `min_month_obs` periods is tested on its own: it FAILS when
+    atanh(corr(book_t, SPY_t-1)) - atanh(corr(book_t, SPY_t)) > z x sqrt(2 / (n - 3)).
+    Returns (the check, the periods to estimate on): every period after the LAST failing
+    month, or the whole series when no month fails. Dates are never shifted: a lagged
+    stretch is dropped, and the row says which months and why."""
+    pts = [(str(d), float(b), float(s)) for d, b, s in series or []
+           if _num(b) is not None and _num(s) is not None]
+    months: dict = {}
+    for i in range(1, len(pts)):
+        months.setdefault(pts[i][0][:7], []).append((pts[i][1], pts[i][2], pts[i - 1][2]))
+    rows, failing = [], []
+    for m, v in sorted(months.items()):
+        n = len(v)
+        row: dict = {"month": m, "n_periods": n}
+        y = np.array([a for a, _, _ in v])
+        x0 = np.array([a for _, a, _ in v])
+        xm = np.array([a for _, _, a in v])
+        if n < max(min_month_obs, 4):
+            row["status"] = "not tested: too few periods"
+        elif min(np.std(y), np.std(x0), np.std(xm)) == 0:
+            row["status"] = "not tested: a constant series"
+        else:
+            c0 = float(np.corrcoef(y, x0)[0, 1])
+            c1 = float(np.corrcoef(y, xm)[0, 1])
+            gap = float(np.arctanh(np.clip(c1, -0.999, 0.999)) - np.arctanh(np.clip(c0, -0.999, 0.999)))
+            thr = z * math.sqrt(2.0 / (n - 3))
+            row.update(corr_same_day=round(c0, 3), corr_lag_minus_1=round(c1, 3),
+                       z_gap=round(gap, 3), z_threshold=round(thr, 3))
+            row["status"] = "FAIL: lag -1 beats same-day" if gap > thr else "ok"
+            if gap > thr:
+                failing.append(m)
+        rows.append(row)
+    check = {"method": (f"per calendar month with >= {min_month_obs} periods: FAIL when "
+                        f"atanh(corr lag -1) - atanh(corr same-day) > {z} x sqrt(2/(n-3)); "
+                        "exposure is estimated after the last failing month; dates are never shifted"),
+             "months": rows, "failing_months": failing}
+    if not failing:
+        return check, list(series or [])
+    kept = [q for q in series or [] if str(q[0])[:7] > failing[-1]]
+    check.update(kept_from=kept[0][0] if kept else None, kept_periods=len(kept),
+                 dropped_periods=len(series or []) - len(kept))
+    return check, kept
+
+
+def _session_spans(series: list, session_dates: Optional[list]) -> list:
+    """Sessions each period spans (None = unknown: the first period, a non-ISO date, or
+    no calendar). m4: capture uses one-session periods, so a 4-session gap is not
+    averaged in as if it were one day."""
+    if not session_dates or not series:
+        return [None] * len(series or [])
+    sd = sorted({str(d)[:10] for d in session_dates})
+    out: list = [None]
+    for i in range(1, len(series)):
+        a, b = str(series[i - 1][0])[:10], str(series[i][0])[:10]
+        if not (_ISO_DAY.match(a) and _ISO_DAY.match(b)):
+            out.append(None)
+            continue
+        out.append(bisect.bisect_right(sd, b) - bisect.bisect_right(sd, a))
+    return out
+
+
+def _capture(pts: list, side: str, min_obs: int, max_se: Optional[float] = None) -> dict:
     """Mean book period return / mean SPY period return over the periods where SPY
     went `side` (up: > 0, down: < 0). Down-capture < 1 = the book lost less than SPY
-    on SPY's down periods; > 1 = it lost more."""
+    on SPY's down periods; > 1 = it lost more. M2: its standard error by the delta
+    method, SE = sd(r_book - c x r_SPY) / (sqrt(n) x |mean r_SPY|); above `max_se`
+    the capture is CANNOT DETERMINE (the estimate and SE are kept, labelled)."""
     sel = [(b, s) for b, s in pts if (s > 0 if side == "up" else s < 0)]
     if len(sel) < min_obs:
         return {**_cd(f"{len(sel)} SPY-{side} periods < {min_obs}"), "n_periods": len(sel)}
-    ms = float(np.mean([s for _, s in sel]))
-    mb = float(np.mean([b for b, _ in sel]))
-    return {"value": round(mb / ms, 3), "n_periods": len(sel),
-            "mean_book_pct": round(100 * mb, 4), "mean_spy_pct": round(100 * ms, 4)}
+    sb = np.array([b for b, _ in sel])
+    ss = np.array([s for _, s in sel])
+    ms, mb = float(ss.mean()), float(sb.mean())
+    c = mb / ms
+    se = float(np.std(sb - c * ss, ddof=1) / (math.sqrt(len(sel)) * abs(ms))) if len(sel) > 1 else float("inf")
+    base = {"n_periods": len(sel), "mean_book_pct": round(100 * mb, 4), "mean_spy_pct": round(100 * ms, 4),
+            "estimate": round(c, 3), "se": round(se, 3)}
+    if max_se is not None and se > max_se:
+        return {**base, **_cd(f"estimate {c:.2f} with SE {se:.2f} > {max_se:.2f} over {len(sel)} SPY-{side} "
+                              f"periods: cannot be told apart from noise")}
+    return {**base, "value": round(c, 3)}
 
 
 def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_leg_pct: Any,
-                    min_capture_obs: int) -> dict:
+                    min_capture_obs: Optional[int] = None, sessions: Optional[int] = None,
+                    window: Optional[tuple] = None, session_dates: Optional[list] = None,
+                    p: Optional[dict] = None) -> dict:
     """CH-11 note (2026-11-13): how much of a book's return is plain SPY exposure.
 
-    From the SAME period-return series `beta_of` used and the beta it returned:
-    up-capture, down-capture, the beta-adjusted excess over the receipt's own window
-    (`return - beta x SPY leg`, directly comparable with the raw excess
-    `return - SPY leg`), and the residual `r_book - beta x r_SPY` compounded per
-    calendar month of the series. rf = 0 by declaration (cash earns nothing here), and
-    the beta is in-sample over the same window: a description of the book's exposure,
-    not a forecast of it. A beta that is NOT_COMPUTABLE or NOT_CREDIBLE (date-stamp
-    lag) makes every field CANNOT DETERMINE with that reason -- the lag that corrupts
-    the beta corrupts the same-day up/down split too."""
-    method = ("beta: OLS slope of book period returns on SPY period returns (same periods); "
-              "capture: mean book / mean SPY return over SPY-up (SPY-down) periods; "
-              "beta-adjusted excess: receipt return - beta x receipt SPY leg; by month: "
-              "compound(1 + r_book - beta x r_SPY) - 1; rf = 0 declared")
+    From the book's period-return series (the one `beta_of` used): beta with its SE,
+    up-capture and down-capture with SE and n, the beta-adjusted excess over the
+    receipt's own window (`return - beta x SPY leg`, beside the raw excess
+    `return - SPY leg`) with SE and MDE, and the residual `r_book - beta x r_SPY`
+    compounded per calendar month. rf = 0 by declaration (the row prints what an assumed
+    cash rate would change), and the beta is in-sample: a description of the book's
+    exposure, not a forecast of it.
+
+    Fix round (review of PR #140):
+    * B1 -- `stamp_screen` runs the date-stamp test per month; when a month fails, the
+      beta and captures are estimated only after the last failing month and the row says so.
+    * M1 -- the beta's window must cover >= `exposure_min_cover` of the receipt sessions
+      and reproduce the receipt return within `exposure_max_return_gap_pp`; otherwise the
+      receipt-window beta-adjusted excess is CANNOT DETERMINE ("not comparable") and the
+      beta window's own figure is printed with its window.
+    * M2 -- capture SE gate; m1 -- a flat NAV is CANNOT DETERMINE, never 0.00 / -0.00.
+    A beta that is NOT_COMPUTABLE, or NOT_CREDIBLE with no clean trailing window, makes
+    every field CANNOT DETERMINE with that reason."""
+    q = params() if p is None else p
+    mco = int(q["min_capture_obs"] if min_capture_obs is None else min_capture_obs)
+    method = ("beta: OLS slope of book period returns on SPY period returns (same periods), SE from the "
+              "OLS residuals; capture: mean book / mean SPY return over one-session SPY-up (SPY-down) "
+              "periods, SE by the delta method (arithmetic per-period convention; "
+              "benchmark_analytics._compute_capture_ratios is monthly-geometric and needs >= 6 months); "
+              "beta-adjusted excess: receipt return - beta x receipt SPY leg, SE = sqrt(n var(r_book - "
+              "beta r_SPY) + SE(beta)^2 SPY leg^2) over the n beta-window periods (iid periods), "
+              f"MDE = {q['mde_z']} x SE; by month: compound(1 + r_book - beta x r_SPY) - 1; rf = 0 declared")
     bval = beta.get("value") if isinstance(beta, dict) else None
     rp, sp = _num(return_pct), _num(spy_leg_pct)
     out: dict = {"method": method, "n_obs": (beta or {}).get("n_obs", 0)}
-    if not isinstance(bval, (int, float)) or isinstance(bval, bool):
-        why = f"beta {bval}: {(beta or {}).get('why') or 'no beta'}"
+
+    def all_cd(why: str) -> dict:
         out.update(beta=_cd(why), up_capture=_cd(why), down_capture=_cd(why),
                    beta_adjusted_excess_pp=_cd(why), by_month=_cd(why),
                    series_beta_adjusted_pp=_cd(why))
         return out
+
+    numeric = isinstance(bval, (int, float)) and not isinstance(bval, bool)
+    if not numeric and bval != NOT_CREDIBLE:
+        return all_cd(f"beta {bval}: {(beta or {}).get('why') or 'no beta'}")
+    check, est = stamp_screen(series, min_month_obs=int(q["stamp_month_min_obs"]),
+                              z=float(q["stamp_month_z"]))
+    out["stamp_check"] = check
+    if check["failing_months"]:
+        fm = "; ".join(f"{r['month']} same-day {r['corr_same_day']:+.2f} / lag -1 {r['corr_lag_minus_1']:+.2f}"
+                       for r in check["months"] if r["month"] in check["failing_months"])
+        lead = f"date stamp lag in {len(check['failing_months'])} month(s) ({fm})"
+        if not est:
+            return all_cd(f"{lead}; no period after the last failing month")
+        b2 = beta_of(est, int(q["min_beta_obs"]))
+        if not isinstance(b2.get("value"), float):
+            return all_cd(f"{lead}; on the {len(est)} periods after it: beta {b2.get('value')}: {b2.get('why')}")
+        bval = b2["value"]
+        out["n_obs"] = b2["n_obs"]
+        out["stamp_note"] = (f"{lead}: exposure estimated on {est[0][0]}..{est[-1][0]} only "
+                             f"({len(est)} periods, lag 0 there); dates were not shifted")
+    elif not numeric:
+        return all_cd(f"beta {bval}: {(beta or {}).get('why') or 'no beta'}")
     b = float(bval)
-    pts = [(float(x), float(y)) for _, x, y in series or [] if _num(x) is not None and _num(y) is not None]
-    out["beta"] = {"value": round(b, 3), "n_obs": len(pts)}
-    if np.std([x for x, _ in pts]) == 0:
-        out["note"] = ("the book's period returns are constant (a flat NAV: all cash, or a NAV "
-                       "that did not update); beta and capture are 0 by arithmetic")
-    out["up_capture"] = _capture(pts, "up", min_capture_obs)
-    out["down_capture"] = _capture(pts, "down", min_capture_obs)
+    spans = _session_spans(est, session_dates)
+    rows = [(d, float(x), float(y), sp_) for (d, x, y), sp_ in zip(est, spans)
+            if _num(x) is not None and _num(y) is not None]
+    yv = np.array([x for _, x, _, _ in rows])
+    xv = np.array([y for _, _, y, _ in rows])
+    n = len(rows)
+    if n == 0 or np.std(yv) == 0:
+        return all_cd("flat NAV over the whole series (all cash, never held a position, or a NAV that did "
+                      "not update): exposure is undefined, not 0")
+    sxx = float(np.sum((xv - xv.mean()) ** 2))
+    resid = yv - (yv.mean() - b * xv.mean()) - b * xv
+    se_b = math.sqrt(float(np.sum(resid ** 2)) / max(n - 2, 1) / sxx) if sxx > 0 else float("inf")
+    d0, d1 = rows[0][0], rows[-1][0]
+    out["beta"] = {"value": round(b, 3), "se": round(se_b, 3), "n_obs": n, "from": d0, "to": d1}
+    one = [(x, y) for _, x, y, s_ in rows if s_ is None or s_ <= 1]
+    out["n_multi_session_periods_excluded_from_capture"] = n - len(one)
+    out["up_capture"] = _capture(one, "up", mco, float(q["max_capture_se"]))
+    out["down_capture"] = _capture(one, "down", mco, float(q["max_capture_se"]))
+    cb = float(np.prod(1 + yv) - 1)
+    cs = float(np.prod(1 + xv) - 1)
+    reasons = []
+    cover = (n / sessions) if sessions else None
+    if cover is not None and cover < float(q["exposure_min_cover"]):
+        reasons.append(f"it covers {n} of {sessions} receipt sessions ({cover:.0%} < "
+                       f"{float(q['exposure_min_cover']):.0%})")
+    gap = (100 * cb - rp) if rp is not None else None
+    if gap is not None and abs(gap) > float(q["exposure_max_return_gap_pp"]):
+        reasons.append(f"its book return {100 * cb:+.2f}% is {gap:+.2f} pp from the receipt return {rp:+.2f}% "
+                       f"(> {float(q['exposure_max_return_gap_pp']):.1f} pp)")
+    rw = window or (None, None)
+    out["estimation_window"] = {
+        "from": d0, "to": d1, "n_periods": n, "receipt_from": rw[0], "receipt_to": rw[1],
+        "receipt_sessions": sessions, "coverage": None if cover is None else round(cover, 3),
+        "series_book_pct": round(100 * cb, 3), "series_spy_pct": round(100 * cs, 3),
+        "return_gap_pp": None if gap is None else round(gap, 3), "comparable": not reasons,
+        "why": "; ".join(reasons) or None}
+    ve = float(np.var(yv - b * xv, ddof=1)) if n > 1 else float("inf")
+
+    def se_pp(spy_frac: float) -> float:
+        return 100 * math.sqrt(n * ve + (se_b * spy_frac) ** 2)
+
+    fig = 100 * (float(np.prod(1 + yv - b * xv)) - 1)
+    fse = se_pp(cs)
+    out["series_beta_adjusted_pp"] = {
+        "value": round(fig, 3), "se_pp": round(fse, 3), "mde_pp": round(float(q["mde_z"]) * fse, 3),
+        "series_book_pct": round(100 * cb, 3), "series_spy_pct": round(100 * cs, 3),
+        "from": d0, "to": d1, "n_periods": n,
+        "note": "compounded over the beta window's own periods (the estimation_window)"}
     if rp is None or sp is None:
         out["beta_adjusted_excess_pp"] = _cd("the receipt row has no return or no SPY leg")
+    elif reasons:
+        out["beta_adjusted_excess_pp"] = _cd(
+            f"not comparable: beta measured on {d0}..{d1} ({n} periods) and the receipt window is "
+            f"{rw[0]}..{rw[1]} ({sessions} sessions): {'; '.join(reasons)}. Over the beta's own window "
+            f"the beta-adjusted excess is {fig:+.2f} pp (SE {fse:.2f})",
+            window_figure_pp=round(fig, 3), window_figure_se_pp=round(fse, 3), window_from=d0, window_to=d1,
+            window_n_periods=n)
     else:
-        out["beta_adjusted_excess_pp"] = {"value": round(rp - b * sp, 3),
-                                          "raw_excess_pp": round(rp - sp, 3),
-                                          "beta_part_pp": round((b - 1.0) * sp, 3),
-                                          "basis": "receipt window"}
+        se = se_pp(sp / 100.0)
+        rf = float(q["rf_annual_assumed"])
+        rfe = (1.0 - b) * rf * (sessions / 252.0) * 100 if sessions else None
+        out["beta_adjusted_excess_pp"] = {
+            "value": round(rp - b * sp, 3), "raw_excess_pp": round(rp - sp, 3),
+            "beta_part_pp": round((b - 1.0) * sp, 3), "basis": "receipt window",
+            "se_pp": round(se, 3), "mde_pp": round(float(q["mde_z"]) * se, 3),
+            "rf_effect_pp": None if rfe is None else round(rfe, 3),
+            "rf_note": (None if rfe is None else
+                        f"rf = 0 declared; with cash at an ASSUMED {rf:.0%}/yr over {sessions} sessions, "
+                        f"Jensen's alpha = this value - {rfe:+.2f} pp ((1 - beta) x rf x T)")}
     months: dict = {}
-    for d, x, y in series or []:
-        if _num(x) is None or _num(y) is None:
-            continue
-        months.setdefault(str(d)[:7], []).append((float(x), float(y)))
+    for d, x, y, _ in rows:
+        months.setdefault(str(d)[:7], []).append((x, y))
     bm = []
     for m, v in sorted(months.items()):
-        cb = float(np.prod([1 + x for x, _ in v]) - 1)
-        cs = float(np.prod([1 + y for _, y in v]) - 1)
+        mb_ = float(np.prod([1 + x for x, _ in v]) - 1)
+        ms_ = float(np.prod([1 + y for _, y in v]) - 1)
         cr = float(np.prod([1 + x - b * y for x, y in v]) - 1)
-        bm.append({"month": m, "n_periods": len(v), "book_pct": round(100 * cb, 3),
-                   "spy_pct": round(100 * cs, 3), "raw_excess_pp": round(100 * (cb - cs), 3),
+        bm.append({"month": m, "n_periods": len(v), "book_pct": round(100 * mb_, 3),
+                   "spy_pct": round(100 * ms_, 3), "raw_excess_pp": round(100 * (mb_ - ms_), 3),
                    "beta_adjusted_pp": round(100 * cr, 3)})
     out["by_month"] = bm
-    cb = float(np.prod([1 + x for x, _ in pts]) - 1)
-    cs = float(np.prod([1 + y for _, y in pts]) - 1)
-    out["series_beta_adjusted_pp"] = {
-        "value": round(100 * (float(np.prod([1 + x - b * y for x, y in pts])) - 1), 3),
-        "series_book_pct": round(100 * cb, 3), "series_spy_pct": round(100 * cs, 3),
-        "from": (series or [[None]])[0][0], "to": (series or [[None]])[-1][0], "n_periods": len(pts),
-        "note": "compounded over the series' own periods; differs from the receipt window when "
-                "the series starts late or skips sessions (compare series_spy_pct with the SPY leg)"}
     return out
 
 
@@ -914,7 +1087,9 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
         e["concentration"] = concentration(weights, smap)
         e["beta_vs_spy"] = beta_of(series, p["min_beta_obs"])
         e["market_exposure"] = market_exposure(series, e["beta_vs_spy"], return_pct=e["return_pct"],
-                                               spy_leg_pct=spy_leg, min_capture_obs=p["min_capture_obs"])
+                                               spy_leg_pct=spy_leg, min_capture_obs=p["min_capture_obs"],
+                                               sessions=sessions, window=(r.get("inception"), r.get("last_mark")),
+                                               session_dates=px.dates("SPY"), p=p)
         e["cash_fraction"] = cash
         e["n_series_periods"] = len(series)
         sub = subwindows(series, sessions)
