@@ -84,6 +84,12 @@ def data_root(tmp_path: Path) -> Path:
         _row("google_news_rss_en_us", "Chip stocks: the people who sold - Barron's",
              tickers=["NVDA"], tags=["resolved:NVDA=cashtag"], minutes_ago=20),
     ])
+    lane_row = _row("dj_reader_marketwatch", "Should I keep going to free annuity dinners?", tickers=["TINY"],
+                    body="A reader asks about annuity sales pitches. " * 30)
+    lane_row["fetcher"] = "web_reader"
+    lane_ok = _row("dj_reader_marketwatch", "Tinycap Widgets Doubles Its Dividend", tickers=["TINY"], minutes_ago=31)
+    lane_ok["fetcher"] = "web_reader"
+    _append(root, "dj_reader_marketwatch", [lane_row, lane_ok])
     _append(root, "sec_edgar_8k_current_atom", [
         _row("sec_edgar_8k_current_atom", "8-K - Solidion Technology Inc. (0001881551) (Filer)",
              tags=["8-K:2.02", "cik:0001881551"]),
@@ -107,6 +113,12 @@ def data_root(tmp_path: Path) -> Path:
         "page_class": "OK", "title": "Chip Stocks Slide Into the Close", "first_seen_utc": _iso(NOW - timedelta(hours=5)),
         "text": filler + " Nvidia led the decline. Nvidia fell 4%. " + filler, "reached_by": {"lane": "front"},
         "tickers_named": [], "outbound_links": []}), encoding="utf-8")
+    (d / "eee.json").write_text(json.dumps({
+        "publisher": "barrons", "url": "https://www.barrons.com/articles/iran-3", "page_kind": "article",
+        "page_class": "OK", "title": "Oil Falls as Iran Talks Resume in Qatar", "first_seen_utc": _iso(NOW - timedelta(hours=6)),
+        "text": "More Videos 01:21 Nvidia investigates its CEO 02:09 Will Huang remain CEO of Nvidia? "
+                "Oil Falls as Iran Talks Resume in Qatar. " + filler,
+        "reached_by": {"lane": "related"}, "tickers_named": [], "outbound_links": []}), encoding="utf-8")
     (d / "bbb.json").write_text(json.dumps({
         "publisher": "barrons", "url": "https://www.barrons.com/", "page_kind": "front", "page_class": "OK",
         "title": "front", "first_seen_utc": _iso(NOW - timedelta(hours=3)), "reached_by": {"lane": "front"},
@@ -185,6 +197,11 @@ def test_tagging_rules_and_common_word_traps(data_root, paths, tmp_path):
     assert "The Fed Holds Rates Steady" not in tags
     assert ("NVDA", "name_match") in tags["Chip Stocks Slide Into the Close"]
     assert not any("Financial Institutions" in t for t in tags)
+    # the reader's lane ticker is kept only when the text names it; chrome before the headline is cut
+    assert "Should I keep going to free annuity dinners?" not in tags
+    assert ("TINY", "reader_lane") in tags["Tinycap Widgets Doubles Its Dividend"]
+    assert "Oil Falls as Iran Talks Resume in Qatar" not in tags
+    assert rec["counts"].get("reader_lane_unconfirmed", 0) >= 1
 
 
 def test_hub_payload_news_forecasts_related_and_typed_event(data_root, paths, tmp_path):

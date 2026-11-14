@@ -147,6 +147,21 @@ def row_id(publisher: str, title: str, url: str) -> str:
     return _sha16(f"t|{publisher.lower()}|{nt}") if nt else _sha16(f"u|{url_key(url)}")
 
 
+_READER_FETCHERS = frozenset({"web_reader", "reader_pool"})
+
+
+def _article_body(text: str, title: str) -> str:
+    """A reader page snapshot from its headline on: the nav, video carousels and 'more
+    videos' lists before it are page chrome (AP's carousel named Nvidia twice above an
+    Iran-war article). Unchanged when the headline is not found in the text."""
+    anchor = re.sub(r"\s+", " ", (title or "").strip().lower())[:40]
+    if len(anchor) >= 12:
+        i = text.lower().find(anchor)
+        if i > 0:
+            return text[i:]
+    return text
+
+
 def _strip_publisher_suffix(title: str) -> str:
     t = (title or "").strip()
     m = _TITLE_SUFFIX.search(t)
@@ -284,6 +299,11 @@ class Tagger:
                                 "where": where})
         return out
 
+    def confirmed(self, sym: str, title: str, body: str) -> bool:
+        """Does the row's own text name `sym` (title, or body with one mention)?"""
+        s = DA.norm_ticker(sym)
+        return any(t["t"] == s for t in self.text_tags(title or "", "title") + self.text_tags(body or "", "body"))
+
     def source_field_tags(self, tickers: Iterable[Any], entity_tags: Iterable[Any]) -> list[dict]:
         """Rule 1 over a corpus row's `tickers` + `entity_tags` (`resolved:X=rule`)."""
         rules: dict[str, str] = {}
@@ -403,11 +423,24 @@ def _corpus_row(src: str, o: dict, tagger: Tagger, typed: dict, now: datetime,
         return None
     url = str(o.get("url") or o.get("index_url") or "")
     publisher, region, title, _basis = EN.publisher_region(src, title_raw, url)
-    body = EN.clean_text(str(o.get("body") or o.get("text") or ""))[:int(C.TICKER_HUB_BODY_CHARS)]
+    reader_row = src.startswith("dj_reader_") or str(o.get("fetcher") or "") in _READER_FETCHERS
+    raw_body = EN.clean_text(str(o.get("body") or o.get("text") or ""))
+    body = (_article_body(raw_body, title) if reader_row else raw_body)[:int(C.TICKER_HUB_BODY_CHARS)]
     uk = url_key(url)
     ty = typed.get(uk) if uk else None
     generic = [o.get("ticker")] if o.get("ticker") else []
     g_field = tagger.source_field_tags(_as_list(o.get("tickers")) + generic, entity)
+    if reader_row:
+        # the reader's `tickers` is the LANE it was browsing, not a provider tag: an
+        # annuity column read from the NTLA lane carried NTLA. Kept only when the text
+        # itself names the ticker (one mention is enough), and labelled reader_lane.
+        lane = [t for t in g_field if t["rule"] == "provider"]
+        g_field = [t for t in g_field if t["rule"] != "provider"]
+        for t in lane:
+            if tagger.confirmed(t["t"], title, body):
+                g_field.append({**t, "m": "reader_lane", "rule": "reader_tickers"})
+            else:
+                stats["reader_lane_unconfirmed"] += 1
     g_cik = tagger.cik_tags(entity) if src.startswith("sec_") else []
     g_digest = [{"t": DA.norm_ticker(t), "m": "digest_typed", "rule": "world_digest", "where": "field"}
                 for t in (ty or {}).get("tickers") or [] if tagger.known(t)]
@@ -453,9 +486,12 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
     if kind == "article":
         title = _strip_publisher_suffix(str(page.get("title") or ""))
         url = str(page.get("url") or "")
-        text = EN.clean_text(str(page.get("text") or ""))[:int(C.TICKER_HUB_BODY_CHARS)]
+        text = _article_body(EN.clean_text(str(page.get("text") or "")), title)[:int(C.TICKER_HUB_BODY_CHARS)]
         g_lane = ([{"t": lane_t, "m": "reader_lane", "rule": str(rb.get("lane") or "lane"), "where": "field"}]
                   if lane_t and tagger.known(lane_t) else [])
+        if g_lane and not tagger.confirmed(lane_t, title, text):
+            stats["reader_lane_unconfirmed"] += 1
+            g_lane = []
         g_named = [{**t, "rule": "tickers_named"}
                    for t in tagger.source_field_tags(_as_list(page.get("tickers_named")), [])
                    if t["t"] not in tagger.bare]
@@ -481,7 +517,8 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
             continue
         stats[f"rows_read:{src}"] += 1
         g_search = ([{"t": lane_t, "m": "reader_search", "rule": str(rb.get("lane") or "search"),
-                      "where": "field"}] if kind == "search" and lane_t and tagger.known(lane_t) else [])
+                      "where": "field"}] if kind == "search" and lane_t and tagger.known(lane_t)
+                    and tagger.confirmed(lane_t, text, "") else [])
         tags = merge_tags(g_search, tagger.text_tags(text, "title"))
         if not tags:
             stats[f"rows_untagged:{src}"] += 1
