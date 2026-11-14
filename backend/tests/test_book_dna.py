@@ -585,3 +585,28 @@ def test_m6_minor_load_prices_reads_only_the_symbols_it_needs(monkeypatch, tmp_p
     monkeypatch.setattr(D, "LLM_DIR", tmp_path)
     px, _ = D.load_prices({"AAA"})
     assert sorted(seen.get("symbols") or []) == ["AAA", "SPY"] and px.has("SPY")
+
+
+def test_b1_lag_is_read_from_spy_sessions_across_multi_session_gaps():
+    """The lanes' NAV skips sessions. The lagged SPY of a period is SPY over the same sessions
+    shifted back one, read from SPY's closes -- never the previous PERIOD's SPY, which after a
+    gap is a different stretch of days and hid August's lag on the live receipt."""
+    rng = np.random.default_rng(13)
+    dates = _sessions(130)
+    j = next(i for i in range(40, 130) if dates[i][:7] != dates[i - 1][:7])
+    k = next(i for i in range(j + 15, 130) if dates[i][:7] != dates[i - 1][:7])
+    r = rng.normal(0.0004, 0.01, 130)
+    close = list(100 * np.cumprod(1 + r))
+    nav = [1e5]
+    for i in range(1, 130):                        # lagged in [j, k), same-day elsewhere
+        nav.append(nav[-1] * (1 + 0.9 * (r[i - 1] if j <= i < k else r[i]) + rng.normal(0, 0.002)))
+    keep = [i for i in range(130) if not (j <= i < k and i % 3 == 0)]     # a gap every third session
+    pts = [(dates[i], nav[i], close[i]) for i in keep]
+    s = [(pts[i][0], pts[i][1] / pts[i - 1][1] - 1, pts[i][2] / pts[i - 1][2] - 1) for i in range(1, len(pts))]
+    spy_close = dict(zip(dates, close))
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=1.0, spy_leg_pct=1.0, min_capture_obs=8,
+                           spy_close=spy_close)
+    assert dates[k - 1][:7] in me["stamp_check"]["failing_months"]
+    assert me["beta"]["from"] >= dates[k] and 0.75 < me["beta"]["value"] < 1.05
+    lagged = next(m for m in me["stamp_check"]["months"] if m["month"] == dates[k - 1][:7])
+    assert lagged["corr_lag_minus_1"] > 0.6 and lagged["corr_lag_minus_1"] > lagged["corr_same_day"] + 0.2

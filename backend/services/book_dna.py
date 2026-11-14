@@ -109,7 +109,8 @@ def params() -> dict:
         "min_beta_obs": int(_cfg("BOOK_DNA_MIN_BETA_OBS", 20)),
         "min_capture_obs": int(_cfg("BOOK_DNA_MIN_CAPTURE_OBS", 8)),
         "stamp_month_min_obs": int(_cfg("BOOK_DNA_STAMP_MONTH_MIN_OBS", 8)),
-        "stamp_month_z": float(_cfg("BOOK_DNA_STAMP_MONTH_Z", 1.645)),
+        "stamp_month_min_lag_corr": float(_cfg("BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR", 0.30)),
+        "stamp_month_min_z_gap": float(_cfg("BOOK_DNA_STAMP_MONTH_MIN_Z_GAP", 0.20)),
         "exposure_min_cover": float(_cfg("BOOK_DNA_EXPOSURE_MIN_COVER", 0.80)),
         "exposure_max_return_gap_pp": float(_cfg("BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP", 2.0)),
         "max_capture_se": float(_cfg("BOOK_DNA_MAX_CAPTURE_SE", 0.25)),
@@ -462,29 +463,50 @@ def _cd(why: str, **extra: Any) -> dict:
 _ISO_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
 
-def stamp_screen(series: Optional[list], *, min_month_obs: int, z: float) -> tuple[dict, list]:
+def stamp_screen(series: Optional[list], *, min_month_obs: int, min_lag_corr: float, min_z_gap: float,
+                 spy_close: Optional[dict] = None) -> tuple[dict, list]:
     """CH-11 fix B1 (review of PR #140): the C15 date-stamp test per CALENDAR MONTH.
 
     `beta_of` compares lag -1 with same-day correlation over the whole series. A series
     stamped a session late in one stretch and on the right day in another (the website
     lanes: late June-August, right from September) averages out and passes. Here each
     month with >= `min_month_obs` periods is tested on its own: it FAILS when
-    atanh(corr(book_t, SPY_t-1)) - atanh(corr(book_t, SPY_t)) > z x sqrt(2 / (n - 3)).
+    corr(book_t, SPY lagged) >= `min_lag_corr` AND atanh(corr lagged) - atanh(corr same
+    period) > `min_z_gap` -- the lag is the better alignment and it is material. This is a
+    detection rule, not a significance test (a month has too few periods for one); each
+    month prints both correlations and sqrt(2/(n-3)), the SE of the z gap.
     Returns (the check, the periods to estimate on): every period after the LAST failing
     month, or the whole series when no month fails. Dates are never shifted: a lagged
-    stretch is dropped, and the row says which months and why."""
+    stretch is dropped, and the row says which months and why.
+
+    "SPY lagged" for a period (d_prev, d] is SPY over the same sessions shifted back one
+    session, read from `spy_close` (date -> close). Without it, the previous PERIOD's SPY
+    return stands in -- which is the wrong number after a multi-session gap: on the lanes'
+    August (16 periods, several gaps) it gave lag -1 corr +0.21 where SPY's own previous
+    session gives about +0.6, and the lag went unseen."""
     pts = [(str(d), float(b), float(s)) for d, b, s in series or []
            if _num(b) is not None and _num(s) is not None]
+    cal = sorted(k for k, v in (spy_close or {}).items() if _num(v) is not None and _ISO_DAY.match(str(k)))
+    pos = {d: i for i, d in enumerate(cal)}
     months: dict = {}
+    n_unpriced = 0
     for i in range(1, len(pts)):
-        months.setdefault(pts[i][0][:7], []).append((pts[i][1], pts[i][2], pts[i - 1][2]))
+        if cal:
+            a, b = pos.get(pts[i - 1][0][:10]), pos.get(pts[i][0][:10])
+            if a is None or b is None or a < 1 or b <= a:
+                n_unpriced += 1
+                continue
+            lagged = float(spy_close[cal[b - 1]]) / float(spy_close[cal[a - 1]]) - 1.0
+        else:
+            lagged = pts[i - 1][2]
+        months.setdefault(pts[i][0][:7], []).append((pts[i][1], pts[i][2], lagged))
     rows, failing = [], []
     for m, v in sorted(months.items()):
         n = len(v)
         row: dict = {"month": m, "n_periods": n}
-        y = np.array([a for a, _, _ in v])
-        x0 = np.array([a for _, a, _ in v])
-        xm = np.array([a for _, _, a in v])
+        y = np.array([q[0] for q in v])
+        x0 = np.array([q[1] for q in v])
+        xm = np.array([q[2] for q in v])
         if n < max(min_month_obs, 4):
             row["status"] = "not tested: too few periods"
         elif min(np.std(y), np.std(x0), np.std(xm)) == 0:
@@ -493,17 +515,19 @@ def stamp_screen(series: Optional[list], *, min_month_obs: int, z: float) -> tup
             c0 = float(np.corrcoef(y, x0)[0, 1])
             c1 = float(np.corrcoef(y, xm)[0, 1])
             gap = float(np.arctanh(np.clip(c1, -0.999, 0.999)) - np.arctanh(np.clip(c0, -0.999, 0.999)))
-            thr = z * math.sqrt(2.0 / (n - 3))
+            fail = c1 >= min_lag_corr and gap > min_z_gap
             row.update(corr_same_day=round(c0, 3), corr_lag_minus_1=round(c1, 3),
-                       z_gap=round(gap, 3), z_threshold=round(thr, 3))
-            row["status"] = "FAIL: lag -1 beats same-day" if gap > thr else "ok"
-            if gap > thr:
+                       z_gap=round(gap, 3), z_gap_se=round(math.sqrt(2.0 / (n - 3)), 3))
+            row["status"] = "FAIL: lag -1 beats same-day" if fail else "ok"
+            if fail:
                 failing.append(m)
         rows.append(row)
-    check = {"method": (f"per calendar month with >= {min_month_obs} periods: FAIL when "
-                        f"atanh(corr lag -1) - atanh(corr same-day) > {z} x sqrt(2/(n-3)); "
+    check = {"method": (f"per calendar month with >= {min_month_obs} periods: FAIL when atanh(corr vs SPY "
+                        f"shifted back one session) >= {min_lag_corr} and atanh(that) - atanh(corr vs SPY "
+                        f"same period) > {min_z_gap} (a detection rule, not a significance test); "
+                        f"lagged SPY from {'SPY session closes' if cal else 'the previous period (no calendar)'}; "
                         "exposure is estimated after the last failing month; dates are never shifted"),
-             "months": rows, "failing_months": failing}
+             "months": rows, "failing_months": failing, "n_periods_without_a_lagged_spy": n_unpriced}
     if not failing:
         return check, list(series or [])
     kept = [q for q in series or [] if str(q[0])[:7] > failing[-1]]
@@ -554,7 +578,7 @@ def _capture(pts: list, side: str, min_obs: int, max_se: Optional[float] = None)
 def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_leg_pct: Any,
                     min_capture_obs: Optional[int] = None, sessions: Optional[int] = None,
                     window: Optional[tuple] = None, session_dates: Optional[list] = None,
-                    p: Optional[dict] = None) -> dict:
+                    spy_close: Optional[dict] = None, p: Optional[dict] = None) -> dict:
     """CH-11 note (2026-11-13): how much of a book's return is plain SPY exposure.
 
     From the book's period-return series (the one `beta_of` used): beta with its SE,
@@ -597,8 +621,11 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
     numeric = isinstance(bval, (int, float)) and not isinstance(bval, bool)
     if not numeric and bval != NOT_CREDIBLE:
         return all_cd(f"beta {bval}: {(beta or {}).get('why') or 'no beta'}")
+    if session_dates is None and spy_close:
+        session_dates = sorted(spy_close)
     check, est = stamp_screen(series, min_month_obs=int(q["stamp_month_min_obs"]),
-                              z=float(q["stamp_month_z"]))
+                              min_lag_corr=float(q["stamp_month_min_lag_corr"]),
+                              min_z_gap=float(q["stamp_month_min_z_gap"]), spy_close=spy_close)
     out["stamp_check"] = check
     if check["failing_months"]:
         fm = "; ".join(f"{r['month']} same-day {r['corr_same_day']:+.2f} / lag -1 {r['corr_lag_minus_1']:+.2f}"
@@ -670,9 +697,10 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
         out["beta_adjusted_excess_pp"] = _cd(
             f"not comparable: beta measured on {d0}..{d1} ({n} periods) and the receipt window is "
             f"{rw[0]}..{rw[1]} ({sessions} sessions): {'; '.join(reasons)}. Over the beta's own window "
-            f"the beta-adjusted excess is {fig:+.2f} pp (SE {fse:.2f})",
+            f"the beta-adjusted excess is {fig:+.2f} pp (SE {fse:.2f}); this beta applied to the whole "
+            f"receipt window would give {rp - b * sp:+.2f} pp, a number whose beta never saw most of that window",
             window_figure_pp=round(fig, 3), window_figure_se_pp=round(fse, 3), window_from=d0, window_to=d1,
-            window_n_periods=n)
+            window_n_periods=n, receipt_window_with_this_beta_pp=round(rp - b * sp, 3))
     else:
         se = se_pp(sp / 100.0)
         rf = float(q["rf_annual_assumed"])
@@ -928,6 +956,8 @@ def _twin_parent_night(row: dict, rows: list) -> Optional[str]:
 def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> list[dict]:
     rows = receipt.get("rows") or []
     books, newest, llm_series = _llm_index(inputs)
+    # CH-11 fix B1: SPY's session closes, for the per-month date-stamp test and capture spans
+    spy_close = ({str(d): float(v) for d, v in px.close["SPY"].dropna().items()} if px.has("SPY") else {})
     smap = inputs.get("sector_map") or {}
     names = {b: r.get("name") for b, r in books.items()}
     rule_of = {b: str(r.get("model"))[5:] for b, r in books.items()
@@ -1089,7 +1119,7 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
         e["market_exposure"] = market_exposure(series, e["beta_vs_spy"], return_pct=e["return_pct"],
                                                spy_leg_pct=spy_leg, min_capture_obs=p["min_capture_obs"],
                                                sessions=sessions, window=(r.get("inception"), r.get("last_mark")),
-                                               session_dates=px.dates("SPY"), p=p)
+                                               spy_close=spy_close, p=p)
         e["cash_fraction"] = cash
         e["n_series_periods"] = len(series)
         sub = subwindows(series, sessions)
