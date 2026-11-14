@@ -635,7 +635,7 @@ def r_local_branching_private_grade(ctx, task) -> Reading:
 
 ROLLING_COHORT_ACTIONS = {"BORN": "OK", "MARKED": "OK", "NOTHING_DUE": "IDLE",
                           "WAIT_PRICES": "IDLE", "MISSED_ENTRY_WINDOW": "DEGRADED",
-                          "REFUSED": "REFUSED"}
+                          "WAIT_LOCK": "IDLE", "REFUSED": "REFUSED"}
 
 
 def r_rolling_cohorts(ctx, task) -> Reading:
@@ -666,7 +666,7 @@ def r_rolling_cohorts(ctx, task) -> Reading:
     if action == "MISSED_ENTRY_WINDOW":
         why.append(f"a due cohort's entry opened before it was born: {d.get('missed')}")
     age, limit = d.get("forward_age_sessions"), _config.ROLLING_COHORT_CADENCE_SESSIONS * _config.ROLLING_COHORT_STALE_CADENCES
-    if action != "REFUSED":
+    if action not in ("REFUSED", "WAIT_LOCK"):     # a lock wait carries no ages: the holder's row follows
         if type(age) is not int or age < 0:
             status = worst(status, "DEGRADED")
             why.append("forward cohort age is absent")

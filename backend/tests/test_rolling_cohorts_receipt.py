@@ -27,6 +27,7 @@ def judge(ctx, path, row):
 @pytest.mark.parametrize("action,expected", [
     ("BORN", "ALIVE_PROGRESSING"), ("MARKED", "ALIVE_PROGRESSING"), ("NOTHING_DUE", "ALIVE_IDLE_EXPECTED"),
     ("WAIT_PRICES", "ALIVE_IDLE_EXPECTED"), ("MISSED_ENTRY_WINDOW", "DEGRADED"), ("REFUSED", "REFUSED"),
+    ("WAIT_LOCK", "ALIVE_IDLE_EXPECTED"),
     ("SOMETHING_ELSE", "DEGRADED")])
 def test_actions(tmp_path, action, expected):
     ctx, p, row = setup(tmp_path, action=action)

@@ -651,7 +651,14 @@ class Store:
         parts = sorted(self.marks_dir.glob("part-*.parquet"))
         if not parts:
             return pd.DataFrame()
-        return pd.concat([pd.read_parquet(p, columns=columns) for p in parts], ignore_index=True)
+        cols = None if columns is None else sorted(set(columns) | {"book_id", "mark_k"})
+        m = pd.concat([pd.read_parquet(p, columns=cols) for p in parts], ignore_index=True)
+        dup = m.duplicated(["book_id", "mark_k"])
+        if dup.any():
+            raise RollingCohortRefused(
+                f"marks table holds {int(dup.sum())} duplicate (book_id, mark_k) rows: two passes "
+                f"wrote the same marks. Counting them would double the evidence; repair by hand")
+        return m if columns is None else m[columns]
 
     def append_marks(self, rows: list[dict], run_id: str) -> Optional[Path]:
         if not rows:
@@ -664,11 +671,10 @@ class Store:
         return p
 
     def journal(self, row: dict) -> None:
+        from backend.services import disk_guard
         self.out.mkdir(parents=True, exist_ok=True)
-        with (self.out / "runs.jsonl").open("a", encoding="utf8", newline="\n") as f:
-            f.write(json.dumps(row, sort_keys=True, default=str) + "\n")
-            f.flush()
-            os.fsync(f.fileno())
+        disk_guard.locked_append_line(self.out / "runs.jsonl", json.dumps(row, sort_keys=True, default=str),
+                                      fsync=True)
 
 
 def _write_once(path: Path, text: str) -> None:
@@ -1026,12 +1032,30 @@ def run(mode: str, *, data_root: Path, out: Path, specs_path: Path, asof: Any = 
     opened, mark every cohort, write the scoreboard. `backfill`: birth every
     scheduled cohort in [from, to] whose entry has passed, flagged backfilled.
 
+    One pass at a time per output folder (`run.lock`): a second pass waits
+    `ROLLING_COHORT_LOCK_WAIT_S` and then returns a WAIT_LOCK row with rc 0.
     Never writes under `data_root`. Returns the journal row (also appended).
     """
+    from backend.services import disk_guard
+    store = Store(out)
+    store.out.mkdir(parents=True, exist_ok=True)
+    try:
+        with disk_guard.file_lock(store.out / "run.lock", timeout_s=float(_config.ROLLING_COHORT_LOCK_WAIT_S)):
+            return _run_locked(mode, data_root=data_root, store=store, specs_path=specs_path, asof=asof,
+                               now=now, date_from=date_from, date_to=date_to, calendar=calendar)
+    except disk_guard.FileLockTimeout as exc:
+        row = {"task": TASK_NAME, "schema": "rolling_cohort_run/1", "mode": mode, "action": "WAIT_LOCK",
+               "rc": 0, "born": [], "utc": (now or datetime.now(timezone.utc)).isoformat(),
+               "reason": f"another pass holds {store.out / 'run.lock'}: {exc}"}
+        store.journal(row)
+        return row
+
+
+def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path, asof: Any,
+                now: Optional[datetime], date_from: Any, date_to: Any, calendar: Any) -> dict:
     t0 = datetime.now(timezone.utc)
     now = now or t0
     cal = calendar or XnysCalendar()
-    store = Store(out)
     run_id = now.strftime("%Y%m%dT%H%M%S%fZ") + "-" + uuid.uuid4().hex[:6]
     specs, manifest = load_specs(specs_path)
     decl = store.declare(manifest=manifest, specs_path=str(specs_path), now=now)

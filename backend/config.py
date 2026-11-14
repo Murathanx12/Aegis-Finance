@@ -4575,6 +4575,9 @@ ROLLING_COHORT_NEWS_MAX_STALE_DAYS = 2.0
 ROLLING_COHORT_STALE_CADENCES = 2
 #: MDE = z * SE (80% power, 5% two-sided).
 ROLLING_COHORT_MDE_Z = 2.8
+#: One pass per output folder: a second pass waits this long for `run.lock`,
+#: then journals WAIT_LOCK with rc 0.
+ROLLING_COHORT_LOCK_WAIT_S = 60.0
 
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).
