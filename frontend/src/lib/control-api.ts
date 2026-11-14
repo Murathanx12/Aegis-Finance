@@ -1229,3 +1229,180 @@ export const agencyHold = (
     { ips_hash: ipsHash, chosen_contract_hash: chosenContractHash, sentence },
     120_000,
   );
+
+// ---------------------------------------------------------------- ticker hub (CH-22)
+// Mirrors `backend/routers/ticker_hub.py` / `backend/services/ticker_hub.py`. Local
+// only: both routes answer 403 unless the desktop shell set AEGIS_CONTROL_ENABLED=1,
+// so on the public site the callers render nothing.
+
+export interface HubTag {
+  t: string;
+  /** source_field | sec_cik | reader_lane | reader_search | digest_typed | text_token | name_match */
+  m: string;
+  rule: string | null;
+  where: string | null;
+}
+
+export interface HubNewsRow {
+  id: string;
+  source: string;
+  publisher: string | null;
+  kind: string | null;
+  first_seen_utc: string | null;
+  published_utc: string | null;
+  title: string | null;
+  url: string | null;
+  feeds: string[] | null;
+  regions: string[] | null;
+  tags: HubTag[];
+  event: { event_type: string | null; topic: string | null; sentiment: number | null; model: string | null } | null;
+  tagged_by?: string[];
+}
+
+export interface HubForecast {
+  id: string | null;
+  made_at: string | null;
+  specialist: string | null;
+  observable: string | null;
+  probability: number | null;
+  threshold: number | null;
+  benchmark: string | null;
+  horizon_days: number | null;
+  resolves_after: string | null;
+  resolved_at: string | null;
+  outcome: number | null;
+  brier: number | null;
+  realised_return: number | null;
+  void_reason: string | null;
+  model: string | null;
+  thesis: string | null;
+}
+
+export interface HubCoverage {
+  status: "OK" | "STALE" | "NO_INDEX";
+  index_built_utc: string | null;
+  index_age_s: number | null;
+  stale_after_s: number;
+  detail: string | null;
+  rows_in_index?: number | null;
+  untagged_share_last_build?: number | null;
+  newest_per_source?: Record<string, string>;
+}
+
+export interface TickerHubResponse {
+  schema: string;
+  ticker: string;
+  siblings: string[];
+  days: number;
+  now_utc: string;
+  identity: { name: string | null; sector: string | null; gics_sector: string | null } | null;
+  news: HubNewsRow[];
+  forecasts: {
+    status: string;
+    open: HubForecast[];
+    resolved: HubForecast[];
+    void: HubForecast[];
+    counts: {
+      open: number;
+      resolved: number;
+      void: number;
+      resolved_outcome_1?: number;
+      resolved_outcome_0?: number;
+      mean_brier?: number | null;
+      n_brier?: number;
+    };
+  };
+  calendar: {
+    status: string;
+    label?: string | null;
+    last_reported?: string | null;
+    error?: string;
+    rows: {
+      date: string | null;
+      kind: string | null;
+      label: string | null;
+      confirmation: string | null;
+      timing: string | null;
+      days_away: number | null;
+      sessions_away: number | null;
+      source: string | null;
+    }[];
+  };
+  events: {
+    event_id: string;
+    primary_ticker: string;
+    role: string;
+    link: string;
+    link_quality: string;
+    first_seen_utc: string;
+    importance_at: number | null;
+    n_publishers: number | null;
+    n_evidence: number | null;
+    title: string | null;
+  }[];
+  related: {
+    ticker: string;
+    name: string | null;
+    link: string;
+    weight: number | null;
+    n: number | null;
+    sign: number | null;
+    source: string;
+    graph_build_id: string | null;
+  }[];
+  coverage: HubCoverage & {
+    n_rows: number;
+    n_returned: number;
+    truncated: boolean;
+    sources: Record<string, number>;
+    tagged_by: Record<string, number>;
+    newest_utc: string | null;
+  };
+}
+
+export interface NewsFeedFacet {
+  key: string;
+  n: number;
+  name?: string | null;
+}
+
+export interface NewsFeedResponse {
+  schema: string;
+  now_utc: string;
+  days: number;
+  filters: { ticker: string | null; sector: string | null; source: string | null };
+  rows: HubNewsRow[];
+  n_rows: number;
+  n_returned: number;
+  truncated: boolean;
+  facets: { ticker: NewsFeedFacet[]; sector: NewsFeedFacet[]; source: NewsFeedFacet[] };
+  sectors: string[];
+  coverage: HubCoverage;
+}
+
+export const getTickerHub = (symbol: string, days = 30) =>
+  controlFetch<TickerHubResponse>(
+    `/ticker/${encodeURIComponent(symbol)}/hub?days=${days}`,
+  );
+
+export const getNewsFeed = (q: {
+  ticker?: string;
+  sector?: string;
+  source?: string;
+  days?: number;
+  limit?: number;
+}) => {
+  const p = new URLSearchParams();
+  if (q.ticker) p.set("ticker", q.ticker);
+  if (q.sector) p.set("sector", q.sector);
+  if (q.source) p.set("source", q.source);
+  p.set("days", String(q.days ?? 30));
+  p.set("limit", String(q.limit ?? 200));
+  return controlFetch<NewsFeedResponse>(`/news/feed?${p.toString()}`);
+};
+
+/** True when the ticker-hub routes are simply not available here (public site,
+ *  backend down, older backend) -- the caller then renders nothing at all. */
+export function hubUnavailable(e: unknown): boolean {
+  return isForbidden(e) || isUnreachable(e) || (isNotBuilt(e) && !String((e as ControlError).detail).includes("not in the universe"));
+}
