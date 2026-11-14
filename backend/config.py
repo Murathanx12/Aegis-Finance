@@ -7144,6 +7144,9 @@ OWNER_INBOX_MAX_CHARS = 8000
 #: `GET /api/control/owner-notes` default and ceiling for `limit`.
 OWNER_INBOX_LIST_DEFAULT = 20
 OWNER_INBOX_LIST_MAX = 500
+#: Seconds a writer waits for the inbox lock (thread + cross-process) before the
+#: request is refused with 503 -- never a silent drop (PR #143 review, M1).
+OWNER_INBOX_LOCK_WAIT_S = 5.0
 # ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
 #: `scripts/night_investigator_news.py`: the investigator's own process and contract,
 #: plus typed world-digest rows about the name and its graph neighbours (context only),
