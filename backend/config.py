@@ -7053,8 +7053,11 @@ TICKER_HUB_BODY_BOILERPLATE: tuple = ("add as preferred on google", "share on fa
                                       "continue with facebook", "share via facebook")
 #: More single-word names that are also surnames, places or adjectives in this corpus's
 #: titles (first real build: "Rogers", "Lindsay", "Manchester", "Costar" = co-star,
-#: "Bullish"); like EVENT_NODES_COMMON_WORD_NAMES they then need an ATTACHED cue.
-TICKER_HUB_COMMON_WORD_NAMES: tuple = ("rogers", "lindsay", "manchester", "costar", "bullish")
+#: "Bullish"; fix-round about-tier sample: "NATO Waters" -> WAT, "Universal early childhood
+#: education" -> UVV, "Scott Kirby" -> KEX); like EVENT_NODES_COMMON_WORD_NAMES they then
+#: need an ATTACHED cue.
+TICKER_HUB_COMMON_WORD_NAMES: tuple = ("rogers", "lindsay", "manchester", "costar", "bullish",
+                                       "waters", "universal", "kirby")
 #: Name keys that never tag a row in the hub ("Financial Institutions in Asia ...").
 TICKER_HUB_DROP_NAME_KEYS: tuple = ("financial institutions",)
 #: A reader front/search-page link becomes a headline row only with this much text.

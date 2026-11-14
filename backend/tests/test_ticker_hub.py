@@ -23,6 +23,8 @@ DAY = NOW.date().isoformat()
 ISSUERS = """symbol,primary_name,aliases,country,is_adr
 A,"Agilent Technologies, Inc.",A|Agilent Technologies,US,
 ACA,Arcosa Inc.,ACA|Arcosa,US,
+WAT,Waters Corporation,WAT|Waters Corporation,US,
+UVV,Universal Corporation,UVV|Universal Corporation,US,
 R,"Ryder System, Inc.","R|Ryder System, Inc.",US,
 RS,Reliance Steel & Aluminum Co.,RS|Reliance Steel,US,
 META,"Meta Platforms, Inc.","META|Meta Platforms, Inc.",US,
@@ -298,6 +300,9 @@ def test_explicit_tokens_need_to_be_unambiguous(tmp_path, data_root, paths):
         _row("wsj_business", "Fixture bank lifts its outlook", body="Shares of $A traded higher after the call."),
         _row("wsj_business", "Meta (META) Draws Fresh Fixture Scrutiny"),
         _row("wsj_business", "Arcosa (ACA) wins a bridge order"),
+        _row("wsj_business", "Drone threat grows near fixture coastal Waters"),
+        _row("wsj_business", "Universal early schooling plan wins fixture backing"),
+        _row("wsj_business", "Waters Corp shares rise after fixture results"),
     ])
     out = tmp_path / "hub"
     _build(data_root, paths, out)
@@ -308,6 +313,10 @@ def test_explicit_tokens_need_to_be_unambiguous(tmp_path, data_root, paths):
     meta = tags["Meta (META) Draws Fresh Fixture Scrutiny"]
     assert ("META", "text_token") in meta or ("META", "name_match") in meta
     assert any(s == "ACA" for s, _ in tags["Arcosa (ACA) wins a bridge order"])
+    # surname / place / adjective names need an attached cue (about-tier sample: WAT, UVV)
+    assert "Drone threat grows near fixture coastal Waters" not in tags
+    assert "Universal early schooling plan wins fixture backing" not in tags
+    assert ("WAT", "name_match") in tags["Waters Corp shares rise after fixture results"]
 
 
 def test_digest_never_confirms_by_a_filing_title(tmp_path, data_root, paths):
