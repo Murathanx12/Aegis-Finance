@@ -610,3 +610,14 @@ def test_b1_lag_is_read_from_spy_sessions_across_multi_session_gaps():
     assert me["beta"]["from"] >= dates[k] and 0.75 < me["beta"]["value"] < 1.05
     lagged = next(m for m in me["stamp_check"]["months"] if m["month"] == dates[k - 1][:7])
     assert lagged["corr_lag_minus_1"] > 0.6 and lagged["corr_lag_minus_1"] > lagged["corr_same_day"] + 0.2
+
+
+def test_m1_the_beta_window_never_runs_past_the_receipt_mark():
+    """A --rebuild-dna on an old receipt reads today's leaderboards: periods after the
+    receipt's last mark are cut, so the beta window lies inside the receipt window."""
+    s = _dated_series(n=40)
+    mark = s[-4][0]
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=_compound(s[:-3], 1), spy_leg_pct=_compound(s[:-3], 2),
+                           min_capture_obs=8, sessions=37, window=(s[0][0], mark))
+    assert me["n_periods_after_the_receipt_mark_dropped"] == 3
+    assert me["beta"]["to"] == mark and isinstance(me["beta_adjusted_excess_pp"]["value"], float)

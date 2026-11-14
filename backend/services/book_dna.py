@@ -623,6 +623,14 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
         return all_cd(f"beta {bval}: {(beta or {}).get('why') or 'no beta'}")
     if session_dates is None and spy_close:
         session_dates = sorted(spy_close)
+    # the beta window lies inside the receipt window: a period-return series read later than
+    # the receipt (a --rebuild-dna on an old receipt reads today's leaderboards) is cut at its mark
+    last = str((window or (None, None))[1] or "")[:10]
+    if _ISO_DAY.match(last) and series:
+        kept_s = [q for q in series if not (_ISO_DAY.match(str(q[0])) and str(q[0])[:10] > last)]
+        if len(kept_s) < len(series):
+            out["n_periods_after_the_receipt_mark_dropped"] = len(series) - len(kept_s)
+            series = kept_s
     check, est = stamp_screen(series, min_month_obs=int(q["stamp_month_min_obs"]),
                               min_lag_corr=float(q["stamp_month_min_lag_corr"]),
                               gap_se=float(q["stamp_month_gap_se"]), spy_close=spy_close)
