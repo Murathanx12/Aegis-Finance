@@ -15,44 +15,47 @@ A local, deterministic, no-LLM index over what this PC already collected:
   by URL so a headline shows its event type when one was typed;
 * FORECASTS -- the frozen forecast ledger (`predictions.jsonl`), open and resolved;
 * EVENT NODES -- `event_nodes/event_nodes.jsonl` as known at build time;
-* RELATED NAMES -- same sector (`potential_universe` identity) and universe-graph links;
+* RELATED NAMES -- universe-graph links, and same-sector peers ranked by how often our own
+  corpus names them together with the ticker (90 days), then by median dollar volume;
 * the CALENDAR is read live per request (`forward_calendar.next_dates`, point in time).
 
-HOW A ROW GETS A TICKER (each tag records its method; the page prints it)
-==========================================================================
-In order, first method wins per ticker:
+HOW A ROW GETS A TICKER (each tag records its method AND its tier; the page prints both)
+========================================================================================
+Methods, first one wins per ticker:
 
-1. ``source_field`` -- a symbol the source row already carries: the provider's own tag,
-   an explicit token the collector recorded (`resolved:X=cashtag|venue_ticker|
-   adr_local_code|paren_ticker`), the reader's `tickers_named`, a generic `ticker` field.
-   A collector NAME match (`resolved:X=name`) is NOT trusted: the inventory found
-   "Six dead in Krakow" -> PPLI ("People") and "Mississippi election" -> FCF ("First"),
-   so those rows are re-resolved by rule 4. A word-like symbol (`A`, `IT`, `ON`, `ALL`,
-   `NOW`, ... `config.EVENT_NODES_BAREWORD_SYMBOLS`) is never taken from a bare
-   parenthesis.
+1. ``source_field`` -- a symbol the source row already carries (provider tag, an explicit
+   token the collector recorded). A collector NAME match (`resolved:X=name`) is NOT
+   trusted: it is re-resolved by rule 4.
 2. ``sec_cik`` -- an SEC row's `cik:` tag through `official/company_tickers.json`.
-   ``reader_lane`` -- a reader ARTICLE page reached while looking up that ticker;
-   ``reader_search`` -- a headline link on a reader SEARCH page for that ticker.
-3. ``digest_typed`` -- the world digest's VERIFIED `tickers` for the same URL.
-4. ``text_token`` / ``name_match`` -- `event_nodes.strict_tickers` on the title and the
-   first `TICKER_HUB_BODY_CHARS` of the body: `$NVDA`, `(NASDAQ: NVDA)`, issuer names and
-   aliases with the CH-35 guards (length floor, common words need an ATTACHED cue,
-   lowercase surface refused), plus `config.TICKER_HUB_CASED_ALIASES` (case-sensitive
-   short names: Meta, AMD, TSMC, Apple ...).
+   ``reader_lane`` / ``reader_search`` -- the reader was browsing that ticker; kept only
+   when the row's text names it.
+3. ``text_token`` / ``name_match`` -- `event_nodes.strict_tickers` on the title and body.
+   Body rules (review of PR #145, F1): per-source boilerplate is cut first
+   (`TICKER_HUB_SOURCE_BOILERPLATE`); a publisher's own ticker never comes from its body
+   (`TICKER_HUB_PUBLISHER_TICKERS`); in a SHORT body (<= TICKER_HUB_SHORT_BODY_CHARS) a
+   name never tags (only an explicit symbol pattern does); in a long body a name needs
+   TICKER_HUB_BODY_MIN_MENTIONS mentions.
+4. ``digest_typed`` -- the world digest's tickers, kept only when the row's own text names
+   the ticker under the rules above, and ranked LAST (F2). In practice it then never
+   decides a tag; the digest labels the row's event type instead.
 
-Untagged rows are NOT stored; the build prints how many rows stayed untagged per
-source so the owner can decide whether a classifier is worth it.
+Tiers: ``about`` = the TITLE names the company (name or explicit symbol), or an SEC filing
+by CIK. Everything else is ``mentions``. The re-measured strict precision of every
+method other than title matches and CIK was under ~50 %, so they only ever reach
+`mentions`; the News tab shows `about` by default.
 
-INCREMENTAL, AND WHAT A REQUEST READS
-=====================================
-The build keeps cursors in `state.json` (byte offset per corpus file, seen page files per
-reader day folder, the digest offset). A request NEVER scans the corpus: it reads
-`postings_<YYYY-MM>.json` (ticker -> [[first_seen epoch, byte offset]]) and seeks the
-rows in `rows_<YYYY-MM>.jsonl`. Every file is written temp -> replace. An index older than
-`TICKER_HUB_STALE_HOURS` is reported STALE with its age.
+ONE GENERATION AT A TIME
+========================
+A build writes a complete new generation directory (rows, postings, state, extras), then
+renames it into place and replaces `CURRENT.json` (generation name + manifest of every
+file's size, sha256 and row count) atomically. A reader resolves `CURRENT.json` and checks
+the manifest's sizes and row counts on every request; a mismatch, an unreadable postings
+file, rows that do not carry the ticker their posting says, an unreadable universe or a
+missing forecast file each turn the payload's status DEGRADED with a named problem --
+never OK, never a 404 for every symbol, never a 500. `verify` re-hashes everything.
 
-DESCRIPTIVE ONLY. Nothing here ranks, scores or recommends; a forecast row is printed
-as written and graded, never as advice.
+DESCRIPTIVE ONLY. Nothing here ranks companies, scores or recommends; a forecast row is
+printed as written and graded, never as advice.
 """
 
 from __future__ import annotations
@@ -61,6 +64,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import threading
 import time
 from collections import Counter
@@ -75,8 +79,10 @@ from backend.services import disk_guard as DG
 from backend.services import event_nodes as EN
 from backend.services import news_entities as NE
 
-SCHEMA = "ticker-hub/1"
-STATE_SCHEMA = "ticker-hub-state/1"
+SCHEMA = "ticker-hub/2"
+INDEX_SCHEMA = str(C.TICKER_HUB_INDEX_SCHEMA)
+STATE_SCHEMA = "ticker-hub-state/2"
+CURRENT_NAME = "CURRENT.json"
 
 # refusal codes (each a red, non-zero exit in the CLI)
 CORPUS_MISSING = "CORPUS_MISSING"
@@ -84,10 +90,12 @@ CORPUS_UNREADABLE = "CORPUS_UNREADABLE"
 ISSUERS_MISSING = "ISSUERS_MISSING"
 NOTHING_INDEXED = "NOTHING_INDEXED"
 BUILD_LOCKED = "BUILD_LOCKED"
+INDEX_DAMAGED = "INDEX_DAMAGED"
 
 #: tag methods, strongest first (a ticker keeps the first method that named it)
-METHODS = ("source_field", "sec_cik", "reader_lane", "reader_search", "digest_typed",
-           "text_token", "name_match")
+METHODS = ("source_field", "sec_cik", "reader_lane", "reader_search", "text_token",
+           "name_match", "digest_typed")
+TIERS = ("about", "mentions")
 _TOKEN_RULES = frozenset({"cashtag", "paren_ticker", "venue_ticker", "adr_local_code"})
 
 _READER_PUBLISHER = {"wsj": "WSJ", "marketwatch": "MarketWatch", "barrons": "Barron's",
@@ -100,10 +108,16 @@ _SUFFIX_PUBLISHER_WORDS = ("wsj", "wall street journal", "ap news", "associated 
                            "scmp", "south china morning post", "nikkei", "reuters")
 _TITLE_SUFFIX = re.compile(r"\s+[-–—|]\s+([^-–—|]{2,60})$")
 _DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_GN_STORY_LINK = re.compile(r"<a\b[^>]*href=\"https?://news\.google\.com/stories/[^\"]*\"[^>]*>.*?</a>",
+                            re.IGNORECASE | re.DOTALL)
+_CHIP_RX = [re.compile(p) for p in C.TICKER_HUB_QUOTE_CHIP_PATTERNS]
+#: files of a v1 cache (no CURRENT.json) that a v2 build removes from the index root
+_V1_FILES = ("state.json", "typed.json", "universe.json", "forecasts.jsonl", "forecasts_index.json",
+             "events.json", "related.json", "latest.json")
 
 
 class TickerHubRefused(RuntimeError):
-    """A build that cannot run (missing/unreadable input, nothing indexed, locked)."""
+    """A build that cannot run (missing/unreadable input, nothing indexed, locked, damaged)."""
 
     def __init__(self, code: str, message: str):
         super().__init__(f"{code}: {message}")
@@ -118,6 +132,14 @@ def _iso(d: Optional[datetime]) -> Optional[str]:
 
 def _sha16(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8", errors="replace")).hexdigest()[:16]
+
+
+def _sha256_file(p: Path) -> str:
+    h = hashlib.sha256()
+    with open(p, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def url_key(url: str) -> str:
@@ -137,23 +159,40 @@ def url_key(url: str) -> str:
     return _sha16(u)
 
 
-def _norm_title(t: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", (t or "").lower()).strip()[:160]
+def norm_title(t: str) -> str:
+    """Unicode-aware: casefolded, every run of non-word characters one space. A CJK
+    headline keeps its characters (v1 kept only [a-z0-9] and folded different Chinese
+    headlines into one row, review F5)."""
+    return re.sub(r"[\W_]+", " ", (t or "").casefold()).strip()
 
 
-def row_id(publisher: str, title: str, url: str) -> str:
-    """One headline from one publisher is one row, whichever feed or page carried it."""
-    nt = _norm_title(title)
-    return _sha16(f"t|{publisher.lower()}|{nt}") if nt else _sha16(f"u|{url_key(url)}")
+def row_id(source: str, title: str, url: str, published_utc: Optional[str] = None) -> str:
+    """One row per (source, full normalised title, published time); a title-less row is
+    keyed on its URL. Copies of one story across sources are joined at READ time."""
+    nt = norm_title(title)
+    if nt:
+        return _sha16(f"t|{source}|{nt}|{published_utc or ''}")
+    return _sha16(f"u|{source}|{url_key(url)}")
+
+
+def is_quote_chip(text: str) -> bool:
+    t = " ".join((text or "").split())
+    return any(rx.match(t) for rx in _CHIP_RX)
+
+
+def _prefixed(table: dict, src: str) -> tuple:
+    """Values of the first key that `src` equals or starts with."""
+    for k, v in table.items():
+        if src == k or src.startswith(k):
+            return tuple(v)
+    return ()
 
 
 _READER_FETCHERS = frozenset({"web_reader", "reader_pool"})
 
 
 def _article_body(text: str, title: str) -> str:
-    """A reader page snapshot from its headline on: the nav, video carousels and 'more
-    videos' lists before it are page chrome (AP's carousel named Nvidia twice above an
-    Iran-war article). Unchanged when the headline is not found in the text."""
+    """A reader page snapshot from its headline on (nav and carousels before it are chrome)."""
     anchor = re.sub(r"\s+", " ", (title or "").strip().lower())[:40]
     if len(anchor) >= 12:
         i = text.lower().find(anchor)
@@ -168,6 +207,15 @@ def _strip_publisher_suffix(title: str) -> str:
     if m and any(w in m.group(1).lower() for w in _SUFFIX_PUBLISHER_WORDS):
         return t[:m.start()].strip()
     return t
+
+
+def effective_utc(first_seen: Optional[datetime], published: Optional[datetime]) -> Optional[datetime]:
+    """When the row happened: its published time when the source gives one (and it is not
+    after first_seen by more than a zone error), else when we first saw it."""
+    if published is not None and (first_seen is None or published <= first_seen + timedelta(
+            seconds=int(C.TICKER_HUB_PUBLISHED_FUTURE_SLACK_S))):
+        return min(published, first_seen) if first_seen is not None else published
+    return first_seen
 
 
 def default_data_root() -> Path:
@@ -189,6 +237,7 @@ def default_paths(data_root: Path) -> dict:
 
 
 def hub_dir(data_root: Path, out: Optional[Path] = None) -> Path:
+    """The index ROOT (holds CURRENT.json, the generations and receipts/)."""
     return Path(out) if out else Path(data_root) / str(C.TICKER_HUB_DIRNAME)
 
 
@@ -203,11 +252,15 @@ def _read_json(path: Path, default: Any = None) -> Any:
         return default
 
 
+def _as_list(v: Any) -> list:
+    return list(v) if isinstance(v, (list, tuple)) else []
+
+
 # ─────────────────────────────────────────────── tagging
 
 class Tagger:
     """The tag rules of the module docstring, bound to one issuer table and one
-    common-word set. `refused` counts every refused name match by key."""
+    common-word set. `refused` counts every refused match by reason."""
 
     def __init__(self, tbl: Any, cik_map: dict, common: dict):
         self.tbl = tbl
@@ -220,6 +273,7 @@ class Tagger:
             self.common.setdefault(str(k).lower(), {"lower": None, "capitalised": None, "listed": "ticker_hub"})
         chrome = [re.escape(p) for p in C.TICKER_HUB_BODY_BOILERPLATE]
         self._chrome_rx = re.compile("|".join(chrome), re.IGNORECASE) if chrome else None
+        self._source_chrome: dict[str, Optional[re.Pattern]] = {}
         self.symbols = {DA.norm_ticker(s) for s in tbl.symbols}
         self.bare = {str(s).upper() for s in C.EVENT_NODES_BAREWORD_SYMBOLS}
         cased = {}
@@ -236,6 +290,8 @@ class Tagger:
     def known(self, sym: str) -> bool:
         return DA.norm_ticker(sym) in self.symbols
 
+    # -- text --------------------------------------------------------------------------
+
     def text_tags(self, text: str, where: str) -> list[dict]:
         """Memoised for short texts: a front-page headline recurs on dozens of pages."""
         if not text:
@@ -250,37 +306,6 @@ class Tagger:
             return [dict(t) for t in hit]
         return self._text_tags(text, where)
 
-    def body_tags(self, body: str) -> list[dict]:
-        """Body tags with one more guard: in a body longer than TICKER_HUB_SHORT_BODY_CHARS
-        (a reader page snapshot carries the site's sidebars and 'most read' lists) a NAME
-        must occur at least TICKER_HUB_BODY_MIN_MENTIONS times. An explicit token
-        ($NVDA, NASDAQ: NVDA) needs one. Refusals are counted as `body_single_mention:`."""
-        if body and self._chrome_rx is not None:
-            body = self._chrome_rx.sub(" ", body)
-        tags = self.text_tags(body, "body")
-        if len(body or "") <= int(C.TICKER_HUB_SHORT_BODY_CHARS):
-            return tags
-        need = int(C.TICKER_HUB_BODY_MIN_MENTIONS)
-        low = body.lower()
-        out = []
-        for t in tags:
-            rule = str(t.get("rule") or "")
-            if t["m"] != "name_match" or ":" not in rule:
-                out.append(t)
-                continue
-            kind, key = rule.split(":", 1)
-            if kind == "cased_alias":
-                n = len(re.findall(r"(?<![A-Za-z0-9])" + re.escape(key) + r"(?![A-Za-z0-9])", body))
-            elif kind == "foreign_alias":
-                n = body.count(key)
-            else:
-                n = len(re.findall(r"(?<![a-z0-9])" + re.escape(key.lower()) + r"(?![a-z0-9])", low))
-            if n >= need:
-                out.append(t)
-            else:
-                self.refused[f"body_single_mention:{key}"] += 1
-        return out
-
     def _text_tags(self, text: str, where: str) -> list[dict]:
         out: list[dict] = []
         hits = EN.strict_tickers(text, self.tbl, self.common, self.refused)
@@ -292,8 +317,7 @@ class Tagger:
             out.append({"t": DA.norm_ticker(sym), "m": m, "rule": rule, "where": where})
         if self._cased_rx is not None:
             seen = {o["t"] for o in out}
-            # another company in a TITLE is context ("Apple, Palantir, AMD ... Stocks"); in a
-            # body it is not (a food column's body named "Waters" and carried the fruit into AAPL)
+            # another company in a TITLE is context ("Apple, Palantir, AMD ... Stocks"); in a body it is not
             others = bool(out) and where == "title"
             for mm in self._cased_rx.finditer(text):
                 s = self.cased.get(mm.group(1))
@@ -309,7 +333,7 @@ class Tagger:
 
     @staticmethod
     def _company_context(text: str, start: int, end: int) -> bool:
-        """A possessive ("Apple's"), an attached corporate cue ("Apple shares", "Apple Inc"),
+        """A possessive ("Apple's"), an attached corporate cue ("Apple shares"),
         a context word anywhere in the text (TICKER_HUB_CASED_CONTEXT_WORDS), or a corporate
         cue word within the news_entities window."""
         nxt = text[end:end + 2]
@@ -322,10 +346,66 @@ class Tagger:
             return True
         return NE._cue_near(low, start, end - start)
 
+    def strip_boilerplate(self, body: str, src: str) -> str:
+        """The general page chrome plus the source's own declared boilerplate."""
+        if not body:
+            return body
+        if self._chrome_rx is not None:
+            body = self._chrome_rx.sub(" ", body)
+        if src not in self._source_chrome:
+            phrases = [re.escape(p) for p in _prefixed(dict(C.TICKER_HUB_SOURCE_BOILERPLATE), src)]
+            self._source_chrome[src] = re.compile("|".join(phrases), re.IGNORECASE) if phrases else None
+        rx = self._source_chrome[src]
+        if rx is not None:
+            body, n = rx.subn(" ", body)
+            if n:
+                self.refused[f"boilerplate_cut:{src.split('_')[0] if src.startswith('google') else src}"] += n
+        return body
+
+    def body_tags(self, body: str, src: str = "") -> list[dict]:
+        """Body tags under the body rules (module docstring, rule 3)."""
+        body = self.strip_boilerplate(body or "", src)
+        tags = self.text_tags(body, "body")
+        own = set(_prefixed(dict(C.TICKER_HUB_PUBLISHER_TICKERS), src))
+        short = len(body) <= int(C.TICKER_HUB_SHORT_BODY_CHARS)
+        need = int(C.TICKER_HUB_BODY_MIN_MENTIONS)
+        low = body.lower()
+        out = []
+        for t in tags:
+            if t["t"] in own:
+                self.refused[f"publisher_own_ticker_in_body:{t['t']}"] += 1
+                continue
+            if t["m"] != "name_match":
+                out.append(t)                     # an explicit symbol pattern ($NVDA, NASDAQ: NVDA)
+                continue
+            if short:
+                self.refused["short_body_name_only"] += 1
+                continue
+            rule = str(t.get("rule") or "")
+            kind, _, key = rule.partition(":")
+            if kind == "cased_alias":
+                n = len(re.findall(r"(?<![A-Za-z0-9])" + re.escape(key) + r"(?![A-Za-z0-9])", body))
+            elif kind == "foreign_alias":
+                n = body.count(key)
+            else:
+                n = len(re.findall(r"(?<![a-z0-9])" + re.escape(key.lower()) + r"(?![a-z0-9])", low))
+            if n >= need:
+                out.append(t)
+            else:
+                self.refused["body_single_mention"] += 1
+        return out
+
     def confirmed(self, sym: str, title: str, body: str) -> bool:
-        """Does the row's own text name `sym` (title, or body with one mention)?"""
+        """Lenient: the title or the body text names `sym` (one mention is enough)."""
         s = DA.norm_ticker(sym)
         return any(t["t"] == s for t in self.text_tags(title or "", "title") + self.text_tags(body or "", "body"))
+
+    def confirmed_strict(self, sym: str, title: str, body: str, src: str) -> bool:
+        """The title names `sym`, or the body does under the body rules."""
+        s = DA.norm_ticker(sym)
+        return any(t["t"] == s for t in self.text_tags(title or "", "title") + self.body_tags(body or "", src))
+
+    # -- fields ------------------------------------------------------------------------
 
     def source_field_tags(self, tickers: Iterable[Any], entity_tags: Iterable[Any]) -> list[dict]:
         """Rule 1 over a corpus row's `tickers` + `entity_tags` (`resolved:X=rule`)."""
@@ -373,6 +453,13 @@ def merge_tags(*groups: Iterable[dict]) -> list[dict]:
             if t["t"] and t["t"] not in seen:
                 seen[t["t"]] = t
     return list(seen.values())
+
+
+def with_tiers(tags: list[dict], title_syms: set) -> list[dict]:
+    """`about` when the title names the ticker or the row is the company's own SEC filing."""
+    for t in tags:
+        t["tier"] = "about" if (t["t"] in title_syms or t["m"] == "sec_cik") else "mentions"
+    return tags
 
 
 def _bump_common(counter_low: Counter, counter_cap: Counter, title: str, tbl: Any) -> None:
@@ -431,8 +518,14 @@ def _read_new_lines_at(path: Path, start: int, end: int) -> list[tuple[str, int]
     return out
 
 
-def _as_list(v: Any) -> list:
-    return list(v) if isinstance(v, (list, tuple)) else []
+def _row(src: str, publisher: str, kind: str, title: str, url: str, fs: datetime,
+         pub: Optional[datetime], regions: list, tags: list[dict]) -> dict:
+    pub_iso = _iso(pub)
+    eff = effective_utc(fs, pub)
+    return {"id": row_id(src, title, url, pub_iso), "source": src, "publisher": publisher, "kind": kind,
+            "first_seen_utc": _iso(fs), "published_utc": pub_iso, "eff_utc": _iso(eff),
+            "title": title[:300], "url": url[:600], "url_key": url_key(url), "feeds": [src],
+            "regions": regions, "tags": tags}
 
 
 def _corpus_row(src: str, o: dict, tagger: Tagger, typed: dict, now: datetime,
@@ -459,17 +552,21 @@ def _corpus_row(src: str, o: dict, tagger: Tagger, typed: dict, now: datetime,
         return None
     url = str(o.get("url") or o.get("index_url") or "")
     publisher, region, title, _basis = EN.publisher_region(src, title_raw, url)
+    if is_quote_chip(title):
+        stats["quote_chips_skipped"] += 1
+        return None
     reader_row = src.startswith("dj_reader_") or str(o.get("fetcher") or "") in _READER_FETCHERS
-    raw_body = EN.clean_text(str(o.get("body") or o.get("text") or ""))
+    raw = str(o.get("body") or o.get("text") or "")
+    if src.startswith("google_news_rss_"):
+        raw = _GN_STORY_LINK.sub(" ", raw)       # the "full coverage" link, any language
+    raw_body = EN.clean_text(raw)
     body = (_article_body(raw_body, title) if reader_row else raw_body)[:int(C.TICKER_HUB_BODY_CHARS)]
     uk = url_key(url)
     ty = typed.get(uk) if uk else None
     generic = [o.get("ticker")] if o.get("ticker") else []
     g_field = tagger.source_field_tags(_as_list(o.get("tickers")) + generic, entity)
     if reader_row:
-        # the reader's `tickers` is the LANE it was browsing, not a provider tag: an
-        # annuity column read from the NTLA lane carried NTLA. Kept only when the text
-        # itself names the ticker (one mention is enough), and labelled reader_lane.
+        # the reader's `tickers` is the LANE it was browsing, not a provider tag
         lane = [t for t in g_field if t["rule"] == "provider"]
         g_field = [t for t in g_field if t["rule"] != "provider"]
         for t in lane:
@@ -478,20 +575,24 @@ def _corpus_row(src: str, o: dict, tagger: Tagger, typed: dict, now: datetime,
             else:
                 stats["reader_lane_unconfirmed"] += 1
     g_cik = tagger.cik_tags(entity) if src.startswith("sec_") else []
-    g_digest = [{"t": DA.norm_ticker(t), "m": "digest_typed", "rule": "world_digest", "where": "field"}
-                for t in (ty or {}).get("tickers") or [] if tagger.known(t)]
+    g_digest = []
+    for t in (ty or {}).get("tickers") or []:
+        if not tagger.known(t):
+            continue
+        if tagger.confirmed_strict(t, title, body, src):
+            g_digest.append({"t": DA.norm_ticker(t), "m": "digest_typed", "rule": "world_digest",
+                             "where": "field"})
+        else:
+            stats["digest_unconfirmed"] += 1
     kind = EN.kind_of(src)
     g_title = [] if kind == "filing" else tagger.text_tags(title, "title")
-    g_body = tagger.body_tags(body)
-    tags = merge_tags(g_field, g_cik, g_digest, g_title, g_body)
+    g_body = tagger.body_tags(body, src)
+    tags = with_tiers(merge_tags(g_field, g_cik, g_title, g_body, g_digest), {t["t"] for t in g_title})
     stats[f"rows_read:{src}"] += 1
     if not tags:
         stats[f"rows_untagged:{src}"] += 1
         return None
-    return {"id": row_id(publisher, title, url), "source": src, "publisher": publisher, "kind": kind,
-            "first_seen_utc": _iso(known), "published_utc": _iso(pub), "title": title[:300],
-            "url": url[:600], "url_key": uk, "feeds": [src], "regions": [region] if region else [],
-            "tags": tags}
+    return _row(src, publisher, kind, title, url, known, pub, [region] if region else [], tags)
 
 
 def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
@@ -521,6 +622,9 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
     out: list[dict] = []
     if kind == "article":
         title = _strip_publisher_suffix(str(page.get("title") or ""))
+        if is_quote_chip(title):
+            stats["quote_chips_skipped"] += 1
+            return []
         url = str(page.get("url") or "")
         text = _article_body(EN.clean_text(str(page.get("text") or "")), title)[:int(C.TICKER_HUB_BODY_CHARS)]
         g_lane = ([{"t": lane_t, "m": "reader_lane", "rule": str(rb.get("lane") or "lane"), "where": "field"}]
@@ -528,8 +632,6 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
         if g_lane and not tagger.confirmed(lane_t, title, text):
             stats["reader_lane_unconfirmed"] += 1
             g_lane = []
-        # `tickers_named` includes quote chips ("NVDA -3.2%") from the page's market strip,
-        # so a Barron's retirement column carried NVDA: kept only when the text names it.
         g_named = []
         for t in tagger.source_field_tags(_as_list(page.get("tickers_named")), []):
             if t["t"] in tagger.bare:
@@ -538,15 +640,14 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
                 g_named.append({**t, "rule": "tickers_named"})
             else:
                 stats["tickers_named_unconfirmed"] += 1
-        tags = merge_tags(g_named, g_lane, tagger.text_tags(title, "title"), tagger.body_tags(text))
+        g_title = tagger.text_tags(title, "title")
+        tags = with_tiers(merge_tags(g_named, g_lane, g_title, tagger.body_tags(text, src)),
+                          {t["t"] for t in g_title})
         stats[f"rows_read:{src}"] += 1
         if not tags:
             stats[f"rows_untagged:{src}"] += 1
             return []
-        out.append({"id": row_id(publisher, title, url), "source": src, "publisher": publisher,
-                    "kind": "article", "first_seen_utc": _iso(known), "published_utc": _iso(pub),
-                    "title": title[:300], "url": url[:600], "url_key": url_key(url), "feeds": [src],
-                    "regions": [], "tags": tags})
+        out.append(_row(src, publisher, "article", title, url, known, pub, [], tags))
         return out
     # front / search pages: their outbound headline links
     min_c, min_w = int(C.TICKER_HUB_MIN_LINK_CHARS), int(C.TICKER_HUB_MIN_LINK_WORDS)
@@ -558,18 +659,19 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
         if len(text) < min_c or len(text.split()) < min_w or not url:
             stats["reader_links_too_short"] += 1
             continue
+        if is_quote_chip(text):
+            stats["quote_chips_skipped"] += 1
+            continue
         stats[f"rows_read:{src}"] += 1
         g_search = ([{"t": lane_t, "m": "reader_search", "rule": str(rb.get("lane") or "search"),
                       "where": "field"}] if kind == "search" and lane_t and tagger.known(lane_t)
                     and tagger.confirmed(lane_t, text, "") else [])
-        tags = merge_tags(g_search, tagger.text_tags(text, "title"))
+        g_title = tagger.text_tags(text, "title")
+        tags = with_tiers(merge_tags(g_search, g_title), {t["t"] for t in g_title})
         if not tags:
             stats[f"rows_untagged:{src}"] += 1
             continue
-        out.append({"id": row_id(publisher, text, url), "source": src, "publisher": publisher,
-                    "kind": "headline_link", "first_seen_utc": _iso(known), "published_utc": None,
-                    "title": text[:300], "url": url[:600], "url_key": url_key(url), "feeds": [src],
-                    "regions": [], "tags": tags})
+        out.append(_row(src, publisher, "headline_link", text, url, known, None, [], tags))
     return out
 
 
@@ -607,8 +709,8 @@ def _month(iso: str) -> str:
     return iso[:7]
 
 
-def shard_paths(hd: Path, month: str) -> tuple[Path, Path]:
-    return hd / f"rows_{month}.jsonl", hd / f"postings_{month}.json"
+def shard_paths(gd: Path, month: str) -> tuple[Path, Path]:
+    return gd / f"rows_{month}.jsonl", gd / f"postings_{month}.json"
 
 
 def _epoch(iso: Optional[str]) -> int:
@@ -631,35 +733,41 @@ def _read_shard(path: Path) -> dict[str, dict]:
 
 
 def _fold(old: dict, new: dict) -> dict:
-    """Same headline seen again: earliest first_seen, union of feeds/regions/tags."""
+    """The same row (same source, title, published time) seen again."""
     if new["first_seen_utc"] < old["first_seen_utc"] and _month(new["first_seen_utc"]) == _month(old["first_seen_utc"]):
         old["first_seen_utc"] = new["first_seen_utc"]
-        old["source"] = new["source"]
+        old["eff_utc"] = new["eff_utc"]
         old["url"] = new["url"] or old["url"]
         old["url_key"] = new["url_key"] or old["url_key"]
-    if not old.get("published_utc") and new.get("published_utc"):
-        old["published_utc"] = new["published_utc"]
-    old["feeds"] = sorted(set(old.get("feeds") or []) | set(new.get("feeds") or []))
     old["regions"] = sorted(set(old.get("regions") or []) | set(new.get("regions") or []))
-    old["tags"] = merge_tags(old.get("tags") or [], new.get("tags") or [])
+    merged = merge_tags(old.get("tags") or [], new.get("tags") or [])
+    about = {t["t"] for t in (old.get("tags") or []) + (new.get("tags") or []) if t.get("tier") == "about"}
+    for t in merged:
+        t["tier"] = "about" if t["t"] in about else t.get("tier", "mentions")
+    old["tags"] = merged
     return old
 
 
-def _write_shard(hd: Path, month: str, rows: dict[str, dict]) -> dict:
-    """rows newest first; postings carry [epoch, byte offset] per ticker/source/all."""
-    rp, pp = shard_paths(hd, month)
-    ordered = sorted(rows.values(), key=lambda r: (r["first_seen_utc"], r["id"]), reverse=True)
+def _write_shard(gd: Path, month: str, rows: dict[str, dict]) -> dict:
+    """rows newest first; postings carry [eff epoch, byte offset] per ticker (all tiers),
+    per ticker in the `about` tier, per source, and for all rows (with an about flag)."""
+    rp, pp = shard_paths(gd, month)
+    ordered = sorted(rows.values(), key=lambda r: (r.get("eff_utc") or r["first_seen_utc"], r["id"]), reverse=True)
     parts: list[str] = []
     off = 0
     post: dict[str, Any] = {"schema": SCHEMA, "month": month, "n_rows": len(ordered),
-                            "ticker": {}, "source": {}, "all": []}
+                            "ticker": {}, "about": {}, "source": {}, "all": []}
     for r in ordered:
         line = json.dumps(r, ensure_ascii=True, separators=(",", ":")) + "\n"
-        ep = _epoch(r["first_seen_utc"])
-        post["all"].append([ep, off])
+        ep = _epoch(r.get("eff_utc") or r["first_seen_utc"])
+        tags = r.get("tags") or []
+        any_about = any(t.get("tier") == "about" for t in tags)
+        post["all"].append([ep, off, 1 if any_about else 0])
         post["source"].setdefault(r["source"], []).append([ep, off])
-        for t in {t["t"] for t in r.get("tags") or []}:
+        for t in {t["t"] for t in tags}:
             post["ticker"].setdefault(t, []).append([ep, off])
+        for t in {t["t"] for t in tags if t.get("tier") == "about"}:
+            post["about"].setdefault(t, []).append([ep, off])
         parts.append(line)
         off += len(line.encode("utf-8"))
     DG.atomic_write_text(rp, "".join(parts) or "\n")
@@ -670,9 +778,10 @@ def _write_shard(hd: Path, month: str, rows: dict[str, dict]) -> dict:
 # ─────────────────────────────────────────────── universe / forecasts / events / related
 
 def load_universe(paths: dict, tbl: Any) -> dict[str, dict]:
-    """{sym: {name, sector, industry, gics_sector}} for every issuer-table symbol.
+    """{sym: {name, sector, gics_sector, dollar_volume}} for every issuer-table symbol.
     `sector` is the potential_universe identity label (the universe graph's sectors);
-    `gics_sector` is `config.WHY_MOVED_TICKER_SECTOR` where it knows the name."""
+    `dollar_volume` its execution.median_dollar_volume (the size measure on file; no
+    market cap is in the data)."""
     import csv
     out: dict[str, dict] = {}
     ip = Path(paths["issuers"])
@@ -681,7 +790,7 @@ def load_universe(paths: dict, tbl: Any) -> dict[str, dict]:
             s = DA.norm_ticker(row.get("symbol"))
             if s:
                 out[s] = {"name": (row.get("primary_name") or "").strip() or None,
-                          "sector": None, "gics_sector": None}
+                          "sector": None, "gics_sector": None, "dollar_volume": None}
     pu_dir = Path(paths["potential_universe"])
     files = sorted(pu_dir.glob("*.jsonl")) if pu_dir.is_dir() else []
     if files:
@@ -694,8 +803,13 @@ def load_universe(paths: dict, tbl: Any) -> dict[str, dict]:
                 ident = r.get("identity") if isinstance(r, dict) else None
                 if isinstance(ident, dict) and r.get("symbol"):
                     s = DA.norm_ticker(r["symbol"])
-                    rec = out.setdefault(s, {"name": None, "sector": None, "gics_sector": None})
+                    rec = out.setdefault(s, {"name": None, "sector": None, "gics_sector": None,
+                                             "dollar_volume": None})
                     rec["sector"] = ident.get("sector") or rec.get("sector")
+                    ex = r.get("execution") if isinstance(r.get("execution"), dict) else {}
+                    dv = ex.get("median_dollar_volume")
+                    if isinstance(dv, (int, float)):
+                        rec["dollar_volume"] = float(dv)
     gics = dict(getattr(C, "WHY_MOVED_TICKER_SECTOR", {}) or {})
     for s, v in gics.items():
         ns = DA.norm_ticker(s)
@@ -715,12 +829,15 @@ def _forecast_compact(r: dict) -> dict:
             "model": r.get("model"), "thesis": (r.get("thesis") or "")[:280] or None}
 
 
-def build_forecasts(pred: Path, hd: Path, state: dict, stats: Counter) -> dict:
+def build_forecasts(pred: Path, gd: Path, prev_gd: Optional[Path], state: dict, stats: Counter) -> dict:
     """Per-ticker compact forecast rows, rebuilt whole when the ledger changed (it is
     rewritten in place, so no byte cursor is valid). Streamed, read-only."""
     from backend.services import forecast_ledger as FL
     if not FL.exists(pred):
+        # written empty, so the index is complete; the receipt and the panel say why it is empty
         stats["forecast_ledger_missing"] += 1
+        DG.atomic_write_text(gd / "forecasts.jsonl", "\n")
+        _write_json(gd / "forecasts_index.json", {})
         return {"status": "LEDGER_MISSING", "path": str(pred)}
     try:
         # the layer's own cache key: it changes with ANY backing file, legacy or streams
@@ -728,7 +845,10 @@ def build_forecasts(pred: Path, hd: Path, state: dict, stats: Counter) -> dict:
     except (OSError, ValueError, TypeError):
         fp = None
     prev = state.get("forecasts") or {}
-    if fp is not None and prev.get("fingerprint") == fp and (hd / "forecasts.jsonl").is_file():
+    if (fp is not None and prev.get("fingerprint") == fp and prev_gd is not None
+            and (prev_gd / "forecasts.jsonl").is_file() and (prev_gd / "forecasts_index.json").is_file()):
+        for name in ("forecasts.jsonl", "forecasts_index.json"):
+            _carry(prev_gd / name, gd / name)
         return {**prev, "status": "UNCHANGED"}
     by: dict[str, list] = {}
     n = bad = 0
@@ -750,18 +870,18 @@ def build_forecasts(pred: Path, hd: Path, state: dict, stats: Counter) -> dict:
         index[t] = off
         parts.append(line)
         off += len(line.encode("utf-8"))
-    DG.atomic_write_text(hd / "forecasts.jsonl", "".join(parts) or "\n")
-    _write_json(hd / "forecasts_index.json", index)
+    DG.atomic_write_text(gd / "forecasts.jsonl", "".join(parts) or "\n")
+    _write_json(gd / "forecasts_index.json", index)
     out = {"status": "REBUILT", "fingerprint": fp, "rows": n, "bad_lines": bad, "tickers": len(by),
            "path": str(pred)}
     state["forecasts"] = out
     return out
 
 
-def build_events(store: Path, hd: Path, now: datetime, stats: Counter) -> dict:
+def build_events(store: Path, gd: Path, now: datetime) -> dict:
     """{ticker: [node brief + first evidence title]} as the event store stood at `now`."""
     if not Path(store).is_file():
-        _write_json(hd / "events.json", {"tickers": {}, "status": "STORE_MISSING"})
+        _write_json(gd / "events.json", {"tickers": {}, "status": "STORE_MISSING"})
         return {"status": "STORE_MISSING", "path": str(store)}
     known = EN.nodes_known_at(Path(store), now)
     by: dict[str, list] = {}
@@ -778,14 +898,14 @@ def build_events(store: Path, hd: Path, now: datetime, stats: Counter) -> dict:
     for t in by:
         by[t].sort(key=lambda b: (str(b.get("first_seen_utc") or "")), reverse=True)
     meta = {k: known.get(k) for k in ("newest_build_utc", "age_hours", "stale", "stale_after_hours")}
-    _write_json(hd / "events.json", {"tickers": by, "status": "OK", **meta})
+    _write_json(gd / "events.json", {"tickers": by, "status": "OK", **meta})
     return {"status": "OK", "nodes": len(known["nodes"]), "tickers": len(by), **meta}
 
 
-def build_related(graph_dir: Path, hd: Path, now: datetime) -> dict:
+def build_related(graph_dir: Path, gd: Path, now: datetime) -> dict:
     """Universe-graph neighbours per company, as the newest graph built at or before now."""
     if not Path(graph_dir).is_dir():
-        _write_json(hd / "related.json", {"tickers": {}, "graph": {"status": "GRAPH_MISSING"}})
+        _write_json(gd / "related.json", {"tickers": {}, "graph": {"status": "GRAPH_MISSING"}})
         return {"status": "GRAPH_MISSING"}
     try:
         graph, gmeta = EN.select_graph(Path(graph_dir), now)
@@ -800,11 +920,112 @@ def build_related(graph_dir: Path, hd: Path, now: datetime) -> dict:
             if nb:
                 by[DA.norm_ticker(s)] = nb
     gm = {k: v for k, v in (gmeta or {}).items() if k != "skipped_after_now"}
-    _write_json(hd / "related.json", {"tickers": by, "graph": gm})
+    _write_json(gd / "related.json", {"tickers": by, "graph": gm})
     return {**gm, "companies_with_links": len(by)}
 
 
-# ─────────────────────────────────────────────── the build
+# ─────────────────────────────────────────────── generations
+
+def read_current(root: Path) -> tuple[Optional[dict], Optional[str]]:
+    """(CURRENT.json, problem). No file -> (None, None); unreadable -> (None, problem)."""
+    p = Path(root) / CURRENT_NAME
+    if not p.is_file():
+        return None, None
+    cur = _read_json(p, None)
+    if not isinstance(cur, dict) or not cur.get("generation"):
+        return None, "CURRENT_UNREADABLE"
+    return cur, None
+
+
+def _carry(src: Path, dst: Path) -> None:
+    """An unchanged file into the new generation: a hard link, else a copy."""
+    try:
+        os.link(src, dst)
+    except OSError:
+        shutil.copy2(src, dst)
+
+
+def _manifest(gd: Path) -> dict:
+    files = {}
+    for p in sorted(gd.iterdir()):
+        if not p.is_file():
+            continue
+        rec: dict[str, Any] = {"bytes": p.stat().st_size, "sha256": _sha256_file(p)}
+        if p.name.startswith("postings_"):
+            po = _read_json(p, {}) or {}
+            rec["rows"] = int(po.get("n_rows") or 0)
+        files[p.name] = rec
+    return files
+
+
+def verify(root: Path, *, full: bool = True) -> dict:
+    """Every problem of the current generation by name. `full` re-hashes every file; the
+    request path checks sizes and counts only (`index_problems`)."""
+    root = Path(root)
+    cur, prob = read_current(root)
+    if cur is None:
+        return {"status": "NO_INDEX" if prob is None else "DEGRADED", "problems": [prob] if prob else [],
+                "generation": None}
+    problems = list(index_problems(root, cur))
+    if full and not any(p.startswith(("GENERATION_MISSING", "INDEX_SCHEMA")) for p in problems):
+        gd = root / cur["generation"]
+        for name, rec in (cur.get("manifest") or {}).items():
+            p = gd / name
+            if p.is_file() and _sha256_file(p) != rec.get("sha256"):
+                problems.append(f"FILE_HASH_MISMATCH:{name}")
+        for name, rec in (cur.get("manifest") or {}).items():
+            if name.startswith("rows_"):
+                m = name[len("rows_"):-len(".jsonl")]
+                try:
+                    with open(gd / name, "rb") as fh:
+                        n = sum(1 for line in fh if line.strip())
+                except OSError:
+                    continue
+                want = ((cur.get("manifest") or {}).get(f"postings_{m}.json") or {}).get("rows")
+                if want is not None and n != want:
+                    problems.append(f"ROWS_POSTINGS_MISMATCH:{m}")
+    problems = sorted(set(problems))
+    return {"status": "DEGRADED" if problems else "OK", "problems": problems,
+            "generation": cur.get("generation"), "built_utc": cur.get("built_utc")}
+
+
+_PROBLEM_CACHE: dict[str, tuple[Any, list]] = {}
+
+
+def index_problems(root: Path, cur: dict) -> list[str]:
+    """Cheap checks: schema, generation present, every manifest file present at its size,
+    postings parse and match the manifest's row counts."""
+    if cur.get("schema") != INDEX_SCHEMA:
+        return [f"INDEX_SCHEMA_OLD:{cur.get('schema')}"]
+    gd = Path(root) / cur["generation"]
+    if not gd.is_dir():
+        return [f"GENERATION_MISSING:{cur['generation']}"]
+    problems = []
+    for name, rec in (cur.get("manifest") or {}).items():
+        p = gd / name
+        try:
+            size = p.stat().st_size
+        except OSError:
+            problems.append(f"FILE_MISSING:{name}")
+            continue
+        if size != rec.get("bytes"):
+            problems.append(f"FILE_SIZE_MISMATCH:{name}")
+            continue
+        if name.startswith("postings_"):
+            po = _cached_json(p)
+            if not isinstance(po, dict):
+                problems.append(f"POSTINGS_UNREADABLE:{name}")
+            elif int(po.get("n_rows") or 0) != int(rec.get("rows") or 0):
+                problems.append(f"POSTINGS_COUNT_MISMATCH:{name}")
+        if name == "universe.json":
+            uni = _cached_json(p)
+            if not isinstance(uni, dict) or not uni:
+                problems.append("UNIVERSE_UNREADABLE")
+    for need in ("universe.json", "forecasts_index.json", "forecasts.jsonl", "state.json"):
+        if need not in (cur.get("manifest") or {}):
+            problems.append(f"FILE_NOT_IN_MANIFEST:{need}")
+    return problems
+
 
 class _Lock:
     def __init__(self, path: Path):
@@ -849,30 +1070,47 @@ def check_inputs(paths: dict) -> None:
 def build(data_root: Path, *, out: Optional[Path] = None, now: Optional[datetime] = None,
           index_days: Optional[int] = None, paths: Optional[dict] = None,
           with_extras: bool = True) -> dict:
-    """Index everything new since the last build into `out` (default `<data_root>/ticker_hub`).
-    Reads the data root only; writes only under `out`. Returns the receipt."""
+    """Index everything new since the last build into a NEW generation under `out`
+    (default `<data_root>/ticker_hub`). Reads the data root only; writes only under `out`."""
     t0 = time.time()
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     P = paths or default_paths(data_root)
     check_inputs(P)
-    hd = hub_dir(data_root, out)
-    hd.mkdir(parents=True, exist_ok=True)
-    with _Lock(hd / ".build.lock"):
-        return _build_locked(P, hd, now, int(index_days or C.TICKER_HUB_INDEX_DAYS), t0, with_extras)
+    root = hub_dir(data_root, out)
+    root.mkdir(parents=True, exist_ok=True)
+    with _Lock(root / ".build.lock"):
+        return _build_locked(P, root, now, int(index_days or C.TICKER_HUB_INDEX_DAYS), t0, with_extras)
 
 
-def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
+def _build_locked(P: dict, root: Path, now: datetime, index_days: int, t0: float,
                   with_extras: bool) -> dict:
     stats: Counter = Counter()
-    state = _read_json(hd / "state.json", None) or {"schema": STATE_SCHEMA}
-    first_build = not state.get("built_utc")
+    cur, cur_prob = read_current(root)
+    prev_gd: Optional[Path] = None
+    if cur is not None and cur.get("schema") == INDEX_SCHEMA and (root / cur["generation"]).is_dir():
+        prev_gd = root / cur["generation"]
+    elif cur is not None or cur_prob:
+        stats["schema_or_current_rebuild"] += 1
+    if cur is None and (root / "state.json").is_file():
+        # a v1 cache: its row ids are not v2's, so it is removed and rebuilt, never mixed
+        for p in list(root.glob("rows_*.jsonl")) + list(root.glob("postings_*.json")) + [root / n for n in _V1_FILES]:
+            if p.is_file():
+                p.unlink()
+                stats["v1_files_removed"] += 1
+    state = (_read_json(prev_gd / "state.json", None) if prev_gd else None) or {"schema": STATE_SCHEMA}
+    first_build = prev_gd is None
+    gen = f"g_{now.strftime('%Y%m%dT%H%M%SZ')}_{os.getpid()}"
+    gd = root / (gen + ".tmp")
+    if gd.exists():
+        shutil.rmtree(gd)
+    gd.mkdir(parents=True)
     tbl = NE.tables(issuers=Path(P["issuers"]))
     try:
         cik_map = DA.load_cik_map(Path(P["cik_map"]))
         cik_status = "OK"
     except Exception as exc:                                           # noqa: BLE001
         cik_map, cik_status = {}, f"CIK_MAP_UNAVAILABLE: {str(exc)[:160]}"
-    typed = _read_json(hd / "typed.json", None) or {}
+    typed = (_read_json(prev_gd / "typed.json", None) if prev_gd else None) or {}
     _update_typed(Path(P["digest"]), state, typed, stats)
     cutoff_day = (now - timedelta(days=index_days)).date().isoformat()
     corpus = Path(P["corpus"])
@@ -932,8 +1170,7 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
                 continue
             known = DA._utc(o.get("first_seen_utc")) or DA.timed_utc(o.get("published_utc"))
             if known is not None and known > now:
-                # written after this build's clock: the cursor stops here, the next build reads it
-                stats["deferred_after_now"] += 1
+                stats["deferred_after_now"] += 1          # the cursor stops here; the next build reads it
                 break
             off = line_end
             r = _corpus_row(src, o, tagger, typed, now, stats)
@@ -976,8 +1213,7 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
                         continue
                     pfs = DA._utc(page.get("first_seen_utc"))
                     if pfs is not None and pfs > now:
-                        # first seen after this build's clock: left unseen for the next build
-                        deferred += 1
+                        deferred += 1                     # left unseen for the next build
                         stats["deferred_after_now"] += 1
                         continue
                     seen.add(name)
@@ -987,18 +1223,22 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
                     s = f"reader:{pub.name}"
                     if isinstance(fs, str) and fs > (newest.get(s) or "") and fs <= _iso(now):
                         newest[s] = fs
-                # a deferred page keeps the folder dirty, so the next build looks again
                 rd_state[key] = {"mtime_ns": None if deferred else mt, "seen": sorted(seen)}
 
-    # merge into month shards
+    # merge into month shards of the NEW generation; untouched shards are carried over
     keys: dict = state.setdefault("keys", {})
     by_month: dict[str, list[dict]] = {}
     for r in new_rows:
         m = keys.get(r["id"]) or _month(r["first_seen_utc"])
         by_month.setdefault(m, []).append(r)
     shard_receipts = []
-    for m in sorted(by_month):
-        rows = _read_shard(shard_paths(hd, m)[0])
+    months_prev = sorted(p.name[len("rows_"):-len(".jsonl")] for p in prev_gd.glob("rows_*.jsonl")) if prev_gd else []
+    for m in sorted(set(months_prev) | set(by_month)):
+        if m not in by_month:
+            for p in shard_paths(prev_gd, m):            # type: ignore[arg-type]
+                _carry(p, gd / p.name)
+            continue
+        rows = _read_shard(shard_paths(prev_gd, m)[0]) if prev_gd else {}
         before = len(rows)
         for r in by_month[m]:
             if r["id"] in rows:
@@ -1007,18 +1247,12 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
             else:
                 rows[r["id"]] = r
                 keys[r["id"]] = m
-        shard_receipts.append({**_write_shard(hd, m, rows), "new": len(rows) - before})
-    _write_json(hd / "typed.json", typed)
+        shard_receipts.append({**_write_shard(gd, m, rows), "new": len(rows) - before})
+    _write_json(gd / "typed.json", typed)
 
-    # totals over the whole index
-    n_index = 0
-    by_method: Counter = Counter()
-    for pp in sorted(hd.glob("postings_*.json")):
-        po = _read_json(pp, {}) or {}
-        n_index += int(po.get("n_rows") or 0)
-    for r in new_rows:
-        for t in r["tags"]:
-            by_method[t["m"]] += 1
+    # one pass over the whole index: totals, tiers, co-mentions
+    totals = _index_totals(gd, now)
+    _write_json(gd / "comention.json", totals.pop("comention"))
     read_total = sum(v for k, v in stats.items() if k.startswith("rows_read:"))
     untagged_total = sum(v for k, v in stats.items() if k.startswith("rows_untagged:"))
     per_source = {}
@@ -1028,50 +1262,118 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
             u = stats.get(f"rows_untagged:{s}", 0)
             per_source[s] = {"read": v, "untagged": u, "tagged": v - u,
                              "untagged_share": round(u / v, 4) if v else None}
+    by_method_new: Counter = Counter()
+    for r in new_rows:
+        for t in r["tags"]:
+            by_method_new[f"{t['m']}/{t.get('tier')}"] += 1
 
     extras: dict = {}
     if with_extras:
         uni = load_universe(P, tbl)
-        _write_json(hd / "universe.json", uni)
+        _write_json(gd / "universe.json", uni)
         extras["universe"] = {"symbols": len(uni), "with_sector": sum(1 for v in uni.values() if v.get("sector")),
+                              "with_dollar_volume": sum(1 for v in uni.values() if v.get("dollar_volume")),
                               "potential_universe_dir": str(P["potential_universe"])}
-        extras["forecasts"] = build_forecasts(Path(P["predictions"]), hd, state, stats)
+        extras["forecasts"] = build_forecasts(Path(P["predictions"]), gd, prev_gd, state, stats)
         try:
-            extras["events"] = build_events(Path(P["event_store"]), hd, now, stats)
+            extras["events"] = build_events(Path(P["event_store"]), gd, now)
         except Exception as exc:                                       # noqa: BLE001
             extras["events"] = {"status": f"EVENTS_UNREADABLE: {type(exc).__name__}: {str(exc)[:160]}"}
-        extras["related"] = build_related(Path(P["graph"]), hd, now)
+        extras["related"] = build_related(Path(P["graph"]), gd, now)
+    elif prev_gd is not None:
+        for name in ("universe.json", "forecasts.jsonl", "forecasts_index.json", "events.json", "related.json"):
+            if (prev_gd / name).is_file():
+                _carry(prev_gd / name, gd / name)
 
     state["common"] = {"low": dict(low), "cap": dict(cap)}
     state["built_utc"] = _iso(now)
     state["n_builds"] = int(state.get("n_builds") or 0) + 1
     state["schema"] = STATE_SCHEMA
-    _write_json(hd / "state.json", state)
+    _write_json(gd / "state.json", state)
     receipt = {
-        "schema": SCHEMA, "built_utc": _iso(now), "first_build": first_build,
-        "index_days": index_days, "cutoff_day": cutoff_day, "elapsed_s": round(time.time() - t0, 1),
-        "data_root_corpus": str(corpus), "out": str(hd),
+        "schema": SCHEMA, "index_schema": INDEX_SCHEMA, "generation": gen, "built_utc": _iso(now),
+        "first_build": first_build, "index_days": index_days, "cutoff_day": cutoff_day,
+        "data_root_corpus": str(corpus), "out": str(root),
         "rows_read_new": read_total, "rows_untagged_new": untagged_total,
         "rows_tagged_new": read_total - untagged_total,
         "untagged_share_new": round(untagged_total / read_total, 4) if read_total else None,
-        "tags_by_method_new": dict(by_method), "rows_in_index": n_index,
+        "tags_by_method_tier_new": dict(by_method_new), **totals,
         "per_source_new": dict(sorted(per_source.items())),
         "newest_per_source": dict(sorted(newest.items())),
         "shards_written": shard_receipts, "cik_map": cik_status,
         "common_word_keys": len(common),
-        "refused_name_matches_top": dict(tagger.refused.most_common(25)),
+        "refused_top": dict(tagger.refused.most_common(30)),
         "counts": {k: v for k, v in sorted(stats.items())
                    if not k.startswith(("rows_read:", "rows_untagged:"))},
         **extras,
     }
-    _write_json(hd / "latest.json", receipt)
-    rec_dir = hd / "receipts"
+    receipt["elapsed_s"] = round(time.time() - t0, 1)
+    _write_json(gd / "latest.json", receipt)
+
+    # publish: the generation dir is renamed into place, then CURRENT.json points at it
+    manifest = _manifest(gd)
+    final = root / gen
+    os.replace(gd, final)
+    _write_json(root / CURRENT_NAME, {"schema": INDEX_SCHEMA, "generation": gen, "built_utc": _iso(now),
+                                       "rows_in_index": totals["rows_in_index"], "manifest": manifest})
+    _prune_generations(root, keep={gen, prev_gd.name if prev_gd else ""})
+    rec_dir = root / "receipts"
     rec_dir.mkdir(exist_ok=True)
     _write_json(rec_dir / f"build_{now.strftime('%Y%m%dT%H%M%SZ')}_{os.getpid()}.json", receipt)
-    if n_index == 0:
-        raise TickerHubRefused(NOTHING_INDEXED, f"0 tagged rows in the index at {hd} "
+    v = verify(root, full=True)
+    receipt["verify"] = v
+    if v["problems"]:
+        raise TickerHubRefused(INDEX_DAMAGED, f"the new generation {gen} fails verify: {v['problems']}")
+    if totals["rows_in_index"] == 0:
+        raise TickerHubRefused(NOTHING_INDEXED, f"0 tagged rows in the index at {root} "
                                                 f"({read_total} rows read this build)")
     return receipt
+
+
+def _prune_generations(root: Path, keep: set) -> None:
+    gens = sorted(p for p in root.iterdir() if p.is_dir() and p.name.startswith("g_"))
+    n_keep = int(C.TICKER_HUB_KEEP_GENERATIONS)
+    candidates = [p for p in gens if p.name not in keep]
+    excess = len(gens) - n_keep
+    for p in candidates:
+        if excess <= 0 and not p.name.endswith(".tmp"):
+            break
+        try:
+            shutil.rmtree(p)
+            excess -= 1
+        except OSError:
+            pass                                        # a reader still holds a file open; next build
+
+
+def _index_totals(gd: Path, now: datetime) -> dict:
+    """Totals over every row of a generation, plus co-mention counts over
+    TICKER_HUB_COMENTION_DAYS (rows naming both tickers, any tier)."""
+    lo = _iso(now - timedelta(days=int(C.TICKER_HUB_COMENTION_DAYS))) or ""
+    n = 0
+    by_mt: Counter = Counter()
+    about: Counter = Counter()
+    pairs: dict[str, Counter] = {}
+    for rp in sorted(gd.glob("rows_*.jsonl")):
+        with open(rp, encoding="utf-8") as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                r = json.loads(line)
+                n += 1
+                syms = sorted({t["t"] for t in r.get("tags") or []})
+                for t in r.get("tags") or []:
+                    by_mt[f"{t['m']}/{t.get('where')}/{t.get('tier')}"] += 1
+                    if t.get("tier") == "about":
+                        about[t["t"]] += 1
+                if 1 < len(syms) <= 12 and (r.get("eff_utc") or r.get("first_seen_utc") or "") >= lo:
+                    for a in syms:
+                        c = pairs.setdefault(a, Counter())
+                        for b in syms:
+                            if b != a:
+                                c[b] += 1
+    com = {a: c.most_common(60) for a, c in pairs.items()}
+    return {"rows_in_index": n, "tags_by_method_where_tier_index": dict(by_mt.most_common()),
+            "about_top": about.most_common(25), "comention": com}
 
 
 # ─────────────────────────────────────────────── reading the index (requests)
@@ -1095,8 +1397,8 @@ def _cached_json(path: Path) -> Any:
     obj = _read_json(path, None)
     with _CACHE_LOCK:
         _CACHE[k] = (stamp, obj)
-        if len(_CACHE) > 24:
-            for kk in list(_CACHE)[:len(_CACHE) - 24]:
+        if len(_CACHE) > 32:
+            for kk in list(_CACHE)[:len(_CACHE) - 32]:
                 _CACHE.pop(kk, None)
     return obj
 
@@ -1116,46 +1418,128 @@ def _clamp_days(days: Optional[int]) -> int:
     return max(1, min(d, int(C.TICKER_HUB_MAX_DAYS)))
 
 
-def index_status(hd: Path, now: datetime) -> dict:
-    latest = _cached_json(hd / "latest.json")
-    if not latest:
-        return {"status": "NO_INDEX", "index_built_utc": None, "index_age_s": None,
-                "stale_after_s": int(float(C.TICKER_HUB_STALE_HOURS) * 3600),
-                "detail": f"no index at {hd}: run `python -m scripts.ticker_hub build`"}
-    built = DA._utc(latest.get("built_utc"))
-    age = None if built is None else int((now - built).total_seconds())
-    lim = int(float(C.TICKER_HUB_STALE_HOURS) * 3600)
-    status = "STALE" if (age is None or age > lim) else "OK"
-    return {"status": status, "index_built_utc": latest.get("built_utc"), "index_age_s": age,
-            "stale_after_s": lim, "rows_in_index": latest.get("rows_in_index"),
-            "untagged_share_last_build": latest.get("untagged_share_new"),
-            "newest_per_source": latest.get("newest_per_source") or {},
-            "detail": (f"STALE: the index was built {age} s ago (limit {lim} s); "
-                       f"run `python -m scripts.ticker_hub build`") if status == "STALE" else None}
+class Index:
+    """One resolved generation for one request, collecting every problem it meets."""
 
+    def __init__(self, root: Path):
+        self.root = Path(root)
+        self.cur, prob = read_current(self.root)
+        self.problems: list[str] = [prob] if prob else []
+        self.gd: Optional[Path] = None
+        if self.cur is not None:
+            self.problems += index_problems(self.root, self.cur)
+            if not any(p.startswith(("INDEX_SCHEMA_OLD", "GENERATION_MISSING")) for p in self.problems):
+                self.gd = self.root / self.cur["generation"]
+        elif prob is None and (self.root / "state.json").is_file():
+            self.problems.append("INDEX_SCHEMA_OLD:v1 (no CURRENT.json)")
 
-def _postings(hd: Path, months: list[str]) -> list[tuple[str, dict]]:
-    out = []
-    for m in months:
-        po = _cached_json(shard_paths(hd, m)[1])
-        if po:
+    @property
+    def present(self) -> bool:
+        return self.gd is not None
+
+    def json(self, name: str) -> Any:
+        return _cached_json(self.gd / name) if self.gd else None
+
+    def universe(self) -> dict:
+        u = self.json("universe.json")
+        return u if isinstance(u, dict) else {}
+
+    def postings(self, months: list[str]) -> list[tuple[str, dict]]:
+        out = []
+        if not self.gd:
+            return out
+        for m in months:
+            rp, pp = shard_paths(self.gd, m)
+            if not pp.is_file():
+                continue
+            po = _cached_json(pp)
+            if not isinstance(po, dict):
+                self.problems.append(f"POSTINGS_UNREADABLE:postings_{m}.json")
+                continue
             out.append((m, po))
+        return out
+
+    def read_at(self, month: str, offsets: Iterable[int], want: Optional[set] = None,
+                tier: str = "all") -> list[dict]:
+        """Rows at byte offsets; an unparseable line or a row that does not carry the
+        ticker its posting promised is a named problem, never a silent skip."""
+        rows: list[dict] = []
+        offs = sorted(set(offsets))
+        if not offs or not self.gd:
+            return rows
+        bad = mismatch = 0
+        try:
+            fh = open(shard_paths(self.gd, month)[0], "rb")
+        except OSError:
+            self.problems.append(f"FILE_MISSING:rows_{month}.jsonl")
+            return rows
+        with fh:
+            for off in offs:
+                fh.seek(off)
+                line = fh.readline()
+                try:
+                    r = json.loads(line.decode("utf-8"))
+                except ValueError:
+                    bad += 1
+                    continue
+                if want:
+                    tags = [t for t in r.get("tags") or [] if t["t"] in want
+                            and (tier == "all" or t.get("tier") == "about")]
+                    if not tags:
+                        mismatch += 1
+                        continue
+                rows.append(r)
+        if bad:
+            self.problems.append(f"ROWS_UNREADABLE_AT_OFFSET:rows_{month}.jsonl:{bad}")
+        if mismatch:
+            self.problems.append(f"ROWS_POSTINGS_MISMATCH:rows_{month}.jsonl:{mismatch}")
+        return rows
+
+
+def source_ages(newest: dict, now: datetime) -> list[dict]:
+    """Every source's newest row, its age and its limit; `stale` past the limit."""
+    out = []
+    by = dict(C.TICKER_HUB_SOURCE_STALE_HOURS_BY_SOURCE)
+    for s, t in sorted((newest or {}).items()):
+        d = DA._utc(t)
+        age_h = None if d is None else round((now - d).total_seconds() / 3600.0, 1)
+        lim = float(by.get(s, C.TICKER_HUB_SOURCE_STALE_HOURS))
+        out.append({"source": s, "newest_utc": t, "age_hours": age_h, "limit_hours": lim,
+                    "stale": age_h is None or age_h > lim})
     return out
 
 
-def _read_at(path: Path, offsets: list[int]) -> list[dict]:
-    rows = []
-    if not offsets:
-        return rows
-    with open(path, "rb") as fh:
-        for off in sorted(offsets):
-            fh.seek(off)
-            line = fh.readline()
-            try:
-                rows.append(json.loads(line.decode("utf-8")))
-            except ValueError:
-                continue
-    return rows
+def index_status(root: Path, now: datetime, ix: Optional[Index] = None) -> dict:
+    """OK / STALE / DEGRADED / NO_INDEX, with every named problem and the per-source ages."""
+    ix = ix or Index(root)
+    lim = int(float(C.TICKER_HUB_STALE_HOURS) * 3600)
+    base = {"stale_after_s": lim, "generation": (ix.cur or {}).get("generation")}
+    if ix.cur is None and not ix.problems:
+        return {**base, "status": "NO_INDEX", "index_built_utc": None, "index_age_s": None, "problems": [],
+                "sources": [], "stale_sources": [],
+                "detail": f"no index at {root}: run `python -m scripts.ticker_hub build`"}
+    latest = ix.json("latest.json") or {}
+    built = DA._utc((ix.cur or {}).get("built_utc"))
+    age = None if built is None else int((now - built).total_seconds())
+    ages = source_ages(latest.get("newest_per_source") or {}, now)
+    stale_src = [a for a in ages if a["stale"]]
+    problems = sorted(set(ix.problems))
+    if any(p.startswith("INDEX_SCHEMA_OLD") for p in problems) and ix.gd is None:
+        status = "NO_INDEX"
+        detail = f"the index at {root} is an older layout ({problems[0]}): run `python -m scripts.ticker_hub build`"
+    elif problems:
+        status = "DEGRADED"
+        detail = ("DEGRADED: the index is damaged (" + ", ".join(problems[:6]) +
+                  "); run `python -m scripts.ticker_hub verify`, then `build`")
+    elif age is None or age > lim:
+        status = "STALE"
+        detail = f"STALE: the index was built {age} s ago (limit {lim} s); run `python -m scripts.ticker_hub build`"
+    else:
+        status, detail = "OK", None
+    return {**base, "status": status, "index_built_utc": (ix.cur or {}).get("built_utc"), "index_age_s": age,
+            "problems": problems, "rows_in_index": (ix.cur or {}).get("rows_in_index"),
+            "untagged_share_last_build": latest.get("untagged_share_new"),
+            "sources": ages, "stale_sources": stale_src, "detail": detail}
 
 
 def _siblings(sym: str) -> list[str]:
@@ -1165,68 +1549,122 @@ def _siblings(sym: str) -> list[str]:
 def _decorate(r: dict, typed: dict, want: Optional[set] = None) -> dict:
     ty = typed.get(r.get("url_key") or "") if typed else None
     out = {k: r.get(k) for k in ("id", "source", "publisher", "kind", "first_seen_utc", "published_utc",
-                                  "title", "url", "feeds", "regions", "tags")}
+                                  "eff_utc", "title", "url", "regions", "tags")}
+    fs, pb = DA._utc(r.get("first_seen_utc")), DA._utc(r.get("published_utc"))
+    out["show_both_times"] = bool(fs and pb and abs((fs - pb).total_seconds()) > int(C.TICKER_HUB_SHOW_BOTH_TIMES_S))
     out["event"] = ({k: ty.get(k) for k in ("event_type", "topic", "sentiment", "model")} if ty else None)
     if want:
-        out["tagged_by"] = sorted({t["m"] for t in r.get("tags") or [] if t["t"] in want},
+        mine = [t for t in r.get("tags") or [] if t["t"] in want]
+        out["tagged_by"] = sorted({t["m"] for t in mine},
                                   key=lambda m: METHODS.index(m) if m in METHODS else 99)
+        out["tier"] = "about" if any(t.get("tier") == "about" for t in mine) else "mentions"
     return out
 
 
-def universe(hd: Path) -> dict:
-    return _cached_json(hd / "universe.json") or {}
+def stories(rows: list[dict]) -> list[list[dict]]:
+    """Rows that share a URL or a normalised title (>= TICKER_HUB_MIN_STORY_TITLE_CHARS) are
+    one story. Returned as groups, each sorted earliest first."""
+    parent = list(range(len(rows)))
+
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    seen: dict[str, int] = {}
+    mn = int(C.TICKER_HUB_MIN_STORY_TITLE_CHARS)
+    for i, r in enumerate(rows):
+        keys = []
+        if r.get("url_key"):
+            keys.append("u:" + r["url_key"])
+        nt = norm_title(r.get("title") or "")
+        if len(nt) >= mn:
+            keys.append("t:" + nt)
+        for k in keys:
+            if k in seen:
+                a, b = find(i), find(seen[k])
+                if a != b:
+                    parent[a] = b
+            else:
+                seen[k] = i
+    groups: dict[int, list[dict]] = {}
+    for i, r in enumerate(rows):
+        groups.setdefault(find(i), []).append(r)
+    out = []
+    for g in groups.values():
+        g.sort(key=lambda r: (r.get("eff_utc") or r.get("first_seen_utc") or "", r.get("id") or ""))
+        out.append(g)
+    out.sort(key=lambda g: (g[0].get("eff_utc") or g[0].get("first_seen_utc") or "", g[0].get("id") or ""),
+             reverse=True)
+    return out
 
 
-def known_symbol(hd: Path, sym: str) -> bool:
-    return DA.norm_ticker(sym) in universe(hd)
+def _story_payload(g: list[dict], typed: dict, want: Optional[set]) -> dict:
+    head = _decorate(g[0], typed, want)
+    head["copies"] = len(g)
+    head["sources"] = sorted({r["source"] for r in g})
+    head["publishers"] = sorted({r.get("publisher") or r["source"] for r in g})
+    head["other_copies"] = [{"source": r["source"], "publisher": r.get("publisher"), "url": r.get("url"),
+                             "first_seen_utc": r.get("first_seen_utc"), "published_utc": r.get("published_utc")}
+                            for r in g[1:20]]
+    if want:
+        tiers = {t.get("tier") for r in g for t in r.get("tags") or [] if t["t"] in want}
+        head["tier"] = "about" if "about" in tiers else "mentions"
+    return head
 
 
-def news_for(hd: Path, syms: list[str], days: int, now: datetime, limit: int) -> tuple[list[dict], dict]:
-    lo = now - timedelta(days=days)
-    lo_ep = int(lo.timestamp())
+def news_page(ix: Index, syms: list[str], days: int, now: datetime, *, tier: str = "about",
+              offset: int = 0, limit: Optional[int] = None) -> tuple[list[dict], dict]:
+    """One page of distinct stories for `syms` in the window (by when each row happened)."""
+    lim = max(1, min(int(limit or C.TICKER_HUB_NEWS_PAGE), 500))
+    lo_ep = int((now - timedelta(days=days)).timestamp())
     want = set(syms)
-    picked: list[tuple[int, str, int]] = []
-    for m, po in _postings(hd, _months_between(lo, now)):
-        seen_off = set()
-        for s in syms:
-            for ep, off in po.get("ticker", {}).get(s, []):
-                if ep >= lo_ep and off not in seen_off:
-                    seen_off.add(off)
-                    picked.append((ep, m, off))
-    picked.sort(reverse=True)
-    total = len(picked)
-    by_m: dict[str, list[int]] = {}
-    for _ep, m, off in picked[:limit]:
-        by_m.setdefault(m, []).append(off)
-    typed = _cached_json(hd / "typed.json") or {}
-    rows = []
-    for m, offs in by_m.items():
-        rows += [_decorate(r, typed, want) for r in _read_at(shard_paths(hd, m)[0], offs)]
-    rows.sort(key=lambda r: (r.get("first_seen_utc") or "", r.get("id") or ""), reverse=True)
-    by_source = Counter(r["source"] for r in rows)
-    by_method = Counter(m for r in rows for m in r.get("tagged_by") or [])
-    return rows, {"n_rows": total, "n_returned": len(rows), "truncated": total > len(rows),
-                  "sources": dict(by_source.most_common()), "tagged_by": dict(by_method),
-                  "newest_utc": rows[0]["first_seen_utc"] if rows else None}
-
-
-def forecasts_for(hd: Path, syms: list[str]) -> dict:
-    idx = _cached_json(hd / "forecasts_index.json")
-    if idx is None:
-        return {"status": "NO_FORECAST_INDEX", "open": [], "resolved": [], "void": [],
-                "counts": {"open": 0, "resolved": 0, "void": 0}}
+    key = "about" if tier == "about" else "ticker"
     rows: list[dict] = []
-    fp = hd / "forecasts.jsonl"
+    for m, po in ix.postings(_months_between(now - timedelta(days=days), now)):
+        offs = {off for s in syms for ep, off in (po.get(key) or {}).get(s, []) if ep >= lo_ep}
+        rows += ix.read_at(m, offs, want, "about" if tier == "about" else "all")
+    groups = stories(rows)
+    typed = ix.json("typed.json") or {}
+    page = [_story_payload(g, typed, want) for g in groups[offset:offset + lim]]
+    by_source = Counter(r["source"] for r in rows)
+    by_method = Counter(t["m"] for r in rows for t in r.get("tags") or [] if t["t"] in want)
+    newest = max((g[0].get("eff_utc") or "" for g in groups), default=None)
+    return page, {"tier": tier, "n_stories": len(groups), "n_rows": len(rows), "n_returned": len(page),
+                  "offset": offset, "limit": lim, "has_more": offset + lim < len(groups),
+                  "sources": dict(by_source.most_common()), "tagged_by": dict(by_method),
+                  "newest_utc": newest or None}
+
+
+def tier_counts(ix: Index, syms: list[str], days: int, now: datetime) -> dict:
+    lo_ep = int((now - timedelta(days=days)).timestamp())
+    out = {"about": 0, "all": 0}
+    for _m, po in ix.postings(_months_between(now - timedelta(days=days), now)):
+        out["about"] += len({off for s in syms for ep, off in (po.get("about") or {}).get(s, []) if ep >= lo_ep})
+        out["all"] += len({off for s in syms for ep, off in (po.get("ticker") or {}).get(s, []) if ep >= lo_ep})
+    return out
+
+
+def forecasts_for(ix: Index, syms: list[str]) -> dict:
+    empty = {"open": [], "resolved": [], "void": [], "counts": {"open": 0, "resolved": 0, "void": 0}}
+    idx = ix.json("forecasts_index.json")
+    fp = ix.gd / "forecasts.jsonl" if ix.gd else None
+    if not isinstance(idx, dict) or fp is None or not fp.is_file():
+        ix.problems.append("FORECASTS_MISSING")
+        return {"status": "FORECASTS_MISSING", **empty}
+    rows: list[dict] = []
     for s in syms:
         off = idx.get(s)
         if off is None:
             continue
-        with open(fp, "rb") as fh:
-            fh.seek(int(off))
-            try:
+        try:
+            with open(fp, "rb") as fh:
+                fh.seek(int(off))
                 rows += json.loads(fh.readline().decode("utf-8")).get("rows") or []
-            except ValueError:
-                continue
+        except (OSError, ValueError, AttributeError):
+            ix.problems.append("FORECASTS_UNREADABLE")
+            return {"status": "FORECASTS_UNREADABLE", **empty}
     void = [r for r in rows if r.get("void_reason")]
     resolved = [r for r in rows if r.get("outcome") is not None and not r.get("void_reason")]
     opn = [r for r in rows if r.get("outcome") is None and not r.get("void_reason")]
@@ -1265,76 +1703,108 @@ def calendar_for(data_root: Path, sym: str, now: datetime) -> dict:
             "snapshot": v.get("pull_id"), "macro_snapshot": mac.get("pull_id")}
 
 
-def related_for(hd: Path, sym: str) -> list[dict]:
-    uni = universe(hd)
+RELATED_PEER_RANK = ("same-sector peers ranked by how many rows of our own corpus name both tickers "
+                     f"(last {int(C.TICKER_HUB_COMENTION_DAYS)} days), then by median dollar volume "
+                     "(potential_universe; no market cap is on file)")
+
+
+def related_for(ix: Index, sym: str) -> list[dict]:
+    uni = ix.universe()
     me = uni.get(sym) or {}
     out: list[dict] = []
-    rel = (_cached_json(hd / "related.json") or {}).get("tickers") or {}
+    rel = (ix.json("related.json") or {}).get("tickers") or {}
     for g in rel.get(sym) or []:
         t = DA.norm_ticker(g.get("ticker"))
         out.append({"ticker": t, "name": (uni.get(t) or {}).get("name"), "link": g.get("link"),
                     "weight": g.get("weight"), "n": g.get("n"), "sign": g.get("sign"),
-                    "source": "universe_graph", "graph_build_id": g.get("graph_build_id")})
+                    "source": "universe_graph", "graph_build_id": g.get("graph_build_id"),
+                    "rank_by": "universe graph link weight"})
     sec = me.get("sector")
     if sec:
         have = {r["ticker"] for r in out}
-        peers = sorted(s for s, v in uni.items() if v.get("sector") == sec and s != sym and s not in have)
+        com = dict(((ix.json("comention.json") or {}).get(sym) or []))
+        peers = [s for s, v in uni.items() if v.get("sector") == sec and s != sym and s not in have]
+        peers.sort(key=lambda s: (-int(com.get(s, 0)), -(uni[s].get("dollar_volume") or 0.0), s))
         for s in peers[:int(C.TICKER_HUB_SECTOR_PEERS)]:
             out.append({"ticker": s, "name": uni[s].get("name"), "link": "same_sector", "weight": None,
-                        "n": None, "sign": None, "source": "potential_universe.identity.sector",
-                        "graph_build_id": None})
+                        "n": int(com.get(s, 0)), "sign": None, "source": "potential_universe.identity.sector",
+                        "graph_build_id": None, "dollar_volume": uni[s].get("dollar_volume"),
+                        "rank_by": RELATED_PEER_RANK})
     return out
 
 
-def hub(symbol: str, *, data_root: Optional[Path] = None, out: Optional[Path] = None,
-        days: Optional[int] = None, now: Optional[datetime] = None) -> dict:
-    """Everything the index holds on one ticker. Raises KeyError for an unknown symbol."""
-    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+def _resolve(data_root: Optional[Path], out: Optional[Path]) -> tuple[Path, Path]:
     dr = Path(data_root) if data_root else default_data_root()
-    hd = hub_dir(dr, out)
+    return dr, hub_dir(dr, out)
+
+
+def hub(symbol: str, *, data_root: Optional[Path] = None, out: Optional[Path] = None,
+        days: Optional[int] = None, now: Optional[datetime] = None, tier: str = "about",
+        offset: int = 0, limit: Optional[int] = None) -> dict:
+    """Everything the index holds on one ticker. KeyError only for a symbol a READABLE
+    universe does not hold; a damaged index answers with status DEGRADED instead."""
+    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    dr, root = _resolve(data_root, out)
+    ix = Index(root)
     sym = DA.norm_ticker(symbol)
-    st = index_status(hd, now)
-    uni = universe(hd)
-    if st["status"] != "NO_INDEX" and sym not in uni:
+    uni = ix.universe()
+    if ix.present and uni and sym not in uni:
         raise KeyError(sym)
     d = _clamp_days(days)
     syms = _siblings(sym)
-    news, ncov = news_for(hd, syms, d, now, int(C.TICKER_HUB_NEWS_LIMIT))
-    ev = ((_cached_json(hd / "events.json") or {}).get("tickers") or {})
-    return {"schema": SCHEMA, "ticker": sym, "siblings": syms[1:], "days": d, "now_utc": _iso(now),
-            "identity": uni.get(sym) or None,
-            "news": news,
-            "forecasts": forecasts_for(hd, syms),
-            "calendar": calendar_for(dr, sym, now),
-            "events": [e for s in syms for e in ev.get(s, [])][:50],
-            "related": related_for(hd, sym),
-            "coverage": {**st, **ncov}}
+    news, ncov = news_page(ix, syms, d, now, tier=tier, offset=offset, limit=limit)
+    ev = ((ix.json("events.json") or {}).get("tickers") or {})
+    payload = {"schema": SCHEMA, "ticker": sym, "siblings": syms[1:], "days": d, "now_utc": _iso(now),
+               "identity": uni.get(sym) or None,
+               "news": news,
+               "tier_counts": tier_counts(ix, syms, d, now),
+               "forecasts": forecasts_for(ix, syms),
+               "calendar": calendar_for(dr, sym, now),
+               "events": [e for s in syms for e in ev.get(s, [])][:50],
+               "related": related_for(ix, sym), "related_rank": RELATED_PEER_RANK}
+    payload["coverage"] = {**index_status(root, now, ix), **ncov}
+    return payload
+
+
+def news(symbol: str, *, data_root: Optional[Path] = None, out: Optional[Path] = None,
+         days: Optional[int] = None, now: Optional[datetime] = None, tier: str = "about",
+         offset: int = 0, limit: Optional[int] = None) -> dict:
+    """One more page of a ticker's stories ("load more")."""
+    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    _dr, root = _resolve(data_root, out)
+    ix = Index(root)
+    sym = DA.norm_ticker(symbol)
+    uni = ix.universe()
+    if ix.present and uni and sym not in uni:
+        raise KeyError(sym)
+    page, ncov = news_page(ix, _siblings(sym), _clamp_days(days), now, tier=tier, offset=offset, limit=limit)
+    return {"schema": SCHEMA, "ticker": sym, "news": page, "coverage": {**index_status(root, now, ix), **ncov}}
 
 
 def feed(*, data_root: Optional[Path] = None, out: Optional[Path] = None, ticker: Optional[str] = None,
          sector: Optional[str] = None, source: Optional[str] = None, days: Optional[int] = None,
-         limit: Optional[int] = None, now: Optional[datetime] = None) -> dict:
-    """The news feed filtered by ticker / sector / source, newest first, with facets
-    (row counts by ticker, sector and source inside the same window and filters)."""
+         limit: Optional[int] = None, now: Optional[datetime] = None, tier: str = "about") -> dict:
+    """The news feed filtered by ticker / sector / source, as distinct stories newest first,
+    with facets (ROW counts by ticker, sector and source inside the same window and filters)."""
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    dr = Path(data_root) if data_root else default_data_root()
-    hd = hub_dir(dr, out)
-    st = index_status(hd, now)
+    _dr, root = _resolve(data_root, out)
+    ix = Index(root)
     d = _clamp_days(days)
     lim = max(1, min(int(limit or C.TICKER_HUB_FEED_LIMIT), int(C.TICKER_HUB_FEED_LIMIT)))
-    uni = universe(hd)
+    uni = ix.universe()
     lo_ep = int((now - timedelta(days=d)).timestamp())
     want_t = set(_siblings(DA.norm_ticker(ticker))) if ticker else None
-    if want_t is not None and st["status"] != "NO_INDEX" and DA.norm_ticker(ticker) not in uni:
+    if want_t is not None and ix.present and uni and DA.norm_ticker(ticker) not in uni:
         raise KeyError(DA.norm_ticker(ticker))
     sec_syms = {s for s, v in uni.items() if v.get("sector") == sector} if sector else None
+    tkey = "about" if tier == "about" else "ticker"
     picked: list[tuple[int, str, int]] = []
     f_ticker: Counter = Counter()
     f_source: Counter = Counter()
     f_sector: Counter = Counter()
-    for m, po in _postings(hd, _months_between(now - timedelta(days=d), now)):
-        tick = po.get("ticker") or {}
-        # the candidate offsets for the filters
+    for m, po in ix.postings(_months_between(now - timedelta(days=d), now)):
+        tick = po.get(tkey) or {}
+
         def offs_for(syms: Iterable[str]) -> set:
             o = set()
             for s in syms:
@@ -1349,22 +1819,21 @@ def feed(*, data_root: Optional[Path] = None, out: Optional[Path] = None, ticker
         if source:
             src_o = {off for ep, off in (po.get("source") or {}).get(source, []) if ep >= lo_ep}
             cand = src_o if cand is None else cand & src_o
-        ep_of = {off: ep for ep, off in po.get("all") or [] if ep >= lo_ep}
+        ep_of = {e[1]: e[0] for e in po.get("all") or [] if e[0] >= lo_ep and (tier != "about" or e[2])}
         if cand is None:
             cand = set(ep_of)
         cand &= set(ep_of)
         for off in cand:
             picked.append((ep_of[off], m, off))
-        # facets over the candidate set
         src_of = {}
         for s, lst in (po.get("source") or {}).items():
-            for ep, off in lst:
+            for _ep, off in lst:
                 if off in cand:
                     src_of[off] = s
         f_source.update(src_of.values())
         sec_of: dict[int, set] = {}
         for s, lst in tick.items():
-            hit = [off for ep, off in lst if off in cand]
+            hit = [off for _ep, off in lst if off in cand]
             if hit:
                 f_ticker[s] += len(hit)
                 sv = (uni.get(s) or {}).get("sector")
@@ -1374,31 +1843,43 @@ def feed(*, data_root: Optional[Path] = None, out: Optional[Path] = None, ticker
         for secs in sec_of.values():
             f_sector.update(secs)
     picked.sort(reverse=True)
+    scan = picked[:max(lim * 4, lim)]
     by_m: dict[str, list[int]] = {}
-    for _ep, m, off in picked[:lim]:
+    for _ep, m, off in scan:
         by_m.setdefault(m, []).append(off)
-    typed = _cached_json(hd / "typed.json") or {}
-    rows = []
+    rows: list[dict] = []
     for m, offs in by_m.items():
-        rows += [_decorate(r, typed, want_t) for r in _read_at(shard_paths(hd, m)[0], offs)]
-    rows.sort(key=lambda r: (r.get("first_seen_utc") or "", r.get("id") or ""), reverse=True)
+        rows += ix.read_at(m, offs, want_t, "about" if tier == "about" else "all")
+    groups = stories(rows)
+    typed = ix.json("typed.json") or {}
+    page = [_story_payload(g, typed, want_t) for g in groups[:lim]]
     top = int(C.TICKER_HUB_FACET_TOP)
-    return {"schema": SCHEMA, "now_utc": _iso(now), "days": d,
+    return {"schema": SCHEMA, "now_utc": _iso(now), "days": d, "tier": tier,
             "filters": {"ticker": DA.norm_ticker(ticker) if ticker else None, "sector": sector,
                         "source": source},
-            "rows": rows, "n_rows": len(picked), "n_returned": len(rows), "truncated": len(picked) > len(rows),
+            "rows": page, "n_rows": len(picked), "n_stories_in_scan": len(groups),
+            "n_rows_scanned": len(scan), "n_returned": len(page), "truncated": len(picked) > len(scan),
             "facets": {"ticker": [{"key": k, "n": n, "name": (uni.get(k) or {}).get("name")}
                                   for k, n in f_ticker.most_common(top)],
                        "sector": [{"key": k, "n": n} for k, n in f_sector.most_common(top)],
                        "source": [{"key": k, "n": n} for k, n in f_source.most_common()]},
             "sectors": sorted({v["sector"] for v in uni.values() if v.get("sector")}),
-            "coverage": st}
+            "coverage": index_status(root, now, ix)}
 
 
-def iter_index_rows(hd: Path) -> Iterator[dict]:
-    """Every stored row (tests and the CLI's `show`)."""
-    for rp in sorted(hd.glob("rows_*.jsonl")):
+def iter_index_rows(root: Path) -> Iterator[dict]:
+    """Every stored row of the CURRENT generation (tests and the CLI)."""
+    cur, _ = read_current(Path(root))
+    if cur is None:
+        return
+    gd = Path(root) / cur["generation"]
+    for rp in sorted(gd.glob("rows_*.jsonl")):
         with open(rp, encoding="utf-8") as fh:
             for line in fh:
                 if line.strip():
                     yield json.loads(line)
+
+
+def current_dir(root: Path) -> Optional[Path]:
+    cur, _ = read_current(Path(root))
+    return (Path(root) / cur["generation"]) if cur else None
