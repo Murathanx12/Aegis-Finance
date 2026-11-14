@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import pytest
 from backend.tests.local_control import local_client
-from fastapi.testclient import TestClient
 
 from backend.main import app
 from backend.services import book_cadence as BC

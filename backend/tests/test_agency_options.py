@@ -15,7 +15,6 @@ from datetime import date
 
 import pytest
 from backend.tests.local_control import local_client
-from fastapi.testclient import TestClient
 
 from backend.main import app
 from backend.services import agency as A

@@ -15,7 +15,6 @@ from pathlib import Path
 import pytest
 from backend.tests.local_control import local_client
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 
 from backend.services import reader_control as RC
 from scripts import task_keeper as TK

@@ -372,7 +372,6 @@ def test_the_morning_step_carries_the_protect_first_block(db, bars, flips,
 
 def test_the_flip_route_is_a_read_and_the_unflip_is_gated(db, bars, flips,
                                                           monkeypatch):
-    from fastapi.testclient import TestClient
 
     from backend.main import app
     client = local_client(app)
@@ -384,7 +383,6 @@ def test_the_flip_route_is_a_read_and_the_unflip_is_gated(db, bars, flips,
 
 
 def test_the_unflip_route_reverses_one_flip(db, bars, flips, monkeypatch):
-    from fastapi.testclient import TestClient
 
     from backend.main import app
     path, conn = db
