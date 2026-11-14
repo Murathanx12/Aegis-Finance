@@ -4546,6 +4546,54 @@ LLM_BOOK_REQUIRED_SERIES = ("URTH", "BETZ", "BOTZ", "GRID", "IGV", "ITA", "LIT",
                             "QTUM", "URA", "XBI", "XLB", "SPY", "IWM", "SMH",
                             "MTUM")
 
+# -- Rolling live cohorts of the branching population (CH-16 / M3, 2026-11-14) --
+#: `branch_population_rolling` re-enters the declared spec grid as a NEW dated
+#: cohort every CADENCE sessions from ANCHOR (the 2026-10-15 freeze day), so
+#: about four 21-session cohorts are always live. A born book never changes.
+ROLLING_COHORT_ANCHOR = "2026-10-15"
+ROLLING_COHORT_CADENCE_SESSIONS = 5
+#: Marks per cohort: interim weekly points plus the 21/63/126 horizons.
+ROLLING_COHORT_MARK_SESSIONS = (5, 10, 15, 21, 42, 63, 84, 105, 126)
+ROLLING_COHORT_HORIZONS = (21, 63, 126)
+#: Random same-liquidity-band portfolios per DISTINCT holding set per cohort.
+ROLLING_COHORT_RANDOM_CONTROLS = 5
+#: Seeds are sha256(tag|cohort|holdings|k)[:15 hex] (>= 2**56 in practice),
+#: outside every literal seed in the repo (all < 1e9 on 2026-11-14).
+ROLLING_COHORT_SEED_TAG = "rolling-cohorts-v2|2026-11-14"
+#: Costs: names pay xs_ranker's band round trip (half at entry, half at the
+#: mark); a SPY short leg pays SPY's band and this borrow fee, accrued per
+#: session; cash and short collateral earn nothing (conservative).
+ROLLING_COHORT_SPY_COST_BPS = 6.0
+ROLLING_COHORT_SHORT_BORROW_BPS_YR = 30.0
+#: Any cost <= 0 (bands, SPY, borrow) is REFUSED unless this is True; then
+#: every cohort and mark row carries `zero_cost_diagnostic: true`.
+ROLLING_COHORT_ZERO_COST_DIAGNOSTIC = False
+#: The bars panel's symbol list is the universe file of this date (xs_ranker,
+#: "names alive on 2026-09-01"): survivor-selected before it. Carried on every
+#: bars-only book and random control as `panel_universe_asof`.
+ROLLING_COHORT_PANEL_UNIVERSE_ASOF = "2026-09-01"
+#: Below these a family is WAIT_INPUT for the cohort (a row with the count),
+#: never entered on thin or stale input.
+ROLLING_COHORT_REVISION_MIN_EVENTS = 200        # revision events in the 90-day window
+ROLLING_COHORT_REVISION_MAX_STALE_DAYS = 6.0    # newest first_seen before the cutoff
+ROLLING_COHORT_NEWS_MIN_ITEMS = 50              # usable typed items, 5 days before decision
+ROLLING_COHORT_NEWS_MAX_STALE_DAYS = 2.0
+#: Health: DEGRADED when no forward cohort was born for more than this many cadences.
+ROLLING_COHORT_STALE_CADENCES = 2
+#: A missing closed session in the bars is a WAIT only this many hours after
+#: that session's close; past it the step and both readers say DEGRADED
+#: ("bars have not advanced since <date>"). Measured: every historical wait <= 2 h.
+ROLLING_COHORT_PRICE_GRACE_H = 18.0
+#: Scoreboard: Student t on strict blocks of 2 x horizon sessions, two-sided
+#: ALPHA, MDE at POWER; no label below MIN_STRICT_BLOCKS; BH-FDR at q = ALPHA
+#: across every distinct test of one run.
+ROLLING_COHORT_ALPHA = 0.05
+ROLLING_COHORT_POWER = 0.80
+ROLLING_COHORT_MIN_STRICT_BLOCKS = 6
+#: One pass per output folder: a second pass waits this long for `run.lock`,
+#: then journals WAIT_LOCK with rc 0.
+ROLLING_COHORT_LOCK_WAIT_S = 60.0
+
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).
 BOOK_FACTORY_CAP_USD = 1.0

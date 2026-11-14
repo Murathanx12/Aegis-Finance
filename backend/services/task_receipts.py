@@ -571,6 +571,20 @@ def r_local_runtime_digest(ctx, task) -> Reading:
                    detail=f"local model status {d.get('status')}; {valid} valid sampled log rows")
 
 
+def _last_session_close_before(stamp: datetime) -> Optional[datetime]:
+    """The closing bell of the newest XNYS session that closed at or before `stamp`;
+    None when the calendar cannot say (then no wait is excused)."""
+    try:
+        from backend.services import market_sessions as MS
+        cal = MS._xnys()
+        idx = cal.sessions_in_range((stamp.date() - timedelta(days=14)).isoformat(), stamp.date().isoformat())
+        closes = [cal.session_close(s).to_pydatetime() for s in idx]
+        closes = [c for c in closes if c <= stamp]
+        return max(closes) if closes else None
+    except Exception:                                            # noqa: BLE001
+        return None
+
+
 def r_local_branching_private_grade(ctx, task) -> Reading:
     """Read the existing native owner's journal, including its real refusals.
 
@@ -596,6 +610,20 @@ def r_local_branching_private_grade(ctx, task) -> Reading:
               "YIELD_IIF_WINDOW": "IDLE", "STOP": "STOPPED", "REFUSED": "REFUSED"}.get(action, "DEGRADED")
     stamp = parse_stamp(d.get("utc"))
     why = str(d.get("reason") or "")
+    # The pinned owner raises the routine evening price wait as an exception (35 of
+    # 51 refusals by 2026-11-14). Its own last line names it; that is a WAIT.
+    # Only INSIDE the grace after the last closed session: a dead price feed raises the
+    # same token every run and must not read IDLE forever (review of PR #147).
+    last = why.strip().splitlines()[-1] if why.strip() else ""
+    if action == "REFUSED" and last.rstrip().endswith(("WAIT_SHARED_PRICE_REFRESH", "WAIT_SHARED_CLOSED_SESSION")):
+        close = _last_session_close_before(stamp) if stamp is not None else None
+        grace_h = float(_config.ROLLING_COHORT_PRICE_GRACE_H)
+        if close is not None and (stamp - close).total_seconds() / 3600.0 <= grace_h:
+            status, why = "IDLE", "evening price wait (the pinned owner reports it as a refusal): " + last.strip()
+        else:
+            status = "DEGRADED"
+            why = (f"bars have not advanced since before the session that closed {close.isoformat() if close else '?'}: "
+                   f"price wait beyond the {grace_h} h grace (or the calendar is unavailable): {last.strip()}")
     if d.get("task") != "AegisLocalBranchingPrivateGrade" or stamp is None or stamp > ctx.now + timedelta(seconds=30):
         status, why = "DEGRADED", "owner identity or receipt UTC is invalid"
     if action in {"GRADED", "ALREADY_GRADED", "WAIT_ENTRY", "WAIT_SHARED_REFRESH", "WAIT_CONSTITUENT_MARKS"}:
@@ -616,6 +644,9 @@ def r_local_branching_private_grade(ctx, task) -> Reading:
             if population.get("activation") == "NONE" and all(type(n) is int and n >= 0 for n in counts):
                 errors, note = receipt_status(population, fields=(), error_fields=("error", "errors", "traceback"))
                 nested = worst("OK" if counts[0] or counts[1] else "IDLE", errors)
+                if counts[0] == 0:
+                    note = "; ".join(x for x in (note, "population STATIC: 0 new books this run (single-freeze "
+                                                 "cohort of 2026-10-15; new cohorts are AegisRollingCohorts)") if x)
             else:
                 nested, note = "DEGRADED", "population operating counts/activation are invalid"
         status, why = worst(status, nested), "; ".join(x for x in (why, note) if x)
@@ -623,6 +654,65 @@ def r_local_branching_private_grade(ctx, task) -> Reading:
                    substance=substance(pick(d, ("action", "session", "grade_receipt", "population1000"))),
                    proof=str(path) + "[-1]", detail=f"private branching owner {action}; population "
                    + (str(population.get("action")) if isinstance(population, dict) else "not present in this owner version"))
+
+
+ROLLING_COHORT_ACTIONS = {"BORN": "OK", "MARKED": "OK", "NOTHING_DUE": "IDLE",
+                          "WAIT_PRICES": "IDLE", "STALE_PRICES": "DEGRADED",
+                          "MISSED_ENTRY_WINDOW": "DEGRADED", "WAIT_LOCK": "IDLE", "REFUSED": "REFUSED"}
+
+
+def r_rolling_cohorts(ctx, task) -> Reading:
+    """`scripts.rolling_cohorts step`'s journal (`rolling_cohorts/runs.jsonl`).
+
+    Reports the age of the newest FORWARD cohort in sessions and goes DEGRADED
+    when none was born for more than `ROLLING_COHORT_STALE_CADENCES` cadences: a
+    population that re-marks old books every two hours is not a live one. The
+    evening price wait is IDLE (rc 0), never a refusal.
+    """
+    from backend.services import system_health as SH
+    path = ctx.path("rolling_cohort_runs", ctx.optimus_dir / "rolling_cohorts" / "runs.jsonl")
+    lines = SH._tail_lines(path, 65536)
+    if not lines:
+        return _none(str(path))
+    try:
+        d = json.loads(lines[-1])
+    except ValueError:
+        return Reading(status="DEGRADED", detail="newest rolling-cohort row is malformed", proof=str(path))
+    if not isinstance(d, dict):
+        return Reading(status="DEGRADED", detail="newest rolling-cohort row is not an object", proof=str(path))
+    action = d.get("action")
+    status = ROLLING_COHORT_ACTIONS.get(action, "DEGRADED")
+    why = [str(d.get("reason") or "")] if d.get("reason") else []
+    stamp = parse_stamp(d.get("utc"))
+    if d.get("task") != "AegisRollingCohorts" or stamp is None or stamp > ctx.now + timedelta(seconds=30):
+        status, why = "DEGRADED", ["owner identity or receipt UTC is invalid"]
+    if d.get("missed"):
+        status = worst(status, "DEGRADED")
+        why.append(f"due cohort(s) missed their entry window: {[m.get('cohort_id') for m in d['missed'] if isinstance(m, dict)]}"
+                   + ("; the newest was born late" if any(isinstance(b, dict) and b.get("born_late")
+                                                           for b in d.get("born") or []) else ""))
+    wait_h, grace_h = d.get("price_wait_h"), _config.ROLLING_COHORT_PRICE_GRACE_H
+    if action == "WAIT_PRICES" and (type(wait_h) not in (int, float) or wait_h > grace_h):
+        status = worst(status, "DEGRADED")
+        why.append(f"bars have not advanced since {d.get('bars_last_session')}: price wait {wait_h} h "
+                   f"is beyond the {grace_h} h grace (or unmeasured)")
+    age, limit = d.get("forward_age_sessions"), _config.ROLLING_COHORT_CADENCE_SESSIONS * _config.ROLLING_COHORT_STALE_CADENCES
+    if action not in ("REFUSED", "WAIT_LOCK"):     # a lock wait carries no ages: the holder's row follows
+        if type(age) is not int or age < 0:
+            status = worst(status, "DEGRADED")
+            why.append("forward cohort age is absent")
+        elif age > limit:
+            status = worst(status, "DEGRADED")
+            why.append(f"no forward cohort born for {age} sessions (> {limit} = "
+                       f"{_config.ROLLING_COHORT_STALE_CADENCES} cadences); newest forward "
+                       f"{d.get('newest_forward_cohort')}")
+    return Reading(stamp=stamp, status=status, reason="; ".join(x for x in why if x),
+                   substance=substance(pick(d, ("action", "through", "newest_forward_cohort",
+                                                "cohorts_total", "marks_total"))),
+                   proof=str(path) + "[-1]",
+                   detail=(f"rolling cohorts {action}; newest forward cohort "
+                           f"{d.get('newest_forward_cohort')} ({age} sessions old, limit {limit}); "
+                           f"{d.get('cohorts_live')} live of {d.get('cohorts_total')}"))
 
 
 def r_alerts(ctx, task) -> Reading:
@@ -1645,6 +1735,8 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisLocalBranchingPrivateGrade": TaskSpec(r_local_branching_private_grade,
         "~/aegis-recovery-evidence/oct14-continuation-20261014/local-branching/automation_runs.jsonl",
         registered_only=True, cadence_h=2.0),
+    "AegisRollingCohorts": TaskSpec(r_rolling_cohorts, "rolling_cohorts/runs.jsonl",
+                                    registered_only=True, cadence_h=2.0),
     "AegisAlerts": TaskSpec(r_alerts, "alerts/receipts/alert_pass_*.json",
                             hash_off="a quiet market legitimately repeats the same pass; its own state "
                                      "and bars_health are read instead"),

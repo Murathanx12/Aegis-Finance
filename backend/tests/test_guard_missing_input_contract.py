@@ -1964,6 +1964,18 @@ def _case_universe_graph():
             "empty return panel")
 
 
+def _case_branch_population_rolling():
+    import pandas as pd
+
+    from backend.services.portfolio_intelligence.branch_population_rolling import (
+        RollingCohortRefused, market_features)
+    # CH-16 rolling cohorts: a cohort cannot be born on a bars panel with no SPY bar
+    # on its own date -- the clock every feature and every mark is counted on.
+    return (lambda: market_features(pd.DataFrame(columns=["symbol", "date", "open", "close", "volume"]),
+                                    pd.Timestamp("2026-01-02")),
+            RollingCohortRefused, "empty bars panel")
+
+
 def _case_owner_calls():
     # CH-01: the missing input is THE PRICE PANEL. A call logged with no bars
     # would carry no base-rate twin, and a call without a twin grades against
@@ -2087,6 +2099,7 @@ def test_global_price_admission_positive_control_is_pure(monkeypatch):
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
+    "branch_population_rolling": _case_branch_population_rolling,
     "owner_calls": _case_owner_calls,
     "dowjones_claims": _case_dowjones_claims,
     "issuer_ir_html": _case_issuer_ir_html,
