@@ -5,7 +5,9 @@
     python -m scripts.results_voice --json                # one JSON summary line
 
 Writes `paper_accounts/results_voice_<run>.json` + `.md` beside the receipts and
-prints the six-line headline block. rc 2 = REFUSED (no pair / no rows), with why.
+prints the headline block (the six lines of 2026-10-07, the "Distinct bets ahead of SPY" line, a
+LABELS LOWERED line when a label fell, and CLAIMS PROMOTED last: "none" until a label rises
+against the previous run's book_dna receipt). rc 2 = REFUSED (no pair / no rows), with why.
 """
 from __future__ import annotations
 
@@ -31,9 +33,13 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--rebuild-dna", action="store_true",
                     help="re-run book_dna on the ROI receipt into --out (lanes not fetched, database "
                          "opened mode=ro); for receipts written before a book_dna field existed. mode=ro "
-                         "writes no row, but SQLite still updates the WAL index aegis_pi.db-shm (its mtime "
-                         "moves); immutable=1 would avoid that and could miss rows still in the WAL")
+                         "opens immutable=1 when the WAL is empty (mode=ro created -wal/-shm beside the "
+                         "live database) and mode=ro when the WAL holds rows (only the -shm mtime moves)")
     a = ap.parse_args(argv)
+    try:                       # a cp1252 console must not crash the run AFTER the receipts are written
+        sys.stdout.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
     try:
         out = RV.run(a.run_id, Path(a.folder) if a.folder else RV.PA_DIR,
                      out_dir=Path(a.out) if a.out else None, rebuild_dna=a.rebuild_dna)
