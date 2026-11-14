@@ -1081,6 +1081,538 @@ def r_research_lane(ctx, task) -> Reading:
                           f"{d.get('queries_issued')} queries issued")
 
 
+# ═══════════════════════════════ the tasks added 2026-11-11 .. 11-14 (S69, CH-22a §5.8)
+#
+# "A task is wired only when the status page reads its own receipt." Each reader below
+# opens the file THAT job writes each run (named in its TaskSpec). Jobs repointed at a
+# release clone run through `scripts/runtime_task.py`, which appends start/end rows (rc)
+# to `runtime_switch/runtime_task_runs.jsonl`; that wrapper row is read ONLY to see a
+# refusal the job prints and does not write (event_nodes rc 2, forward_calendar
+# SNAPSHOT_EXISTS, discovery_autopsy refusals ...), and only when it is NEWER than the
+# job's own receipt. Manual attended runs of the same module (`--help`, `--dry-run`,
+# `contract`) land in that log too, so a run is matched by its scheduled argv.
+
+RUNTIME_TASK_RUN_LOG = ("runtime_switch", "runtime_task_runs.jsonl")
+#: argv tokens that mark an attended manual run, never the scheduled job
+MANUAL_RUN_TOKENS = frozenset({"--help", "-h", "--dry-run", "--print-plan", "--now"})
+#: wrapper rcs that are a refusal (the job's documented 2, the wrapper's own 90)
+WRAPPER_REFUSED_RCS = frozenset({2, 90})
+
+
+def _wrapper_lines(ctx) -> list[str]:
+    from backend.services import system_health as SH                # noqa: PLC0415
+    key = "runtime_task_runs_tail"
+    if key not in ctx.cache:
+        p = ctx.optimus_dir.joinpath(*RUNTIME_TASK_RUN_LOG)
+        ctx.cache[key] = SH._tail_lines(p, int(getattr(_config, "TASK_RECEIPT_WRAPPER_TAIL_BYTES", 2_000_000)))
+    return ctx.cache[key]
+
+
+def _argv_matches(argv: Any, module: str, want: Iterable[str], exclude: Iterable[str]) -> bool:
+    if not isinstance(argv, list):
+        return False
+    a = [str(x) for x in argv]
+    at = next((i for i in range(len(a) - 1) if a[i] == "-m" and a[i + 1] == module), None)
+    if at is None:
+        return False
+    tail = a[at + 2:]
+    return (all(w in tail for w in want) and not any(x in tail for x in exclude)
+            and not any(x in MANUAL_RUN_TOKENS for x in tail))
+
+
+def wrapper_outcome(ctx, module: str, want: Iterable[str] = (), exclude: Iterable[str] = ()
+                    ) -> Optional[dict]:
+    """The newest `runtime_task.py` outcome of the SCHEDULED run of `module`: an `end`
+    row paired (by wrapper_pid) with a start whose argv carries every `want` token, or a
+    `refused` / `launch_failed` row with such an argv. None when the tail holds none."""
+    want, exclude = tuple(want), tuple(exclude)
+    starts: dict = {}
+    out = None
+    for line in _wrapper_lines(ctx):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(r, dict):
+            continue
+        ev = r.get("event")
+        if ev == "start" and _argv_matches(r.get("argv"), module, want, exclude):
+            starts[r.get("wrapper_pid")] = r
+        elif ev == "end" and r.get("module") == module and r.get("wrapper_pid") in starts:
+            out = {"utc": parse_stamp(r.get("utc")), "rc": r.get("rc"), "event": "end",
+                   "argv": starts.pop(r.get("wrapper_pid")).get("argv")}
+        elif ev in ("refused", "launch_failed") and _argv_matches(r.get("argv"), module, want, exclude):
+            out = {"utc": parse_stamp(r.get("utc")), "rc": r.get("rc"), "event": ev,
+                   "argv": r.get("argv"), "why": str(r.get("why") or "")[:160]}
+    return out
+
+
+def _after_wrapper(ctx, rd: Reading, module: str, want: Iterable[str] = (), exclude: Iterable[str] = (),
+                   *, idle_rcs: Optional[dict] = None,
+                   refused_rcs: Iterable[int] = WRAPPER_REFUSED_RCS) -> Reading:
+    """`rd` unless the scheduled run's wrapper row is NEWER than its receipt and exited
+    non-zero: then REFUSED (rc 2 / 90) or DEGRADED (a crash code), stamped by that row.
+    A receipt that already says it failed keeps its own (more specific) reason."""
+    o = wrapper_outcome(ctx, module, want, exclude)
+    if o is None or o["utc"] is None or o["utc"] > ctx.now + timedelta(seconds=60):
+        return rd
+    rc = o["rc"]
+    if rd.stamp is not None and o["utc"] <= rd.stamp:
+        return rd
+    if rc == 0:
+        return rd
+    if idle_rcs and rc in idle_rcs:
+        rd.detail = (rd.detail + f"; newest scheduled run exited {rc} ({idle_rcs[rc]})").strip("; ")
+        return rd
+    st = "REFUSED" if rc in set(refused_rcs) else "DEGRADED"
+    why = (f"the scheduled `{module}` run at {o['utc']:%Y-%m-%d %H:%M} UTC exited rc {rc} "
+           f"({o['event']}{': ' + o['why'] if o.get('why') else ''}) and wrote no newer receipt")
+    if rd.status not in ("OK", "IDLE"):
+        rd.reason = f"{rd.reason}; {why}"
+        return rd
+    return Reading(stamp=o["utc"], status=st, reason=why, substance=None,
+                   proof="runtime_switch/runtime_task_runs.jsonl (end row after " + (rd.proof or "no receipt") + ")",
+                   detail=rd.detail or f"{module}: no receipt")
+
+
+def _newest_strict(folder: Path, pattern: str, keep: Callable[[dict], bool] = lambda d: True
+                   ) -> tuple[Optional[Path], Any, Optional[str]]:
+    """(path, receipt, unknown_reason): the newest receipt by NAME that `keep` accepts.
+    An unreadable file met on the way is UNKNOWN (its kind cannot be told), never skipped."""
+    try:
+        files = sorted(Path(folder).glob(pattern))
+    except OSError as exc:
+        return None, None, f"cannot list {folder} ({type(exc).__name__})"
+    for p in reversed(files):
+        d = _read(p)
+        if not isinstance(d, dict):
+            return p, None, f"newest receipt {p.name} cannot be read as a JSON object"
+        if keep(d):
+            return p, d, None
+    return None, None, None
+
+
+def _sched_local(task: Optional[dict], date_key: str, time_key: str) -> Optional[datetime]:
+    """A schtasks local date + time (this machine's US-format CSV) -> aware UTC, else None."""
+    if not task:
+        return None
+    s = f"{str(task.get(date_key) or '').strip()} {str(task.get(time_key) or '').strip()}".strip()
+    for fmt in ("%m/%d/%Y %I:%M:%S %p", "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %I:%M %p", "%m/%d/%Y %H:%M"):
+        try:
+            return datetime.strptime(s, fmt).astimezone().astimezone(timezone.utc)
+        except ValueError:
+            continue
+    return None
+
+
+def not_due_yet(ctx, task: Optional[dict], cadence_h: float) -> tuple[Optional[str], Optional[str]]:
+    """For a task the scheduler says has NEVER run (0x41303): (idle_reason, fault).
+    Not due yet while its first trigger (`Start Date`/`Start Time`) + one cadence (with
+    grace) is in the future; past that, never having run is a fault. An unparseable
+    trigger is a fault with its reason (a guard derives its inputs or refuses)."""
+    from backend.services import system_health as SH                # noqa: PLC0415
+    if not _never_ran(task):
+        return None, None
+    first = _sched_local(task, "Start Date", "Start Time")
+    if first is None:
+        return None, (f"the task has never run and its first trigger "
+                      f"({task.get('Start Date')!r} {task.get('Start Time')!r}) cannot be read")
+    due_by = first + timedelta(hours=float(cadence_h) * (1 + SH.GRACE))
+    if ctx.now < due_by:
+        return (f"not due yet: the task has never run; its trigger starts {first:%Y-%m-%d %H:%M} UTC and "
+                f"its next run is {task.get('Next Run Time')}", None)
+    return None, (f"the task has NEVER run although its first trigger ({first:%Y-%m-%d %H:%M} UTC) "
+                  f"is more than one cadence ago")
+
+
+def _cadence(name: str) -> float:
+    return float(_config.HEALTH_TASK_CADENCE_H.get(name, 24.0))
+
+
+def r_event_nodes(ctx, task) -> Reading:
+    """CH-35 `event_nodes daily` (every 30 min): `event_nodes/daily_latest.json`, the
+    small receipt each run rewrites. A broken chain, a degraded input block (graph,
+    forward calendar, catalyst calendar) or zero corpus rows read is DEGRADED."""
+    out = ctx.optimus_dir / str(getattr(_config, "EVENT_NODES_DIRNAME", "event_nodes"))
+    p = out / "daily_latest.json"
+    where = f"{out.name}/daily_latest.json"
+    if not p.exists():
+        return _after_wrapper(ctx, _none(where), "scripts.event_nodes", ("daily",))
+    d = _read(p)
+    if not isinstance(d, dict):
+        return Reading(unknown_reason=f"{where} exists but cannot be read as a JSON object", proof=where)
+    t = parse_stamp(d.get("now"))
+    bad = []
+    chain = d.get("chain") if isinstance(d.get("chain"), dict) else {}
+    if chain.get("ok") is not True:
+        bad.append(f"chain.ok={chain.get('ok')} (n {chain.get('n')})")
+    for blk in ("graph", "calendar", "catalyst_calendar"):
+        b = d.get(blk) if isinstance(d.get(blk), dict) else {}
+        if map_status(b.get("status") or "MISSING") != "OK":
+            bad.append(f"{blk}={b.get('status') or 'missing'}")
+    rows = (d.get("read") or {}).get("rows_read") if isinstance(d.get("read"), dict) else None
+    if not rows:
+        bad.append(f"rows_read={rows} (no corpus rows in the window)")
+    rd = Reading(stamp=t, status="DEGRADED" if bad else "OK", reason="; ".join(bad),
+                 proof=f"{where} now + chain.ok + input blocks",
+                 detail=f"event nodes {d.get('build_id')}: {d.get('n_events')} events, "
+                        f"+{d.get('appended_versions')} versions, chain n {chain.get('n')}")
+    return _after_wrapper(ctx, rd, "scripts.event_nodes", ("daily",))
+
+
+def r_forward_calendar(ctx, task) -> Reading:
+    """CH-08 `forward_calendar pull` (daily): the newest FULL_UNIVERSE pull receipt
+    (`forward_calendar/snapshots/fc_*_receipt.json`; a manual `--tickers`/`--limit` pull is
+    PARTIAL and ignored). Its own `status` LOW_COVERAGE / LOW_DATE_SHARE is the CLI's rc 2
+    refusal: REFUSED with both shares. rc 3 (SKIP_PULL_LOCKED: another pull held the
+    lock) is a skip, not a failure."""
+    snap = ctx.optimus_dir / str(getattr(_config, "FORWARD_CALENDAR_DIRNAME", "forward_calendar")) / "snapshots"
+    p, d, unk = _newest_strict(snap, "fc_*_receipt.json", lambda r: r.get("scope") == "FULL_UNIVERSE")
+    if unk:
+        return Reading(unknown_reason=unk, proof=f"forward_calendar/snapshots/{p.name if p else ''}")
+    args = ("forward_calendar", ("pull",), ("--tickers", "--limit"))
+    if d is None:
+        return _after_wrapper(ctx, _none("forward_calendar/snapshots/fc_*_receipt.json (scope FULL_UNIVERSE)"),
+                              "scripts." + args[0], args[1], args[2], idle_rcs={3: "SKIP_PULL_LOCKED"})
+    st = "OK" if d.get("status") == "OK" else "REFUSED"
+    why = "" if st == "OK" else (
+        f"{d.get('status')}: answered {d.get('answered')}/{d.get('requested')} (share {d.get('answered_share')}, "
+        f"floor {d.get('min_answered_share')}), date share {d.get('date_share')} (floor {d.get('min_date_share')}), "
+        f"earnings-fields share {d.get('earnings_fields_share')} (floor {d.get('min_earnings_fields_share')})")
+    rd = Reading(stamp=parse_stamp(d.get("finished_utc")), status=st, reason=why,
+                 proof=f"forward_calendar/snapshots/{p.name} finished_utc + status",
+                 detail=f"forward calendar {d.get('pull_id')}: {d.get('with_date')} dated of "
+                        f"{d.get('requested')}, status {d.get('status')}")
+    return _after_wrapper(ctx, rd, "scripts." + args[0], args[1], args[2], idle_rcs={3: "SKIP_PULL_LOCKED"})
+
+
+def r_owner_calls_record(ctx, task) -> Reading:
+    """CH-01 `owner_calls record` (daily): `owner_calls/states.jsonl`, one sealed row per
+    newly pinned day. The age of the newest `recorded_utc` is the check; a broken chain
+    exits rc 2 with no row and is read from the wrapper."""
+    p = ctx.optimus_dir / "owner_calls" / "states.jsonl"
+    if not p.exists():
+        return _after_wrapper(ctx, _none("owner_calls/states.jsonl"), "scripts.owner_calls", ("record",))
+    row = _last_row(p)
+    if row is None:
+        return Reading(unknown_reason="owner_calls/states.jsonl holds no readable row", proof="owner_calls/states.jsonl")
+    bad = [] if row.get("seal") and row.get("prev") else ["newest row carries no seal/prev"]
+    rd = Reading(stamp=parse_stamp(row.get("recorded_utc")), status="DEGRADED" if bad else "OK",
+                 reason="; ".join(bad), proof="owner_calls/states.jsonl[-1].recorded_utc",
+                 detail=f"owner calls: newest pinned day {row.get('day')}")
+    return _after_wrapper(ctx, rd, "scripts.owner_calls", ("record",))
+
+
+def r_discovery_autopsy(ctx, task) -> Reading:
+    """CH-13 `discovery_autopsy --daily`: the newest `discovery_autopsy/index.jsonl` row
+    (session, run_id, summary.degradations). A run whose inputs are unchanged writes
+    nothing, so the run_id stays put until a new session arrives (session-only cadence).
+    Every AutopsyRefused is rc 2 with nothing written: read from the wrapper."""
+    folder = ctx.optimus_dir / str(getattr(_config, "AUTOPSY_DAILY_DIRNAME", "discovery_autopsy"))
+    p = folder / "index.jsonl"
+    if not p.exists():
+        return _after_wrapper(ctx, _none(f"{folder.name}/index.jsonl"), "scripts.discovery_autopsy", ("--daily",))
+    row = _last_row(p)
+    if row is None:
+        return Reading(unknown_reason=f"{folder.name}/index.jsonl holds no readable row", proof=f"{folder.name}/index.jsonl")
+    summ = row.get("summary") if isinstance(row.get("summary"), dict) else {}
+    deg = summ.get("degradations") or []
+    rd = Reading(stamp=parse_stamp(row.get("run_id")), status="DEGRADED" if deg else "OK",
+                 reason=f"degradations: {deg}"[:200] if deg else "",
+                 proof=f"{folder.name}/index.jsonl[-1].run_id",
+                 detail=f"autopsy of session {row.get('session')} ({row.get('receipt')})")
+    return _after_wrapper(ctx, rd, "scripts.discovery_autopsy", ("--daily",))
+
+
+def _lab_window(day: date) -> tuple[datetime, datetime]:
+    a, b = (_hhmm(x) for x in getattr(_config, "LAB_NIGHT_WINDOW_UTC", ("15:00", "22:15")))
+    return datetime.combine(day, a, timezone.utc), datetime.combine(day, b, timezone.utc)
+
+
+def r_lab_night(ctx, task) -> Reading:
+    """The night lab (`always_on_lab --ticks 70`, 23:00-06:15 local = LAB_NIGHT_WINDOW_UTC).
+    Its receipt is `lab_status.json`, written at the END of every tick. Inside the window
+    the always_on_lab probe judges the live process; outside it, the last window must have
+    written at least one tick. A night whose lock shows a start and whose status never
+    moved is DEGRADED: the scheduler's 0x40010004 is the window-end kill, not the fault."""
+    from backend.services import system_health as SH                # noqa: PLC0415
+    d = _read(ctx.optimus_dir / "lab_status.json")
+    lock = _read(ctx.optimus_dir / "always_on_lab_lock.json")
+    marker = ctx.optimus_dir / str(getattr(_config, "ALWAYS_ON_LAB_OFF_MARKER", "always_on_lab_OFF"))
+    if marker.exists():
+        return Reading(stamp=ctx.now, status="STOPPED", reason=f"{marker.name} present (no launcher starts the lab)",
+                       proof=marker.name, detail="night lab OFF by marker")
+    if (ctx.optimus_dir / "lab_status.json").exists() and not isinstance(d, dict):
+        return Reading(unknown_reason="lab_status.json exists but cannot be read as a JSON object",
+                       proof="lab_status.json")
+    utc = ctx.now.astimezone(timezone.utc)
+    s0, e0 = _lab_window(utc.date())
+    tick = parse_stamp((d or {}).get("utc"))
+    started = parse_stamp((d or {}).get("started_utc"))
+    lock_start = parse_stamp((lock or {}).get("started_utc")) if isinstance(lock, dict) else None
+    grace = timedelta(minutes=float(getattr(_config, "LAB_NIGHT_FIRST_TICK_GRACE_MIN", 30)))
+    lock_txt = (f"lock: pid {(lock or {}).get('pid')} started {lock_start:%Y-%m-%d %H:%M} UTC, previous exit "
+                f"{(lock or {}).get('previous_exit_reason')}" if lock_start else "no readable lock")
+    base = dict(proof="lab_status.json utc/started_utc/ticks + always_on_lab_lock.json")
+    if s0 <= utc <= e0:
+        if tick is not None and tick >= s0:
+            r = SH.p_always_on_lab(ctx)
+            st = "OK" if r.verdict == "ALIVE" else ("STOPPED" if r.verdict == "STOPPED_BY_OPERATOR" else "DEGRADED")
+            return Reading(stamp=tick, status=st, reason="" if st == "OK" else r.detail, **base,
+                           detail=f"night lab running: tick {(d or {}).get('ticks')} at {tick:%H:%M} UTC; {r.detail[:120]}")
+        if utc - s0 <= grace:
+            return Reading(stamp=None, idle_reason=f"the night window opened {SH._fmt_age((utc - s0).total_seconds())} "
+                                                   f"ago; the first tick is not due yet", **base,
+                           detail="night lab starting")
+        return Reading(stamp=lock_start if lock_start and lock_start >= s0 - grace else tick, status="DEGRADED",
+                       reason=(f"the night window opened at {s0:%H:%M} UTC and no tick has been written "
+                               f"(newest lab_status tick {tick and f'{tick:%Y-%m-%d %H:%M}'}); {lock_txt}"),
+                       **base, detail="night lab: no tick this window")
+    day = utc.date() if utc > e0 else utc.date() - timedelta(days=1)
+    s, e = _lab_window(day)
+    if tick is not None and s <= tick <= e + timedelta(minutes=15) and started is not None and started >= s - grace:
+        return Reading(stamp=tick, status="OK",
+                       idle_reason=f"outside its night window {s:%H:%M}-{e:%H:%M} UTC (the last night produced)",
+                       **base, detail=f"night lab {day}: {(d or {}).get('ticks')} ticks, last at {tick:%H:%M} UTC, "
+                                      f"exit {(d or {}).get('previous_exit_reason') or 'see lock'}")
+    in_window = lock_start is not None and s - grace <= lock_start <= e
+    return Reading(stamp=lock_start if in_window else tick, status="DEGRADED",
+                   reason=(f"the night window of {day} ({s:%H:%M}-{e:%H:%M} UTC) wrote no lab tick "
+                           f"(newest lab_status tick {tick and f'{tick:%Y-%m-%d %H:%M}'} UTC); {lock_txt}"),
+                   **base, detail="night lab: last window produced nothing")
+
+
+def r_news_overlay(ctx, task) -> Reading:
+    """CH-14b `news_overlay_book step`: the newest FORWARD row of
+    `news_overlay_book/decisions.jsonl` (`written_utc`). `refused: true` (stale base bars)
+    is REFUSED; a `degradation` (no/stale/empty digest, no baseline) is DEGRADED. The
+    step's raised refusals (STALE_PANEL, outside the window) write no row: wrapper rc 2."""
+    p = ctx.optimus_dir / "news_overlay_book" / "decisions.jsonl"
+    args = ("scripts.news_overlay_book", ("step",), ("--date",))
+    idle, fault = not_due_yet(ctx, task, _cadence("AegisNewsOverlayBook"))
+    if not p.exists():
+        rd = _none("news_overlay_book/decisions.jsonl (FORWARD rows)")
+        rd.idle_reason = idle
+        if fault:
+            rd.detail += f"; {fault}"
+        return _after_wrapper(ctx, rd, *args)
+    row = _last_row(p, lambda r: r.get("label") == "FORWARD")
+    if row is None:
+        return Reading(unknown_reason="news_overlay_book/decisions.jsonl holds no readable FORWARD row",
+                       proof="news_overlay_book/decisions.jsonl")
+    st, why = "OK", ""
+    if row.get("refused"):
+        st, why = "REFUSED", f"refused: {row.get('degradation')}"
+    elif row.get("degradation"):
+        st, why = "DEGRADED", f"degradation {row.get('degradation')}"
+    rd = Reading(stamp=parse_stamp(row.get("written_utc")), status=st, reason=why,
+                 proof="news_overlay_book/decisions.jsonl[-1 FORWARD].written_utc",
+                 detail=f"news overlay {row.get('session')}: scalar {row.get('scalar')}")
+    return _after_wrapper(ctx, rd, *args)
+
+
+#: llm_selector_book's exit codes: 2 refused, 3 DeepSeek budget refused, 4 flag off
+SELECTOR_REFUSED_RCS = frozenset({2, 3, 4, 90})
+
+
+def r_llm_selector(ctx, task) -> Reading:
+    """The weekly LLM selector book (`llm_selector_book --decide`): the newer of
+    `llm_selector/decisions.jsonl` and `llm_selector/refusals.jsonl` (each `written_utc`).
+    A newer refusal is REFUSED with its code, except ALREADY_DECIDED for a date that
+    already holds a decision (the goal is met). Until the scheduler has run it once, the
+    rows are the brain's manual runs: the row certifies the data, not the task, and
+    reads "not due yet" only until its first trigger + one cadence has passed."""
+    folder = ctx.optimus_dir / "llm_selector"
+    args = ("scripts.llm_selector_book", ("--decide",))
+    dec = _last_row(folder / "decisions.jsonl") if (folder / "decisions.jsonl").exists() else None
+    ref = _last_row(folder / "refusals.jsonl") if (folder / "refusals.jsonl").exists() else None
+    if (folder / "decisions.jsonl").exists() and dec is None:
+        return Reading(unknown_reason="llm_selector/decisions.jsonl holds no readable row",
+                       proof="llm_selector/decisions.jsonl")
+    t_d = parse_stamp((dec or {}).get("written_utc"))
+    t_r = parse_stamp((ref or {}).get("written_utc"))
+    idle, fault = not_due_yet(ctx, task, _cadence("AegisLLMSelectorBook"))
+    if t_d is None and t_r is None:
+        rd = _none("llm_selector/decisions.jsonl | refusals.jsonl")
+        rd.idle_reason = idle
+        if fault:
+            rd.detail += f"; {fault}"
+        return _after_wrapper(ctx, rd, *args, refused_rcs=SELECTOR_REFUSED_RCS)
+    if t_r is not None and (t_d is None or t_r > t_d):
+        code = str(ref.get("code"))
+        if code == "ALREADY_DECIDED" and dec and dec.get("decision_date") == ref.get("decision_date"):
+            rd = Reading(stamp=t_r, status="IDLE", reason=f"ALREADY_DECIDED for {ref.get('decision_date')}",
+                         idle_reason=f"a decision for {ref.get('decision_date')} already exists",
+                         proof="llm_selector/refusals.jsonl[-1]", detail="llm selector: already decided")
+        else:
+            rd = Reading(stamp=t_r, status="REFUSED", reason=f"{code}: {str(ref.get('detail'))[:160]}",
+                         proof="llm_selector/refusals.jsonl[-1].written_utc",
+                         detail=f"llm selector refused {code}")
+    else:
+        rd = Reading(stamp=t_d, proof="llm_selector/decisions.jsonl[-1].written_utc",
+                     detail=f"llm selector decision {dec.get('decision_date')} (entry {dec.get('entry_session')})")
+    if _never_ran(task):
+        rd.never_by_task = True
+        if idle:
+            rd.idle_reason = (f"{idle}; the newest row is from a MANUAL run -- the row certifies the data, "
+                              f"not the task")
+        elif rd.status in ("OK", "IDLE"):
+            rd.status, rd.reason = "DEGRADED", f"{fault}; the rows are from manual runs"
+    return _after_wrapper(ctx, rd, *args, refused_rcs=SELECTOR_REFUSED_RCS)
+
+
+def r_system_status(ctx, task) -> Reading:
+    """The systems page itself (`system_status --html`, every 15 min): its own
+    `system_status/status.json` (`generated_utc`, `exit_code`). Exit 3 means "collected,
+    some rows undetermined"; those rows are red on their own, so this job's row is OK
+    with the count and never DOWN for them (no self-referential loop)."""
+    p = ctx.optimus_dir / "system_status" / "status.json"
+    if not p.exists():
+        return _none("system_status/status.json")
+    d = _read(p)
+    if not isinstance(d, dict):
+        return Reading(unknown_reason="system_status/status.json exists but cannot be read as a JSON object",
+                       proof="system_status/status.json")
+    rc = d.get("exit_code")
+    und = d.get("undetermined") or []
+    st, why = ("OK", "") if rc in (0, 3) else ("DEGRADED", f"exit_code={rc}")
+    if d.get("schema") not in (None, "system_status/1") and st == "OK":
+        st, why = "DEGRADED", f"unexpected schema {d.get('schema')}"
+    return Reading(stamp=parse_stamp(d.get("generated_utc")), status=st, reason=why,
+                   proof="system_status/status.json generated_utc + exit_code",
+                   detail=f"status receipt exit {rc}; counts {d.get('counts')}"
+                          + (f"; {len(und)} row(s) undetermined (their own rows are judged)" if und else ""))
+
+
+_PS1_FILE = re.compile(r"""-File\s+(?:"([^"]+\.ps1)"|(\S+\.ps1))""", re.IGNORECASE)
+
+
+def harness_path(ctx, task: Optional[dict], key: str, script: str, rel: tuple[str, ...]
+                 ) -> tuple[Optional[Path], Optional[str]]:
+    """(path, unknown_reason) for a receipt a PowerShell harness writes beside itself.
+
+    Derived from the scheduled task's OWN action (`-File "<dir>/<script>"`), never from a
+    sibling folder of the checkout: the harness lives in a recovery-evidence folder a
+    release clone neither carries nor needs. `ctx.paths[key]` overrides (tests). An action
+    that names another script, or a harness folder absent from this machine, is UNKNOWN
+    with the reason."""
+    if key in ctx.paths:
+        return Path(ctx.paths[key]), None
+    action = str((task or {}).get("Task To Run") or "")
+    m = _PS1_FILE.search(action)
+    if not m:
+        return None, (f"the receipt is written beside {script}, and the task's action does not name a "
+                      f"-File .ps1 ({action[:120] or 'no action read'})")
+    ps1 = Path(m.group(1) or m.group(2))
+    if ps1.name.lower() != script.lower():
+        return None, f"the task's action runs {ps1.name}, not {script}: its receipt cannot be derived"
+    if not ps1.parent.is_dir():
+        return None, f"the harness folder {ps1.parent} named by the task's action is absent on this machine"
+    return ps1.parent.joinpath(*rel), None
+
+
+#: the keyless SEC raw collector's own words (raw_collection_once.py `controls`)
+RAW_SEC_YIELDS = frozenset({"CORPUS_WRITER_ACTIVE", "IIF_LAUNCH_WINDOW"})
+RAW_SEC_STOPS = frozenset({"RAW_COLLECTION_STOP", "BETA_COORDINATOR_STOP"})
+RAW_SEC_SCAN = 48
+
+
+def r_raw_sec(ctx, task) -> Reading:
+    """The hourly keyless SEC 8-K Ex-99 collector, a hash-pinned recovery-evidence
+    harness (`run_raw_collection.ps1` -> `raw_collection_once.py`). Its receipts are
+    `<harness>/receipts/<stamp>_<pid>.json`. A yield to another corpus writer or the IIF
+    launch window is skipped (judged by the newest non-yield receipt, so a yield neither
+    flaps red nor hides an older failure); a backoff SKIP is DEGRADED; REFUSED is REFUSED."""
+    folder, unk = harness_path(ctx, task, "raw_sec_receipts", "run_raw_collection.ps1", ("receipts",))
+    if unk:
+        return Reading(unknown_reason=unk, proof="schtasks Task To Run (-File <harness>.ps1)")
+    try:
+        files = sorted(folder.glob("2*_*.json"))
+    except OSError:
+        files = []
+    if not files:
+        return _none(str(folder / "<stamp>_<pid>.json"))
+    yields = []
+    for p in reversed(files[-RAW_SEC_SCAN:]):
+        d = _read(p)
+        if not isinstance(d, dict):
+            return Reading(unknown_reason=f"receipt {p.name} cannot be read as a JSON object", proof=str(p))
+        status, reason = str(d.get("status")), str(d.get("reason"))
+        t = parse_stamp(d.get("written_utc") or d.get("started_utc"))
+        if status == "REFUSED" and reason in RAW_SEC_YIELDS:
+            yields.append((t, reason))
+            continue
+        note = f"; {len(yields)} newer yield(s) ({yields[0][1]})" if yields else ""
+        if status == "REFUSED" and reason in RAW_SEC_STOPS:
+            st, why = "STOPPED", f"{reason} present"
+        elif status == "OK":
+            st, why = "OK", ""
+        elif status == "SKIPPED":
+            st, why = "DEGRADED", f"SKIPPED {reason} after {d.get('consecutive_failures')} consecutive failure(s)"
+        else:
+            st, why = map_status(status) if status != "REFUSED" else "REFUSED", f"{status} {reason}"
+        return Reading(stamp=t, status=st, reason=why, proof=f"{folder.name}/{p.name} written_utc",
+                       detail=f"raw SEC collection {status} {reason}: {d.get('rows_new')} new rows{note}")
+    t = yields[-1][0] if yields else None
+    return Reading(stamp=t, status="IDLE", idle_reason=f"every one of the newest {len(yields)} receipts yielded",
+                   proof=str(folder), detail=f"raw SEC collection yielded ({yields[0][1] if yields else ''})")
+
+
+#: owner_warning_once.ps1's journal words
+OWNER_WARNING_OK = frozenset({"PROVISIONAL", "NO_HELD_EVENT"})
+OWNER_WARNING_NO_RECEIPT_WHY = (
+    "NO_RUNNER_RECEIPT: the runner printed nothing and the harness could not read its exit code "
+    "(Windows PowerShell 5.1 Start-Process -PassThru leaves .ExitCode null after WaitForExit(ms), "
+    "measured 2026-11-14), so 'no held event' and a silent failure both land here and the task "
+    "exits 2; the harness, not the warning, is what this row reports")
+
+
+def r_owner_warning(ctx, task) -> Reading:
+    """The owner event warning harness (`owner_warning_once.ps1`, every 10 min): its own
+    journal `owner_warning_journal/owner_warning_runs.jsonl`. One run may write several
+    rows with the same `at_utc`; the run's status is the worst of them."""
+    p, unk = harness_path(ctx, task, "owner_warning_runs", "owner_warning_once.ps1",
+                          ("owner_warning_journal", "owner_warning_runs.jsonl"))
+    if unk:
+        return Reading(unknown_reason=unk, proof="schtasks Task To Run (-File <harness>.ps1)")
+    from backend.services import system_health as SH                # noqa: PLC0415
+    lines = SH._tail_lines(p, 65536)
+    if not lines:
+        return _none(str(p))
+    rows = []
+    for ln in lines:
+        try:
+            r = json.loads(ln.lstrip("\ufeff"))
+        except ValueError:
+            continue
+        if isinstance(r, dict):
+            rows.append(r)
+    if not rows:
+        return Reading(unknown_reason="owner_warning_runs.jsonl holds no readable row", proof=str(p))
+    at = rows[-1].get("at_utc")
+    run = [r for r in rows if r.get("at_utc") == at]
+    st, why = "OK", []
+    for r in run:
+        s = str(r.get("status"))
+        if s in OWNER_WARNING_OK:
+            continue
+        if s == "DEFERRED_IIF_WINDOW":
+            st = worst(st, "IDLE")
+        elif s == "NO_RUNNER_RECEIPT":
+            st = worst(st, "DEGRADED")
+            why.append(OWNER_WARNING_NO_RECEIPT_WHY)
+        elif s == "REFUSED":
+            st = worst(st, "REFUSED")
+            why.append(f"REFUSED {r.get('reason')}")
+        else:
+            st = worst(st, "DEGRADED")
+            why.append(s)
+    return Reading(stamp=parse_stamp(at), status=st, reason="; ".join(why),
+                   idle_reason="deferred: inside the IIF launch window" if st == "IDLE" else None,
+                   proof=f"{p.name}[-1].at_utc",
+                   detail=f"owner warning run: {', '.join(sorted({str(r.get('status')) for r in run}))}")
+
+
 def r_no_receipt(why: str):
     def reader(ctx, task) -> Reading:
         return Reading(unknown_reason=why)
@@ -1161,6 +1693,43 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
                         "registration waits for owner review (python -m scripts.task_keeper "
                         "register --apply)"),
     "AegisWRDSPullNight": TaskSpec(r_retired, "none (retired one-shot, 2026-08-21)", retired=True),
+    # ── S69 (2026-11-14): the tasks added 11-11 .. 11-14, each judged by its own receipt
+    "AegisEventNodes": TaskSpec(
+        r_event_nodes, "event_nodes/daily_latest.json (+ runtime_switch/runtime_task_runs.jsonl rc)",
+        hash_off="every 30 min; a quiet window legitimately repeats the counts; chain and input blocks are read"),
+    "AegisForwardCalendar": TaskSpec(
+        r_forward_calendar, "forward_calendar/snapshots/fc_<stamp>_receipt.json, scope FULL_UNIVERSE "
+                            "(+ runtime_task_runs.jsonl rc)",
+        hash_off="daily; status and both shares are read"),
+    "AegisOwnerCallsRecord": TaskSpec(
+        r_owner_calls_record, "owner_calls/states.jsonl (+ runtime_task_runs.jsonl rc)",
+        hash_off="a row is written only when a new day is pinned; its recorded_utc is the check"),
+    "AegisDiscoveryAutopsy": TaskSpec(
+        r_discovery_autopsy, "discovery_autopsy/index.jsonl (+ runtime_task_runs.jsonl rc)", session_only=True,
+        hash_off="an unchanged-input run writes nothing; the run_id's age is the check"),
+    "AegisRawSecCollection": TaskSpec(
+        r_raw_sec, "<dir of the task's run_raw_collection.ps1>/receipts/<stamp>_<pid>.json",
+        hash_off="hourly; a caught-up source legitimately repeats CAUGHT_UP_*"),
+    "AegisLabNight": TaskSpec(
+        r_lab_night, "lab_status.json (+ always_on_lab_lock.json), inside LAB_NIGHT_WINDOW_UTC",
+        hash_off="judged per night window: a tick inside the window, or the last window produced"),
+    "AegisNewsOverlayBook": TaskSpec(
+        r_news_overlay, "news_overlay_book/decisions.jsonl FORWARD rows (+ runtime_task_runs.jsonl rc)",
+        session_only=True, window_cfg=("NEWS_OVERLAY_TASK_WINDOW_START_ET", "NEWS_OVERLAY_TASK_WINDOW_END_ET"),
+        hash_off="one row per session; its written_utc is the check"),
+    "AegisLLMSelectorBook": TaskSpec(
+        r_llm_selector, "llm_selector/decisions.jsonl | llm_selector/refusals.jsonl (+ runtime_task_runs.jsonl rc)",
+        hash_off="weekly; one decision per decision_date"),
+    "AegisSystemStatus": TaskSpec(
+        r_system_status, "system_status/status.json generated_utc + exit_code",
+        hash_off="the page's counts legitimately repeat; its stamp and exit code are the check"),
+    "AegisOwnerEventWarning": TaskSpec(
+        r_owner_warning, "<dir of the task's owner_warning_once.ps1>/owner_warning_journal/"
+                         "owner_warning_runs.jsonl",
+        hash_off="every 10 min; a quiet book legitimately repeats the same status"),
+    "AegisCodexDaemonAtLogon": TaskSpec(
+        r_retired, "none (retired: Codex-month leftover, Disabled since 2026-11-07; starts the Codex app-server "
+                   "daemon at logon, which nothing on main consumes)", retired=True),
     "AegisAlwaysOnLab": TaskSpec(_delegate("p_always_on_lab", "always_on_lab"),
                                  "lab_status.json (judged by the always_on_lab probe)",
                                  hash_off="judged by the always_on_lab probe (pid + OFF marker)",

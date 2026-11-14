@@ -548,6 +548,13 @@ def test_weekend_reads_idle_expected_for_a_session_only_task(tmp_path):
 def test_task_rows_carry_state_and_coarse_verdict(tmp_path, monkeypatch):
     ctx = _ctx(tmp_path)
     sched = {n: _task(n) for n, sp in TR.TASK_RECEIPT.items() if not sp.registered_only}
+    # S69: two PowerShell harness tasks write their receipt beside their own .ps1, which the
+    # reader finds from the task's action (`Task To Run`); give them a real (empty) harness
+    # folder, as the scheduler row does on the machine
+    for n, script in (("AegisOwnerEventWarning", "owner_warning_once.ps1"),
+                      ("AegisRawSecCollection", "run_raw_collection.ps1")):
+        ps1 = _w(tmp_path / "harness" / n / script, "# fixture")
+        sched[n] = _task(n, **{"Task To Run": f'powershell.exe -NoProfile -File "{ps1}"'})
     monkeypatch.setattr(SH, "_schtasks", lambda c: sched)
     rows = SH.run_probes(ctx, only={"task"})
     names = {r["name"] for r in rows}
