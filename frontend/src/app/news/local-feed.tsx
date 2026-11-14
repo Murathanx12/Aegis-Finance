@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * Our own collected news, filtered by ticker, sector and source (CH-22). Backed by
- * `/api/control/news/feed`, which answers only on the desktop shell (403 elsewhere),
- * so on the public site this renders nothing.
+ * Our own collected news, filtered by ticker, sector and source, as distinct stories
+ * (CH-22). Backed by `/api/control/news/feed`, which answers only on the desktop shell;
+ * the card is rendered only in the desktop build (`CONTROL_PLANE_BUILD`), and there an
+ * unreachable backend, a damaged index and dead sources are shown, in red.
  */
 
 import { useState } from "react";
@@ -12,8 +13,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ApiState, DASH, ageLabel, fmtUtc } from "@/components/desktop/primitives";
-import { getNewsFeed, hubUnavailable, isNotBuilt } from "@/lib/control-api";
-import { NewsRows } from "@/app/stock/[ticker]/aegis-file";
+import { CONTROL_PLANE_BUILD, getNewsFeed, isUnknownSymbol, type HubTier } from "@/lib/control-api";
+import { CoverageNotes, NewsRows, SourceAges } from "@/app/stock/[ticker]/aegis-file";
 
 export function LocalNewsFeed() {
   const [tickerInput, setTickerInput] = useState("");
@@ -21,14 +22,18 @@ export function LocalNewsFeed() {
   const [sector, setSector] = useState("");
   const [source, setSource] = useState("");
   const [days, setDays] = useState(7);
+  const [tier, setTier] = useState<HubTier>("about");
   const { data, error, isFetching } = useQuery({
-    queryKey: ["news-feed", ticker, sector, source, days],
-    queryFn: () => getNewsFeed({ ticker, sector, source, days, limit: 200 }),
+    queryKey: ["news-feed", ticker, sector, source, days, tier],
+    queryFn: () => getNewsFeed({ ticker, sector, source, days, limit: 200, tier }),
+    enabled: CONTROL_PLANE_BUILD,
     retry: false,
     staleTime: 60_000,
   });
-  if (error && hubUnavailable(error)) return null;
+  if (!CONTROL_PLANE_BUILD) return null;
   const cov = data?.coverage;
+  const tone =
+    cov?.status === "OK" ? "" : cov?.status === "DEGRADED" ? "text-destructive border-destructive/50" : "text-amber-400 border-amber-500/40";
   const pickTicker = (t: string) => {
     setTickerInput(t);
     setTicker(t);
@@ -39,10 +44,7 @@ export function LocalNewsFeed() {
         <CardTitle className="text-base font-medium text-muted-foreground flex flex-wrap items-center gap-2">
           Our collected news
           {cov ? (
-            <Badge
-              variant="outline"
-              className={`text-[10px] ${cov.status === "OK" ? "" : "text-amber-400 border-amber-500/40"}`}
-            >
+            <Badge variant="outline" className={`text-[10px] ${tone}`}>
               index {cov.status} · built {ageLabel(cov.index_built_utc)}
             </Badge>
           ) : null}
@@ -105,6 +107,15 @@ export function LocalNewsFeed() {
               </option>
             ))}
           </select>
+          <select
+            aria-label="tier"
+            value={tier}
+            onChange={(e) => setTier(e.target.value as HubTier)}
+            className="rounded-md border border-border bg-background px-1.5 py-1"
+          >
+            <option value="about">headline names the company</option>
+            <option value="all">+ mentions</option>
+          </select>
           <button type="submit" className="rounded-md bg-primary/15 px-2.5 py-1 text-primary">
             filter
           </button>
@@ -128,12 +139,12 @@ export function LocalNewsFeed() {
             </Link>
           ) : null}
         </form>
-        {error && isNotBuilt(error) ? (
+        {error && isUnknownSymbol(error) ? (
           <p className="text-xs text-muted-foreground">{ticker} is not in the issuer table.</p>
         ) : (
           <ApiState error={error} what="news feed" />
         )}
-        {cov?.detail ? <p className="text-xs text-amber-400">{cov.detail}</p> : null}
+        <CoverageNotes cov={cov} />
         {data ? (
           <>
             <div className="flex flex-wrap gap-1 text-[11px]">
@@ -164,8 +175,8 @@ export function LocalNewsFeed() {
               ))}
             </div>
             <p className="text-[11px] text-muted-foreground">
-              {data.n_rows} tagged rows in {data.days} days
-              {data.truncated ? ` (newest ${data.n_returned} shown)` : ""} · index built{" "}
+              {data.n_rows} tagged rows in {data.days} days (facet counts are rows) · {data.n_returned} distinct
+              stories shown{data.truncated ? ` from the newest ${data.n_rows_scanned} rows` : ""} · index built{" "}
               {fmtUtc(cov?.index_built_utc ?? null)} · untagged share at the last build{" "}
               {cov?.untagged_share_last_build == null
                 ? DASH
@@ -173,6 +184,7 @@ export function LocalNewsFeed() {
               (untagged rows are not listed here)
             </p>
             <NewsRows rows={data.rows} focus={data.filters.ticker ?? undefined} />
+            <SourceAges cov={cov} />
           </>
         ) : null}
       </CardContent>

@@ -2,16 +2,18 @@
 
 /**
  * "Aegis file on <TICKER>" -- everything this PC holds on one ticker (CH-22):
- * our own collected news (every source, newest first, with how each row was tagged
- * and the typed event when the world digest typed it), the frozen forecasts (open
- * and resolved, with outcome), the next calendar dates, and related names.
+ * our own collected news as distinct stories (every source, newest first, with both the
+ * published and collected time when they differ, the number of copies, how each was
+ * tagged and whether the headline is ABOUT the company or only mentions it), the frozen
+ * forecasts (open and resolved, with outcome), the next calendar dates, related names
+ * (with how they were ranked), and every source's age (dead ones in red).
  *
- * Local only. The route answers 403 off the desktop shell, so on the public site
- * this renders NOTHING (no error card, no empty frame). An absent field prints the
- * em dash, never a stand-in.
+ * Desktop only: rendered only in the desktop build (`CONTROL_PLANE_BUILD`); there an
+ * unreachable backend or a damaged index is SHOWN, never hidden. An absent field prints
+ * the em dash, never a stand-in.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,11 +21,15 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiState, DASH, ageLabel, fmtUtc } from "@/components/desktop/primitives";
 import {
+  CONTROL_PLANE_BUILD,
+  errorText,
   getTickerHub,
-  hubUnavailable,
-  isNotBuilt,
+  getTickerNews,
+  isUnknownSymbol,
+  type HubCoverage,
   type HubForecast,
   type HubNewsRow,
+  type HubTier,
   type TickerHubResponse,
 } from "@/lib/control-api";
 
@@ -36,7 +42,7 @@ const METHOD_LABEL: Record<string, string> = {
   reader_lane: "reader lane",
   reader_search: "reader search",
   digest_typed: "digest",
-  text_token: "ticker token",
+  text_token: "ticker symbol",
   name_match: "name match",
 };
 
@@ -44,19 +50,81 @@ function num(v: number | null | undefined, digits = 2): string {
   return v == null || !Number.isFinite(v) ? DASH : v.toFixed(digits);
 }
 
+/** The index status line: red for DEGRADED (with each named problem), amber for STALE /
+ *  NO_INDEX, and every source past its limit in red. Shared with the /news page. */
+export function CoverageNotes({ cov }: { cov: HubCoverage | undefined }) {
+  if (!cov) return null;
+  const red = cov.status === "DEGRADED";
+  return (
+    <div className="space-y-1 text-xs">
+      {cov.detail ? <p className={red ? "text-destructive font-medium" : "text-amber-400"}>{cov.detail}</p> : null}
+      {red && cov.problems?.length ? (
+        <ul className="list-disc pl-4 text-destructive">
+          {cov.problems.map((p) => (
+            <li key={p} className="font-mono">
+              {p}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {cov.stale_sources?.length ? (
+        <p className="text-destructive">
+          sources with no new rows past their limit:{" "}
+          {cov.stale_sources
+            .map((s) => `${s.source}: no rows since ${s.newest_utc ? s.newest_utc.slice(0, 10) : DASH}`)
+            .join(" · ")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function SourceAges({ cov }: { cov: HubCoverage | undefined }) {
+  if (!cov?.sources?.length) return null;
+  return (
+    <details className="text-[11px]">
+      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+        newest row per source ({cov.sources.length} sources, {cov.stale_sources?.length ?? 0} stale)
+      </summary>
+      <ul className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+        {cov.sources.map((s) => (
+          <li key={s.source} className={s.stale ? "text-destructive" : "text-muted-foreground"}>
+            <span className="font-mono">{s.source}</span> {fmtUtc(s.newest_utc)} (
+            {s.age_hours == null ? DASH : `${s.age_hours} h`}, limit {s.limit_hours} h)
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 export function NewsRows({ rows, focus }: { rows: HubNewsRow[]; focus?: string }) {
-  if (!rows.length) return <p className="text-sm text-muted-foreground">No rows in this window.</p>;
+  if (!rows.length) return <p className="text-sm text-muted-foreground">No stories in this window.</p>;
   return (
     <ul className="divide-y divide-border/30">
       {rows.map((r) => {
         const methods = r.tagged_by ?? Array.from(new Set(r.tags.map((t) => t.m)));
         const others = r.tags.map((t) => t.t).filter((t) => t !== focus);
+        const when = r.eff_utc ?? r.first_seen_utc;
         return (
           <li key={r.id} className="py-2">
             <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
-              <span className="font-mono">{fmtUtc(r.first_seen_utc)}</span>
+              <span className="font-mono">{fmtUtc(when)}</span>
+              {r.show_both_times ? (
+                <span className="text-amber-400">(collected {fmtUtc(r.first_seen_utc)})</span>
+              ) : null}
               <span>{r.publisher ?? DASH}</span>
               <span className="opacity-60">({r.source})</span>
+              {r.copies && r.copies > 1 ? (
+                <span title={(r.sources ?? []).join(", ")}>
+                  · {r.copies} copies / {r.sources?.length ?? 1} sources
+                </span>
+              ) : null}
+              {r.tier ? (
+                <Badge variant="outline" className="text-[10px]">
+                  {r.tier}
+                </Badge>
+              ) : null}
               {r.event?.event_type ? (
                 <Badge variant="outline" className="text-[10px]">
                   {r.event.event_type}
@@ -88,6 +156,7 @@ export function NewsRows({ rows, focus }: { rows: HubNewsRow[]; focus?: string }
 }
 
 function ForecastTable({ rows, resolved }: { rows: HubForecast[]; resolved: boolean }) {
+  const [shown, setShown] = useState(100);
   if (!rows.length) return <p className="text-sm text-muted-foreground">None.</p>;
   return (
     <div className="overflow-x-auto">
@@ -112,7 +181,7 @@ function ForecastTable({ rows, resolved }: { rows: HubForecast[]; resolved: bool
           </tr>
         </thead>
         <tbody>
-          {rows.slice(0, 100).map((f, i) => (
+          {rows.slice(0, shown).map((f, i) => (
             <tr key={f.id ?? i} className="border-t border-border/20" title={f.thesis ?? undefined}>
               <td className="py-1 pr-2 font-mono">{f.made_at ? f.made_at.slice(0, 10) : DASH}</td>
               <td className="py-1 pr-2">
@@ -138,19 +207,99 @@ function ForecastTable({ rows, resolved }: { rows: HubForecast[]; resolved: bool
           ))}
         </tbody>
       </table>
-      {rows.length > 100 ? (
-        <p className="mt-1 text-[11px] text-muted-foreground">showing 100 of {rows.length}</p>
+      {rows.length > shown ? (
+        <button
+          type="button"
+          className="mt-1 text-[11px] text-primary hover:underline"
+          onClick={() => setShown((n) => n + 100)}
+        >
+          showing {shown} of {rows.length} — show 100 more
+        </button>
       ) : null}
     </div>
   );
 }
 
-function Body({ data, tab }: { data: TickerHubResponse; tab: Tab }) {
-  if (tab === "News") return <NewsRows rows={data.news} focus={data.ticker} />;
+function NewsTab({ data, days, tier, setTier }: {
+  data: TickerHubResponse;
+  days: number;
+  tier: HubTier;
+  setTier: (t: HubTier) => void;
+}) {
+  const [extra, setExtra] = useState<HubNewsRow[]>([]);
+  const [hasMore, setHasMore] = useState(data.coverage.has_more);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    setExtra([]);
+    setHasMore(data.coverage.has_more);
+    setErr(null);
+  }, [data]);
+  const rows = [...data.news, ...extra];
+  const more = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const page = await getTickerNews(data.ticker, { days, tier, offset: rows.length, limit: 50 });
+      setExtra((x) => [...x, ...page.news]);
+      setHasMore(page.coverage.has_more);
+    } catch (e) {
+      setErr(errorText(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <span>
+          {data.coverage.n_stories} distinct stories ({data.coverage.n_rows} rows) in {data.days} days · newest{" "}
+          {fmtUtc(data.coverage.newest_utc)}
+        </span>
+        <span className="ml-auto inline-flex rounded-md border border-border">
+          {(["about", "all"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTier(t)}
+              className={`px-2 py-0.5 ${tier === t ? "bg-primary/15 text-primary" : "hover:text-foreground"}`}
+            >
+              {t === "about" ? `about ${data.ticker} (${data.tier_counts.about} rows)` : `+ mentions (${data.tier_counts.all} rows)`}
+            </button>
+          ))}
+        </span>
+      </div>
+      <NewsRows rows={rows} focus={data.ticker} />
+      {err ? <p className="text-xs text-destructive">{err}</p> : null}
+      {hasMore ? (
+        <button
+          type="button"
+          disabled={loading}
+          onClick={more}
+          className="rounded-md bg-primary/15 px-2.5 py-1 text-xs text-primary disabled:opacity-50"
+        >
+          {loading ? "loading…" : `load more (${rows.length} of ${data.coverage.n_stories})`}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function Body({ data, tab, days, tier, setTier }: {
+  data: TickerHubResponse;
+  tab: Tab;
+  days: number;
+  tier: HubTier;
+  setTier: (t: HubTier) => void;
+}) {
+  if (tab === "News") return <NewsTab data={data} days={days} tier={tier} setTier={setTier} />;
   if (tab === "Forecasts") {
     const c = data.forecasts.counts;
     return (
       <div className="space-y-4">
+        {data.forecasts.status !== "OK" ? (
+          <p className="text-xs text-destructive">forecasts: {data.forecasts.status}</p>
+        ) : null}
         <p className="text-xs text-muted-foreground">
           open {c.open} · resolved {c.resolved} (outcome 1: {c.resolved_outcome_1 ?? DASH}, 0:{" "}
           {c.resolved_outcome_0 ?? DASH}) · void {c.void} · mean Brier {num(c.mean_brier, 3)} over{" "}
@@ -211,20 +360,25 @@ function Body({ data, tab }: { data: TickerHubResponse; tab: Tab }) {
     );
   }
   return data.related.length ? (
-    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
-      {data.related.map((r) => (
-        <li key={`${r.ticker}-${r.link}`} className="flex gap-2">
-          <Link href={`/stock/${r.ticker}`} className="font-mono hover:text-primary">
-            {r.ticker}
-          </Link>
-          <span className="truncate">{r.name ?? DASH}</span>
-          <span className="text-xs text-muted-foreground">
-            {r.link}
-            {r.weight != null ? ` ${r.weight}` : ""}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-2">
+      <p className="text-[11px] text-muted-foreground">
+        Graph links are ranked by universe-graph weight; {data.related_rank}.
+      </p>
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
+        {data.related.map((r) => (
+          <li key={`${r.ticker}-${r.link}`} className="flex gap-2">
+            <Link href={`/stock/${r.ticker}`} className="font-mono hover:text-primary">
+              {r.ticker}
+            </Link>
+            <span className="truncate">{r.name ?? DASH}</span>
+            <span className="text-xs text-muted-foreground">
+              {r.link}
+              {r.link === "same_sector" ? ` · ${r.n ?? 0} co-mentions` : r.weight != null ? ` ${r.weight}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   ) : (
     <p className="text-sm text-muted-foreground">No related names on file.</p>
   );
@@ -233,16 +387,19 @@ function Body({ data, tab }: { data: TickerHubResponse; tab: Tab }) {
 export function AegisFileCard({ ticker }: { ticker: string }) {
   const [tab, setTab] = useState<Tab>("News");
   const [days, setDays] = useState(30);
+  const [tier, setTier] = useState<HubTier>("about");
   const { data, error, isLoading } = useQuery({
-    queryKey: ["ticker-hub", ticker, days],
-    queryFn: () => getTickerHub(ticker, days),
-    enabled: ticker.length > 0,
+    queryKey: ["ticker-hub", ticker, days, tier],
+    queryFn: () => getTickerHub(ticker, days, tier),
+    enabled: CONTROL_PLANE_BUILD && ticker.length > 0,
     retry: false,
     staleTime: 60_000,
   });
-  if (!ticker || (error && hubUnavailable(error))) return null;
+  if (!CONTROL_PLANE_BUILD || !ticker) return null;
   if (isLoading) return <Skeleton className="h-40 w-full" />;
   const cov = data?.coverage;
+  const tone =
+    cov?.status === "OK" ? "" : cov?.status === "DEGRADED" ? "text-destructive border-destructive/50" : "text-amber-400 border-amber-500/40";
   return (
     <Card>
       <CardHeader>
@@ -255,24 +412,21 @@ export function AegisFileCard({ ticker }: { ticker: string }) {
             </Badge>
           ) : null}
           {cov ? (
-            <Badge
-              variant="outline"
-              className={`text-[10px] ${cov.status === "OK" ? "" : "text-amber-400 border-amber-500/40"}`}
-            >
+            <Badge variant="outline" className={`text-[10px] ${tone}`}>
               index {cov.status} · built {ageLabel(cov.index_built_utc)}
             </Badge>
           ) : null}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {error && isNotBuilt(error) ? (
+        {error && isUnknownSymbol(error) ? (
           <p className="text-xs text-muted-foreground">
             {ticker} is not in the issuer table, so this PC holds no file on it.
           </p>
         ) : (
           <ApiState error={error} what="ticker hub" />
         )}
-        {cov?.detail ? <p className="text-xs text-amber-400">{cov.detail}</p> : null}
+        <CoverageNotes cov={cov} />
         {data ? (
           <>
             <div className="flex flex-wrap items-center gap-1">
@@ -286,7 +440,7 @@ export function AegisFileCard({ ticker }: { ticker: string }) {
                   }`}
                 >
                   {t}
-                  {t === "News" ? ` (${data.coverage.n_rows})` : ""}
+                  {t === "News" ? ` (${data.coverage.n_stories})` : ""}
                   {t === "Forecasts" ? ` (${data.forecasts.counts.open + data.forecasts.counts.resolved})` : ""}
                   {t === "Calendar" ? ` (${data.calendar.rows.length})` : ""}
                   {t === "Related" ? ` (${data.related.length})` : ""}
@@ -305,17 +459,8 @@ export function AegisFileCard({ ticker }: { ticker: string }) {
                 ))}
               </select>
             </div>
-            {tab === "News" ? (
-              <p className="text-[11px] text-muted-foreground">
-                {data.coverage.n_rows} rows in {data.days} days
-                {data.coverage.truncated ? ` (newest ${data.coverage.n_returned} shown)` : ""} · newest{" "}
-                {fmtUtc(data.coverage.newest_utc)} · sources:{" "}
-                {Object.entries(data.coverage.sources)
-                  .map(([s, n]) => `${s} ${n}`)
-                  .join(", ") || DASH}
-              </p>
-            ) : null}
-            <Body data={data} tab={tab} />
+            <Body data={data} tab={tab} days={days} tier={tier} setTier={setTier} />
+            <SourceAges cov={cov} />
           </>
         ) : null}
       </CardContent>
