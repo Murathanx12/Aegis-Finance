@@ -430,8 +430,8 @@ def test_a_flicker_is_rising_not_promoted_and_a_fall_is_lowered_at_once(folder):
     v = RV.run(RID, folder, write_files=False)["voice"]
     lines = v["headline_lines"]
     assert lines[-1] == "CLAIMS PROMOTED: none."
-    assert lines[-2] == f"LABELS RISING, NOT YET HELD (1 of 3 runs): {acc} OBSERVED → EARLY_EVIDENCE."
-    assert lines[-3] == f"LABELS LOWERED: {other} EARLY_EVIDENCE → OBSERVED (since run {EARLIER[2]})."
+    assert lines[-2] == f"LABELS RISING, NOT YET HELD (1 of 3 runs): {acc} OBSERVED -> EARLY_EVIDENCE."
+    assert lines[-3] == f"LABELS LOWERED: {other} EARLY_EVIDENCE -> OBSERVED (since run {EARLIER[2]})."
     assert lines[-4].startswith("Distinct bets ahead of SPY: ")
     md = RV.render_md(v)
     assert "LABELS RISING, NOT YET HELD" in md and "## Flags beside the labels" in md
@@ -505,7 +505,7 @@ def test_missing_history_says_why(folder):
     v = RV.run(RID, folder, write_files=False)["voice"]
     assert v["claims"]["line"] == "CLAIMS PROMOTED: none (not enough earlier runs to confirm a rise)"
     assert v["claims"]["rising_lines"] == ["LABELS RISING, NOT YET HELD (1 of 3 runs): revision_flow_v0 "
-                                           "OBSERVED → EARLY_EVIDENCE"]
+                                           "OBSERVED -> EARLY_EVIDENCE"]
     (folder / f"book_dna_{EARLIER[-1]}.json").unlink()
     v0 = RV.run(RID, folder, write_files=False)["voice"]
     assert v0["claims"]["line"] == "CLAIMS PROMOTED: none (no earlier run to compare)"
@@ -526,7 +526,7 @@ def test_the_fixture_promotes_a_rise_held_through_the_window(folder):
     for r, lab in zip(EARLIER, ("OBSERVED(5)", "EARLY_EVIDENCE", "EARLY_EVIDENCE")):
         _write_prev(folder, _set("revision_flow_v0", lab), r)
     v = RV.run(RID, folder, write_files=False)["voice"]
-    assert v["headline_lines"][-1] == ("CLAIMS PROMOTED: revision_flow_v0 OBSERVED → EARLY_EVIDENCE (held 3 "
+    assert v["headline_lines"][-1] == ("CLAIMS PROMOTED: revision_flow_v0 OBSERVED -> EARLY_EVIDENCE (held 3 "
                                        f"daily runs since run {EARLIER[1]}).")
 
 

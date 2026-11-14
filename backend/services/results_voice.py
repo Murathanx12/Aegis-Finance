@@ -783,7 +783,7 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
     since = f" (since run {ch['compared_with']['run_id']})" if ch["compared_with"] else ""
     if promoted:
         claims_line = ("CLAIMS PROMOTED: " + ", ".join(
-            f"{x['account']} {x['previous_rung']} → {x['rung']} (held {x['held_runs']} daily runs since run "
+            f"{x['account']} {x['previous_rung']} -> {x['rung']} (held {x['held_runs']} daily runs since run "
             f"{x['held_since_run']})" for x in promoted))
     elif ps["why"]:
         claims_line = f"CLAIMS PROMOTED: none ({ps['why']})"
@@ -792,8 +792,8 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
     rising_lines = []
     for k in sorted({x["held_runs"] for x in ps["rising"]}):
         rising_lines.append(f"LABELS RISING, NOT YET HELD ({k} of {hold} runs): " + ", ".join(
-            f"{x['account']} {x['previous_rung']} → {x['rung']}" for x in ps["rising"] if x["held_runs"] == k))
-    lowered_line = ("LABELS LOWERED: " + ", ".join(f"{x['account']} {_rung_name(x['previous_label'])} → "
+            f"{x['account']} {x['previous_rung']} -> {x['rung']}" for x in ps["rising"] if x["held_runs"] == k))
+    lowered_line = ("LABELS LOWERED: " + ", ".join(f"{x['account']} {_rung_name(x['previous_label'])} -> "
                                                    f"{_rung_name(x['label'])}" for x in ch["lowered"]) + since
                     ) if ch["lowered"] else None
     bets2 = bets_after_same_bet(accounts, cl["bet_of"], sb, books, by_acc)
@@ -1188,7 +1188,7 @@ def public_view(v: dict, is_personal) -> dict:
         "one_bet_groups": [" ~ ".join(m for m in g if not is_personal(m, None)) for g in c.get("jaccard_bets") or []],
         "claims_line": (cl.get("line") if not any(n in str(cl.get("line")) for n in personal_names) else
                         "CLAIMS PROMOTED: " + ", ".join(
-                            [f"{x['account']} {x['previous_rung']} → {x['rung']}"
+                            [f"{x['account']} {x['previous_rung']} -> {x['rung']}"
                              for x in cl.get("promoted") or [] if not personal(x["account"])]
                             + [f"{sum(1 for x in cl.get('promoted') or [] if personal(x['account']))} "
                                "owner-personal account(s), names withheld"])),
