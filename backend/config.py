@@ -6402,6 +6402,23 @@ HEALTH_TASK_CADENCE_H = {
 #: consecutive probes AND for longer than the allowed age, with no declared idle
 #: reason, is STALE even though its stamps keep moving (roadmap §7).
 HEALTH_PROGRESS_SAME_HASH_PROBES = 2
+#: S69 (2026-11-14, CH-22a §5.8): the tasks registered 11-11 .. 11-14, cadences read from
+#: their live triggers. `task_receipts` judges each by the receipt its job writes.
+HEALTH_TASK_CADENCE_H.update({
+    "AegisEventNodes": 0.5, "AegisForwardCalendar": 24.0, "AegisOwnerCallsRecord": 24.0,
+    "AegisDiscoveryAutopsy": 24.0, "AegisRawSecCollection": 1.0, "AegisLabNight": 24.0,
+    "AegisNewsOverlayBook": 24.0, "AegisLLMSelectorBook": 168.0, "AegisSystemStatus": 0.25,
+    "AegisOwnerEventWarning": 1.0 / 6.0,
+})
+#: bytes of `runtime_switch/runtime_task_runs.jsonl` read for wrapper rcs (~140 kB/day
+#: measured 2026-11-14, so this covers about two weeks: a weekly job's last run included)
+TASK_RECEIPT_WRAPPER_TAIL_BYTES = 2_000_000
+#: AegisLabNight: trigger 23:00 local (UTC+8) + ExecutionTimeLimit PT7H15M, in UTC
+LAB_NIGHT_WINDOW_UTC = ("15:00", "22:15")
+#: minutes after the window opens before a night with no tick reads DEGRADED
+LAB_NIGHT_FIRST_TICK_GRACE_MIN = 30
+#: AegisNewsOverlayBook's declared ET window (the step's own NEWS_OVERLAY_STEP_WINDOW_ET)
+NEWS_OVERLAY_TASK_WINDOW_START_ET, NEWS_OVERLAY_TASK_WINDOW_END_ET = NEWS_OVERLAY_STEP_WINDOW_ET
 #: `task_keeper analyst`: the weekly analyst-target pull (~60-80 min measured).
 ANALYST_PULL_TIMEOUT_MIN = 150
 #: `task_keeper brain`: `tools/refresh_aegis.py` in the sibling Optimus repo.

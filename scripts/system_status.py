@@ -375,7 +375,11 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
         if str(last_res).strip() not in ("", "0", "267011", "267009", "267008", "267010") and re.fullmatch(r"-?\d+", str(last_res).strip()):
             flags.append(f"last result {last_res} (non-zero)")
             status = worst(status, "DEGRADED")
-        if never:
+        if never and (pr or {}).get("state") == "ALIVE_IDLE_EXPECTED":
+            # S69: the receipt reader itself judged the never-run task not due yet
+            # (task_receipts.not_due_yet: first trigger + one cadence still ahead)
+            flags.append("has never run (not due yet)")
+        elif never:
             flags.append("has never run")
             status = worst(status, "DEGRADED")
         if state.strip().lower() == "disabled":
