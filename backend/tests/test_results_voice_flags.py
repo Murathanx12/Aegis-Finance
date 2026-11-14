@@ -381,60 +381,153 @@ def folder(tmp_path: Path) -> Path:
     return d
 
 
-def _write_prev(folder: Path, edit) -> None:
+EARLIER = ["2026-10-03T235345Z", "2026-10-04T235345Z", "2026-10-05T235345Z"]   # the fixture RID's 3 days before
+
+
+def _write_prev(folder: Path, edit, rid: str = EARLIER[-1]) -> None:
     d = json.loads((folder / f"book_dna_{RID}.json").read_text(encoding="utf-8"))
     edit(d)
-    (folder / "book_dna_2026-10-05T235345Z.json").write_text(json.dumps(d), encoding="utf-8")
+    (folder / f"book_dna_{rid}.json").write_text(json.dumps(d), encoding="utf-8")
 
 
-def test_claims_none_when_no_label_rose_since_the_previous_run(folder):
-    _write_prev(folder, lambda d: None)
-    v = RV.run(RID, folder, write_files=False)["voice"]
-    assert v["claims"]["line"] == "CLAIMS PROMOTED: none"
-    assert v["claims"]["compared_with"]["run_id"] == "2026-10-05T235345Z"
-    assert v["headline_lines"][-1] == "CLAIMS PROMOTED: none."
-    assert not any(ln.startswith("LABELS LOWERED") for ln in v["headline_lines"])
+def _set(account: str, label: str):
+    def edit(d):
+        for b in d["books"]:
+            if b["account"] == account:
+                b["evidence"] = {"label": label}
+    return edit
 
 
-def test_claims_promoted_names_a_rise_and_labels_lowered_names_a_fall(folder):
+def _set_current(folder: Path, account: str, label: str) -> None:
     cur = folder / f"book_dna_{RID}.json"
     d = json.loads(cur.read_text(encoding="utf-8"))
-    for b in d["books"]:
-        if b["account"] == "pers_revision_flow_leaders_2026-09-25":
-            b["evidence"] = {"label": "EARLY_EVIDENCE", "why": "test"}
+    _set(account, label)(d)
     cur.write_text(json.dumps(d), encoding="utf-8")
 
-    def prev(p):
-        for b in p["books"]:
-            if b["account"] == "pers_revision_flow_leaders_2026-09-25":
-                b["evidence"] = {"label": "OBSERVED(7)"}
-            if b["account"] == "revision_flow_v0":
-                b["evidence"] = {"label": "EARLY_EVIDENCE"}
-    _write_prev(folder, prev)
+
+def test_claims_none_when_no_label_rose_over_the_hold_window(folder):
+    for r in EARLIER:
+        _write_prev(folder, lambda d: None, r)
+    v = RV.run(RID, folder, write_files=False)["voice"]
+    assert v["claims"]["line"] == "CLAIMS PROMOTED: none"
+    assert v["claims"]["compared_with"]["run_id"] == EARLIER[-1]
+    assert [d["run_id"] for d in v["claims"]["promotion_days"]] == EARLIER
+    assert v["headline_lines"][-1] == "CLAIMS PROMOTED: none."
+    assert not any(ln.startswith(("LABELS LOWERED", "LABELS RISING")) for ln in v["headline_lines"])
+
+
+def test_a_flicker_is_rising_not_promoted_and_a_fall_is_lowered_at_once(folder):
+    """SHADOW_BAYES_v0 on 2026-11-11/13/14: EARLY_EVIDENCE -> OBSERVED -> EARLY_EVIDENCE."""
+    acc, other = "revision_flow_v0", "pers_revision_flow_leaders_2026-09-25"
+    _set_current(folder, acc, "EARLY_EVIDENCE")
+    _write_prev(folder, _set(acc, "EARLY_EVIDENCE"), EARLIER[0])
+    _write_prev(folder, _set(acc, "EARLY_EVIDENCE"), EARLIER[1])
+
+    def last(d):
+        _set(acc, "OBSERVED(6)")(d)
+        _set(other, "EARLY_EVIDENCE")(d)
+    _write_prev(folder, last, EARLIER[2])
     v = RV.run(RID, folder, write_files=False)["voice"]
     lines = v["headline_lines"]
-    assert lines[-1] == ("CLAIMS PROMOTED: pers_revision_flow_leaders_2026-09-25 OBSERVED(7) -> EARLY_EVIDENCE "
-                         "(since run 2026-10-05T235345Z).")
-    assert lines[-2].startswith("LABELS LOWERED: revision_flow_v0 EARLY_EVIDENCE -> OBSERVED(7)")
-    assert lines[-3].startswith("Distinct bets ahead of SPY: ")
+    assert lines[-1] == "CLAIMS PROMOTED: none."
+    assert lines[-2] == f"LABELS RISING, NOT YET HELD (1 of 3 runs): {acc} OBSERVED → EARLY_EVIDENCE."
+    assert lines[-3] == f"LABELS LOWERED: {other} EARLY_EVIDENCE → OBSERVED (since run {EARLIER[2]})."
+    assert lines[-4].startswith("Distinct bets ahead of SPY: ")
     md = RV.render_md(v)
-    assert "LABELS LOWERED: revision_flow_v0" in md and "## Flags beside the labels" in md
+    assert "LABELS RISING, NOT YET HELD" in md and "## Flags beside the labels" in md
+    RV.run(RID, folder)
+    _, block = RV.headline_block(folder)
+    assert block[-2].startswith("LABELS RISING, NOT YET HELD") and block[-1].startswith("CLAIMS PROMOTED:")
+
+
+def _hist(*days: dict) -> dict:
+    return {"days": [{"day": f"d{i}", "run_id": f"r{i}", "path": f"p{i}", "labels": lab}
+                     for i, lab in enumerate(days)]}
+
+
+def _state(st: dict) -> str:
+    if st["promoted"]:
+        return "P"
+    return f"R{st['rising'][0]['held_runs']}" if st["rising"] else "-"
+
+
+def test_a_rise_held_three_runs_promotes_exactly_once():
+    OB, E = "OBSERVED(30)", "EARLY_EVIDENCE"
+    seq = [OB, OB, OB, E, E, E, E, E]                     # daily labels; the rise is on day 3
+    seen = []
+    for t in range(3, len(seq)):
+        hist = _hist(*({"a": x} for x in seq[t - 3:t]))       # the 3 daily runs before t
+        seen.append(_state(RV.promotion_status(["a"], {"a": {"evidence": {"label": seq[t]}}}, hist, 3)))
+    assert seen == ["R1", "R2", "P", "-", "-"]
+    st = RV.promotion_status(["a"], {"a": {"evidence": {"label": E}}}, _hist({"a": OB}, {"a": E}, {"a": E}), 3)
+    assert st["promoted"][0]["previous_rung"] == "OBSERVED" and st["promoted"][0]["held_since_run"] == "r1"
+
+
+def test_a_flicker_never_promotes():
+    OB, E = "OBSERVED(30)", "EARLY_EVIDENCE"
+    seq = [OB, E, OB, E, E, OB, E, OB, E, E, OB]
+    for t in range(3, len(seq)):
+        hist = _hist(*({"a": x} for x in seq[t - 3:t]))
+        st = RV.promotion_status(["a"], {"a": {"evidence": {"label": seq[t]}}}, hist, 3)
+        assert st["promoted"] == [], (t, seq[t - 3:t + 1])
+
+
+def test_an_account_missing_from_an_earlier_run_is_not_promoted():
+    E = "EARLY_EVIDENCE"
+    st = RV.promotion_status(["a"], {"a": {"evidence": {"label": E}}},
+                             _hist({"b": "OBSERVED(9)"}, {"a": E}, {"a": E}), 3)
+    assert st["promoted"] == [] and st["rising"] == []
+
+
+def _dna_file(folder: Path, rid: str, label: str) -> None:
+    (folder / f"book_dna_{rid}.json").write_text(
+        json.dumps({"books": [{"account": "a", "evidence": {"label": label}}]}), encoding="utf-8")
+
+
+def test_two_runs_on_one_utc_day_count_once(tmp_path):
+    OB, E = "OBSERVED(30)", "EARLY_EVIDENCE"
+    _dna_file(tmp_path, "2026-01-01T010000Z", OB)
+    _dna_file(tmp_path, "2026-01-02T010000Z", OB)
+    _dna_file(tmp_path, "2026-01-03T010000Z", E)
+    _dna_file(tmp_path, "2026-01-03T200000Z", E)       # same UTC day: counts once
+    _dna_file(tmp_path, "2026-01-04T000500Z", OB)       # same UTC day as THIS run: left out
+    for i, p in enumerate(sorted(tmp_path.iterdir())):
+        os.utime(p, (2_000_000_000 - i * 1000,) * 2)   # mtimes inverted: must not matter
+    h = RV.label_history(tmp_path, "2026-01-04T060000Z", 3)
+    assert [d["run_id"] for d in h["days"]] == ["2026-01-01T010000Z", "2026-01-02T010000Z", "2026-01-03T200000Z"]
+    st = RV.promotion_status(["a"], {"a": {"evidence": {"label": E}}}, h, 3)
+    assert st["promoted"] == [] and st["rising"][0]["held_runs"] == 2
+
+
+def test_missing_history_says_why(folder):
+    _write_prev(folder, _set("revision_flow_v0", "OBSERVED(6)"))
+    _set_current(folder, "revision_flow_v0", "EARLY_EVIDENCE")
+    v = RV.run(RID, folder, write_files=False)["voice"]
+    assert v["claims"]["line"] == "CLAIMS PROMOTED: none (not enough earlier runs to confirm a rise)"
+    assert v["claims"]["rising_lines"] == ["LABELS RISING, NOT YET HELD (1 of 3 runs): revision_flow_v0 "
+                                           "OBSERVED → EARLY_EVIDENCE"]
+    (folder / f"book_dna_{EARLIER[-1]}.json").unlink()
+    v0 = RV.run(RID, folder, write_files=False)["voice"]
+    assert v0["claims"]["line"] == "CLAIMS PROMOTED: none (no earlier run to compare)"
 
 
 def test_holding_a_high_label_is_not_a_promotion(folder):
-    """The bug the owner saw: an account already at EARLY_EVIDENCE on both runs is not promoted."""
-    def high(d):
-        for b in d["books"]:
-            if b["account"] == "revision_flow_v0":
-                b["evidence"] = {"label": "EARLY_EVIDENCE"}
-    cur = folder / f"book_dna_{RID}.json"
-    d = json.loads(cur.read_text(encoding="utf-8"))
-    high(d)
-    cur.write_text(json.dumps(d), encoding="utf-8")
-    _write_prev(folder, high)
+    """The bug the owner saw: an account already at EARLY_EVIDENCE on every run is not promoted."""
+    _set_current(folder, "revision_flow_v0", "EARLY_EVIDENCE")
+    for r in EARLIER:
+        _write_prev(folder, _set("revision_flow_v0", "EARLY_EVIDENCE"), r)
     v = RV.run(RID, folder, write_files=False)["voice"]
-    assert v["claims"]["line"] == "CLAIMS PROMOTED: none"
+    assert v["claims"]["line"] == "CLAIMS PROMOTED: none" and v["claims"]["rising"] == []
     assert "EARLY_EVIDENCE" in v["claims"]["labels_held"]
+
+
+def test_the_fixture_promotes_a_rise_held_through_the_window(folder):
+    _set_current(folder, "revision_flow_v0", "EARLY_EVIDENCE")
+    for r, lab in zip(EARLIER, ("OBSERVED(5)", "EARLY_EVIDENCE", "EARLY_EVIDENCE")):
+        _write_prev(folder, _set("revision_flow_v0", lab), r)
+    v = RV.run(RID, folder, write_files=False)["voice"]
+    assert v["headline_lines"][-1] == ("CLAIMS PROMOTED: revision_flow_v0 OBSERVED → EARLY_EVIDENCE (held 3 "
+                                       f"daily runs since run {EARLIER[1]}).")
 
 
 def test_old_receipt_flags_cannot_determine_and_the_distinct_bets_line(folder):

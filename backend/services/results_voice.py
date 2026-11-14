@@ -69,6 +69,7 @@ def params() -> dict:
                                         "random_sleeve"))),
         "label_ladder": list(_dna.LABEL_LADDER),
         "label_ceiling_of_book_dna": _dna.LABEL_CEILING,
+        "promotion_hold_runs": max(1, int(_cfg("RESULTS_VOICE_PROMOTION_HOLD_RUNS", 3))),
     }
 
 
@@ -150,6 +151,76 @@ def label_changes(accounts: list[str], books: dict, prev: Optional[dict]) -> dic
             out["promoted"].append(row)
         elif rn < rw:
             out["lowered"].append(row)
+    return out
+
+
+def label_history(folder: Path, run_id: str, n_days: int) -> dict:
+    """The labels of the last `n_days` DAILY runs before `run_id`'s UTC day, oldest first. One run
+    per UTC day counts once: the latest run id of each day (by the run id in the file name, never
+    mtime); runs on the same UTC day as `run_id` are left out (this run stands for its day).
+    {"days": [{"day", "run_id", "path", "labels": {account: label}}], "unreadable": [...],
+     "n_earlier_days": <all earlier days on disk>}."""
+    day0 = str(run_id)[:10]
+    by_day: dict = {}
+    for r in run_ids(folder, "book_dna"):
+        if r < str(run_id) and r[:10] < day0:
+            by_day[r[:10]] = max(by_day.get(r[:10], r), r)
+    days = sorted(by_day)
+    out: dict = {"days": [], "unreadable": [], "n_earlier_days": len(days)}
+    for d in days[-n_days:] if n_days > 0 else []:
+        rid = by_day[d]
+        p = Path(folder) / f"book_dna_{rid}.json"
+        try:
+            dna = json.loads(p.read_text(encoding="utf-8"))
+            labels = {str(b.get("account")): (b.get("evidence") or {}).get("label") for b in dna.get("books") or []}
+        except (OSError, ValueError, AttributeError) as e:
+            out["unreadable"].append({"run_id": rid, "path": rel(p), "error": type(e).__name__})
+            continue
+        out["days"].append({"day": d, "run_id": rid, "path": rel(p), "labels": labels})
+    return out
+
+
+def _rung_name(label: Any) -> str:
+    return str(label or "UNLABELLED").split("(")[0]
+
+
+def promotion_status(accounts: list[str], books: dict, history: Optional[dict], hold: int) -> dict:
+    """PROMOTED only when the label is strictly higher than the one held BEFORE the rise AND the
+    higher rung has held for `hold` consecutive daily runs (this run included); printed once, on the
+    run where the hold completes. A rise that has held k < hold runs is RISING (k of hold). A label
+    that flickers (EARLY_EVIDENCE -> OBSERVED -> EARLY_EVIDENCE) restarts at 1 and never promotes
+    until it holds."""
+    out = {"hold_runs": hold, "promoted": [], "rising": [], "days": [], "why": None}
+    days = (history or {}).get("days") or []
+    out["days"] = [{"day": d["day"], "run_id": d["run_id"], "path": d["path"]} for d in days]
+    if (history or {}).get("unreadable"):
+        out["unreadable"] = history["unreadable"]
+    if not days:
+        out["why"] = "no earlier run to compare"
+    elif len(days) < hold:
+        out["why"] = "not enough earlier runs to confirm a rise"
+    for a in accounts:
+        now = ((books.get(a) or {}).get("evidence") or {}).get("label")
+        rn = _rung(now)
+        seq = [_rung(d["labels"].get(a)) if a in d["labels"] else None for d in days]
+        if rn is None:
+            continue
+        k, before, i = 1, None, len(seq) - 1
+        while i >= 0 and seq[i] is not None and seq[i] >= rn:
+            k += 1
+            i -= 1
+        if i >= 0:
+            before = seq[i]
+        if before is None or before >= rn:
+            continue                                   # no rise visible in the loaded history
+        row = {"account": a, "label": now, "rung": _rung_name(now),
+               "previous_label": next(d["labels"].get(a) for d in reversed(days[:i + 1])),
+               "previous_rung": _dna.LABEL_LADDER[before], "held_runs": k,
+               "held_since_run": days[i + 1]["run_id"] if i + 1 < len(days) else None}
+        if k == hold:
+            out["promoted"].append(row)
+        elif k < hold:
+            out["rising"].append(row)
     return out
 
 
@@ -606,9 +677,10 @@ def _r(x: Any, nd: int = 3) -> Optional[float]:
 
 
 def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: str,
-          prev: Optional[dict] = None) -> dict:
+          prev: Optional[dict] = None, history: Optional[dict] = None) -> dict:
     """`prev`: `previous_dna(...)` -- the previous run's book_dna receipt, against which a label
-    ROSE (CLAIMS PROMOTED) or FELL (LABELS LOWERED). None = no earlier run."""
+    FELL (LABELS LOWERED). `history`: `label_history(...)` -- the earlier DAILY runs a rise must
+    hold through before CLAIMS PROMOTED names it. None = no earlier run."""
     if not isinstance(roi, dict) or not roi.get("rows"):
         raise ResultsVoiceRefused("the ROI receipt is missing or has no rows")
     if not isinstance(dna, dict) or not isinstance(dna.get("books"), list):
@@ -702,18 +774,28 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
     top_rung = max((x for x in rungs if x in ladder), key=ladder.index, default="UNLABELLED")
     # owner 2026-11-14: CLAIMS PROMOTED prints "none" until a label actually RISES against the
     # previous run's receipt (it used to list every account above OBSERVED, risen or not)
+    # coordinator 2026-11-14 (PR #146 follow-up): a rise must HOLD for P["promotion_hold_runs"]
+    # consecutive daily runs before it is a promotion; a fall is reported at once
     ch = label_changes(accounts, books, prev)
-    promoted = ch["promoted"]
+    ps = promotion_status(accounts, books, history, P["promotion_hold_runs"])
+    promoted = ps["promoted"]
+    hold = P["promotion_hold_runs"]
     since = f" (since run {ch['compared_with']['run_id']})" if ch["compared_with"] else ""
-    if ch["compared_with"] is None:
-        claims_line = f"CLAIMS PROMOTED: none ({ch['why']})"
-    elif promoted:
-        claims_line = ("CLAIMS PROMOTED: " + ", ".join(f"{x['account']} {x['previous_label']} -> {x['label']}"
-                                                       for x in promoted) + since)
+    if promoted:
+        claims_line = ("CLAIMS PROMOTED: " + ", ".join(
+            f"{x['account']} {x['previous_rung']} → {x['rung']} (held {x['held_runs']} daily runs since run "
+            f"{x['held_since_run']})" for x in promoted))
+    elif ps["why"]:
+        claims_line = f"CLAIMS PROMOTED: none ({ps['why']})"
     else:
         claims_line = "CLAIMS PROMOTED: none"
-    lowered_line = ("LABELS LOWERED: " + ", ".join(f"{x['account']} {x['previous_label']} -> {x['label']}"
-                                                   for x in ch["lowered"]) + since) if ch["lowered"] else None
+    rising_lines = []
+    for k in sorted({x["held_runs"] for x in ps["rising"]}):
+        rising_lines.append(f"LABELS RISING, NOT YET HELD ({k} of {hold} runs): " + ", ".join(
+            f"{x['account']} {x['previous_rung']} → {x['rung']}" for x in ps["rising"] if x["held_runs"] == k))
+    lowered_line = ("LABELS LOWERED: " + ", ".join(f"{x['account']} {_rung_name(x['previous_label'])} → "
+                                                   f"{_rung_name(x['label'])}" for x in ch["lowered"]) + since
+                    ) if ch["lowered"] else None
     bets2 = bets_after_same_bet(accounts, cl["bet_of"], sb, books, by_acc)
 
     ranking = beta_adjusted_ranking([{**row_view(a), "bet_members": cl["bet_of"][a]} for a in accounts])
@@ -751,13 +833,18 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
                         "family": by_acc[a].get("family"),
                         "flags": flags_view(books.get(a), sb[a])} for a in accounts],
         "claims": {"labels_held": dict(sorted(rungs.items())), "claimable_above_observed": above,
-                   "top_rung": top_rung, "promoted": promoted, "lowered": ch["lowered"],
+                   "top_rung": top_rung, "promoted": promoted, "rising": ps["rising"],
+                   "lowered": ch["lowered"], "promotion_days": ps["days"],
+                   "promotion_why": ps["why"], "hold_runs": hold,
                    "compared_with": ch["compared_with"], "compare_why": ch.get("why"),
                    "n_compared": ch["n_compared"], "new_since_previous": ch["new_accounts"],
-                   "rule": ("a label ROSE when its rung on " + " < ".join(_dna.LABEL_LADDER) + " is strictly "
-                            "higher than the same account's in the previous run's book_dna receipt (previous "
-                            "= the largest run id below this one, by file name, never by mtime)"),
-                   "line": claims_line, "lowered_line": lowered_line,
+                   "rule": (f"PROMOTED when the rung on {' < '.join(_dna.LABEL_LADDER)} is strictly higher than "
+                            f"the rung held before the rise AND has held for {hold} consecutive daily runs "
+                            "(this one included; one run per UTC day, the latest run id of that day; receipts "
+                            "ordered by the run id in their file name, never by mtime); printed once, on the run "
+                            "where the hold completes. A shorter rise prints LABELS RISING, NOT YET HELD. "
+                            "LOWERED = lower than the previous receipt's rung, reported at once."),
+                   "line": claims_line, "lowered_line": lowered_line, "rising_lines": rising_lines,
                    "ceiling_note": (f"book_dna awards at most {_dna.LABEL_CEILING}; VALIDATED_EDGE needs a "
                                     f"validator on data the idea never saw"),
                    "receipts": receipts},
@@ -832,6 +919,7 @@ def headline_lines(v: dict) -> list[str]:
         lines.append(sbc["line"] + ".")
     if v["claims"].get("lowered_line"):
         lines.append(v["claims"]["lowered_line"] + ".")
+    lines += [ln + "." for ln in v["claims"].get("rising_lines") or []]
     lines.append(v["claims"]["line"] + ".")
     return lines
 
@@ -959,7 +1047,11 @@ def render_md(v: dict) -> str:
     out += ["", f"## Claims — receipts: {rc}", ""]
     if cl.get("lowered_line"):
         out.append(f"- {cl['lowered_line']}.")
+    out += [f"- {ln}." for ln in cl.get("rising_lines") or []]
     out += [f"- {cl['line']}.",
+            f"- daily runs a rise must hold through ({cl.get('hold_runs')}): "
+            + (", ".join(f"{d['day']} (run {d['run_id']})" for d in cl.get("promotion_days") or []) or "none on disk")
+            + " + this run",
             f"- compared with: {('run ' + cw['run_id'] + ' (`' + cw['path'] + '`), ' + str(cl.get('n_compared')) + ' accounts on both receipts, ' + str(len(cl.get('new_since_previous') or [])) + ' new since') if cw else cl.get('compare_why')}",
             f"- rule: {cl.get('rule')}",
             f"- labels held by strategy accounts: {cl['labels_held']} (a label held is not a label that rose)",
@@ -1024,7 +1116,8 @@ def run(run_id: Optional[str] = None, folder: Path = PA_DIR, *, write_files: boo
     else:
         rid = run_id or newest_shared_run_id(folder)
         roi, dna, rp, dp = load_pair(rid, folder)
-    v = build(roi, dna, roi_path=rel(rp), dna_path=rel(dp), prev=previous_dna(folder, rid))
+    v = build(roi, dna, roi_path=rel(rp), dna_path=rel(dp), prev=previous_dna(folder, rid),
+              history=label_history(folder, rid, params()["promotion_hold_runs"]))
     v["run_id"] = rid
     v["headline_lines"] = headline_lines(v)
     if write_files:
@@ -1055,7 +1148,7 @@ def public_view(v: dict, is_personal) -> dict:
               (v.get("flags_rows") or []) + ((v.get("beta_adjusted_ranking") or {}).get("rows") or [])
               + v.get("leaders", []) + v.get("losers", [])}
     cl0 = v.get("claims") or {}
-    for x in (cl0.get("promoted") or []) + (cl0.get("lowered") or []):
+    for x in (cl0.get("promoted") or []) + (cl0.get("lowered") or []) + (cl0.get("rising") or []):
         fam_of.setdefault(x["account"], None)
 
     def personal(a: Any) -> bool:
@@ -1095,7 +1188,7 @@ def public_view(v: dict, is_personal) -> dict:
         "one_bet_groups": [" ~ ".join(m for m in g if not is_personal(m, None)) for g in c.get("jaccard_bets") or []],
         "claims_line": (cl.get("line") if not any(n in str(cl.get("line")) for n in personal_names) else
                         "CLAIMS PROMOTED: " + ", ".join(
-                            [f"{x['account']} {x['previous_label']} -> {x['label']}"
+                            [f"{x['account']} {x['previous_rung']} → {x['rung']}"
                              for x in cl.get("promoted") or [] if not personal(x["account"])]
                             + [f"{sum(1 for x in cl.get('promoted') or [] if personal(x['account']))} "
                                "owner-personal account(s), names withheld"])),
@@ -1118,7 +1211,7 @@ def newest_voice_path(folder: Path = PA_DIR, suffix: str = ".md") -> Optional[Pa
 
 
 HEADLINE_PREFIXES = ("RESULTS ", "LEADER", "NEXT:", "WHAT RAISES IT:", "BEHIND:", "Distinct bets ahead of SPY:",
-                     "LABELS LOWERED:", "CLAIMS PROMOTED:")
+                     "LABELS LOWERED:", "LABELS RISING, NOT YET HELD", "CLAIMS PROMOTED:")
 
 
 def headline_block(folder: Path = PA_DIR, n: Optional[int] = None) -> tuple[Optional[Path], list[str]]:

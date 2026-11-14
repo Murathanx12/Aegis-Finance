@@ -5291,6 +5291,10 @@ BOOK_DNA_FLAG_SAME_BET_MIN_OBS = 20
 BOOK_DNA_FLAG_MDE_MIN_OBS = 20
 BOOK_DNA_FLAG_ONE_NAME_SHARE = 0.40
 BOOK_DNA_FLAG_HIGH_BETA = 1.5
+#: PR #146 follow-up: CLAIMS PROMOTED names a rise only once the higher label has held for this
+#: many consecutive DAILY runs (this run included; one run per UTC day, by run id, never mtime);
+#: until then the voice prints "LABELS RISING, NOT YET HELD (k of N runs)". A fall is immediate.
+RESULTS_VOICE_PROMOTION_HOLD_RUNS = 3
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
