@@ -723,9 +723,9 @@ def build_forecasts(pred: Path, hd: Path, state: dict, stats: Counter) -> dict:
         stats["forecast_ledger_missing"] += 1
         return {"status": "LEDGER_MISSING", "path": str(pred)}
     try:
-        st = Path(pred).stat()
-        fp = [st.st_size, st.st_mtime_ns]
-    except OSError:
+        # the layer's own cache key: it changes with ANY backing file, legacy or streams
+        fp = json.loads(json.dumps(list(FL.fingerprint(pred)), default=str))
+    except (OSError, ValueError, TypeError):
         fp = None
     prev = state.get("forecasts") or {}
     if fp is not None and prev.get("fingerprint") == fp and (hd / "forecasts.jsonl").is_file():
