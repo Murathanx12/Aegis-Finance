@@ -58,6 +58,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as C  # noqa: E402
+from backend.services import task_receipts as TR  # noqa: E402
 
 SCHEMA = "system_status/1"
 STATUSES = ("OK", "DEGRADED", "DOWN", "UNKNOWN")
@@ -347,6 +348,33 @@ def group_loops(rows: list[dict], *, min_group: int = 4) -> list[dict]:
     return out
 
 
+def _old_rc(name: str, spec: Any, sch: dict, mapped: Optional[dict], now: datetime) -> str:
+    """A non-zero scheduler result that is OLD, or '' when it is current (or cannot be dated).
+
+    Old = the task's own receipt reader judged it OK AND either the receipt is newer than the
+    last run (a later good run wrote it; a weekly task's manual-run rc) or the last run is
+    older than the declared cadence window. Anything else -- no reader, a bad receipt, an
+    unparseable Last Run Time -- stays a current failure ("did not run" is not "passed")."""
+    if not mapped or mapped.get("status") != "OK":
+        return ""
+    d_part, _, t_part = str(sch.get("Last Run Time", "")).strip().partition(" ")
+    last = TR._sched_local({"d": d_part, "t": t_part}, "d", "t")
+    if last is None:
+        return ""
+    rc = str(sch.get("Last Result", "")).strip()
+    receipt = parse_ts(mapped.get("evidence_utc"))
+    window_h = float(spec.cadence_h if spec is not None and spec.cadence_h is not None
+                     else C.HEALTH_TASK_CADENCE_H.get(name, 24.0)) * 1.25
+    age_h = (now - last).total_seconds() / 3600
+    if receipt is not None and receipt > last:
+        why = f"a newer good receipt exists ({fmt_age((now - receipt).total_seconds())} old)"
+    elif age_h > window_h:
+        why = f"older than its {window_h:.0f} h cadence window"
+    else:
+        return ""
+    return f"old last result {rc} from a run {fmt_age(age_h * 3600)} ago ({why}); not a current failure"
+
+
 def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]:
     """Scheduled tasks: the probe judge (receipt-based) + schtasks' own columns."""
     from backend.services import system_health as SH
@@ -372,9 +400,21 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
         flags = []
         never = str(last_res).strip() == "267011" or "N/A" in str(last_run)
         running = str(last_res).strip() == "267009"
+        try:
+            spec = TR.TASK_RECEIPT.get(name)
+        except Exception:  # noqa: BLE001
+            spec = None
+        retired = (state.strip().lower() == "disabled" and spec is not None
+                   and bool(spec.retired or spec.disabled_ok))
         if str(last_res).strip() not in ("", "0", "267011", "267009", "267008", "267010") and re.fullmatch(r"-?\d+", str(last_res).strip()):
-            flags.append(f"last result {last_res} (non-zero)")
-            status = worst(status, "DEGRADED")
+            old = _old_rc(name, spec, sch, mapped, now)
+            if retired:
+                flags.append(f"last result {last_res} (non-zero; retired task, not judged)")
+            elif old:
+                flags.append(old)               # shown with its age, never a current failure
+            else:
+                flags.append(f"last result {last_res} (non-zero)")
+                status = worst(status, "DEGRADED")
         if never and (pr or {}).get("state") == "ALIVE_IDLE_EXPECTED":
             # S69: the receipt reader itself judged the never-run task not due yet
             # (task_receipts.not_due_yet: first trigger + one cadence still ahead)
@@ -382,12 +422,16 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
         elif never:
             flags.append("has never run")
             status = worst(status, "DEGRADED")
-        if state.strip().lower() == "disabled":
+        if retired:
+            flags.append("RETIRED: Disabled on purpose -- " + (spec.disabled_ok or "declared retired in task_receipts"))
+        elif state.strip().lower() == "disabled":
             flags.append("DISABLED")
             status = worst(status, "DEGRADED")
         elif next_run.strip() in ("N/A", "") and not never and not running:
             flags.append("no next run scheduled")
             status = worst(status, "DEGRADED")
+        if retired:
+            status = "OK"      # a retired row claims no health: it is counted out (extra.retired)
         is_one = any(p.search(name) for p in one_shot)
         detail = (f"last run {last_run or '-'} result {last_res or '-'}; next {next_run or '-'}"
                   + (f"; {', '.join(flags)}" if flags else "")
@@ -403,7 +447,8 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
                        evidence=(mapped or {}).get("evidence_path") or "schtasks",
                        stamp=parse_ts((mapped or {}).get("evidence_utc")), now=now,
                        lim=(mapped or {}).get("limit_s"), action=act, required=bool(mapped) and not is_one, one_shot=is_one,
-                       extra={"last_run": last_run, "last_result": last_res, "next_run": next_run, "state": state}))
+                       extra={"last_run": last_run, "last_result": last_res, "next_run": next_run, "state": state,
+                              **({"retired": True} if retired else {})}))
     if not out:
         out.append(row("tasks", "scheduler", "UNKNOWN", "no Aegis* tasks found and none declared",
                        evidence="schtasks", now=now, action="Register the tasks (task_keeper --register) or check the filter."))
@@ -761,14 +806,87 @@ def _powercfg(run: Callable[[list, float], tuple]) -> Optional[tuple[int, int]]:
 
 
 def _default_run(argv: list, timeout: float) -> tuple:
+    # no console window under pythonw / the task scheduler (the attribute exists on Windows only)
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
     try:
-        cp = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)  # noqa: S603
+        cp = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False,  # noqa: S603
+                            creationflags=flags)
         return cp.returncode, (cp.stdout or "")
     except Exception:  # noqa: BLE001
         return 127, ""
 
 
+#: What the `power` row counts: (event id, provider substring, label). Kernel-Power 41 = the
+#: system rebooted without a clean shutdown; EventLog 6008 = the previous shutdown was
+#: unexpected; WER-SystemErrorReporting 1001 (System log) = a BugCheck was recorded.
+POWER_EVENTS = ((41, "Kernel-Power", "Kernel-Power 41"), (6008, "EventLog", "EventLog 6008"),
+                (1001, "SystemErrorReporting", "BugCheck 1001"))
+_POWER_PS = (
+    "$ErrorActionPreference='Stop'; try { $e = Get-WinEvent -FilterHashtable @{LogName='System'; "
+    "Id=41,6008,1001; StartTime=(Get-Date).AddDays(-%d)} } catch { if ($_.FullyQualifiedErrorId -like "
+    "'NoMatchingEventsFound*' -or $_.Exception.Message -like 'No events were found*') { $e = @() } "
+    "else { Write-Error $_; exit 1 } }; "
+    "$o = @($e | ForEach-Object { [pscustomobject]@{id=$_.Id; provider=$_.ProviderName; "
+    "utc=$_.TimeCreated.ToUniversalTime().ToString('o')} }); "
+    "if ($o.Count -eq 0) { '[]' } else { ConvertTo-Json -InputObject $o -Compress }")
+
+
+def _power_events_default(days: int, run: Callable[[list, float], tuple]) -> Optional[list[dict]]:
+    """Unclean-shutdown events of the last `days` days from the System log, or None when the
+    log could not be read (non-Windows, PowerShell failed, timed out, output not JSON)."""
+    if sys.platform != "win32":
+        return None
+    rc, txt = run(["powershell", "-NoProfile", "-NonInteractive", "-Command", _POWER_PS % days], 60)
+    if rc != 0 or not (txt or "").strip():
+        return None
+    try:
+        data = json.loads(txt)
+    except ValueError:
+        return None
+    if isinstance(data, dict):
+        data = [data]
+    if not isinstance(data, list) or not all(isinstance(e, dict) and {"id", "provider", "utc"} <= set(e) for e in data):
+        return None             # not the shape our own script prints: unknown, never "clean"
+    return data
+
+
+def power_row(now: datetime, events: Optional[list[dict]]) -> dict:
+    """The `power` row: unclean shutdowns / bugchecks in the last 7 days.
+    DOWN if any in the last 24 h, DEGRADED if any in 7 days, OK if the log was read and is
+    clean, UNKNOWN when it could not be read (never OK)."""
+    if events is None:
+        return row("infrastructure", "power", "UNKNOWN",
+                   "the System event log could not be read (not Windows, or Get-WinEvent failed/timed out)",
+                   evidence="Get-WinEvent System 41/6008/1001", now=now, required=False,
+                   action="Run `Get-WinEvent -FilterHashtable @{LogName='System';Id=41,6008,1001}` by hand.")
+    found = []
+    for e in events:
+        if not isinstance(e, dict):
+            continue
+        t = parse_ts(e.get("utc"))
+        label = next((lab for i, prov, lab in POWER_EVENTS
+                      if str(e.get("id")) == str(i) and prov.lower() in str(e.get("provider") or "").lower()), None)
+        if t is None or label is None or t > now + timedelta(seconds=FUTURE_SLACK_S):
+            continue
+        if (now - t) <= timedelta(days=7):
+            found.append((t, label))
+    found.sort(reverse=True)
+    if not found:
+        return row("infrastructure", "power", "OK", "no Kernel-Power 41, EventLog 6008 or BugCheck 1001 in the last 7 days",
+                   evidence="Get-WinEvent System 41/6008/1001 (live)", now=now)
+    last24 = [x for x in found if (now - x[0]) <= timedelta(hours=24)]
+    st = "DOWN" if last24 else "DEGRADED"
+    listing = "; ".join(f"{iso(t)} {lab}" for t, lab in found[:12]) + (f"; +{len(found) - 12} more" if len(found) > 12 else "")
+    return row("infrastructure", "power", st,
+               f"{len(found)} unclean-shutdown event(s) in 7 days ({len(last24)} in 24 h): {listing}",
+               evidence="Get-WinEvent System 41/6008/1001 (live)", stamp=found[0][0], now=now,
+               extra={"events": [{"utc": iso(t), "kind": lab} for t, lab in found]},
+               action="Fast Startup off; never sleep/hibernate on AC; check the charger; read the minidump "
+                      "(C:/Windows/Minidump). The row clears after 7 clean days.")
+
+
 def machine_rows(now: datetime, *, run: Callable[[list, float], tuple] = _default_run,
+                 power_events: Optional[Callable[[int], Optional[list[dict]]]] = None,
                  ram_free: Callable[[], Optional[float]] = _ram_free_gb,
                  boot: Callable[[datetime], Optional[datetime]] = _boot_time,
                  repo_slug: str = "Murathanx12/Aegis-Finance") -> list[dict]:
@@ -803,6 +921,8 @@ def machine_rows(now: datetime, *, run: Callable[[list, float], tuple] = _defaul
         out.append(row("infrastructure", "sleep_settings", st, f"sleep after: on AC {fmt(ac)}, on battery {fmt(dc)}",
                        evidence="powercfg /query SUB_SLEEP STANDBYIDLE", now=now,
                        action="" if st == "OK" else "The PC sleeps on AC, so scheduled night work stops: `powercfg /change standby-timeout-ac 0`."))
+    out.append(power_row(now, (power_events(7) if power_events is not None
+                               else _power_events_default(7, run))))
     rc, txt = run(["gh", "pr", "list", "--repo", repo_slug, "--state", "open", "--json", "number", "--limit", "100"], 30)
     try:
         n = len(json.loads(txt)) if rc == 0 else None
@@ -883,7 +1003,7 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
     for s in sections.values():
         s["rows"].sort(key=lambda r: (-_SEV[_st(r)], r["name"]))
     counted = [r for s in sections.values() for r in s["rows"] if not r.get("one_shot")
-               and not r["name"].startswith("rule ")]
+               and not r["name"].startswith("rule ") and not (r.get("extra") or {}).get("retired")]
     counts = {k: sum(1 for r in counted if r["status"] == k) for k in STATUSES}
     rec = {"receipt": SCHEMA, "generated_utc": iso(now), "optimus_dir": str(optimus_dir), "repo": str(repo),
            "allow_proc": allow_proc, "counts": counts, "sections": sections,

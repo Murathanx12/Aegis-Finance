@@ -6539,6 +6539,8 @@ HEALTH_TASK_CADENCE_H.update({
     "AegisNewsOverlayBook": 24.0, "AegisLLMSelectorBook": 168.0, "AegisSystemStatus": 0.25,
     "AegisOwnerEventWarning": 1.0 / 6.0,
 })
+#: S70: `AegisTickerHub` (`scripts.ticker_hub build`, trigger every 30 min).
+HEALTH_TASK_CADENCE_H["AegisTickerHub"] = 0.5
 #: bytes of `runtime_switch/runtime_task_runs.jsonl` read for wrapper rcs (~140 kB/day
 #: measured 2026-11-14, so this covers about two weeks: a weekly job's last run included)
 TASK_RECEIPT_WRAPPER_TAIL_BYTES = 2_000_000

@@ -166,6 +166,10 @@ class TaskSpec:
     window_utc: Optional[tuple[str, str]] = None
     #: A separately owned private task may declare cadence without repinning config.
     cadence_h: Optional[float] = None
+    #: Disabled ON PURPOSE and declared here with the reason (the owner's word, cited): while
+    #: the scheduler says Disabled, the row is a retired/disabled row, not a fault. An ENABLED
+    #: task, or a Disabled one with no declaration, is still judged as before.
+    disabled_ok: str = ""
 
 
 def parse_stamp(v: Any) -> Optional[datetime]:
@@ -713,6 +717,37 @@ def r_rolling_cohorts(ctx, task) -> Reading:
                    detail=(f"rolling cohorts {action}; newest forward cohort "
                            f"{d.get('newest_forward_cohort')} ({age} sessions old, limit {limit}); "
                            f"{d.get('cohorts_live')} live of {d.get('cohorts_total')}"))
+
+
+def r_ticker_hub(ctx, task) -> Reading:
+    """`scripts.ticker_hub build` (every 30 min): `ticker_hub/receipts/build_<stamp>_<pid>.json`.
+
+    Dated by the receipt's OWN `built_utc`, never the file mtime. A build that refuses (rc 2)
+    writes no receipt, so a refusing hub goes STALE here through the age rule. DEGRADED when
+    the build recorded a failed verify or indexed zero rows.
+    """
+    folder = ctx.path("ticker_hub_receipts", ctx.optimus_dir / "ticker_hub" / "receipts")
+    p, d = _newest(folder, "build_*.json")
+    if not isinstance(d, dict):
+        return _none(str(folder / "build_<stamp>_<pid>.json"))
+    stamp = parse_stamp(d.get("built_utc"))
+    if stamp is None or stamp > ctx.now + timedelta(seconds=30):
+        return Reading(status="DEGRADED", reason="build receipt has no valid built_utc", proof=f"{p.name}",
+                       detail="ticker hub build receipt carries no usable stamp")
+    status, why = "OK", []
+    v = d.get("verify")
+    if isinstance(v, dict) and v.get("status") not in (None, "OK"):
+        status = "DEGRADED"
+        why.append(f"verify {v.get('status')}: {str(v.get('problems'))[:120]}")
+    rows = d.get("rows_in_index")
+    if type(rows) is not int or rows <= 0:
+        status = "DEGRADED"
+        why.append(f"rows_in_index={rows!r}")
+    return Reading(stamp=stamp, status=status, reason="; ".join(why),
+                   substance=substance(pick(d, ("generation", "rows_in_index", "rows_read_new"))),
+                   proof=f"ticker_hub/receipts/{p.name} built_utc",
+                   detail=f"ticker hub build {d.get('generation')}: {rows} rows indexed, "
+                          f"{d.get('rows_read_new')} new, {d.get('elapsed_s')} s")
 
 
 def r_alerts(ctx, task) -> Reading:
@@ -1725,9 +1760,11 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisDataCatalog": TaskSpec(r_catalog, "data_catalog/catalog_*.json + task_keeper/opportunities.jsonl "
                                             "(opportunities_build, C15) + task_keeper/publish_receipts.jsonl "
                                             "(public_receipts, C15)"),
-    "AegisContestRehearsal": TaskSpec(r_rehearsal, "contest/rehearsal/runs.jsonl"),
+    "AegisContestRehearsal": TaskSpec(r_rehearsal, "contest/rehearsal/runs.jsonl",
+                                     disabled_ok="contest over 2026-11-13; retired on the owner's word 2026-11-14, XML kept"),
     "AegisContestDesk": TaskSpec(r_contest_desk, "contest/live/runs.jsonl | contest/live/refusals/live_gate_*.json",
-                                 session_only=True),
+                                 session_only=True,
+                                 disabled_ok="contest over 2026-11-13; retired on the owner's word 2026-11-14, XML kept"),
     "AegisHypLabNightly": TaskSpec(r_hyp_lab, "hyp_lab/receipts/nightly_*.json"),
     "AegisWorldDigest": TaskSpec(r_world_digest, "digest/world_digest_*.json"),
     "AegisLocalRuntimeDigest": TaskSpec(r_local_runtime_digest,
@@ -1737,6 +1774,9 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
         registered_only=True, cadence_h=2.0),
     "AegisRollingCohorts": TaskSpec(r_rolling_cohorts, "rolling_cohorts/runs.jsonl",
                                     registered_only=True, cadence_h=2.0),
+    "AegisTickerHub": TaskSpec(r_ticker_hub, "ticker_hub/receipts/build_<stamp>_<pid>.json built_utc",
+                               hash_off="a build over an unchanged corpus legitimately repeats its row counts; "
+                                        "its own built_utc is the check"),
     "AegisAlerts": TaskSpec(r_alerts, "alerts/receipts/alert_pass_*.json",
                             hash_off="a quiet market legitimately repeats the same pass; its own state "
                                      "and bars_health are read instead"),
@@ -1818,6 +1858,7 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisOwnerEventWarning": TaskSpec(
         r_owner_warning, "<dir of the task's owner_warning_once.ps1>/owner_warning_journal/"
                          "owner_warning_runs.jsonl",
+        disabled_ok="retired on the owner's word 2026-11-14 (docs/ROADMAP.md CH-22 note)",
         hash_off="every 10 min; a quiet book legitimately repeats the same status"),
     "AegisCodexDaemonAtLogon": TaskSpec(
         r_retired, "none (retired: Codex-month leftover, Disabled since 2026-11-07; starts the Codex app-server "
@@ -2014,6 +2055,12 @@ def _judge(ctx, name: str, task: Optional[dict], spec: Optional[TaskSpec]) -> Ju
     if spec is None:
         return Judgement("UNKNOWN", f"no receipt is declared for {name}: add it to "
                                     f"task_receipts.TASK_RECEIPT")
+    if (spec.retired or spec.disabled_ok) and task is not None             and str(task.get("Scheduled Task State")) == "Disabled":
+        # Disabled AND declared retired/disabled-on-purpose in code with its reason: a RETIRED
+        # row, not a fault. An enabled retired task falls through to the line below.
+        return Judgement("STOPPED_BY_OPERATOR",
+                         f"RETIRED (Disabled on purpose): {spec.disabled_ok or spec.receipt}"[:240],
+                         proof="task_receipts.TASK_RECEIPT disabled_ok", extra={"retired": True})
     if spec.retired:
         return Judgement("DEGRADED", f"retired task still registered ({spec.receipt}); delete it: "
                                      f"schtasks /Delete /TN {name} /F", proof="task_receipts.TASK_RECEIPT retired")
