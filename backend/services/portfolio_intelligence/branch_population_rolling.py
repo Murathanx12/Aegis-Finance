@@ -333,11 +333,16 @@ def revision_features(revisions: pd.DataFrame, *, cohort: pd.Timestamp,
 
 
 def load_news_items(path: Path) -> list[dict]:
-    """Parse the typed-news cache once; same admission rules as v1's adapter."""
+    """Parse the typed-news cache once into VERSIONS (one per cached row).
+
+    Same admission rules as v1's adapter. Versions are deduplicated per cohort,
+    AFTER that cohort's cutoff (`dedupe_news_versions`): a re-typing cached after
+    the cutoff must never change what an earlier cohort saw.
+    """
     p = Path(path)
     if not p.is_file():
         return []
-    items: dict[str, Optional[dict]] = {}
+    versions: list[dict] = []
     with p.open("r", encoding="utf8") as f:
         for line in f:
             if len(line) > 1024 * 1024:
@@ -361,29 +366,38 @@ def load_news_items(path: Path) -> list[dict]:
             published = _utc(row.get("published_utc")) or first
             if first > known or published > known:
                 continue
-            key = row["item_id"]
-            item = {"item_id": key, "known": known, "published": published,
-                    "event_type": row.get("event_type"), "score": float(score),
-                    "tickers": [str(t).upper() for t in row.get("tickers") or []]}
-            prev = items.get(key, "absent")
-            if prev is None:
-                continue
-            if prev != "absent" and prev["event_type"] != item["event_type"]:
-                items[key] = None          # ambiguous typed event: dropped, like v1
-                continue
-            if prev == "absent" or prev["known"] < known:
-                items[key] = item
+            versions.append({"item_id": row["item_id"], "known": known, "published": published,
+                             "event_type": row.get("event_type"), "score": float(score),
+                             "tickers": [str(t).upper() for t in row.get("tickers") or []]})
+    return versions
+
+
+def dedupe_news_versions(versions: list[dict], *, available_before: datetime) -> list[dict]:
+    """Versions known before the cutoff ONLY, then v1's rule: the latest version
+    per item; an item typed with two event types (before the cutoff) is dropped."""
+    items: dict[str, Optional[dict]] = {}
+    for v in versions:
+        if v["known"] >= available_before:
+            continue
+        prev = items.get(v["item_id"], "absent")
+        if prev is None:
+            continue
+        if prev != "absent" and prev["event_type"] != v["event_type"]:
+            items[v["item_id"]] = None          # ambiguous typed event: dropped, like v1
+            continue
+        if prev == "absent" or prev["known"] < v["known"]:
+            items[v["item_id"]] = v
     return [v for v in items.values() if v]
 
 
 def news_features(items: list[dict], *, available_before: datetime, decision: datetime,
                   market: set) -> tuple[list[dict], dict]:
-    """Items known before the cutoff and published within 5 days of the decision."""
+    """Items known before the cutoff and published within 5 days of the decision.
+
+    `items` are raw versions: the cutoff is applied BEFORE they are deduplicated."""
     out = []
     newest = None
-    for it in items:
-        if it["known"] >= available_before:
-            continue
+    for it in dedupe_news_versions(items, available_before=available_before):
         newest = it["known"] if newest is None or it["known"] > newest else newest
         if (decision - it["published"]).total_seconds() > 5 * 86400 or it["published"] > decision:
             continue

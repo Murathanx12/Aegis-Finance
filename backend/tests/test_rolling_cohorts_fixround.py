@@ -102,3 +102,29 @@ def test_a_changed_grading_config_is_refused_by_name(tmp_path, monkeypatch):
     monkeypatch.setattr(_config, "ROLLING_COHORT_SHORT_BORROW_BPS_YR", decl["config"]["ROLLING_COHORT_SHORT_BORROW_BPS_YR"])
     monkeypatch.setattr(_config, "ROLLING_COHORT_LOCK_WAIT_S", 5.0)        # operational, not grading
     assert run("step", root, out, specs, now + timedelta(minutes=2))["rc"] == 0
+
+
+# ── finding 7: news versions cached after the cutoff never change a cohort ──
+
+def test_a_news_retype_cached_after_the_cutoff_does_not_change_a_backfilled_cohort(tmp_path):
+    from backend.tests.test_rolling_cohorts import news_lines
+    d, e = DAYS[ANCHOR_I], DAYS[ANCHOR_I + 1]
+    clean = make_root(tmp_path / "c", ANCHOR_I + 26)
+    pois = make_root(tmp_path / "p", ANCHOR_I + 26)
+    late = []
+    for ln in news_lines(d, n=20):                                  # the reviewer's fixture B
+        rec = json.loads(ln)
+        rec["row"]["event_type"] = "guidance"
+        rec["cached_utc"] = (pd.Timestamp(e) + pd.Timedelta(days=3)).tz_localize("UTC").isoformat()
+        late.append(json.dumps(rec))
+    with (pois / R.NEWS_REL).open("a", encoding="utf8") as f:
+        f.write("\n".join(late) + "\n")
+    sp = subset_specs(tmp_path, per_family=10)
+    now = utc(DAYS[ANCHOR_I + 30])
+    for root, name in ((clean, "a"), (pois, "b")):
+        run("backfill", root, tmp_path / name, sp, now, date_from=d, date_to=d)
+    ba, ra = _books(tmp_path / "a", d)
+    bb, rb = _books(tmp_path / "b", d)
+    assert ra["input_status"]["news"]["status"] == "OK"
+    assert ra["input_status"]["news"]["n_items_5d"] == rb["input_status"]["news"]["n_items_5d"] == 20
+    assert ba == bb
