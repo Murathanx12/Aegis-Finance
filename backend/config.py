@@ -6979,6 +6979,23 @@ TICKER_HUB_INDEX_DAYS = 90
 TICKER_HUB_STALE_HOURS = 6.0
 #: Body characters handed to the strict resolver per row (titles are always read whole).
 TICKER_HUB_BODY_CHARS = 4000
+#: In a body longer than this (a reader page snapshot carries sidebars and "most read"
+#: lists) an issuer NAME must occur at least TICKER_HUB_BODY_MIN_MENTIONS times; the first
+#: real build tagged "Trump says war with Iran is over" (AP) NVDA from a sidebar headline.
+TICKER_HUB_SHORT_BODY_CHARS = 600
+TICKER_HUB_BODY_MIN_MENTIONS = 2
+#: Page-chrome phrases cut from reader bodies before tagging (BBC prints "Add as preferred
+#: on Google" on every article; share buttons name Facebook).
+TICKER_HUB_BODY_BOILERPLATE: tuple = ("add as preferred on google", "share on facebook",
+                                      "follow us on facebook", "sign in with google",
+                                      "get it on google play", "continue with google",
+                                      "continue with facebook", "share via facebook")
+#: More single-word names that are also surnames, places or adjectives in this corpus's
+#: titles (first real build: "Rogers", "Lindsay", "Manchester", "Costar" = co-star,
+#: "Bullish"); like EVENT_NODES_COMMON_WORD_NAMES they then need an ATTACHED cue.
+TICKER_HUB_COMMON_WORD_NAMES: tuple = ("rogers", "lindsay", "manchester", "costar", "bullish")
+#: Name keys that never tag a row in the hub ("Financial Institutions in Asia ...").
+TICKER_HUB_DROP_NAME_KEYS: tuple = ("financial institutions",)
 #: A reader front/search-page link becomes a headline row only with this much text.
 TICKER_HUB_MIN_LINK_CHARS = 25
 TICKER_HUB_MIN_LINK_WORDS = 4

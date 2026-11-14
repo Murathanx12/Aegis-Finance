@@ -199,6 +199,12 @@ class Tagger:
         self.cik_map = cik_map
         self.common = common
         self.refused: Counter = Counter()
+        self._memo: dict[tuple[str, str], list[dict]] = {}
+        self.drop_keys = {str(k).lower() for k in C.TICKER_HUB_DROP_NAME_KEYS}
+        for k in C.TICKER_HUB_COMMON_WORD_NAMES:
+            self.common.setdefault(str(k).lower(), {"lower": None, "capitalised": None, "listed": "ticker_hub"})
+        chrome = [re.escape(p) for p in C.TICKER_HUB_BODY_BOILERPLATE]
+        self._chrome_rx = re.compile("|".join(chrome), re.IGNORECASE) if chrome else None
         self.symbols = {DA.norm_ticker(s) for s in tbl.symbols}
         self.bare = {str(s).upper() for s in C.EVENT_NODES_BAREWORD_SYMBOLS}
         cased = {}
@@ -215,11 +221,57 @@ class Tagger:
         return DA.norm_ticker(sym) in self.symbols
 
     def text_tags(self, text: str, where: str) -> list[dict]:
+        """Memoised for short texts: a front-page headline recurs on dozens of pages."""
         if not text:
             return []
+        if len(text) <= 300:
+            k = (where, text)
+            hit = self._memo.get(k)
+            if hit is None:
+                hit = self._text_tags(text, where)
+                if len(self._memo) < 200_000:
+                    self._memo[k] = hit
+            return [dict(t) for t in hit]
+        return self._text_tags(text, where)
+
+    def body_tags(self, body: str) -> list[dict]:
+        """Body tags with one more guard: in a body longer than TICKER_HUB_SHORT_BODY_CHARS
+        (a reader page snapshot carries the site's sidebars and 'most read' lists) a NAME
+        must occur at least TICKER_HUB_BODY_MIN_MENTIONS times. An explicit token
+        ($NVDA, NASDAQ: NVDA) needs one. Refusals are counted as `body_single_mention:`."""
+        if body and self._chrome_rx is not None:
+            body = self._chrome_rx.sub(" ", body)
+        tags = self.text_tags(body, "body")
+        if len(body or "") <= int(C.TICKER_HUB_SHORT_BODY_CHARS):
+            return tags
+        need = int(C.TICKER_HUB_BODY_MIN_MENTIONS)
+        low = body.lower()
+        out = []
+        for t in tags:
+            rule = str(t.get("rule") or "")
+            if t["m"] != "name_match" or ":" not in rule:
+                out.append(t)
+                continue
+            kind, key = rule.split(":", 1)
+            if kind == "cased_alias":
+                n = len(re.findall(r"(?<![A-Za-z0-9])" + re.escape(key) + r"(?![A-Za-z0-9])", body))
+            elif kind == "foreign_alias":
+                n = body.count(key)
+            else:
+                n = len(re.findall(r"(?<![a-z0-9])" + re.escape(key.lower()) + r"(?![a-z0-9])", low))
+            if n >= need:
+                out.append(t)
+            else:
+                self.refused[f"body_single_mention:{key}"] += 1
+        return out
+
+    def _text_tags(self, text: str, where: str) -> list[dict]:
         out: list[dict] = []
         hits = EN.strict_tickers(text, self.tbl, self.common, self.refused)
         for sym, rule in hits.items():
+            if rule.split(":", 1)[-1] in self.drop_keys:
+                self.refused[f"hub_drop_key:{rule}"] += 1
+                continue
             m = "text_token" if rule in _TOKEN_RULES else "name_match"
             out.append({"t": DA.norm_ticker(sym), "m": m, "rule": rule, "where": where})
         if self._cased_rx is not None:
@@ -361,7 +413,7 @@ def _corpus_row(src: str, o: dict, tagger: Tagger, typed: dict, now: datetime,
                 for t in (ty or {}).get("tickers") or [] if tagger.known(t)]
     kind = EN.kind_of(src)
     g_title = [] if kind == "filing" else tagger.text_tags(title, "title")
-    g_body = tagger.text_tags(body, "body")
+    g_body = tagger.body_tags(body)
     tags = merge_tags(g_field, g_cik, g_digest, g_title, g_body)
     stats[f"rows_read:{src}"] += 1
     if not tags:
@@ -407,7 +459,7 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
         g_named = [{**t, "rule": "tickers_named"}
                    for t in tagger.source_field_tags(_as_list(page.get("tickers_named")), [])
                    if t["t"] not in tagger.bare]
-        tags = merge_tags(g_named, g_lane, tagger.text_tags(title, "title"), tagger.text_tags(text, "body"))
+        tags = merge_tags(g_named, g_lane, tagger.text_tags(title, "title"), tagger.body_tags(text))
         stats[f"rows_read:{src}"] += 1
         if not tags:
             stats[f"rows_untagged:{src}"] += 1

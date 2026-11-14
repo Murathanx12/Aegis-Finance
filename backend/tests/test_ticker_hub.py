@@ -30,6 +30,7 @@ PPLI,People Incorporated,PPLI|People Incorporated,US,
 QMCO,Quantum Corporation,QMCO|Quantum Corporation,US,
 SOLI,Solidion Technology Inc.,SOLI|Solidion Technology,US,
 TINY,Tinycap Widgets Inc.,TINY|Tinycap Widgets,US,
+FISI,"Financial Institutions, Inc.","FISI|Financial Institutions, Inc.",US,
 """
 
 
@@ -73,6 +74,7 @@ def data_root(tmp_path: Path) -> Path:
         _row("wsj_tech", "Gartner stock: $IT rallies; ON Semiconductor (NASDAQ: ON) beats", minutes_ago=50),
         _row("wsj_tech", "A quiet day for markets", minutes_ago=60),
         _row("wsj_tech", "Tinycap Widgets wins a contract", minutes_ago=70),
+        _row("wsj_tech", "How Financial Institutions in Asia Stay Competitive", minutes_ago=75),
     ])
     _append(root, "google_news_rss_en_us", [
         _row("google_news_rss_en_us", "Six dead, 15 injured in Krakow attack - The Australian",
@@ -94,6 +96,17 @@ def data_root(tmp_path: Path) -> Path:
         "page_class": "OK", "title": "Apple Sells More Phones | Barron's", "first_seen_utc": _iso(NOW - timedelta(hours=2)),
         "published_utc": None, "text": "Apple said ...", "reached_by": {"lane": "search:AAPL", "ticker": "AAPL"},
         "tickers_named": ["AAPL", "A"], "outbound_links": []}), encoding="utf-8")
+    filler = "Lorem ipsum dolor sit amet. " * 40
+    (d / "ccc.json").write_text(json.dumps({
+        "publisher": "barrons", "url": "https://www.barrons.com/articles/fed-1", "page_kind": "article",
+        "page_class": "OK", "title": "The Fed Holds Rates Steady", "first_seen_utc": _iso(NOW - timedelta(hours=4)),
+        "text": filler + " Most read: Nvidia falls. " + filler, "reached_by": {"lane": "front"},
+        "tickers_named": [], "outbound_links": []}), encoding="utf-8")
+    (d / "ddd.json").write_text(json.dumps({
+        "publisher": "barrons", "url": "https://www.barrons.com/articles/chips-2", "page_kind": "article",
+        "page_class": "OK", "title": "Chip Stocks Slide Into the Close", "first_seen_utc": _iso(NOW - timedelta(hours=5)),
+        "text": filler + " Nvidia led the decline. Nvidia fell 4%. " + filler, "reached_by": {"lane": "front"},
+        "tickers_named": [], "outbound_links": []}), encoding="utf-8")
     (d / "bbb.json").write_text(json.dumps({
         "publisher": "barrons", "url": "https://www.barrons.com/", "page_kind": "front", "page_class": "OK",
         "title": "front", "first_seen_utc": _iso(NOW - timedelta(hours=3)), "reached_by": {"lane": "front"},
@@ -168,6 +181,10 @@ def test_tagging_rules_and_common_word_traps(data_root, paths, tmp_path):
     # untagged rows are counted, not stored
     assert rec["rows_untagged_new"] >= 5 and rec["untagged_share_new"] is not None
     assert "A quiet day for markets" not in tags
+    # a name in a long page body needs two mentions (one is a sidebar); a hub drop key never tags
+    assert "The Fed Holds Rates Steady" not in tags
+    assert ("NVDA", "name_match") in tags["Chip Stocks Slide Into the Close"]
+    assert not any("Financial Institutions" in t for t in tags)
 
 
 def test_hub_payload_news_forecasts_related_and_typed_event(data_root, paths, tmp_path):

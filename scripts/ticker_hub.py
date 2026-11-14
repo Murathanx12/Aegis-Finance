@@ -131,6 +131,11 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--source", default=None)
             p.add_argument("--limit", type=int, default=50)
     a = ap.parse_args(argv)
+    for stream in (sys.stdout, sys.stderr):        # headlines carry any script; cp1252 consoles refuse them
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     try:
         return {"build": cmd_build, "show": cmd_show, "feed": cmd_feed}[a.cmd](a)
     except TH.TickerHubRefused as exc:
