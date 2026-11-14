@@ -7024,7 +7024,7 @@ TICKER_HUB_CASED_ALIASES_NEED_CONTEXT: tuple = ("Apple",)
 TICKER_HUB_CASED_CONTEXT_WORDS: tuple = ("iphone", "ipad", "macbook", "airpods", "app store",
                                          "tim cook", "cupertino", "all-time high", "intraday",
                                          "market cap", "market value", "trillion", "nasdaq",
-                                         "s&p 500", "dow jones", "wall street")
+                                         "s&p 500")
 #: Share classes read together on one ticker page.
 TICKER_HUB_SIBLINGS: dict = {"GOOGL": ("GOOG",), "GOOG": ("GOOGL",), "BRK.B": ("BRK.A",),
                              "BRK.A": ("BRK.B",)}

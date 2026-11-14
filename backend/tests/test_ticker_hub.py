@@ -127,7 +127,7 @@ def data_root(tmp_path: Path) -> Path:
     (d / "hhh.json").write_text(json.dumps({
         "publisher": "barrons", "url": "https://www.barrons.com/articles/fruit-5", "page_kind": "article",
         "page_class": "OK", "title": "My Quest to Find the Crispest Apple in America", "first_seen_utc": _iso(NOW - timedelta(hours=8)),
-        "text": "My Quest to Find the Crispest Apple in America. An Apple a day; the Apple orchard. " + filler,
+        "text": "My Quest to Find the Crispest Apple in America. An Apple a day; the Apple orchard sells to Tinycap Widgets. " + filler,
         "reached_by": {"lane": "front"}, "tickers_named": [], "outbound_links": []}), encoding="utf-8")
     (d / "bbb.json").write_text(json.dumps({
         "publisher": "barrons", "url": "https://www.barrons.com/", "page_kind": "front", "page_class": "OK",

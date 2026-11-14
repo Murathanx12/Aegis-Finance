@@ -292,7 +292,9 @@ class Tagger:
             out.append({"t": DA.norm_ticker(sym), "m": m, "rule": rule, "where": where})
         if self._cased_rx is not None:
             seen = {o["t"] for o in out}
-            others = bool(out)
+            # another company in a TITLE is context ("Apple, Palantir, AMD ... Stocks"); in a
+            # body it is not (a food column's body named "Waters" and carried the fruit into AAPL)
+            others = bool(out) and where == "title"
             for mm in self._cased_rx.finditer(text):
                 s = self.cased.get(mm.group(1))
                 if s and s not in seen:
