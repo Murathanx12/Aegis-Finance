@@ -1148,7 +1148,8 @@ def wrapper_outcome(ctx, module: str, want: Iterable[str] = (), exclude: Iterabl
 
 
 def _after_wrapper(ctx, rd: Reading, module: str, want: Iterable[str] = (), exclude: Iterable[str] = (),
-                   *, idle_rcs: Optional[dict] = None) -> Reading:
+                   *, idle_rcs: Optional[dict] = None,
+                   refused_rcs: Iterable[int] = WRAPPER_REFUSED_RCS) -> Reading:
     """`rd` unless the scheduled run's wrapper row is NEWER than its receipt and exited
     non-zero: then REFUSED (rc 2 / 90) or DEGRADED (a crash code), stamped by that row.
     A receipt that already says it failed keeps its own (more specific) reason."""
@@ -1163,7 +1164,7 @@ def _after_wrapper(ctx, rd: Reading, module: str, want: Iterable[str] = (), excl
     if idle_rcs and rc in idle_rcs:
         rd.detail = (rd.detail + f"; newest scheduled run exited {rc} ({idle_rcs[rc]})").strip("; ")
         return rd
-    st = "REFUSED" if rc in WRAPPER_REFUSED_RCS else "DEGRADED"
+    st = "REFUSED" if rc in set(refused_rcs) else "DEGRADED"
     why = (f"the scheduled `{module}` run at {o['utc']:%Y-%m-%d %H:%M} UTC exited rc {rc} "
            f"({o['event']}{': ' + o['why'] if o.get('why') else ''}) and wrote no newer receipt")
     if rd.status not in ("OK", "IDLE"):
@@ -1410,6 +1411,10 @@ def r_news_overlay(ctx, task) -> Reading:
     return _after_wrapper(ctx, rd, *args)
 
 
+#: llm_selector_book's exit codes: 2 refused, 3 DeepSeek budget refused, 4 flag off
+SELECTOR_REFUSED_RCS = frozenset({2, 3, 4, 90})
+
+
 def r_llm_selector(ctx, task) -> Reading:
     """The weekly LLM selector book (`llm_selector_book --decide`): the newer of
     `llm_selector/decisions.jsonl` and `llm_selector/refusals.jsonl` (each `written_utc`).
@@ -1432,7 +1437,7 @@ def r_llm_selector(ctx, task) -> Reading:
         rd.idle_reason = idle
         if fault:
             rd.detail += f"; {fault}"
-        return _after_wrapper(ctx, rd, *args)
+        return _after_wrapper(ctx, rd, *args, refused_rcs=SELECTOR_REFUSED_RCS)
     if t_r is not None and (t_d is None or t_r > t_d):
         code = str(ref.get("code"))
         if code == "ALREADY_DECIDED" and dec and dec.get("decision_date") == ref.get("decision_date"):
@@ -1453,7 +1458,7 @@ def r_llm_selector(ctx, task) -> Reading:
                               f"not the task")
         elif rd.status in ("OK", "IDLE"):
             rd.status, rd.reason = "DEGRADED", f"{fault}; the rows are from manual runs"
-    return _after_wrapper(ctx, rd, *args)
+    return _after_wrapper(ctx, rd, *args, refused_rcs=SELECTOR_REFUSED_RCS)
 
 
 def r_system_status(ctx, task) -> Reading:
