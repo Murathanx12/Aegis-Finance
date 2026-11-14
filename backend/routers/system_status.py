@@ -57,8 +57,13 @@ def system_status_page() -> HTMLResponse:
     _require_enabled()
     rec = _load()
     if rec is None:
+        # PR #143 review L3: the no-receipt page needs the same way back to the app
+        from scripts.system_status import NAV_LINKS
+        nav = " · ".join(f"<a href='{html.escape(h, quote=True)}'>{html.escape(t)}</a>"
+                         for t, h in NAV_LINKS)
         body = ("<!doctype html><meta charset=utf-8><title>Aegis systems</title>"
-                "<body style='font:14px system-ui;padding:24px'><h1>Aegis systems</h1>"
+                f"<body style='font:14px system-ui;padding:24px'><nav aria-label='Aegis app'>{nav}</nav>"
+                "<h1>Aegis systems</h1>"
                 f"<p>No status receipt yet at <code>{html.escape(str(receipt_path()))}</code>.</p>"
                 f"<p>Run <code>{html.escape(REFRESH_COMMAND)}</code> (read-only), then reload.</p>"
                 "<p><a href='/desktop'>Open the lists</a></p></body>")

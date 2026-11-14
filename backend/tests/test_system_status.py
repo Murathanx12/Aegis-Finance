@@ -344,6 +344,8 @@ def test_page_without_a_receipt_names_the_command(monkeypatch, tmp_path):
     c = _client(monkeypatch, tmp_path)
     r = c.get("/system-status")
     assert r.status_code == 404 and "python -m scripts.system_status --html" in r.text
+    for href in ("/", "/stock", "/watchlist", "/news", "/desktop"):   # L3: a way back
+        assert f"href='{href}'" in r.text, href
     assert c.get("/api/control/system-status").status_code == 404
 
 
