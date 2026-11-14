@@ -608,6 +608,54 @@ def test_owner_warning_stale_and_unreadable(tmp_path):
     assert _j(_ctx(tmp_path / "x", now, owner_warning_runs=p), "AegisOwnerEventWarning").state == "UNKNOWN"
 
 
+# ─────────────────────────────────────────── harness paths come from the task's own action
+
+
+def _ps_task(name: str, ps1: Path) -> dict:
+    return _task(name, **{"Task To Run": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe "
+                                         f'-NoProfile -NonInteractive -WindowStyle Hidden -File "{ps1}"'})
+
+
+def test_owner_warning_journal_is_found_from_the_task_action(tmp_path):
+    now = _now()
+    h = tmp_path / "harness"
+    _w(h / "owner_warning_once.ps1", "# fixture")
+    _jl(h / "owner_warning_journal" / "owner_warning_runs.jsonl",
+        [{"status": "NO_HELD_EVENT", "at_utc": (now - timedelta(minutes=2)).isoformat()}])
+    ctx = _ctx(tmp_path, now)
+    j = TR.judge(ctx, "AegisOwnerEventWarning", _ps_task("AegisOwnerEventWarning", h / "owner_warning_once.ps1"))
+    assert j.state == "ALIVE_PROGRESSING", j.detail
+
+
+def test_raw_sec_receipts_are_found_from_the_task_action(tmp_path):
+    now = _now()
+    h = tmp_path / "harness"
+    _w(h / "run_raw_collection.ps1", "# fixture")
+    _raw(h / "receipts", now - timedelta(minutes=20), "OK", "ROWS_WRITTEN")
+    ctx = _ctx(tmp_path, now)
+    j = TR.judge(ctx, "AegisRawSecCollection", _ps_task("AegisRawSecCollection", h / "run_raw_collection.ps1"))
+    assert j.state == "ALIVE_PROGRESSING", j.detail
+
+
+@pytest.mark.parametrize("name,script", [("AegisOwnerEventWarning", "owner_warning_once.ps1"),
+                                         ("AegisRawSecCollection", "run_raw_collection.ps1")])
+def test_harness_absent_or_action_unreadable_is_unknown(tmp_path, name, script):
+    ctx = _ctx(tmp_path, _now())
+    j = TR.judge(ctx, name, _ps_task(name, tmp_path / "gone" / script))
+    assert j.state == "UNKNOWN" and "absent on this machine" in j.detail
+    j = TR.judge(ctx, name, _ps_task(name, tmp_path / "other.ps1"))
+    assert j.state == "UNKNOWN" and "not " + script in j.detail
+    j = TR.judge(ctx, name, _task(name))
+    assert j.state == "UNKNOWN" and "does not name a -File .ps1" in j.detail
+
+
+def test_no_new_reader_derives_a_sibling_folder_of_the_checkout():
+    import inspect
+    for fn in (TR.r_raw_sec, TR.r_owner_warning, TR.harness_path):
+        src = inspect.getsource(fn)
+        assert "repo.parent" not in src and "aegis-recovery-evidence" not in src, fn.__name__
+
+
 # ─────────────────────────────────────────── the systems page row
 
 

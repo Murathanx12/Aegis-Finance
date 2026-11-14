@@ -1484,6 +1484,33 @@ def r_system_status(ctx, task) -> Reading:
                           + (f"; {len(und)} row(s) undetermined (their own rows are judged)" if und else ""))
 
 
+_PS1_FILE = re.compile(r"""-File\s+(?:"([^"]+\.ps1)"|(\S+\.ps1))""", re.IGNORECASE)
+
+
+def harness_path(ctx, task: Optional[dict], key: str, script: str, rel: tuple[str, ...]
+                 ) -> tuple[Optional[Path], Optional[str]]:
+    """(path, unknown_reason) for a receipt a PowerShell harness writes beside itself.
+
+    Derived from the scheduled task's OWN action (`-File "<dir>/<script>"`), never from a
+    sibling folder of the checkout: the harness lives in a recovery-evidence folder a
+    release clone neither carries nor needs. `ctx.paths[key]` overrides (tests). An action
+    that names another script, or a harness folder absent from this machine, is UNKNOWN
+    with the reason."""
+    if key in ctx.paths:
+        return Path(ctx.paths[key]), None
+    action = str((task or {}).get("Task To Run") or "")
+    m = _PS1_FILE.search(action)
+    if not m:
+        return None, (f"the receipt is written beside {script}, and the task's action does not name a "
+                      f"-File .ps1 ({action[:120] or 'no action read'})")
+    ps1 = Path(m.group(1) or m.group(2))
+    if ps1.name.lower() != script.lower():
+        return None, f"the task's action runs {ps1.name}, not {script}: its receipt cannot be derived"
+    if not ps1.parent.is_dir():
+        return None, f"the harness folder {ps1.parent} named by the task's action is absent on this machine"
+    return ps1.parent.joinpath(*rel), None
+
+
 #: the keyless SEC raw collector's own words (raw_collection_once.py `controls`)
 RAW_SEC_YIELDS = frozenset({"CORPUS_WRITER_ACTIVE", "IIF_LAUNCH_WINDOW"})
 RAW_SEC_STOPS = frozenset({"RAW_COLLECTION_STOP", "BETA_COORDINATOR_STOP"})
@@ -1496,9 +1523,9 @@ def r_raw_sec(ctx, task) -> Reading:
     `<harness>/receipts/<stamp>_<pid>.json`. A yield to another corpus writer or the IIF
     launch window is skipped (judged by the newest non-yield receipt, so a yield neither
     flaps red nor hides an older failure); a backoff SKIP is DEGRADED; REFUSED is REFUSED."""
-    default = (ctx.repo.parent / "aegis-recovery-evidence" / "oct15-clean-recovery-20261015"
-               / "oct15-sec-cursor-runtime-r6" / "receipts")
-    folder = ctx.path("raw_sec_receipts", default)
+    folder, unk = harness_path(ctx, task, "raw_sec_receipts", "run_raw_collection.ps1", ("receipts",))
+    if unk:
+        return Reading(unknown_reason=unk, proof="schtasks Task To Run (-File <harness>.ps1)")
     try:
         files = sorted(folder.glob("2*_*.json"))
     except OSError:
@@ -1544,9 +1571,10 @@ def r_owner_warning(ctx, task) -> Reading:
     """The owner event warning harness (`owner_warning_once.ps1`, every 10 min): its own
     journal `owner_warning_journal/owner_warning_runs.jsonl`. One run may write several
     rows with the same `at_utc`; the run's status is the worst of them."""
-    default = (ctx.repo.parent / "aegis-recovery-evidence" / "beta-v2-owner-20261025" / "continuation-20261103"
-               / "owner_warning_journal" / "owner_warning_runs.jsonl")
-    p = ctx.path("owner_warning_runs", default)
+    p, unk = harness_path(ctx, task, "owner_warning_runs", "owner_warning_once.ps1",
+                          ("owner_warning_journal", "owner_warning_runs.jsonl"))
+    if unk:
+        return Reading(unknown_reason=unk, proof="schtasks Task To Run (-File <harness>.ps1)")
     from backend.services import system_health as SH                # noqa: PLC0415
     lines = SH._tail_lines(p, 65536)
     if not lines:
@@ -1554,7 +1582,7 @@ def r_owner_warning(ctx, task) -> Reading:
     rows = []
     for ln in lines:
         try:
-            r = json.loads(ln.lstrip("﻿"))
+            r = json.loads(ln.lstrip("\ufeff"))
         except ValueError:
             continue
         if isinstance(r, dict):
@@ -1680,8 +1708,7 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
         r_discovery_autopsy, "discovery_autopsy/index.jsonl (+ runtime_task_runs.jsonl rc)", session_only=True,
         hash_off="an unchanged-input run writes nothing; the run_id's age is the check"),
     "AegisRawSecCollection": TaskSpec(
-        r_raw_sec, "~/aegis-recovery-evidence/oct15-clean-recovery-20261015/oct15-sec-cursor-runtime-r6/"
-                   "receipts/<stamp>_<pid>.json",
+        r_raw_sec, "<dir of the task's run_raw_collection.ps1>/receipts/<stamp>_<pid>.json",
         hash_off="hourly; a caught-up source legitimately repeats CAUGHT_UP_*"),
     "AegisLabNight": TaskSpec(
         r_lab_night, "lab_status.json (+ always_on_lab_lock.json), inside LAB_NIGHT_WINDOW_UTC",
@@ -1697,8 +1724,8 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
         r_system_status, "system_status/status.json generated_utc + exit_code",
         hash_off="the page's counts legitimately repeat; its stamp and exit code are the check"),
     "AegisOwnerEventWarning": TaskSpec(
-        r_owner_warning, "~/aegis-recovery-evidence/beta-v2-owner-20261025/continuation-20261103/"
-                         "owner_warning_journal/owner_warning_runs.jsonl",
+        r_owner_warning, "<dir of the task's owner_warning_once.ps1>/owner_warning_journal/"
+                         "owner_warning_runs.jsonl",
         hash_off="every 10 min; a quiet book legitimately repeats the same status"),
     "AegisCodexDaemonAtLogon": TaskSpec(
         r_retired, "none (retired: Codex-month leftover, Disabled since 2026-11-07; starts the Codex app-server "
