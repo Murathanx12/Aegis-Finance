@@ -5255,12 +5255,13 @@ BOOK_DNA_MIN_CAPTURE_OBS = 8
 #: CH-11 fix round (review of PR #140, 2026-11-14). B1: the C15 date-stamp test runs per
 #: calendar month (months with >= this many periods); a month FAILS when its correlation with
 #: SPY shifted back one session is at least MIN_LAG_CORR AND beats the same-day correlation by
-#: more than MIN_Z_GAP in Fisher-z units. A detection rule, not a 5% test: a month holds 9-22
-#: periods, and on the lanes' August (16) a one-sided 5% test needs a z gap of 0.645 against the
-#: 0.46-0.63 observed. market_exposure is then estimated after the last failing month.
+#: more than GAP_SE standard errors (sqrt(2/(n-3))) in Fisher-z units. A detection rule, not a 5%
+#: test: a month holds 9-22 periods, and on the lanes' August (16) a one-sided 5% test needs a z
+#: gap of 0.645 against the 0.46-0.63 observed. market_exposure is then estimated after the last
+#: failing month.
 BOOK_DNA_STAMP_MONTH_MIN_OBS = 8
 BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR = 0.30
-BOOK_DNA_STAMP_MONTH_MIN_Z_GAP = 0.20
+BOOK_DNA_STAMP_MONTH_GAP_SE = 1.0
 #: M1: the beta's window is comparable with the receipt window only when it covers at least
 #: this share of the receipt sessions AND its compounded book return is within this many pp of
 #: the receipt return; otherwise the receipt-window beta-adjusted excess is CANNOT DETERMINE

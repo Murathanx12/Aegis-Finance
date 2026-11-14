@@ -110,7 +110,7 @@ def params() -> dict:
         "min_capture_obs": int(_cfg("BOOK_DNA_MIN_CAPTURE_OBS", 8)),
         "stamp_month_min_obs": int(_cfg("BOOK_DNA_STAMP_MONTH_MIN_OBS", 8)),
         "stamp_month_min_lag_corr": float(_cfg("BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR", 0.30)),
-        "stamp_month_min_z_gap": float(_cfg("BOOK_DNA_STAMP_MONTH_MIN_Z_GAP", 0.20)),
+        "stamp_month_gap_se": float(_cfg("BOOK_DNA_STAMP_MONTH_GAP_SE", 1.0)),
         "exposure_min_cover": float(_cfg("BOOK_DNA_EXPOSURE_MIN_COVER", 0.80)),
         "exposure_max_return_gap_pp": float(_cfg("BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP", 2.0)),
         "max_capture_se": float(_cfg("BOOK_DNA_MAX_CAPTURE_SE", 0.25)),
@@ -463,7 +463,7 @@ def _cd(why: str, **extra: Any) -> dict:
 _ISO_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
 
-def stamp_screen(series: Optional[list], *, min_month_obs: int, min_lag_corr: float, min_z_gap: float,
+def stamp_screen(series: Optional[list], *, min_month_obs: int, min_lag_corr: float, gap_se: float,
                  spy_close: Optional[dict] = None) -> tuple[dict, list]:
     """CH-11 fix B1 (review of PR #140): the C15 date-stamp test per CALENDAR MONTH.
 
@@ -472,9 +472,9 @@ def stamp_screen(series: Optional[list], *, min_month_obs: int, min_lag_corr: fl
     lanes: late June-August, right from September) averages out and passes. Here each
     month with >= `min_month_obs` periods is tested on its own: it FAILS when
     corr(book_t, SPY lagged) >= `min_lag_corr` AND atanh(corr lagged) - atanh(corr same
-    period) > `min_z_gap` -- the lag is the better alignment and it is material. This is a
-    detection rule, not a significance test (a month has too few periods for one); each
-    month prints both correlations and sqrt(2/(n-3)), the SE of the z gap.
+    period) > `gap_se` x sqrt(2/(n-3)) -- the lag is the better alignment by at least that
+    many standard errors, and it is material. A detection rule, not a 5% test (a month has
+    too few periods for one); each month prints both correlations and the SE of the gap.
     Returns (the check, the periods to estimate on): every period after the LAST failing
     month, or the whole series when no month fails. Dates are never shifted: a lagged
     stretch is dropped, and the row says which months and why.
@@ -515,7 +515,7 @@ def stamp_screen(series: Optional[list], *, min_month_obs: int, min_lag_corr: fl
             c0 = float(np.corrcoef(y, x0)[0, 1])
             c1 = float(np.corrcoef(y, xm)[0, 1])
             gap = float(np.arctanh(np.clip(c1, -0.999, 0.999)) - np.arctanh(np.clip(c0, -0.999, 0.999)))
-            fail = c1 >= min_lag_corr and gap > min_z_gap
+            fail = c1 >= min_lag_corr and gap > gap_se * math.sqrt(2.0 / (n - 3))
             row.update(corr_same_day=round(c0, 3), corr_lag_minus_1=round(c1, 3),
                        z_gap=round(gap, 3), z_gap_se=round(math.sqrt(2.0 / (n - 3)), 3))
             row["status"] = "FAIL: lag -1 beats same-day" if fail else "ok"
@@ -524,7 +524,7 @@ def stamp_screen(series: Optional[list], *, min_month_obs: int, min_lag_corr: fl
         rows.append(row)
     check = {"method": (f"per calendar month with >= {min_month_obs} periods: FAIL when atanh(corr vs SPY "
                         f"shifted back one session) >= {min_lag_corr} and atanh(that) - atanh(corr vs SPY "
-                        f"same period) > {min_z_gap} (a detection rule, not a significance test); "
+                        f"same period) > {gap_se:g} x sqrt(2/(n-3)) (a detection rule, not a 5% test); "
                         f"lagged SPY from {'SPY session closes' if cal else 'the previous period (no calendar)'}; "
                         "exposure is estimated after the last failing month; dates are never shifted"),
              "months": rows, "failing_months": failing, "n_periods_without_a_lagged_spy": n_unpriced}
@@ -625,7 +625,7 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
         session_dates = sorted(spy_close)
     check, est = stamp_screen(series, min_month_obs=int(q["stamp_month_min_obs"]),
                               min_lag_corr=float(q["stamp_month_min_lag_corr"]),
-                              min_z_gap=float(q["stamp_month_min_z_gap"]), spy_close=spy_close)
+                              gap_se=float(q["stamp_month_gap_se"]), spy_close=spy_close)
     out["stamp_check"] = check
     if check["failing_months"]:
         fm = "; ".join(f"{r['month']} same-day {r['corr_same_day']:+.2f} / lag -1 {r['corr_lag_minus_1']:+.2f}"
