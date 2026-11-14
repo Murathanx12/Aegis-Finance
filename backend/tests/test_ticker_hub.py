@@ -22,6 +22,10 @@ DAY = NOW.date().isoformat()
 
 ISSUERS = """symbol,primary_name,aliases,country,is_adr
 A,"Agilent Technologies, Inc.",A|Agilent Technologies,US,
+ACA,Arcosa Inc.,ACA|Arcosa,US,
+R,"Ryder System, Inc.","R|Ryder System, Inc.",US,
+RS,Reliance Steel & Aluminum Co.,RS|Reliance Steel,US,
+META,"Meta Platforms, Inc.","META|Meta Platforms, Inc.",US,
 AAAA,Aardvark Chipworks Inc.,AAAA|Aardvark Chipworks,US,
 AAPL,Apple Inc.,AAPL|Apple,US,
 ALL,Allstate Corporation (The),ALL|Allstate Corporation (The),US,
@@ -283,6 +287,41 @@ def test_tiers_about_is_the_title_or_the_filing(tmp_path, data_root, paths):
     assert all(r["tier"] == "about" for r in h_about["news"])
     assert h_about["tier_counts"]["about"] < h_about["tier_counts"]["all"]
 
+
+
+def test_explicit_tokens_need_to_be_unambiguous(tmp_path, data_root, paths):
+    """The re-measured sample: "Affordable Care Act (ACA)" -> ACA, "MESA(R)" -> R, "$A" -> A.
+    A bare (XYZ) needs the issuer named in the same text; a one-letter token never tags."""
+    _append(data_root, "wsj_business", [
+        _row("wsj_business", "Insurer wins an Affordable Care Act (ACA) contract in Texas"),
+        _row("wsj_business", "Spine maker clears review for its MESA(R) implant"),
+        _row("wsj_business", "Fixture bank lifts its outlook", body="Shares of $A traded higher after the call."),
+        _row("wsj_business", "Meta (META) Draws Fresh Fixture Scrutiny"),
+        _row("wsj_business", "Arcosa (ACA) wins a bridge order"),
+    ])
+    out = tmp_path / "hub"
+    _build(data_root, paths, out)
+    tags = _tags(out)
+    assert "Insurer wins an Affordable Care Act (ACA) contract in Texas" not in tags
+    assert "Spine maker clears review for its MESA(R) implant" not in tags
+    assert "Fixture bank lifts its outlook" not in tags
+    meta = tags["Meta (META) Draws Fresh Fixture Scrutiny"]
+    assert ("META", "text_token") in meta or ("META", "name_match") in meta
+    assert any(s == "ACA" for s, _ in tags["Arcosa (ACA) wins a bridge order"])
+
+
+def test_digest_never_confirms_by_a_filing_title(tmp_path, data_root, paths):
+    """A filing's title is the filer's name: 'Reliance Global Group' is not RS (sample)."""
+    _append(data_root, "sec_edgar_8k_current_atom", [
+        _row("sec_edgar_8k_current_atom", "8-K - Reliance Steel Global Fixture Group (0009999999) (Filer)",
+             url="https://www.sec.gov/fixture/rs-1", tags=["8-K:8.01", "cik:0009999999"])])
+    dg = data_root / "news_corpus" / "_digest_cache" / "extract_wd_v1.jsonl"
+    with dg.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"cache_key": "k9", "row": {"url": "https://www.sec.gov/fixture/rs-1",
+                                                        "event_type": "other", "tickers": ["RS"]}}) + "\n")
+    out = tmp_path / "hub"
+    _build(data_root, paths, out)
+    assert not any("Reliance Steel Global Fixture Group" in k for k in _tags(out))
 
 # ─────────────────────────────── ids, dates, stories
 

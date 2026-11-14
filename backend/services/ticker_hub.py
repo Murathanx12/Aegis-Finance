@@ -313,6 +313,8 @@ class Tagger:
             if rule.split(":", 1)[-1] in self.drop_keys:
                 self.refused[f"hub_drop_key:{rule}"] += 1
                 continue
+            if not self.token_ok(DA.norm_ticker(sym), rule, text):
+                continue
             m = "text_token" if rule in _TOKEN_RULES else "name_match"
             out.append({"t": DA.norm_ticker(sym), "m": m, "rule": rule, "where": where})
         if self._cased_rx is not None:
@@ -330,6 +332,37 @@ class Tagger:
                     out.append({"t": s, "m": "name_match", "rule": f"cased_alias:{mm.group(1)}",
                                 "where": where})
         return out
+
+    def _name_words(self, sym: str) -> set:
+        """First words (>= 3 chars) of every issuer-table name and cased alias of `sym`."""
+        if not hasattr(self, "_names_by_sym"):
+            by: dict[str, set] = {}
+            weak = {"the", "and", "new", "first"} | set(NE._GENERIC_ALIASES) | set(self.common)
+            for key, s in self.tbl.name_to_symbol.items():
+                w = key.split()[0] if key.split() else ""
+                if len(w) >= 3 and w not in weak:
+                    by.setdefault(DA.norm_ticker(s), set()).add(w)
+            for alias, s in self.cased.items():
+                by.setdefault(s, set()).add(alias.lower())
+            self._names_by_sym = by
+        return self._names_by_sym.get(sym, set())
+
+    def token_ok(self, sym: str, rule: str, text: str) -> bool:
+        """An explicit token is trusted only when it is unambiguous: never a one-letter
+        symbol from `$X` / `(X)`, and a bare `(XYZ)` only when the same text also names
+        the issuer (the re-measured sample: "Affordable Care Act (ACA)" -> ACA, Treasury
+        "(OCC)", "MESA(R)" -> R). `NASDAQ: X` and local codes stay trusted."""
+        if rule not in ("paren_ticker", "cashtag"):
+            return True
+        if len(sym) <= 1:
+            self.refused[f"one_letter_{rule}:{sym}"] += 1
+            return False
+        if rule == "paren_ticker":
+            low = (text or "").lower()
+            if not any(re.search(r"(?<![a-z0-9])" + re.escape(w) + r"(?![a-z0-9])", low) for w in self._name_words(sym)):
+                self.refused["paren_ticker_without_name"] += 1
+                return False
+        return True
 
     @staticmethod
     def _company_context(text: str, start: int, end: int) -> bool:
@@ -564,7 +597,8 @@ def _corpus_row(src: str, o: dict, tagger: Tagger, typed: dict, now: datetime,
     uk = url_key(url)
     ty = typed.get(uk) if uk else None
     generic = [o.get("ticker")] if o.get("ticker") else []
-    g_field = tagger.source_field_tags(_as_list(o.get("tickers")) + generic, entity)
+    g_field = [t for t in tagger.source_field_tags(_as_list(o.get("tickers")) + generic, entity)
+               if t["rule"] not in ("paren_ticker", "cashtag") or tagger.token_ok(t["t"], t["rule"], f"{title}\n{body}")]
     if reader_row:
         # the reader's `tickers` is the LANE it was browsing, not a provider tag
         lane = [t for t in g_field if t["rule"] == "provider"]
@@ -575,16 +609,18 @@ def _corpus_row(src: str, o: dict, tagger: Tagger, typed: dict, now: datetime,
             else:
                 stats["reader_lane_unconfirmed"] += 1
     g_cik = tagger.cik_tags(entity) if src.startswith("sec_") else []
+    kind = EN.kind_of(src)
     g_digest = []
     for t in (ty or {}).get("tickers") or []:
         if not tagger.known(t):
             continue
-        if tagger.confirmed_strict(t, title, body, src):
+        # a filing's title is the FILER's name, not a headline: "Blackstone Real Estate Income
+        # Trust" is not BX, "Reliance Global Group" is not RS (re-measured sample)
+        if tagger.confirmed_strict(t, "" if kind == "filing" else title, body, src):
             g_digest.append({"t": DA.norm_ticker(t), "m": "digest_typed", "rule": "world_digest",
                              "where": "field"})
         else:
             stats["digest_unconfirmed"] += 1
-    kind = EN.kind_of(src)
     g_title = [] if kind == "filing" else tagger.text_tags(title, "title")
     g_body = tagger.body_tags(body, src)
     tags = with_tiers(merge_tags(g_field, g_cik, g_title, g_body, g_digest), {t["t"] for t in g_title})
