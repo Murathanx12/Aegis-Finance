@@ -571,6 +571,20 @@ def r_local_runtime_digest(ctx, task) -> Reading:
                    detail=f"local model status {d.get('status')}; {valid} valid sampled log rows")
 
 
+def _last_session_close_before(stamp: datetime) -> Optional[datetime]:
+    """The closing bell of the newest XNYS session that closed at or before `stamp`;
+    None when the calendar cannot say (then no wait is excused)."""
+    try:
+        from backend.services import market_sessions as MS
+        cal = MS._xnys()
+        idx = cal.sessions_in_range((stamp.date() - timedelta(days=14)).isoformat(), stamp.date().isoformat())
+        closes = [cal.session_close(s).to_pydatetime() for s in idx]
+        closes = [c for c in closes if c <= stamp]
+        return max(closes) if closes else None
+    except Exception:                                            # noqa: BLE001
+        return None
+
+
 def r_local_branching_private_grade(ctx, task) -> Reading:
     """Read the existing native owner's journal, including its real refusals.
 
@@ -598,9 +612,18 @@ def r_local_branching_private_grade(ctx, task) -> Reading:
     why = str(d.get("reason") or "")
     # The pinned owner raises the routine evening price wait as an exception (35 of
     # 51 refusals by 2026-11-14). Its own last line names it; that is a WAIT.
+    # Only INSIDE the grace after the last closed session: a dead price feed raises the
+    # same token every run and must not read IDLE forever (review of PR #147).
     last = why.strip().splitlines()[-1] if why.strip() else ""
     if action == "REFUSED" and last.rstrip().endswith(("WAIT_SHARED_PRICE_REFRESH", "WAIT_SHARED_CLOSED_SESSION")):
-        status, why = "IDLE", "evening price wait (the pinned owner reports it as a refusal): " + last.strip()
+        close = _last_session_close_before(stamp) if stamp is not None else None
+        grace_h = float(_config.ROLLING_COHORT_PRICE_GRACE_H)
+        if close is not None and (stamp - close).total_seconds() / 3600.0 <= grace_h:
+            status, why = "IDLE", "evening price wait (the pinned owner reports it as a refusal): " + last.strip()
+        else:
+            status = "DEGRADED"
+            why = (f"bars have not advanced since before the session that closed {close.isoformat() if close else '?'}: "
+                   f"price wait beyond the {grace_h} h grace (or the calendar is unavailable): {last.strip()}")
     if d.get("task") != "AegisLocalBranchingPrivateGrade" or stamp is None or stamp > ctx.now + timedelta(seconds=30):
         status, why = "DEGRADED", "owner identity or receipt UTC is invalid"
     if action in {"GRADED", "ALREADY_GRADED", "WAIT_ENTRY", "WAIT_SHARED_REFRESH", "WAIT_CONSTITUENT_MARKS"}:
@@ -634,8 +657,8 @@ def r_local_branching_private_grade(ctx, task) -> Reading:
 
 
 ROLLING_COHORT_ACTIONS = {"BORN": "OK", "MARKED": "OK", "NOTHING_DUE": "IDLE",
-                          "WAIT_PRICES": "IDLE", "MISSED_ENTRY_WINDOW": "DEGRADED",
-                          "WAIT_LOCK": "IDLE", "REFUSED": "REFUSED"}
+                          "WAIT_PRICES": "IDLE", "STALE_PRICES": "DEGRADED",
+                          "MISSED_ENTRY_WINDOW": "DEGRADED", "WAIT_LOCK": "IDLE", "REFUSED": "REFUSED"}
 
 
 def r_rolling_cohorts(ctx, task) -> Reading:
@@ -663,8 +686,16 @@ def r_rolling_cohorts(ctx, task) -> Reading:
     stamp = parse_stamp(d.get("utc"))
     if d.get("task") != "AegisRollingCohorts" or stamp is None or stamp > ctx.now + timedelta(seconds=30):
         status, why = "DEGRADED", ["owner identity or receipt UTC is invalid"]
-    if action == "MISSED_ENTRY_WINDOW":
-        why.append(f"a due cohort's entry opened before it was born: {d.get('missed')}")
+    if d.get("missed"):
+        status = worst(status, "DEGRADED")
+        why.append(f"due cohort(s) missed their entry window: {[m.get('cohort_id') for m in d['missed'] if isinstance(m, dict)]}"
+                   + ("; the newest was born late" if any(isinstance(b, dict) and b.get("born_late")
+                                                           for b in d.get("born") or []) else ""))
+    wait_h, grace_h = d.get("price_wait_h"), _config.ROLLING_COHORT_PRICE_GRACE_H
+    if action == "WAIT_PRICES" and (type(wait_h) not in (int, float) or wait_h > grace_h):
+        status = worst(status, "DEGRADED")
+        why.append(f"bars have not advanced since {d.get('bars_last_session')}: price wait {wait_h} h "
+                   f"is beyond the {grace_h} h grace (or unmeasured)")
     age, limit = d.get("forward_age_sessions"), _config.ROLLING_COHORT_CADENCE_SESSIONS * _config.ROLLING_COHORT_STALE_CADENCES
     if action not in ("REFUSED", "WAIT_LOCK"):     # a lock wait carries no ages: the holder's row follows
         if type(age) is not int or age < 0:

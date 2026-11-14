@@ -31,6 +31,10 @@ class FakeCal:
     def close_of(self, day):
         return datetime.combine(pd.Timestamp(day).date(), time(21, 0), tzinfo=timezone.utc)
 
+    def closed_sessions(self, start, now):
+        return [pd.Timestamp(d) for d in pd.bdate_range(pd.Timestamp(start), pd.Timestamp(now.date()))
+                if self.close_of(d) <= now]
+
 
 def utc(day, hh=23):
     return datetime.combine(pd.Timestamp(day).date(), time(hh, 0), tzinfo=timezone.utc)

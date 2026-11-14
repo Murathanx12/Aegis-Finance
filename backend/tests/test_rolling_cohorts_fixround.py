@@ -19,6 +19,40 @@ from backend.tests.test_rolling_cohorts import (ANCHOR_I, DAYS, _books, cfg, mak
                                                 run, subset_specs, utc)
 
 
+# ── finding 1: a dead price feed is DEGRADED after the grace, never IDLE forever ──
+
+def _reader(tmp_path, row):
+    from datetime import datetime
+    from backend.services import system_health as SH, task_receipts as TR
+    p = tmp_path / "runs_reader.jsonl"
+    p.write_text(json.dumps(row, default=str) + "\n", encoding="utf8")
+    ctx = SH.ProbeCtx(optimus_dir=tmp_path / "o", now=datetime.fromisoformat(row["utc"]), repo=tmp_path,
+                      paths={"rolling_cohort_runs": p})
+    return TR.r_rolling_cohorts(ctx, None)
+
+
+def test_a_dead_price_feed_goes_degraded_and_due_cohorts_are_missed_then_born_late(tmp_path):
+    root = make_root(tmp_path, ANCHOR_I + 1)                       # the reviewer's attack A
+    specs, out = subset_specs(tmp_path), tmp_path / "out"
+    assert run("step", root, out, specs, utc(DAYS[ANCHOR_I]))["action"] == "BORN"
+    r1 = run("step", root, out, specs, utc(DAYS[ANCHOR_I + 1], 22))           # 1 h after the close
+    assert r1["action"] == "WAIT_PRICES" and _reader(tmp_path, r1).status == "IDLE"
+    r6 = run("step", root, out, specs, utc(DAYS[ANCHOR_I + 6], 22))
+    assert r6["action"] == "STALE_PRICES" and r6["rc"] == 0
+    assert "bars have not advanced since" in r6["reason"]
+    assert r6["forward_age_sessions"] == 6                         # exchange sessions, not bars sessions
+    assert [m["cohort_id"] for m in r6["missed"]] == [DAYS[ANCHOR_I + 5].date().isoformat()]
+    assert _reader(tmp_path, r6).status == "DEGRADED"
+    # the feed comes back on the evening of +6: the missed slot is born LATE, decided on +6
+    pd.read_parquet(make_root(tmp_path / "fresh", ANCHOR_I + 7) / R.BARS_REL).to_parquet(root / R.BARS_REL, index=False)
+    r7 = run("step", root, out, specs, utc(DAYS[ANCHOR_I + 6], 23))
+    assert r7["action"] == "BORN" and r7["born"][0]["born_late"] is True
+    _, rec = _books(out, DAYS[ANCHOR_I + 5])
+    assert rec["born_late"] is True and rec["decision_date"] == DAYS[ANCHOR_I + 6].date().isoformat()
+    assert rec["entry_session"] == DAYS[ANCHOR_I + 7].date().isoformat() and rec["forward_evidence"] is True
+    assert _reader(tmp_path, r7).status == "DEGRADED"              # the miss is reported once
+
+
 # ── finding 4: one run at a time; duplicate marks fail loud ─────────────────
 
 def test_a_second_concurrent_run_waits_cleanly(tmp_path, monkeypatch):

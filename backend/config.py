@@ -4576,6 +4576,10 @@ ROLLING_COHORT_NEWS_MIN_ITEMS = 50              # usable typed items, 5 days bef
 ROLLING_COHORT_NEWS_MAX_STALE_DAYS = 2.0
 #: Health: DEGRADED when no forward cohort was born for more than this many cadences.
 ROLLING_COHORT_STALE_CADENCES = 2
+#: A missing closed session in the bars is a WAIT only this many hours after
+#: that session's close; past it the step and both readers say DEGRADED
+#: ("bars have not advanced since <date>"). Measured: every historical wait <= 2 h.
+ROLLING_COHORT_PRICE_GRACE_H = 18.0
 #: MDE = z * SE (80% power, 5% two-sided).
 ROLLING_COHORT_MDE_Z = 2.8
 #: One pass per output folder: a second pass waits this long for `run.lock`,

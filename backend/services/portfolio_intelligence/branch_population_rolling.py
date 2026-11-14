@@ -599,9 +599,14 @@ def random_controls(long_w: dict, short: float, market: pd.DataFrame, *, cohort:
 
 
 def birth(specs: dict, manifest: str, inputs: dict, *, backfilled: bool, born_utc: str,
-          k_controls: int) -> dict:
-    """One cohort: one row per spec (a READY book or a WAIT row with its count)."""
-    cohort = inputs["cohort"].date().isoformat()
+          k_controls: int, cohort_id: Optional[str] = None, born_late: bool = False) -> dict:
+    """One cohort: one row per spec (a READY book or a WAIT row with its count).
+
+    `cohort_id` is the scheduled slot; it differs from the decision date only for
+    a cohort born LATE after a price outage (`born_late: true`), which is decided
+    on the newest bars and entered at the next open -- never backdated."""
+    decision_date = inputs["cohort"].date().isoformat()
+    cohort = cohort_id or decision_date
     market = inputs["market"]
     fstat = family_input_status(specs, inputs)
     rows, distinct = [], {}
@@ -648,7 +653,9 @@ def birth(specs: dict, manifest: str, inputs: dict, *, backfilled: bool, born_ut
     for r in rows:
         key = f"{r['family']}:{r['status']}"
         counts[key] = counts.get(key, 0) + 1
-    return {"schema": COHORT_SCHEMA, "cohort_id": cohort, "entry_session": inputs["entry"].date().isoformat(),
+    return {"schema": COHORT_SCHEMA, "cohort_id": cohort, "decision_date": decision_date,
+            "scheduled_date": cohort, "born_late": bool(born_late),
+            "entry_session": inputs["entry"].date().isoformat(),
             "decision_utc": inputs["decision"].isoformat(),
             "available_before_utc": inputs["available_before"].isoformat(),
             "backfilled": bool(backfilled), "forward_evidence": not backfilled, "born_utc": born_utc,
@@ -1073,6 +1080,13 @@ class XnysCalendar:
         from backend.services import market_sessions as MS
         return MS.session_close_utc(day)
 
+    def closed_sessions(self, start: Any, now: datetime) -> list[pd.Timestamp]:
+        """Every XNYS session from `start` whose closing bell is at or before `now`."""
+        from backend.services import market_sessions as MS
+        cal = MS._xnys()
+        idx = cal.sessions_in_range(pd.Timestamp(start).date().isoformat(), now.date().isoformat())
+        return [pd.Timestamp(s.date()) for s in idx if cal.session_close(s).to_pydatetime() <= now]
+
 
 def _read_revisions(data_root: Path) -> Optional[pd.DataFrame]:
     p = Path(data_root) / REVISIONS_REL
@@ -1162,27 +1176,44 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
     if not sessions or sessions[-1] < anchor:
         raise RollingCohortRefused(f"the {BENCH} bars do not reach the anchor {anchor.date()}")
     last_bar = sessions[-1]
-    sched = schedule(sessions, anchor=anchor, cadence=cadence)
+    bar_set = set(sessions)
+    # The schedule, "due" and every age run on the EXCHANGE calendar (sessions
+    # closed by now), never on the dates present in the bars file: a dead price
+    # feed must not freeze the clocks that would report it (review of PR #147).
+    cal_sessions = [s for s in cal.closed_sessions(anchor, now) if s <= through]
+    if not cal_sessions or cal_sessions[0] != anchor:
+        raise RollingCohortRefused(f"the exchange calendar has no closed session at the anchor {anchor.date()}")
+    expected_last = cal_sessions[-1]
+    sched = schedule(cal_sessions, anchor=anchor, cadence=cadence)
     existing = {c["cohort_id"]: c for c in store.cohorts()}
-    # A session that has CLOSED but is not in the bars yet is the evening wait.
-    next_open = cal.next_open_after(last_bar)
-    next_close = cal.close_of(next_open.date()) if next_open else None
-    prices_waiting = bool(next_close and now >= next_close)
+    grace_h = float(_config.ROLLING_COHORT_PRICE_GRACE_H)
+    price_wait_h, prices_waiting, prices_stale = 0.0, False, False
+    if last_bar < expected_last:
+        first_missing = next(s for s in cal_sessions if s > last_bar)
+        price_wait_h = round((now - cal.close_of(first_missing)).total_seconds() / 3600.0, 2)
+        prices_stale = price_wait_h > grace_h
+        prices_waiting = not prices_stale
+    stale_reason = (f"bars have not advanced since {last_bar.date()}; the exchange has closed sessions "
+                    f"through {expected_last.date()}; {price_wait_h} h after the first missing close "
+                    f"(grace {grace_h} h)" if prices_stale else None)
     state: dict = {"loaded": False, "revisions": None, "news": None}
     born, missed, skipped = [], [], []
 
-    def _birth(d: pd.Timestamp, entry: pd.Timestamp, backfilled: bool) -> None:
+    def _birth(d: pd.Timestamp, entry: pd.Timestamp, backfilled: bool, *, cohort_id: Optional[str] = None,
+               born_late: bool = False) -> None:
         if not state["loaded"]:
             state.update(loaded=True, revisions=_read_revisions(data_root),
                          news=load_news_items(Path(data_root) / NEWS_REL))
         inp = build_inputs(bars=bars, revisions=state["revisions"], news_items=state["news"],
                            cohort=d, entry=entry)
         rec = birth(specs, manifest, inp, backfilled=backfilled, born_utc=now.isoformat(),
-                    k_controls=int(_config.ROLLING_COHORT_RANDOM_CONTROLS))
+                    k_controls=int(_config.ROLLING_COHORT_RANDOM_CONTROLS), cohort_id=cohort_id,
+                    born_late=born_late)
         rec.update(versions)
         store.write_cohort(rec, inp, manifest)
         existing[rec["cohort_id"]] = rec
-        born.append({"cohort_id": rec["cohort_id"], "backfilled": backfilled, "books": rec["n_books"],
+        born.append({"cohort_id": rec["cohort_id"], "decision_date": rec["decision_date"],
+                     "born_late": born_late, "backfilled": backfilled, "books": rec["n_books"],
                      "distinct_portfolios": rec["n_distinct_portfolios"],
                      "random_controls": len(rec["controls"]),
                      "input_status": {k: v["status"] for k, v in rec["input_status"].items()},
@@ -1190,22 +1221,36 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
 
     if mode == "step":
         d = sched[-1]
-        if d.date().isoformat() not in existing:
-            i = sessions.index(d)
-            if i + 1 < len(sessions):
-                missed.append({"cohort_id": d.date().isoformat(), "why": "entry session already in the bars"})
-            else:
-                entry_open = cal.next_open_after(d)
-                if now >= entry_open:
-                    missed.append({"cohort_id": d.date().isoformat(),
-                                   "why": f"entry open {entry_open.isoformat()} has passed"})
-                else:
-                    _birth(d, pd.Timestamp(entry_open.date()), backfilled=False)
+        did = d.date().isoformat()
+        if did not in existing:
+            entry_open = cal.next_open_after(d)
+            if d in bar_set and d == last_bar and now < entry_open:
+                _birth(d, pd.Timestamp(entry_open.date()), backfilled=False)
+            elif now >= entry_open:
+                missed.append({"cohort_id": did, "why": (f"entry open {entry_open.isoformat()} passed before "
+                                                         f"its bars could be read (bars through {last_bar.date()})")})
+        # Earlier slots that fell due during an outage (after the declaration, after the
+        # newest born cohort) are listed, never silently skipped.
+        declared_day = pd.Timestamp(_utc(decl["declared_utc"]).date())
+        newest = pd.Timestamp(max(existing)) if existing else anchor - pd.Timedelta(days=1)
+        for s in sched[:-1]:
+            sid = s.date().isoformat()
+            if sid not in existing and s >= declared_day and s > newest:
+                missed.append({"cohort_id": sid, "why": "fell due during a price outage; not born"})
+        # Born LATE: the newest missed slot is entered at the next open, decided on the
+        # newest bars -- its true decision date, never backdated.
+        if missed and did not in existing and not born and last_bar == expected_last:
+            nxt = cal.next_open_after(last_bar)
+            if now < nxt:
+                _birth(last_bar, pd.Timestamp(nxt.date()), backfilled=False, cohort_id=did, born_late=True)
     elif mode == "backfill":
         lo = pd.Timestamp(date_from) if date_from is not None else anchor
         hi = pd.Timestamp(date_to) if date_to is not None else last_bar
         for d in sched:
             if not lo <= d <= hi or d.date().isoformat() in existing:
+                continue
+            if d not in bar_set:
+                skipped.append({"cohort_id": d.date().isoformat(), "why": "NO_BARS_FOR_COHORT_DATE"})
                 continue
             i = sessions.index(d)
             if i + 1 < len(sessions):
@@ -1245,13 +1290,15 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
 
     fwd = [c for c in cohorts if not c["backfilled"]]
     sidx = {s: i for i, s in enumerate(sessions)}
+    # Ages in EXCHANGE sessions closed by now (not bars sessions).
     if fwd:
         newest_fwd = max(c["cohort_id"] for c in fwd)
-        fwd_age = len(sessions) - 1 - sidx.get(pd.Timestamp(newest_fwd), len(sessions) - 1)
+        dec = pd.Timestamp(existing[newest_fwd].get("decision_date") or newest_fwd)
+        fwd_age = sum(1 for s in cal_sessions if s > dec)
     else:
         newest_fwd = None
         declared = pd.Timestamp(_utc(decl["declared_utc"]).date())
-        fwd_age = sum(1 for s in sessions if s > declared)
+        fwd_age = sum(1 for s in cal_sessions if s > declared)
     live = 0
     for c in cohorts:
         e = pd.Timestamp(c["entry_session"])
@@ -1259,6 +1306,8 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
             live += 1
     if born:
         action = "BORN"
+    elif prices_stale:
+        action = "STALE_PRICES"
     elif prices_waiting:
         action = "WAIT_PRICES"
     elif missed:
@@ -1267,9 +1316,13 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
         action = "MARKED"
     else:
         action = "NOTHING_DUE"
-    row = {"task": TASK_NAME, "schema": "rolling_cohort_run/1", "utc": now.isoformat(), "mode": mode,
+    row = {"task": TASK_NAME, "schema": "rolling_cohort_run/2", "utc": now.isoformat(), "mode": mode,
            "action": action, "rc": 0, "run_id": run_id, "through": last_bar.date().isoformat(),
-           "prices_waiting": prices_waiting, "born": born, "missed": missed, "skipped": skipped,
+           "bars_last_session": last_bar.date().isoformat(),
+           "expected_last_session": expected_last.date().isoformat(),
+           "price_wait_h": price_wait_h, "price_grace_h": grace_h, "reason": stale_reason,
+           "prices_waiting": prices_waiting, "prices_stale": prices_stale,
+           "born": born, "missed": missed, "skipped": skipped,
            "cohorts_total": len(cohorts), "cohorts_forward": len(fwd), "cohorts_live": live,
            "newest_cohort": max(existing) if existing else None, "newest_forward_cohort": newest_fwd,
            "forward_age_sessions": int(fwd_age), "cadence_sessions": cadence,

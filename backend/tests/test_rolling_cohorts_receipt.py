@@ -26,12 +26,26 @@ def judge(ctx, path, row):
 
 @pytest.mark.parametrize("action,expected", [
     ("BORN", "ALIVE_PROGRESSING"), ("MARKED", "ALIVE_PROGRESSING"), ("NOTHING_DUE", "ALIVE_IDLE_EXPECTED"),
-    ("WAIT_PRICES", "ALIVE_IDLE_EXPECTED"), ("MISSED_ENTRY_WINDOW", "DEGRADED"), ("REFUSED", "REFUSED"),
+    ("STALE_PRICES", "DEGRADED"), ("MISSED_ENTRY_WINDOW", "DEGRADED"), ("REFUSED", "REFUSED"),
     ("WAIT_LOCK", "ALIVE_IDLE_EXPECTED"),
     ("SOMETHING_ELSE", "DEGRADED")])
 def test_actions(tmp_path, action, expected):
     ctx, p, row = setup(tmp_path, action=action)
     assert judge(ctx, p, row).state == expected
+
+
+def test_stale_prices_and_overlong_waits_and_missed_cohorts_are_degraded(tmp_path):
+    ctx, p, row = setup(tmp_path, action="STALE_PRICES", reason="bars have not advanced since X")
+    assert judge(ctx, p, row).state == "DEGRADED"
+    ctx, p, row = setup(tmp_path, action="WAIT_PRICES", price_wait_h=2.0, bars_last_session="X")
+    assert judge(ctx, p, row).state == "ALIVE_IDLE_EXPECTED"
+    row["price_wait_h"] = TR._config.ROLLING_COHORT_PRICE_GRACE_H + 1
+    assert judge(ctx, p, row).state == "DEGRADED"
+    row.pop("price_wait_h")
+    assert judge(ctx, p, row).state == "DEGRADED"
+    ctx, p, row = setup(tmp_path, action="BORN", missed=[{"cohort_id": "x"}],
+                        born=[{"cohort_id": "x", "born_late": True}])
+    assert judge(ctx, p, row).state == "DEGRADED"
 
 
 def test_no_forward_cohort_for_more_than_two_cadences_is_degraded(tmp_path):
@@ -54,8 +68,27 @@ def test_identity_and_clock(tmp_path):
     assert judge(ctx, p, row).state == "STALE"
 
 
-def test_branching_owner_price_wait_is_idle_other_refusals_stay_red(tmp_path):
+@pytest.mark.parametrize("hours_after_close,expected", [(2, "ALIVE_IDLE_EXPECTED"), (17.5, "ALIVE_IDLE_EXPECTED"),
+                                                        (19, "DEGRADED"), (None, "DEGRADED")])
+def test_branching_owner_price_wait_is_idle_only_inside_the_grace(tmp_path, monkeypatch, hours_after_close, expected):
     now = datetime.now(timezone.utc)
+    close = None if hours_after_close is None else now - timedelta(hours=hours_after_close)
+    monkeypatch.setattr(TR, "_last_session_close_before", lambda stamp: close)
+    p = tmp_path / "automation_runs.jsonl"
+    ctx = SH.ProbeCtx(optimus_dir=tmp_path / "optimus", now=now, repo=tmp_path, paths={"local_branching_runs": p})
+    name = "AegisLocalBranchingPrivateGrade"
+    row = {"task": name, "utc": now.isoformat(), "action": "REFUSED",
+           "reason": "Traceback ...\r\nValueError: WAIT_SHARED_PRICE_REFRESH"}
+    p.write_text(json.dumps(row) + "\n", encoding="utf8")
+    j = TR.judge(ctx, name, {"TaskName": name, "Scheduled Task State": "Enabled", "Last Result": "1"})
+    assert j.state == expected
+    if expected == "DEGRADED":
+        assert "bars have not advanced" in TR.r_local_branching_private_grade(ctx, None).reason
+
+
+def test_branching_owner_price_wait_is_idle_other_refusals_stay_red(tmp_path, monkeypatch):
+    now = datetime.now(timezone.utc)
+    monkeypatch.setattr(TR, "_last_session_close_before", lambda stamp: now - timedelta(hours=1))
     p = tmp_path / "automation_runs.jsonl"
     ctx = SH.ProbeCtx(optimus_dir=tmp_path / "optimus", now=now, repo=tmp_path, paths={"local_branching_runs": p})
     name = "AegisLocalBranchingPrivateGrade"
