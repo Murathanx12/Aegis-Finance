@@ -22,8 +22,10 @@ import {
  * automatically sends to you directly, or saves it to the cache so you can open
  * it". There is no channel from this app to a Claude session, so the box does
  * the second thing, honestly: it appends one row to
- * `<optimus>/owner_inbox/notes.jsonl`, and the next brain session reads it with
- * `python -m scripts.owner_inbox list --unread`. No model answers it here.
+ * `<optimus>/owner_inbox/notes.jsonl`. A Claude session sees it only when it runs
+ * `python -m scripts.owner_inbox list --unread --data-root <live optimus>` at its
+ * start -- so the page states that as a fact, not as a promise (review of #143,
+ * M3). No model answers it here.
  *
  * Success is shown only with the saved row's own time, read back from the
  * server's answer; a failure shows the server's error text. Never a fake "sent".
@@ -55,10 +57,25 @@ function RecentNotes({ enabled }: { enabled: boolean }) {
       </p>
     );
   const d = notes.data;
+  // review of #143, M2: a line the reader could not parse is a note that may be
+  // lost. Say so in red rather than showing a clean list.
+  const torn =
+    d && d.unreadable_lines > 0 ? (
+      <p className="text-xs text-red-500" role="alert">
+        {d.unreadable_lines} line{d.unreadable_lines === 1 ? "" : "s"} of the inbox file could
+        not be read — a note may be damaged. File: <span className="font-mono">{d.path}</span>
+      </p>
+    ) : null;
   if (!d || d.notes.length === 0)
-    return <p className="text-xs text-muted-foreground">No notes yet.</p>;
+    return (
+      <>
+        {torn}
+        <p className="text-xs text-muted-foreground">No notes yet.</p>
+      </>
+    );
   return (
     <div className="space-y-1.5">
+      {torn}
       <p className="text-[11px] text-muted-foreground">
         Last {d.notes.length} of {d.n_notes} · {d.n_unread} not yet read by Claude
       </p>
@@ -126,8 +143,8 @@ export function OwnerNoteForm({ autoFocus = false }: { autoFocus?: boolean }) {
       </form>
       {save.isSuccess && save.data?.note ? (
         <p className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-xs" role="status">
-          Saved — Claude reads this at the start of the next session. Saved at{" "}
-          {fmtTime(save.data.note.utc)}.
+          Saved to the inbox file. Claude reads it when a session starts and runs the inbox
+          command. Saved at {fmtTime(save.data.note.utc)}.
         </p>
       ) : null}
       {save.isError ? (
@@ -140,10 +157,16 @@ export function OwnerNoteForm({ autoFocus = false }: { autoFocus?: boolean }) {
   );
 }
 
+/** Pages that carry the inline form, so the floating button stays off them
+ *  (review of #143, L4: /desktop/ask showed the box twice). */
+const INLINE_FORM_PAGES = ["/desktop/ask"];
+
 /** Bottom-right on every page, only in the desktop build (see CONTROL_PLANE_BUILD). */
 export function OwnerNoteButton() {
   const [open, setOpen] = useState(false);
-  if (!CONTROL_PLANE_BUILD) return null;
+  const raw = usePathname() ?? "/";
+  const here = raw.length > 1 ? raw.replace(/\/$/, "") : raw;
+  if (!CONTROL_PLANE_BUILD || INLINE_FORM_PAGES.includes(here)) return null;
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
       {open ? (
@@ -160,7 +183,8 @@ export function OwnerNoteButton() {
             </button>
           </div>
           <p className="mb-2 text-[11px] text-muted-foreground">
-            Saved on this PC for the next Claude session. Nothing is sent and nothing answers here.
+            Saved to a file on this PC. Nothing is sent and nothing answers here; a Claude
+            session sees it when it runs the inbox command.
           </p>
           <OwnerNoteForm autoFocus />
         </div>

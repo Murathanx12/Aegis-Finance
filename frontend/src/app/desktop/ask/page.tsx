@@ -11,6 +11,7 @@ import { OwnerNoteForm } from "@/components/desktop/owner-note";
 import { ApiState, DASH, RawPayload } from "@/components/desktop/primitives";
 import {
   ask,
+  CONTROL_PLANE_BUILD,
   errorText,
   getLlama,
   getMorning,
@@ -101,7 +102,9 @@ export default function AskAegisPage() {
   return (
     <div className="space-y-4">
       {/* CH-22 (2026-11-14): the owner's note box, on top, because the two are
-          easy to confuse and do different things. */}
+          easy to confuse and do different things. Same desktop-build check as
+          the floating button, which stays off this page (review of #143, L4). */}
+      {CONTROL_PLANE_BUILD ? (
       <Card>
         <CardHeader className="border-b">
           <CardTitle className="flex items-center gap-2 text-sm">
@@ -112,12 +115,13 @@ export default function AskAegisPage() {
           <p className="text-xs text-muted-foreground">
             <strong className="text-foreground">Ask Aegis</strong> (below) answers now, from the
             local model reading the receipts on this PC.{" "}
-            <strong className="text-foreground">A note</strong> is saved on this PC and read by the
-            Claude session at its next start — nobody answers it here.
+            <strong className="text-foreground">A note</strong> is saved to the inbox file on this PC;
+            a Claude session reads it when it starts and runs the inbox command. Nobody answers it here.
           </p>
           <OwnerNoteForm />
         </CardContent>
       </Card>
+      ) : null}
       <Card>
         <CardHeader className="border-b">
           <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
