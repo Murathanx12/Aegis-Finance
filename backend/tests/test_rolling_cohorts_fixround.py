@@ -196,6 +196,68 @@ def test_one_day_revision_specs_see_the_day_before_the_cutoff(tmp_path):
     assert rec["decision_utc"] == rec["available_before_utc"]      # one clock
 
 
+# ── finding 8: input drift is a row; torn snapshots are never reused ─────────
+
+def test_input_drift_after_birth_is_recorded_and_the_book_is_kept(tmp_path):
+    d = DAYS[ANCHOR_I]
+    root = make_root(tmp_path, ANCHOR_I + 26)                       # the reviewer's attack F
+    sp, out = subset_specs(tmp_path, per_family=10), tmp_path / "out"
+    now = utc(DAYS[ANCHOR_I + 30])
+    run("backfill", root, out, sp, now, date_from=d, date_to=d)
+    before, rec = _books(out, d)
+    rv = pd.read_parquet(root / R.REVISIONS_REL)
+    rv["target_action"] = "Lowers"                                  # a vendor rewrites history
+    rv.to_parquet(root / R.REVISIONS_REL, index=False)
+    r2 = run("backfill", root, out, sp, now + timedelta(minutes=1), date_from=d, date_to=d)
+    drift = r2["input_drift"]
+    assert [x["input"] for x in drift] == ["revision"] and drift[0]["old_hash"] == rec["input_hashes"]["revision"]
+    assert drift[0]["new_hash"] != drift[0]["old_hash"]
+    assert _books(out, d)[0] == before                             # the born book is never edited
+    lines = (out / "input_drift.jsonl").read_text(encoding="utf8").splitlines()
+    run("backfill", root, out, sp, now + timedelta(minutes=2), date_from=d, date_to=d)
+    assert len((out / "input_drift.jsonl").read_text(encoding="utf8").splitlines()) == len(lines) == 1
+
+
+def test_a_torn_input_snapshot_is_replaced_not_reused(tmp_path):
+    d = DAYS[ANCHOR_I]
+    root = make_root(tmp_path, ANCHOR_I + 1)
+    sp = subset_specs(tmp_path)
+    run("step", root, tmp_path / "a", sp, utc(d))
+    _, rec = _books(tmp_path / "a", d)
+    torn = tmp_path / "b" / "inputs" / (rec["input_snapshot_prefix"] + ".market.parquet")
+    torn.parent.mkdir(parents=True)
+    torn.write_bytes(b"PAR1 torn")
+    run("step", root, tmp_path / "b", sp, utc(d))
+    _, rec_b = _books(tmp_path / "b", d)
+    import hashlib
+    assert hashlib.sha256(torn.read_bytes()).hexdigest() == rec_b["input_snapshot_sha256"]["market.parquet"]
+    assert len(pd.read_parquet(torn)) > 0
+
+
+def test_rows_carry_the_adjusted_price_unversioned_revisions_and_universe_flags(tmp_path):
+    root = make_root(tmp_path, ANCHOR_I + 31)
+    sp, out = subset_specs(tmp_path), tmp_path / "out"
+    run("backfill", root, out, sp, utc(DAYS[ANCHOR_I + 31]), date_from=DAYS[ANCHOR_I])
+    _, rec = _books(out, DAYS[ANCHOR_I])
+    ready = [b for b in rec["books"] if b["status"] == "READY"]
+    assert all(b["price_filter_uses_adjusted"] is True for b in ready)
+    assert rec["n_books_price_filter_uses_adjusted"] == len(ready)
+    assert isinstance(rec["n_names_min_price_ambiguous"], int)
+    rev = [b for b in ready if b["family"] in ("revision_flow", "net_raises")]
+    bars_only = [b for b in ready if b["family"] in R.BAR_FAMILIES]
+    assert rev and all(b["revisions_file_not_versioned"] is True for b in rev)
+    assert bars_only and all(b["panel_universe_asof"] == _config.ROLLING_COHORT_PANEL_UNIVERSE_ASOF for b in bars_only)
+    assert all(b.get("panel_universe_asof") is None for b in rev)
+    m = R.Store(out).marks()
+    assert {"price_filter_uses_adjusted", "revisions_file_not_versioned", "panel_universe_asof"} <= set(m.columns)
+    # a forward birth reads the price as it was at D: no adjusted-price flag
+    root2 = make_root(tmp_path / "fw", ANCHOR_I + 1)
+    run("step", root2, tmp_path / "fwout", sp, utc(DAYS[ANCHOR_I]))
+    _, fw = _books(tmp_path / "fwout", DAYS[ANCHOR_I])
+    assert all(b["price_filter_uses_adjusted"] is False and b["revisions_file_not_versioned"] is False
+               for b in fw["books"] if b["status"] == "READY")
+
+
 # ── finding 7: news versions cached after the cutoff never change a cohort ──
 
 def test_a_news_retype_cached_after_the_cutoff_does_not_change_a_backfilled_cohort(tmp_path):

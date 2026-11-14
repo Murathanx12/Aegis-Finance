@@ -4568,6 +4568,10 @@ ROLLING_COHORT_SHORT_BORROW_BPS_YR = 30.0
 #: Any cost <= 0 (bands, SPY, borrow) is REFUSED unless this is True; then
 #: every cohort and mark row carries `zero_cost_diagnostic: true`.
 ROLLING_COHORT_ZERO_COST_DIAGNOSTIC = False
+#: The bars panel's symbol list is the universe file of this date (xs_ranker,
+#: "names alive on 2026-09-01"): survivor-selected before it. Carried on every
+#: bars-only book and random control as `panel_universe_asof`.
+ROLLING_COHORT_PANEL_UNIVERSE_ASOF = "2026-09-01"
 #: Below these a family is WAIT_INPUT for the cohort (a row with the count),
 #: never entered on thin or stale input.
 ROLLING_COHORT_REVISION_MIN_EVENTS = 200        # revision events in the 90-day window

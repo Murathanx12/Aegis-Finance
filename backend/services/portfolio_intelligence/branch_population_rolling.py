@@ -314,6 +314,9 @@ def market_features(bars: pd.DataFrame, cohort: pd.Timestamp) -> pd.DataFrame:
     live = (out["last_date"] >= cohort - pd.Timedelta(days=5)) & (out["last_close"] >= XR.MIN_PRICE)
     proxies = set(XR.INDEX_PROXIES)
     out["eligible"] = live & np.array([not (s in proxies or s == "CASH" or _is_etf(s)) for s in out.index])
+    # The panel is adjusted for events after D: in a backfill a name this close to
+    # the $3 floor may have been on the other side of it at D.
+    out["min_price_ambiguous"] = (out["last_close"] >= XR.MIN_PRICE / 2) & (out["last_close"] <= XR.MIN_PRICE * 2)
     return out.drop(columns=["last_date"])
 
 
@@ -643,7 +646,12 @@ def birth(specs: dict, manifest: str, inputs: dict, *, backfilled: bool, born_ut
                      "invested_share": gross_long - short, "n_names": len(long_w),
                      "holdings_hash": hh, "inputs_hash": in_hash, "beta_ex_ante": beta_ex,
                      "matched_no_news_policy_id": spec.get("matched_no_news_policy_id"),
-                     "cost_bps": {t: float(market.at[t, "cost_bps"]) for t in long_w}})
+                     "cost_bps": {t: float(market.at[t, "cost_bps"]) for t in long_w},
+                     # flags a backtest must read (review of PR #147, findings 6 and 8)
+                     "price_filter_uses_adjusted": bool(backfilled),
+                     "revisions_file_not_versioned": bool(backfilled and "revision" in need),
+                     "panel_universe_asof": (_config.ROLLING_COHORT_PANEL_UNIVERSE_ASOF
+                                             if spec["family"] in BAR_FAMILIES else None)})
         distinct.setdefault(hh, (long_w, short))
     controls = []
     for hh in sorted(distinct):
@@ -660,6 +668,9 @@ def birth(specs: dict, manifest: str, inputs: dict, *, backfilled: bool, born_ut
             "available_before_utc": inputs["available_before"].isoformat(),
             "backfilled": bool(backfilled), "forward_evidence": not backfilled, "born_utc": born_utc,
             "spec_manifest_sha256": manifest, "input_hashes": inputs["hashes"], "input_status": fstat,
+            "price_filter_uses_adjusted": bool(backfilled),
+            "n_books_price_filter_uses_adjusted": sum(r.get("price_filter_uses_adjusted") is True for r in rows),
+            "n_names_min_price_ambiguous": int(market["min_price_ambiguous"].sum()),
             "n_books": sum(r["status"] == "READY" for r in rows), "n_distinct_portfolios": len(distinct),
             "counts": counts, "books": rows, "controls": controls,
             "seed_tag": _config.ROLLING_COHORT_SEED_TAG, "k_random_controls": k_controls}
@@ -734,13 +745,15 @@ class Store:
         self.cohorts_dir.mkdir(parents=True, exist_ok=True)
         self.inputs_dir.mkdir(parents=True, exist_ok=True)
         snap = self.inputs_dir / f"{rec['cohort_id']}_{digest(inputs['hashes'])[:16]}"
-        if not snap.with_suffix(".market.parquet").exists():
-            inputs["market"].reset_index().to_parquet(snap.with_suffix(".market.parquet"), index=False)
-        if inputs["revision"] is not None and not snap.with_suffix(".revision.parquet").exists():
-            inputs["revision"].reset_index().to_parquet(snap.with_suffix(".revision.parquet"), index=False)
-        if inputs["news"] is not None and not snap.with_suffix(".news.json").exists():
-            _write_once(snap.with_suffix(".news.json"), json.dumps(inputs["news"]))
-        rec = dict(rec, input_snapshot_prefix=snap.name)
+        shas = {"market.parquet": _snapshot(snap.with_name(snap.name + ".market.parquet"),
+                                            lambda p: inputs["market"].reset_index().to_parquet(p, index=False))}
+        if inputs["revision"] is not None:
+            shas["revision.parquet"] = _snapshot(snap.with_name(snap.name + ".revision.parquet"),
+                                                 lambda p: inputs["revision"].reset_index().to_parquet(p, index=False))
+        if inputs["news"] is not None:
+            shas["news.json"] = _snapshot(snap.with_name(snap.name + ".news.json"),
+                                          lambda p: p.write_text(json.dumps(inputs["news"]), encoding="utf8"))
+        rec = dict(rec, input_snapshot_prefix=snap.name, input_snapshot_sha256=shas)
         _write_once(p, json.dumps(rec, sort_keys=True, allow_nan=False))
         return p
 
@@ -769,11 +782,30 @@ class Store:
         os.replace(tmp, p)
         return p
 
+    def append_drift(self, row: dict) -> None:
+        from backend.services import disk_guard
+        disk_guard.locked_append_line(self.out / "input_drift.jsonl", json.dumps(row, sort_keys=True, default=str),
+                                      fsync=True)
+
     def journal(self, row: dict) -> None:
         from backend.services import disk_guard
         self.out.mkdir(parents=True, exist_ok=True)
         disk_guard.locked_append_line(self.out / "runs.jsonl", json.dumps(row, sort_keys=True, default=str),
                                       fsync=True)
+
+
+def _snapshot(path: Path, write: Any) -> str:
+    """temp -> replace; an existing file is reused only when its size and sha256
+    equal the fresh write (a torn file from a crashed pass is replaced)."""
+    tmp = path.with_name(path.name + f".{uuid.uuid4().hex[:8]}.tmp")
+    write(tmp)
+    h = hashlib.sha256(tmp.read_bytes()).hexdigest()
+    if path.exists() and path.stat().st_size == tmp.stat().st_size \
+            and hashlib.sha256(path.read_bytes()).hexdigest() == h:
+        tmp.unlink()
+    else:
+        os.replace(tmp, path)
+    return h
 
 
 def _write_once(path: Path, text: str) -> None:
@@ -934,13 +966,18 @@ def mark_rows(cohorts: list[dict], bars: pd.DataFrame, *, through: pd.Timestamp,
                            inputs_hash=it["inputs_hash"], beta_ex_ante=it["beta_ex_ante"],
                            random_n=len(vals), random_mean_net=rmean,
                            excess_vs_random=None if rmean is None else net - rmean,
-                           seed=None, parent_holdings_hash=None)
+                           seed=None, parent_holdings_hash=None,
+                           price_filter_uses_adjusted=bool(it.get("price_filter_uses_adjusted", c["backfilled"])),
+                           revisions_file_not_versioned=bool(it.get("revisions_file_not_versioned", False)),
+                           panel_universe_asof=it.get("panel_universe_asof"))
             else:
                 row.update(policy_id=None, family="random_control", mechanism="random_same_band",
                            horizon_sessions=None, params_json=None, inputs_hash=None,
                            beta_ex_ante=None, random_n=None, random_mean_net=None,
                            excess_vs_random=None, seed=str(it["seed"]),
-                           parent_holdings_hash=it["parent_holdings_hash"])
+                           parent_holdings_hash=it["parent_holdings_hash"],
+                           price_filter_uses_adjusted=bool(c["backfilled"]), revisions_file_not_versioned=False,
+                           panel_universe_asof=_config.ROLLING_COHORT_PANEL_UNIVERSE_ASOF)  # drawn from the panel
             rows.append(row)
     return rows
 
@@ -1334,6 +1371,45 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
     else:
         raise RollingCohortRefused(f"unknown mode {mode!r}")
 
+    # Input drift: re-derive the inputs of cohorts born earlier (backfill: all in its
+    # range; step: the newest) and RECORD a differing hash. The book is never changed.
+    born_ids = {b["cohort_id"] for b in born}
+    if mode == "backfill":
+        lo_d = pd.Timestamp(date_from) if date_from is not None else anchor
+        hi_d = pd.Timestamp(date_to) if date_to is not None else last_bar
+        check = [c for k, c in sorted(existing.items()) if k not in born_ids and lo_d <= pd.Timestamp(k) <= hi_d]
+    else:
+        check = [existing[max(existing)]] if existing and max(existing) not in born_ids else []
+    drift: list[dict] = []
+    seen_drift = set()
+    drift_path = store.out / "input_drift.jsonl"
+    if drift_path.is_file():
+        for ln in drift_path.read_text(encoding="utf8").splitlines():
+            try:
+                x = json.loads(ln)
+                seen_drift.add((x["cohort_id"], x["input"], x["new_hash"]))
+            except (ValueError, KeyError):
+                continue
+    for c in check:
+        dec = pd.Timestamp(c.get("decision_date") or c["cohort_id"])
+        if dec not in bar_set:
+            continue
+        if not state["loaded"]:
+            state.update(loaded=True, revisions=_read_revisions(data_root),
+                         news=load_news_items(Path(data_root) / NEWS_REL))
+        fresh = build_inputs(bars=bars, revisions=state["revisions"], news_items=state["news"],
+                             cohort=dec, entry=pd.Timestamp(c["entry_session"]))
+        for key, old in sorted(c["input_hashes"].items()):
+            new = fresh["hashes"].get(key)
+            if new != old:
+                row_d = {"schema": "rolling_cohort_input_drift/1", "utc": now.isoformat(), "run_id": run_id,
+                         "cohort_id": c["cohort_id"], "input": key, "old_hash": old, "new_hash": new,
+                         "note": "the born book keeps its original inputs; this records that the source changed"}
+                drift.append(row_d)
+                if (c["cohort_id"], key, new) not in seen_drift:
+                    store.append_drift(row_d)
+                    seen_drift.add((c["cohort_id"], key, new))
+
     cohorts = [existing[k] for k in sorted(existing)]
     have = store.marks(columns=["book_id", "mark_k"])
     keys = set(zip(have["book_id"], have["mark_k"])) if len(have) else set()
@@ -1390,7 +1466,7 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
            "expected_last_session": expected_last.date().isoformat(),
            "price_wait_h": price_wait_h, "price_grace_h": grace_h, "reason": stale_reason,
            "prices_waiting": prices_waiting, "prices_stale": prices_stale,
-           "born": born, "missed": missed, "skipped": skipped,
+           "born": born, "missed": missed, "skipped": skipped, "input_drift": drift,
            "cohorts_total": len(cohorts), "cohorts_forward": len(fwd), "cohorts_live": live,
            "newest_cohort": max(existing) if existing else None, "newest_forward_cohort": newest_fwd,
            "forward_age_sessions": int(fwd_age), "cadence_sessions": cadence,
