@@ -947,33 +947,84 @@ def mark_rows(cohorts: list[dict], bars: pd.DataFrame, *, through: pd.Timestamp,
 
 # ─────────────────────────────── scoreboard ─────────────────────────────────
 
-def block_stats(values: list[float], session_idx: list[int], *, block: int, z: float) -> dict:
-    """Mean with SE on NON-OVERLAPPING cohort-date blocks (overlap-aware n)."""
+SE_METHOD = ("block means on STRICT non-overlapping blocks of 2 x horizon sessions of entry date "
+             "(a hold of `horizon` sessions cannot reach two blocks ahead, as in "
+             "xs_ranker.top_k_backtest's n_blocks_strict); Student t with n_blocks - 1 df")
+
+
+def block_stats(values: list[float], session_idx: list[int], *, horizon: int) -> dict:
+    """One test: the mean of strict-block means, its SE, a Student-t p and the MDE.
+
+    Blocks are 2 x `horizon` sessions wide on the ENTRY-session index: a hold of
+    `horizon` sessions entered in block b ends before block b + 2 begins, so block
+    means one apart are nearly independent and two apart fully. (Blocks of width
+    `horizon` overlapped by half, and a normal z on 2-12 of them labelled 5-22% of
+    pure noise; review of PR #147.) MDE = (t_{1-a/2} + t_{power}) x SE, n-1 df."""
+    from scipy import stats as S
+    alpha, power = float(_config.ROLLING_COHORT_ALPHA), float(_config.ROLLING_COHORT_POWER)
+    block = 2 * int(horizon)
+    out = {"n_cohorts": len(values), "block_sessions": block, "n_blocks_strict": 0, "mean": None,
+           "mean_rows": None, "se": None, "df": None, "t": None, "p": None, "t_crit": None, "mde": None}
     if not values:
-        return {"n_cohorts": 0, "n_blocks": 0, "mean": None, "se": None, "mde": None}
-    df = pd.DataFrame({"v": values, "b": [i // block for i in session_idx]})
+        return out
+    df = pd.DataFrame({"v": values, "b": [int(i) // block for i in session_idx]})
     bm = df.groupby("b")["v"].mean()
     n = int(len(bm))
-    se = float(bm.std(ddof=1) / math.sqrt(n)) if n >= 2 else None
-    return {"n_cohorts": int(len(df)), "n_blocks": n, "mean": float(df["v"].mean()),
-            "se": se, "mde": None if se is None else z * se}
+    out.update(n_blocks_strict=n, mean=float(bm.mean()), mean_rows=float(df["v"].mean()))
+    if n >= 2:
+        se = float(bm.std(ddof=1) / math.sqrt(n))
+        dof = n - 1
+        crit = float(S.t.ppf(1 - alpha / 2, dof))
+        out.update(se=se, df=dof, t_crit=crit, mde=(crit + float(S.t.ppf(power, dof))) * se)
+        if se > 0:
+            t = out["mean"] / se
+            out.update(t=t, p=float(2 * S.t.sf(abs(t), dof)))
+    return out
 
 
-def _verdict(st: dict) -> str:
-    if st["se"] is None or st["n_blocks"] < 2:
-        return f"CANNOT DETERMINE ({st['n_blocks']} non-overlapping block(s); need >= 2 for an error bar)"
-    if abs(st["mean"]) < st["mde"]:
-        return f"CANNOT DETERMINE (|mean| {abs(st['mean']):.4f} < MDE {st['mde']:.4f})"
-    return "OBSERVED DIFFERENCE BEYOND THE MDE (descriptive; not a claim)"
+def label_tests(stats: list[dict]) -> dict:
+    """Verdict per test, BH-FDR across every test of one run, and the header line.
+
+    Only a test with >= ROLLING_COHORT_MIN_STRICT_BLOCKS strict blocks can be
+    labelled; the BH step-up runs over exactly those. Mutates `stats` (adds
+    `verdict`, `bh_discovery`) and returns the header."""
+    alpha, min_b = float(_config.ROLLING_COHORT_ALPHA), int(_config.ROLLING_COHORT_MIN_STRICT_BLOCKS)
+    eligible = [s for s in stats if s["n_blocks_strict"] >= min_b and s["p"] is not None]
+    m = len(eligible)
+    order = sorted(range(m), key=lambda i: eligible[i]["p"])
+    kmax = 0
+    for rank, i in enumerate(order, 1):
+        if eligible[i]["p"] <= alpha * rank / m:
+            kmax = rank
+    disc = {id(eligible[order[r]]) for r in range(kmax)}
+    for s in stats:
+        n = s["n_blocks_strict"]
+        s["bh_discovery"] = id(s) in disc
+        if n < min_b:
+            s["verdict"] = f"CANNOT DETERMINE ({n} blocks of {min_b})"
+        elif s["p"] is None:
+            s["verdict"] = "CANNOT DETERMINE (no error bar: zero dispersion across blocks)"
+        elif s["bh_discovery"]:
+            s["verdict"] = (f"OBSERVED DIFFERENCE (BH-FDR q {alpha} over {m} distinct tests; "
+                            f"descriptive, not a claim)")
+        else:
+            s["verdict"] = f"CANNOT DETERMINE (p {s['p']:.3f}; not a BH-FDR discovery at q {alpha} over {m} tests)"
+    observed = sum(s["p"] < alpha for s in eligible)
+    return {"tests": len(stats), "eligible_tests": m, "min_strict_blocks": min_b, "alpha": alpha,
+            "crossings_expected_by_chance": alpha * m, "crossings_observed": int(observed),
+            "bh_discoveries": len(disc), "se_method": SE_METHOD,
+            "line": (f"crossings expected by chance: {alpha * m:.1f}; observed: {observed} (raw p < {alpha} "
+                     f"among {m} distinct tests with >= {min_b} strict blocks); BH-FDR discoveries: {len(disc)}")}
 
 
 def scoreboard(marks: pd.DataFrame, cohorts: list[dict], *, mark_k: int, sessions: list[pd.Timestamp]) -> dict:
-    z = float(_config.ROLLING_COHORT_MDE_Z)
+    """Per DISTINCT portfolio series (specs whose holdings agree in every cohort are
+    one test), per family, per declared pair. Forward view excludes backfill."""
     sidx = {s.date().isoformat(): i for i, s in enumerate(sessions)}
-    out: dict = {"schema": "rolling_cohort_scoreboard/1", "mark_k": mark_k, "mde_z": z,
+    out: dict = {"schema": "rolling_cohort_scoreboard/2", "mark_k": mark_k, "se_method": SE_METHOD,
                  "label_rule": "OBSERVED(n_cohorts) only; no promotion, no EARLY_EVIDENCE logic here",
                  "unit": "excess_same_share = book net - SPY at the same invested share (net of its cost)",
-                 "cohorts": [], "specs": [], "families": {}, "pairs": {}}
+                 "cohorts": [], "tests": [], "families": {}, "pairs": {}}
     for c in cohorts:
         ready = [b for b in c["books"] if b["status"] == "READY"]
         fam: dict = {}
@@ -999,37 +1050,54 @@ def scoreboard(marks: pd.DataFrame, cohorts: list[dict], *, mark_k: int, session
     if b.empty:
         out["note"] = f"no mark at {mark_k} sessions yet"
         return out
-    b["sidx"] = b["cohort_id"].map(sidx)
+    if b.duplicated(["book_id", "mark_k"]).any():
+        raise RollingCohortRefused("scoreboard refused: duplicate (book_id, mark_k) rows")
+    b["sidx"] = b["entry_session"].map(sidx)                      # blocks on the ENTRY session
     b = b[b["sidx"].notna()]
     b["sidx"] = b["sidx"].astype(int)
     for view, sub in (("forward", b[~b["backfilled"]]), ("all_incl_backfilled", b)):
-        specs_out = []
+        groups: dict = {}
         for pid, g in sub.groupby("policy_id"):
-            st = block_stats(g["excess_same_share"].tolist(), g["sidx"].tolist(), block=mark_k, z=z)
+            sig = tuple(sorted(zip(g["cohort_id"], g["holdings_hash"])))
+            groups.setdefault(sig, []).append((pid, g))
+        tests = []
+        for sig, members in groups.items():
+            g = members[0][1].sort_values("cohort_id")
+            st = block_stats(g["excess_same_share"].tolist(), g["sidx"].tolist(), horizon=mark_k)
             loco = [float(g.drop(index=i)["excess_same_share"].mean()) for i in g.index] if len(g) > 1 else []
             r = g["excess_vs_random"].dropna()
-            specs_out.append({"policy_id": pid, "family": g["family"].iloc[0], "mechanism": g["mechanism"].iloc[0],
-                              **st, "label": f"OBSERVED({st['n_cohorts']})", "verdict": _verdict(st),
-                              "distinct_portfolios": int(g["holdings_hash"].nunique()),
-                              "by_month": {k: float(v) for k, v in g.groupby(g["cohort_id"].str[:7])["excess_same_share"].mean().items()},
-                              "loco_min": min(loco) if loco else None, "loco_max": max(loco) if loco else None,
-                              "mean_excess_vs_random": float(r.mean()) if len(r) else None,
-                              "mean_excess_vs_spy": float(g["excess_vs_spy"].mean())})
-        out["specs" if view == "forward" else "specs_all"] = specs_out
+            tests.append({"test_id": digest(list(sig))[:16], "policy_ids": sorted(p for p, _ in members),
+                          "n_specs": len(members), "families": sorted({m[1]["family"].iloc[0] for m in members}),
+                          "mechanisms": sorted({m[1]["mechanism"].iloc[0] for m in members}),
+                          **st, "label": f"OBSERVED({st['n_cohorts']})",
+                          "distinct_portfolios": int(g["holdings_hash"].nunique()),
+                          "by_month": {k: float(v) for k, v in
+                                       g.groupby(g["cohort_id"].str[:7])["excess_same_share"].mean().items()},
+                          "loco_min": min(loco) if loco else None, "loco_max": max(loco) if loco else None,
+                          "mean_excess_vs_random": float(r.mean()) if len(r) else None,
+                          "mean_excess_vs_spy": float(g["excess_vs_spy"].mean())})
+        head = label_tests(tests)
+        head["specs_scored"] = int(sub["policy_id"].nunique())
+        out["tests" if view == "forward" else "tests_all"] = tests
+        out["header" if view == "forward" else "header_all"] = head
         fams = {}
         for fam, g in sub.groupby("family"):
             d = g.drop_duplicates(["cohort_id", "holdings_hash"])     # per DISTINCT portfolio
-            per_c = d.groupby("cohort_id")["excess_same_share"].mean()
-            st = block_stats(per_c.tolist(), [sidx[x] for x in per_c.index], block=mark_k, z=z)
-            fams[fam] = {**st, "books": int(len(g)), "distinct_portfolio_cohort_rows": int(len(d)),
-                         "verdict": _verdict(st)}
+            per_c = d.groupby(["cohort_id", "sidx"])["excess_same_share"].mean().reset_index()
+            st = block_stats(per_c["excess_same_share"].tolist(), per_c["sidx"].tolist(), horizon=mark_k)
+            fams[fam] = {**st, "books": int(len(g)), "distinct_portfolio_cohort_rows": int(len(d))}
+        fam_head = label_tests(list(fams.values()))
         out["families" if view == "forward" else "families_all"] = fams
+        out["families_header" if view == "forward" else "families_header_all"] = fam_head
     out["pairs"] = _pairs(b, cohorts)
-    sp = out.get("specs_all", [])
-    out["summary"] = {"specs_scored_forward": len(out.get("specs", [])), "specs_scored_all": len(sp),
-                      "cannot_determine_all": sum(s["verdict"].startswith("CANNOT") for s in sp),
-                      "median_mde_all": (float(np.median([s["mde"] for s in sp if s["mde"] is not None]))
-                                         if any(s["mde"] is not None for s in sp) else None)}
+    ta = out.get("tests_all", [])
+    out["summary"] = {"tests_forward": len(out.get("tests", [])), "tests_all": len(ta),
+                      "specs_scored_all": out.get("header_all", {}).get("specs_scored"),
+                      "cannot_determine_all": sum(s["verdict"].startswith("CANNOT") for s in ta),
+                      "line_all": out.get("header_all", {}).get("line"),
+                      "line_forward": out.get("header", {}).get("line"),
+                      "median_mde_all": (float(np.median([s["mde"] for s in ta if s["mde"] is not None]))
+                                         if any(s["mde"] is not None for s in ta) else None)}
     return out
 
 

@@ -273,9 +273,12 @@ def test_marks_table_is_append_only_and_honest(tmp_path):
     allm = R.Store(out).marks()
     assert not allm.duplicated(["book_id", "mark_k"]).any()
     board = json.loads(Path(r2["scoreboard"]).read_bytes())["boards"]["21"]
-    assert board["specs"] == []                                   # forward view: backfill excluded
-    assert board["specs_all"] and all(s["label"].startswith("OBSERVED(") for s in board["specs_all"])
-    assert all(s["verdict"].startswith("CANNOT DETERMINE") or s["mde"] is not None for s in board["specs_all"])
+    assert board["tests"] == []                                   # forward view: backfill excluded
+    assert board["tests_all"] and all(s["label"].startswith("OBSERVED(") for s in board["tests_all"])
+    assert all(s["verdict"].startswith("CANNOT DETERMINE") for s in board["tests_all"])   # < 6 strict blocks
+    assert "crossings expected by chance" in board["header_all"]["line"]
+    # one test per DISTINCT portfolio series: specs that always held the same names share it
+    assert sum(t["n_specs"] for t in board["tests_all"]) == board["header_all"]["specs_scored"]
     # a hedged momentum book pays SPY cost and borrow on its short leg
     if len(hedged):
         h = hedged[hedged["gross_short"] > 0]

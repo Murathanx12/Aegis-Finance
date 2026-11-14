@@ -53,6 +53,40 @@ def test_a_dead_price_feed_goes_degraded_and_due_cohorts_are_missed_then_born_la
     assert _reader(tmp_path, r7).status == "DEGRADED"              # the miss is reported once
 
 
+# ── finding 2: the scoreboard is calibrated under pure noise ─────────────────
+
+def _null_series(kind: str, n_blocks: int, rng, h: int = 21):
+    n_sessions = n_blocks * 2 * h
+    idx = list(range(0, n_sessions, 5))                           # weekly cohorts
+    if kind == "independent":
+        return list(rng.normal(0, 0.03, len(idx))), idx
+    daily = rng.normal(0, 0.03 / np.sqrt(h), n_sessions + h)       # overlapping 21-session holds
+    return [float(daily[i:i + h].sum()) for i in idx], idx
+
+
+@pytest.mark.parametrize("kind", ["independent", "overlapping"])
+@pytest.mark.parametrize("n_blocks", [6, 12])
+def test_pure_noise_specs_are_labelled_at_or_below_the_nominal_rate(kind, n_blocks):
+    rng = np.random.default_rng(1000 + n_blocks + (kind == "overlapping"))
+    stats = [R.block_stats(*_null_series(kind, n_blocks, rng), horizon=21) for _ in range(400)]
+    head = R.label_tests(stats)
+    raw = np.mean([s["p"] is not None and s["p"] < 0.05 for s in stats])
+    labelled = np.mean([s["verdict"].startswith("OBSERVED") for s in stats])
+    assert raw <= 0.05 + 0.03                                      # the t on strict blocks is calibrated
+    assert labelled <= 0.05 + 0.01                                 # BH across the run, never above nominal
+    assert head["crossings_expected_by_chance"] == pytest.approx(0.05 * head["eligible_tests"])
+    assert "crossings expected by chance" in head["line"]
+
+
+def test_too_few_strict_blocks_is_never_labelled():
+    rng = np.random.default_rng(3)
+    v, idx = _null_series("independent", 4, rng)
+    s = R.block_stats([x + 0.5 for x in v], idx, horizon=21)        # a huge mean, 4 strict blocks
+    R.label_tests([s])
+    assert s["n_blocks_strict"] == 4 and s["verdict"] == "CANNOT DETERMINE (4 blocks of 6)"
+    assert s["block_sessions"] == 42 and s["df"] == 3
+
+
 # ── finding 4: one run at a time; duplicate marks fail loud ─────────────────
 
 def test_a_second_concurrent_run_waits_cleanly(tmp_path, monkeypatch):

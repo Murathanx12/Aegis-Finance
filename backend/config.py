@@ -4580,8 +4580,12 @@ ROLLING_COHORT_STALE_CADENCES = 2
 #: that session's close; past it the step and both readers say DEGRADED
 #: ("bars have not advanced since <date>"). Measured: every historical wait <= 2 h.
 ROLLING_COHORT_PRICE_GRACE_H = 18.0
-#: MDE = z * SE (80% power, 5% two-sided).
-ROLLING_COHORT_MDE_Z = 2.8
+#: Scoreboard: Student t on strict blocks of 2 x horizon sessions, two-sided
+#: ALPHA, MDE at POWER; no label below MIN_STRICT_BLOCKS; BH-FDR at q = ALPHA
+#: across every distinct test of one run.
+ROLLING_COHORT_ALPHA = 0.05
+ROLLING_COHORT_POWER = 0.80
+ROLLING_COHORT_MIN_STRICT_BLOCKS = 6
 #: One pass per output folder: a second pass waits this long for `run.lock`,
 #: then journals WAIT_LOCK with rc 0.
 ROLLING_COHORT_LOCK_WAIT_S = 60.0
