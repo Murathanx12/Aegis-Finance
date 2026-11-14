@@ -365,9 +365,9 @@ def exposure_line(x: dict) -> str:
         w = x.get(f"{k}_why")
         if w and w not in whys:
             whys.append(w)
-    tail = f" (CANNOT DETERMINE: {'; '.join(w[:320] for w in whys)})" if whys else ""
+    tail = f" (CANNOT DETERMINE: {'; '.join(w[:800] for w in whys)})" if whys else ""
     if x.get("stamp_note") and isinstance(x.get("beta"), float):
-        tail += f" ({x['stamp_note'][:320]})"
+        tail += f" ({x['stamp_note'][:400]})"
     return ", ".join(parts) + tail
 
 
@@ -626,9 +626,9 @@ def _exp_whys(rows: list[dict]) -> list[str]:
             # collapse identical reasons (one bad beta makes all four CANNOT DETERMINE)
             reasons = sorted({w.split(': ', 1)[1] for w in whys})
             fields = ", ".join(w.split(':', 1)[0] for w in whys)
-            out.append(f"- {x['account']} — CANNOT DETERMINE ({fields}): {'; '.join(r[:360] for r in reasons)}")
+            out.append(f"- {x['account']} — CANNOT DETERMINE ({fields}): {'; '.join(r[:800] for r in reasons)}")
         if e.get("stamp_note") and isinstance(e.get("beta"), float):
-            out.append(f"- {x['account']} — beta window: {e['stamp_note'][:360]}")
+            out.append(f"- {x['account']} — beta window: {e['stamp_note'][:400]}")
     return ([""] + out) if out else []
 
 
