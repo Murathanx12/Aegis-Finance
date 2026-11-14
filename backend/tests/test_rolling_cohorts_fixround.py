@@ -104,6 +104,30 @@ def test_a_changed_grading_config_is_refused_by_name(tmp_path, monkeypatch):
     assert run("step", root, out, specs, now + timedelta(minutes=2))["rc"] == 0
 
 
+# ── finding 5: one clock -- a 1-day spec sees the 24 h before the cutoff ────
+
+def test_one_day_revision_specs_see_the_day_before_the_cutoff(tmp_path):
+    d, e = DAYS[ANCHOR_I], DAYS[ANCHOR_I + 1]
+    assert (e - d).days == 1                                     # the fixture's cohort is mid-week
+    root = make_root(tmp_path, ANCHOR_I + 1)
+    rv = pd.read_parquet(root / R.REVISIONS_REL)
+    fresh = [dict(ticker="S03", event_date=str(d + pd.Timedelta(hours=15)), firm=f"N{f}", target_action="Raises",
+                  prior_target=50.0, current_target=60.0, pit_safe=True,
+                  first_seen_utc=(d + pd.Timedelta(hours=18)).tz_localize("UTC").isoformat()) for f in range(5)]
+    pd.concat([rv, pd.DataFrame(fresh)], ignore_index=True).to_parquet(root / R.REVISIONS_REL, index=False)
+    full = json.loads(R.Path(subset_specs(tmp_path)).read_bytes())
+    allspecs = json.loads((R.REPO / "docs/TRIALS/ROLLING-COHORTS-SPECIFICATIONS-v2.json").read_bytes())
+    full["specifications"] = [s for s in allspecs["specifications"]
+                              if s["family"] == "revision_flow" and s["max_age_days"] == 1][:6]
+    sp = tmp_path / "oneday.json"
+    sp.write_text(json.dumps(full), encoding="utf8")
+    run("step", root, tmp_path / "out", sp, utc(d))
+    _, rec = _books(tmp_path / "out", d)
+    ready = [b for b in rec["books"] if b["status"] == "READY"]
+    assert ready and all(set(b["long"]) == {"S03"} for b in ready)
+    assert rec["decision_utc"] == rec["available_before_utc"]      # one clock
+
+
 # ── finding 7: news versions cached after the cutoff never change a cohort ──
 
 def test_a_news_retype_cached_after_the_cutoff_does_not_change_a_backfilled_cohort(tmp_path):

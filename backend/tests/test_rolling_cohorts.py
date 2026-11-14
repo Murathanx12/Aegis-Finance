@@ -188,10 +188,10 @@ def test_backfill_never_reads_a_row_dated_on_or_after_the_entry(tmp_path):
     bars.to_parquet(poison / R.BARS_REL, index=False)
     rv = pd.read_parquet(poison / R.REVISIONS_REL)
     late = []
-    for f in range(12):                                               # dated on/after D, or first seen after the cutoff
-        late.append(dict(ticker="S40", event_date=str(d + pd.Timedelta(hours=15)), firm=f"P{f}", target_action="Raises",
-                         prior_target=10.0, current_target=30.0, pit_safe=True,
-                         first_seen_utc=(d + pd.Timedelta(hours=16)).tz_localize("UTC").isoformat()))
+    for f in range(12):                                               # dated on/after the entry date E (the cutoff),
+        late.append(dict(ticker="S40", event_date=str(e + pd.Timedelta(hours=1)), firm=f"P{f}", target_action="Raises",
+                         prior_target=10.0, current_target=30.0, pit_safe=True,    # or first seen after it
+                         first_seen_utc=(e + pd.Timedelta(hours=2)).tz_localize("UTC").isoformat()))
         late.append(dict(ticker="S41", event_date=str(d - pd.Timedelta(days=1)), firm=f"P{f}", target_action="Raises",
                          prior_target=10.0, current_target=30.0, pit_safe=True,
                          first_seen_utc=(e + pd.Timedelta(hours=1)).tz_localize("UTC").isoformat()))

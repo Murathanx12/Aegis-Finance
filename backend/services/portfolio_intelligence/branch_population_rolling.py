@@ -21,21 +21,18 @@ What changes, and what does not:
 * Every mark is one row of one append-only table (`marks/part-<run>.parquet`),
   which a backtest can read later.
 
-THE TWO CLOCKS OF A COHORT (declared in the strategy contract)
-==============================================================
+THE ONE CLOCK OF A COHORT (strategy contract v2)
+===============================================
 For cohort date D (a closed XNYS session) the book enters at the OPEN of the
-first session E after D.
+first session E after D. The cutoff is E at 00:00 UTC, before any E opening
+bell. Every input row must be dated AND first seen strictly before it: bars
+dated <= D, revisions with `event_date` and `first_seen_utc` before it, news
+with `cached_utc`/`first_seen`/`published` before it (news versions are
+deduplicated only after the cutoff). The same cutoff is the reference for
+every spec's `max_age_days` freshness (`decision_utc == available_before_utc`).
 
-* `available_before_utc` = E at 00:00 UTC -- the information cutoff. Every
-  input row must be dated strictly before it: bars dated <= D, revisions with
-  `event_date < D` (revision_flow's strict rule) AND `first_seen_utc` before
-  the cutoff, news with `cached_utc`/`first_seen`/`published` before it. This
-  is before any E opening bell, so nothing acted on was not yet public.
-* `decision_utc` = D at 21:00 UTC (at or after the US close in both DST
-  regimes) -- the reference clock for each spec's `max_age_days` freshness.
-
-The forward step and the backfill use the SAME two clocks, so a backfilled
-cohort is what the forward step would have built from the rows still on disk.
+The forward step and the backfill use the SAME clock, so a backfilled cohort is
+what the forward step would have built from the rows still on disk.
 A backfilled row is flagged `backfilled: true`: never forward evidence, usable
 as backtest data.
 """
@@ -231,9 +228,15 @@ def schedule(sessions: list[pd.Timestamp], *, anchor: Any, cadence: int) -> list
 
 
 def clocks(cohort: pd.Timestamp, entry: pd.Timestamp) -> tuple[datetime, datetime]:
-    decision = datetime.combine(cohort.date(), time(21, 0), tzinfo=timezone.utc)
-    available = datetime.combine(entry.date(), time(0, 0), tzinfo=timezone.utc)
-    return decision, available
+    """ONE clock (contract v2): the cutoff = the entry session E at 00:00 UTC.
+
+    It admits a row (dated and first seen strictly before it) AND it is the
+    reference for every `max_age_days`, so "fresh in the last day" means the 24 h
+    before the cutoff. Returned twice for the record's two historical field names.
+    v1 of this module admitted revisions before D 00:00 but aged them from
+    D 21:00, which left a 1-day spec a 3-hour window (review of PR #147)."""
+    cutoff = datetime.combine(entry.date(), time(0, 0), tzinfo=timezone.utc)
+    return cutoff, cutoff
 
 
 def _utc(v: Any) -> Optional[datetime]:
@@ -316,16 +319,21 @@ def market_features(bars: pd.DataFrame, cohort: pd.Timestamp) -> pd.DataFrame:
 
 def revision_features(revisions: pd.DataFrame, *, cohort: pd.Timestamp,
                       available_before: datetime) -> tuple[pd.DataFrame, dict]:
-    """revision_flow.compute on rows first seen before the cutoff, events < D."""
+    """revision_flow.compute at the ONE cutoff: rows first seen AND dated before it.
+
+    `event_date` is naive UTC (the vendor's clock, measured in the review); the
+    window is revision_flow's [cutoff - 90 d, cutoff), strict, and
+    `days_since_last` is measured from the cutoff."""
     from backend.services import revision_flow as rf
     if "pit_safe" not in revisions.columns or "first_seen_utc" not in revisions.columns:
         raise RollingCohortRefused("revisions carry no pit_safe / first_seen_utc column")
+    cut = pd.Timestamp(available_before).tz_convert("UTC").tz_localize(None)
     seen = pd.to_datetime(revisions["first_seen_utc"], utc=True, errors="coerce")
     keep = seen.notna() & (seen < pd.Timestamp(available_before))
     frame = revisions[keep.to_numpy()]
     event = pd.to_datetime(frame["event_date"], errors="coerce")
-    frame = frame[(event < cohort).to_numpy()]
-    flow = rf.compute(frame, asof=cohort)
+    frame = frame[(event < cut).to_numpy()]
+    flow = rf.compute(frame, asof=cut)
     newest = seen[keep].max()
     n_events = int(flow["n_events"].sum()) if len(flow) else 0
     return flow, {"n_events_90d": n_events, "n_tickers": int(len(flow)),
@@ -456,7 +464,7 @@ def v1_rows(spec: dict, *, market: pd.DataFrame, revision: Optional[pd.DataFrame
             news: Optional[list[dict]], decision: datetime, cohort: pd.Timestamp) -> list[dict]:
     """Rows in the shape `branch_population.targets` reads, after v1's filters."""
     rows: list[dict] = []
-    base = datetime.combine(cohort.date(), time(), tzinfo=timezone.utc)
+    base = decision                     # revision_flow measured days_since_last from this same cutoff
     seg_ok = (lambda t: market.at[t, "segment"] == "liquid") if spec["liquidity_segment"] == "liquid" else (lambda t: True)
     limit = spec["max_age_days"] * 86400
     if "revision" in spec["input_families"] and revision is not None:
