@@ -99,7 +99,7 @@ def data_root(tmp_path: Path) -> Path:
     d.mkdir(parents=True)
     (d / "aaa.json").write_text(json.dumps({
         "publisher": "barrons", "url": "https://www.barrons.com/articles/apple-x", "page_kind": "article",
-        "page_class": "OK", "title": "Apple Sells More Phones | Barron's", "first_seen_utc": _iso(NOW - timedelta(hours=2)),
+        "page_class": "OK", "title": "Apple Shares Rise on Phone Sales | Barron's", "first_seen_utc": _iso(NOW - timedelta(hours=2)),
         "published_utc": None, "text": "Apple said ...", "reached_by": {"lane": "search:AAPL", "ticker": "AAPL"},
         "tickers_named": ["AAPL", "A"], "outbound_links": []}), encoding="utf-8")
     filler = "Lorem ipsum dolor sit amet. " * 40
@@ -119,6 +119,16 @@ def data_root(tmp_path: Path) -> Path:
         "text": "More Videos 01:21 Nvidia investigates its CEO 02:09 Will Huang remain CEO of Nvidia? "
                 "Oil Falls as Iran Talks Resume in Qatar. " + filler,
         "reached_by": {"lane": "related"}, "tickers_named": [], "outbound_links": []}), encoding="utf-8")
+    (d / "ggg.json").write_text(json.dumps({
+        "publisher": "barrons", "url": "https://www.barrons.com/articles/retire-4", "page_kind": "article",
+        "page_class": "OK", "title": "3 Moves Retirees Can Make in a Nervous Market", "first_seen_utc": _iso(NOW - timedelta(hours=7)),
+        "text": "3 Moves Retirees Can Make in a Nervous Market. NVDA -3.2% " + filler,
+        "reached_by": {"lane": "front"}, "tickers_named": ["NVDA"], "outbound_links": []}), encoding="utf-8")
+    (d / "hhh.json").write_text(json.dumps({
+        "publisher": "barrons", "url": "https://www.barrons.com/articles/fruit-5", "page_kind": "article",
+        "page_class": "OK", "title": "My Quest to Find the Crispest Apple in America", "first_seen_utc": _iso(NOW - timedelta(hours=8)),
+        "text": "My Quest to Find the Crispest Apple in America. An Apple a day; the Apple orchard. " + filler,
+        "reached_by": {"lane": "front"}, "tickers_named": [], "outbound_links": []}), encoding="utf-8")
     (d / "bbb.json").write_text(json.dumps({
         "publisher": "barrons", "url": "https://www.barrons.com/", "page_kind": "front", "page_class": "OK",
         "title": "front", "first_seen_utc": _iso(NOW - timedelta(hours=3)), "reached_by": {"lane": "front"},
@@ -185,7 +195,7 @@ def test_tagging_rules_and_common_word_traps(data_root, paths, tmp_path):
     # name match, SEC by CIK, reader lane, reader front link, cased alias
     assert ("NVDA", "name_match") in tags["Nvidia Shares Fall After Earnings"]
     assert ("SOLI", "sec_cik") in next(v for k, v in tags.items() if "Solidion" in k)
-    apple = tags["Apple Sells More Phones"]
+    apple = tags["Apple Shares Rise on Phone Sales"]
     assert ("AAPL", "source_field") in apple and not any(s == "A" for s, _ in apple)
     assert ("NVDA", "name_match") in tags["Nvidia Stock Is Down. Here Is Why."]
     assert "Subscribe" not in tags and "Bond yields climb as the Fed waits" not in tags
@@ -201,6 +211,9 @@ def test_tagging_rules_and_common_word_traps(data_root, paths, tmp_path):
     assert "Should I keep going to free annuity dinners?" not in tags
     assert ("TINY", "reader_lane") in tags["Tinycap Widgets Doubles Its Dividend"]
     assert "Oil Falls as Iran Talks Resume in Qatar" not in tags
+    # a quote chip in tickers_named is not news about NVDA; the fruit is not the company
+    assert "3 Moves Retirees Can Make in a Nervous Market" not in tags
+    assert "My Quest to Find the Crispest Apple in America" not in tags
     assert rec["counts"].get("reader_lane_unconfirmed", 0) >= 1
 
 

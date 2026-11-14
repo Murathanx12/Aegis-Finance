@@ -228,6 +228,7 @@ class Tagger:
             if s in self.symbols:
                 cased[alias] = s
         self.cased = cased
+        self.cased_need_context = set(C.TICKER_HUB_CASED_ALIASES_NEED_CONTEXT)
         self._cased_rx = (re.compile(r"(?<![A-Za-z0-9])(" + "|".join(
             re.escape(a) for a in sorted(cased, key=len, reverse=True)) + r")(?![A-Za-z0-9\-])")
             if cased else None)
@@ -291,13 +292,33 @@ class Tagger:
             out.append({"t": DA.norm_ticker(sym), "m": m, "rule": rule, "where": where})
         if self._cased_rx is not None:
             seen = {o["t"] for o in out}
+            others = bool(out)
             for mm in self._cased_rx.finditer(text):
                 s = self.cased.get(mm.group(1))
                 if s and s not in seen:
+                    if mm.group(1) in self.cased_need_context and not (
+                            others or self._company_context(text, mm.start(), mm.end())):
+                        self.refused[f"cased_alias_no_context:{mm.group(1)}"] += 1
+                        continue
                     seen.add(s)
                     out.append({"t": s, "m": "name_match", "rule": f"cased_alias:{mm.group(1)}",
                                 "where": where})
         return out
+
+    @staticmethod
+    def _company_context(text: str, start: int, end: int) -> bool:
+        """A possessive ("Apple's"), an attached corporate cue ("Apple shares", "Apple Inc"),
+        a context word anywhere in the text (TICKER_HUB_CASED_CONTEXT_WORDS), or a corporate
+        cue word within the news_entities window."""
+        nxt = text[end:end + 2]
+        if nxt in ("'s", "’s"):
+            return True
+        if EN._ADJ_CUE.match(text[end:end + 30]):
+            return True
+        low = text.lower()
+        if any(w in low for w in C.TICKER_HUB_CASED_CONTEXT_WORDS):
+            return True
+        return NE._cue_near(low, start, end - start)
 
     def confirmed(self, sym: str, title: str, body: str) -> bool:
         """Does the row's own text name `sym` (title, or body with one mention)?"""
@@ -505,9 +526,16 @@ def _reader_rows(pub_dir: str, page: dict, tagger: Tagger, now: datetime,
         if g_lane and not tagger.confirmed(lane_t, title, text):
             stats["reader_lane_unconfirmed"] += 1
             g_lane = []
-        g_named = [{**t, "rule": "tickers_named"}
-                   for t in tagger.source_field_tags(_as_list(page.get("tickers_named")), [])
-                   if t["t"] not in tagger.bare]
+        # `tickers_named` includes quote chips ("NVDA -3.2%") from the page's market strip,
+        # so a Barron's retirement column carried NVDA: kept only when the text names it.
+        g_named = []
+        for t in tagger.source_field_tags(_as_list(page.get("tickers_named")), []):
+            if t["t"] in tagger.bare:
+                continue
+            if tagger.confirmed(t["t"], title, text):
+                g_named.append({**t, "rule": "tickers_named"})
+            else:
+                stats["tickers_named_unconfirmed"] += 1
         tags = merge_tags(g_named, g_lane, tagger.text_tags(title, "title"), tagger.body_tags(text))
         stats[f"rows_read:{src}"] += 1
         if not tags:

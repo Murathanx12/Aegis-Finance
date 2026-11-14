@@ -7015,6 +7015,16 @@ TICKER_HUB_SKIP_PAGE_KINDS: tuple = ("stock_text", "media", "front_text")
 #: issuer table. "Apple" is the one accepted risk (the fruit, capitalised in a title).
 TICKER_HUB_CASED_ALIASES: dict = {"Meta": "META", "AMD": "AMD", "TSMC": "TSM", "Apple": "AAPL",
                                   "Facebook": "META", "AWS": "AMZN"}
+#: Cased aliases that are also common nouns: taken only with company context (a possessive,
+#: an attached cue, a cue word nearby, or another company named in the same text). The final
+#: real build tagged WSJ's "My Quest to Find the Crispest Apple in America" AAPL.
+TICKER_HUB_CASED_ALIASES_NEED_CONTEXT: tuple = ("Apple",)
+#: Words anywhere in the same text that also give that context ("Apple unveils new iPhone",
+#: "Apple hits fresh all-time intraday high"). Lowercase, substring.
+TICKER_HUB_CASED_CONTEXT_WORDS: tuple = ("iphone", "ipad", "macbook", "airpods", "app store",
+                                         "tim cook", "cupertino", "all-time high", "intraday",
+                                         "market cap", "market value", "trillion", "nasdaq",
+                                         "s&p 500", "dow jones", "wall street")
 #: Share classes read together on one ticker page.
 TICKER_HUB_SIBLINGS: dict = {"GOOGL": ("GOOG",), "GOOG": ("GOOGL",), "BRK.B": ("BRK.A",),
                              "BRK.A": ("BRK.B",)}
