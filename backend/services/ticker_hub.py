@@ -386,13 +386,26 @@ def _corpus_files(corpus: Path, cutoff_day: str) -> list[tuple[str, Path]]:
 
 def _read_new_lines(path: Path, start: int, end: int) -> tuple[list[str], int]:
     """Complete lines in [start, end); returns (lines, new offset)."""
+    lines, off = [], start
+    for line, line_end in _read_new_lines_at(path, start, end):
+        lines.append(line)
+        off = line_end
+    return lines, off
+
+
+def _read_new_lines_at(path: Path, start: int, end: int) -> list[tuple[str, int]]:
+    """Complete lines in [start, end), each with the byte offset just past it."""
     with open(path, "rb") as fh:
         fh.seek(start)
         data = fh.read(max(0, end - start))
-    cut = data.rfind(b"\n")
-    if cut < 0:
-        return [], start
-    return data[:cut + 1].decode("utf-8", errors="replace").splitlines(), start + cut + 1
+    out, pos = [], 0
+    while True:
+        nl = data.find(b"\n", pos)
+        if nl < 0:
+            break
+        out.append((data[pos:nl].decode("utf-8", errors="replace").rstrip("\r"), start + nl + 1))
+        pos = nl + 1
+    return out
 
 
 def _as_list(v: Any) -> list:
@@ -875,16 +888,24 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
     new_rows: list[dict] = []
     newest: dict = state.setdefault("newest_per_source", {})
     for src, f, rel, start, end in work:
-        lines, off = _read_new_lines(f, start, end)
-        for line in lines:
+        off = start
+        for line, line_end in _read_new_lines_at(f, start, end):
             try:
                 o = json.loads(line)
             except ValueError:
                 stats["bad_json_lines"] += 1
+                off = line_end
                 continue
             if not isinstance(o, dict):
                 stats["bad_json_lines"] += 1
+                off = line_end
                 continue
+            known = DA._utc(o.get("first_seen_utc")) or DA.timed_utc(o.get("published_utc"))
+            if known is not None and known > now:
+                # written after this build's clock: the cursor stops here, the next build reads it
+                stats["deferred_after_now"] += 1
+                break
+            off = line_end
             r = _corpus_row(src, o, tagger, typed, now, stats)
             fs = o.get("first_seen_utc") or o.get("read_utc")
             if isinstance(fs, str) and fs > (newest.get(src) or "") and fs <= _iso(now):
@@ -910,6 +931,7 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
                 if prev.get("mtime_ns") == mt:
                     continue
                 seen = set(prev.get("seen") or [])
+                deferred = 0
                 names = sorted(n for n in os.listdir(day) if n.endswith(".json"))
                 for name in names:
                     if name in seen:
@@ -919,16 +941,24 @@ def _build_locked(P: dict, hd: Path, now: datetime, index_days: int, t0: float,
                     except (OSError, ValueError):
                         stats["reader_pages_unreadable"] += 1
                         continue
-                    seen.add(name)
                     if not isinstance(page, dict):
+                        seen.add(name)
                         continue
+                    pfs = DA._utc(page.get("first_seen_utc"))
+                    if pfs is not None and pfs > now:
+                        # first seen after this build's clock: left unseen for the next build
+                        deferred += 1
+                        stats["deferred_after_now"] += 1
+                        continue
+                    seen.add(name)
                     stats["reader_pages_read"] += 1
                     new_rows.extend(_reader_rows(pub.name, page, tagger, now, stats))
                     fs = page.get("first_seen_utc")
                     s = f"reader:{pub.name}"
                     if isinstance(fs, str) and fs > (newest.get(s) or "") and fs <= _iso(now):
                         newest[s] = fs
-                rd_state[key] = {"mtime_ns": mt, "seen": sorted(seen)}
+                # a deferred page keeps the folder dirty, so the next build looks again
+                rd_state[key] = {"mtime_ns": None if deferred else mt, "seen": sorted(seen)}
 
     # merge into month shards
     keys: dict = state.setdefault("keys", {})

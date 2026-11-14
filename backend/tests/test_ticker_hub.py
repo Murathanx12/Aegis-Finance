@@ -248,6 +248,28 @@ def test_incremental_build_reads_only_new_rows(data_root, paths, tmp_path):
     assert any(r["title"] == "Nvidia (NVDA) unveils a new chip" for r in h["news"])
 
 
+def test_rows_first_seen_after_the_build_clock_wait_for_the_next_build(data_root, paths, tmp_path):
+    """A row or page written while a long build runs is newer than the build's `now`; it must be
+    read by the NEXT build, not marked as read and lost (the second real build lost an FT link)."""
+    out = tmp_path / "hub"
+    _append(data_root, "wsj_tech", [_row("wsj_tech", "Nvidia (NVDA) future headline", minutes_ago=-60)])
+    d = data_root / "news_corpus" / "dowjones" / "ft" / DAY
+    d.mkdir(parents=True)
+    (d / "fff.json").write_text(json.dumps({
+        "publisher": "ft", "url": "https://www.ft.com/", "page_kind": "front", "page_class": "OK", "title": "ft",
+        "first_seen_utc": _iso(NOW + timedelta(minutes=30)), "reached_by": {"lane": "front"},
+        "outbound_links": [{"url": "https://www.ft.com/content/x", "text": "Nvidia exposed to possible lawsuits after the exit"}]}),
+        encoding="utf-8")
+    first = _build(data_root, paths, out)
+    titles = {r["title"] for r in TH.iter_index_rows(out)}
+    assert "Nvidia (NVDA) future headline" not in titles
+    assert "Nvidia exposed to possible lawsuits after the exit" not in titles
+    assert first["counts"]["deferred_after_now"] == 2
+    _build(data_root, paths, out, now=NOW + timedelta(hours=2))
+    titles = {r["title"] for r in TH.iter_index_rows(out)}
+    assert {"Nvidia (NVDA) future headline", "Nvidia exposed to possible lawsuits after the exit"} <= titles
+
+
 def test_stale_flag_compares_the_build_time_with_now(data_root, paths, tmp_path):
     out = tmp_path / "hub"
     _build(data_root, paths, out)
