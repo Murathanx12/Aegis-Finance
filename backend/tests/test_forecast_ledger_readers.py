@@ -45,6 +45,7 @@ NAMES_THE_FILE: dict[str, str] = {
     "backend/services/discovery_autopsy.py": "via the layer (exists, logical_lines); the default path only",
     "backend/services/event_nodes.py": "via the layer (exists, logical_lines); the default path only",
     "backend/services/expected_return.py": "via the layer (forecast_reputation.load_ledger)",
+    "backend/services/ticker_hub.py": "via the layer (exists, fingerprint, logical_lines); the default path only",
     "backend/services/fast_mover_forensics.py": "via the layer (logical_lines)",
     "backend/services/forecast_reputation.py": "via the layer (load_ledger -> read_rows)",
     "backend/services/legibility.py": "via the layer (read_rows, fingerprint)",

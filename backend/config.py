@@ -7047,6 +7047,118 @@ EVENT_NODES_FOREIGN_NAME_ALIASES: dict = {
     "美光公司": ("MU", "Micron's Chinese name with 'company' (美光公司)"),
     "台灣美光": ("MU", "Micron's Taiwan entity (台灣美光)"),
 }
+# ── TICKER HUB (ROADMAP CH-22 / M-universe: one page per ticker) ─────────────────
+#: `backend/services/ticker_hub.py` indexes the local news corpus by ticker
+#: (`python -m scripts.ticker_hub build`). The cache lives under `<data root>/<dirname>`.
+TICKER_HUB_DIRNAME = "ticker_hub"
+#: A first build indexes corpus day files / reader day folders at most this old.
+TICKER_HUB_INDEX_DAYS = 90
+#: The index is STALE (payload says so, with its age) past this many hours.
+TICKER_HUB_STALE_HOURS = 6.0
+#: Body characters handed to the strict resolver per row (titles are always read whole).
+TICKER_HUB_BODY_CHARS = 4000
+#: In a body longer than this (a reader page snapshot carries sidebars and "most read"
+#: lists) an issuer NAME must occur at least TICKER_HUB_BODY_MIN_MENTIONS times; the first
+#: real build tagged "Trump says war with Iran is over" (AP) NVDA from a sidebar headline.
+TICKER_HUB_SHORT_BODY_CHARS = 600
+TICKER_HUB_BODY_MIN_MENTIONS = 2
+#: Page-chrome phrases cut from reader bodies before tagging (BBC prints "Add as preferred
+#: on Google" on every article; share buttons name Facebook).
+TICKER_HUB_BODY_BOILERPLATE: tuple = ("add as preferred on google", "share on facebook",
+                                      "follow us on facebook", "sign in with google",
+                                      "get it on google play", "continue with google",
+                                      "continue with facebook", "share via facebook")
+#: More single-word names that are also surnames, places or adjectives in this corpus's
+#: titles (first real build: "Rogers", "Lindsay", "Manchester", "Costar" = co-star,
+#: "Bullish"; fix-round about-tier sample: "NATO Waters" -> WAT, "Universal early childhood
+#: education" -> UVV, "Scott Kirby" -> KEX); like EVENT_NODES_COMMON_WORD_NAMES they then
+#: need an ATTACHED cue.
+TICKER_HUB_COMMON_WORD_NAMES: tuple = ("rogers", "lindsay", "manchester", "costar", "bullish",
+                                       "waters", "universal", "kirby")
+#: Name keys that never tag a row in the hub ("Financial Institutions in Asia ...").
+TICKER_HUB_DROP_NAME_KEYS: tuple = ("financial institutions",)
+#: A reader front/search-page link becomes a headline row only with this much text.
+TICKER_HUB_MIN_LINK_CHARS = 25
+TICKER_HUB_MIN_LINK_WORDS = 4
+#: Request caps.
+TICKER_HUB_DEFAULT_DAYS = 30
+TICKER_HUB_MAX_DAYS = 120
+TICKER_HUB_NEWS_LIMIT = 200
+TICKER_HUB_FEED_LIMIT = 500
+TICKER_HUB_FACET_TOP = 40
+TICKER_HUB_SECTOR_PEERS = 25
+#: Sources that are not headlines (search pages, media pages) and are not indexed.
+TICKER_HUB_SKIP_SOURCES: tuple = ("social", "media_transcripts", "dj_digest_inbox")
+#: Reader page kinds that are not news (quote pages, media pages).
+TICKER_HUB_SKIP_PAGE_KINDS: tuple = ("stock_text", "media", "front_text")
+#: Well-known short names the strict resolver cannot take (under its 5-character
+#: floor, or ambiguous without a cue). CASE-SENSITIVE, whole word, symbol must be in the
+#: issuer table. "Apple" is the one accepted risk (the fruit, capitalised in a title).
+TICKER_HUB_CASED_ALIASES: dict = {"Meta": "META", "AMD": "AMD", "TSMC": "TSM", "Apple": "AAPL",
+                                  "Facebook": "META", "AWS": "AMZN"}
+#: Cased aliases that are also common nouns: taken only with company context (a possessive,
+#: an attached cue, a cue word nearby, or another company named in the same title). The final
+#: real build tagged a food column about apple varieties AAPL.
+TICKER_HUB_CASED_ALIASES_NEED_CONTEXT: tuple = ("Apple",)
+#: Words anywhere in the same text that also give that context ("Apple unveils new iPhone",
+#: "Apple hits fresh all-time intraday high"). Lowercase, substring.
+TICKER_HUB_CASED_CONTEXT_WORDS: tuple = ("iphone", "ipad", "macbook", "airpods", "app store",
+                                         "tim cook", "cupertino", "all-time high", "intraday",
+                                         "market cap", "market value", "trillion", "nasdaq",
+                                         "s&p 500")
+#: Share classes read together on one ticker page.
+TICKER_HUB_SIBLINGS: dict = {"GOOGL": ("GOOG",), "GOOG": ("GOOGL",), "BRK.B": ("BRK.A",),
+                             "BRK.A": ("BRK.B",)}
+#: Fix round (review of PR #145). Index layout version: a cache written by another version
+#: is rebuilt from scratch, never mixed (row ids changed in v2).
+TICKER_HUB_INDEX_SCHEMA = "ticker-hub-index/2"
+#: Boilerplate cut from a row's body BEFORE tagging, per source-id prefix ("*" = every
+#: source). Google News ends every cluster with a "full coverage" link in the edition's
+#: language; one "Google" in it tagged GOOGL on ~4,100 unrelated rows (review F1).
+TICKER_HUB_SOURCE_BOILERPLATE: dict = {
+    "google_news_rss_": ("See more headlines and perspectives on Google News",
+                         "See more headlines & perspectives on Google News",
+                         "View Full Coverage on Google News",
+                         "在Google 新闻上查看更多头条新闻和观点",
+                         "前往 Google 新聞瀏覽更多頭條新聞和觀點",
+                         "Google ニュースで見出しと意見をもっと見る",
+                         "Google 뉴스에서 헤드라인 및 의견 더보기"),
+}
+#: A publisher's or aggregator's OWN ticker is never taken from its body (page chrome,
+#: footers, "on Google News"); only from the title. Source-id prefix -> symbols.
+TICKER_HUB_PUBLISHER_TICKERS: dict = {
+    "google_news_rss_": ("GOOGL", "GOOG"),
+    "dj_reader_": ("NWSA", "NWS"), "wsj_": ("NWSA", "NWS"), "mw_": ("NWSA", "NWS"),
+    "barrons_magazine": ("NWSA", "NWS"), "reader:wsj": ("NWSA", "NWS"),
+    "reader:barrons": ("NWSA", "NWS"), "reader:marketwatch": ("NWSA", "NWS"),
+    "reader:cnbc": ("CMCSA",), "reader:yahoo": ("YHOO",),
+}
+#: Reader headline links that are quote chips, not news ("TSEM Tower Semiconductor Ltd.
+#: 154.61 -11.87 (-7.13%)", "NVDA, price 164.10, down 5.55 percent").
+TICKER_HUB_QUOTE_CHIP_PATTERNS: tuple = (
+    r"^[A-Z][A-Z.\-]{0,6}\s.*\s[+\-]?\d[\d,]*\.\d+\s[+\-]\d[\d,]*\.?\d*\s\([+\-]?\d+(?:\.\d+)?%\)$",
+    r"^[A-Z][A-Z.\-]{0,6},\s*price\s[\d,.]+,\s*(?:up|down)\s[\d.]+\s*percent$",
+)
+#: A source whose newest row is older than this is listed as stale (red) on the hub and
+#: the news page. Per-source overrides for feeds that are slow by nature.
+TICKER_HUB_SOURCE_STALE_HOURS = 48.0
+TICKER_HUB_SOURCE_STALE_HOURS_BY_SOURCE: dict = {"quantocracy_rss": 240.0,
+                                                 "reddit_securityanalysis_rss": 168.0,
+                                                 "reader:fed": 720.0, "reader:treasury": 168.0,
+                                                 "reader:bls": 720.0, "reader:sec": 168.0}
+#: A published time later than first_seen by more than this is not believed (a wrong zone);
+#: the row is then placed by its first_seen.
+TICKER_HUB_PUBLISHED_FUTURE_SLACK_S = 3600
+#: Two times on a row are both shown when they differ by more than this.
+TICKER_HUB_SHOW_BOTH_TIMES_S = 86400
+#: A normalised title shorter than this never joins two rows into one story by title alone.
+TICKER_HUB_MIN_STORY_TITLE_CHARS = 12
+#: Co-mention window for ranking related names.
+TICKER_HUB_COMENTION_DAYS = 90
+#: Stories per News page ("load more" fetches the next page).
+TICKER_HUB_NEWS_PAGE = 50
+#: Generations of the index kept on disk (current + previous); older ones are deleted.
+TICKER_HUB_KEEP_GENERATIONS = 2
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
