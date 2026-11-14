@@ -5248,6 +5248,33 @@ BOOK_DNA_LANE_FAMILY_CORR = 0.85
 BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
 #: How many tickers name a cluster's shared basket on the collapse line.
 BOOK_DNA_BASKET_TOP = 5
+#: CH-11 note (2026-11-13, "the books won only because the market was rising"):
+#: up-capture / down-capture need at least this many SPY-up AND SPY-down periods
+#: in the book's period-return series; below it they say CANNOT DETERMINE.
+BOOK_DNA_MIN_CAPTURE_OBS = 8
+#: CH-11 fix round (review of PR #140, 2026-11-14). B1: the C15 date-stamp test runs per
+#: calendar month (months with >= this many periods); a month FAILS when its correlation with
+#: SPY shifted back one session is at least MIN_LAG_CORR AND beats the same-day correlation by
+#: more than GAP_SE standard errors (sqrt(2/(n-3))) in Fisher-z units. A detection rule, not a 5%
+#: test: a month holds 9-22 periods, and on the lanes' August (16) a one-sided 5% test needs a z
+#: gap of 0.645 against the 0.46-0.63 observed. market_exposure is then estimated after the last
+#: failing month.
+BOOK_DNA_STAMP_MONTH_MIN_OBS = 8
+BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR = 0.30
+BOOK_DNA_STAMP_MONTH_GAP_SE = 1.0
+#: M1: the beta's window is comparable with the receipt window only when it covers at least
+#: this share of the receipt sessions AND its compounded book return is within this many pp of
+#: the receipt return; otherwise the receipt-window beta-adjusted excess is CANNOT DETERMINE
+#: and the beta window's own figure is printed, labelled with its window.
+BOOK_DNA_EXPOSURE_MIN_COVER = 0.80
+BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP = 2.0
+#: M2: an up/down capture whose standard error (delta method) is above this is CANNOT DETERMINE.
+BOOK_DNA_MAX_CAPTURE_SE = 0.25
+#: house rule "the MDE beside every alpha": MDE = this x SE (80% power, 5% two-sided).
+BOOK_DNA_MDE_Z = 2.8
+#: m2: rf = 0 is declared; the row also prints (1 - beta) x rf x T at this ASSUMED cash rate
+#: (not a measured rate) so the reader sees how much the declaration favours a low-beta book.
+BOOK_DNA_RF_ANNUAL_ASSUMED = 0.04
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +

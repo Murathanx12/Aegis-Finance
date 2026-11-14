@@ -232,3 +232,178 @@ def test_telegram_results_block(folder):
     txt = TC.results_block(root)
     assert txt.splitlines()[0].startswith("RESULTS ") and f"results_voice_{RID}.md" in txt
     assert "revision\\_flow\\_v0" in TC.results_block(root, markdown=True)
+
+
+# ── CH-11 note (2026-11-13): every book row prints its market exposure ─────
+
+def test_a_receipt_older_than_the_fields_says_cannot_determine_with_why(voice):
+    for x in voice["leaders"] + voice["losers"]:
+        e = x["market_exposure"]
+        assert e["beta_adjusted_excess_pp"] == DNA.CANNOT_DETERMINE
+        assert "predates the market_exposure fields" in e["beta_adjusted_excess_pp_why"]
+        assert x["exposure_line"].startswith("beta CANNOT DETERMINE, up-capture CANNOT DETERMINE, "
+                                             "down-capture CANNOT DETERMINE, beta-adjusted excess CANNOT DETERMINE")
+    lines = voice["headline_lines"]
+    assert len(lines) == 6
+    assert "beta-adjusted excess CANNOT DETERMINE" in lines[1] and "beta-adjusted excess" in lines[4]
+    rk = voice["beta_adjusted_ranking"]
+    assert rk["n_determined"] == 0 and rk["n_cannot_determine"] == voice["headline"]["n_strategy_accounts"]
+
+
+def _with_exposure(folder: Path) -> dict:
+    """Give every book in the fixture's book_dna a synthetic market_exposure block; one
+    strategy account gets a NOT_CREDIBLE beta instead."""
+    p = folder / f"book_dna_{RID}.json"
+    d = json.loads(p.read_text(encoding="utf-8"))
+    want = {}
+    for i, b in enumerate(d["books"]):
+        if b["account"] == "hack4":
+            why = "beta NOT_CREDIBLE: beta: NOT_CREDIBLE (date stamp lag): synthetic"
+            b["market_exposure"] = {k: {"value": DNA.CANNOT_DETERMINE, "why": why}
+                                    for k in ("beta", "up_capture", "down_capture", "beta_adjusted_excess_pp")}
+            continue
+        beta = 0.5 + 0.1 * i
+        bax = round(float(b.get("excess_pp") or 0.0) - 0.37 * i, 3)
+        want[b["account"]] = (beta, bax)
+        b["market_exposure"] = {"beta": {"value": beta}, "up_capture": {"value": beta + 0.1},
+                                "down_capture": {"value": beta - 0.1},
+                                "beta_adjusted_excess_pp": {"value": bax}, "n_obs": 25}
+    p.write_text(json.dumps(d), encoding="utf-8")
+    return want
+
+
+def test_rows_print_beta_capture_and_beta_adjusted_excess(folder):
+    want = _with_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    top = v["leaders"][0]
+    beta, bax = want[top["account"]]
+    assert top["exposure_line"] == (f"beta {beta:.2f}, up-capture {beta + 0.1:.2f}, down-capture "
+                                    f"{beta - 0.1:.2f}, beta-adjusted excess {bax:+.2f} pp")
+    assert top["exposure_line"] in v["headline_lines"][1]
+    hack4 = next(x for x in v["losers"] if x["account"] == "hack4")
+    assert "CANNOT DETERMINE: beta NOT_CREDIBLE" in hack4["exposure_line"]
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "- hack4 — CANNOT DETERMINE (beta, up-capture, down-capture, beta-adjusted excess)" in md
+
+
+def test_ranking_by_beta_adjusted_excess_excludes_controls_like_the_headline(folder):
+    want = _with_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    rk = v["beta_adjusted_ranking"]
+    accs = [x["account"] for x in rk["rows"]]
+    excluded = {x["account"] for x in v["excluded_controls"]}
+    assert len(accs) == v["headline"]["n_strategy_accounts"] and not (set(accs) & excluded)
+    det = [a for a in accs if a != "hack4"]
+    assert [want[a][1] for a in det] == sorted((want[a][1] for a in det), reverse=True)
+    assert accs[-1] == "hack4" and rk["n_cannot_determine"] == 1
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "## Books ranked by beta-adjusted excess" in md
+    assert "Ranked after the fact" in md and f"range {rk['sessions_min']}–{rk['sessions_max']}" in md
+
+
+def test_rebuild_dna_refuses_to_write_beside_the_receipts(folder):
+    with pytest.raises(RV.ResultsVoiceRefused):
+        RV.run(RID, folder, rebuild_dna=True)
+    with pytest.raises(RV.ResultsVoiceRefused):
+        RV.run(RID, folder, rebuild_dna=True, out_dir=folder)
+
+
+def test_rebuild_dna_writes_only_into_out_dir_and_reads_read_only(folder, tmp_path, monkeypatch):
+    import pandas as pd
+    from datetime import date, timedelta
+    seen = {}
+
+    def fake_inputs(receipt, *, http_get=None, fetch_lanes=True, read_only_db=False):
+        seen.update(fetch_lanes=fetch_lanes, read_only_db=read_only_db)
+        return {"books": [], "leaderboards": [], "fleet_positions": {}, "fleet_manager_last_run": {},
+                "fleet_grades": {}, "pc_state": None, "pc_nav": [], "pc_manager_last_run": None,
+                "night_nav": {}, "lane_positions": {}, "lane_caps": {}, "sector_map": {},
+                "sector_source": "test", "gaps": {}}
+    monkeypatch.setattr(DNA, "load_inputs", fake_inputs)
+    days = [date.today() - timedelta(days=k) for k in range(60, 0, -1)]
+    bars = pd.DataFrame([{"symbol": "SPY", "date": pd.Timestamp(d), "open": 100 + i * 0.1, "close": 100 + i * 0.1}
+                         for i, d in enumerate(x for x in days if x.weekday() < 5)])
+    before = sorted(p.name for p in folder.iterdir())
+    out = tmp_path / "out"
+    res = RV.run(RID, folder, out_dir=out, rebuild_dna=True, bars=bars)
+    assert sorted(p.name for p in folder.iterdir()) == before
+    assert seen == {"fetch_lanes": False, "read_only_db": True}
+    names = sorted(p.name for p in out.iterdir())
+    assert names == [f"book_dna_{RID}.json", f"results_voice_{RID}.json", f"results_voice_{RID}.md"]
+    assert res["run_id"] == RID
+    for x in res["voice"]["leaders"] + res["voice"]["losers"]:
+        assert "market_exposure" in x and x["market_exposure"]["beta_adjusted_excess_pp"] is not None
+
+
+# ── CH-11 fix round (review of PR #140, 2026-11-14): each test fails on 0b45f7f8 ──
+
+def _rich(beta: float, bax: float, *, window=("2026-09-01", "2026-11-12", 45, 103)) -> dict:
+    """A market_exposure block in the shape book_dna writes after the fix round."""
+    f, t, n, s = window
+    return {"beta": {"value": beta, "se": 0.05, "n_obs": n, "from": f, "to": t},
+            "up_capture": {"value": beta + 0.07, "se": 0.08, "n_periods": 22, "estimate": beta + 0.07},
+            "down_capture": {"value": beta - 0.09, "se": 0.06, "n_periods": 23, "estimate": beta - 0.09},
+            "beta_adjusted_excess_pp": {"value": bax, "se_pp": 2.1, "mde_pp": 5.88, "rf_effect_pp": 1.05,
+                                        "rf_note": "rf = 0 declared; ASSUMED 4%/yr"},
+            "estimation_window": {"from": f, "to": t, "n_periods": n, "receipt_sessions": s,
+                                  "comparable": True},
+            "n_obs": n}
+
+
+def _with_fix_round_exposure(folder: Path) -> tuple[str, str, str]:
+    """Every book gets a rich block; one is NOT COMPARABLE (M1), one is a flat book printed
+    near zero (m1) with a date-stamp note (B1). Returns (not comparable, near zero, ranked)."""
+    p = folder / f"book_dna_{RID}.json"
+    d = json.loads(p.read_text(encoding="utf-8"))
+    names = [b["account"] for b in d["books"]]
+    nc, nz = "hack4", next(a for a in names if a not in ("hack4",) and not a.startswith("hack"))
+    for i, b in enumerate(d["books"]):
+        b["market_exposure"] = _rich(0.3 + 0.01 * i, 5.0 - 0.5 * i)
+        if b["account"] == nc:
+            why = ("not comparable: beta measured on 2026-09-28..2026-11-11 (31 periods) and the receipt window "
+                   "is 2026-08-28..2026-11-12 (54 sessions): it covers 31 of 54 receipt sessions (57% < 80%)")
+            b["market_exposure"]["beta_adjusted_excess_pp"] = {
+                "value": DNA.CANNOT_DETERMINE, "why": why, "window_figure_pp": -2.87, "window_figure_se_pp": 3.0,
+                "window_from": "2026-09-28", "window_to": "2026-11-11", "window_n_periods": 31}
+            b["market_exposure"]["estimation_window"].update(comparable=False, receipt_sessions=54)
+        if b["account"] == nz:
+            me = b["market_exposure"]
+            me["beta"]["value"], me["down_capture"]["value"] = 0.0001, -0.0001
+            me["beta_adjusted_excess_pp"]["value"] = -0.001
+            me["stamp_note"] = "date stamp lag in 1 month(s) (2026-08 same-day -0.09 / lag -1 +0.62): synthetic"
+    p.write_text(json.dumps(d), encoding="utf-8")
+    return nc, nz, names[0]
+
+
+def test_fix_m1_not_comparable_rows_print_their_window_figure_and_follow_the_ranked(folder):
+    nc, nz, _ = _with_fix_round_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    rk = v["beta_adjusted_ranking"]
+    accs = [x["account"] for x in rk["rows"]]
+    assert rk["n_not_comparable"] == 1 and accs[-1] == nc          # after every ranked account
+    row = rk["rows"][-1]["market_exposure"]
+    assert row["not_comparable"]["figure_pp"] == -2.87
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "NOT COMPARABLE: -2.87 pp on 2026-09-28..2026-11-11 (31 p)" in md
+    assert "covers 31 of 54 receipt sessions" in md                 # the reason line, not a blank
+
+
+def test_fix_rows_print_se_n_mde_and_the_beta_window(folder):
+    _, _, first = _with_fix_round_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "| beta | up-capture | down-capture | beta-adjusted excess | beta window |" in md
+    assert "±0.05 | " in md and "±0.08 (n 22)" in md and "pp ±2.10 (MDE 5.88)" in md
+    assert "2026-09-01..2026-11-12, 45 p of 103 s" in md
+    top = v["leaders"][0]
+    assert " on 2026-09-01..2026-11-12, 45 p of 103 s" in top["exposure_line"]
+    assert "Jensen at assumed rf" in md
+
+
+def test_fix_m1_minor_never_prints_minus_zero_and_prints_the_stamp_note(folder):
+    _, nz, _ = _with_fix_round_exposure(folder)
+    RV.run(RID, folder)
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "-0.00" not in md
+    if any(nz in ln for ln in md.splitlines() if ln.startswith("|")):
+        assert f"- {nz} — beta window: date stamp lag in 1 month(s)" in md
