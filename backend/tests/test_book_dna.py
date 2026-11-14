@@ -335,3 +335,289 @@ def test_beta_of_a_date_stamp_lagged_series_is_not_credible_with_both_numbers():
     assert out["why"].startswith("beta: NOT_CREDIBLE (date stamp lag)")
     assert f"{out['corr_vs_spy_lag_minus_1']:+.2f}" in out["why"] and f"{out['corr_vs_spy']:+.2f}" in out["why"]
     assert "beta_same_day" in out           # the uncredible number is kept, labelled, never served as the beta
+
+
+# ── CH-11 note (2026-11-13): how much of a book's return is plain SPY exposure ──
+def _dated_series(n: int = 60, beta: float = 1.5, alpha: float = 0.0005, seed: int = 11) -> list:
+    """A same-day series on real weekday dates derived from today (spans >= 2 months)."""
+    rng = np.random.default_rng(seed)
+    dates = _sessions(n)
+    spy = rng.normal(0.0003, 0.01, n)
+    book = alpha + beta * spy + rng.normal(0.0, 0.002, n)
+    return [(d, float(b), float(s)) for d, b, s in zip(dates, book, spy)]
+
+
+def _compound(s: list, k: int) -> float:
+    return 100 * (float(np.prod([1 + q[k] for q in s])) - 1)
+
+
+def test_market_exposure_on_a_high_beta_book():
+    s = _dated_series()
+    beta = D.beta_of(s, 20)
+    assert isinstance(beta["value"], float) and 1.35 < beta["value"] < 1.65
+    # the receipt's return and SPY leg are the series' own (fix round M1: a receipt the
+    # series does not reproduce is "not comparable", see the tests below)
+    rp, sp = _compound(s, 1), _compound(s, 2)
+    me = D.market_exposure(s, beta, return_pct=rp, spy_leg_pct=sp, min_capture_obs=8)
+    b = beta["value"]
+    assert me["beta"]["value"] == round(b, 3)
+    # return - beta x SPY leg, beside the raw excess, on the receipt's own window
+    assert me["beta_adjusted_excess_pp"]["value"] == round(rp - b * sp, 3)
+    assert me["beta_adjusted_excess_pp"]["raw_excess_pp"] == round(rp - sp, 3)
+    # a beta-1.5 book captures ~1.5x of SPY on both sides
+    assert 1.3 < me["up_capture"]["value"] < 1.8 and 1.3 < me["down_capture"]["value"] < 1.8
+    assert me["up_capture"]["n_periods"] + me["down_capture"]["n_periods"] <= len(s)
+    # by month: every period lands in exactly one month, residual compounded per month
+    bm = me["by_month"]
+    assert len(bm) >= 2 and sum(m["n_periods"] for m in bm) == len(s)
+    first = [(x, y) for d, x, y in s if d[:7] == bm[0]["month"]]
+    want = 100 * (np.prod([1 + x - b * y for x, y in first]) - 1)
+    assert abs(bm[0]["beta_adjusted_pp"] - want) < 1e-2
+    assert me["series_beta_adjusted_pp"]["n_periods"] == len(s)
+
+
+def test_market_exposure_is_cannot_determine_on_a_lagged_series():
+    s = _series_lagged(1)
+    beta = D.beta_of(s, 20)
+    assert beta["value"] == D.NOT_CREDIBLE
+    me = D.market_exposure(s, beta, return_pct=5.0, spy_leg_pct=2.0, min_capture_obs=8)
+    for k in ("beta", "up_capture", "down_capture", "beta_adjusted_excess_pp", "by_month",
+              "series_beta_adjusted_pp"):
+        assert me[k]["value"] == D.CANNOT_DETERMINE, k
+        assert "NOT_CREDIBLE (date stamp lag)" in me[k]["why"], k
+
+
+def test_market_exposure_is_cannot_determine_on_a_short_series():
+    s = _dated_series(n=12)
+    beta = D.beta_of(s, 20)
+    me = D.market_exposure(s, beta, return_pct=5.0, spy_leg_pct=2.0, min_capture_obs=8)
+    assert me["beta_adjusted_excess_pp"]["value"] == D.CANNOT_DETERMINE
+    assert "12 period returns < 20" in me["beta_adjusted_excess_pp"]["why"]
+
+
+def test_capture_needs_enough_periods_on_each_side():
+    rng = np.random.default_rng(5)
+    spy = np.abs(rng.normal(0.0, 0.01, 40)) + 0.001
+    spy[[3, 11, 19, 27]] *= -1                                    # 4 SPY-down periods
+    s = [(d, float(1.2 * x + rng.normal(0, 0.001)), float(x)) for d, x in zip(_sessions(40), spy)]
+    beta = D.beta_of(s, 20)
+    me = D.market_exposure(s, beta, return_pct=1.0, spy_leg_pct=1.0, min_capture_obs=8)
+    assert isinstance(me["up_capture"]["value"], float)
+    assert me["down_capture"]["value"] == D.CANNOT_DETERMINE
+    assert me["down_capture"]["why"] == "4 SPY-down periods < 8"
+
+
+def test_market_exposure_without_a_spy_leg_says_so():
+    s = _dated_series()
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=3.0, spy_leg_pct=None, min_capture_obs=8)
+    assert me["beta_adjusted_excess_pp"]["value"] == D.CANNOT_DETERMINE
+    assert isinstance(me["up_capture"]["value"], float)
+
+
+def test_every_book_row_carries_market_exposure_never_blank(world):
+    rc, inputs, px = world
+    dna = D.build(rc, inputs, px)
+    for b in dna["books"]:
+        me = b["market_exposure"]
+        v = me["beta_adjusted_excess_pp"]["value"]
+        assert v == D.CANNOT_DETERMINE and me["beta_adjusted_excess_pp"]["why"], b["account"]
+
+
+# ── CH-11 fix round (review of PR #140, 2026-11-14): each test fails on 0b45f7f8 ──
+def _split_stamp_series(n: int = 130, seed: int = 21) -> tuple[list, int]:
+    """B1 in miniature, the website lanes' NAV: unrelated to SPY at first (June-July), then
+    stamped one session LATE for a month (book_t = 0.9 x SPY_t-1, August), then on the right
+    day (book_t = 0.9 x SPY_t, September onward). Returns (series, index of the first
+    same-day period); both switches fall on month boundaries."""
+    rng = np.random.default_rng(seed)
+    dates = _sessions(n)
+    j = next(i for i in range(n // 5, n) if dates[i][:7] != dates[i - 1][:7])
+    k = next(i for i in range(j + 15, n) if dates[i][:7] != dates[i - 1][:7])
+    spy = rng.normal(0.0004, 0.01, n + 1)
+    noise = rng.normal(0.0, 0.003, n + 1)
+    book = [noise[i + 1] + (0.0 if i < j else 0.9 * spy[i] if i < k else 0.9 * spy[i + 1]) for i in range(n)]
+    return [(d, float(book[i]), float(spy[i + 1])) for i, d in enumerate(dates)], k
+
+
+def test_b1_a_series_lagged_in_its_first_months_passes_the_whole_series_check():
+    """The defect itself: the whole-series guard sees nothing and serves a blended beta."""
+    s, _ = _split_stamp_series()
+    whole = D.beta_of(s, 20)
+    assert isinstance(whole["value"], float) and whole["value"] < 0.75       # ~0.9 x share same-day
+
+
+def test_b1_per_month_stamp_check_estimates_after_the_last_lagged_month():
+    s, k = _split_stamp_series()
+    rp, sp = _compound(s, 1), _compound(s, 2)
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=rp, spy_leg_pct=sp, min_capture_obs=8,
+                           sessions=len(s), window=(s[0][0], s[-1][0]))
+    chk = me["stamp_check"]
+    assert chk["failing_months"] and all(m < s[k][0][:7] for m in chk["failing_months"])
+    # estimated only on the same-day stretch, and the row says so, with the window
+    assert me["beta"]["from"] == s[k][0] and me["beta"]["n_obs"] == len(s) - k
+    assert 0.8 < me["beta"]["value"] < 1.0 and me["beta"]["se"] > 0
+    assert "date stamp lag in" in me["stamp_note"] and "dates were not shifted" in me["stamp_note"]
+    # the beta window covers < 80% of the receipt: the receipt-window figure is not comparable
+    bax = me["beta_adjusted_excess_pp"]
+    assert bax["value"] == D.CANNOT_DETERMINE and bax["why"].startswith("not comparable")
+    assert isinstance(bax["window_figure_pp"], float) and bax["window_from"] == s[k][0]
+
+
+def test_b1_a_series_lagged_in_its_last_sessions_is_cannot_determine():
+    """Right day first, stamped a session late for the last 40 sessions: nothing after the
+    last failing month can carry a beta, so every field says why instead of a number."""
+    rng = np.random.default_rng(4)
+    n = 130
+    spy = rng.normal(0.0004, 0.01, n + 1)
+    noise = rng.normal(0.0, 0.003, n + 1)
+    s = [(d, float(noise[i + 1] + 0.9 * (spy[i + 1] if i < n - 40 else spy[i])), float(spy[i + 1]))
+         for i, d in enumerate(_sessions(n))]
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=1.0, spy_leg_pct=1.0, min_capture_obs=8)
+    assert me["stamp_check"]["failing_months"]
+    for k in ("beta", "up_capture", "down_capture", "beta_adjusted_excess_pp"):
+        assert me[k]["value"] == D.CANNOT_DETERMINE and "date stamp lag" in me[k]["why"], k
+
+
+def test_b1_lane_row_in_a_receipt_carries_the_window_and_the_lag_note():
+    s, k = _split_stamp_series()
+    dates = _sessions(len(s) + 1)
+    s = [(d, b, x) for d, (_, b, x) in zip(dates[1:], s)]
+    k_date = s[k][0]
+    spy, nav = [100.0], [1e5]
+    for _, b, x in s:
+        spy.append(spy[-1] * (1 + x))
+        nav.append(nav[-1] * (1 + b))
+    px = D.Prices(_bars({"SPY": spy}, dates))
+    rp, sp = 100 * (nav[-1] / nav[0] - 1), 100 * (spy[-1] / spy[0] - 1)
+    row = {"account": "lane-x", "family": "website_lane", "inception": dates[0], "last_mark": dates[-1],
+           "start_capital": 1e5, "equity": nav[-1], "roi_pct": rp, "spy_same_window_pct": sp,
+           "vs_spy_pp": rp - sp, "status": "LIVE", "spy_base": "close", "graded_against": None, "note": "",
+           "n_positions": None, "source": "test"}
+    rc = {"generated_utc": f"{date.today().isoformat()}T05:00:00+00:00", "rows": [row],
+          "lane_nav_series": {"lanes": {"lane-x": [list(q) for q in zip(dates, nav)]},
+                              "spy_rebased_100k_at_2026_06_08": [list(q) for q in zip(dates, spy)]},
+          "aggregate": {"n_ahead_of_spy": 1, "honest_sentence": "x"}}
+    dna = D.build(rc, _inputs([]), px)
+    me = next(b for b in dna["books"] if b["account"] == "lane-x")["market_exposure"]
+    assert me["stamp_check"]["failing_months"] and me["beta"]["from"] == k_date
+    w = me["estimation_window"]
+    assert w["receipt_sessions"] == len(s) and w["n_periods"] == len(s) - k and w["comparable"] is False
+    assert me["beta_adjusted_excess_pp"]["value"] == D.CANNOT_DETERMINE
+
+
+def test_m1_a_beta_window_shorter_than_the_receipt_is_not_comparable():
+    s = _dated_series(n=31)
+    rp, sp = _compound(s, 1), _compound(s, 2)
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=rp, spy_leg_pct=sp, min_capture_obs=8,
+                           sessions=54, window=("r0", "r1"))
+    bax = me["beta_adjusted_excess_pp"]
+    assert bax["value"] == D.CANNOT_DETERMINE
+    assert "covers 31 of 54 receipt sessions" in bax["why"] and f"{s[0][0]}..{s[-1][0]}" in bax["why"]
+    assert bax["window_figure_pp"] == me["series_beta_adjusted_pp"]["value"]
+    assert me["estimation_window"]["coverage"] == round(31 / 54, 3)
+    # enough coverage and the same return: comparable, with SE and MDE beside it
+    ok = D.market_exposure(s, D.beta_of(s, 20), return_pct=rp, spy_leg_pct=sp, min_capture_obs=8, sessions=34)
+    v = ok["beta_adjusted_excess_pp"]
+    assert isinstance(v["value"], float) and v["se_pp"] > 0 and abs(v["mde_pp"] - 2.8 * v["se_pp"]) < 0.01
+
+
+def test_m1_a_beta_window_that_misses_the_receipt_return_is_not_comparable():
+    """hack4: the receipt lost -22.92% over 54 sessions, the beta's 31 periods -3.04%."""
+    s = _dated_series(n=31)
+    rp, sp = _compound(s, 1), _compound(s, 2)
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=rp - 19.9, spy_leg_pct=sp, min_capture_obs=8,
+                           sessions=31)
+    assert me["beta_adjusted_excess_pp"]["value"] == D.CANNOT_DETERMINE
+    assert "pp from the receipt return" in me["beta_adjusted_excess_pp"]["why"]
+
+
+def test_m2_a_noisy_capture_is_cannot_determine_with_its_estimate_and_se():
+    rng = np.random.default_rng(9)
+    dates = _sessions(40)
+    spy = rng.normal(0.0, 0.01, 40)
+    s = [(d, float(0.7 * x + rng.normal(0, 0.03)), float(x)) for d, x in zip(dates, spy)]
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=_compound(s, 1), spy_leg_pct=_compound(s, 2),
+                           min_capture_obs=8)
+    for side in ("up_capture", "down_capture"):
+        c = me[side]
+        assert c["value"] == D.CANNOT_DETERMINE and "cannot be told apart from noise" in c["why"], side
+        assert c["se"] > 0.25 and isinstance(c["estimate"], float) and c["n_periods"] >= 8
+    t = _dated_series()
+    tight = D.market_exposure(t, D.beta_of(t, 20), return_pct=1.0, spy_leg_pct=1.0, min_capture_obs=8)
+    assert isinstance(tight["up_capture"]["value"], float) and tight["up_capture"]["se"] < 0.25
+
+
+def test_m1_minor_a_flat_nav_is_cannot_determine_never_zero():
+    s = [(d, 0.0, float(x)) for d, x in zip(_sessions(40), np.random.default_rng(2).normal(0, 0.01, 40))]
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=0.0, spy_leg_pct=-0.69, min_capture_obs=8)
+    for k in ("beta", "up_capture", "down_capture", "beta_adjusted_excess_pp"):
+        assert me[k]["value"] == D.CANNOT_DETERMINE and "flat NAV" in me[k]["why"], k
+
+
+def test_m2_minor_rf_effect_is_printed_beside_a_low_beta_excess():
+    s = _dated_series(beta=0.25)
+    rp, sp = _compound(s, 1), _compound(s, 2)
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=rp, spy_leg_pct=sp, min_capture_obs=8,
+                           sessions=len(s))
+    v = me["beta_adjusted_excess_pp"]
+    b = me["beta"]["value"]
+    assert v["rf_effect_pp"] == round((1 - b) * 0.04 * len(s) / 252 * 100, 3) and "ASSUMED" in v["rf_note"]
+
+
+def test_m4_minor_multi_session_periods_are_left_out_of_capture():
+    s = _dated_series(n=80)
+    every_other = s[::2]                                   # every period spans two sessions
+    me = D.market_exposure(every_other, D.beta_of(every_other, 20), return_pct=1.0, spy_leg_pct=1.0,
+                           min_capture_obs=8, session_dates=[d for d, _, _ in s])
+    assert me["n_multi_session_periods_excluded_from_capture"] == len(every_other) - 1
+    assert me["up_capture"]["value"] == D.CANNOT_DETERMINE
+
+
+def test_m6_minor_load_prices_reads_only_the_symbols_it_needs(monkeypatch, tmp_path):
+    from backend.services import xs_ranker
+    seen = {}
+
+    def fake_load_bars(*a, **k):
+        seen.update(k)
+        return pd.DataFrame({"symbol": ["SPY"], "date": [pd.Timestamp(_sessions(1)[0])], "open": [1.0],
+                             "close": [1.0]})
+    monkeypatch.setattr(xs_ranker, "load_bars", fake_load_bars)
+    monkeypatch.setattr(D, "LLM_DIR", tmp_path)
+    px, _ = D.load_prices({"AAA"})
+    assert sorted(seen.get("symbols") or []) == ["AAA", "SPY"] and px.has("SPY")
+
+
+def test_b1_lag_is_read_from_spy_sessions_across_multi_session_gaps():
+    """The lanes' NAV skips sessions. The lagged SPY of a period is SPY over the same sessions
+    shifted back one, read from SPY's closes -- never the previous PERIOD's SPY, which after a
+    gap is a different stretch of days and hid August's lag on the live receipt."""
+    rng = np.random.default_rng(13)
+    dates = _sessions(130)
+    j = next(i for i in range(40, 130) if dates[i][:7] != dates[i - 1][:7])
+    k = next(i for i in range(j + 15, 130) if dates[i][:7] != dates[i - 1][:7])
+    r = rng.normal(0.0004, 0.01, 130)
+    close = list(100 * np.cumprod(1 + r))
+    nav = [1e5]
+    for i in range(1, 130):                        # lagged in [j, k), same-day elsewhere
+        nav.append(nav[-1] * (1 + 0.9 * (r[i - 1] if j <= i < k else r[i]) + rng.normal(0, 0.002)))
+    keep = [i for i in range(130) if not (j <= i < k and i % 3 == 0)]     # a gap every third session
+    pts = [(dates[i], nav[i], close[i]) for i in keep]
+    s = [(pts[i][0], pts[i][1] / pts[i - 1][1] - 1, pts[i][2] / pts[i - 1][2] - 1) for i in range(1, len(pts))]
+    spy_close = dict(zip(dates, close))
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=1.0, spy_leg_pct=1.0, min_capture_obs=8,
+                           spy_close=spy_close)
+    assert dates[k - 1][:7] in me["stamp_check"]["failing_months"]
+    assert me["beta"]["from"] >= dates[k] and 0.75 < me["beta"]["value"] < 1.05
+    lagged = next(m for m in me["stamp_check"]["months"] if m["month"] == dates[k - 1][:7])
+    assert lagged["corr_lag_minus_1"] > 0.6 and lagged["corr_lag_minus_1"] > lagged["corr_same_day"] + 0.2
+
+
+def test_m1_the_beta_window_never_runs_past_the_receipt_mark():
+    """A --rebuild-dna on an old receipt reads today's leaderboards: periods after the
+    receipt's last mark are cut, so the beta window lies inside the receipt window."""
+    s = _dated_series(n=40)
+    mark = s[-4][0]
+    me = D.market_exposure(s, D.beta_of(s, 20), return_pct=_compound(s[:-3], 1), spy_leg_pct=_compound(s[:-3], 2),
+                           min_capture_obs=8, sessions=37, window=(s[0][0], mark))
+    assert me["n_periods_after_the_receipt_mark_dropped"] == 3
+    assert me["beta"]["to"] == mark and isinstance(me["beta_adjusted_excess_pp"]["value"], float)

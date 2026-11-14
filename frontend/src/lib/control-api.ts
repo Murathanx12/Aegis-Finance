@@ -1406,3 +1406,51 @@ export const getNewsFeed = (q: {
 export function hubUnavailable(e: unknown): boolean {
   return isForbidden(e) || isUnreachable(e) || (isNotBuilt(e) && !String((e as ControlError).detail).includes("not in the universe"));
 }
+
+// ---------------------------------------------------------------- owner inbox
+// CH-22 (2026-11-14): `backend/routers/owner_inbox.py`. A note is one
+// append-only row the NEXT Claude session reads at its start
+// (`python -m scripts.owner_inbox list --unread`). It is not a chat: nothing is
+// sent anywhere and no model answers it.
+
+/**
+ * Whether this build talks to the local control plane at all. The packaged
+ * desktop app is the only build that does (`AEGIS_DESKTOP_BUILD=1` ->
+ * `NEXT_PUBLIC_AEGIS_DESKTOP_BUILD=1`, the same flag `lib/api.ts` uses for its
+ * same-origin base). On the public website it is false at COMPILE time, so the
+ * "This PC" links and the note box are not in the page at all.
+ */
+export const CONTROL_PLANE_BUILD = process.env.NEXT_PUBLIC_AEGIS_DESKTOP_BUILD === "1";
+
+export interface OwnerNote {
+  kind: "note";
+  id: string;
+  utc: string;
+  text: string;
+  page: string | null;
+  status: "unread" | "read";
+  status_utc?: string | null;
+}
+
+export interface OwnerNoteSaved {
+  saved: boolean;
+  path: string;
+  note: OwnerNote;
+}
+
+export interface OwnerNotesResponse {
+  path: string;
+  exists: boolean;
+  n_notes: number;
+  n_unread: number;
+  unreadable_lines: number;
+  notes: OwnerNote[];
+}
+
+/** Gated (403 unless the desktop shell enabled the control plane). 422 = empty or too long. */
+export const postOwnerNote = (text: string, page?: string | null) =>
+  post<OwnerNoteSaved>("/owner-note", { text, page: page ?? null });
+
+/** Newest first. Gated like the write: the owner's notes are never public. */
+export const getOwnerNotes = (limit = 5) =>
+  controlFetch<OwnerNotesResponse>(`/owner-notes?limit=${limit}`);

@@ -150,6 +150,14 @@ def _storage_dir() -> Path:
 
 log = logging.getLogger("aegis.desktop")
 
+#: The page the window opens on: the ORIGINAL dashboard, with the sidebar.
+#: CH-22a (2026-11-11) made it `/system-status`, a backend-rendered page with no
+#: sidebar and no way back, and the owner lost the rest of the app (2026-11-14:
+#: "you removed everything ... I want the original dashboard as well"). The
+#: systems page is now the sidebar's "This PC" group, and links back. `--page`
+#: still opens anything else.
+DEFAULT_PAGE = "/"
+
 #: Filled by `start_backend`'s thread if it dies. Read by the report (and so by
 #: the launcher's receipt, which embeds the report) -- a window that never
 #: loaded must be able to say WHY without a second launch.
@@ -410,8 +418,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--serve", action="store_true",
                     help="start everything and KEEP SERVING, no window -- for verifying a "
                          "packaged build, or for running the engine on a machine with no display")
-    ap.add_argument("--page", default="/system-status",
-                    help="path to open in the window (default: the systems dashboard; /desktop is the lists)")
+    ap.add_argument("--page", default=DEFAULT_PAGE,
+                    help="path to open in the window (default: the dashboard, /; "
+                         "/system-status is the systems page, /desktop the lists)")
     a = ap.parse_args(argv)
 
     t0 = time.time()
@@ -435,7 +444,7 @@ def main(argv: list[str] | None = None) -> int:
         report |= {"health_ok": ok, "cold_start_s": waited,
                    "total_s": round(time.time() - t0, 2),
                    "mode": "serve" if a.serve else "headless",
-                   "url": f"http://127.0.0.1:{port}/desktop"}
+                   "url": f"http://127.0.0.1:{port}{a.page}"}
         if BACKEND_ERROR:
             report["backend_error"] = dict(BACKEND_ERROR)
         # The acceptance line for the root fix (handoff 2026-09-11 s1.1): the

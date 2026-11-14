@@ -289,6 +289,32 @@ def test_the_shell_is_started_from_the_checkout_by_module():
     assert argv[:4] == ["C:/py/python.exe", "-m", "desktop.aegis_desktop", "--page"]
 
 
+def _page_default(path) -> object:
+    """The `default=` of the `--page` argument, read from the AST (no launch)."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Call) and getattr(n.func, "attr", None) == "add_argument"                 and n.args and isinstance(n.args[0], ast.Constant) and n.args[0].value == "--page":
+            for kw in n.keywords:
+                if kw.arg == "default":
+                    return kw.value.id if isinstance(kw.value, ast.Name) else kw.value.value
+    return None
+
+
+def test_the_window_opens_on_the_dashboard_by_default():
+    """CH-22 (2026-11-14): the owner lost the dashboard when the default became
+    `/system-status`. Both the launcher and the shell open `/` unless `--page`
+    says otherwise, and the two constants cannot drift apart."""
+    from desktop import aegis_desktop as ad
+    assert launcher.DEFAULT_PAGE == ad.DEFAULT_PAGE == "/"
+    argv = launcher.shell_argv("C:/py/python.exe")
+    assert argv[argv.index("--page") + 1] == "/"
+    assert _page_default(REPO / "desktop" / "launcher.py") == "DEFAULT_PAGE"
+    assert _page_default(REPO / "desktop" / "aegis_desktop.py") == "DEFAULT_PAGE"
+    # `--page` still opens anything else
+    argv = launcher.shell_argv("C:/py/python.exe", "/system-status")
+    assert argv[argv.index("--page") + 1] == "/system-status"
+
+
 def test_the_launcher_never_imports_backend():
     """The whole point. Anything the launcher imports is FROZEN with it, and
     anything frozen can resolve a path differently from the checkout."""

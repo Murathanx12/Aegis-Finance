@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { Providers } from "@/components/providers";
+import { OwnerNoteButton } from "@/components/desktop/owner-note";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -59,6 +60,9 @@ export default function RootLayout({
               {children}
             </div>
           </main>
+          {/* CH-22: "Note to Claude", bottom-right on every page. Renders
+              nothing outside the desktop build (CONTROL_PLANE_BUILD). */}
+          <OwnerNoteButton />
         </Providers>
       </body>
     </html>
