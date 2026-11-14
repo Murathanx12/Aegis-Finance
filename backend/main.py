@@ -583,6 +583,14 @@ _origins = (
     else ["http://localhost:3000", "http://127.0.0.1:3000"]
 )
 _origins += [o for o in _PUBLIC_SITE_ORIGINS if o not in _origins]
+#: PR #143 review, H1: in the DESKTOP app the page is served by this same process
+#: (same origin), so no other origin needs to read anything -- and with the website
+#: and :3000 allowed, any script on those origins could read the local control
+#: plane (the owner's notes included). The shell sets AEGIS_DESKTOP=1 before this
+#: module is imported. The website (Railway) never sets it, so its list is unchanged.
+DESKTOP_CORS_ORIGINS: list[str] = []
+if os.getenv("AEGIS_DESKTOP", "") == "1":
+    _origins = list(DESKTOP_CORS_ORIGINS)
 
 app.add_middleware(
     CORSMiddleware,

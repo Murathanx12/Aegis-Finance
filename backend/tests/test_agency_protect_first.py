@@ -15,6 +15,7 @@ Three properties, each of which would be invisible if it broke:
 from __future__ import annotations
 
 import pytest
+from backend.tests.local_control import local_client
 
 from backend.services import agency as A
 from backend.services import book_cadence as BC
@@ -374,7 +375,7 @@ def test_the_flip_route_is_a_read_and_the_unflip_is_gated(db, bars, flips,
     from fastapi.testclient import TestClient
 
     from backend.main import app
-    client = TestClient(app)
+    client = local_client(app)
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
     assert client.post("/api/control/agency/unflip", json={}).status_code == 403
     body = client.get("/api/control/agency/protect-first").json()
@@ -392,7 +393,7 @@ def test_the_unflip_route_reverses_one_flip(db, bars, flips, monkeypatch):
     A.protect_first_pass(asof=BC.latest_bar_date(bars), bars=bars, conn=conn,
                          path=flips)
     monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
-    r = TestClient(app).post("/api/control/agency/unflip",
+    r = local_client(app).post("/api/control/agency/unflip",
                              json={"book_id": book.book_id, "by": "murat"})
     assert r.status_code == 200, r.text
     assert r.json()["flip"]["reversed_by"] == "murat"

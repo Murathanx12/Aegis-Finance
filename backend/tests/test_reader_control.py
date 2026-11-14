@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+from backend.tests.local_control import local_client
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -425,7 +426,7 @@ def client(monkeypatch, tmp_path):
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
     app = FastAPI()
     app.include_router(control.router)
-    return TestClient(app)
+    return local_client(app)  # H1: loopback Host + JSON, like the desktop page
 
 
 def test_router_reads_while_disabled_and_refuses_writes(client, tmp_path):

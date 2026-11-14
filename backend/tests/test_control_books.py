@@ -8,6 +8,7 @@ survives the page being rewritten.
 from __future__ import annotations
 
 import pytest
+from backend.tests.local_control import local_client
 from fastapi.testclient import TestClient
 
 from backend.main import app
@@ -15,7 +16,7 @@ from backend.services import book_cadence as BC
 from backend.services import paper_books as PB
 from backend.tests.book_helpers import make_strategy, seeded_db, synthetic_bars
 
-client = TestClient(app)
+client = local_client(app)  # H1: loopback Host + JSON, like the desktop page
 
 
 @pytest.fixture()

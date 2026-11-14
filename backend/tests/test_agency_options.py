@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from backend.tests.local_control import local_client
 from fastapi.testclient import TestClient
 
 from backend.main import app
@@ -23,7 +24,7 @@ from backend.services import paper_books as PB
 from backend.strategy.contract import loss_budget_worst_case
 from backend.tests.book_helpers import seeded_db, synthetic_bars
 
-client = TestClient(app)
+client = local_client(app)  # H1: loopback Host + JSON, like the desktop page
 ANSWERS = [3, 3, 2, 3, 2, 2, 1, 2]
 
 
