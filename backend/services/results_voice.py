@@ -272,7 +272,12 @@ def exposure_view(book: Optional[dict], dna_name: str = "the book_dna receipt") 
     """CH-11 note (2026-11-13, the owner: "the books won only because the market was
     rising"): beta, up/down capture and the beta-adjusted excess of one book, read from
     book_dna's `market_exposure` -- never recomputed here. Each field is a number or
-    `CANNOT DETERMINE` with its reason; never 0-for-unknown, never blank."""
+    `CANNOT DETERMINE` with its reason; never 0-for-unknown, never blank.
+
+    Fix round (review of PR #140): also the SE beside each number (n beside each capture,
+    MDE beside the beta-adjusted excess), the window the beta was estimated on against the
+    receipt window, the date-stamp note when months were dropped (B1), and -- when the two
+    windows are not comparable (M1) -- the beta window's own figure, labelled with its window."""
     cd = _dna.CANNOT_DETERMINE
     if not book:
         why = "no book_dna row for this account"
@@ -290,45 +295,105 @@ def exposure_view(book: Optional[dict], dna_name: str = "the book_dna receipt") 
             out[k], out[f"{k}_why"] = float(v), None
         else:
             out[k], out[f"{k}_why"] = cd, (why or str(f.get("why") or "not computed by book_dna"))
+        out[f"{k}_se"] = _fnum(f.get("se_pp" if k == "beta_adjusted_excess_pp" else "se"))
+        out[f"{k}_n"] = f.get("n_periods") if k in ("up_capture", "down_capture") else None
+    bx = me.get("beta_adjusted_excess_pp") if isinstance(me.get("beta_adjusted_excess_pp"), dict) else {}
+    out["beta_adjusted_excess_pp_mde"] = _fnum(bx.get("mde_pp"))
+    out["rf_effect_pp"] = _fnum(bx.get("rf_effect_pp"))
+    out["not_comparable"] = ({"figure_pp": float(bx["window_figure_pp"]),
+                              "se_pp": _fnum(bx.get("window_figure_se_pp")),
+                              "from": bx.get("window_from"), "to": bx.get("window_to"),
+                              "n_periods": bx.get("window_n_periods")}
+                             if _fnum(bx.get("window_figure_pp")) is not None else None)
+    w = me.get("estimation_window") if isinstance(me.get("estimation_window"), dict) else None
+    out["window"] = w
+    rs = (w or {}).get("receipt_sessions")
+    out["window_label"] = (f"{w.get('from')}..{w.get('to')}, {w.get('n_periods')} p of "
+                           f"{rs if rs is not None else '?'} s" if w else None)
+    out["stamp_note"] = me.get("stamp_note")
     out["n_obs"] = me.get("n_obs")
     out["by_month"] = me.get("by_month") if isinstance(me.get("by_month"), list) else None
     return out
 
 
-def _fmt_exp(x: dict, k: str, unit: str = "") -> str:
+def _fnum(x: Any) -> Optional[float]:
+    return float(x) if isinstance(x, (int, float)) and not isinstance(x, bool) and x == x else None
+
+
+def _signed(v: float, nd: int = 2) -> str:
+    v = 0.0 if abs(v) < 0.5 * 10 ** -nd else v          # review m1: never "-0.00"
+    return f"{v:+.{nd}f}"
+
+
+def _fmt_exp(x: dict, k: str, unit: str = "", short: bool = False) -> str:
+    """One field: '0.36 ±0.05', '0.43 ±0.08 (n 22)', '+6.51 pp ±2.10 (MDE 5.88)', or
+    'NOT COMPARABLE: +1.38 pp on A..B (31 p)' / CANNOT DETERMINE. The SE, n and MDE print
+    when book_dna supplied them; `short` drops n and the MDE."""
     v = x.get(k)
     if isinstance(v, (int, float)):
-        return f"{v:+.2f}{unit}" if unit else f"{v:.2f}"
+        base = f"{_signed(v)}{unit}" if unit else f"{(0.0 if abs(v) < 0.005 else v):.2f}"
+        se = x.get(f"{k}_se")
+        if se is not None:
+            base += f" ±{se:.2f}"
+        if not short:
+            n = x.get(f"{k}_n")
+            if n is not None:
+                base += f" (n {n})"
+            mde = x.get(f"{k}_mde")
+            if mde is not None:
+                base += f" (MDE {mde:.2f})"
+        return base
+    nc = x.get("not_comparable") if k == "beta_adjusted_excess_pp" else None
+    if nc:
+        return (f"NOT COMPARABLE: {_signed(nc['figure_pp'])} pp on {nc['from']}..{nc['to']}"
+                + ("" if short else f" ({nc['n_periods']} p)"))
     return _dna.CANNOT_DETERMINE
 
 
 def exposure_line(x: dict) -> str:
-    """'beta b, up-capture u, down-capture d, beta-adjusted excess x pp' -- the CANNOT
-    DETERMINE reasons follow once, de-duplicated."""
-    parts = [f"{label} {_fmt_exp(x, k, ' pp' if k == 'beta_adjusted_excess_pp' else '')}"
-             for k, label in _EXPOSURE_FIELDS]
+    """'beta b, up-capture u, down-capture d, beta-adjusted excess x pp' (with SE, n, MDE
+    and the beta window when book_dna supplied them) -- the CANNOT DETERMINE reasons and
+    the date-stamp note follow once, de-duplicated."""
+    parts = []
+    for k, label in _EXPOSURE_FIELDS:
+        cell = f"{label} {_fmt_exp(x, k, ' pp' if k == 'beta_adjusted_excess_pp' else '')}"
+        if k == "beta" and x.get("window_label") and isinstance(x.get("beta"), float):
+            cell += f" on {x['window_label']}"
+        parts.append(cell)
     whys = []
     for k, _ in _EXPOSURE_FIELDS:
         w = x.get(f"{k}_why")
         if w and w not in whys:
             whys.append(w)
-    return ", ".join(parts) + (f" (CANNOT DETERMINE: {'; '.join(w[:160] for w in whys)})" if whys else "")
+    tail = f" (CANNOT DETERMINE: {'; '.join(w[:320] for w in whys)})" if whys else ""
+    if x.get("stamp_note") and isinstance(x.get("beta"), float):
+        tail += f" ({x['stamp_note'][:320]})"
+    return ", ".join(parts) + tail
 
 
 def beta_adjusted_ranking(rows: list[dict]) -> dict:
     """The strategy accounts (same exclusions as the headline) ranked by beta-adjusted
-    excess; those that cannot be determined follow, with their reason."""
-    det = sorted((r for r in rows if isinstance(r["market_exposure"]["beta_adjusted_excess_pp"], float)),
-                 key=lambda r: (-r["market_exposure"]["beta_adjusted_excess_pp"], r["account"]))
-    und = sorted((r for r in rows if not isinstance(r["market_exposure"]["beta_adjusted_excess_pp"], float)),
-                 key=lambda r: r["account"])
+    excess over the receipt window; then the accounts whose beta window is NOT COMPARABLE
+    with the receipt window (by their beta window's own figure, labelled); then those that
+    cannot be determined, with their reason."""
+    def bax(r: dict) -> Any:
+        return r["market_exposure"]["beta_adjusted_excess_pp"]
+
+    det = sorted((r for r in rows if isinstance(bax(r), float)), key=lambda r: (-bax(r), r["account"]))
+    nc = sorted((r for r in rows if not isinstance(bax(r), float) and r["market_exposure"].get("not_comparable")),
+                key=lambda r: (-r["market_exposure"]["not_comparable"]["figure_pp"], r["account"]))
+    und = sorted((r for r in rows if not isinstance(bax(r), float)
+                  and not r["market_exposure"].get("not_comparable")), key=lambda r: r["account"])
     sess = [r["sessions_graded"] for r in rows if isinstance(r.get("sessions_graded"), int)]
-    return {"rows": det + und, "n_determined": len(det), "n_cannot_determine": len(und),
+    return {"rows": det + nc + und, "n_determined": len(det), "n_not_comparable": len(nc),
+            "n_cannot_determine": len(nc) + len(und),
             "sessions_min": min(sess) if sess else None, "sessions_max": max(sess) if sess else None,
             "note": ("Ranked after the fact over each account's own window; the top of this table is "
-                     "biased upward exactly like the leader table. Beta is in-sample over the same "
-                     "window (rf = 0): it says how much of the return was SPY exposure, not that the "
-                     "rest is skill.")}
+                     "biased upward exactly like the leader table. Beta is in-sample (rf = 0; the "
+                     "rf column says what an ASSUMED cash rate would change): it says how much of the "
+                     "return was SPY exposure, not that the rest is skill. An account whose beta was "
+                     "measured on a window that does not cover its receipt window is NOT COMPARABLE "
+                     "and follows the ranked ones with its beta window's own figure.")}
 
 
 # ───────────────────────────────────────────────────────────── build
@@ -482,8 +547,9 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
 
 def exposure_short(x: dict) -> str:
     e = x.get("market_exposure") or {}
-    return (f"beta {_fmt_exp(e, 'beta')}, up {_fmt_exp(e, 'up_capture')}, down {_fmt_exp(e, 'down_capture')}, "
-            f"beta-adj {_fmt_exp(e, 'beta_adjusted_excess_pp', ' pp')}")
+    return (f"beta {_fmt_exp(e, 'beta', short=True)}, up {_fmt_exp(e, 'up_capture', short=True)}, "
+            f"down {_fmt_exp(e, 'down_capture', short=True)}, "
+            f"beta-adj {_fmt_exp(e, 'beta_adjusted_excess_pp', ' pp', short=True)}")
 
 
 def _leader_short(x: dict) -> str:
@@ -524,10 +590,26 @@ def headline_lines(v: dict) -> list[str]:
     return lines
 
 
+_EXP_HEAD = "beta | up-capture | down-capture | beta-adjusted excess | beta window"
+_EXP_ALIGN = "---:|---:|---:|---:|---"
+
+
 def _exp_cells(x: dict) -> str:
+    """beta, up, down, beta-adjusted excess (each with SE / n / MDE when book_dna gave them)
+    and the beta window: 'from..to, n p of N s' -- review M1: the periods behind the beta
+    are printed beside the sessions of the receipt window."""
     e = x.get("market_exposure") or {}
     return (f"{_fmt_exp(e, 'beta')} | {_fmt_exp(e, 'up_capture')} | {_fmt_exp(e, 'down_capture')} | "
-            f"{_fmt_exp(e, 'beta_adjusted_excess_pp', ' pp')}")
+            f"{_fmt_exp(e, 'beta_adjusted_excess_pp', ' pp')} | {e.get('window_label') or 'n/a'}")
+
+
+def _rf_cell(x: dict) -> str:
+    """m2: what rf = 0 is worth -- Jensen's alpha at an ASSUMED cash rate."""
+    e = x.get("market_exposure") or {}
+    v, rf = e.get("beta_adjusted_excess_pp"), e.get("rf_effect_pp")
+    if isinstance(v, float) and rf is not None:
+        return f"{_signed(v - rf)} pp"
+    return "n/a"
 
 
 def _exp_whys(rows: list[dict]) -> list[str]:
@@ -544,7 +626,9 @@ def _exp_whys(rows: list[dict]) -> list[str]:
             # collapse identical reasons (one bad beta makes all four CANNOT DETERMINE)
             reasons = sorted({w.split(': ', 1)[1] for w in whys})
             fields = ", ".join(w.split(':', 1)[0] for w in whys)
-            out.append(f"- {x['account']} — CANNOT DETERMINE ({fields}): {'; '.join(r[:220] for r in reasons)}")
+            out.append(f"- {x['account']} — CANNOT DETERMINE ({fields}): {'; '.join(r[:360] for r in reasons)}")
+        if e.get("stamp_note") and isinstance(e.get("beta"), float):
+            out.append(f"- {x['account']} — beta window: {e['stamp_note'][:360]}")
     return ([""] + out) if out else []
 
 
@@ -554,19 +638,23 @@ def render_ranking_md(v: dict, rc: str) -> list[str]:
         return []
     out = ["", f"## Books ranked by beta-adjusted excess — receipts: {rc}", "",
            f"Strategy accounts only (controls and twins excluded by the same rule as the headline). "
-           f"{rk['n_determined']} accounts have a beta-adjusted excess, {rk['n_cannot_determine']} CANNOT "
-           f"DETERMINE. Sessions per account range {rk['sessions_min']}–{rk['sessions_max']}, each over its own "
-           f"window. {rk['note']}", "",
-           "| # | account | sessions | return | SPY same window | raw excess | beta | up-capture | down-capture | "
-           "beta-adjusted excess | label |",
-           "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
+           f"{rk['n_determined']} accounts have a beta-adjusted excess over their receipt window, "
+           f"{rk['n_cannot_determine']} CANNOT DETERMINE ({rk.get('n_not_comparable', 0)} of them NOT COMPARABLE: "
+           f"beta measured on a shorter window, its own figure shown). Sessions per account range "
+           f"{rk['sessions_min']}–{rk['sessions_max']}, each over its own window. ± is one standard error; "
+           f"MDE = {_dna.params()['mde_z']:g} x SE. 'Jensen at assumed rf' subtracts (1 - beta) x "
+           f"{_dna.params()['rf_annual_assumed']:.0%}/yr x T (an ASSUMED cash rate, not a measured one). "
+           f"{rk['note']}", "",
+           f"| # | account | sessions | return | SPY same window | raw excess | {_EXP_HEAD} | "
+           "Jensen at assumed rf | label |",
+           f"|---:|---|---:|---:|---:|---:|{_EXP_ALIGN}|---:|---|"]
     for i, x in enumerate(rk["rows"], 1):
         mem = len(x.get("bet_members") or [])
         acc = x["account"] + (f" (one bet with {mem - 1} other account(s))" if mem > 1 else "")
         out.append(f"| {i} | {acc} | {x['sessions_graded']} | {x['roi_pct']:+.2f}% | "
                    f"{x['spy_same_window_pct']:+.2f}% | {x['vs_spy_pp']:+.2f} pp | {_exp_cells(x)} | "
-                   f"{x['evidence_label']} |")
-    out += _exp_whys([x for x in rk["rows"] if not isinstance(x["market_exposure"]["beta_adjusted_excess_pp"], float)])
+                   f"{_rf_cell(x)} | {x['evidence_label']} |")
+    out += _exp_whys(rk["rows"])
     return out
 
 
@@ -581,9 +669,9 @@ def render_md(v: dict) -> str:
     out += ["", f"## Leaders: the top {len(v['leaders'])} DISTINCT bets — receipts: {rc}", "",
             "Chosen after the fact from the whole table; a leader over a few sessions is an observation, "
             "not a skill claim.", "",
-            "| # | account (bet members) | return | SPY same window | vs SPY | beta | up-capture | down-capture | "
-            "beta-adjusted excess | window | sessions | label | random twin |",
-            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|---|"]
+            f"| # | account (bet members) | return | SPY same window | vs SPY | {_EXP_HEAD} | "
+            "window | sessions | label | random twin |",
+            f"|---:|---|---:|---:|---:|{_EXP_ALIGN}|---|---:|---|---|"]
     for x in v["leaders"]:
         tw = x["random_twin"]
         twc = (f"{tw['return_pct']:+.2f}% ({tw['kind']}), gap {tw['gap_pp']:+.2f} pp"
@@ -602,9 +690,9 @@ def render_md(v: dict) -> str:
         out.append(f"- **{x['account']}** {rz['label']} -> {rz.get('next_label')}: {rz['line']}. "
                    f"{x['twin_line'][0].upper()}{x['twin_line'][1:]}.")
     out += ["", f"## Behind SPY: the worst {len(v['losers'])}, named with the same honesty — receipts: {rc}", "",
-            "| account | family | return | SPY same window | vs SPY | beta | up-capture | down-capture | "
-            "beta-adjusted excess | window | sessions | label |",
-            "|---|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|"]
+            f"| account | family | return | SPY same window | vs SPY | {_EXP_HEAD} | "
+            "window | sessions | label |",
+            f"|---|---|---:|---:|---:|{_EXP_ALIGN}|---|---:|---|"]
     for x in v["losers"]:
         out.append(f"| {x['account']} | {x['family']} | {x['roi_pct']:+.2f}% | {x['spy_same_window_pct']:+.2f}% | "
                    f"{x['vs_spy_pp']:+.2f} pp | {_exp_cells(x)} | {x['inception']} -> {x['last_mark']} | "

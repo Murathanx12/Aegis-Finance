@@ -30,7 +30,9 @@ def main(argv: list[str] | None = None) -> int:
                                                  "the receipts")
     ap.add_argument("--rebuild-dna", action="store_true",
                     help="re-run book_dna on the ROI receipt into --out (lanes not fetched, database "
-                         "read-only); for receipts written before a book_dna field existed")
+                         "opened mode=ro); for receipts written before a book_dna field existed. mode=ro "
+                         "writes no row, but SQLite still updates the WAL index aegis_pi.db-shm (its mtime "
+                         "moves); immutable=1 would avoid that and could miss rows still in the WAL")
     a = ap.parse_args(argv)
     try:
         out = RV.run(a.run_id, Path(a.folder) if a.folder else RV.PA_DIR,

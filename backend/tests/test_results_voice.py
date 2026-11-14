@@ -333,3 +333,77 @@ def test_rebuild_dna_writes_only_into_out_dir_and_reads_read_only(folder, tmp_pa
     assert res["run_id"] == RID
     for x in res["voice"]["leaders"] + res["voice"]["losers"]:
         assert "market_exposure" in x and x["market_exposure"]["beta_adjusted_excess_pp"] is not None
+
+
+# ── CH-11 fix round (review of PR #140, 2026-11-14): each test fails on 0b45f7f8 ──
+
+def _rich(beta: float, bax: float, *, window=("2026-09-01", "2026-11-12", 45, 103)) -> dict:
+    """A market_exposure block in the shape book_dna writes after the fix round."""
+    f, t, n, s = window
+    return {"beta": {"value": beta, "se": 0.05, "n_obs": n, "from": f, "to": t},
+            "up_capture": {"value": beta + 0.07, "se": 0.08, "n_periods": 22, "estimate": beta + 0.07},
+            "down_capture": {"value": beta - 0.09, "se": 0.06, "n_periods": 23, "estimate": beta - 0.09},
+            "beta_adjusted_excess_pp": {"value": bax, "se_pp": 2.1, "mde_pp": 5.88, "rf_effect_pp": 1.05,
+                                        "rf_note": "rf = 0 declared; ASSUMED 4%/yr"},
+            "estimation_window": {"from": f, "to": t, "n_periods": n, "receipt_sessions": s,
+                                  "comparable": True},
+            "n_obs": n}
+
+
+def _with_fix_round_exposure(folder: Path) -> tuple[str, str, str]:
+    """Every book gets a rich block; one is NOT COMPARABLE (M1), one is a flat book printed
+    near zero (m1) with a date-stamp note (B1). Returns (not comparable, near zero, ranked)."""
+    p = folder / f"book_dna_{RID}.json"
+    d = json.loads(p.read_text(encoding="utf-8"))
+    names = [b["account"] for b in d["books"]]
+    nc, nz = "hack4", next(a for a in names if a not in ("hack4",) and not a.startswith("hack"))
+    for i, b in enumerate(d["books"]):
+        b["market_exposure"] = _rich(0.3 + 0.01 * i, 5.0 - 0.5 * i)
+        if b["account"] == nc:
+            why = ("not comparable: beta measured on 2026-09-28..2026-11-11 (31 periods) and the receipt window "
+                   "is 2026-08-28..2026-11-12 (54 sessions): it covers 31 of 54 receipt sessions (57% < 80%)")
+            b["market_exposure"]["beta_adjusted_excess_pp"] = {
+                "value": DNA.CANNOT_DETERMINE, "why": why, "window_figure_pp": -2.87, "window_figure_se_pp": 3.0,
+                "window_from": "2026-09-28", "window_to": "2026-11-11", "window_n_periods": 31}
+            b["market_exposure"]["estimation_window"].update(comparable=False, receipt_sessions=54)
+        if b["account"] == nz:
+            me = b["market_exposure"]
+            me["beta"]["value"], me["down_capture"]["value"] = 0.0001, -0.0001
+            me["beta_adjusted_excess_pp"]["value"] = -0.001
+            me["stamp_note"] = "date stamp lag in 1 month(s) (2026-08 same-day -0.09 / lag -1 +0.62): synthetic"
+    p.write_text(json.dumps(d), encoding="utf-8")
+    return nc, nz, names[0]
+
+
+def test_fix_m1_not_comparable_rows_print_their_window_figure_and_follow_the_ranked(folder):
+    nc, nz, _ = _with_fix_round_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    rk = v["beta_adjusted_ranking"]
+    accs = [x["account"] for x in rk["rows"]]
+    assert rk["n_not_comparable"] == 1 and accs[-1] == nc          # after every ranked account
+    row = rk["rows"][-1]["market_exposure"]
+    assert row["not_comparable"]["figure_pp"] == -2.87
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "NOT COMPARABLE: -2.87 pp on 2026-09-28..2026-11-11 (31 p)" in md
+    assert "covers 31 of 54 receipt sessions" in md                 # the reason line, not a blank
+
+
+def test_fix_rows_print_se_n_mde_and_the_beta_window(folder):
+    _, _, first = _with_fix_round_exposure(folder)
+    v = RV.run(RID, folder)["voice"]
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "| beta | up-capture | down-capture | beta-adjusted excess | beta window |" in md
+    assert "±0.05 | " in md and "±0.08 (n 22)" in md and "pp ±2.10 (MDE 5.88)" in md
+    assert "2026-09-01..2026-11-12, 45 p of 103 s" in md
+    top = v["leaders"][0]
+    assert " on 2026-09-01..2026-11-12, 45 p of 103 s" in top["exposure_line"]
+    assert "Jensen at assumed rf" in md
+
+
+def test_fix_m1_minor_never_prints_minus_zero_and_prints_the_stamp_note(folder):
+    _, nz, _ = _with_fix_round_exposure(folder)
+    RV.run(RID, folder)
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    assert "-0.00" not in md
+    if any(nz in ln for ln in md.splitlines() if ln.startswith("|")):
+        assert f"- {nz} — beta window: date stamp lag in 1 month(s)" in md
