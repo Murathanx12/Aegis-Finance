@@ -645,6 +645,9 @@ app.include_router(control.router)
 app.include_router(control_ask.router)
 # CH-22a: the systems dashboard (reads one receipt; the desktop's first screen)
 app.include_router(system_status.router)
+# CH-22 ticker hub: our own news/forecasts/calendar/related per ticker (local only, 403 off-desktop)
+from backend.routers import ticker_hub as _ticker_hub_router  # noqa: E402
+app.include_router(_ticker_hub_router.router)
 
 
 def mount_desktop_frontend(application: "FastAPI") -> dict:

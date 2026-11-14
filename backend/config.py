@@ -6969,6 +6969,38 @@ EVENT_NODES_FOREIGN_NAME_ALIASES: dict = {
     "美光公司": ("MU", "Micron's Chinese name with 'company' (美光公司)"),
     "台灣美光": ("MU", "Micron's Taiwan entity (台灣美光)"),
 }
+# ── TICKER HUB (ROADMAP CH-22 / M-universe: one page per ticker) ─────────────────
+#: `backend/services/ticker_hub.py` indexes the local news corpus by ticker
+#: (`python -m scripts.ticker_hub build`). The cache lives under `<data root>/<dirname>`.
+TICKER_HUB_DIRNAME = "ticker_hub"
+#: A first build indexes corpus day files / reader day folders at most this old.
+TICKER_HUB_INDEX_DAYS = 90
+#: The index is STALE (payload says so, with its age) past this many hours.
+TICKER_HUB_STALE_HOURS = 6.0
+#: Body characters handed to the strict resolver per row (titles are always read whole).
+TICKER_HUB_BODY_CHARS = 4000
+#: A reader front/search-page link becomes a headline row only with this much text.
+TICKER_HUB_MIN_LINK_CHARS = 25
+TICKER_HUB_MIN_LINK_WORDS = 4
+#: Request caps.
+TICKER_HUB_DEFAULT_DAYS = 30
+TICKER_HUB_MAX_DAYS = 120
+TICKER_HUB_NEWS_LIMIT = 200
+TICKER_HUB_FEED_LIMIT = 500
+TICKER_HUB_FACET_TOP = 40
+TICKER_HUB_SECTOR_PEERS = 25
+#: Sources that are not headlines (search pages, media pages) and are not indexed.
+TICKER_HUB_SKIP_SOURCES: tuple = ("social", "media_transcripts", "dj_digest_inbox")
+#: Reader page kinds that are not news (quote pages, media pages).
+TICKER_HUB_SKIP_PAGE_KINDS: tuple = ("stock_text", "media", "front_text")
+#: Well-known short names the strict resolver cannot take (under its 5-character
+#: floor, or ambiguous without a cue). CASE-SENSITIVE, whole word, symbol must be in the
+#: issuer table. "Apple" is the one accepted risk (the fruit, capitalised in a title).
+TICKER_HUB_CASED_ALIASES: dict = {"Meta": "META", "AMD": "AMD", "TSMC": "TSM", "Apple": "AAPL",
+                                  "Facebook": "META", "AWS": "AMZN"}
+#: Share classes read together on one ticker page.
+TICKER_HUB_SIBLINGS: dict = {"GOOGL": ("GOOG",), "GOOG": ("GOOGL",), "BRK.B": ("BRK.A",),
+                             "BRK.A": ("BRK.B",)}
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
