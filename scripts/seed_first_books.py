@@ -452,7 +452,9 @@ def control_client():
     from fastapi.testclient import TestClient
 
     from backend.main import app
-    return TestClient(app)
+    # PR #143 review H1: control POSTs answer only a loopback Host with the served
+    # port; `json=` on every call below supplies the required Content-Type.
+    return TestClient(app, base_url="http://127.0.0.1:8000")
 
 
 def existing_ids(conn=None) -> set:

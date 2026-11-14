@@ -422,7 +422,15 @@ def _assign(handle, pid: int) -> dict:
         return {"bound": False, "reason": f"{type(exc).__name__}: {exc}"}
 
 
-def shell_argv(interp: str, page: str = "/system-status", extra: list[str] | None = None) -> list[str]:
+#: The page the window opens on. The ORIGINAL dashboard with its sidebar
+#: (owner, 2026-11-14: "I want the original dashboard as well to check the
+#: stocks and track them"); the systems page is one click away in the sidebar's
+#: "This PC" group. Kept equal to `desktop.aegis_desktop.DEFAULT_PAGE` by test --
+#: the launcher must not import the shell, so the value is written twice.
+DEFAULT_PAGE = "/"
+
+
+def shell_argv(interp: str, page: str = DEFAULT_PAGE, extra: list[str] | None = None) -> list[str]:
     return [interp, "-m", "desktop.aegis_desktop", "--page", page, *(extra or [])]
 
 
@@ -571,7 +579,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="skip git / pip / frontend and start the shell as it is")
     ap.add_argument("--headless", action="store_true",
                     help="start the shell serving, probe /api/health, print the receipt, stop")
-    ap.add_argument("--page", default="/system-status")
+    ap.add_argument("--page", default=DEFAULT_PAGE,
+                    help="path the window opens on (default: the dashboard, /; /system-status is the systems page)")
     ap.add_argument("--port", type=int, default=0)
     a, passthrough = ap.parse_known_args(argv)
 

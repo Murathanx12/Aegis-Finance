@@ -969,6 +969,11 @@ main{padding:12px 16px;max-width:1200px;margin:0 auto}h2{font-size:12px;text-tra
 .act{display:block;color:var(--fg);font-size:12px}.act::before{content:"to do: ";color:var(--mut)}
 button{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer;font:inherit}
 a{color:inherit}.stale{color:var(--down);font-weight:600}
+nav.top{flex-basis:100%;display:flex;gap:4px;flex-wrap:wrap;margin:-2px 0 2px}
+nav.top a{text-decoration:none;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:2px 9px}
+nav.top a:hover{color:var(--fg);background:var(--card)}
+.gen{font-size:14px;margin:4px 0 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.gen.stale{border-color:var(--down)}
 @media (max-width:700px){.r{grid-template-columns:70px 1fr}.r .d{grid-column:1 / -1}}
 """
 
@@ -994,6 +999,36 @@ def _row_html(r: dict, *, show_section: bool = False) -> str:
             f"<span class=d>{e(r['detail'])}{ev}{act}</span></div>")
 
 
+#: The links back to the rest of the desktop app (CH-22, 2026-11-14). Plain hrefs:
+#: this page is rendered by the backend, the targets are routes of the static
+#: export the same server mounts at `/`. Owner: "you removed everything to add
+#: [this page]" -- it had no way back to the dashboard.
+NAV_LINKS = (("Dashboard", "/"), ("Stocks", "/stock"), ("Watchlist", "/watchlist"),
+             ("News", "/news"), ("Desktop", "/desktop"))
+
+
+def generated_line(rec: dict, *, now: Optional[datetime] = None) -> tuple[str, bool]:
+    """(plain-words sentence, stale?) -- when the receipt was collected and how old it is.
+
+    Compared to `limit_s("status_receipt")`, so the sentence can go red; a receipt
+    with no readable time says so instead of printing a date it does not have.
+    """
+    gen = parse_ts(rec.get("generated_utc"))
+    if gen is None:
+        return ("This status has no readable collection time, so none of it can be called "
+                "current. Refresh: python -m scripts.system_status --html", True)
+    age = ((now or utcnow()) - gen).total_seconds()
+    lim = limit_s("status_receipt")
+    when = f"{gen:%Y-%m-%d %H:%M} UTC ({gen.astimezone():%H:%M} on this PC)"
+    if age < -60:
+        return (f"This status was collected {when} -- {fmt_age(age)} in the FUTURE by this "
+                "PC's clock, so its age cannot be judged.", True)
+    if lim is not None and age > lim:
+        return (f"This status was collected {when}, {fmt_age(age)} ago -- older than the "
+                f"{fmt_age(lim)} limit. Refresh: python -m scripts.system_status --html", True)
+    return f"This status was collected {when}, {fmt_age(age)} ago.", False
+
+
 def render_html(rec: dict, *, now: Optional[datetime] = None) -> str:
     """One self-contained page: no network, no CDN, light/dark aware."""
     e = _html.escape
@@ -1003,12 +1038,17 @@ def render_html(rec: dict, *, now: Optional[datetime] = None) -> str:
     stale = age is not None and lim is not None and age > lim
     red = reds(rec)
     parts = [f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
-             f"<title>Aegis systems</title><style>{_CSS}</style></head><body><header><h1>Aegis systems</h1>"
+             f"<title>Aegis systems</title><style>{_CSS}</style></head><body><header>"
+             "<nav class=top aria-label='Aegis app'>"
+             + "".join(f"<a href='{e(href, quote=True)}'>{e(label)}</a>" for label, href in NAV_LINKS)
+             + "</nav><h1>Aegis systems</h1>"
              f"<span class=hl>{e(header_line(rec))}</span>"
              f"<span class=mut>collected {e(rec.get('generated_utc') or '?')}"
              + (f" · <span class=stale>{fmt_age(age)} old, refresh: python -m scripts.system_status --html</span>" if stale else
                 f" · {fmt_age(age)} ago") + "</span>"
              "<button id=theme type=button>theme</button></header><main>"]
+    gl, gl_stale = generated_line(rec, now=now)
+    parts.append(f"<p class='gen{' stale' if gl_stale else ''}' id=generated>{e(gl)}</p>")
     if rec.get("undetermined"):
         parts.append("<h2>Could not determine</h2><div class=card>" + "".join(
             f"<div class=r><span class='b UNKNOWN'>UNKNOWN</span><span class=n></span><span class=d>{e(u)}</span></div>"

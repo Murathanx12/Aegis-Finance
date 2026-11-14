@@ -7196,6 +7196,18 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+# -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
+#: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's
+#: "Note to Claude" box appends one row to `<OPTIMUS_LEDGER_DIR>/owner_inbox/notes.jsonl`.
+#: No LLM call, nothing is sent anywhere: the next brain session reads the file.
+#: A note longer than this many characters is refused (422), never cut.
+OWNER_INBOX_MAX_CHARS = 8000
+#: `GET /api/control/owner-notes` default and ceiling for `limit`.
+OWNER_INBOX_LIST_DEFAULT = 20
+OWNER_INBOX_LIST_MAX = 500
+#: Seconds a writer waits for the inbox lock (thread + cross-process) before the
+#: request is refused with 503 -- never a silent drop (PR #143 review, M1).
+OWNER_INBOX_LOCK_WAIT_S = 5.0
 # ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
 #: `scripts/night_investigator_news.py`: the investigator's own process and contract,
 #: plus typed world-digest rows about the name and its graph neighbours (context only),

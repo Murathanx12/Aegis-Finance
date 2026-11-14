@@ -18,6 +18,7 @@ import ast
 from pathlib import Path
 
 import pytest
+from backend.tests.local_control import local_client
 from fastapi.testclient import TestClient
 
 from backend.routers import control
@@ -138,7 +139,7 @@ def client(monkeypatch):
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
     app = FastAPI()
     app.include_router(control.router)
-    return TestClient(app)
+    return local_client(app)  # H1: loopback Host + JSON, like the desktop page
 
 
 def test_reads_work_while_writes_refuse_when_disabled(client):
