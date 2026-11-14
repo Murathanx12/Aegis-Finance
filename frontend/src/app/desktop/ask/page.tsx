@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Power, Send, ShieldOff } from "lucide-react";
+import { BookOpen, MessageSquarePlus, Power, Send, ShieldOff } from "lucide-react";
+import { OwnerNoteForm } from "@/components/desktop/owner-note";
 import { ApiState, DASH, RawPayload } from "@/components/desktop/primitives";
 import {
   ask,
@@ -99,6 +100,24 @@ export default function AskAegisPage() {
 
   return (
     <div className="space-y-4">
+      {/* CH-22 (2026-11-14): the owner's note box, on top, because the two are
+          easy to confuse and do different things. */}
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <MessageSquarePlus className="size-4" /> Note to Claude
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-foreground">Ask Aegis</strong> (below) answers now, from the
+            local model reading the receipts on this PC.{" "}
+            <strong className="text-foreground">A note</strong> is saved on this PC and read by the
+            Claude session at its next start — nobody answers it here.
+          </p>
+          <OwnerNoteForm />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader className="border-b">
           <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
