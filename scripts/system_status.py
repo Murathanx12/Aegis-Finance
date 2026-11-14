@@ -239,7 +239,7 @@ PROBE_SECTION = {
     "bars_panel": None,            # replaced by the two bars rows below
     "iif1_night": None,            # replaced by the richer learning row
     "task": "tasks", "daily_pass": "tasks",
-    "ranking": "universe", "u_funnel": "universe",
+    "ranking": "universe", "u_funnel": "universe", "forward_calendar": "universe",
     "u_plan": "decisions", "decision_contract": "decisions", "policy_state": "decisions",
     "sim_session": "decisions", "live_market_loop": "decisions", "book_grader": "decisions",
     "u_review": "decisions",

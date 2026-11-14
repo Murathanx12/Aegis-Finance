@@ -309,5 +309,8 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    # Under pythonw (a scheduled task with no console) sys.stdout is None: the first firing of
+    # the 30-minute task on 2026-11-13 died here with rc 1 in 3.6 s and wrote no receipt.
+    if sys.stdout is not None and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.exit(main())
