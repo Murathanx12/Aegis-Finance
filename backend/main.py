@@ -698,9 +698,22 @@ def mount_desktop_frontend(application: "FastAPI") -> dict:
             except ValueError:
                 return "", None
 
+    # CH-22 (2026-11-14): the window opens on `/`, the dashboard. The API's JSON
+    # index (`@app.get("/")`) is registered first and would answer `/` -- and the
+    # client router's `/?_rsc=` fetch for the sidebar's "Dashboard" link -- with
+    # the endpoint list instead of the page. In the desktop app only, `/` belongs
+    # to the export; the JSON index stays on the website, where nothing is mounted.
+    from fastapi.routing import APIRoute as _APIRoute
+    before = len(application.router.routes)
+    application.router.routes[:] = [
+        r for r in application.router.routes
+        if not (isinstance(r, _APIRoute) and r.path == "/")]
+    root_routes_removed = before - len(application.router.routes)
     application.mount("/", _ExportFiles(directory=str(out), html=True), name="desktop")
-    logger.info("desktop frontend mounted from %s (stock shell: %s)", out, shell["reason"])
-    return {"mounted": True, "path": str(out), "stock_shell": shell}
+    logger.info("desktop frontend mounted from %s (stock shell: %s; JSON index routes removed: %d)",
+                out, shell["reason"], root_routes_removed)
+    return {"mounted": True, "path": str(out), "stock_shell": shell,
+            "root_index_routes_removed": root_routes_removed}
 
 
 #: The `[ticker]` route the desktop export pre-renders as a blank shell. Any
