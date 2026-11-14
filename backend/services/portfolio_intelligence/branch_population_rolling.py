@@ -47,9 +47,9 @@ import json
 import math
 import os
 import uuid
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -781,7 +781,6 @@ def mark_rows(cohorts: list[dict], bars: pd.DataFrame, *, through: pd.Timestamp,
         opn = open_all.reindex(days)
         spy_c = close[BENCH].to_numpy(dtype=float)
         spy_o0 = float(opn[BENCH].iloc[0])
-        books = {b["holdings_hash"]: b for b in c["books"] if b["status"] == "READY"}
         rnd: dict[str, list] = {}
         for ctl in c["controls"]:
             rnd.setdefault(ctl["parent_holdings_hash"], []).append(ctl)
