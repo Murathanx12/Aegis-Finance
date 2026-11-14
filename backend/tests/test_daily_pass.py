@@ -1006,3 +1006,28 @@ def test_the_child_runner_reads_the_summary_and_names_a_failure(monkeypatch) -> 
     assert argvs[2][2:] == ["scripts.bridge_report", "report", "--json"]
     assert all(kw["timeout"] == 5 for _a, kw in seen[-3:])
     assert all(kw.get("shell") in (None, False) for _a, kw in seen)
+
+
+def test_a_degraded_bars_refresh_is_a_degraded_row_and_still_runs_the_audit(
+        out, calls, rth_open, monkeypatch) -> None:
+    """rc 3: US panels current, only declared-optional foreign symbols failed."""
+    monkeypatch.setattr(DP, "run_bars_refresh", lambda **kw: {
+        "status": "degraded", "rc": 3, "line": "BARS_FRESH: newest=x sessions_old=0",
+        "reason": "DEGRADED: only declared-optional foreign symbol(s) failed: ['EVO.ST']",
+        "panels": {"ranker_deep": {"status": "ok", "rows_added": 5}}})
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "bars_refresh")
+    assert row["status"] == "degraded" and row["bars_refresh_status"] == "degraded"
+    assert row["survivorship_audit"]["status"] != "refused"
+    assert any("EVO.ST" in r for r in row["refusals"])
+    assert "bars_refresh" not in rec["steps_that_did_not_run"]
+    assert any(l.startswith("DEGRADED bars feed") for l in DP.degraded_lines(rec["steps"]))
+
+
+def test_wait_network_is_a_refused_row(out, calls, rth_open, monkeypatch) -> None:
+    monkeypatch.setattr(DP, "run_bars_refresh", lambda **kw: {
+        "status": "wait_network", "rc": 4, "line": "BARS_FRESH: newest=x sessions_old=1",
+        "reason": "WAIT_NETWORK: data host did not resolve", "panels": {}})
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "bars_refresh")
+    assert row["status"] == "refused" and row["bars_refresh_status"] == "wait_network"

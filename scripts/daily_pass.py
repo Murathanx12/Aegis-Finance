@@ -208,7 +208,7 @@ STEPS: tuple[tuple[str, str], ...] = (
 #: `always_on_lab.STATUSES` uses for the same thing, so one reader learns one
 #: vocabulary: the step outlived its wall-clock box, its thread was abandoned,
 #: and the pass went on to the next step.
-STATUSES = ("ok", "nothing_to_do", "refused", "error", "skipped", "timeout")
+STATUSES = ("ok", "nothing_to_do", "refused", "error", "skipped", "timeout", "degraded")
 
 #: Per-step wall-clock bound, read from config at import so a step declared
 #: without a box is an AssertionError HERE rather than an unbounded step three
@@ -540,6 +540,10 @@ def degraded_lines(rows: list[dict]) -> list[str]:
                    "returned no age line)")
     elif m.group(1) == "UNKNOWN" or int(m.group(1)) >= 1:
         out.append(f"DEGRADED bars: {m.group(1)} closed session(s) missing -- {bl}")
+    br = by.get("bars_refresh") or {}
+    if br.get("status") == "degraded":
+        out.append("DEGRADED bars feed: US panels current, foreign leg failed -- "
+                   + "; ".join(str(x) for x in (br.get("refusals") or [])[:1]))
     pa = by.get("paper_accounts") or {}
     if pa.get("broker_degraded"):
         out.append(str(pa["broker_degraded"]))
@@ -905,20 +909,33 @@ def step_bars_refresh(ctx: dict) -> dict:
     added = sum(int((v or {}).get("rows_added") or 0) for v in panels.values()
                 if isinstance(v, dict))
     added += int((res.get("frozen_constituents") or {}).get("n_new_rows") or 0)
-    status = ("refused" if st == "refused" else
+    # `bars_refresh` statuses (scripts.pull_bars_refresh): ok / unchanged /
+    # degraded (rc 3: only declared-optional foreign symbols failed, every US
+    # panel current) / refused (rc 2) / wait_network (rc 4, red: the venue was
+    # never reached). A row `degraded` is NOT a refusal: the US panels are
+    # current, so the survivorship audit still runs.
+    degraded = st == "degraded"
+    status = ("refused" if st in ("refused", "wait_network") or (
+                  st not in ("ok", "unchanged", "nothing_to_do", "degraded")) else
+              "degraded" if degraded else
               "ok" if st == "ok" and added else "nothing_to_do")
     refusals = [str(res.get("reason"))] if res.get("reason") else []
     if str(res.get("line") or "").startswith("BARS_STALE"):
         refusals.append(str(res["line"]))
+    soft_notes = list(refusals) if degraded else []
+    if degraded:
+        refusals = []
     ctx["bars_line"] = res.get("line")
     audit = {"status": "refused", "reason": "bars refresh did not establish current inputs"}
-    if st in ("ok", "unchanged", "nothing_to_do") and res.get("rc") == 0 and not refusals:
+    if st in ("ok", "unchanged", "nothing_to_do", "degraded") and res.get("rc") in (0, 3) and not refusals:
         from scripts.survivorship_cache_producer import produce
         remaining = min(180.0, float(_STEP_BOXES["bars_refresh"]) - (time.time() - t0) - 60.0)
         audit = produce(budget_seconds=remaining)
     if audit["status"] == "refused":
         refusals.append("survivorship_audit: " + str(audit.get("reason")))
         status = "refused"
+    # a degraded row keeps its reason visible (task_receipts prints refusals[0])
+    refusals = (soft_notes + refusals) if status == "degraded" else refusals
     return _row("bars_refresh", status, rows=added,
                 seconds=round(time.time() - t0, 2), refusals=refusals,
                 bars_line=res.get("line"), receipt=res.get("path"),
