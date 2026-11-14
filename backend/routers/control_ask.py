@@ -34,12 +34,14 @@ from __future__ import annotations
 import os
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from backend.routers.control import _now, _require_enabled
+from backend.routers.control import _now, _require_enabled, guard_unsafe_methods
 from backend.services import ask_tools
 
-router = APIRouter(prefix="/api/control", tags=["control"])
+# H1 (PR #143 review): the ask POST is state-changing (it can start the model server).
+router = APIRouter(prefix="/api/control", tags=["control"],
+                   dependencies=[Depends(guard_unsafe_methods)])
 
 
 ASK_SYSTEM = (

@@ -5248,6 +5248,33 @@ BOOK_DNA_LANE_FAMILY_CORR = 0.85
 BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
 #: How many tickers name a cluster's shared basket on the collapse line.
 BOOK_DNA_BASKET_TOP = 5
+#: CH-11 note (2026-11-13, "the books won only because the market was rising"):
+#: up-capture / down-capture need at least this many SPY-up AND SPY-down periods
+#: in the book's period-return series; below it they say CANNOT DETERMINE.
+BOOK_DNA_MIN_CAPTURE_OBS = 8
+#: CH-11 fix round (review of PR #140, 2026-11-14). B1: the C15 date-stamp test runs per
+#: calendar month (months with >= this many periods); a month FAILS when its correlation with
+#: SPY shifted back one session is at least MIN_LAG_CORR AND beats the same-day correlation by
+#: more than GAP_SE standard errors (sqrt(2/(n-3))) in Fisher-z units. A detection rule, not a 5%
+#: test: a month holds 9-22 periods, and on the lanes' August (16) a one-sided 5% test needs a z
+#: gap of 0.645 against the 0.46-0.63 observed. market_exposure is then estimated after the last
+#: failing month.
+BOOK_DNA_STAMP_MONTH_MIN_OBS = 8
+BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR = 0.30
+BOOK_DNA_STAMP_MONTH_GAP_SE = 1.0
+#: M1: the beta's window is comparable with the receipt window only when it covers at least
+#: this share of the receipt sessions AND its compounded book return is within this many pp of
+#: the receipt return; otherwise the receipt-window beta-adjusted excess is CANNOT DETERMINE
+#: and the beta window's own figure is printed, labelled with its window.
+BOOK_DNA_EXPOSURE_MIN_COVER = 0.80
+BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP = 2.0
+#: M2: an up/down capture whose standard error (delta method) is above this is CANNOT DETERMINE.
+BOOK_DNA_MAX_CAPTURE_SE = 0.25
+#: house rule "the MDE beside every alpha": MDE = this x SE (80% power, 5% two-sided).
+BOOK_DNA_MDE_Z = 2.8
+#: m2: rf = 0 is declared; the row also prints (1 - beta) x rf x T at this ASSUMED cash rate
+#: (not a measured rate) so the reader sees how much the declaration favours a low-beta book.
+BOOK_DNA_RF_ANNUAL_ASSUMED = 0.04
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
@@ -5300,6 +5327,40 @@ MATCHED_TWIN_REEVAL_LOOKBACK_DAYS = 140
 #: A reconstruction that misses the receipt's own return by more than this is
 #: flagged RECON_GAP (the twins are still computed on the reconstruction).
 MATCHED_TWIN_REEVAL_MAX_RECON_GAP_PP = 1.0
+# ── CH-38 conditional dip study (2026-11-13, `scripts/ch38_dip_study.py`) ─────
+#: Every threshold below was fixed BEFORE any forward return was read and is
+#: hashed into the study's declaration. The owner's rule: a name >= 30% below
+#: its 52-week high (close / max of the trailing 252 closes - 1, total-return
+#: index; the 11-11 screen's `off_high`).
+CH38_DIP_DRAWDOWN = 0.30
+#: Arm A = the market itself had fallen: the FF value-weighted market's
+#: total-return index >= 10% below its trailing 252-session high on the signal
+#: date (the conventional "correction"); arm B = the company fell, the market
+#: had not (market drawdown < 10%).
+CH38_MARKET_DRAWDOWN = 0.10
+#: Liquid only: price >= 5 USD AND among the top 1,800 common stocks by
+#: 63-session median dollar volume on the signal date (the 11-11 screen held
+#: 1,868 names at >= 20 M USD; a rank floor is the same breadth in every era).
+CH38_MIN_PRICE = 5.0
+CH38_LIQUID_TOP_N = 1800
+#: Nominal floor of the paper book today, run as a labelled sensitivity line.
+CH38_NOMINAL_DOLLAR_VOLUME = 20e6
+CH38_HORIZONS = (21, 63, 126)
+CH38_VOL_WINDOW = 63
+CH38_BETA_WINDOW = 252
+#: Stop for the future book: exit at the close AFTER the first close at or below
+#: entry x (1 - 3 x the name's trailing 63-session daily sigma); cash after.
+CH38_STOP_SIGMA = 3.0
+#: Twin draws per signal date (matched_twins.draw_twins, band x vol tercile).
+CH38_TWIN_DRAWS = 40
+CH38_SEED = 20261113
+#: Labelled sensitivity sweeps (read at their WORST cell, never used to admit).
+CH38_SWEEP_DIP_DRAWDOWN = (0.20, 0.40)
+CH38_SWEEP_MARKET_DRAWDOWN = (0.05, 0.15)
+CH38_ALPHA = 0.05
+CH38_POWER = 0.80
+CH38_FIRST_YEAR = 1991
+CH38_LAST_YEAR = 2024
 
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
@@ -6402,6 +6463,23 @@ HEALTH_TASK_CADENCE_H = {
 #: consecutive probes AND for longer than the allowed age, with no declared idle
 #: reason, is STALE even though its stamps keep moving (roadmap §7).
 HEALTH_PROGRESS_SAME_HASH_PROBES = 2
+#: S69 (2026-11-14, CH-22a §5.8): the tasks registered 11-11 .. 11-14, cadences read from
+#: their live triggers. `task_receipts` judges each by the receipt its job writes.
+HEALTH_TASK_CADENCE_H.update({
+    "AegisEventNodes": 0.5, "AegisForwardCalendar": 24.0, "AegisOwnerCallsRecord": 24.0,
+    "AegisDiscoveryAutopsy": 24.0, "AegisRawSecCollection": 1.0, "AegisLabNight": 24.0,
+    "AegisNewsOverlayBook": 24.0, "AegisLLMSelectorBook": 168.0, "AegisSystemStatus": 0.25,
+    "AegisOwnerEventWarning": 1.0 / 6.0,
+})
+#: bytes of `runtime_switch/runtime_task_runs.jsonl` read for wrapper rcs (~140 kB/day
+#: measured 2026-11-14, so this covers about two weeks: a weekly job's last run included)
+TASK_RECEIPT_WRAPPER_TAIL_BYTES = 2_000_000
+#: AegisLabNight: trigger 23:00 local (UTC+8) + ExecutionTimeLimit PT7H15M, in UTC
+LAB_NIGHT_WINDOW_UTC = ("15:00", "22:15")
+#: minutes after the window opens before a night with no tick reads DEGRADED
+LAB_NIGHT_FIRST_TICK_GRACE_MIN = 30
+#: AegisNewsOverlayBook's declared ET window (the step's own NEWS_OVERLAY_STEP_WINDOW_ET)
+NEWS_OVERLAY_TASK_WINDOW_START_ET, NEWS_OVERLAY_TASK_WINDOW_END_ET = NEWS_OVERLAY_STEP_WINDOW_ET
 #: `task_keeper analyst`: the weekly analyst-target pull (~60-80 min measured).
 ANALYST_PULL_TIMEOUT_MIN = 150
 #: `task_keeper brain`: `tools/refresh_aegis.py` in the sibling Optimus repo.
@@ -6748,6 +6826,43 @@ ONE_EVENT_FUNNEL_STALE_DAYS = 10
 #: evidence (review 2 S65, B1: a back-dated --now must not mint a 'frozen' hit).
 ONE_EVENT_REPLAY_TOLERANCE_S = 300
 
+# ── FORWARD CATALYST CALENDAR (ROADMAP CH-35 next dates, CH-08 freshness, M2) ──
+#: `backend/services/forward_calendar.py` + `scripts/forward_calendar.py`: the NEXT
+#: earnings date for every universe name, one append-only point-in-time snapshot per
+#: pull under `<data root>/forward_calendar/snapshots/`.
+FORWARD_CALENDAR_DIRNAME = "forward_calendar"
+#: Symbols per Yahoo v7 quote request (one request answers the whole batch).
+FORWARD_CALENDAR_BATCH_SIZE = 50
+#: Pause between batches, and after a 429 before the one retry of that batch.
+FORWARD_CALENDAR_BATCH_SLEEP_S = 2.0
+FORWARD_CALENDAR_RATE_LIMIT_BACKOFF_S = 60.0
+FORWARD_CALENDAR_TIMEOUT_S = 30
+#: RED floor on what the VENDOR ANSWERED: a pull where fewer than this share of the
+#: names asked for got any row back (DATE or NO_DATE; FAILED does not count) is
+#: LOW_COVERAGE: the CLI exits 2 and the health row is STALE (a collector that returns
+#: nothing must not be green).
+FORWARD_CALENDAR_MIN_ANSWERED_SHARE = 0.90
+#: Separate floor on the share of ISSUERS (ETFs/indices excluded) with a next date:
+#: names that reported in the last weeks legitimately have none. CALIBRATED on the first
+#: full receipt (fc_20261113T093334Z_d5c977, two weeks after the Q3 peak): 676 of 1,856
+#: issuers had a next date (0.3642) while 1,152 carried only a past one, so the 0.40
+#: first guess was red on a healthy pull and would be every quarter. Below this floor
+#: the receipt is LOW_DATE_SHARE (rc 2).
+FORWARD_CALENDAR_MIN_DATE_SHARE = 0.20
+#: The floor that does not move with the season: issuers whose row has the vendor's
+#: earnings fields at all (a next date OR only a past one). 0.985 on the same receipt.
+#: A vendor that stops sending the fields drops this; also LOW_DATE_SHARE (rc 2).
+FORWARD_CALENDAR_MIN_FIELDS_SHARE = 0.80
+#: A ticker's newest row older than this is CALENDAR_STALE (dates get revised; the
+#: pull is daily). The health row goes STALE past the same age.
+FORWARD_CALENDAR_STALE_DAYS = 3.0
+#: Reader default horizon (matches pm_catalysts / macro_calendar HORIZON_DAYS).
+FORWARD_CALENDAR_HORIZON_DAYS = 120
+#: A `.partial.jsonl` left by an interrupted pull is resumed if started within this.
+FORWARD_CALENDAR_RESUME_MAX_AGE_HOURS = 12.0
+#: LLM-selector books (llm_portfolio/books.jsonl) frozen within this many days join the universe.
+FORWARD_CALENDAR_BOOK_LOOKBACK_DAYS = 30
+
 # ── EVENT NODES (ROADMAP CH-35, slice 1) ─────────────────────────────────────
 #: `backend/services/event_nodes.py`: corpus rows -> deterministic event clusters
 #: -> one versioned, hash-chained EVENT NODE per event. No LLM in the build; the
@@ -6932,6 +7047,118 @@ EVENT_NODES_FOREIGN_NAME_ALIASES: dict = {
     "美光公司": ("MU", "Micron's Chinese name with 'company' (美光公司)"),
     "台灣美光": ("MU", "Micron's Taiwan entity (台灣美光)"),
 }
+# ── TICKER HUB (ROADMAP CH-22 / M-universe: one page per ticker) ─────────────────
+#: `backend/services/ticker_hub.py` indexes the local news corpus by ticker
+#: (`python -m scripts.ticker_hub build`). The cache lives under `<data root>/<dirname>`.
+TICKER_HUB_DIRNAME = "ticker_hub"
+#: A first build indexes corpus day files / reader day folders at most this old.
+TICKER_HUB_INDEX_DAYS = 90
+#: The index is STALE (payload says so, with its age) past this many hours.
+TICKER_HUB_STALE_HOURS = 6.0
+#: Body characters handed to the strict resolver per row (titles are always read whole).
+TICKER_HUB_BODY_CHARS = 4000
+#: In a body longer than this (a reader page snapshot carries sidebars and "most read"
+#: lists) an issuer NAME must occur at least TICKER_HUB_BODY_MIN_MENTIONS times; the first
+#: real build tagged "Trump says war with Iran is over" (AP) NVDA from a sidebar headline.
+TICKER_HUB_SHORT_BODY_CHARS = 600
+TICKER_HUB_BODY_MIN_MENTIONS = 2
+#: Page-chrome phrases cut from reader bodies before tagging (BBC prints "Add as preferred
+#: on Google" on every article; share buttons name Facebook).
+TICKER_HUB_BODY_BOILERPLATE: tuple = ("add as preferred on google", "share on facebook",
+                                      "follow us on facebook", "sign in with google",
+                                      "get it on google play", "continue with google",
+                                      "continue with facebook", "share via facebook")
+#: More single-word names that are also surnames, places or adjectives in this corpus's
+#: titles (first real build: "Rogers", "Lindsay", "Manchester", "Costar" = co-star,
+#: "Bullish"; fix-round about-tier sample: "NATO Waters" -> WAT, "Universal early childhood
+#: education" -> UVV, "Scott Kirby" -> KEX); like EVENT_NODES_COMMON_WORD_NAMES they then
+#: need an ATTACHED cue.
+TICKER_HUB_COMMON_WORD_NAMES: tuple = ("rogers", "lindsay", "manchester", "costar", "bullish",
+                                       "waters", "universal", "kirby")
+#: Name keys that never tag a row in the hub ("Financial Institutions in Asia ...").
+TICKER_HUB_DROP_NAME_KEYS: tuple = ("financial institutions",)
+#: A reader front/search-page link becomes a headline row only with this much text.
+TICKER_HUB_MIN_LINK_CHARS = 25
+TICKER_HUB_MIN_LINK_WORDS = 4
+#: Request caps.
+TICKER_HUB_DEFAULT_DAYS = 30
+TICKER_HUB_MAX_DAYS = 120
+TICKER_HUB_NEWS_LIMIT = 200
+TICKER_HUB_FEED_LIMIT = 500
+TICKER_HUB_FACET_TOP = 40
+TICKER_HUB_SECTOR_PEERS = 25
+#: Sources that are not headlines (search pages, media pages) and are not indexed.
+TICKER_HUB_SKIP_SOURCES: tuple = ("social", "media_transcripts", "dj_digest_inbox")
+#: Reader page kinds that are not news (quote pages, media pages).
+TICKER_HUB_SKIP_PAGE_KINDS: tuple = ("stock_text", "media", "front_text")
+#: Well-known short names the strict resolver cannot take (under its 5-character
+#: floor, or ambiguous without a cue). CASE-SENSITIVE, whole word, symbol must be in the
+#: issuer table. "Apple" is the one accepted risk (the fruit, capitalised in a title).
+TICKER_HUB_CASED_ALIASES: dict = {"Meta": "META", "AMD": "AMD", "TSMC": "TSM", "Apple": "AAPL",
+                                  "Facebook": "META", "AWS": "AMZN"}
+#: Cased aliases that are also common nouns: taken only with company context (a possessive,
+#: an attached cue, a cue word nearby, or another company named in the same title). The final
+#: real build tagged a food column about apple varieties AAPL.
+TICKER_HUB_CASED_ALIASES_NEED_CONTEXT: tuple = ("Apple",)
+#: Words anywhere in the same text that also give that context ("Apple unveils new iPhone",
+#: "Apple hits fresh all-time intraday high"). Lowercase, substring.
+TICKER_HUB_CASED_CONTEXT_WORDS: tuple = ("iphone", "ipad", "macbook", "airpods", "app store",
+                                         "tim cook", "cupertino", "all-time high", "intraday",
+                                         "market cap", "market value", "trillion", "nasdaq",
+                                         "s&p 500")
+#: Share classes read together on one ticker page.
+TICKER_HUB_SIBLINGS: dict = {"GOOGL": ("GOOG",), "GOOG": ("GOOGL",), "BRK.B": ("BRK.A",),
+                             "BRK.A": ("BRK.B",)}
+#: Fix round (review of PR #145). Index layout version: a cache written by another version
+#: is rebuilt from scratch, never mixed (row ids changed in v2).
+TICKER_HUB_INDEX_SCHEMA = "ticker-hub-index/2"
+#: Boilerplate cut from a row's body BEFORE tagging, per source-id prefix ("*" = every
+#: source). Google News ends every cluster with a "full coverage" link in the edition's
+#: language; one "Google" in it tagged GOOGL on ~4,100 unrelated rows (review F1).
+TICKER_HUB_SOURCE_BOILERPLATE: dict = {
+    "google_news_rss_": ("See more headlines and perspectives on Google News",
+                         "See more headlines & perspectives on Google News",
+                         "View Full Coverage on Google News",
+                         "在Google 新闻上查看更多头条新闻和观点",
+                         "前往 Google 新聞瀏覽更多頭條新聞和觀點",
+                         "Google ニュースで見出しと意見をもっと見る",
+                         "Google 뉴스에서 헤드라인 및 의견 더보기"),
+}
+#: A publisher's or aggregator's OWN ticker is never taken from its body (page chrome,
+#: footers, "on Google News"); only from the title. Source-id prefix -> symbols.
+TICKER_HUB_PUBLISHER_TICKERS: dict = {
+    "google_news_rss_": ("GOOGL", "GOOG"),
+    "dj_reader_": ("NWSA", "NWS"), "wsj_": ("NWSA", "NWS"), "mw_": ("NWSA", "NWS"),
+    "barrons_magazine": ("NWSA", "NWS"), "reader:wsj": ("NWSA", "NWS"),
+    "reader:barrons": ("NWSA", "NWS"), "reader:marketwatch": ("NWSA", "NWS"),
+    "reader:cnbc": ("CMCSA",), "reader:yahoo": ("YHOO",),
+}
+#: Reader headline links that are quote chips, not news ("TSEM Tower Semiconductor Ltd.
+#: 154.61 -11.87 (-7.13%)", "NVDA, price 164.10, down 5.55 percent").
+TICKER_HUB_QUOTE_CHIP_PATTERNS: tuple = (
+    r"^[A-Z][A-Z.\-]{0,6}\s.*\s[+\-]?\d[\d,]*\.\d+\s[+\-]\d[\d,]*\.?\d*\s\([+\-]?\d+(?:\.\d+)?%\)$",
+    r"^[A-Z][A-Z.\-]{0,6},\s*price\s[\d,.]+,\s*(?:up|down)\s[\d.]+\s*percent$",
+)
+#: A source whose newest row is older than this is listed as stale (red) on the hub and
+#: the news page. Per-source overrides for feeds that are slow by nature.
+TICKER_HUB_SOURCE_STALE_HOURS = 48.0
+TICKER_HUB_SOURCE_STALE_HOURS_BY_SOURCE: dict = {"quantocracy_rss": 240.0,
+                                                 "reddit_securityanalysis_rss": 168.0,
+                                                 "reader:fed": 720.0, "reader:treasury": 168.0,
+                                                 "reader:bls": 720.0, "reader:sec": 168.0}
+#: A published time later than first_seen by more than this is not believed (a wrong zone);
+#: the row is then placed by its first_seen.
+TICKER_HUB_PUBLISHED_FUTURE_SLACK_S = 3600
+#: Two times on a row are both shown when they differ by more than this.
+TICKER_HUB_SHOW_BOTH_TIMES_S = 86400
+#: A normalised title shorter than this never joins two rows into one story by title alone.
+TICKER_HUB_MIN_STORY_TITLE_CHARS = 12
+#: Co-mention window for ranking related names.
+TICKER_HUB_COMENTION_DAYS = 90
+#: Stories per News page ("load more" fetches the next page).
+TICKER_HUB_NEWS_PAGE = 50
+#: Generations of the index kept on disk (current + previous); older ones are deleted.
+TICKER_HUB_KEEP_GENERATIONS = 2
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
@@ -7098,6 +7325,18 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+# -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
+#: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's
+#: "Note to Claude" box appends one row to `<OPTIMUS_LEDGER_DIR>/owner_inbox/notes.jsonl`.
+#: No LLM call, nothing is sent anywhere: the next brain session reads the file.
+#: A note longer than this many characters is refused (422), never cut.
+OWNER_INBOX_MAX_CHARS = 8000
+#: `GET /api/control/owner-notes` default and ceiling for `limit`.
+OWNER_INBOX_LIST_DEFAULT = 20
+OWNER_INBOX_LIST_MAX = 500
+#: Seconds a writer waits for the inbox lock (thread + cross-process) before the
+#: request is refused with 503 -- never a silent drop (PR #143 review, M1).
+OWNER_INBOX_LOCK_WAIT_S = 5.0
 # ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
 #: `scripts/night_investigator_news.py`: the investigator's own process and contract,
 #: plus typed world-digest rows about the name and its graph neighbours (context only),
