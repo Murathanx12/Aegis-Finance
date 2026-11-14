@@ -264,6 +264,8 @@ def test_marks_table_is_append_only_and_honest(tmp_path):
     assert (m["kind"] == "random_control").any() and b["excess_vs_random"].notna().any()
     r2 = run("step", root, out, specs, now + timedelta(minutes=5))
     assert r2["marks_written"] == 0 and r2["born"] == []
+    assert r2["scoreboard"] == r1["scoreboard"]                   # an idle step does not copy the board
+    assert len(list(out.glob("scoreboard_*.json"))) == 1
     allm = R.Store(out).marks()
     assert not allm.duplicated(["book_id", "mark_k"]).any()
     board = json.loads(Path(r2["scoreboard"]).read_bytes())["boards"]["21"]

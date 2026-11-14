@@ -985,10 +985,37 @@ def _read_revisions(data_root: Path) -> Optional[pd.DataFrame]:
                                        "current_target", "pit_safe", "first_seen_utc"])
 
 
-def _rss_mb() -> Optional[float]:
+def _rss_mb() -> Optional[dict]:
+    """Resident and (Windows) peak working set of this process, MB."""
     try:
         import psutil
-        return round(psutil.Process().memory_info().rss / 1024 ** 2, 1)
+        m = psutil.Process().memory_info()
+        peak = getattr(m, "peak_wset", None)
+        return {"rss": round(m.rss / 1024 ** 2, 1),
+                "peak": None if peak is None else round(peak / 1024 ** 2, 1)}
+    except Exception:                                            # noqa: BLE001
+        pass
+    if os.name != "nt":
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        class _PMC(ctypes.Structure):
+            _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
+                        ("PeakWorkingSetSize", ctypes.c_size_t), ("WorkingSetSize", ctypes.c_size_t),
+                        ("QuotaPeakPagedPoolUsage", ctypes.c_size_t), ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                        ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t), ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                        ("PagefileUsage", ctypes.c_size_t), ("PeakPagefileUsage", ctypes.c_size_t)]
+        pmc = _PMC()
+        pmc.cb = ctypes.sizeof(_PMC)
+        k32 = ctypes.WinDLL("kernel32")
+        k32.GetCurrentProcess.restype = wintypes.HANDLE
+        psapi = ctypes.WinDLL("psapi")
+        psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(_PMC), wintypes.DWORD]
+        if not psapi.GetProcessMemoryInfo(k32.GetCurrentProcess(), ctypes.byref(pmc), pmc.cb):
+            return None
+        return {"rss": round(pmc.WorkingSetSize / 1024 ** 2, 1), "peak": round(pmc.PeakWorkingSetSize / 1024 ** 2, 1)}
     except Exception:                                            # noqa: BLE001
         return None
 
@@ -1083,11 +1110,17 @@ def run(mode: str, *, data_root: Path, out: Path, specs_path: Path, asof: Any = 
     marks = store.marks()
     boards = {str(k): scoreboard(marks, cohorts, mark_k=k, sessions=sessions)
               for k in _config.ROLLING_COHORT_HORIZONS}
-    board_path = store.out / f"scoreboard_{run_id}.json"
-    tmp = board_path.with_suffix(".tmp")
-    tmp.write_text(json.dumps({"run_id": run_id, "through": last_bar.date().isoformat(), "boards": boards},
-                              default=str), encoding="utf8")
-    os.replace(tmp, board_path)
+    # A scoreboard is written only when its inputs changed (a birth or new marks);
+    # a 2-hourly idle step points at the previous one instead of copying it.
+    prior = sorted(store.out.glob("scoreboard_*.json"))
+    if born or rows or not prior:
+        board_path = store.out / f"scoreboard_{run_id}.json"
+        tmp = board_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"run_id": run_id, "through": last_bar.date().isoformat(), "boards": boards},
+                                  default=str), encoding="utf8")
+        os.replace(tmp, board_path)
+    else:
+        board_path = prior[-1]
 
     fwd = [c for c in cohorts if not c["backfilled"]]
     sidx = {s: i for i, s in enumerate(sessions)}
