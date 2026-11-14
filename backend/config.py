@@ -5275,6 +5275,22 @@ BOOK_DNA_MDE_Z = 2.8
 #: m2: rf = 0 is declared; the row also prints (1 - beta) x rf x T at this ASSUMED cash rate
 #: (not a measured rate) so the reader sees how much the declaration favours a low-beta book.
 BOOK_DNA_RF_ANNUAL_ASSUMED = 0.04
+#: claims-none (owner 2026-11-14, "improve the labeling and classification"): FLAGS beside the
+#: evidence label -- they never raise or lower it. IDLE_CASH = gross / equity below IDLE_GROSS
+#: for the last >= IDLE_MIN_SESSIONS sessions; an idle book's excess is "from cash, not from
+#: positions" when more than FROM_CASH_SHARE of it accrued while idle. SAME_BET_AS = daily
+#: excess correlation >= SAME_BET_CORR over >= SAME_BET_MIN_OBS common sessions. BELOW_MDE uses
+#: the raw-excess MDE (BOOK_DNA_MDE_Z x SE, >= MDE_MIN_OBS periods). ONE_NAME = top-1 holding >
+#: ONE_NAME_SHARE of the gain (BOOK_DNA_ONE_NAME_SHARE, 0.50, still drives the loser rules).
+#: HIGH_BETA = beta > HIGH_BETA.
+BOOK_DNA_FLAG_IDLE_GROSS = 0.05
+BOOK_DNA_FLAG_IDLE_MIN_SESSIONS = 5
+BOOK_DNA_FLAG_FROM_CASH_SHARE = 0.5
+BOOK_DNA_FLAG_SAME_BET_CORR = 0.90
+BOOK_DNA_FLAG_SAME_BET_MIN_OBS = 20
+BOOK_DNA_FLAG_MDE_MIN_OBS = 20
+BOOK_DNA_FLAG_ONE_NAME_SHARE = 0.40
+BOOK_DNA_FLAG_HIGH_BETA = 1.5
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
