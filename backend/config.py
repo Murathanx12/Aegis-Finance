@@ -5327,6 +5327,40 @@ MATCHED_TWIN_REEVAL_LOOKBACK_DAYS = 140
 #: A reconstruction that misses the receipt's own return by more than this is
 #: flagged RECON_GAP (the twins are still computed on the reconstruction).
 MATCHED_TWIN_REEVAL_MAX_RECON_GAP_PP = 1.0
+# ── CH-38 conditional dip study (2026-11-13, `scripts/ch38_dip_study.py`) ─────
+#: Every threshold below was fixed BEFORE any forward return was read and is
+#: hashed into the study's declaration. The owner's rule: a name >= 30% below
+#: its 52-week high (close / max of the trailing 252 closes - 1, total-return
+#: index; the 11-11 screen's `off_high`).
+CH38_DIP_DRAWDOWN = 0.30
+#: Arm A = the market itself had fallen: the FF value-weighted market's
+#: total-return index >= 10% below its trailing 252-session high on the signal
+#: date (the conventional "correction"); arm B = the company fell, the market
+#: had not (market drawdown < 10%).
+CH38_MARKET_DRAWDOWN = 0.10
+#: Liquid only: price >= 5 USD AND among the top 1,800 common stocks by
+#: 63-session median dollar volume on the signal date (the 11-11 screen held
+#: 1,868 names at >= 20 M USD; a rank floor is the same breadth in every era).
+CH38_MIN_PRICE = 5.0
+CH38_LIQUID_TOP_N = 1800
+#: Nominal floor of the paper book today, run as a labelled sensitivity line.
+CH38_NOMINAL_DOLLAR_VOLUME = 20e6
+CH38_HORIZONS = (21, 63, 126)
+CH38_VOL_WINDOW = 63
+CH38_BETA_WINDOW = 252
+#: Stop for the future book: exit at the close AFTER the first close at or below
+#: entry x (1 - 3 x the name's trailing 63-session daily sigma); cash after.
+CH38_STOP_SIGMA = 3.0
+#: Twin draws per signal date (matched_twins.draw_twins, band x vol tercile).
+CH38_TWIN_DRAWS = 40
+CH38_SEED = 20261113
+#: Labelled sensitivity sweeps (read at their WORST cell, never used to admit).
+CH38_SWEEP_DIP_DRAWDOWN = (0.20, 0.40)
+CH38_SWEEP_MARKET_DRAWDOWN = (0.05, 0.15)
+CH38_ALPHA = 0.05
+CH38_POWER = 0.80
+CH38_FIRST_YEAR = 1991
+CH38_LAST_YEAR = 2024
 
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
