@@ -26,9 +26,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run-id", default=None, help="YYYY-MM-DDTHHMMSSZ; default: newest shared run id")
     ap.add_argument("--folder", default=None, help="paper_accounts folder (default: the ledger's)")
     ap.add_argument("--json", action="store_true", help="print a one-line JSON summary")
+    ap.add_argument("--out", default=None, help="write the voice (and a rebuilt book_dna) here, not beside "
+                                                 "the receipts")
+    ap.add_argument("--rebuild-dna", action="store_true",
+                    help="re-run book_dna on the ROI receipt into --out (lanes not fetched, database "
+                         "opened mode=ro); for receipts written before a book_dna field existed. mode=ro "
+                         "writes no row, but SQLite still updates the WAL index aegis_pi.db-shm (its mtime "
+                         "moves); immutable=1 would avoid that and could miss rows still in the WAL")
     a = ap.parse_args(argv)
     try:
-        out = RV.run(a.run_id, Path(a.folder) if a.folder else RV.PA_DIR)
+        out = RV.run(a.run_id, Path(a.folder) if a.folder else RV.PA_DIR,
+                     out_dir=Path(a.out) if a.out else None, rebuild_dna=a.rebuild_dna)
     except RV.ResultsVoiceRefused as exc:
         msg = {"status": "refused", "why": str(exc)}
         print(json.dumps(msg) if a.json else f"REFUSED results_voice: {exc}")

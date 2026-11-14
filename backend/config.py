@@ -5248,6 +5248,33 @@ BOOK_DNA_LANE_FAMILY_CORR = 0.85
 BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
 #: How many tickers name a cluster's shared basket on the collapse line.
 BOOK_DNA_BASKET_TOP = 5
+#: CH-11 note (2026-11-13, "the books won only because the market was rising"):
+#: up-capture / down-capture need at least this many SPY-up AND SPY-down periods
+#: in the book's period-return series; below it they say CANNOT DETERMINE.
+BOOK_DNA_MIN_CAPTURE_OBS = 8
+#: CH-11 fix round (review of PR #140, 2026-11-14). B1: the C15 date-stamp test runs per
+#: calendar month (months with >= this many periods); a month FAILS when its correlation with
+#: SPY shifted back one session is at least MIN_LAG_CORR AND beats the same-day correlation by
+#: more than GAP_SE standard errors (sqrt(2/(n-3))) in Fisher-z units. A detection rule, not a 5%
+#: test: a month holds 9-22 periods, and on the lanes' August (16) a one-sided 5% test needs a z
+#: gap of 0.645 against the 0.46-0.63 observed. market_exposure is then estimated after the last
+#: failing month.
+BOOK_DNA_STAMP_MONTH_MIN_OBS = 8
+BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR = 0.30
+BOOK_DNA_STAMP_MONTH_GAP_SE = 1.0
+#: M1: the beta's window is comparable with the receipt window only when it covers at least
+#: this share of the receipt sessions AND its compounded book return is within this many pp of
+#: the receipt return; otherwise the receipt-window beta-adjusted excess is CANNOT DETERMINE
+#: and the beta window's own figure is printed, labelled with its window.
+BOOK_DNA_EXPOSURE_MIN_COVER = 0.80
+BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP = 2.0
+#: M2: an up/down capture whose standard error (delta method) is above this is CANNOT DETERMINE.
+BOOK_DNA_MAX_CAPTURE_SE = 0.25
+#: house rule "the MDE beside every alpha": MDE = this x SE (80% power, 5% two-sided).
+BOOK_DNA_MDE_Z = 2.8
+#: m2: rf = 0 is declared; the row also prints (1 - beta) x rf x T at this ASSUMED cash rate
+#: (not a measured rate) so the reader sees how much the declaration favours a low-beta book.
+BOOK_DNA_RF_ANNUAL_ASSUMED = 0.04
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
@@ -5300,6 +5327,40 @@ MATCHED_TWIN_REEVAL_LOOKBACK_DAYS = 140
 #: A reconstruction that misses the receipt's own return by more than this is
 #: flagged RECON_GAP (the twins are still computed on the reconstruction).
 MATCHED_TWIN_REEVAL_MAX_RECON_GAP_PP = 1.0
+# ── CH-38 conditional dip study (2026-11-13, `scripts/ch38_dip_study.py`) ─────
+#: Every threshold below was fixed BEFORE any forward return was read and is
+#: hashed into the study's declaration. The owner's rule: a name >= 30% below
+#: its 52-week high (close / max of the trailing 252 closes - 1, total-return
+#: index; the 11-11 screen's `off_high`).
+CH38_DIP_DRAWDOWN = 0.30
+#: Arm A = the market itself had fallen: the FF value-weighted market's
+#: total-return index >= 10% below its trailing 252-session high on the signal
+#: date (the conventional "correction"); arm B = the company fell, the market
+#: had not (market drawdown < 10%).
+CH38_MARKET_DRAWDOWN = 0.10
+#: Liquid only: price >= 5 USD AND among the top 1,800 common stocks by
+#: 63-session median dollar volume on the signal date (the 11-11 screen held
+#: 1,868 names at >= 20 M USD; a rank floor is the same breadth in every era).
+CH38_MIN_PRICE = 5.0
+CH38_LIQUID_TOP_N = 1800
+#: Nominal floor of the paper book today, run as a labelled sensitivity line.
+CH38_NOMINAL_DOLLAR_VOLUME = 20e6
+CH38_HORIZONS = (21, 63, 126)
+CH38_VOL_WINDOW = 63
+CH38_BETA_WINDOW = 252
+#: Stop for the future book: exit at the close AFTER the first close at or below
+#: entry x (1 - 3 x the name's trailing 63-session daily sigma); cash after.
+CH38_STOP_SIGMA = 3.0
+#: Twin draws per signal date (matched_twins.draw_twins, band x vol tercile).
+CH38_TWIN_DRAWS = 40
+CH38_SEED = 20261113
+#: Labelled sensitivity sweeps (read at their WORST cell, never used to admit).
+CH38_SWEEP_DIP_DRAWDOWN = (0.20, 0.40)
+CH38_SWEEP_MARKET_DRAWDOWN = (0.05, 0.15)
+CH38_ALPHA = 0.05
+CH38_POWER = 0.80
+CH38_FIRST_YEAR = 1991
+CH38_LAST_YEAR = 2024
 
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
@@ -7152,6 +7213,18 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+# -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
+#: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's
+#: "Note to Claude" box appends one row to `<OPTIMUS_LEDGER_DIR>/owner_inbox/notes.jsonl`.
+#: No LLM call, nothing is sent anywhere: the next brain session reads the file.
+#: A note longer than this many characters is refused (422), never cut.
+OWNER_INBOX_MAX_CHARS = 8000
+#: `GET /api/control/owner-notes` default and ceiling for `limit`.
+OWNER_INBOX_LIST_DEFAULT = 20
+OWNER_INBOX_LIST_MAX = 500
+#: Seconds a writer waits for the inbox lock (thread + cross-process) before the
+#: request is refused with 503 -- never a silent drop (PR #143 review, M1).
+OWNER_INBOX_LOCK_WAIT_S = 5.0
 # ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
 #: `scripts/night_investigator_news.py`: the investigator's own process and contract,
 #: plus typed world-digest rows about the name and its graph neighbours (context only),
