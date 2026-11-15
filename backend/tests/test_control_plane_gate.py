@@ -44,8 +44,8 @@ def _leaf_routes(application):
 
 
 def _is_control_plane(path: str | None) -> bool:
-    return bool(path) and any(path == p or path.startswith(p + "/") or path.startswith(p)
-                              for p in CR.CONTROL_PLANE_PREFIXES)
+    # prefix match on purpose: `/api/controlX` is still claimed by the plane
+    return bool(path) and any(path.startswith(p) for p in CR.CONTROL_PLANE_PREFIXES)
 
 
 def _control_routes():
@@ -98,6 +98,14 @@ def test_every_control_plane_route_carries_the_gate_and_the_route_class():
             missing_gate.append(r.path)
     assert not missing_gate, f"control-plane routes without control_plane_gate: {sorted(set(missing_gate))}"
     assert not wrong_class, f"control-plane routes not built by control_plane_router(): {sorted(set(wrong_class))}"
+
+
+def test_the_public_schema_does_not_list_the_plane(monkeypatch):
+    _off(monkeypatch)
+    schema = TestClient(app).get("/openapi.json")
+    assert schema.status_code == 200
+    listed = [p for p in schema.json().get("paths", {}) if _is_control_plane(p)]
+    assert not listed, listed
 
 
 def test_the_gate_runs_before_the_routes_own_dependencies():

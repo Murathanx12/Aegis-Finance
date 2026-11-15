@@ -282,8 +282,11 @@ class ControlPlaneRoute(APIRoute):
 
 def control_plane_router(**kwargs) -> APIRouter:
     """The ONE constructor for a control-plane router: prefix `/api/control` unless
-    given, `ControlPlaneRoute`, and `control_plane_gate` before any other dependency."""
+    given, `ControlPlaneRoute`, `control_plane_gate` before any other dependency,
+    and out of the OpenAPI schema (the website's public `/openapi.json` would
+    otherwise list every route of a plane that answers 404 there)."""
     kwargs.setdefault("prefix", "/api/control")
+    kwargs.setdefault("include_in_schema", False)
     deps = list(kwargs.pop("dependencies", None) or [])
     return APIRouter(route_class=ControlPlaneRoute,
                      dependencies=[Depends(control_plane_gate), *deps], **kwargs)
