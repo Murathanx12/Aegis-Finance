@@ -1976,6 +1976,17 @@ def _case_branch_population_rolling():
             RollingCohortRefused, "empty bars panel")
 
 
+def _case_dynamic_exposure_books():
+    from pathlib import Path as _P
+
+    from backend.services.portfolio_intelligence.dynamic_exposure_books import (
+        DynamicBookRefused, load_earnings)
+    # CH-45: the leader-gap rule's missing input is the earnings calendar. Without
+    # it the balanced book would silently never cut; refused instead.
+    return (lambda: load_earnings(_P("this/path/does/not/exist")), DynamicBookRefused,
+            "absent earnings calendar")
+
+
 def _case_owner_calls():
     # CH-01: the missing input is THE PRICE PANEL. A call logged with no bars
     # would carry no base-rate twin, and a call without a twin grades against
@@ -2111,6 +2122,7 @@ CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
     "branch_population_rolling": _case_branch_population_rolling,
+    "dynamic_exposure_books": _case_dynamic_exposure_books,
     "owner_calls": _case_owner_calls,
     "dowjones_claims": _case_dowjones_claims,
     "issuer_ir_html": _case_issuer_ir_html,

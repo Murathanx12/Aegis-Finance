@@ -4674,6 +4674,58 @@ ROLLING_COHORT_MIN_STRICT_BLOCKS = 6
 #: then journals WAIT_LOCK with rc 0.
 ROLLING_COHORT_LOCK_WAIT_S = 60.0
 
+# -- Dynamic exposure book family (CH-45, 2026-11-15) --
+#: NOT prefixed ROLLING_COHORT_: `branch_population_rolling.config_snapshot`
+#: binds every ROLLING_COHORT_* key into the live population's declaration, and
+#: a new one would make that population refuse. These values are FROZEN in
+#: docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v1.json; `dynamic_exposure_books`
+#: refuses to run when they differ (a changed rule is a new contract id).
+#: Rules and parameters are the 11-14 market replay's (replay_findings.txt
+#: section 0/0b, s3_rules.py), not tuned.
+#: Base selection: v2 spec momentum_12_1 / liquid / equal / 40 names / h126, hedge none.
+DYNAMIC_BOOK_BASE_POLICY_ID = "c79397f92fd9d3562378388e"
+#: Rule (d), balanced: leader earnings-session gap <= GAP -> stock exposure GROSS
+#: for the next SESSIONS sessions. AVGO counts from 2019 (replay).
+DYNAMIC_BOOK_LEADERS = ("AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "AVGO")
+DYNAMIC_BOOK_LEADER_SINCE = {"AVGO": "2019-01-01"}
+DYNAMIC_BOOK_LEADER_GAP = -0.05
+DYNAMIC_BOOK_LEADER_GROSS = 0.5
+DYNAMIC_BOOK_LEADER_SESSIONS = 5
+#: STALE (a step exits non-zero naming the leader) when a leader's newest known
+#: report is older than this many days, or its calendar pull predates the last
+#: session: the cache stores only reports before its pull (review of PR #150).
+DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS = 80
+#: Rule (b), preservation: QQQ close < SMA(SMA) -> short QQQ at beta x NAV,
+#: beta of the book on QQQ over BETA_WINDOW sessions, clipped.
+DYNAMIC_BOOK_HEDGE_ETF = "QQQ"
+DYNAMIC_BOOK_HEDGE_SMA = 50
+DYNAMIC_BOOK_HEDGE_BETA_WINDOW = 126
+DYNAMIC_BOOK_HEDGE_BETA_MIN_OBS = 126     # the replay's rolling(126): a full window
+DYNAMIC_BOOK_HEDGE_BETA_CLIP = (0.0, 3.0)
+#: Rule costs (replay: 10 bps per unit of stock exposure changed, 2 bps per unit
+#: of ETF hedge changed) plus the rolling machinery's short borrow (the replay
+#: charged 0; stated). The base book also pays its band round trip.
+DYNAMIC_BOOK_COST_STOCK_BPS = 10.0
+DYNAMIC_BOOK_COST_ETF_BPS = 2.0
+DYNAMIC_BOOK_HEDGE_BORROW_BPS_YR = 30.0
+#: Report only: worst case on a book of this size if every long name gaps
+#: -WORST_GAP at the peak stock exposure (hedge credited nothing), and the
+#: window for the effective-bet count at entry.
+DYNAMIC_BOOK_REPORT_EQUITY_USD = 100_000.0
+DYNAMIC_BOOK_WORST_GAP = 0.30
+#: Report only: a one-session QQQ rise against the hedge (longs credited 0), at the
+#: observed hedge and at the largest the beta clip admits (3x: gross 3.95x).
+DYNAMIC_BOOK_SQUEEZE_QQQ_UP = 0.10
+DYNAMIC_BOOK_BETS_WINDOW = 63
+#: The owner's 11-14 forecast, frozen at the 2026-11-13 close (replay section 4):
+#: the EW of the 22 high-beta fleet books beats SPY at the 21st and 63rd session
+#: after REF_DATE, IF SPY is up; graded vs SPY and vs beta x SPY. Its own prefix
+#: so the dynamic-book declaration above is not touched. Before a grade date the
+#: grader prints NOT_DUE with the running state, never a verdict.
+OWNER_REBOUND_FORECAST_REF_DATE = "2026-11-13"
+OWNER_REBOUND_FORECAST_REF_CLOSES = {"SPY": 754.37, "QQQ": 679.89, "SMH": 486.75}
+OWNER_REBOUND_FORECAST_GRADES = {"21": "2026-12-15", "63": "2027-02-17"}
+
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).
 BOOK_FACTORY_CAP_USD = 1.0
