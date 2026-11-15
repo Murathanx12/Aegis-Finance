@@ -568,6 +568,10 @@ def run_table1(ledger: Path, sessions: np.ndarray, n_boot: int, seed: int) -> di
             s3 = add_reference(s3[s3["stratum"].isin(shared)].drop(
                 columns=["stratum", "base", "bs", "bs_ref", "ls", "ls_ref"]))
             c = contrast(s3, n_boot, rng)
+            nk = s3.groupby("kind").size()
+            if len(nk) == 2 and int(nk.min()) < 30 and "verdict_date_blocks" in c:
+                c["verdict_date_blocks"] = c["verdict_ticker"] = (
+                    f"CANNOT_DETERMINE: {int(nk.min())} rows for one kind in the shared strata")
             c["shared_strata"] = [str(z) for z in shared]
             c["rows_dropped_unshared_stratum"] = int(len(sub if per == "ALL" else
                                                          sub[sub["period"] == "P1"]) - len(s3))
@@ -576,9 +580,12 @@ def run_table1(ledger: Path, sessions: np.ndarray, n_boot: int, seed: int) -> di
     # by month (made month), per kind and observable
     bm = []
     for (k, obs, mo), sub in x.groupby(["kind", "observable", "made_month"]):
+        hmax = int(sub["h"].max())
         r = {"kind": k, "observable": obs, "made_month": mo, **skill_of(sub),
-             "n_days": int(sub["made_day"].nunique()), "n_date_blocks": int(sub["block"].nunique()),
-             "n_tickers": int(sub["ticker"].nunique())}
+             "horizons": sorted(int(v) for v in sub["h"].unique()),
+             "n_days": int(sub["made_day"].nunique()),
+             "n_date_blocks": int(assign_date_blocks(sub, h_override=hmax).nunique()),
+             "block_h": hmax, "n_tickers": int(sub["ticker"].nunique())}
         bm.append(r)
     res["by_month"] = bm
     splits += len(bm)
