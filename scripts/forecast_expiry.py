@@ -14,9 +14,9 @@ trailing window, and the regime each was earned in. Neither changes a ledger,
 a label or a book; both refuse an `--out` inside the data folder's parent.
 
 Exit codes: 0 OK; 2 refused (missing input, or --out inside the data folder);
-3 the counts do not reconcile; 4 a file in the data folder was added or removed
-while the sweep ran (named in the output -- live jobs also write there, so the
-names say whose it was).
+3 the counts do not reconcile; 4 a path carrying this tool's output name
+(`forecast_expiry`) appeared, changed or vanished in the data folder. Files the live
+jobs add or grow while it runs are printed by name and do not change the exit code.
 """
 
 from __future__ import annotations
@@ -43,6 +43,20 @@ def _print_tree_check(before: dict, after: dict) -> dict:
         for f in d[k][:20]:
             print(f"  {k:8s} {f}")
     return d
+
+
+def _ours_or_zero(d: dict) -> int:
+    """4 when a path in the live folder carrying this tool's output name moved, else 0.
+    The full lists are compared, not the printed sample."""
+    name = _config.FORECAST_EXPIRY_SUBDIR
+    ours = [f for k in ("all_added", "all_removed", "all_resized") for f in d.get(k, []) if name in f]
+    if ours:
+        print(f"\nFAILED: {len(ours)} path(s) named {name!r} moved inside the live folder: {ours[:10]}")
+        return 4
+    if d["n_added"] or d["n_removed"] or d["n_resized"]:
+        print("\nNOTE: the live jobs changed the files named above while this ran; none carries this "
+              f"tool's output name ({name!r}), and this process writes only under --out")
+    return 0
 
 
 def cmd_sweep(a: argparse.Namespace) -> int:
@@ -115,11 +129,7 @@ def cmd_sweep(a: argparse.Namespace) -> int:
     if not ok:
         print("\nFAILED: the counts do not reconcile")
         return 3
-    if d["n_added"] or d["n_removed"]:
-        print("\nNOTE: files were added/removed in the live folder while the sweep ran (names above); "
-              "this process writes only under --out")
-        return 4
-    return 0
+    return _ours_or_zero(d)
 
 
 def _newest_pair(pa_dir: Path, run_id: str | None) -> str:
@@ -215,7 +225,7 @@ def cmd_labels(a: argparse.Namespace) -> int:
     print(f"step-down cannot be determined: {len(undet)}  {[r['account'] for r in undet]}")
     print(f"receipt {path}")
     d = _print_tree_check(before, after)
-    return 4 if (d["n_added"] or d["n_removed"]) else 0
+    return _ours_or_zero(d)
 
 
 def main(argv: list[str] | None = None) -> int:

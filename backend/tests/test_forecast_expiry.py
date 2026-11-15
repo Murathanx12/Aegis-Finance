@@ -265,3 +265,17 @@ def test_a_young_book_keeps_its_fair_twin_rung_and_an_old_one_is_cannot_determin
     assert rows["young"]["trailing_label"] == "REPLICATED" and rows["young"]["step_down"] == "NO"
     assert rows["old"]["trailing_label"] == "EARLY_EVIDENCE"
     assert rows["old"]["step_down"] == "CANNOT_DETERMINE" and rows["old"]["would_step_down"] is False
+
+
+def test_the_cli_sweeps_a_synthetic_root_and_refuses_an_out_inside_it(tmp_path, capsys):
+    from scripts import forecast_expiry as CLI
+    root, led = _fixture(tmp_path)
+    before = _sha(led)
+    rc = CLI.main(["sweep", "--data-root", str(root), "--out", str(tmp_path / "o"), "--as-of", "2025-12-31",
+                   "--no-campaign"])
+    assert rc == 0 and _sha(led) == before
+    assert "reconciles: True" in capsys.readouterr().out
+    assert CLI.main(["sweep", "--data-root", str(root), "--out", str(root.parent / "x"), "--no-campaign"]) == 2
+    d = FE.tree_diff({"a": 1}, {"a": 1, "forecast_expiry/expiry.jsonl": 5})
+    assert CLI._ours_or_zero(d) == 4
+    assert CLI._ours_or_zero(FE.tree_diff({"a": 1}, {"a": 2, "news/x.json": 3})) == 0

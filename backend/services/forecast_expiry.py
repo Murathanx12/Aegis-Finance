@@ -437,7 +437,8 @@ def tree_diff(before: dict, after: dict) -> dict:
     resized = sorted(k for k in set(before) & set(after) if before[k] != after[k])
     return {"n_before": len(before), "n_after": len(after), "added": added[:50],
             "n_added": len(added), "removed": removed[:50], "n_removed": len(removed),
-            "resized": resized[:50], "n_resized": len(resized)}
+            "resized": resized[:50], "n_resized": len(resized),
+            "all_added": added, "all_removed": removed, "all_resized": resized}
 
 
 def _now() -> datetime:
