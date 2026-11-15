@@ -265,10 +265,19 @@ class Panel:
     last_bar: dict
     by_sym: dict
     source: str
+    alt_by_sym: Optional[dict] = None   # llm_portfolio/global_bars.parquet: NOT read by the grader
+    alt_source: Optional[str] = None
 
     def bars_from(self, sym: str, d: str) -> int:
         import pandas as pd
         s = self.by_sym.get(sym)
+        if s is None or not d:
+            return 0
+        return int((s >= pd.Timestamp(d)).sum())
+
+    def alt_bars_from(self, sym: str, d: str) -> int:
+        import pandas as pd
+        s = (self.alt_by_sym or {}).get(sym)
         if s is None or not d:
             return 0
         return int((s >= pd.Timestamp(d)).sum())
@@ -307,7 +316,20 @@ def load_panel(data_root: Path, symbols: Iterable[str]) -> Panel:
         b = pd.DataFrame({"symbol": [], "date": pd.to_datetime([])})
     last_bar = b.groupby("symbol")["date"].max().to_dict()
     by_sym = {s: g.sort_values() for s, g in b["date"].groupby(b["symbol"])}
-    return Panel(panel_dates, last_bar, by_sym, " + ".join(srcs))
+    # The global panel the llm books are marked against. forecast_grader does not
+    # read it, so a bar found ONLY here is named as such, never counted as resolvable.
+    alt, alt_src = None, None
+    g = Path(data_root) / "llm_portfolio" / "global_bars.parquet"
+    rest = sorted(set(want) - set(by_sym))
+    if g.exists() and rest:
+        try:
+            gb = pd.read_parquet(g, columns=["symbol", "date"], filters=[("symbol", "in", rest)])
+            gb["date"] = pd.to_datetime(gb["date"])
+            alt = {s: gg.sort_values() for s, gg in gb["date"].groupby(gb["symbol"])}
+            alt_src = f"llm_portfolio/{g.name} ({len(alt)} of {len(rest)} names the grader's panels lack)"
+        except Exception as exc:                                   # noqa: BLE001
+            alt_src = f"llm_portfolio/{g.name} unreadable ({type(exc).__name__})"
+    return Panel(panel_dates, last_bar, by_sym, " + ".join(srcs), alt, alt_src)
 
 
 def disposition(rec: dict, *, as_of: date, panel: Panel) -> dict:
@@ -340,7 +362,15 @@ def disposition(rec: dict, *, as_of: date, panel: Panel) -> dict:
     for sym in needs:
         have = panel.bars_from(sym, start)
         if have < h + 1:
-            missing.append(f"bars:{sym} ({have} of {h + 1} from {start}; panel to {panel.last_session()})")
+            if sym.startswith("book:"):
+                missing.append(f"nav:{sym} (a paper-book id: no bar panel carries it; the grader's "
+                               f"panels hold {have} bars)")
+                continue
+            alt = panel.alt_bars_from(sym, start)
+            where = (f"; {alt} bars in llm_portfolio/global_bars.parquet, which forecast_grader does "
+                     f"not read" if alt >= h + 1 else "")
+            missing.append(f"bars:{sym} ({have} of {h + 1} from {start}; panel to "
+                           f"{panel.last_session()}{where})")
     ra = _day(rec.get("resolves_after"))
     if missing:
         return {"disposition": WAITING_INPUT, "waiting_for": "; ".join(missing), "detail": "local panel short"}
@@ -537,12 +567,19 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
     panel = load_panel(data_root, syms)
     owed_disp: dict = {d: 0 for d in DISPOSITIONS}
     owed_rows = []
+    owed_waiting: dict = {}
     for fid, rec in owed.items():
         d = disposition(rec, as_of=as_of, panel=panel)
         owed_disp[d["disposition"]] += 1
+        if d["disposition"] == WAITING_INPUT:
+            w = str(d.get("waiting_for") or "")
+            w = ("resolver_date" if w.startswith("resolver") else
+                 "bars_only_in_global_panel" if "global_bars.parquet" in w else w.split(":", 1)[0])
+            owed_waiting[w] = owed_waiting.get(w, 0) + 1
         owed_rows.append({"forecast_id": fid, "ticker": rec.get("ticker"), **d})
     camp_disp: dict = {d: 0 for d in DISPOSITIONS}
     camp_on_record_void = 0
+    camp_global = 0
     camp_rows_out = []
     waiting_for: dict = {}
     void_codes: dict = {}
@@ -560,6 +597,7 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
         if d["disposition"] == WAITING_INPUT:
             w = str(d.get("waiting_for") or "").split(" (")[0]
             waiting_for[w] = waiting_for.get(w, 0) + 1
+            camp_global += int("global_bars.parquet" in str(d.get("waiting_for")))
         camp_rows_out.append({"schema": SCHEMA + "/campaign", "forecast_id": fid,
                               "ticker": (live or camp[fid]).get("ticker"),
                               "resolves_after": camp[fid].get("resolves_after"),
@@ -592,7 +630,7 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
         "expired_ungraded": {
             "n": counts[EXPIRED_UNGRADED],
             "n_before_resolver_date": expired_ungraded_not_due,
-            "dispositions": owed_disp},
+            "dispositions": owed_disp, "waiting_for": owed_waiting},
         "score": {
             "graded_rows_with_brier": len(graded_brier),
             "mean_brier_voids_excluded": (round(sum(graded_brier) / len(graded_brier), 5)
@@ -601,7 +639,8 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
             "note": ("A voided row carries no outcome and no brier, so the score with voids is not "
                      "computable and the score without them is the only one; a proposed void below "
                      "is an ungraded row and moves no score either way.")},
-        "bar_panel": {"source": panel.source, "last_session": panel.last_session(),
+        "bar_panel": {"source": panel.source, "alt_source": panel.alt_source,
+                      "last_session": panel.last_session(),
                       "symbols_needed": len(syms), "symbols_found": len(panel.last_bar)},
         "side_ledger": {"path": str(expiry_path(out_dir)), "rows_before": len(prev),
                         "rows_appended": len(new_rows)},
@@ -617,7 +656,8 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
             "reconciles": sum(camp_disp.values()) == len(camp),
             "void_on_ledger_record": camp_on_record_void,
             "void_proposed_side_ledger_only": camp_disp[VOID_PROPOSED] - camp_on_record_void,
-            "void_codes": void_codes, "waiting_for": waiting_for}
+            "void_codes": void_codes, "waiting_for": waiting_for,
+            "waiting_with_bars_only_in_global_panel": camp_global}
     if write:
         sub = Path(out_dir) / _config.FORECAST_EXPIRY_SUBDIR
         sub.mkdir(parents=True, exist_ok=True)

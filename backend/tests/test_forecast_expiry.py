@@ -233,3 +233,17 @@ def test_a_book_younger_than_the_window_is_its_own_trailing_window():
     ser = [(d, 0.001, 0.0) for d in sessions[1:30]]
     out, n, lo, whole = FE.trailing_series(ser, sessions, sessions[0], sessions[29], 63, 29)
     assert whole is True and n == 29 and len(out) == 29
+
+
+def test_waiting_input_names_a_book_nav_and_a_bar_only_in_the_global_panel(tmp_path):
+    root, _ = _fixture(tmp_path)
+    sess = FE.session_calendar(date(2025, 11, 3), date(2026, 1, 30))
+    (root / "llm_portfolio").mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"symbol": "005930.KS", "date": [pd.Timestamp(d) for d in sess]}).to_parquet(
+        root / "llm_portfolio" / "global_bars.parquet", index=False)
+    panel = FE.load_panel(root, ["005930.KS", "book:abc", "SPY"])
+    k = FE.disposition(_row("k", made_at="2025-12-01T15:00:00+00:00", ticker="005930.KS"), as_of=AS_OF, panel=panel)
+    assert k["disposition"] == FE.WAITING_INPUT and "global_bars.parquet" in k["waiting_for"]
+    b = FE.disposition(_row("b", made_at="2025-12-01T15:00:00+00:00", ticker="book:abc",
+                            observable="beats_benchmark", benchmark="book:twin"), as_of=AS_OF, panel=panel)
+    assert b["disposition"] == FE.WAITING_INPUT and "nav:book:abc" in b["waiting_for"]

@@ -88,6 +88,7 @@ def cmd_sweep(a: argparse.Namespace) -> int:
     print(f"\nEXPIRED_UNGRADED (a grade is owed): {eu['n']}  "
           f"({eu['n_before_resolver_date']} before the resolver's own resolves_after)")
     print(f"  dispositions: {eu['dispositions']}")
+    print(f"  waiting for: {eu['waiting_for']}")
     sc = rec["score"]
     print(f"\nscore: mean Brier {sc['mean_brier_voids_excluded']} over {sc['graded_rows_with_brier']:,} graded "
           f"rows; {sc['voids_on_record']} voids on record carry no Brier. {sc['note']}")
@@ -102,6 +103,8 @@ def cmd_sweep(a: argparse.Namespace) -> int:
         print(f"  VOID on the ledger's own record {c['void_on_ledger_record']:,}; proposed here "
               f"(side ledger only) {c['void_proposed_side_ledger_only']:,}; codes {c['void_codes']}")
         print(f"  WAITING_INPUT for: {c['waiting_for']}")
+        print(f"  ...of which the bars exist only in llm_portfolio/global_bars.parquet (not read by "
+              f"forecast_grader): {c['waiting_with_bars_only_in_global_panel']}")
         ok &= bool(c["reconciles"])
     print(f"\nbar panel: {rec['bar_panel']}")
     print(f"side ledger {rec['side_ledger']}")
