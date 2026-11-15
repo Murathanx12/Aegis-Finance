@@ -1,11 +1,11 @@
 """Forecast and evidence expiry (CH-42) -- read-only over the live ledgers.
 
     python -m scripts.forecast_expiry sweep  --data-root <optimus dir> --out <dir> [--as-of D]
-           [--campaign-ref 7e3fb909^] [--campaign-as-of D] [--no-campaign]
+           [--campaign-ref 7e3fb909^] [--campaign-as-of D] [--no-campaign] [--allow-regress]
     python -m scripts.forecast_expiry labels --data-root <optimus dir> --out <dir> [--run-id R]
 
 `sweep` classifies every forecast in `<data-root>/predictions.jsonl` (ACTIVE /
-EXPIRED_GRADED / EXPIRED_UNGRADED / VOID / UNDATED), appends state changes to
+WINDOW_CLOSED_NOT_DUE / GRADE_OWED / EXPIRED_GRADED / VOID / UNDATED), appends state changes to
 `<out>/forecast_expiry/expiry.jsonl`, and accounts one by one for the overdue
 forecasts of the campaign ledger copy named by `--campaign-ref` (read with
 `git show` from this checkout, streamed, never copied). `labels` prints each
@@ -13,8 +13,10 @@ book's evidence label beside the label `book_dna.evidence_label` gives on the
 trailing window, and the regime each was earned in. Neither changes a ledger,
 a label or a book; both refuse an `--out` inside the data folder's parent.
 
-Exit codes: 0 OK; 2 refused (missing input, or --out inside the data folder);
-3 the counts do not reconcile; 4 a path carrying this tool's output name
+Exit codes: 0 OK; 2 refused (missing input, --out inside the data folder, or an
+--as-of earlier than the side ledger's newest entry); 3 the counts do not reconcile,
+or a forecast would move BACKWARDS to an earlier state (the ids are listed and nothing
+is appended; --allow-regress appends them flagged); 4 a path carrying this tool's output name
 (`forecast_expiry`) appeared, changed or vanished in the data folder. Files the live
 jobs add or grow while it runs are printed by name and do not change the exit code.
 """
@@ -72,7 +74,17 @@ def cmd_sweep(a: argparse.Namespace) -> int:
     before = FE.snapshot_tree(root)
     try:
         rec = FE.sweep(data_root=root, out_dir=out, as_of=as_of, campaign_lines=lines,
-                       campaign_label=label, campaign_as_of=camp_as_of)
+                       campaign_label=label, campaign_as_of=camp_as_of,
+                       allow_regress=bool(a.allow_regress))
+    except FE.ForecastExpiryRegress as exc:
+        cap = int(_config.FORECAST_EXPIRY_REGRESS_PRINT_MAX)
+        print(f"REFUSED (backwards state move): {exc}")
+        for m in exc.moves[:cap]:
+            print(f"  {m['forecast_id']}  {m['from']} -> {m['to']}  (line {m['line']}, last recorded "
+                  f"as of {m['last_recorded_as_of']}, row sha256 changed: {m['row_sha256_changed']})")
+        if len(exc.moves) > cap:
+            print(f"  ... {len(exc.moves) - cap} more, all in the regress_refused file named above")
+        return 3
     except FE.ForecastExpiryRefused as exc:
         print(f"REFUSED: {exc}")
         return 2
@@ -98,14 +110,37 @@ def cmd_sweep(a: argparse.Namespace) -> int:
     print(f"\nUNDATED: {rec['undated']['n']}")
     for u in rec["undated"]["rows"][:20]:
         print(f"  {u['forecast_id']} line {u['line']}: {u['reason']}")
-    eu = rec["expired_ungraded"]
-    print(f"\nEXPIRED_UNGRADED (a grade is owed): {eu['n']}  "
-          f"({eu['n_before_resolver_date']} before the resolver's own resolves_after)")
-    print(f"  dispositions: {eu['dispositions']}")
-    print(f"  waiting for: {eu['waiting_for']}")
+    fc = rec["foreign_calendar_unverified"]
+    print(f"  of which basis foreign_calendar_unverified (non-US ticker, not yet due): "
+          f"{rec['undated']['n_foreign_calendar_unverified']}")
+    print(f"\nnon-US tickers (no valid_until given): {fc['n']}  by state "
+          f"{ {k: v for k, v in fc['by_state'].items() if v} }")
+    go = rec["grade_owed"]
+    b = go["bridge"]
+    print(f"\nGRADE_OWED (the grader's rule: as_of >= resolves_after, no outcome, no void): {go['n']}")
+    print("  bridge from the loose count:")
+    print(f"    rows without resolved_at past resolves_after   {b['rows_without_resolved_at_past_resolves_after']:>7,}")
+    print(f"    - voided on record (a void has no resolved_at) {b['minus_voided_on_record']:>7,}")
+    print(f"    - graded, no resolved_at stamp                 {b['minus_graded_without_a_resolved_at_stamp']:>7,}")
+    print(f"    = ungraded, unvoided, past resolves_after      {b['equals_ungraded_unvoided_past_resolves_after']:>7,}")
+    print(f"    + due today (resolves_after = as_of)           {b['plus_due_today_resolves_after_equals_as_of']:>7,}")
+    print(f"    + resolved_at stamp but no outcome             {b['plus_resolved_at_stamp_but_no_outcome']:>7,}")
+    print(f"    + resolves_after unreadable, window closed     {b['plus_resolves_after_unreadable_and_window_closed']:>7,}")
+    print(f"    = GRADE_OWED                                   {b['equals']:>7,}   reconciles: {b['reconciles']}")
+    ok &= bool(b["reconciles"])
+    print(f"  grader buckets: {go['grader_buckets']}")
+    print(f"  dispositions: {go['dispositions']}")
+    print(f"  waiting for: {go['waiting_for']}")
+    wc = rec["window_closed_not_due"]
+    print(f"\nWINDOW_CLOSED_NOT_DUE (session window closed, resolves_after still ahead; nothing owed "
+          f"yet): {wc['n']}")
+    print(f"  dispositions: {wc['dispositions']}")
+    print(f"  waiting for: {wc['waiting_for']}")
     sc = rec["score"]
     print(f"\nscore: mean Brier {sc['mean_brier_voids_excluded']} over {sc['graded_rows_with_brier']:,} graded "
-          f"rows; {sc['voids_on_record']} voids on record carry no Brier. {sc['note']}")
+          f"rows; {sc['voids_on_record']} voids on record carry no Brier.")
+    print(f"  population: {sc['population']}.")
+    print(f"  {sc['note']}")
     if "campaign" in rec:
         c = rec["campaign"]
         print(f"\ncampaign ledger copy: {c['source']}")
@@ -121,7 +156,15 @@ def cmd_sweep(a: argparse.Namespace) -> int:
               f"forecast_grader): {c['waiting_with_bars_only_in_global_panel']}")
         ok &= bool(c["reconciles"])
     print(f"\nbar panel: {rec['bar_panel']}")
-    print(f"side ledger {rec['side_ledger']}")
+    sl = rec["side_ledger"]
+    print(f"side ledger {sl['path']}: {sl['rows_before']:,} ids before (newest as-of "
+          f"{sl['newest_as_of_before']}), {sl['rows_appended']:,} rows appended "
+          f"({sl['appended_row_sha256_changed_only']} for a changed row sha256 alone, "
+          f"{sl['appended_restated_from_another_schema']} restated from another schema); "
+          f"backwards moves {sl['regress_n']} (allow-regress {sl['allow_regress']}); ids recorded before "
+          f"but absent from the ledger now {sl['ids_recorded_before_but_absent_from_ledger']}")
+    for m in sl["regress"][:int(_config.FORECAST_EXPIRY_REGRESS_PRINT_MAX)]:
+        print(f"  REGRESS (appended, flagged) {m['forecast_id']}  {m['from']} -> {m['to']}")
     print(f"receipt {rec.get('receipt_path')}")
     print(f"ledger bytes before {rec['ledger_bytes_before']:,} after {rec['ledger_bytes_after']:,} "
           f"(live jobs rewrite it in place; this process opened it read-only)")
@@ -185,6 +228,7 @@ def cmd_labels(a: argparse.Namespace) -> int:
     n = int(a.trailing or _config.FORECAST_EXPIRY_LABEL_TRAILING_SESSIONS)
     rows = FE.label_stepdown(books, spy_sessions=px.dates("SPY"), p=p, n_trailing=n,
                              vol_cut=float(_config.FORECAST_EXPIRY_REGIME_VOL_CUT))
+    cov = FE.stepdown_coverage(rows, n_trailing=n)
     down = [r for r in rows if r["would_step_down"]]
     undet = [r for r in rows if r["step_down"] == "CANNOT_DETERMINE"]
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -193,7 +237,7 @@ def cmd_labels(a: argparse.Namespace) -> int:
                "label_rule": "book_dna.evidence_label, unchanged; fair twin not recomputed on the trailing window "
                              "(REPLICATED on the trailing window can come only from a same-rule book that is "
                              "itself EARLY_EVIDENCE on its trailing window)",
-               "gaps": inputs.get("gaps"), "n_books": len(rows),
+               "gaps": inputs.get("gaps"), "n_books": len(rows), "coverage": cov,
                "rebuilt_vs_shipped_label_mismatches": mism,
                "n_would_step_down": len(down), "would_step_down": [r["account"] for r in down],
                "n_step_down_cannot_determine": len(undet),
@@ -221,7 +265,9 @@ def cmd_labels(a: argparse.Namespace) -> int:
         if r["step_down"] != "NO":
             print(f"    trailing {tw['from']}..{str(tw['to'])[:10]} {tw['sessions']} sessions, excess "
                   f"{tw['excess_pp']} pp: {r['trailing_why']}")
-    print(f"\nwould step down: {len(down)}  {[r['account'] for r in down]}")
+    print(f"\nwhat this run tests: {cov['statement']}")
+    print(f"  really tested: {cov['really_tested']}")
+    print(f"\nwould step down: {len(down)} of {cov['n_really_tested']} tested  {[r['account'] for r in down]}")
     print(f"step-down cannot be determined: {len(undet)}  {[r['account'] for r in undet]}")
     print(f"receipt {path}")
     d = _print_tree_check(before, after)
@@ -243,6 +289,9 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--campaign-ref", default=_config.FORECAST_EXPIRY_CAMPAIGN_REF)
     s.add_argument("--campaign-as-of", default=None)
     s.add_argument("--no-campaign", action="store_true")
+    s.add_argument("--allow-regress", action="store_true",
+                   help="append backwards state moves flagged instead of refusing (exit 3), and "
+                        "accept an --as-of earlier than the side ledger's newest entry")
     s.set_defaults(fn=cmd_sweep)
     lab = sp.add_parser("labels")
     lab.add_argument("--data-root", required=True)

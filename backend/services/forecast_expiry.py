@@ -15,20 +15,37 @@ calendar and sorts every row into exactly one state:
 * ``VOID``              -- the row carries a `void_reason` (the existing vocabulary,
                            `forecast_grader.VOID_REASONS` and the threshold voids);
 * ``EXPIRED_GRADED``    -- the row has an outcome: it belongs in the graded archive;
+* ``GRADE_OWED``        -- the GRADER's own due rule holds (`forecast_grader.bucket_of`:
+                           today >= `resolves_after`), no outcome, no void. This is the
+                           only state that says a grade is owed;
 * ``UNDATED``           -- no `valid_until` can be derived from the row (named, counted,
-                           never silently ACTIVE);
-* ``EXPIRED_UNGRADED``  -- `as_of > valid_until` and no outcome: the window closed and a
-                           grade is owed;
+                           never silently ACTIVE). A non-US ticker that is not yet due is
+                           here with basis `foreign_calendar_unverified`: its window runs
+                           on its own exchange's sessions, which this module does not hold;
+* ``WINDOW_CLOSED_NOT_DUE`` -- the session window closed (`as_of > valid_until`) but the
+                           resolver's bound `resolves_after` is still in the future: no
+                           longer a live claim, and nothing is owed yet;
 * ``ACTIVE``            -- the window is still open.
 
-Each ledger's rows read = the five counts, printed as a reconciliation.
+Each ledger's rows read = the six counts, printed as a reconciliation. The receipt
+also carries a bridge from "rows without resolved_at past resolves_after" (which
+includes voids) to GRADE_OWED, term by term.
+
+A STATE NEVER MOVES BACKWARDS SILENTLY
+======================================
+ACTIVE -> WINDOW_CLOSED_NOT_DUE -> GRADE_OWED -> EXPIRED_GRADED / VOID is the only
+direction a frozen row can travel. A sweep that would record the reverse (an outcome
+or a void removed, or an earlier `--as-of`) raises `ForecastExpiryRegress` naming the
+ids and appends nothing to the side ledger, unless `allow_regress` is passed; then
+the rows are appended flagged `regress`. A row whose bytes changed while its state
+did not is appended too (`changes: ["row_sha256"]`).
 
 READ-ONLY OVER THE LEDGERS
 ==========================
 The forecast rows are frozen (canon: append-only, no mutation of seeded
 histories). Nothing here opens a ledger for writing. The sweep writes only its
 own SIDE ledger, ``<out>/forecast_expiry/expiry.jsonl``, append-only: a second
-sweep appends a row only when an id's (state, valid_until, reason code) changed.
+sweep appends a row only when an id's (state, valid_until, reason code, row sha256) changed.
 Every row carries the sha256 of the ledger line it was derived from, so a later
 reader can tell whether the frozen row it describes is still the same bytes.
 
@@ -64,15 +81,26 @@ from typing import Any, Callable, Iterable, Iterator, Optional, Sequence
 
 from backend import config as _config
 
-SCHEMA = "forecast_expiry/1"
+SCHEMA = "forecast_expiry/2"
 LEDGER_PREDICTIONS = "predictions"
 
 ACTIVE = "ACTIVE"
 EXPIRED_GRADED = "EXPIRED_GRADED"
-EXPIRED_UNGRADED = "EXPIRED_UNGRADED"
+WINDOW_CLOSED_NOT_DUE = "WINDOW_CLOSED_NOT_DUE"
+GRADE_OWED = "GRADE_OWED"
 VOID = "VOID"
 UNDATED = "UNDATED"
-STATES = (ACTIVE, EXPIRED_GRADED, EXPIRED_UNGRADED, VOID, UNDATED)
+STATES = (ACTIVE, WINDOW_CLOSED_NOT_DUE, GRADE_OWED, EXPIRED_GRADED, VOID, UNDATED)
+
+#: How far along its one-way life a state is. A move to a LOWER rank is a regress.
+#: UNDATED ranks with ACTIVE (nothing is known to have closed); a grade and a void
+#: are both terminal, so a move between them is not a regress.
+STATE_RANK = {ACTIVE: 0, UNDATED: 0, WINDOW_CLOSED_NOT_DUE: 1, GRADE_OWED: 2,
+              EXPIRED_GRADED: 3, VOID: 3}
+
+BASIS_FOREIGN = "foreign_calendar_unverified"
+#: The one bucket of `forecast_grader.bucket_of` that means "the due date has not arrived".
+GRADER_NOT_YET_DUE = "not_yet_due"
 
 RESOLVED = "RESOLVED"
 RESOLVABLE_NOW = "RESOLVABLE_NOW"
@@ -94,9 +122,32 @@ VOID_RULE = (
     "side ledger only; no ledger row is changed.")
 
 
+#: Said wherever a FOREIGN name's bars are found only in the global panel (a US-listed
+#: name found only there shares the US calendar and gets no such caveat): having
+#: enough bars is not the same as having a gradeable window.
+GLOBAL_BARS_WINDOW_CAVEAT = (
+    "Those bars are on the ticker's own exchange calendar: its entry bar and its window's "
+    "last bar can fall on different dates from a US benchmark's, so a beats_benchmark grade "
+    "built from them would compare two different windows (window mismatch)")
+
+BRIER_POPULATION = (
+    "every row of this ledger that has an outcome and a brier: the WHOLE ledger, grades made "
+    "before the erratum included. It is not the population CH-12 scored, so this figure is "
+    "not comparable with CH-12's")
+
+
 class ForecastExpiryRefused(RuntimeError):
     """The sweep will not report: an input is missing or the output would land in
     the live data folder."""
+
+
+class ForecastExpiryRegress(ForecastExpiryRefused):
+    """One or more forecasts would move BACKWARDS (e.g. graded -> ungraded). Nothing
+    was appended to the side ledger. `moves` lists every one."""
+
+    def __init__(self, message: str, moves: list):
+        super().__init__(message)
+        self.moves = moves
 
 
 # ─────────────────────────────── the session calendar ───────────────────────
@@ -143,6 +194,16 @@ def family_of(row: dict) -> str:
     return spec.split(":", 1)[0]
 
 
+def is_foreign_ticker(ticker: Any) -> bool:
+    """A ticker carrying an exchange suffix (`005930.KS`, `7011.T`): the suffix
+    convention `opportunities.split_suffix` already owns. `DX-Y.NYB` is the grader's
+    non-equity notation, not a foreign listing."""
+    from backend.services import forecast_grader as FG
+    from backend.services import opportunities as O
+    t = str(ticker or "").strip().upper()
+    return bool(t) and t not in FG.NON_EQUITY_EXACT and O.is_foreign(t)
+
+
 def derive_valid_until(row: dict, sessions: Sequence[date]) -> dict:
     """The last session of the forecast's window, from the row's OWN fields.
 
@@ -153,8 +214,17 @@ def derive_valid_until(row: dict, sessions: Sequence[date]) -> dict:
     grades. Fallback: the row's own target date `resolves_after`. Neither -> no
     valid_until and the reason.
 
+    A non-US ticker gets no date at all: basis `foreign_calendar_unverified`.
+
     Returns {valid_until, basis, entry_session, why_undated}."""
     from backend.services import belief_state as B
+    if is_foreign_ticker(row.get("ticker")):
+        # The resolver grades a foreign name over ITS OWN bars (belief_state.resolve_one),
+        # so the window's last session is a date on that exchange's calendar. An XNYS
+        # count gives a different, wrong date; no date is better than that one.
+        return {"valid_until": None, "basis": BASIS_FOREIGN, "entry_session": None,
+                "why_undated": (f"{BASIS_FOREIGN}: {row.get('ticker')} trades on its own exchange's "
+                                f"sessions, which are not held here; an XNYS date would be wrong")}
     h = _horizon(row.get("horizon_days"))
     start = None
     start_why = None
@@ -185,8 +255,18 @@ def derive_valid_until(row: dict, sessions: Sequence[date]) -> dict:
     return {"valid_until": None, "basis": None, "entry_session": None, "why_undated": "; ".join(why)}
 
 
+def grader_bucket(row: dict, as_of: date) -> str:
+    """`forecast_grader.bucket_of` for this row: the grader's OWN due rule, called,
+    not copied (today >= resolves_after, no outcome, no void)."""
+    from backend.services import forecast_grader as FG
+    return FG.bucket_of(row, today=as_of)
+
+
 def classify(row: dict, *, as_of: date, sessions: Sequence[date]) -> dict:
-    """Exactly one of `STATES` for one ledger row, with its valid_until and reason."""
+    """Exactly one of `STATES` for one ledger row, with its valid_until and reason.
+
+    Order: VOID, EXPIRED_GRADED, then GRADE_OWED by the grader's rule (which needs
+    no valid_until), then UNDATED, WINDOW_CLOSED_NOT_DUE, ACTIVE."""
     vu = derive_valid_until(row, sessions)
     base = {"valid_until": vu["valid_until"], "basis": vu["basis"]}
     if row.get("void_reason"):
@@ -196,11 +276,24 @@ def classify(row: dict, *, as_of: date, sessions: Sequence[date]) -> dict:
         if vu["valid_until"] and vu["valid_until"] >= as_of.isoformat():
             why += f"; graded although valid_until {vu['valid_until']} has not passed"
         return {**base, "state": EXPIRED_GRADED, "reason": why}
+    ra = _day(row.get("resolves_after"))
+    if ra is not None:
+        bucket = grader_bucket(row, as_of)
+        if bucket != GRADER_NOT_YET_DUE:
+            return {**base, "state": GRADE_OWED, "grader_bucket": bucket,
+                    "reason": (f"due {ra} by the grader's rule (as_of >= resolves_after); no outcome, "
+                               f"no void; grader bucket {bucket}")}
     if vu["valid_until"] is None:
         return {**base, "state": UNDATED, "reason": f"UNDATED: {vu['why_undated']}"}
     if as_of.isoformat() > vu["valid_until"]:
-        return {**base, "state": EXPIRED_UNGRADED,
-                "reason": f"window closed {vu['valid_until']} ({vu['basis']}); no outcome"}
+        if ra is None:
+            # The grader does not call an unreadable date "not yet due" either: it is a finding.
+            return {**base, "state": GRADE_OWED, "grader_bucket": grader_bucket(row, as_of),
+                    "reason": (f"due: window closed {vu['valid_until']} ({vu['basis']}) and resolves_after "
+                               f"is unreadable, which the grader buckets as a finding, not as not-yet-due")}
+        return {**base, "state": WINDOW_CLOSED_NOT_DUE,
+                "reason": (f"window closed {vu['valid_until']} ({vu['basis']}); resolver date "
+                           f"{ra} not reached, nothing owed yet")}
     return {**base, "state": ACTIVE, "reason": f"open until {vu['valid_until']} ({vu['basis']})"}
 
 
@@ -281,6 +374,13 @@ class Panel:
         if s is None or not d:
             return 0
         return int((s >= pd.Timestamp(d)).sum())
+
+    def sessions_from(self, d: str) -> int:
+        """Sessions the PANEL holds on or after `d` (any symbol)."""
+        import pandas as pd
+        if not d or not len(self.panel_dates):
+            return 0
+        return int((self.panel_dates >= pd.Timestamp(d)).sum())
 
     def last_session(self) -> Optional[str]:
         return str(self.panel_dates[-1])[:10] if len(self.panel_dates) else None
@@ -369,7 +469,14 @@ def disposition(rec: dict, *, as_of: date, panel: Panel) -> dict:
             alt = panel.alt_bars_from(sym, start)
             where = (f"; {alt} bars in llm_portfolio/global_bars.parquet, which forecast_grader does "
                      f"not read" if alt >= h + 1 else "")
-            missing.append(f"bars:{sym} ({have} of {h + 1} from {start}; panel to "
+            if where and is_foreign_ticker(sym):
+                where += f". {GLOBAL_BARS_WINDOW_CAVEAT}"
+            gap = ""
+            if have and not is_foreign_ticker(sym):
+                held = panel.sessions_from(start)
+                gap = (f"; the panel holds {held} sessions from {start}, so {max(held - have, 0)} "
+                       f"are missing for this ticker")
+            missing.append(f"bars:{sym} ({have} of the {h + 1} needed from {start}{gap}; panel to "
                            f"{panel.last_session()}{where})")
     ra = _day(rec.get("resolves_after"))
     if missing:
@@ -389,23 +496,55 @@ def expiry_path(out_dir: Path) -> Path:
     return Path(out_dir) / _config.FORECAST_EXPIRY_SUBDIR / "expiry.jsonl"
 
 
-def fold_expiry(path: Path) -> dict:
-    """{(ledger, forecast_id): last row} of the side ledger (empty if absent)."""
+def read_expiry(path: Path) -> tuple[dict, Optional[str]]:
+    """({(ledger, forecast_id): last row}, newest `sweep_as_of` on ANY row) of the
+    side ledger; ({}, None) if absent."""
     last: dict = {}
+    newest: Optional[str] = None
     if not Path(path).exists():
-        return last
+        return last, newest
     for _, raw in iter_lines(path):
         r = _parse(raw)
         if r and r.get("forecast_id") is not None:
             last[(r.get("ledger"), r.get("forecast_id"))] = r
-    return last
+            a = str(r.get("sweep_as_of") or "")[:10]
+            if a and (newest is None or a > newest):
+                newest = a
+    return last, newest
 
 
-def _changed(prev: Optional[dict], row: dict) -> bool:
+def fold_expiry(path: Path) -> dict:
+    """{(ledger, forecast_id): last row} of the side ledger (empty if absent)."""
+    return read_expiry(path)[0]
+
+
+def changes_since(prev: Optional[dict], row: dict) -> list[str]:
+    """Which recorded facts differ from the id's last side-ledger row ([] = nothing
+    to append). `row_sha256` alone is a change: the frozen line's bytes moved."""
     if prev is None:
-        return True
-    return (prev.get("state"), prev.get("valid_until"), reason_code(prev.get("reason") or "")) != \
-           (row["state"], row["valid_until"], reason_code(row["reason"]))
+        return ["new"]
+    out = []
+    if prev.get("schema") != row["schema"]:
+        out.append("schema")
+    if prev.get("state") != row["state"]:
+        out.append("state")
+    if prev.get("valid_until") != row["valid_until"]:
+        out.append("valid_until")
+    if reason_code(prev.get("reason") or "") != reason_code(row["reason"]):
+        out.append("reason")
+    if prev.get("row_sha256") and prev["row_sha256"] != row["row_sha256"]:
+        out.append("row_sha256")
+    return out
+
+
+def is_regress(prev: Optional[dict], row: dict) -> bool:
+    """True when the state moved to a lower `STATE_RANK` than the id's last row.
+    A row written under another schema is a restatement (the states were defined
+    differently), never a regress."""
+    if prev is None or prev.get("schema") != row["schema"]:
+        return False
+    a, b = STATE_RANK.get(prev.get("state")), STATE_RANK.get(row["state"])
+    return a is not None and b is not None and b < a
 
 
 def _out_must_be_outside(data_root: Path, out_dir: Path) -> None:
@@ -448,14 +587,19 @@ def _now() -> datetime:
 def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
           campaign_lines: Optional[Callable[[], Iterable[tuple[int, bytes]]]] = None,
           campaign_label: str = "", campaign_as_of: Optional[date] = None,
-          now: Optional[datetime] = None, write: bool = True) -> dict:
+          now: Optional[datetime] = None, write: bool = True,
+          allow_regress: bool = False) -> dict:
     """Classify every row of the forecast ledger, append state changes to the side
     ledger, account for the campaign's overdue forecasts one by one, and return
     the summary receipt (also written as `sweep_<stamp>.json`).
 
     `campaign_lines` yields (lineno, raw) of the campaign ledger copy whose overdue
     forecasts are to be accounted for (default: none). Overdue there uses
-    `belief_state.ledger_health`'s strict predicate: `as_of > resolves_after`."""
+    `belief_state.ledger_health`'s strict predicate: `as_of > resolves_after`.
+
+    Refuses (`ForecastExpiryRefused`) an `as_of` earlier than the newest entry of the
+    side ledger under `out_dir`, and (`ForecastExpiryRegress`, with every id) a sweep
+    in which a forecast would move to an earlier state -- both unless `allow_regress`."""
     data_root, out_dir = Path(data_root), Path(out_dir)
     ledger = data_root / "predictions.jsonl"
     if not ledger.exists():
@@ -491,18 +635,29 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
     sessions = session_calendar(date(2024, 1, 1), as_of + timedelta(days=800))
 
     # 3. stream the live ledger once
-    prev = fold_expiry(expiry_path(out_dir))
+    prev, newest_as_of = read_expiry(expiry_path(out_dir))
+    if newest_as_of and as_of.isoformat() < newest_as_of and not allow_regress:
+        raise ForecastExpiryRefused(
+            f"--as-of {as_of} is earlier than the side ledger's newest entry ({newest_as_of}) in "
+            f"{expiry_path(out_dir)}: sweeping backwards would record states moving backwards. "
+            f"Use a new --out folder, or pass --allow-regress to append them flagged")
     counts = {s: 0 for s in STATES}
     by_kind: dict = {}
     by_family: dict = {}
     basis_n: dict = {}
     undated: list = []
-    owed: dict = {}                 # pid -> minimal rec (EXPIRED_UNGRADED, for disposition)
+    foreign_by_state = {s: 0 for s in STATES}
+    owed: dict = {}                 # pid -> minimal rec (GRADE_OWED, for disposition)
+    closed: dict = {}               # pid -> minimal rec (WINDOW_CLOSED_NOT_DUE, for disposition)
     camp_live: dict = {}            # pid -> minimal live rec
     new_rows: list = []
+    regress: list = []
+    sha_only = restated = 0
     rows_read = unparseable = 0
     graded_brier: list = []
-    expired_ungraded_not_due = 0
+    # the bridge from the loose count ("no resolved_at, past resolves_after") to GRADE_OWED
+    br = {"start": 0, "void": 0, "graded": 0, "past": 0, "today": 0, "stamped": 0, "unreadable": 0}
+    owed_buckets: dict = {}
     seen_ids: set = set()
     dup_ids = 0
     for n, raw in iter_lines(ledger):
@@ -540,13 +695,26 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
                 graded_brier.append(float(row["brier"]))
             except (TypeError, ValueError):
                 pass
-        if row is not None and st == EXPIRED_UNGRADED:
-            owed[fid] = {k2: row.get(k2) for k2 in (
+        if c["basis"] == BASIS_FOREIGN:
+            foreign_by_state[st] += 1
+        if row is not None:
+            ra = _day(row.get("resolves_after"))
+            loose = not row.get("resolved_at") and ra is not None and as_of > ra
+            if loose:
+                br["start"] += 1
+                if row.get("void_reason"):
+                    br["void"] += 1
+                elif row.get("outcome") is not None:
+                    br["graded"] += 1
+            if st == GRADE_OWED:
+                br["unreadable" if ra is None else "today" if ra == as_of
+                   else "past" if loose else "stamped"] += 1
+                b = str(c.get("grader_bucket"))
+                owed_buckets[b] = owed_buckets.get(b, 0) + 1
+        if row is not None and st in (GRADE_OWED, WINDOW_CLOSED_NOT_DUE):
+            (owed if st == GRADE_OWED else closed)[fid] = {k2: row.get(k2) for k2 in (
                 "prediction_id", "ticker", "benchmark", "observable", "horizon_days", "made_at",
                 "resolves_after", "specialist", "mechanism_id", "inputs_used")}
-            ra = _day(row.get("resolves_after"))
-            if ra is not None and as_of < ra:
-                expired_ungraded_not_due += 1
         if row is not None and fid in camp:
             camp_live[fid] = {k2: row.get(k2) for k2 in (
                 "prediction_id", "ticker", "benchmark", "observable", "horizon_days", "made_at",
@@ -555,29 +723,80 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
                    "family": family, "valid_until": c["valid_until"], "valid_until_basis": c["basis"],
                    "state": st, "reason": c["reason"], "sweep_utc": now.isoformat(timespec="seconds"),
                    "sweep_as_of": as_of.isoformat(), "line": n, "row_sha256": line_sha256(raw)}
-        if _changed(prev.get((LEDGER_PREDICTIONS, fid)), out_row):
+        was = prev.get((LEDGER_PREDICTIONS, fid))
+        ch = changes_since(was, out_row)
+        if ch:
+            out_row["changes"] = ch
+            if was is not None:
+                out_row["prev_state"] = was.get("state")
+                if "row_sha256" in ch:
+                    out_row["prev_row_sha256"] = was.get("row_sha256")
+                sha_only += int(ch == ["row_sha256"])
+                restated += int("schema" in ch)
+            if is_regress(was, out_row):
+                out_row["regress"] = True
+                regress.append({"forecast_id": fid, "line": n, "from": was.get("state"), "to": st,
+                                "last_recorded_as_of": was.get("sweep_as_of"),
+                                "row_sha256_changed": "row_sha256" in ch})
             new_rows.append(out_row)
     size_after = ledger.stat().st_size
+    absent = sum(1 for (led, fid) in prev if led == LEDGER_PREDICTIONS and fid not in seen_ids
+                 and not str(fid).startswith("line:"))
+    if regress and not allow_regress:
+        ids = [m["forecast_id"] for m in regress]
+        path = None
+        if write:
+            sub = Path(out_dir) / _config.FORECAST_EXPIRY_SUBDIR
+            sub.mkdir(parents=True, exist_ok=True)
+            path = _write_new(sub / f"regress_refused_{stamp}.json", json.dumps(
+                {"schema": SCHEMA + "/regress_refused", "generated_utc": now.isoformat(timespec="seconds"),
+                 "as_of": as_of.isoformat(), "ledger": str(ledger), "n": len(regress), "moves": regress,
+                 "side_ledger_rows_appended": 0}, indent=1, default=str))
+        raise ForecastExpiryRegress(
+            f"{len(regress)} forecast(s) would move to an EARLIER state than the side ledger records "
+            f"(an outcome or a void was removed from the ledger row, or the clock went back); nothing "
+            f"was appended. Full list: {path or ids}. Pass --allow-regress to append them flagged",
+            regress)
+
+    def _dispose(recs: dict, state: str) -> tuple[dict, dict, list]:
+        disp: dict = {d: 0 for d in DISPOSITIONS}
+        waiting: dict = {}
+        out: list = []
+        for fid, rec in recs.items():
+            d = disposition(rec, as_of=as_of, panel=panel)
+            disp[d["disposition"]] += 1
+            if d["disposition"] == WAITING_INPUT:
+                w = str(d.get("waiting_for") or "")
+                w = ("resolver_date" if w.startswith("resolver") else
+                     "bars_only_in_global_panel" if "global_bars.parquet" in w else w.split(":", 1)[0])
+                waiting[w] = waiting.get(w, 0) + 1
+            out.append({"forecast_id": fid, "state": state, "ticker": rec.get("ticker"), **d})
+        return disp, waiting, out
 
     # 4. dispositions: every owed grade in the live ledger + every campaign overdue id
     syms: set = set()
-    for rec in list(owed.values()) + list(camp_live.values()):
+    for rec in list(owed.values()) + list(closed.values()) + list(camp_live.values()):
         syms.add(str(rec.get("ticker") or ""))
         if rec.get("benchmark"):
             syms.add(str(rec["benchmark"]))
     panel = load_panel(data_root, syms)
-    owed_disp: dict = {d: 0 for d in DISPOSITIONS}
-    owed_rows = []
-    owed_waiting: dict = {}
-    for fid, rec in owed.items():
-        d = disposition(rec, as_of=as_of, panel=panel)
-        owed_disp[d["disposition"]] += 1
-        if d["disposition"] == WAITING_INPUT:
-            w = str(d.get("waiting_for") or "")
-            w = ("resolver_date" if w.startswith("resolver") else
-                 "bars_only_in_global_panel" if "global_bars.parquet" in w else w.split(":", 1)[0])
-            owed_waiting[w] = owed_waiting.get(w, 0) + 1
-        owed_rows.append({"forecast_id": fid, "ticker": rec.get("ticker"), **d})
+    owed_disp, owed_waiting, owed_rows = _dispose(owed, GRADE_OWED)
+    closed_disp, closed_waiting, closed_rows = _dispose(closed, WINDOW_CLOSED_NOT_DUE)
+    net_past = br["start"] - br["void"] - br["graded"]
+    bridge_total = net_past + br["today"] + br["stamped"] + br["unreadable"]
+    bridge = {
+        "rows_without_resolved_at_past_resolves_after": br["start"],
+        "minus_voided_on_record": br["void"],
+        "minus_graded_without_a_resolved_at_stamp": br["graded"],
+        "equals_ungraded_unvoided_past_resolves_after": net_past,
+        "plus_due_today_resolves_after_equals_as_of": br["today"],
+        "plus_resolved_at_stamp_but_no_outcome": br["stamped"],
+        "plus_resolves_after_unreadable_and_window_closed": br["unreadable"],
+        "equals": bridge_total, GRADE_OWED: counts[GRADE_OWED],
+        "reconciles": bridge_total == counts[GRADE_OWED] and net_past == br["past"],
+        "why": ("the loose count uses a strict date (as_of > resolves_after) and counts voided rows, "
+                "which carry no resolved_at; the grader's rule is as_of >= resolves_after with no "
+                "outcome and no void")}
     camp_disp: dict = {d: 0 for d in DISPOSITIONS}
     camp_on_record_void = 0
     camp_global = 0
@@ -614,12 +833,19 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
         "states_definition": {
             VOID: "row carries void_reason (the ledger's own vocabulary)",
             EXPIRED_GRADED: "row has an outcome (graded archive, shown DEGRADED, never live evidence)",
-            UNDATED: "no valid_until derivable from the row's own fields",
-            EXPIRED_UNGRADED: "as_of > valid_until and no outcome: a grade is owed",
-            ACTIVE: "as_of <= valid_until"},
+            GRADE_OWED: ("forecast_grader.bucket_of's due rule: as_of >= resolves_after, no outcome, "
+                         "no void (also: resolves_after unreadable and the window closed). The only "
+                         "state in which a grade is owed"),
+            UNDATED: ("no valid_until derivable from the row's own fields; includes a non-US ticker "
+                      f"not yet due (basis {BASIS_FOREIGN})"),
+            WINDOW_CLOSED_NOT_DUE: ("as_of > valid_until, no outcome, no void, and resolves_after is "
+                                    "still in the future: not a live claim, nothing owed yet"),
+            ACTIVE: "as_of <= valid_until and not due"},
         "valid_until_rule": ("entry session = first XNYS session on/after belief_state.resolution_start_date; "
                              "valid_until = the session horizon_days later (horizon+1 bars, as resolve_one "
-                             "grades); fallback resolves_after; else UNDATED"),
+                             "grades); fallback resolves_after; else UNDATED. A ticker with an exchange "
+                             f"suffix gets no date: basis {BASIS_FOREIGN} (its window runs on its own "
+                             "exchange's sessions)"),
         "reconciliation": {
             LEDGER_PREDICTIONS: {"rows_read": rows_read, **counts, "sum_of_states": total,
                                  "reconciles": total == rows_read,
@@ -627,12 +853,21 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
         "valid_until_basis_counts": basis_n,
         "by_kind": dict(sorted(by_kind.items())),
         "by_family": dict(sorted(by_family.items())),
-        "undated": {"n": len(undated), "rows": undated[:200]},
-        "expired_ungraded": {
-            "n": counts[EXPIRED_UNGRADED],
-            "n_before_resolver_date": expired_ungraded_not_due,
+        "undated": {"n": len(undated), "n_foreign_calendar_unverified": foreign_by_state[UNDATED],
+                    "rows": undated[:200]},
+        "foreign_calendar_unverified": {
+            "n": sum(foreign_by_state.values()), "by_state": foreign_by_state,
+            "note": ("no valid_until is given to these rows. One that is due is GRADE_OWED by the "
+                     "grader's date rule like any other; one that is not yet due is UNDATED, because "
+                     "whether its window has closed cannot be said without its exchange's calendar")},
+        "grade_owed": {
+            "n": counts[GRADE_OWED], "bridge": bridge, "grader_buckets": owed_buckets,
             "dispositions": owed_disp, "waiting_for": owed_waiting},
+        "window_closed_not_due": {
+            "n": counts[WINDOW_CLOSED_NOT_DUE],
+            "dispositions": closed_disp, "waiting_for": closed_waiting},
         "score": {
+            "population": BRIER_POPULATION,
             "graded_rows_with_brier": len(graded_brier),
             "mean_brier_voids_excluded": (round(sum(graded_brier) / len(graded_brier), 5)
                                           if graded_brier else None),
@@ -644,7 +879,13 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
                       "last_session": panel.last_session(),
                       "symbols_needed": len(syms), "symbols_found": len(panel.last_bar)},
         "side_ledger": {"path": str(expiry_path(out_dir)), "rows_before": len(prev),
-                        "rows_appended": len(new_rows)},
+                        "newest_as_of_before": newest_as_of,
+                        "rows_appended": len(new_rows),
+                        "appended_row_sha256_changed_only": sha_only,
+                        "appended_restated_from_another_schema": restated,
+                        "allow_regress": bool(allow_regress),
+                        "regress_n": len(regress), "regress": regress[:200],
+                        "ids_recorded_before_but_absent_from_ledger": absent},
     }
     if campaign_lines is not None:
         receipt["campaign"] = {
@@ -667,7 +908,8 @@ def sweep(*, data_root: Path, out_dir: Path, as_of: Optional[date] = None,
                 for r in new_rows:
                     fh.write((json.dumps(r, sort_keys=True) + "\n").encode("utf-8"))
         _write_new(sub / f"owed_dispositions_{stamp}.jsonl",
-                   "".join(json.dumps(r, sort_keys=True, default=str) + "\n" for r in owed_rows))
+                   "".join(json.dumps(r, sort_keys=True, default=str) + "\n"
+                           for r in owed_rows + closed_rows))
         if campaign_lines is not None:
             _write_new(sub / f"campaign_accounting_{stamp}.jsonl",
                        "".join(json.dumps(r, sort_keys=True, default=str) + "\n" for r in camp_rows_out))
@@ -794,3 +1036,39 @@ def label_stepdown(books: Sequence[dict], *, spy_sessions: Sequence[str], p: dic
             "rung_change": step, "step_down": verdict, "step_down_why": why_v,
             "would_step_down": verdict == "YES"})
     return rows
+
+
+def stepdown_coverage(rows: Sequence[dict], *, n_trailing: int) -> dict:
+    """How many books the trailing-window step-down result really TESTS.
+
+    A book younger than the window is its own trailing window (`whole_window`):
+    its trailing label is its earned label by construction, so it cannot step down
+    and says nothing about whether labels age. Only a book that holds a label above
+    OBSERVED and is older than the window is a test."""
+    from backend.services import book_dna as BD
+    ladder = list(BD.LABEL_LADDER)
+
+    def rung(r: dict) -> Optional[int]:
+        k = str(r.get("label") or "").split("(")[0]
+        return ladder.index(k) if k in ladder else None
+
+    floor = ladder.index("OBSERVED") if "OBSERVED" in ladder else 0
+    whole = [r for r in rows if (r.get("trailing_window") or {}).get("whole_window")]
+    above = [r for r in rows if rung(r) is not None and rung(r) > floor]
+    above_whole = [r for r in above if (r.get("trailing_window") or {}).get("whole_window")]
+    tested = [r for r in above if not (r.get("trailing_window") or {}).get("whole_window")]
+    not_strategy = [r for r in above if r.get("category") != "strategy"]
+    return {
+        "trailing_sessions": int(n_trailing), "n_books": len(rows),
+        "n_whole_window": len(whole),
+        "n_above_observed": len(above),
+        "n_above_observed_whole_window": len(above_whole),
+        "n_really_tested": len(tested),
+        "really_tested": sorted(str(r.get("account")) for r in tested),
+        "n_above_observed_not_a_strategy_book": len(not_strategy),
+        "statement": (
+            f"{len(whole)} of {len(rows)} books are younger than the {int(n_trailing)}-session trailing "
+            f"window (whole-window: trailing label = earned label by construction, a step-down is "
+            f"impossible). Of the {len(above)} books holding a label above OBSERVED, {len(above_whole)} "
+            f"are whole-window, so the step-down result tests {len(tested)} book(s); "
+            f"{len(not_strategy)} of the {len(above)} are twins or controls, not strategy books.")}
