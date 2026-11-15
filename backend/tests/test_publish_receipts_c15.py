@@ -116,8 +116,13 @@ def test_the_sanitiser_is_not_optional_a_bypassed_scrub_is_refused(world, monkey
     monkeypatch.setattr(S, "scrub_str", lambda s: s)                  # simulate a sanitiser regression
     out = PR.publish()
     refused = {n for n, e in out["kinds"].items() if e["status"] == "REFUSED"}
-    assert {"arena", "system_health", "opportunities"} <= refused
+    assert {"arena", "opportunities"} <= refused
     assert all("leak scan" in out["kinds"][n]["why"] for n in refused)
+    # S70: the health page passes `health_public.public_system_health` BEFORE the sanitiser, so the
+    # producer's free text never reaches the scrub at all; with the scrub bypassed its copy is
+    # still clean (it is the one kind that no longer depends on the scrub for its row text).
+    assert out["kinds"]["system_health"]["status"] == "OK"
+    assert_clean(json.loads((PR.public_dir() / "system_health" / "latest.json").read_text(encoding="utf-8")))
     assert not (PR.public_dir() / "arena" / "latest.json").exists()
 
 
@@ -340,7 +345,12 @@ def test_owner_identity_is_scrubbed_on_every_kind_and_is_in_the_leak_scan(world,
         "verdict":"ALIVE","state":"ALIVE","evidence_utc":None,"evidence_mode":"STATIC_PROOF",
         "detail":"MURAT asked; see github.com/murathanx12 and Murathan's notes",
         "proof":"synthetic configuration independently verified"})
-    rec["counts"]["ALIVE"] += 1
+    # S70: row detail/proof are null in the published copy (public projection), so the owner
+    # scrub is exercised on a field that survives it: a row NAME.
+    rec["rows"].append({"name": "MURAT asked", "probe": "openclaw_tool_scope", "where": "pc",
+        "verdict": "ALIVE", "state": "ALIVE", "evidence_utc": None, "evidence_mode": "STATIC_PROOF",
+        "detail": "x", "proof": "synthetic configuration independently verified"})
+    rec["counts"]["ALIVE"] += 2
     hp.write_text(json.dumps(rec), encoding="utf-8")
     L._CACHE.clear()
     assert PR.leak_scan({"x": "by Murathanx12"}) == ["$.x: owner identity"]
@@ -352,8 +362,9 @@ def test_owner_identity_is_scrubbed_on_every_kind_and_is_in_the_leak_scan(world,
     health_rows=[r for group in json.loads(raw)["groups"] for r in group["rows"]]
     failed=next(r for r in health_rows if r["name"]=="sim_session")
     healthy=next(r for r in health_rows if r["name"]=="openclaw_tool_scope")
-    assert failed["proof"]=="" and failed["alarm"]["light"]=="AMBER"
-    assert healthy["alarm"]["light"]=="GREEN" and "the owner asked" in healthy["detail"]
+    assert failed["proof"] is None and failed["alarm"]["light"]=="AMBER"
+    assert healthy["alarm"]["light"]=="GREEN" and healthy["detail"] is None
+    assert any(r["name"] == "the owner asked" for r in health_rows)
     assert rec["rows"][0]==failed_original
     monkeypatch.setattr(PR, "_owner_scrub", lambda v: v)                    # a scrub regression
     again = PR.publish()

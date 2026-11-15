@@ -16,7 +16,9 @@ WHAT IS PUBLISHED
 For each public page, the payload its router serves, built from the NEWEST receipts on
 this machine by the SAME builder (`legibility.*_payload`, `opportunities.load_latest`)
 and passed through the SAME deny-by-default sanitiser the routers use
-(`legibility_sanitise.sanitise` with the page's allow-list). The page payload IS the
+(`legibility_sanitise.sanitise` with the page's allow-list). The health page first passes
+`health_public.public_system_health` (status words, ids, dates and counts; no producer free
+text, no receipt file name), the projection its router gives a public caller. The page payload IS the
 trimmed receipt: only the fields the page renders survive, and every source receipt it
 was built from is named in the payload's receipts strip and in the manifest with the
 sha256 of the bytes read.
@@ -191,6 +193,21 @@ class Kind:
     spec: str
     build: Callable[[], Optional[dict]]
     page: str
+    #: an extra PUBLIC projection applied to the built payload before the owner scrub and the
+    #: sanitiser (None = the allow-list alone decides). A projection that raises refuses the kind.
+    project: Optional[Callable[[dict], dict]] = None
+
+
+def _public_system_health(payload: dict) -> dict:
+    """The tracked copy of the health page is in a public repository, so it carries the same
+    projection the router applies to a public caller (`health_public.public_system_health`):
+    status words, ids, dates and counts; row detail / proof / where / evidence, the receipt
+    file and line, `read_me_first`, `same_output_rule` and the task owners' receipt column
+    are null. `served_from` is a serve-time word (`refresh` writes it), so it is not baked in."""
+    from backend.services import health_public as HP              # noqa: PLC0415
+    out = HP.public_system_health(payload)
+    out.pop("served_from", None)
+    return out
 
 
 KINDS: tuple[Kind, ...] = (
@@ -199,7 +216,8 @@ KINDS: tuple[Kind, ...] = (
     Kind("forecast_lab", "forecast_lab", lambda: L.forecast_lab_payload(), "/forecast-lab"),
     Kind("theory_lab_sticky", "theory_lab", lambda: L.theory_lab_payload(board="sticky"), "/theory-lab?board=sticky"),
     Kind("theory_lab_basket", "theory_lab", lambda: L.theory_lab_payload(board="basket"), "/theory-lab?board=basket"),
-    Kind("system_health", "system_health", lambda: L.system_health_payload(), "/health"),
+    Kind("system_health", "system_health", lambda: L.system_health_payload(), "/health",
+         project=_public_system_health),
     Kind("opportunities", "opportunities", _opportunities, "/opportunities"),
     Kind("brain", "brain", lambda: L.brain_payload(), "/brain"),
 )
@@ -237,9 +255,23 @@ def leak_scan(v: Any, where: str = "$") -> list[str]:
     return out
 
 
-def _sources(payload: dict) -> list[dict]:
-    return [{k: r.get(k) for k in ("kind", "file", "sha256", "stamp_utc", "role", "status")}
-            for r in payload.get("receipts") or [] if r.get("file")]
+def _sources(payload: dict, *, projected: bool = False) -> list[dict]:
+    """The manifest's source rows, from the payload AS BUILT. For a projected kind the
+    receipt's file name is withheld from the published copy, so the manifest (tracked, public)
+    withholds it too, and takes no free text from the producer: the kind and status (identifiers),
+    the sha256 of the bytes read (64 hex) and the receipt's own stamp (a parseable date) stay;
+    `file` and `role` are null."""
+    keep = ("kind", "file", "sha256", "stamp_utc", "role", "status")
+    rows = [{k: r.get(k) for k in keep} for r in payload.get("receipts") or [] if r.get("file")]
+    if not projected:
+        return rows
+
+    def ident(v: Any) -> Optional[str]:
+        return v if isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9_.:+-]{1,64}", v) else None
+    return [{"kind": ident(r["kind"]), "file": None,
+             "sha256": r["sha256"] if isinstance(r["sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", r["sha256"]) else None,
+             "stamp_utc": r["stamp_utc"] if isinstance(r["stamp_utc"], str) and L.parse_utc(r["stamp_utc"]) else None,
+             "role": None, "status": ident(r["status"])} for r in rows]
 
 
 def sanitised_bytes(kind: Kind, payload: dict) -> tuple[Optional[bytes], dict]:
@@ -277,12 +309,20 @@ def publish(*, out_dir: Optional[Path] = None, kinds: tuple[Kind, ...] = KINDS, 
             e.update(status="REFUSED", why=f"build raised {type(exc).__name__}: {str(exc)[:200]}")
         if payload is None and "status" not in e:
             e.update(status="MISSING", why="the builder found no receipt on this machine")
+        built = payload
+        if payload is not None and k.project is not None:
+            e["projection"] = getattr(k.project, "__name__", "projection")
+            try:
+                payload = k.project(payload)
+            except Exception as exc:                                # noqa: BLE001 -- named, never raised
+                payload = None
+                e.update(status="REFUSED", why=f"public projection raised {type(exc).__name__}")
         if payload is not None:
             b, verdict = sanitised_bytes(k, _owner_scrub(payload))
             e.update(verdict)
             if b is not None:
                 blobs[k.name] = b
-                e.update(sources=_sources(payload), sha256=_sha(b), bytes=len(b),
+                e.update(sources=_sources(built, projected=k.project is not None), sha256=_sha(b), bytes=len(b),
                          payload_status=payload.get("status"))
         if k.name not in blobs:
             old = (prev.get("kinds") or {}).get(k.name) or {}
