@@ -6712,6 +6712,23 @@ PC_SIGMA_FALLBACK_DAILY = 0.049
 #: skipped by the mandate (review C2 F5); override only by env when the owner
 #: rotates the account on purpose.
 PC_PAPER_ACCOUNT_NUMBER = os.getenv("AEGIS_PC_PAPER_ACCOUNT", "PA37CSAUFCQR")
+#: S70 (P4, engineer D7): `python -m scripts.runtime_release --repoint-plan <tag>`. A task that
+#: can reach a broker order path stays ATTENDED: it is listed in the plan and never written
+#: into the generated repoint script. Three ways to be attended, any one suffices: the task's
+#: name; a wrapper argument that is one of these flags (exact, or `flag=value`); a segment
+#: that runs one of these modules ("module" alone, or "module subcommand").
+RUNTIME_REPOINT_ATTENDED_TASKS = ("AegisFleetManagerOpen", "AegisFleetManagerPreclose", "AegisSimOwner",
+                                  "AegisDailyPass", "AegisTelegramAgent")
+RUNTIME_REPOINT_ATTENDED_FLAGS = ("--live", "--execute", "--place-orders", "--submit-orders", "--trade")
+RUNTIME_REPOINT_ATTENDED_MODULES = ("scripts.fleet_manager_run", "scripts.sim_run", "scripts.sim_session",
+                                    "scripts.daily_pass", "scripts.telegram_agent", "scripts.task_keeper sim")
+#: Modules whose running population is bound to the config it was declared under, and the
+#: folder (under the task's `--data-root`, unless the task passes `--out`) holding
+#: `declaration.json`. A target clone whose `config_snapshot()` differs is not planned.
+RUNTIME_REPOINT_DECLARATIONS = {"scripts.rolling_cohorts": "rolling_cohorts"}
+#: seconds: the read-only scheduler enumeration, and the target clone's config snapshot
+RUNTIME_REPOINT_ENUM_TIMEOUT_S = 120
+RUNTIME_REPOINT_SNAPSHOT_TIMEOUT_S = 180
 
 # ── Public-flow SENSORS (chunk C16, 2026-10-07) ───────────────────────────────
 #: Provenance + latency sensors, NEVER a trade signal on their own (roadmap

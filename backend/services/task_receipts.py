@@ -170,6 +170,10 @@ class TaskSpec:
     #: the scheduler says Disabled, the row is a retired/disabled row, not a fault. An ENABLED
     #: task, or a Disabled one with no declaration, is still judged as before.
     disabled_ok: str = ""
+    #: S70 (P4, engineer D5): `task_keeper catchup` may start this task late after the PC slept
+    #: over its trigger. True ONLY for a job that is idempotent and can reach no order path;
+    #: `catchup_tasks()` derives the keeper's list from this flag and the declared cadence.
+    catchup_safe: bool = False
 
 
 def parse_stamp(v: Any) -> Optional[datetime]:
@@ -1799,23 +1803,24 @@ def r_retired(ctx, task) -> Reading:
 
 
 TASK_RECEIPT: dict[str, TaskSpec] = {
-    "AegisDailyPass": TaskSpec(r_daily_pass, "night_factory_<d>/daily_pass_<d>.json"),
+    "AegisDailyPass": TaskSpec(r_daily_pass, "night_factory_<d>/daily_pass_<d>.json", catchup_safe=True),
     "AegisIIF1NightLauncher": TaskSpec(_delegate("p_iif1_night", "iif1_night"), "iif1_nights/<weekday>.json",
                                        hash_off="judged by the iif1_night probe (weekday-aware)"),
     "AegisNNLabNightly": TaskSpec(r_nn_lab, "nightly_receipt_contract over nn_lab/receipts/nightly_*.json",
-                                  hash_off="the shared nightly contract judges status and age"),
+                                  hash_off="the shared nightly contract judges status and age", catchup_safe=True),
     "AegisSimOwner": TaskSpec(r_sim_owner, "sim/owner.jsonl",
                               hash_off="the owner's row is legitimately constant while one session runs; "
                                        "the session itself is the sim_session row"),
     "AegisDataCatalog": TaskSpec(r_catalog, "data_catalog/catalog_*.json + task_keeper/opportunities.jsonl "
                                             "(opportunities_build, C15) + task_keeper/publish_receipts.jsonl "
-                                            "(public_receipts, C15)"),
+                                            "(public_receipts, C15)", catchup_safe=True),
     "AegisContestRehearsal": TaskSpec(r_rehearsal, "contest/rehearsal/runs.jsonl",
-                                     disabled_ok="contest over 2026-11-13; retired on the owner's word 2026-11-14, XML kept"),
+                                     disabled_ok="contest over 2026-11-13; retired on the owner's word 2026-11-14, XML kept",
+                                     catchup_safe=True),
     "AegisContestDesk": TaskSpec(r_contest_desk, "contest/live/runs.jsonl | contest/live/refusals/live_gate_*.json",
                                  session_only=True,
                                  disabled_ok="contest over 2026-11-13; retired on the owner's word 2026-11-14, XML kept"),
-    "AegisHypLabNightly": TaskSpec(r_hyp_lab, "hyp_lab/receipts/nightly_*.json"),
+    "AegisHypLabNightly": TaskSpec(r_hyp_lab, "hyp_lab/receipts/nightly_*.json", catchup_safe=True),
     "AegisWorldDigest": TaskSpec(r_world_digest, "digest/world_digest_*.json"),
     "AegisLocalRuntimeDigest": TaskSpec(r_local_runtime_digest,
                                         "local_runtime_digest/digest_*.json", registered_only=True),
@@ -1823,9 +1828,10 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
         "~/aegis-recovery-evidence/oct14-continuation-20261014/local-branching/automation_runs.jsonl",
         registered_only=True, cadence_h=2.0),
     "AegisRollingCohorts": TaskSpec(r_rolling_cohorts, "rolling_cohorts/runs.jsonl",
-                                    registered_only=True, cadence_h=2.0),
+                                    registered_only=True, cadence_h=2.0, catchup_safe=True),
+    # not caught up (S70 P4): a new paper-book family; whether a late step is safe is not known yet
     "AegisDynamicBooks": TaskSpec(r_dynamic_books, "dynamic_books/runs.jsonl (the step's own utc)",
-                                  registered_only=True, cadence_h=24.0),
+                                  registered_only=True, cadence_h=24.0, catchup_safe=False),
     "AegisTickerHub": TaskSpec(r_ticker_hub, "ticker_hub/receipts/build_<stamp>_<pid>.json built_utc",
                                hash_off="a build over an unchanged corpus legitimately repeats its row counts; "
                                         "its own built_utc is the check"),
@@ -1844,7 +1850,7 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
         session_only=True,
         hash_off="each eligible repeat is a new broker coverage observation",
         window_utc=("15:05", "19:05")),
-    "AegisFleetDailyCheck": TaskSpec(r_fleet_daily, "paper_accounts/fleet_daily/fleet_*.json"),
+    "AegisFleetDailyCheck": TaskSpec(r_fleet_daily, "paper_accounts/fleet_daily/fleet_*.json", catchup_safe=True),
     "AegisReaderSupervisor": TaskSpec(r_reader, "dowjones/night_reader_supervisor.jsonl (tick)"),
     "AegisCatchUp": TaskSpec(r_catchup, "task_keeper/keeper.jsonl (job catchup)",
                              hash_off="an all-'ok' catch-up row is the healthy steady state"),
@@ -1854,14 +1860,15 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisAnalystPanelDaily": TaskSpec(r_analyst_panel, "aegis-alpha-terminal state/research/analyst_panel/<date>.jsonl",
                                        session_only=True,
                                        hash_off="a daily snapshot of a slow consensus can repeat; age and row "
-                                                "count are the checks"),
+                                                "count are the checks", catchup_safe=True),
     "AegisAnalystPull": TaskSpec(r_analyst_pull, "analyst/analyst_pull_<day>.json | task_keeper/analyst.jsonl",
-                                 hash_off="weekly; age and n_snapshots are the checks"),
+                                 hash_off="weekly; age and n_snapshots are the checks", catchup_safe=True),
     "AegisBrainRefresh": TaskSpec(r_brain, "task_keeper/brain.jsonl",
-                                  hash_off="the brain page's own stamp is the optimus_brain row"),
+                                  hash_off="the brain page's own stamp is the optimus_brain row", catchup_safe=True),
     "AegisPublicFlow": TaskSpec(r_public_flow, "task_keeper/public_flow.jsonl (+ public_flow/receipts/)",
                                 hash_off="each step's own receipt carries rows_added; the job row is a summary",
-                                unregistered_ok="C16 public-flow sensors: registration waits for its review"),
+                                unregistered_ok="C16 public-flow sensors: registration waits for its review",
+                                catchup_safe=True),
     "AegisResearchLane": TaskSpec(r_research_lane, "research_instruments/probe_<run_id>.json "
                                                    "(+ task_keeper/research_lane.jsonl)",
                                  hash_off="weekly; most weeks are a declared not_due no-op, judged idle "
@@ -1884,13 +1891,14 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisForwardCalendar": TaskSpec(
         r_forward_calendar, "forward_calendar/snapshots/fc_<stamp>_receipt.json, scope FULL_UNIVERSE "
                             "(+ runtime_task_runs.jsonl rc)",
-        hash_off="daily; status and both shares are read"),
+        hash_off="daily; status and both shares are read", catchup_safe=True),
     "AegisOwnerCallsRecord": TaskSpec(
         r_owner_calls_record, "owner_calls/states.jsonl (+ runtime_task_runs.jsonl rc)",
-        hash_off="a row is written only when a new day is pinned; its recorded_utc is the check"),
+        hash_off="a row is written only when a new day is pinned; its recorded_utc is the check",
+        catchup_safe=True),
     "AegisDiscoveryAutopsy": TaskSpec(
         r_discovery_autopsy, "discovery_autopsy/index.jsonl (+ runtime_task_runs.jsonl rc)", session_only=True,
-        hash_off="an unchanged-input run writes nothing; the run_id's age is the check"),
+        hash_off="an unchanged-input run writes nothing; the run_id's age is the check", catchup_safe=True),
     "AegisRawSecCollection": TaskSpec(
         r_raw_sec, "<dir of the task's run_raw_collection.ps1>/receipts/<stamp>_<pid>.json",
         hash_off="hourly; a caught-up source legitimately repeats CAUGHT_UP_*"),
@@ -1935,6 +1943,23 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
 
 #: scheduler names outside the `Aegis*` prefix that the probe still reads
 EXTRA_TASK_NAMES = tuple(n for n in TASK_RECEIPT if not n.startswith("Aegis"))
+
+
+def declared_cadence_h(name: str, spec: Optional[TaskSpec] = None) -> Optional[float]:
+    """The cadence a task declares (its TaskSpec, else config.HEALTH_TASK_CADENCE_H), or None."""
+    spec = spec or TASK_RECEIPT.get(name)
+    if spec is not None and spec.cadence_h is not None:
+        return float(spec.cadence_h)
+    v = _config.HEALTH_TASK_CADENCE_H.get(name)
+    return None if v is None else float(v)
+
+
+def catchup_tasks(table: Optional[dict] = None) -> tuple[str, ...]:
+    """The tasks `task_keeper catchup` may start late (S70 P4, engineer D5): declared
+    `catchup_safe`, a declared cadence, and not retired. Table order."""
+    table = TASK_RECEIPT if table is None else table
+    return tuple(n for n, s in table.items()
+                 if s.catchup_safe and not s.retired and declared_cadence_h(n, s) is not None)
 
 
 # ═══════════════════════════════════════════════════════════════ judging
