@@ -345,7 +345,8 @@ def _enable(monkeypatch):
     monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
 
 
-def test_the_questionnaire_route_is_a_read():
+def test_the_questionnaire_route_is_a_read(monkeypatch):
+    _enable(monkeypatch)    # CH-22 follow-up: reads are desktop-only too
     body = client.get("/api/control/agency/questionnaire").json()
     assert len(body["questions"]) == 8
     assert body["limits"]
@@ -354,12 +355,12 @@ def test_the_questionnaire_route_is_a_read():
 
 def test_intake_is_gated(monkeypatch):
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
-    assert client.post("/api/control/agency/intake", json={}).status_code == 403
+    assert client.post("/api/control/agency/intake", json={}).status_code == 404  # CH-22 follow-up: off the desktop the route does not exist
 
 
 def test_hold_is_gated(monkeypatch):
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
-    assert client.post("/api/control/agency/hold", json={}).status_code == 403
+    assert client.post("/api/control/agency/hold", json={}).status_code == 404  # CH-22 follow-up: off the desktop the route does not exist
 
 
 def test_the_intake_route_returns_a_hashed_policy(monkeypatch, ips_store):

@@ -25,7 +25,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control, control_ask, system_status, owner_inbox
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control, control_ask, system_status, owner_inbox, usage
 
 logging.basicConfig(
     level=logging.INFO,
@@ -602,6 +602,7 @@ app.add_middleware(
 
 # Request timing (must be added after CORS so it wraps the actual handler)
 add_timing_middleware(app)
+app.state.cors_origins = list(_origins)  # usage beacon reuses the CORS allow-list
 
 
 # ── Register routers ──────────────────────────────────────────
@@ -643,8 +644,13 @@ app.include_router(candidates.router)
 # read-only mirror. Writes only append-only JSONL under backend/data/human_loop;
 # places nothing, seals nothing.
 app.include_router(journal.router)
-# Aegis Desktop control plane (roadmap 2026-09-08 section 10.7): reads are always on,
-# every mutating route refuses unless AEGIS_CONTROL_ENABLED=1, so this is inert on Railway.
+# Aegis Desktop control plane (roadmap 2026-09-08 section 10.7). Every control-plane
+# router below (control, control_ask, system_status, ticker_hub, owner_inbox) is built
+# by `control.control_plane_router()`: unless AEGIS_CONTROL_ENABLED=1 each of its routes,
+# reads included, answers 404 as if it did not exist, so the plane is absent on Railway;
+# on the desktop every request must pass `check_local_request`.
+# `backend/tests/test_control_plane_gate.py` fails on any route under
+# `control.CONTROL_PLANE_PREFIXES` that is mounted without that gate.
 app.include_router(control.router)
 # The assistant answers from its OWN module (roadmap O6). Split out so an AST test
 # can prove a negative over a narrow file: no write, no subprocess, no broker and
@@ -660,6 +666,7 @@ app.include_router(_ticker_hub_router.router)
 # CH-22 (2026-11-14): the owner's "Note to Claude" inbox. Appends a JSONL row the next
 # brain session reads; no LLM, no outbound call, gated like the control plane.
 app.include_router(owner_inbox.router)
+usage.register(app)  # only when AEGIS_USAGE_RECEIPT=1 at startup; otherwise absent (404, not in openapi)
 
 
 def mount_desktop_frontend(application: "FastAPI") -> dict:

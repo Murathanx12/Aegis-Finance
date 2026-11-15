@@ -22,13 +22,14 @@ from __future__ import annotations
 import os
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import HTTPException, Query
 
-from backend.routers.control import check_local_request
+from backend.routers.control import control_plane_router
 from backend.services import ticker_hub as TH
 
-router = APIRouter(prefix="/api/control", tags=["control", "ticker-hub"],
-                   dependencies=[Depends(check_local_request)])
+# CH-22 follow-up: the one control-plane gate (404 off the desktop, then
+# `check_local_request`) -- it replaces the bare `check_local_request` dependency.
+router = control_plane_router(tags=["control", "ticker-hub"])
 
 
 def _require_enabled() -> None:

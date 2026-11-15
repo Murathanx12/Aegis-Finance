@@ -723,6 +723,56 @@ def r_rolling_cohorts(ctx, task) -> Reading:
                            f"{d.get('cohorts_live')} live of {d.get('cohorts_total')}"))
 
 
+DYNAMIC_BOOK_ACTIONS = {"BORN": "OK", "MARKED": "OK", "NOTHING_DUE": "IDLE",
+                        "STALE_CALENDAR": "DEGRADED", "REFUSED": "REFUSED"}
+
+
+def r_dynamic_books(ctx, task) -> Reading:
+    """`scripts.dynamic_books step`'s journal (`dynamic_books/runs.jsonl`), CH-45.
+
+    Dated by the row's OWN `utc`, never the file mtime; the age rule makes a missing
+    fresh row STALE. A step with a STALE leader calendar exits 3 and reads DEGRADED
+    with the leaders named; a refusal (rc 2: contract/config/code drift, or a stored
+    row that no longer recomputes) reads REFUSED with its reason. A row claiming
+    success with rc != 0 or a non-zero stored-vs-recompute difference is DEGRADED.
+    """
+    from backend.services import system_health as SH
+    path = ctx.path("dynamic_book_runs", ctx.optimus_dir / "dynamic_books" / "runs.jsonl")
+    lines = SH._tail_lines(path, 65536)
+    if not lines:
+        return _none(str(path))
+    try:
+        d = json.loads(lines[-1])
+    except ValueError:
+        return Reading(status="DEGRADED", detail="newest dynamic-book row is malformed", proof=str(path))
+    if not isinstance(d, dict):
+        return Reading(status="DEGRADED", detail="newest dynamic-book row is not an object", proof=str(path))
+    action = d.get("action")
+    status = DYNAMIC_BOOK_ACTIONS.get(action, "DEGRADED")
+    why = [str(d.get("reason"))] if d.get("reason") else []
+    stamp = parse_stamp(d.get("utc"))
+    if d.get("task") != "AegisDynamicBooks" or stamp is None or stamp > ctx.now + timedelta(seconds=30):
+        status, why = "DEGRADED", ["owner identity or receipt UTC is invalid"]
+    expected_rc = {"STALE_CALENDAR": 3, "REFUSED": 2}.get(action, 0)
+    if d.get("rc") != expected_rc:
+        status = worst(status, "DEGRADED")
+        why.append(f"action {action} with rc {d.get('rc')!r} (expected {expected_rc})")
+    stale = d.get("calendar_stale")
+    if action == "STALE_CALENDAR":
+        why.append("leader calendar STALE: " + "; ".join(
+            f"{k}: {', '.join(v) if isinstance(v, list) else v}" for k, v in sorted((stale or {}).items())))
+    differ = d.get("stored_rows_differ")
+    if action != "REFUSED" and (type(differ) is not int or differ != 0):
+        status = worst(status, "DEGRADED")
+        why.append(f"stored_rows_differ={differ!r}: stored path rows must recompute exactly")
+    return Reading(stamp=stamp, status=status, reason="; ".join(x for x in why if x),
+                   substance=substance(pick(d, ("action", "through", "cohorts_total", "paths_total"))),
+                   proof=str(path) + "[-1]",
+                   detail=(f"dynamic exposure books {action} (mode {d.get('mode')}); through {d.get('through')}; "
+                           f"{d.get('cohorts_total')} cohorts, {d.get('paths_written')} path rows written, "
+                           f"{d.get('stored_rows_rechecked')} stored rows rechecked"))
+
+
 def r_ticker_hub(ctx, task) -> Reading:
     """`scripts.ticker_hub build` (every 30 min): `ticker_hub/receipts/build_<stamp>_<pid>.json`.
 
@@ -1779,6 +1829,9 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
         registered_only=True, cadence_h=2.0),
     "AegisRollingCohorts": TaskSpec(r_rolling_cohorts, "rolling_cohorts/runs.jsonl",
                                     registered_only=True, cadence_h=2.0, catchup_safe=True),
+    # not caught up (S70 P4): a new paper-book family; whether a late step is safe is not known yet
+    "AegisDynamicBooks": TaskSpec(r_dynamic_books, "dynamic_books/runs.jsonl (the step's own utc)",
+                                  registered_only=True, cadence_h=24.0, catchup_safe=False),
     "AegisTickerHub": TaskSpec(r_ticker_hub, "ticker_hub/receipts/build_<stamp>_<pid>.json built_utc",
                                hash_off="a build over an unchanged corpus legitimately repeats its row counts; "
                                         "its own built_utc is the check"),

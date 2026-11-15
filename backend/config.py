@@ -1107,6 +1107,40 @@ config: dict = {
         "slow_request_threshold_s": 10.0,# Requests slower than this get a warning log
     },
 
+    # ── USAGE RECEIPT (privacy-preserving traffic counter; OFF by default) ───
+    # Enabled only by env AEGIS_USAGE_RECEIPT=1. Summary route needs env
+    # AEGIS_USAGE_TOKEN (refused when unset). Receipt files are written only
+    # when env AEGIS_USAGE_RECEIPT_DIR names a writable directory.
+    # See backend/services/usage_receipt.py.
+    "usage_receipt": {
+        "visitor_cap": 20000,            # distinct-visitor set cap per UTC day
+        "days_kept": 14,                 # finalized days kept in memory
+        "ticker_top_n": 20,              # ticker table rows reported
+        "ticker_max_tracked": 500,       # distinct tickers tracked per day
+        "page_max_tracked": 200,         # distinct page templates tracked per day
+        "route_max_tracked": 400,        # distinct route templates tracked per day
+        "flush_interval_s": 300,         # min seconds between receipt-file writes
+        "beacon_per_visitor_per_min": 30,
+        "beacon_global_per_min": 600,
+        "beacon_max_body_bytes": 256,
+        "ticker_min_visitors": 5,        # ticker table hidden below this many distinct visitors
+        "ticker_min_requests": 5,        # a ticker row needs at least this many requests
+        # Server-side callers (e.g. the frontend host) to count as "excluded", not human.
+        # Substrings of the user agent / prefixes of the client address. Empty by default.
+        "exclude_ua_substrings": [],
+        "exclude_ip_prefixes": [],
+        "ticker_param_names": ["ticker", "symbol"],
+        "page_ticker_prefixes": ["stock", "ticker"],
+        # Excluded from human counts, counted separately (case-insensitive substrings).
+        "monitor_ua_substrings": ["curl/", "python-requests", "python-httpx", "uptimerobot",
+                                  "github-hookshot", "railway", "vercel", "pingdom",
+                                  "statuscake", "go-http-client", "wget/", "healthcheck"],
+        "bot_ua_substrings": ["bot", "spider", "crawl", "slurp", "headless", "facebookexternalhit",
+                              "preview", "scrapy", "httpclient", "okhttp", "axios", "node-fetch"],
+        "health_path_prefixes": ["/api/health", "/docs", "/redoc", "/openapi.json",
+                                 "/favicon.ico", "/static", "/_next"],
+    },
+
     # ── FMP DAILY QUOTA BUDGET ───────────────────────────────────────────
     # FMP free tier is ~250 requests/day shared by ALL callers (provider
     # fallback, ESG, congress collector). The pre-registered congress-IC
@@ -3567,6 +3601,52 @@ DAILY_PASS_STEP_BOX_S: dict = {
 #: sessions. Read from the parquet's own `date` column, never an mtime. 2 =
 #: one missed daily refresh is tolerated, a second is a finding.
 BARS_MAX_AGE_SESSIONS = 2
+# --- bars feed reliability (2026-11-15, engineer defects D2/D3) -------------
+#: Ordered NAMES (never values) the bar puller resolves its market-data
+#: credential from; the first pair that is present AND authenticates wins.
+#: scope "env" = this process's environment, "terminal_env" = the sibling
+#: repo's .env (read-only), "env+terminal_env" = either. `paper` marks a pair
+#: that belongs to a paper TRADING account: retiring/resetting that account
+#: silently stops the feed, so the receipt flags it. The dedicated data-only
+#: pair goes FIRST; adding it to the environment/.env is the owner's step.
+#: Order below the first entry is the order the code has always used.
+BARS_DATA_CREDENTIAL_ORDER = (
+    {"label": "dedicated_data", "key": "ALPACA_DATA_KEY_ID", "secret": "ALPACA_DATA_SECRET_KEY",
+     "scope": "env+terminal_env", "paper": False, "verify": True},
+    {"label": "process_env", "key": "APCA_API_KEY_ID", "secret": "APCA_API_SECRET_KEY",
+     "scope": "env", "paper": None, "verify": False},   # None = unknown (Alpaca trading-key names)
+    {"label": "HACK1", "key": "AAT_HACK1_KEY_ID", "secret": "AAT_HACK1_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK2", "key": "AAT_HACK2_KEY_ID", "secret": "AAT_HACK2_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK4", "key": "AAT_HACK4_KEY_ID", "secret": "AAT_HACK4_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK5", "key": "AAT_HACK5_KEY_ID", "secret": "AAT_HACK5_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK6", "key": "AAT_HACK6_KEY_ID", "secret": "AAT_HACK6_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK3", "key": "AAT_HACK3_KEY_ID", "secret": "AAT_HACK3_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+)
+#: Bounded wait for DNS of the data host before the first call (boot burst of
+#: 2026-11-14 02:44: the task ran before the network was up). tries x interval.
+BARS_NETWORK_WAIT_TRIES = 3
+BARS_NETWORK_WAIT_INTERVAL_S = 45.0
+#: Foreign symbols whose failure DEGRADES (rc 3) rather than REFUSES the bars
+#: refresh: the five frozen non-US constituents, which the US SIP panels cannot
+#: supply. Any other failed symbol, and any US gated panel behind the last
+#: closed session, is REFUSED (rc 2).
+BARS_REFRESH_OPTIONAL_FOREIGN_SYMBOLS = ("EVO.ST", "HAG.DE", "KOG.OL", "RHM.DE", "SAAB-B.ST")
+#: Exit codes of `python -m scripts.pull_bars_refresh`. 0 = OK / unchanged.
+#: The network-down status is spelled `refused_network` so any status reader
+#: that matches the REFUS prefix (task_receipts.map_status) reads it RED; a
+#: `WAIT_` spelling reads IDLE there.
+BARS_REFRESH_RC = {"ok": 0, "unchanged": 0, "dry_run": 0, "refused": 2,
+                   "degraded": 3, "refused_network": 4}
+#: A US gated panel "reached the last close" only if at least this share of the
+#: symbols that had the PREVIOUS closed session's bar also has the last closed
+#: session's bar (a panel's max date alone passes when one name advanced).
+BARS_REFRESH_MIN_COVERAGE = 0.90
 #: `forecast_grader` voids a due forecast as UNRESOLVABLE when its ticker's bars
 #: STOPPED at least this many sessions before the panel's newest bar (the name
 #: delisted: AVB and EA on 2026-09-26, both `inactive` at the venue) and its
@@ -4594,6 +4674,58 @@ ROLLING_COHORT_MIN_STRICT_BLOCKS = 6
 #: then journals WAIT_LOCK with rc 0.
 ROLLING_COHORT_LOCK_WAIT_S = 60.0
 
+# -- Dynamic exposure book family (CH-45, 2026-11-15) --
+#: NOT prefixed ROLLING_COHORT_: `branch_population_rolling.config_snapshot`
+#: binds every ROLLING_COHORT_* key into the live population's declaration, and
+#: a new one would make that population refuse. These values are FROZEN in
+#: docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v1.json; `dynamic_exposure_books`
+#: refuses to run when they differ (a changed rule is a new contract id).
+#: Rules and parameters are the 11-14 market replay's (replay_findings.txt
+#: section 0/0b, s3_rules.py), not tuned.
+#: Base selection: v2 spec momentum_12_1 / liquid / equal / 40 names / h126, hedge none.
+DYNAMIC_BOOK_BASE_POLICY_ID = "c79397f92fd9d3562378388e"
+#: Rule (d), balanced: leader earnings-session gap <= GAP -> stock exposure GROSS
+#: for the next SESSIONS sessions. AVGO counts from 2019 (replay).
+DYNAMIC_BOOK_LEADERS = ("AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "AVGO")
+DYNAMIC_BOOK_LEADER_SINCE = {"AVGO": "2019-01-01"}
+DYNAMIC_BOOK_LEADER_GAP = -0.05
+DYNAMIC_BOOK_LEADER_GROSS = 0.5
+DYNAMIC_BOOK_LEADER_SESSIONS = 5
+#: STALE (a step exits non-zero naming the leader) when a leader's newest known
+#: report is older than this many days, or its calendar pull predates the last
+#: session: the cache stores only reports before its pull (review of PR #150).
+DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS = 80
+#: Rule (b), preservation: QQQ close < SMA(SMA) -> short QQQ at beta x NAV,
+#: beta of the book on QQQ over BETA_WINDOW sessions, clipped.
+DYNAMIC_BOOK_HEDGE_ETF = "QQQ"
+DYNAMIC_BOOK_HEDGE_SMA = 50
+DYNAMIC_BOOK_HEDGE_BETA_WINDOW = 126
+DYNAMIC_BOOK_HEDGE_BETA_MIN_OBS = 126     # the replay's rolling(126): a full window
+DYNAMIC_BOOK_HEDGE_BETA_CLIP = (0.0, 3.0)
+#: Rule costs (replay: 10 bps per unit of stock exposure changed, 2 bps per unit
+#: of ETF hedge changed) plus the rolling machinery's short borrow (the replay
+#: charged 0; stated). The base book also pays its band round trip.
+DYNAMIC_BOOK_COST_STOCK_BPS = 10.0
+DYNAMIC_BOOK_COST_ETF_BPS = 2.0
+DYNAMIC_BOOK_HEDGE_BORROW_BPS_YR = 30.0
+#: Report only: worst case on a book of this size if every long name gaps
+#: -WORST_GAP at the peak stock exposure (hedge credited nothing), and the
+#: window for the effective-bet count at entry.
+DYNAMIC_BOOK_REPORT_EQUITY_USD = 100_000.0
+DYNAMIC_BOOK_WORST_GAP = 0.30
+#: Report only: a one-session QQQ rise against the hedge (longs credited 0), at the
+#: observed hedge and at the largest the beta clip admits (3x: gross 3.95x).
+DYNAMIC_BOOK_SQUEEZE_QQQ_UP = 0.10
+DYNAMIC_BOOK_BETS_WINDOW = 63
+#: The owner's 11-14 forecast, frozen at the 2026-11-13 close (replay section 4):
+#: the EW of the 22 high-beta fleet books beats SPY at the 21st and 63rd session
+#: after REF_DATE, IF SPY is up; graded vs SPY and vs beta x SPY. Its own prefix
+#: so the dynamic-book declaration above is not touched. Before a grade date the
+#: grader prints NOT_DUE with the running state, never a verdict.
+OWNER_REBOUND_FORECAST_REF_DATE = "2026-11-13"
+OWNER_REBOUND_FORECAST_REF_CLOSES = {"SPY": 754.37, "QQQ": 679.89, "SMH": 486.75}
+OWNER_REBOUND_FORECAST_GRADES = {"21": "2026-12-15", "63": "2027-02-17"}
+
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).
 BOOK_FACTORY_CAP_USD = 1.0
@@ -4790,6 +4922,11 @@ OPENCLAW_BROWSER_HOSTS = OPENCLAW_USER_TAB_HOSTS + OPENCLAW_SOCIAL_HOSTS
 OPENCLAW_REPAIRS_PER_HOUR = 3
 OPENCLAW_REPAIR_BACKOFF_S = 60.0
 OPENCLAW_REPAIR_PORT_WAIT_S = 240.0
+#: A dependency repair that ends unhealthy this many times in a row writes a
+#: DOWN row (journal `gateway_down` + reader_status state DOWN). 2026-11-14.
+OPENCLAW_REPAIR_FAILS_BEFORE_DOWN = 2
+#: A failure streak older than this is history, not a streak.
+OPENCLAW_REPAIR_STREAK_MAX_AGE_S = 6 * 3600.0
 #: No gateway (re)start below this much free RAM: the kill test of 2026-09-28
 #: 14:30 restarted it at 0.5-0.8 GB free and it did not bind its port for more
 #: than 15 minutes (handoff 09-28: "would not open its port under 1 GB free").
