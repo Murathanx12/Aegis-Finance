@@ -1537,6 +1537,11 @@ def main(argv: list[str] | None = None) -> int:
             ledger = Path(a.ledger) if a.ledger else root / LIVE_LEDGER.name
             if not ledger.is_file():
                 raise Refusal(f"no forecast ledger at {ledger}")
+            from backend.services import forecast_ledger as _FL
+            _be = _FL.backend_for(ledger)
+            if _be.kind != "legacy":
+                raise Refusal(f"{ledger} is answered by the monthly streams ({_be.reason}); this "
+                              f"script hashes and reads the single legacy file and would read a frozen copy")
             r1 = run_table1(ledger, sessions, a.n_boot, a.seed,
                             bars_path=root / "prices_2025_26" / "bars.parquet", asof=asof)
             r1["meta"] = meta
