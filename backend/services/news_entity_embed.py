@@ -1019,8 +1019,13 @@ def tag(out: Path) -> dict:
     # the uncertain middle = the LLM budget question (no call is made here)
     unc_rows = {int(P["row"][j]) for j in np.nonzero(dec == "uncertain")[0]}
     unc_rows_unl = {int(P["row"][j]) for j in np.nonzero((dec == "uncertain") & (rp == -1))[0]}
-    # distinct calendar days that carry rows (a bad published stamp cannot stretch the window)
-    days = float(max(1, len({(r["eff"] or "")[:10] for r in rows if r.get("eff")})))
+    # distinct calendar days that carry rows inside the collection window (a row whose source
+    # stamps a years-old published time is still a row collected in the window; it must not
+    # stretch the denominator)
+    ep_max = max(r["ep"] for r in rows)
+    lo = ep_max - int(C.TICKER_HUB_INDEX_DAYS) * 86400
+    days = float(max(1, len({(r["eff"] or "")[:10] for r in rows if r.get("eff") and r["ep"] >= lo})))
+    n_old = sum(1 for r in rows if r["ep"] < lo)
     price = dict((getattr(C, "LLM_PRICE_PER_MTOK", {}) or {}).get(str(C.NEWS_EMBED_LLM_PRICE_MODEL)) or {})
     tin, tout = int(C.NEWS_EMBED_LLM_IN_TOKENS_PER_ROW), int(C.NEWS_EMBED_LLM_OUT_TOKENS_PER_ROW)
 
@@ -1056,6 +1061,7 @@ def tag(out: Path) -> dict:
         "uncertain_middle": {"pairs": int((dec == "uncertain").sum()), "rows": len(unc_rows),
                              "rows_unlabelled_only": len(unc_rows_unl),
                              "window_days": round(days, 1), "rows_per_day": round(len(unc_rows) / days, 1),
+                             "rows_dated_before_window": n_old,
                              "est_in_tokens_per_row": tin, "est_out_tokens_per_row": tout,
                              "price_model": str(C.NEWS_EMBED_LLM_PRICE_MODEL), "price_per_mtok": price,
                              "est_usd_whole_window": _usd(len(unc_rows)),
