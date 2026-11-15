@@ -3,6 +3,7 @@
     python -m scripts.rolling_cohorts compile-specs
     python -m scripts.rolling_cohorts step --data-root <optimus> [--out <dir>] [--asof <date>]
     python -m scripts.rolling_cohorts backfill --data-root <optimus> --from 2026-10-15 [--to <date>]
+    python -m scripts.rolling_cohorts report --data-root <optimus> [--out <dir>]   (read only)
 
 `step` is one idempotent pass: birth the due weekly cohort if its entry has not
 opened, mark every live cohort, write the scoreboard. `backfill` births the
@@ -55,7 +56,24 @@ def main(argv: list[str] | None = None) -> int:
         if name == "backfill":
             p.add_argument("--from", dest="date_from", default=None)
             p.add_argument("--to", dest="date_to", default=None)
+    rp = sub.add_parser("report", help="read-only independent-bets / cohorts-needed report")
+    rp.add_argument("--data-root", required=True, type=Path)
+    rp.add_argument("--out", type=Path, default=None, help="default <data-root>/rolling_cohorts/reports")
+    rp.add_argument("--stamp", default=None, help="fix the report id stamp (tests)")
     a = ap.parse_args(argv)
+    if a.cmd == "report":
+        from backend.services.portfolio_intelligence import cohort_report as CR
+        try:
+            out = output_dir(a.data_root, a.out if a.out is not None
+                             else Path(a.data_root) / "rolling_cohorts" / "reports")
+            rep = CR.build_report(a.data_root, stamp=a.stamp)
+            pj, pm = CR.write_report(rep, out)
+        except R.RollingCohortRefused as exc:
+            print(json.dumps({"task": R.TASK_NAME, "action": "REPORT_REFUSED", "rc": 2, "reason": str(exc)}))
+            return 2
+        print(json.dumps({"report_id": rep["report_id"], "json": str(pj), "md": str(pm),
+                          "citation": rep["citation"]}, indent=1))
+        return 0
     try:
         if a.cmd == "compile-specs":
             v1 = json.loads(SPECS_V1.read_bytes())
