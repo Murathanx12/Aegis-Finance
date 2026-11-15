@@ -7633,13 +7633,15 @@ DAY_FILE_MACRO_HORIZON_DAYS = 16
 DAY_FILE_SENSOR_TICKERS = ("NVDA", "MSFT", "AAPL", "AMZN", "GOOGL", "META", "AVGO", "TSM", "TSLA")
 #: The event-node store is red when its newest build is older than this on a session day.
 DAY_FILE_EVENT_NODES_STALE_HOURS = 6.0
-DAY_FILE_TOP_EVENTS = 10
+DAY_FILE_TOP_EVENTS = 5
 #: The ROI + book_dna pair is red when the ROI receipt is older than this.
 DAY_FILE_BOOKS_STALE_HOURS = 36.0
 #: The forecast ledger is red when its newest row is older than this.
 DAY_FILE_FORECAST_STALE_HOURS = 48.0
 #: The main accounts the owner may copy by hand come first in their own table.
-DAY_FILE_MAIN_FAMILIES = ("website_lane",)
+#: Main accounts: broker-held families, plus the accounts the site shows (twins/controls `__` never).
+DAY_FILE_BROKER_FAMILIES = ("alpaca_fleet", "pc_paper")
+DAY_FILE_SHOWN_ACCOUNTS = ("aggressive", "balanced", "conservative", "conviction", "mirror", "smallmid-quality")
 DAY_FILE_MAIN_ACCOUNT_PATTERNS = (r"^PC-PAPER$", r"^murat_core_satellite", r"^hack[1-4]$", r"^revision_flow_v0$")
 #: Families left out of the page: the owner's own holdings are not reviewed (owner, 2026-11-13).
 DAY_FILE_EXCLUDED_FAMILIES = ("murat_book",)
@@ -7651,7 +7653,18 @@ DAY_FILE_STATUS_STALE_HOURS = 1.0
 #: Tasks printed in "scheduled today" (the rest are in the JSON).
 DAY_FILE_TOP_SCHEDULED = 40
 #: Earnings dates printed in the dates section (sensors first); the rest are in the JSON.
-DAY_FILE_TOP_DATES = 25
+DAY_FILE_TOP_DATES = 12
+#: The opening TODAY block is at most this many lines.
+DAY_FILE_TODAY_MAX_LINES = 15
+#: Non-OK systems rows printed (the rest are counted; all are in the JSON).
+DAY_FILE_TOP_RED_ROWS = 10
+#: Best and worst other books printed in the books tables.
+DAY_FILE_BOOKS_TOP_BOTTOM = 5
+#: A book is left out of the worst-case ranking (and counted) when its family is listed or its name matches.
+DAY_FILE_WORST_EXCLUDE_FAMILIES = ("llm_portfolio:competition", "llm_portfolio:twin")
+DAY_FILE_WORST_EXCLUDE_RE = r"(rehearsal|__|_random_twin|random_same_band|-control$|^matched_)"
+#: The cohort report (`scripts.rolling_cohorts report`, run by hand) is red when older than this.
+DAY_FILE_COHORT_REPORT_STALE_HOURS = 192.0
 #: The rolling-cohort journal's newest row is red when older than this (the step runs about every 2 h).
 DAY_FILE_COHORT_STALE_HOURS = 8.0
 #: The dynamic-books journal's newest row is red when older than this.
