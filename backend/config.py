@@ -5480,6 +5480,17 @@ BOOK_DNA_FLAG_HIGH_BETA = 1.5
 #: many consecutive DAILY runs (this run included; one run per UTC day, by run id, never mtime);
 #: until then the voice prints "LABELS RISING, NOT YET HELD (k of N runs)". A fall is immediate.
 RESULTS_VOICE_PROMOTION_HOLD_RUNS = 3
+#: paper tables (S70, council 2 item 7/8; `scripts/paper_tables.py`, offline, no LLM). Table 1:
+#: forecasts made on/before PAPER_TABLES_CUT_DAY are the §64 era, later ones the new holdout;
+#: the §64 shrink (0.65 toward the base rate) is applied to the holdout UNCHANGED, as fixed then.
+#: Table 2: no-edge books drawn per (window, k, band) cell; NOT a tuned value, a sample size.
+PAPER_TABLES_CUT_DAY = "2026-09-24"
+PAPER_TABLES_SHRINK_FROM_S64 = 0.65
+PAPER_TABLES_N_BOOT = 1000
+PAPER_TABLES_SEED = 20261115
+PAPER_TABLES_WINDOWS: tuple = (21, 35, 45, 55, 78, 111)
+PAPER_TABLES_KS: tuple = (5, 10, 20, 30, 75)
+PAPER_TABLES_BOOKS_PER_CELL = 300
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
