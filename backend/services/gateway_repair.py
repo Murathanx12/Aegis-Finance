@@ -40,6 +40,7 @@ line, and only when its parent process is gone.
 from __future__ import annotations
 
 import json
+import os
 import re
 import socket
 import subprocess
@@ -224,6 +225,30 @@ def _gateway_procs() -> list[dict]:
             for r in rows if isinstance(r, dict)]
 
 
+def newest_startup_failed(stability_dir: Path | None = None) -> dict | None:
+    """The newest `gateway.startup_failed` stability record the gateway wrote
+    (name carries a UTC stamp, so the newest sorts last), reduced to the fields
+    a journal row needs. READ ONLY; None when there is none or it is unreadable.
+    2026-11-14: pid 41800 wrote one 96 s after its start ("another OpenClaw
+    process owns state-lifecycle") and the repair never looked at it."""
+    try:
+        if stability_dir is None:
+            home = Path(os.environ.get("OPENCLAW_HOME") or os.environ.get("USERPROFILE")
+                        or Path.home())
+            stability_dir = Path(os.environ.get("OPENCLAW_STATE_DIR") or home / ".openclaw")                 / "logs" / "stability"
+        files = sorted(Path(stability_dir).glob("*gateway.startup_failed.json"),
+                       key=lambda f: f.name)
+        if not files:
+            return None
+        d = json.loads(files[-1].read_text(encoding="utf-8"))
+        err = d.get("error") or {}
+        return {"file": files[-1].name, "generated_at": d.get("generatedAt"),
+                "pid": (d.get("process") or {}).get("pid"),
+                "error": err.get("name"), "reason": str(err.get("message") or "")[:200]}
+    except Exception:                                               # noqa: BLE001
+        return None
+
+
 def _free_gb() -> float | None:
     rows = _powershell_json("Get-CimInstance Win32_OperatingSystem | Select-Object "
                             "FreePhysicalMemory | ConvertTo-Json -Compress")
@@ -265,6 +290,8 @@ class Deps:
     orphan_mcp: Callable[[], list[dict]] = _orphan_mcp_pids
     kill_pid: Callable[[int], bool] = _kill_pid
     gateway_procs: Callable[[], list[dict]] = _gateway_procs
+    #: the newest `gateway.startup_failed` record (journal evidence only)
+    startup_failed: Callable[[], dict | None] = newest_startup_failed
     free_gb: Callable[[], float | None] = _free_gb
     sleep: Callable[[float], None] = time.sleep
     clock: Callable[[], float] = time.monotonic
@@ -372,10 +399,19 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
         say(event="repair_step", fault=fault, **row)
         return after
 
+    def n_starts() -> int:
+        return sum(1 for s_ in steps if s_["step"] in ("gateway_start", "gateway_restart"))
+
     def done(after: dict, cleared: str | None, stopped: str | None = None) -> dict:
-        return {"fault": fault, "steps": steps, "healthy": bool(after.get("healthy")),
-                "cleared_by": cleared, "stopped_because": stopped,
-                "seconds": round(d.clock() - t0, 2)}
+        out = {"fault": fault, "steps": steps, "healthy": bool(after.get("healthy")),
+               "cleared_by": cleared, "stopped_because": stopped,
+               "gateway_starts": n_starts(), "seconds": round(d.clock() - t0, 2)}
+        if not out["healthy"] and not after.get("gateway_port"):
+            try:                       # evidence for the journal; never decides anything
+                out["startup_failed"] = d.startup_failed()
+            except Exception:                                       # noqa: BLE001
+                out["startup_failed"] = None
+        return out
 
     if fault == "NOT_MURATCLAW":
         out = done({"healthy": False}, None, "NOT_MURATCLAW is never auto-repaired: it could "
@@ -425,12 +461,21 @@ def repair(fault: str, *, deps: Deps | None = None, log: Callable[..., None] | N
                     return done(after, "wait_for_port_existing" if after["healthy"] else None,
                                 None if after["healthy"] else "attach failed after the port "
                                                               "came up")
-                return done(after, None, f"GATEWAY_STARTING_SLOW: {len(procs)} gateway "
-                                         f"process(es) alive, port closed; not starting "
-                                         f"another")
+                # 2026-11-14: re-list after the wait. The process that was
+                # "starting" can have DIED during it (pid 41800: "another
+                # OpenClaw process owns state-lifecycle", 96 s after start);
+                # then nothing is coming up and ONE start is owed this pass.
+                still = d.gateway_procs()
+                if still:
+                    return done(after, None, f"GATEWAY_STARTING_SLOW: {len(still)} gateway "
+                                             f"process(es) alive, port closed after the "
+                                             f"wait; not starting another")
+                say(event="gateway_died_during_wait", fault=fault, was_alive=len(procs))
             after = step("gateway_start", lambda: d.openclaw(["gateway", "start"], 120.0))
             if not after["gateway_port"]:
                 after = step("wait_for_port", lambda: wait_for_port(d))
+            if after["healthy"]:
+                return done(after, "gateway_start")
         else:
             after = step("gateway_restart", lambda: d.openclaw(["gateway", "restart"], 180.0))
             if not after["gateway_port"]:

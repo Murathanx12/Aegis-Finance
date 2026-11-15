@@ -720,6 +720,46 @@ def end_time(hhmm: str) -> datetime | None:
     return end if end > now else end + timedelta(days=1)
 
 
+REPAIR_STREAK_FILE = DJ / "gateway_repair_streak.json"
+
+
+def log_repair(res: dict, *, streak_path: Path | None = None, **extra: object) -> dict:
+    """One `repair` journal row for a finished `GR.repair`, and the failure
+    streak. 2026-11-14: a repair ended unhealthy at 17:46:57 and nothing said
+    so; the reader stayed down until a manual start. A repair that ends
+    unhealthy `OPENCLAW_REPAIR_FAILS_BEFORE_DOWN` times in a row (kept on disk,
+    so a supervisor restart does not forget it) also writes a `gateway_down`
+    row and sets the reader status to DOWN. Healthy resets the streak."""
+    path = streak_path or REPAIR_STREAK_FILE
+    log(event="repair", fault=res.get("fault"), healthy=res.get("healthy"),
+        cleared_by=res.get("cleared_by"), seconds=res.get("seconds"),
+        steps=[x["step"] for x in res.get("steps") or []],
+        gateway_starts=res.get("gateway_starts"),
+        stopped_because=res.get("stopped_because"),
+        startup_failed=res.get("startup_failed"), **extra)
+    try:
+        n = int(json.loads(path.read_text(encoding="utf-8")).get("fails", 0))
+    except (OSError, ValueError, AttributeError):
+        n = 0
+    n = 0 if res.get("healthy") else n + 1
+    try:
+        GR_atomic_json(path, {"fails": n, "t": datetime.now().astimezone().isoformat(
+            timespec="seconds")})
+    except OSError:
+        pass
+    need = int(getattr(_config, "OPENCLAW_REPAIR_FAILS_BEFORE_DOWN", 2))
+    out = {"fails_in_a_row": n, "down": n >= need}
+    if out["down"]:
+        sf = res.get("startup_failed") or {}
+        why = (res.get("stopped_because") or "repair ended unhealthy")[:200]
+        log(event="gateway_down", level="DOWN", fails_in_a_row=n, fault=res.get("fault"),
+            reason=why, startup_failed=res.get("startup_failed"))
+        write_status(DOWN, next_action="repair again within budget; needs attention if it "
+                     "persists", last_error=f"GATEWAY_DOWN x{n}: {why} "
+                     f"{sf.get('reason') or ''}".strip())
+    return out
+
+
 def repair_once(budget: GR.RepairBudget | None = None, *, deps: GR.Deps | None = None) -> dict:
     """Probe; if faulted and the budget allows, repair. One receipt line each."""
     pr = GR.probe(deps)
@@ -733,9 +773,7 @@ def repair_once(budget: GR.RepairBudget | None = None, *, deps: GR.Deps | None =
         return {"probe": pr, "repair": None, "deferred_s": round(wait, 1)}
     b.spend(time.monotonic())
     res = GR.repair(pr.get("fault") or "GATEWAY_DOWN", deps=deps, log=log)
-    log(event="repair", fault=res["fault"], healthy=res["healthy"],
-        cleared_by=res["cleared_by"], seconds=res.get("seconds"),
-        steps=[s["step"] for s in res["steps"]])
+    log_repair(res)
     return {"probe": pr, "repair": res}
 
 
@@ -1389,8 +1427,7 @@ def main(argv: list[str] | None = None) -> int:
         pr_ = GR.probe()
         if not pr_["healthy"]:
             res_ = GR.repair(pr_.get("fault") or "PROFILE_DETACHED", log=log)
-            log(event="repair", fault=res_["fault"], healthy=res_["healthy"],
-                cleared_by=res_["cleared_by"], steps=[x["step"] for x in res_["steps"]])
+            log_repair(res_)
         relaunch_now(f"after chrome recycle: {why_}")
         return rec
     # 2026-09-29: sleep / resume and a failed PID query (see `slept_through`)
@@ -1438,6 +1475,7 @@ def main(argv: list[str] | None = None) -> int:
                 if ok_r:
                     budget.spend(time.monotonic())
                     res_r = GR.repair(pr_r.get("fault") or "PROFILE_DETACHED", log=log)
+                    log_repair(res_r, after="resume")
                     row_r.update(repair_healthy=res_r["healthy"], cleared_by=res_r["cleared_by"])
                 else:
                     row_r["repair_deferred_s"] = round(w_r, 1)
@@ -1475,9 +1513,7 @@ def main(argv: list[str] | None = None) -> int:
                     if not pr_c.get("healthy") and ok_c:
                         budget.spend(time.monotonic())
                         res_c = GR.repair(pr_c.get("fault") or "CHROME_DOWN", log=log)
-                        log(event="repair", fault=res_c["fault"], healthy=res_c["healthy"],
-                            cleared_by=res_c["cleared_by"],
-                            steps=[x["step"] for x in res_c["steps"]])
+                        log_repair(res_c)
                 anc = GR.ensure_anchor_tab()
                 if anc.get("opened"):
                     log(event="anchor_opened", tab=anc["opened"], n_pages=anc.get("n_pages"))
@@ -1530,9 +1566,7 @@ def main(argv: list[str] | None = None) -> int:
                     if not pr["healthy"] and ok_b:
                         budget.spend(time.monotonic())
                         res = GR.repair(pr.get("fault") or "GATEWAY_DOWN", log=log)
-                        log(event="repair", fault=res["fault"], healthy=res["healthy"],
-                            cleared_by=res["cleared_by"],
-                            steps=[x["step"] for x in res["steps"]])
+                        log_repair(res)
                 elif act == "restart_pool":
                     log(event="pool_stopped", why="stall", **stop_pool_gracefully())
                     relaunch_now("stall: restart the pool")
@@ -1640,9 +1674,7 @@ def main(argv: list[str] | None = None) -> int:
             elif act == "repair":
                 budget.spend(time.monotonic())
                 res = GR.repair(pr.get("fault") or "GATEWAY_DOWN", log=log)
-                log(event="repair", fault=res["fault"], healthy=res["healthy"],
-                    cleared_by=res["cleared_by"], seconds=res.get("seconds"),
-                    steps=[s["step"] for s in res["steps"]])
+                log_repair(res)
             elif act == "relaunch":
                 if cls["kind"] == OPEN_FAULT:
                     open_budget.spend(time.monotonic())
