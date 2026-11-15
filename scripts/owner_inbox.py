@@ -205,7 +205,8 @@ def _short(v: object, n: int) -> Optional[str]:
 
 def add_note(text: object, page: Optional[str] = None, *, data_root: Optional[Path] = None,
              origin: Optional[str] = None, host: Optional[str] = None,
-             user_agent: Optional[str] = None) -> dict:
+             user_agent: Optional[str] = None,
+             source: Optional[str] = None) -> dict:
     """Append one unread note and return the row exactly as written.
 
     `origin`, `host` and `user_agent` are the request's own headers, stored so a
@@ -219,6 +220,9 @@ def add_note(text: object, page: Optional[str] = None, *, data_root: Optional[Pa
            "text": t, "page": pg, "status": "unread",
            "origin": _short(origin, 200), "host": _short(host, 200),
            "user_agent": _short(user_agent, 200)}
+    src = _short(source, 40)
+    if src is not None:            # CH-48: "telegram"; absent for the desktop app, as before
+        row["source"] = src
     _append(inbox_path(data_root), row)
     return row
 

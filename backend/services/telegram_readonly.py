@@ -178,10 +178,10 @@ def positions_text(root: Optional[Path] = None, *, now: Optional[datetime] = Non
 
 #: name -> (reader, one-line help). The ONLY things this table can do.
 COMMANDS: dict[str, tuple[Callable[..., str], str]] = {
-    "status": (status_text, "the systems dashboard: counts and what is not OK"),
+    "status": (status_text, "the systems dashboard: counts and what is not OK (/status: each DOWN row)"),
     "budget": (budget_text, "DeepSeek spend this month vs the cap"),
     "digest": (digest_text, "the newest world news digest"),
-    "books": (books_text, "the LLM-portfolio books leaderboard"),
+    "books": (books_text, "the LLM-portfolio books leaderboard (/books: the results voice headline)"),
     "nav": (nav_text, "every paper account vs SPY (ROI receipt)"),
     "positions": (positions_text, "paper positions and stops (fleet-manager receipt)"),
 }
@@ -192,7 +192,8 @@ ALIASES = {"start": "help", "menu": "help", "commands": "help", "?": "help", "he
 def help_text() -> str:
     lines = ["AEGIS (read-only). Send one word, with or without /:"]
     lines += [f"/{k} -- {v[1]}" for k, v in COMMANDS.items()]
-    lines += ["/help -- this list", "",
+    lines += ["/note <text> -- leave an unverified note for the brain (same inbox as the app)",
+              "/help -- this list", "",
               "Every answer is read from a receipt on disk and shows its age. This bot never places "
               "or cancels an order, starts or stops anything, calls a model or runs a command."]
     return "\n".join(lines)
@@ -235,10 +236,29 @@ def _handler(name: str) -> Callable[[list, dict], dict]:
     return h
 
 
+def _owner_handler(name: str) -> Callable[[list, dict], Any]:
+    """CH-48: `/status /books /note /help` from the owner's chat. The bridge has already admitted
+    the sender; `dispatch` checks the chat id AGAIN against the configured owner, journals the
+    round trip, and returns None (-> an empty reply, nothing sent) for any other chat."""
+    def h(args: list, msg: dict) -> Any:
+        from backend.services import telegram_bridge as TG
+        from backend.services import telegram_owner_commands as OC
+        reply = OC.dispatch({**(msg or {}), "text": str((msg or {}).get("text") or f"/{name}")},
+                            owner_chat_id=TG.owner_chat_id())
+        return _reply(reply) if reply else ""
+    h.__name__ = f"owner_{name}"
+    return h
+
+
+#: The slash forms of these four are the CH-48 owner commands; the plain words ("status",
+#: "books") keep today's readers (`answer()` above is untouched).
+OWNER_COMMANDS: tuple[str, ...] = ("status", "books", "note", "help")
+
 #: For `telegram_bridge.poll(handlers=...)`.
-HANDLERS: dict[str, Callable[[list, dict], dict]] = {
+HANDLERS: dict[str, Callable[[list, dict], Any]] = {
     **{name: _handler(name) for name in (*COMMANDS, "help")},
     **{alias: _handler(alias) for alias in ALIASES},
+    **{name: _owner_handler(name) for name in OWNER_COMMANDS},
 }
 
 __all__ = ["COMMANDS", "ALIASES", "HANDLERS", "answer", "text_reply", "callback_reply",

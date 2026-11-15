@@ -5643,6 +5643,17 @@ TELEGRAM_AGENT_MODE = os.getenv("AEGIS_TELEGRAM_AGENT_MODE", "read_only").strip(
 TELEGRAM_READONLY_STATUS_STALE_H = 6.0
 #: `positions` answers from the newest fleet-manager run receipt; older than this, STALE.
 TELEGRAM_READONLY_POSITIONS_STALE_H = 26.0
+# CH-48 slice 1 (2026-11-15, `backend/services/telegram_owner_commands.py`): /status /books /note /help.
+#: Commands one chat may send per hour before it is told to wait (a reply, owner only).
+TELEGRAM_OWNER_CMD_MAX_PER_H = 30
+#: Of those, how many may be /note (each writes one inbox row).
+TELEGRAM_OWNER_NOTE_MAX_PER_H = 10
+#: Refused (non-owner) journal rows per hour; beyond this they are dropped and counted.
+TELEGRAM_OWNER_REFUSED_JOURNAL_MAX_PER_H = 20
+#: `/books` says STALE when the newest results voice is older than this many hours.
+TELEGRAM_OWNER_BOOKS_STALE_H = 36.0
+#: A reply is cut to this many characters (Telegram's limit is 4096) with a count of omitted lines.
+TELEGRAM_OWNER_REPLY_MAX_CHARS = 3500
 
 # ── Stitched tickers (review 2026-09-29 F4, `backend/services/stitched_tickers.py`) ──
 #: A symbol whose bars stop for MORE than this many market sessions and then
