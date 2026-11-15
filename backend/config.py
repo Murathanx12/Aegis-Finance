@@ -5491,6 +5491,18 @@ PAPER_TABLES_SEED = 20261115
 PAPER_TABLES_WINDOWS: tuple = (21, 35, 45, 55, 78, 111)
 PAPER_TABLES_KS: tuple = (5, 10, 20, 30, 75)
 PAPER_TABLES_BOOKS_PER_CELL = 300
+#: fix round after the adversarial review (2026-11-15). A cluster interval is READ only at or
+#: above this many blocks (date blocks in Table 1, start quarters in Table 2); below it the
+#: interval is printed and the verdict is CANNOT_DISTINGUISH / too few blocks, never a win.
+PAPER_TABLES_MIN_CLUSTERS_FOR_VERDICT = 10
+#: Table 2 headline interval: books are resampled in blocks of the window's START period
+#: (pandas period alias; "Q" = calendar quarter), because books in one window are one draw.
+PAPER_TABLES_TIME_BLOCK_FREQ = "Q"
+#: the exactly-zero-edge comparator: books with iid symmetric log returns against an
+#: independent benchmark of the same kind, labelled by the real rule. A sample size and a
+#: scale (the label is scale-free in the symmetric case), not tuned values.
+PAPER_TABLES_ZERO_EDGE_DRAWS = 20000
+PAPER_TABLES_ZERO_EDGE_DAILY_SD = 0.01
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
