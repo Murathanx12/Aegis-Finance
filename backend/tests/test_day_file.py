@@ -264,3 +264,13 @@ def test_the_probe_reads_the_run_stamp_and_goes_stale(tmp_path):
            {"generated_utc": _iso(old), "sections_not_ok": ["red"], "replay": False})
     r1 = DF.p_day_file(ctx)
     assert r1.verdict == "STALE" and "1 section(s) not OK" in r1.detail
+
+
+def test_a_replay_does_not_read_the_live_inbox(tmp_path):
+    root = _root(tmp_path)
+    _write(root / "owner_inbox" / "notes.jsonl",
+           json.dumps({"kind": "note", "id": "n", "utc": _iso(NOW), "text": "x", "status": "unread"}) + "
+")
+    rec = DF.build(root, now=NOW - timedelta(days=2), wall=NOW, forecast_lines=lambda p: iter(()))
+    assert rec["replay"] is True
+    assert rec["sections"]["inbox"]["status"] == DF.CD

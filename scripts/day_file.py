@@ -915,10 +915,13 @@ def cohorts_section(data_root: Path, now: datetime) -> dict:
 
 # ═══════════════════════════════════════════════════════════════ 10. owner inbox
 
-def inbox_section(data_root: Path, now: datetime) -> dict:
+def inbox_section(data_root: Path, now: datetime, replay: bool = False) -> dict:
     from scripts import owner_inbox as OI
     p = OI.inbox_path(data_root)
     r = rel(p, data_root)
+    if replay:
+        return section("inbox", [line(CD, "REPLAY: the unread count is live state (a note's read status is not "
+                                          "dated per clock), so it CANNOT be determined as of this clock", r)])
     if not p.exists():
         return section("inbox", [line(CD, "no owner_inbox/notes.jsonl: the unread count CANNOT be determined (the "
                                           "file is written by the first note)", r)])
@@ -1083,7 +1086,7 @@ def build(data_root: Path, *, now: Optional[datetime] = None, wall: Optional[dat
     guard("cohorts", lambda: cohorts_section(data_root, now))
     guard("forecasts", lambda: forecasts_section(data_root, now, forecast_lines))
     guard("owner_calls", lambda: owner_calls_section(data_root, now))
-    guard("inbox", lambda: inbox_section(data_root, now))
+    guard("inbox", lambda: inbox_section(data_root, now, replay))
     ordered = {k: secs[k] for k, _ in SECTIONS}
     not_ok = [k for k, s in ordered.items() if s["status"] != OK]
     return {"schema": SCHEMA, "receipt": "day_file", "day": local_day(now), "tz": str(_cfg("DAY_FILE_TZ", "Asia/Hong_Kong")),
