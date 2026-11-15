@@ -53,6 +53,10 @@ GUARD = "check_local_request"
 #: router-level guard that applies check_local_request to POST/PUT/PATCH/DELETE
 #: only: GET routes on such a router are NOT local-only (reads are served)
 UNSAFE_GUARD = "guard_unsafe_methods"
+#: `backend.routers.control.control_plane_router(**kw)`: the gated constructor and its
+#: default prefix (a test pins both against the real function)
+PLANE_ROUTER = "control_plane_router"
+PLANE_PREFIX = "/api/control"
 #: hosts that are not data sources (schemas, code hosting, our own deploys, loopback)
 IGNORED_HOSTS = {
     "www.w3.org", "purl.org", "json-schema.org", "github.com", "doi.org", "127.0.0.1",
@@ -182,6 +186,14 @@ def find_routes(m: Module) -> list[dict[str, Any]]:
         if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
             f = node.value.func
             fname = f.id if isinstance(f, ast.Name) else (f.attr if isinstance(f, ast.Attribute) else "")
+            if fname == PLANE_ROUTER and node.targets and isinstance(node.targets[0], ast.Name):
+                # #155: the control plane's one constructor. Every route on such a router is
+                # behind `control_plane_gate` (404 off the desktop, loopback-only on it).
+                prefix = PLANE_PREFIX
+                for kw in node.value.keywords:
+                    if kw.arg == "prefix" and _const(kw.value) is not None:
+                        prefix = _const(kw.value)
+                routers[node.targets[0].id] = {"prefix": prefix, "guarded": True, "unsafe_guarded": False}
             if fname == "APIRouter" and node.targets and isinstance(node.targets[0], ast.Name):
                 prefix = ""
                 for kw in node.value.keywords:
