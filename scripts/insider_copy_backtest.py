@@ -262,7 +262,7 @@ def load_trades() -> tuple[pd.DataFrame, dict]:
     info["cmp_class_counts"] = T["cmp_class"].value_counts().to_dict()
     info["cluster_trades"] = int(T["cluster"].sum())
     info["filing_span"] = [str(T["filing_date"].min().date()), str(T["filing_date"].max().date())]
-    del B, Cl
+    del B
     gc.collect()
     return T, info
 
