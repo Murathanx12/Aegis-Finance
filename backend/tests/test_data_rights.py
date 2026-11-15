@@ -76,3 +76,18 @@ def test_strict_only_fails_on_a_no(tmp_path: Path):
     # report mode is always 0; strict is allowed to be non-zero (nothing calls it)
     assert data_rights_audit.main(["--out", str(tmp_path)]) == 0
     assert data_rights_audit.main(["--out", str(tmp_path), "--strict"]) in (0, 1)
+
+
+def test_the_control_plane_constructor_is_read_as_local_only():
+    """#155 builds every control-plane router with `control_plane_router()`; the audit must
+    exclude those routes (they answer 404 on the hosted site), not skip or publish them."""
+    import inspect
+
+    from backend.routers import control
+    from scripts import data_rights_audit as A
+
+    assert hasattr(control, A.PLANE_ROUTER)
+    assert f'"{A.PLANE_PREFIX}"' in inspect.getsource(control.control_plane_router)
+    rep = A.audit(A.ROOT)
+    assert rep["excluded_local_only_routes"] >= 20
+    assert not [r for r in rep["routes"] if r["path"].startswith("/api/control")]
