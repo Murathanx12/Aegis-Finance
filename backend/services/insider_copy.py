@@ -430,11 +430,22 @@ def _blocks(entry_idx: np.ndarray, H: int) -> np.ndarray:
     return np.asarray(entry_idx, dtype=np.int64) // int(H)
 
 
-def block_means(values: np.ndarray, entry_idx: np.ndarray, H: int) -> pd.Series:
-    """Equal-weight mean of the trades entering in each block of ``H`` sessions."""
+def block_means(values: np.ndarray, entry_idx: np.ndarray, H: int,
+                groups: np.ndarray | None = None) -> pd.Series:
+    """Mean of the trades entering in each block of ``H`` sessions.
+
+    ``groups=None`` weights every trade equally. With ``groups`` (one key per
+    trade, e.g. the entry session for per-date, or permno + filing week for
+    per-firm-week) the trades of one group are averaged first, then the
+    groups equally: one decision filed by several entities counts once.
+    """
     v = np.asarray(values, dtype=float)
     m = np.isfinite(v)
-    return pd.Series(v[m]).groupby(_blocks(entry_idx, H)[m]).mean()
+    b = _blocks(entry_idx, H)[m]
+    if groups is None:
+        return pd.Series(v[m]).groupby(b).mean()
+    g = np.asarray(groups)[m]
+    return pd.Series(v[m]).groupby([b, g]).mean().groupby(level=0).mean()
 
 
 def _t(x: np.ndarray) -> tuple[float, float, float]:
@@ -446,37 +457,93 @@ def _t(x: np.ndarray) -> tuple[float, float, float]:
     return float(np.mean(x)), se, float(np.mean(x) / se) if se > 0 else float("nan")
 
 
+def newey_west_t(x: np.ndarray, lag: int = 1) -> float:
+    """Newey-West (Bartlett) t of the mean of a block series.
+
+    ADDED AFTER THE 2026-11-15 REVIEW, beside the declared test: adjacent
+    H-blocks share at most one block of calendar (a window entering late in
+    block b ends in block b+1), so lag 1 covers the overlap. The DECLARED
+    verdict test remains the alternate-block t.
+    """
+    x = np.asarray(x, dtype=float)
+    x = x[np.isfinite(x)]
+    n = len(x)
+    if n < 3:
+        return float("nan")
+    e = x - x.mean()
+    v = float(e @ e) / n
+    for k in range(1, lag + 1):
+        v += 2.0 * (1.0 - k / (lag + 1.0)) * float(e[k:] @ e[:-k]) / n
+    return float(x.mean() / np.sqrt(v / n)) if v > 0 else float("nan")
+
+
 def series_stats(bm: pd.Series) -> dict:
     """t on H-blocks, and on alternate blocks (strictly non-overlapping windows:
-    a window starting in block b ends before block b+2 begins). The MDE (80%
-    power, 5% two-sided) is 2.8 x the non-overlap standard error."""
+    a window starting in block b ends before block b+2 begins).
+
+    The DECLARED test is the alternate parity with the larger standard error;
+    ``mean_nonoverlap`` is THAT parity's mean, so it is the mean that belongs
+    to ``t_nonoverlap``. Both parities are reported. The MDE (80% power, 5%
+    two-sided) is 2.8 x the declared parity's SE. ``t_nw1_all_blocks`` is the
+    Newey-West t on all blocks, added after the review (not the verdict rule).
+    """
     mean_all, se_all, t_all = _t(bm.to_numpy())
     alt = [bm[bm.index % 2 == p].to_numpy() for p in (0, 1)]
     res = [_t(a) for a in alt]
-    # report the parity with the larger standard error (the conservative one)
     k = int(np.nanargmax([r[1] if np.isfinite(r[1]) else -1 for r in res]))
     mean_alt, se_alt, t_alt = res[k]
     return {"n_blocks": int(len(bm)), "mean_block": mean_all, "se_block": se_all,
-            "t_block": t_all, "n_blocks_nonoverlap": int(len(alt[k])),
+            "t_block": t_all, "declared_parity": k, "n_blocks_nonoverlap": int(len(alt[k])),
             "mean_nonoverlap": mean_alt, "se_nonoverlap": se_alt,
             "t_nonoverlap": t_alt,
-            "mde_nonoverlap": 2.8 * se_alt if np.isfinite(se_alt) else float("nan")}
+            "mde_nonoverlap": 2.8 * se_alt if np.isfinite(se_alt) else float("nan"),
+            "parity": [{"parity": p, "n_blocks": int(len(alt[p])), "mean": res[p][0], "se": res[p][1],
+                        "t": res[p][2]} for p in (0, 1)],
+            "t_nw1_all_blocks": newey_west_t(bm.to_numpy(), 1),
+            "t_nw2_all_blocks": newey_west_t(bm.to_numpy(), 2)}
 
 
-def stats(values: np.ndarray, entry_idx: np.ndarray, H: int) -> dict:
+def stats(values: np.ndarray, entry_idx: np.ndarray, H: int,
+          groups: np.ndarray | None = None) -> dict:
     v = np.asarray(values, dtype=float)
     out = {"n_trades": int(np.isfinite(v).sum()),
            "mean_trade": float(np.nanmean(v)) if np.isfinite(v).any() else float("nan")}
-    out.update(series_stats(block_means(v, entry_idx, H)))
+    out.update(series_stats(block_means(v, entry_idx, H, groups)))
     return out
 
 
-def diff_stats(va: np.ndarray, ia: np.ndarray, vb: np.ndarray, ib: np.ndarray, H: int) -> dict:
+def diff_stats(va: np.ndarray, ia: np.ndarray, vb: np.ndarray, ib: np.ndarray, H: int,
+               ga: np.ndarray | None = None, gb: np.ndarray | None = None) -> dict:
     """Block-mean difference A - B on blocks where both sleeves traded."""
-    a, b = block_means(va, ia, H), block_means(vb, ib, H)
+    a, b = block_means(va, ia, H, ga), block_means(vb, ib, H, gb)
     d = (a - b).dropna()
     out = series_stats(d)
     out["n_blocks_both"] = int(len(d))
+    return out
+
+
+def robustness(values: np.ndarray, entry_idx: np.ndarray, H: int, names: np.ndarray,
+               groups: np.ndarray | None = None) -> dict:
+    """The headline with its largest contributors removed, and winsorised.
+
+    ``drop_top1`` / ``drop_top5`` remove every trade in the 1 / 5 names whose
+    summed value is largest (the names that carry a positive total);
+    ``winsor_1_99`` clips the sleeve's own values at its 1st / 99th percentile.
+    """
+    v = np.asarray(values, dtype=float)
+    nm = np.asarray(names)
+    m = np.isfinite(v)
+    tot = pd.Series(v[m]).groupby(nm[m]).sum().sort_values(ascending=False)
+    out = {"full": stats(v, entry_idx, H, groups)}
+    for k in (1, 5):
+        drop = set(tot.head(k).index)
+        keep = ~np.isin(nm, list(drop))
+        out[f"drop_top{k}"] = stats(v[keep], np.asarray(entry_idx)[keep], H,
+                                    None if groups is None else np.asarray(groups)[keep])
+        out[f"drop_top{k}"]["dropped"] = [str(x) for x in tot.head(k).index]
+    if m.any():
+        lo, hi = np.percentile(v[m], [1, 99])
+        out["winsor_1_99"] = stats(np.clip(v, lo, hi), entry_idx, H, groups)
     return out
 
 
@@ -493,6 +560,20 @@ def by_year(values: np.ndarray, entry_idx: np.ndarray, years: np.ndarray, H: int
         if dates is not None:
             row["n_dates"] = int(len(np.unique(np.asarray(dates)[m])))
         out.append(row)
+    return out
+
+
+def by_year_diff(va: np.ndarray, ia: np.ndarray, ya: np.ndarray, vb: np.ndarray, ib: np.ndarray,
+                 yb: np.ndarray, H: int) -> list[dict]:
+    """Per entry year, the block-mean difference A - B (blocks where both traded)."""
+    out = []
+    ya, yb = np.asarray(ya), np.asarray(yb)
+    for yr in sorted(set(ya.tolist()) & set(yb.tolist())):
+        ma, mb = ya == yr, yb == yr
+        d = (block_means(np.asarray(va)[ma], np.asarray(ia)[ma], H)
+             - block_means(np.asarray(vb)[mb], np.asarray(ib)[mb], H)).dropna()
+        out.append({"year": int(yr), "mean_block": float(d.mean()) if len(d) else float("nan"),
+                    "n_blocks": int(len(d))})
     return out
 
 

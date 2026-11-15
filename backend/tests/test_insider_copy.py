@@ -245,3 +245,44 @@ def test_verdict_vocabulary():
     assert IC.verdict(pos, pos, pos, -0.001, 0.7) == "CANNOT_DISTINGUISH"
     assert IC.verdict(flat, flat, neg, 0.0, 0.3) == "FAILED_VARIANT"
     assert IC.verdict(flat, flat, flat, 0.0, 0.5) == "CANNOT_DISTINGUISH"
+
+
+# ── review round (2026-11-15): weighting, both parities, NW t, robustness ──
+
+def test_group_weighting_counts_one_decision_once():
+    idx = np.array([0, 0, 0, 0])
+    v = np.array([1.0, 1.0, 1.0, 0.0])
+    g = np.array(["firmA", "firmA", "firmA", "firmB"])     # one filing by three entities
+    assert IC.block_means(v, idx, 21).iloc[0] == pytest.approx(0.75)
+    assert IC.block_means(v, idx, 21, g).iloc[0] == pytest.approx(0.5)
+
+
+def test_declared_mean_belongs_to_its_t_and_both_parities_are_reported():
+    rng = np.random.default_rng(2)
+    idx = np.arange(0, 21 * 60, 21)
+    v = rng.normal(0.01, 0.05, len(idx))
+    st = IC.stats(v, idx, 21)
+    k = st["declared_parity"]
+    par = st["parity"][k]
+    assert st["mean_nonoverlap"] == pytest.approx(par["mean"])
+    assert st["t_nonoverlap"] == pytest.approx(par["t"])
+    assert {p["parity"] for p in st["parity"]} == {0, 1}
+    assert np.isfinite(st["t_nw1_all_blocks"])
+
+
+def test_newey_west_t_equals_plain_t_shape_without_autocorrelation():
+    x = np.array([1.0, -1.0] * 50) + 0.1
+    # strongly negative lag-1 autocorrelation shrinks the variance -> NW t above the naive t
+    naive = x.mean() / (x.std(ddof=0) / np.sqrt(len(x)))
+    assert IC.newey_west_t(x, 1) > naive
+
+
+def test_robustness_drops_the_largest_names_and_winsorises():
+    idx = np.repeat(np.arange(0, 21 * 10, 21), 3)
+    v = np.full(len(idx), 0.01)
+    names = np.array(["N%d" % (i % 7) for i in range(len(idx))])
+    v[names == "N3"] = 5.0
+    r = IC.robustness(v, idx, 21, names)
+    assert r["drop_top1"]["dropped"] == ["N3"]
+    assert r["drop_top1"]["mean_block"] == pytest.approx(0.01)
+    assert r["winsor_1_99"]["mean_block"] <= r["full"]["mean_block"]
