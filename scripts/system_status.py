@@ -230,6 +230,30 @@ def dated_row(section: str, name: str, content_status: str, detail: str, stamp: 
                action=act, required=required, extra=extra)
 
 
+def live_data_dir(optimus_dir: Path) -> Path:
+    """The folder that holds the LIVE `funnel_night10.json`: the parent of the data root
+    AFTER links are resolved (CH-64).
+
+    In a release clone `backend/data/optimus` is a junction to the live data, while
+    `backend/data/funnel_night10.json` beside it is the file committed with the release.
+    The scheduled funnel consumer (`sim_run.u_funnel`) runs in the live checkout, where
+    `config.IC_FUNNEL_PATH` is `<live>/backend/data/funnel_night10.json`: the sibling of the
+    junction's TARGET, not of the junction. A data root that is a plain folder resolves to
+    itself, so nothing changes outside a clone."""
+    opt = Path(optimus_dir)
+    try:
+        return opt.resolve().parent
+    except OSError:
+        return opt.parent
+
+
+def sched_iso(text: Any) -> Optional[str]:
+    """A schtasks local date-time ("11/16/2026 1:15:00 AM") -> ISO 8601 UTC, else None
+    ("N/A", "-", empty, another locale). Parsed by the one parser the task judge uses."""
+    d_part, _, t_part = str(text or "").strip().partition(" ")
+    return iso(TR._sched_local({"d": d_part, "t": t_part}, "d", "t"))
+
+
 # ═══════════════════════════════════════════════════════════════ probe mapping
 
 #: system_health verdict -> dashboard status. REFUSED is DOWN (a guard's refusal is
@@ -448,6 +472,9 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
                        stamp=parse_ts((mapped or {}).get("evidence_utc")), now=now,
                        lim=(mapped or {}).get("limit_s"), action=act, required=bool(mapped) and not is_one, one_shot=is_one,
                        extra={"last_run": last_run, "last_result": last_res, "next_run": next_run, "state": state,
+                              # CH-64: ISO 8601 UTC beside the scheduler's locale text (kept: the
+                              # day file reads the ISO field first, older readers the text)
+                              "next_run_utc": sched_iso(next_run), "last_run_utc": sched_iso(last_run),
                               **({"retired": True} if retired else {})}))
     if not out:
         out.append(row("tasks", "scheduler", "UNKNOWN", "no Aegis* tasks found and none declared",
@@ -600,11 +627,48 @@ def parquet_max_date(p: Path) -> tuple[Optional[datetime], str]:
         return None, type(exc).__name__
 
 
-def universe_rows(optimus: Path, data_dir: Path, now: datetime, limits: Optional[dict]) -> list[dict]:
-    out: list[dict] = []
-    opt_rows = set(C.SYSTEM_STATUS_OPTIONAL_ROWS)
-    # --- the universe graph receipt (CH-30 writes it; absent until then)
-    gp, gd = newest_by_name(optimus / "universe_graph", "*.json")
+_BUILD_ID = re.compile(r"[\w.\-]+")
+
+
+def graph_row(optimus: Path, now: datetime, limits: Optional[dict]) -> dict:
+    """The universe graph, read from `<data root>/universe_graph/latest.json` (the pointer
+    `universe_graph.write_run` flips) and dated by the `built_utc` INSIDE it. Counts and
+    status come from the build's own `receipt.json`. No pointer, or a pointer with no
+    stamp, is UNKNOWN (CANNOT DETERMINE), never fresh."""
+    required = "universe_graph" not in set(C.SYSTEM_STATUS_OPTIONAL_ROWS)
+    gdir = Path(optimus) / "universe_graph"
+    lp = gdir / "latest.json"
+    act = "Rebuild the graph (`python -m scripts.universe_graph build`) and read its receipt."
+    latest = read_json(lp)
+    if isinstance(latest, dict):
+        stamp = parse_ts(latest.get("built_utc"))
+        bid = str(latest.get("build_id") or "")
+        rp = gdir / bid / "receipt.json" if _BUILD_ID.fullmatch(bid) else None
+        g = read_json(rp) if rp else None
+        if stamp is None:
+            return row("universe", "universe_graph", "UNKNOWN",
+                       f"CANNOT DETERMINE: {lp.name} (build {bid or '?'}) carries no readable `built_utc`, "
+                       "so the graph's age is unknown and it is not treated as fresh",
+                       evidence=str(lp), now=now, lim=limit_s("universe_graph", limits), action=act,
+                       required=required)
+        if not isinstance(g, dict):
+            return dated_row("universe", "universe_graph", "UNKNOWN",
+                             f"build {bid or '?'}: its receipt.json is unreadable or absent, so nodes, edges and "
+                             "status CANNOT be determined", stamp, now, evidence=f"{lp} built_utc",
+                             limits=limits, action_bad=act, required=required)
+        counts = g.get("counts") if isinstance(g.get("counts"), dict) else {}
+        st = str(g.get("status") or "UNKNOWN")        # no status field is not OK (review 3)
+        cst = ("OK" if st.upper() in ("OK", "ALIVE", "BUILT") else
+               "UNKNOWN" if st == "UNKNOWN" else "DEGRADED")
+        deg = g.get("degraded_inputs") or []
+        return dated_row("universe", "universe_graph", cst,
+                         f"build {bid} as of {latest.get('as_of')}: nodes {counts.get('n_nodes')}; "
+                         f"edges {counts.get('n_edges')}; panel last session {g.get('panel_last_session')}; "
+                         f"status {st}" + (f" (degraded inputs: {', '.join(map(str, deg))[:120]})" if deg else ""),
+                         stamp, now, evidence=f"{lp} built_utc", limits=limits, action_bad=act,
+                         required=required, extra={"build_id": bid, "receipt": str(rp)})
+    # the pre-CH-30 shape: one dated JSON per build, dated by the stamp in its name
+    gp, gd = newest_by_name(gdir, "*.json")
     g = read_json(gp) if gp else None
     if isinstance(g, dict):
         nodes = g.get("nodes_by_type") or g.get("n_nodes")
@@ -612,36 +676,68 @@ def universe_rows(optimus: Path, data_dir: Path, now: datetime, limits: Optional
         st = str(g.get("status") or "UNKNOWN")        # no status field is not OK (review 3)
         cst = ("OK" if st.upper() in ("OK", "ALIVE", "BUILT") else
                "UNKNOWN" if st == "UNKNOWN" else "DEGRADED")
-        newest_bar = g.get("newest_bar_date")
-        out.append(dated_row("universe", "universe_graph", cst,
-                             f"nodes {nodes}; edges {edges}; newest bar {newest_bar}; status {st}",
-                             parse_ts(g.get("generated_utc") or g.get("generated_at")) or gd, now,
-                             evidence=f"universe_graph/{gp.name}", limits=limits,
-                             action_bad="Rebuild the graph (CH-30 nightly job) and read its receipt.",
-                             required="universe_graph" not in opt_rows))
-    else:
-        out.append(row("universe", "universe_graph", "UNKNOWN",
-                       "no universe_graph receipt yet (CH-30 writes it)", evidence="universe_graph/*.json", now=now,
-                       action="CH-30 builds this receipt; until then the universe is the funnel list only.",
-                       required="universe_graph" not in opt_rows))
-    # --- the funnel snapshot
-    fp = data_dir / "funnel_night10.json"
+        return dated_row("universe", "universe_graph", cst,
+                         f"nodes {nodes}; edges {edges}; newest bar {g.get('newest_bar_date')}; status {st}",
+                         parse_ts(g.get("generated_utc") or g.get("generated_at")) or gd, now,
+                         evidence=f"universe_graph/{gp.name}", limits=limits, action_bad=act, required=required)
+    return row("universe", "universe_graph", "UNKNOWN",
+               f"CANNOT DETERMINE: no readable {lp} (the graph has never been built under this data root, "
+               "or the pointer is not a JSON object)", evidence=str(lp), now=now, action=act, required=required)
+
+
+def funnel_row(optimus: Path, data_dir: Path, now: datetime) -> dict:
+    """The candidate set, read from the LIVE file (`data_dir`, see `live_data_dir`) and dated
+    by its own `generated_at`. The shelf life is `investment_committee.FUNNEL_STALE_DAYS`
+    and the sentence is `funnel_staleness`: one rule, the one the decision path uses."""
+    from backend.services import investment_committee as IC
+    fp = Path(data_dir) / "funnel_night10.json"
+    lim = float(IC.FUNNEL_STALE_DAYS) * 86400.0
+    rebuild = "Rebuild: `python -m backend.services.opportunity_funnel` (it refuses, without overwriting, when a stage fails)."
+    extra: dict = {"limit_days": IC.FUNNEL_STALE_DAYS}
+    # a second copy beside an unresolved data root (the file committed with a release clone)
+    # is named so the reader can see it was NOT the one read
+    other = Path(optimus).parent / "funnel_night10.json"
+    try:
+        same = other.resolve() == fp.resolve()
+    except OSError:
+        same = True
+    if not same and other.exists():
+        oj = read_json(other)
+        extra["not_read"] = {"path": str(other), "why": "committed copy beside the data-root link, not the live file",
+                             "generated_at": oj.get("generated_at") if isinstance(oj, dict) else None}
     f = read_json(fp)
-    if isinstance(f, dict):
-        uni = f.get("universe")
-        usz = len(uni) if hasattr(uni, "__len__") and not isinstance(uni, (int, float)) else uni
-        cands = f.get("candidates") or []
-        fails = f.get("failures") or []
-        cst = "DEGRADED" if fails else "OK"
-        if not cands:
-            cst = "DOWN"
-        out.append(dated_row("universe", "funnel", cst,
-                             f"{len(cands)} candidates; universe block {usz}; failures {len(fails)}",
-                             parse_ts(f.get("generated_at")), now, evidence=f"{fp.name} generated_at", limits=limits,
-                             action_bad="Rebuild: `python -m backend.services.opportunity_funnel` (it refuses, without overwriting, when a stage fails)."))
-    else:
-        out.append(row("universe", "funnel", "UNKNOWN", f"{fp.name} unreadable or absent", evidence=str(fp), now=now,
-                       action="Rebuild the funnel snapshot; a ranking over an unread candidate set is the 2026-09-22 failure."))
+    if not isinstance(f, dict):
+        return row("universe", "funnel", "UNKNOWN", f"CANNOT DETERMINE: {fp} is unreadable or absent",
+                   evidence=str(fp), now=now, lim=lim, extra=extra,
+                   action="Rebuild the funnel snapshot; a ranking over an unread candidate set is the 2026-09-22 failure.")
+    uni = f.get("universe")
+    usz = len(uni) if hasattr(uni, "__len__") and not isinstance(uni, (int, float)) else uni
+    cands = f.get("candidates") or []
+    fails = f.get("failures") or []
+    cst = "DEGRADED" if fails else "OK"
+    if not cands:
+        cst = "DOWN"
+    stamp = parse_ts(f.get("generated_at"))
+    stale = IC.funnel_staleness(f.get("generated_at"), now=now)
+    a_status, _age, why = judge_age(stamp, now, lim)
+    if stale and a_status == "OK":
+        a_status = "DEGRADED"                 # the decision path's rule says stale: never OK here
+    status = worst(cst, a_status)
+    detail = f"{len(cands)} candidates; universe block {usz}; failures {len(fails)}"
+    if stamp is None:
+        detail += f" [CANNOT DETERMINE the age: {stale or why}]"
+    elif why:
+        detail += f" [{why}]"
+    elif stale:
+        detail += f" [{stale[:160]}]"
+    return row("universe", "funnel", status, detail, evidence=f"{fp} generated_at", stamp=stamp, now=now,
+               lim=lim, action="" if status == "OK" else rebuild, extra=extra)
+
+
+def universe_rows(optimus: Path, data_dir: Path, now: datetime, limits: Optional[dict]) -> list[dict]:
+    out: list[dict] = []
+    out.append(graph_row(optimus, now, limits))
+    out.append(funnel_row(optimus, data_dir, now))
     # --- bars panels
     for label, rel in (("prices_2025_26", "prices_2025_26/bars.parquet"), ("prices_deep", "prices_deep/bars.parquet")):
         p = optimus / rel
@@ -936,6 +1032,123 @@ def machine_rows(now: datetime, *, run: Callable[[list, float], tuple] = _defaul
     return out
 
 
+# ═══════════════════════════════════════════════════════════════ wrapper refusals
+
+#: Written by `scripts/runtime_task.py` under the LIVE data root (its RUN_LOG_REL).
+RUN_JOURNAL_REL = Path("runtime_switch") / "runtime_task_runs.jsonl"
+REFUSED_ROW = "refused in the last hour"
+
+
+def _refusal_tasks(argv: Any) -> list[str]:
+    """What a refused wrapper run was going to start: the module after each `-m`. The
+    journal holds a flat argv (wrapper refusal, rc 90) or one list per segment (LOW_MEMORY)."""
+    if not isinstance(argv, list):
+        return ["(no argv in the row)"]
+    segs = argv if argv and all(isinstance(x, list) for x in argv) else [argv]
+    out: list[str] = []
+    for seg in segs:
+        seg = [str(x) for x in seg]
+        mods = [seg[i + 1] for i, x in enumerate(seg[:-1]) if x == "-m"]
+        if not mods:
+            first = next((x for x in seg if not x.startswith("-")), "")
+            mods = [Path(first).name] if first else ["(no module in argv)"]
+        out.extend(mods)
+    return out
+
+
+def _tally(items: list[str]) -> str:
+    c: dict[str, int] = {}
+    for x in items:
+        c[x] = c.get(x, 0) + 1
+    return ", ".join(f"{k} x{v}" if v > 1 else k for k, v in sorted(c.items(), key=lambda kv: (-kv[1], kv[0])))
+
+
+def refusal_row(optimus: Path, now: datetime, limits: Optional[dict]) -> dict:
+    """Wrapper refusals (CH-64). `runtime_task.py` writes `event: refused` (split brain rc 90,
+    LOW_MEMORY rc 93, a bad config ...) and starts nothing; on 2026-11-15 thirteen runs were
+    refused in an hour and no page showed it. DOWN when the last hour holds any; the 24-hour
+    count is beside it. A journal that cannot be read is UNKNOWN (CANNOT DETERMINE): zero
+    refusals read from nothing is not zero refusals. Rows are dated by their own `utc`."""
+    p = Path(optimus) / RUN_JOURNAL_REL
+    short_h = float(C.SYSTEM_STATUS_REFUSED_WINDOW_H)
+    long_h = float(C.SYSTEM_STATUS_REFUSED_LONG_WINDOW_H)
+    act_unread = ("Open the journal by hand; it is written by scripts/runtime_task.py on every wrapped task run, "
+                  "so an unreadable or empty one means no wrapped task has run under this data root.")
+
+    def cannot(why: str) -> dict:
+        return row("infrastructure", REFUSED_ROW, "UNKNOWN", f"CANNOT DETERMINE: {why}", evidence=str(p), now=now,
+                   lim=limit_s("runtime_journal", limits), action=act_unread)
+
+    n_rows = bad = undated = 0
+    newest: Optional[datetime] = None
+    refused: list[tuple[datetime, dict]] = []
+    horizon = now + timedelta(seconds=FUTURE_SLACK_S)
+    try:
+        with open(p, "r", encoding="utf-8", errors="replace") as fh:
+            for ln in fh:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                try:
+                    d = json.loads(ln)
+                except ValueError:
+                    bad += 1
+                    continue
+                if not isinstance(d, dict):
+                    bad += 1
+                    continue
+                n_rows += 1
+                t = parse_ts(d.get("utc"))
+                ok_t = t is not None and t <= horizon
+                if ok_t and (newest is None or t > newest):
+                    newest = t
+                if d.get("event") == "refused":
+                    if ok_t:
+                        refused.append((t, d))
+                    else:
+                        undated += 1
+    except OSError as exc:
+        return cannot(f"the wrapper journal cannot be opened ({type(exc).__name__})")
+    if n_rows == 0:
+        return cannot(f"the wrapper journal holds no readable row ({bad} unparseable line(s))")
+
+    def window(hours: float) -> list[tuple[datetime, dict]]:
+        return [(t, d) for t, d in refused if (now - t).total_seconds() <= hours * 3600.0]
+
+    def reasons(rows: list[tuple[datetime, dict]]) -> list[str]:
+        return [str(d.get("reason") or f"rc {d.get('rc')}") for _t, d in rows]
+
+    def tasks(rows: list[tuple[datetime, dict]]) -> list[str]:
+        return [m for _t, d in rows for m in _refusal_tasks(d.get("argv"))]
+
+    r1, r24 = window(short_h), window(long_h)
+    bits = [f"{len(r1)} refused in the last {short_h:g} h"
+            + (f" ({_tally(tasks(r1))[:260]}; reasons: {_tally(reasons(r1))[:120]})" if r1 else ""),
+            f"{len(r24)} in the last {long_h:g} h"
+            + (f" ({_tally(tasks(r24))[:260]}; reasons: {_tally(reasons(r24))[:120]})" if r24 else "")]
+    cst = "DOWN" if r1 else "OK"
+    if undated:
+        cst = worst(cst, "UNKNOWN")
+        bits.append(f"{undated} refused row(s) carry no readable or a future `utc` and CANNOT be placed in a window")
+    if bad:
+        bits.append(f"{bad} unparseable line(s) skipped")
+    last = max(refused, key=lambda x: x[0]) if refused else None
+    if last is not None and r24:
+        bits.append(f"newest refusal {iso(last[0])}: {str(last[1].get('why') or '')[:200]}")
+    extra = {"n_refused_1h": len(r1), "n_refused_24h": len(r24), "window_h": short_h, "long_window_h": long_h,
+             "tasks_1h": sorted(set(tasks(r1))), "reasons_1h": sorted(set(reasons(r1))),
+             "tasks_24h": sorted(set(tasks(r24))), "reasons_24h": sorted(set(reasons(r24))),
+             "refused_utc_1h": [iso(t) for t, _d in r1][-50:],
+             "newest_refused_utc": iso(last[0]) if last else None,
+             "journal_rows": n_rows, "unparseable_lines": bad, "undated_refused": undated}
+    return dated_row("infrastructure", REFUSED_ROW, cst, "; ".join(bits), newest, now,
+                     evidence=f"{p} event=refused (each row dated by its own utc; the stamp is the newest row of any kind)",
+                     limits=limits, limit_key="runtime_journal", extra=extra,
+                     action_bad="A wrapper refusal starts nothing: read `why` on the newest refused row, fix the cause "
+                                "(a database in the clone, low memory, the config); the row clears an hour after the last one. "
+                                "If only the journal's age is red, no wrapped task has run lately: check the scheduler.")
+
+
 # ═══════════════════════════════════════════════════════════════ lessons
 
 def lesson_rows(optimus: Path, now: datetime, limits: Optional[dict], n: int = 5) -> list[dict]:
@@ -964,7 +1177,8 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
     """Build the receipt. Never raises: a section that fails is an error + an UNKNOWN row."""
     now = now or utcnow()
     optimus_dir, repo = Path(optimus_dir), Path(repo)
-    data_dir = optimus_dir.parent
+    data_dir = live_data_dir(optimus_dir)        # CH-64: the junction's target, not the clone
+    funnel_path = data_dir / "funnel_night10.json"
     sections: dict[str, dict] = {k: {"title": t, "rows": [], "error": None} for k, t in SECTIONS}
 
     def guard(key: str, fn: Callable[[], list[dict]]) -> None:
@@ -982,6 +1196,10 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
             from backend.services import system_health as SH
             ctx = ctx or SH.make_ctx(optimus_dir=optimus_dir, now=now, allow_proc=allow_proc, repo=repo,
                                      http_json=_short_http_json)
+            # the probes' own funnel readers default to config.IC_FUNNEL_PATH, which inside a
+            # release clone is the committed copy: point them at the live file too
+            if isinstance(getattr(ctx, "paths", None), dict):
+                ctx.paths.setdefault("funnel", funnel_path)
             probes = raw_probe_rows(ctx)
         except Exception as exc:  # noqa: BLE001
             sections["infrastructure"]["error"] = f"probes: {type(exc).__name__}"
@@ -995,6 +1213,7 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
     guard("decisions", lambda: decision_rows(optimus_dir, now, limits))
     guard("night", lambda: night_rows(optimus_dir, now, limits))
     guard("infrastructure", lambda: machine_rows(now, run=run))
+    guard("infrastructure", lambda: [refusal_row(optimus_dir, now, limits)])
     guard("lessons", lambda: lesson_rows(optimus_dir, now, limits))
     mapped_probes = [m for m in (map_probe_row(p_) for p_ in probes if p_.get("probe") != "task") if m]
     for m in group_loops(mapped_probes):
@@ -1006,6 +1225,7 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
                and not r["name"].startswith("rule ") and not (r.get("extra") or {}).get("retired")]
     counts = {k: sum(1 for r in counted if r["status"] == k) for k in STATUSES}
     rec = {"receipt": SCHEMA, "generated_utc": iso(now), "optimus_dir": str(optimus_dir), "repo": str(repo),
+           "live_data_dir": str(data_dir), "funnel_path": str(funnel_path),
            "allow_proc": allow_proc, "counts": counts, "sections": sections,
            "read_me_first": "Read-only. Every dated row compares its evidence date to a limit in config.SYSTEM_STATUS_LIMITS_H; "
                             "UNKNOWN means the evidence is missing, never fine. No broker was called."}
@@ -1219,7 +1439,8 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Read-only systems status receipt (+ HTML page).")
     ap.add_argument("--optimus-dir", type=Path, default=Path(C.OPTIMUS_LEDGER_DIR))
     ap.add_argument("--repo", type=Path, default=REPO)
-    ap.add_argument("--out-dir", type=Path, default=None, help="default: <optimus-dir>/system_status")
+    ap.add_argument("--out-dir", "--out", dest="out_dir", type=Path, default=None,
+                    help="where status.json / status.html are written (default: <optimus-dir>/system_status)")
     ap.add_argument("--html", action="store_true", help="also write status.html")
     ap.add_argument("--render-only", action="store_true", help="render status.html from the existing status.json")
     ap.add_argument("--no-proc", action="store_true", help="skip probes that shell out (schtasks, gh, railway ...)")

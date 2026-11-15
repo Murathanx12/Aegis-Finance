@@ -120,11 +120,12 @@ def test_funnel_without_a_stamp_is_unknown(tmp_path):
     assert _by_name(S.universe_rows(opt, tmp_path, NOW, None))["funnel"]["status"] == "UNKNOWN"
 
 
-def test_universe_graph_optional_until_ch30(tmp_path):
+def test_universe_graph_is_required_since_ch64(tmp_path):
+    """Was optional until CH-30 wrote the graph; it exists now, so a missing one is undetermined."""
     opt = tmp_path / "optimus"
     opt.mkdir()
     g = _by_name(S.universe_rows(opt, tmp_path, NOW, None))["universe_graph"]
-    assert g["status"] == "UNKNOWN" and g["required"] is False
+    assert g["status"] == "UNKNOWN" and g["required"] is True
 
 
 # -- books -----------------------------------------------------------------------
