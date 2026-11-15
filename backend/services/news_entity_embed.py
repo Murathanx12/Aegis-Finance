@@ -671,11 +671,14 @@ def build_pairs(rows: list[dict], E: np.ndarray, comp_syms: list[str], CE: np.nd
     bank_pos = [[sym_ix[s] for s in rows[i]["pos"] if s in sym_ix] for i in lab]
     votes = knn_votes(E, ep, lab, bank_pos, knn_k)
     fam_code = {f: i for i, f in enumerate(FAMILIES)}
-    X: list[list[float]] = []
-    meta: list[tuple[int, int, int]] = []           # (row index, company index, label)
+    X_parts: list[np.ndarray] = []
+    M_parts: list[np.ndarray] = []
     n_pos_total = n_pos_covered = 0
     nc = len(comp_syms)
     for s in range(0, len(rows), 2048):
+        # per chunk: python lists for one chunk only, then a float32 block (bounded memory)
+        X: list[list[float]] = []
+        meta: list[tuple[int, int, int]] = []       # (row index, company index, label)
         S = np.asarray(E[s:s + 2048], dtype=np.float32) @ CE.T
         ranks = np.argsort(-S, axis=1)
         for r in range(len(S)):
@@ -718,8 +721,10 @@ def build_pairs(rows: list[dict], E: np.ndarray, comp_syms: list[str], CE: np.nd
                           1.0 if "cos" in cand[c] else 0.0, 1.0 if "knn" in cand[c] else 0.0,
                           1.0 if "rules" in cand[c] else 0.0])
                 meta.append((i, c, (1 if c in pos else 0) if row["pos"] else -1))
-    Xa = np.asarray(X, dtype=np.float32).reshape(-1, len(FEATURES))
-    Ma = np.asarray(meta, dtype=np.int64).reshape(-1, 3)
+        X_parts.append(np.asarray(X, dtype=np.float32).reshape(-1, len(FEATURES)))
+        M_parts.append(np.asarray(meta, dtype=np.int64).reshape(-1, 3))
+    Xa = np.concatenate(X_parts) if X_parts else np.zeros((0, len(FEATURES)), dtype=np.float32)
+    Ma = np.concatenate(M_parts) if M_parts else np.zeros((0, 3), dtype=np.int64)
     return {"X": Xa, "row": Ma[:, 0], "comp": Ma[:, 1], "y": Ma[:, 2],
             "candidate_recall": {"precise_positives": n_pos_total, "in_candidates": n_pos_covered,
                                  "share": round(n_pos_covered / n_pos_total, 4) if n_pos_total else None}}
