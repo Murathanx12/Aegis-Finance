@@ -313,18 +313,36 @@ def verdict(k_wrong: int, n: int, bar: Optional[float] = None) -> str:
     return "CANNOT_DISTINGUISH"
 
 
+#: No listed company is worth more than this in USD; a larger `market_cap_usd` is in a local
+#: currency (the tracker's finnhub / panel rows for foreign issuers), so it cannot rank.
+MAX_PLAUSIBLE_CAP_USD = 6.0e12
+
+
+def size_rankings(uni: dict, prof: dict, top_n: int) -> dict:
+    """Two size rankings over the hub universe: the DECLARED one (`market_cap_usd` from the
+    tracker profiles, as-is) and the hub's own USD size measure (median dollar volume)."""
+    caps = sorted(((float(v.get("market_cap_usd") or 0), s) for s, v in prof.items()
+                   if s in uni and isinstance(v, dict) and v.get("market_cap_usd")), reverse=True)
+    implausible = [s for c, s in caps if c > MAX_PLAUSIBLE_CAP_USD]
+    dv = sorted(((float((v or {}).get("dollar_volume") or 0), s) for s, v in uni.items()
+                 if isinstance(v, dict) and (v or {}).get("dollar_volume")), reverse=True)
+    return {"market_cap_declared": [s for _c, s in caps[:top_n]],
+            "dollar_volume": [s for _c, s in dv[:top_n]],
+            "market_cap_implausible_n": len(implausible),
+            "market_cap_implausible_in_declared_top": [s for s in [x for _c, x in caps[:top_n]] if s in set(implausible)]}
+
+
 def hub_effect(data_root: Path, profiles: Path, demotions: dict, top_n: Optional[int] = None) -> dict:
     """Rows per ticker in the LIVE hub generation before and after hiding the demotions, for
-    the largest companies by market cap present in the hub universe. Reads ids and tags only."""
+    the largest companies in the hub universe (two size rankings, see `size_rankings`).
+    Reads ids and tags only."""
     top_n = int(C.NEWS_DEMOTE_TOP_N if top_n is None else top_n)
     root = Path(data_root) / str(C.TICKER_HUB_DIRNAME)
     cur = json.loads(_need(root / "CURRENT.json").read_text(encoding="utf-8"))
     gen = root / cur["generation"]
     uni = json.loads(_need(gen / "universe.json").read_text(encoding="utf-8"))
     prof = json.loads(_need(profiles).read_text(encoding="utf-8"))
-    caps = sorted(((float(v.get("market_cap_usd") or 0), s) for s, v in prof.items()
-                   if s in uni and isinstance(v, dict) and v.get("market_cap_usd")), reverse=True)
-    top = [s for _c, s in caps[:top_n]]
+    ranks = size_rankings(uni, prof, top_n)
     before, after, about_b, about_a, hidden_by = Counter(), Counter(), Counter(), Counter(), Counter()
     n_rows = n_hidden = n_rows_touched = 0
     for f in sorted(gen.glob("rows_*.jsonl")):
@@ -348,21 +366,61 @@ def hub_effect(data_root: Path, profiles: Path, demotions: dict, top_n: Optional
                     about_a[t] += 1
                 for x in hidden:
                     hidden_by[x.get("t")] += 1
-    table = []
-    for s in top:
-        b, a = before[s], after[s]
-        table.append({"ticker": s, "rows_before": b, "rows_after": a, "hidden": b - a,
-                      "share_hidden": round((b - a) / b, 4) if b else None,
-                      "about_before": about_b[s], "about_after": about_a[s],
-                      "loses_more_than_half": bool(b and (b - a) / b > 0.5)})
+    def table(top: list[str]) -> dict:
+        rows = []
+        for s in top:
+            b, a = before[s], after[s]
+            rows.append({"ticker": s, "rows_before": b, "rows_after": a, "hidden": b - a,
+                         "share_hidden": round((b - a) / b, 4) if b else None,
+                         "about_before": about_b[s], "about_after": about_a[s],
+                         "loses_more_than_half": bool(b and (b - a) / b > 0.5)})
+        return {"rows": rows,
+                "tickers_losing_more_than_half": [r["ticker"] for r in rows if r["loses_more_than_half"]],
+                "about_tags_changed": sum(1 for r in rows if r["about_before"] != r["about_after"]),
+                "rows_before_total": sum(r["rows_before"] for r in rows),
+                "rows_after_total": sum(r["rows_after"] for r in rows)}
+
+    hid_rows = sorted(((before[t] - after[t], t) for t in before if before[t] - after[t] > 0), reverse=True)
     return {"generation": cur["generation"], "built_utc": cur.get("built_utc"), "hub_rows": n_rows,
             "tags_hidden": n_hidden, "rows_touched": n_rows_touched,
             "demotions_in_sidecar": len(demotions),
             "demotions_matched_in_live_hub": sum(hidden_by.values()),
-            "top_by_market_cap": table,
-            "tickers_losing_more_than_half": [r["ticker"] for r in table if r["loses_more_than_half"]],
-            "about_tags_changed": sum(1 for r in table if r["about_before"] != r["about_after"]),
+            "top_by_dollar_volume": table(ranks["dollar_volume"]),
+            "top_by_market_cap_declared": table(ranks["market_cap_declared"]),
+            "market_cap_defect": {
+                "implausible_caps_in_universe": ranks["market_cap_implausible_n"],
+                "implausible_in_declared_top": ranks["market_cap_implausible_in_declared_top"],
+                "note": ("the declared ranking (`market_cap_usd`, tracker profiles) holds local-currency values for "
+                         "foreign issuers, so its top 30 is mostly ADRs with few hub rows; the dollar-volume table "
+                         "(the hub's own USD size measure) is the readable one. A deviation from the declaration, "
+                         "on the hub-effect table only; the verdict metric is untouched.")},
+            "tickers_any_losing_more_than_half_min10": [
+                t for t in before if before[t] >= 10 and (before[t] - after[t]) / before[t] > 0.5],
+            "most_hidden": [{"ticker": t, "hidden": n, "rows_before": before[t]} for n, t in hid_rows[:15]],
             "market_cap_source": str(profiles)}
+
+
+def gate_all_rows(ch46: Path) -> dict:
+    """The language gate over EVERY CH-46 row (not only population rows): how many rows and
+    classifier pairs it would route to `uncertain`, by source family and by decision."""
+    model = json.loads(_need(ch46 / NEE.MODEL_NAME).read_text(encoding="utf-8"))
+    d = np.load(_need(ch46 / NEE.PAIRS_NAME))
+    dec = NEE.decide(d["score"], model["thresholds"])
+    gated = np.zeros(len(d["part"]), dtype=bool)
+    rows, fam_all, fam_g = 0, Counter(), Counter()
+    for i, r in enumerate(NEE.iter_row_file(ch46)):
+        rows += 1
+        fam_all[r["fam"]] += 1
+        if ND.non_english(f"{r.get('title') or ''} {r.get('text') or ''}"):
+            gated[i] = True
+            fam_g[r["fam"]] += 1
+    gp = gated[d["row"]]
+    return {"rows": rows, "rows_gated": int(gated.sum()),
+            "rows_gated_by_source": dict(sorted(fam_g.items())),
+            "share_gated_by_source": {f: round(fam_g[f] / fam_all[f], 4) for f in sorted(fam_g)},
+            "pairs_gated_by_decision": dict(Counter(dec[gp].tolist())),
+            "note": ("the population (body-match mentions) holds almost no non-English rows; the gate's effect is on "
+                     "the classifier's other decisions, mainly the `about` promotions the CH-46 audit found wrong")}
 
 
 def cmd_evaluate(work: Path, ch46: Path, declaration: Path, data_root: Path, profiles: Path) -> dict:
@@ -371,6 +429,15 @@ def cmd_evaluate(work: Path, ch46: Path, declaration: Path, data_root: Path, pro
         key = list(csv.DictReader(fh))
     lab = _labels(work, key)
     th = thresholds(ch46)
+    # a digest ticker the row's text confirms is MERGED into the body-match tag by the hub
+    # (`ticker_hub.merge_tags`), so no separate `digest_typed` tag survives: mark them here
+    want = {p["ri"] for p in pop}
+    dig: dict[int, set] = {}
+    for i, r in enumerate(NEE.iter_row_file(ch46)):
+        if i in want:
+            dig[i] = set(r.get("dig") or [])
+    for p in pop:
+        p["method"] = "body+digest" if p["ticker"] in dig.get(p["ri"], set()) else p["method"]
     # ── counts
     strata = Counter((p["fam"], p["month"]) for p in pop)
     dec1 = Counter(p["dec1"] for p in pop)
@@ -384,7 +451,8 @@ def cmd_evaluate(work: Path, ch46: Path, declaration: Path, data_root: Path, pro
             "of_which_would_have_been_reject": sum(1 for p in gated if p["dec1_ungated"] == ND.REJECT),
             "by_source": dict(Counter(p["fam"] for p in gated)),
             "reject_without_gate": sum(1 for p in pop if p["dec1_ungated"] == ND.REJECT),
-            "reject_with_gate": dec1[ND.REJECT]}
+            "reject_with_gate": dec1[ND.REJECT],
+            "all_rows": gate_all_rows(ch46)}
     # ── (a) precise-label contradiction (recall only: every tag in this pool is wrong by the label)
     pa = [p for p in pop if p["label_a"] is not None]
     a_wrong = [p for p in pa if p["label_a"] == 0]
@@ -428,6 +496,21 @@ def cmd_evaluate(work: Path, ch46: Path, declaration: Path, data_root: Path, pro
                                 "by_decision": wrong_table([(k["dec1"], v) for k, v in kept_s])},
           "share_of_wrong_tags_removed": share_removed([v for _k, v in r01], [v for _k, v in k01], n_rej1, n_kept1),
           "verdict": verdict(k_wrong_r, len(r01))}
+    n2r = sum(1 for _k, v in rej_s if v == 2)
+    v1["cannot_tell_sensitivity"] = {
+        "all_cannot_tell_wrong": _rate(k_wrong_r + n2r, len(rej_s)),
+        "all_cannot_tell_right": _rate(k_wrong_r, len(rej_s)),
+        "note": "bounds, not variants: the verdict uses labels 0/1 only, as declared"}
+    p_r = k_wrong_r / len(r01) if r01 else None
+    p_k = sum(1 for _k, v in k01 if v == 0) / len(k01) if k01 else None
+    if p_r is not None and p_k is not None:
+        base = (n_rej1 * p_r + n_kept1 * p_k) / max(n_rej1 + n_kept1, 1)
+        v1["baseline_hide_every_body_tag"] = {
+            "est_share_wrong_in_population": round(base, 4),
+            "reject_minus_baseline": round(p_r - base, 4),
+            "reject_minus_kept": round(p_r - p_k, 4),
+            "note": ("the precision of hiding EVERY population tag, from the same two samples; the classifier's "
+                     "reject is worth only what it adds over this")}
     k2 = sum(1 for _k, v in r2 if v == 0)
     v2 = {"threshold": t2, "pos_share": th["v2_pos_share"], "pool": n_rej2,
           "precision_reject_is_wrong": _rate(k2, len(r2)),
@@ -457,6 +540,10 @@ def cmd_evaluate(work: Path, ch46: Path, declaration: Path, data_root: Path, pro
         "thresholds": th, "variants_tried": 2,
         "population": {"tags": len(pop), "rows": len({p["row_id"] for p in pop}),
                        "by_method": dict(Counter(p["method"] for p in pop)),
+                       "digest_note": ("no tag in the window carries m == digest_typed: the hub keeps a digest "
+                                       "ticker only when the row's text confirms it, and `merge_tags` then keeps the "
+                                       "body name-match tag instead. `body+digest` marks body tags whose ticker is "
+                                       "also in the row's digest tickers"),
                        "by_decision_v1": dict(dec1),
                        "by_decision_v2": dict(Counter(p["dec2"] for p in pop)),
                        "by_part": dict(Counter(str(p["part"]) for p in pop)),
