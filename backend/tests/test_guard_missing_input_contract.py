@@ -1980,11 +1980,12 @@ def _case_dynamic_exposure_books():
     from pathlib import Path as _P
 
     from backend.services.portfolio_intelligence.dynamic_exposure_books import (
-        DynamicBookRefused, load_earnings)
-    # CH-45: the leader-gap rule's missing input is the earnings calendar. Without
-    # it the balanced book would silently never cut; refused instead.
-    return (lambda: load_earnings(_P("this/path/does/not/exist")), DynamicBookRefused,
-            "absent earnings calendar")
+        DynamicBookRefused, load_contracts)
+    # CH-45 (contracts v3): the frozen contracts file is the input every run needs;
+    # absent, it is refused, never defaulted. (An absent or old forward calendar is
+    # not a raise: a step exits 3 STALE_CALENDAR naming it, see test_dynamic_exposure_books.)
+    return (lambda: load_contracts(_P("this/path/does/not/exist.json"), {}), DynamicBookRefused,
+            "absent contracts file")
 
 
 def _case_owner_calls():
@@ -2052,6 +2053,17 @@ def _case_ticker_hub():
     nowhere = _P("does/not/exist/ticker_hub")
     return (lambda: check_inputs(default_paths(nowhere)), TickerHubRefused,
             "a ticker-hub build with no news corpus")
+
+
+def _case_news_entity_embed():
+    # CH-46: with no news corpus there is nothing to embed or classify; that must be a
+    # named refusal (rc 2), never an empty receipt that reads as a measured precision.
+    from pathlib import Path as _P
+
+    from backend.services.news_entity_embed import EmbedTagRefused, check_inputs, default_paths
+    nowhere = _P("does/not/exist/news_entity_embed")
+    return (lambda: check_inputs(default_paths(nowhere)), EmbedTagRefused,
+            "an embedding tagger run with no news corpus")
 
 
 def _case_llm_selector_book():
@@ -2256,6 +2268,7 @@ CASES = {
     "news_overlay_book": _case_news_overlay_book,
     "forward_calendar": _case_forward_calendar,
     "ticker_hub": _case_ticker_hub,
+    "news_entity_embed": _case_news_entity_embed,
 }
 
 
