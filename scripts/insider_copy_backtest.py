@@ -50,7 +50,26 @@ WRDS = OPT / "wrds"
 DELIST = WRDS / "bulk" / "crsp__dsedelist.parquet"
 FF = WRDS / "ff_factors_daily.parquet"
 LIVE_DIRS = (OPT / "sec_insider", WRDS, WRDS / "bulk")
-DECL_NAME = "insider_copy_DECLARATION.json"
+
+
+def set_data_root(root: Path) -> None:
+    """Read inputs from another checkout's ``backend/data`` (read-only; outputs go to --out)."""
+    global OPT, EVENTS, WRDS, DELIST, FF, LIVE_DIRS
+    OPT = Path(root) / "optimus"
+    EVENTS = OPT / "sec_insider" / "insider_events_v1.parquet"
+    WRDS = OPT / "wrds"
+    DELIST = WRDS / "bulk" / "crsp__dsedelist.parquet"
+    FF = WRDS / "ff_factors_daily.parquet"
+    LIVE_DIRS = (OPT / "sec_insider", WRDS, WRDS / "bulk")
+    if not EVENTS.exists():
+        raise IC.InsiderCopyRefused(f"no Form 4 event table under {root}")
+DECL_NAME = "insider_copy_DECLARATION_v2.json"
+DECL_V1_NAME = "insider_copy_DECLARATION.json"
+DECL_V1_SHA = "880dc87e3655d7c4"
+#: In insider_events_v1 the buy types are MUTUALLY EXCLUSIVE (sec_insider_bulk_load
+#: types a CMP-classified buy as opportunistic/routine INSTEAD of open_market_buy),
+#: so every code-P purchase is the union of these three.
+BUY_TYPES = ("insider_open_market_buy", "insider_opportunistic_buy", "insider_routine_buy")
 RECEIPT_NAME = "insider_copy_receipt.json"
 
 #: The variants, declared before the run. V1 is the primary; the others are
@@ -134,9 +153,17 @@ def declaration_body() -> dict:
         "owner_claim": ("some of the insiders made 300% ... copying their portfolio after the SEC filings "
                         "you could have made at least double the S&P (2026-11-14)"),
         "written_before_any_return_was_read": True,
+        "supersedes": {"file": DECL_V1_NAME, "sha16": DECL_V1_SHA,
+                       "reason": ("v1 named event_type insider_open_market_buy alone; in this table that type is only "
+                                  "the CMP-UNCLASSIFIABLE buys (classified buys carry their own exclusive type), so v1 "
+                                  "would have dropped 264k classified purchases and emptied the routine/opportunistic "
+                                  "split. The universe is corrected; nothing else changes. A run under v1 printed "
+                                  "result lines to a log that was stopped and kept UNREAD "
+                                  "(run_attempt2_ABORTED_UNREAD.log).")},
         "forward_trials_untouched": ["TRIAL-INSIDER-IC", "TRIAL-CMP-INSIDER-IC"],
-        "universe": ("SEC Form 4 bulk, event_type insider_open_market_buy (code P, acquired, non-derivative, "
-                     "not 10b5-1; plan flag UNKNOWN before 2023q2 is kept), linked to a CRSP permno, filing "
+        "universe": ("SEC Form 4 bulk, every code-P purchase: event_type in insider_open_market_buy | "
+                     "insider_opportunistic_buy | insider_routine_buy (mutually exclusive types; code P, acquired, "
+                     "non-derivative, not 10b5-1; plan flag UNKNOWN before 2023q2 is kept), linked to a CRSP permno, filing "
                      f"date {CFG.INSIDER_COPY_FIRST_FILING}..{CFG.INSIDER_COPY_LAST_FILING}; one copy trade "
                      "per (insider CIK, permno, filing date)"),
         "public_bound": ("FILING_DATE 22:00 America/New_York (the bulk SUBMISSION table has no acceptance "
@@ -191,6 +218,10 @@ def part_declare(out: Path) -> int:
     if len(VARIANTS) > CFG.INSIDER_COPY_MAX_VARIANTS:
         say("REFUSED: more variants than the declared maximum")
         return 2
+    v1 = out / DECL_V1_NAME
+    if v1.exists() and json.loads(v1.read_text(encoding="utf-8")).get("sha16") != DECL_V1_SHA:
+        say("REFUSED: the superseded v1 declaration on disk does not carry the sha this amendment names")
+        return 2
     body = declaration_body()
     body["sha16"] = _sha(body)
     body["written_utc"] = _now()
@@ -206,17 +237,12 @@ def load_trades() -> tuple[pd.DataFrame, dict]:
     cols = ["permno", "event_type", "event_time_utc", "observed_at_utc", "insider_cik", "insider_is_officer",
             "insider_is_director", "insider_is_tenpercent", "insider_dollar_value", "insider_cluster_buyers",
             "symbol"]
-    B = pd.read_parquet(EVENTS, columns=cols, filters=[("event_type", "=", "insider_open_market_buy")])
-    info = {"buy_rows_all": int(len(B)), "buy_rows_with_permno": int(B["permno"].notna().sum())}
-    Cl = pd.read_parquet(EVENTS, columns=["permno", "event_type", "event_time_utc", "observed_at_utc", "insider_cik"],
-                         filters=[("event_type", "in", ["insider_opportunistic_buy", "insider_routine_buy"])])
-    Cl["cmp_class"] = Cl["event_type"].map({"insider_opportunistic_buy": "opportunistic",
-                                            "insider_routine_buy": "routine"})
-    Cl = (Cl.sort_values("cmp_class")      # 'opportunistic' < 'routine': keep the stronger label
-          .drop_duplicates(["insider_cik", "permno", "event_time_utc", "observed_at_utc"])
-          .drop(columns=["event_type"]))
-    B = B.merge(Cl, on=["insider_cik", "permno", "event_time_utc", "observed_at_utc"], how="left")
-    B["cmp_class"] = B["cmp_class"].fillna("unclassifiable")
+    B = pd.read_parquet(EVENTS, columns=cols, filters=[("event_type", "in", list(BUY_TYPES))])
+    info = {"buy_rows_all": int(len(B)), "buy_rows_with_permno": int(B["permno"].notna().sum()),
+            "buy_rows_by_type": B["event_type"].value_counts().to_dict()}
+    B["cmp_class"] = B["event_type"].map({"insider_opportunistic_buy": "opportunistic",
+                                          "insider_routine_buy": "routine"}).fillna("unclassifiable")
+    B = B.drop(columns=["event_type"])
     B = B.dropna(subset=["permno", "observed_at_utc", "insider_cik"])
     B["filing_date"] = (B["observed_at_utc"].dt.tz_convert("America/New_York").dt.tz_localize(None)
                         .dt.normalize())
@@ -426,7 +452,7 @@ def part_run(out: Path) -> int:
     cap = pd.DataFrame(M["CAP"])
     pct = cap.rank(axis=1, pct=True).to_numpy(dtype=np.float32)
     del cap
-    bucket = np.where(np.isfinite(pct), np.minimum((pct * CFG.INSIDER_COPY_SIZE_BUCKETS).astype(np.int16),
+    bucket = np.where(np.isfinite(pct), np.minimum((np.nan_to_num(pct, nan=0.0) * CFG.INSIDER_COPY_SIZE_BUCKETS).astype(np.int16),
                                                    CFG.INSIDER_COPY_SIZE_BUCKETS - 1), -1).astype(np.int8)
     del pct
     gc.collect()
@@ -653,7 +679,11 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("part", choices=["declare", "run"])
     ap.add_argument("--out", required=True, type=Path)
+    ap.add_argument("--data-root", type=Path, default=None,
+                    help="backend/data folder to READ from (default: this checkout's)")
     a = ap.parse_args(argv)
+    if a.data_root is not None:
+        set_data_root(a.data_root)
     if a.part == "declare":
         return part_declare(a.out)
     return part_run(a.out)
