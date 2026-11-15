@@ -802,6 +802,25 @@ def choose_thresholds(scores: np.ndarray, y: np.ndarray, target: Optional[float]
             "status": "OK" if t_about is not None else "TARGET_UNREACHABLE"}
 
 
+def thresholds_by_family(scores: np.ndarray, y: np.ndarray, fams: np.ndarray, fallback: dict) -> dict:
+    """Variant 2: one validation threshold pair per source family; a family whose validation
+    pairs cannot reach the target with `NEWS_EMBED_MIN_ABOUT_N` pairs keeps the global pair."""
+    out = {}
+    for f in sorted(set(fams.tolist())):
+        m = fams == f
+        th = choose_thresholds(scores[m], y[m]) if int((y[m] == 1).sum()) else {"status": "NO_POSITIVES"}
+        out[f] = th if th.get("status") == "OK" else {**fallback, "status": f"GLOBAL_FALLBACK:{th.get('status')}"}
+    return out
+
+
+def decide_by_family(scores: np.ndarray, fams: np.ndarray, by: dict, fallback: dict) -> np.ndarray:
+    out = np.full(len(scores), "reject", dtype=object)
+    for f in sorted(set(fams.tolist())):
+        m = fams == f
+        out[m] = decide(scores[m], by.get(f, fallback))
+    return out
+
+
 def decide(scores: np.ndarray, th: dict) -> np.ndarray:
     out = np.full(len(scores), "reject", dtype=object)
     out[scores >= th["reject"]] = "uncertain"
@@ -929,9 +948,22 @@ def tag(out: Path) -> dict:
     held_dedup = prec_rec(dec[dd], P["y"][dd], int((P["y"][dd] == 1).sum()))
     held_dedup["note"] = "first pair per (story, ticker); recall here is within candidates"
     no_sec = te & ~np.isin(np.array([rows[int(i)]["fam"] for i in P["row"]]), ("sec_ex99", "sec_atom"))
+    va_no_sec = va & ~np.isin(np.array([rows[int(i)]["fam"] for i in P["row"]]), ("sec_ex99", "sec_atom"))
     held_news = prec_rec(dec[no_sec], P["y"][no_sec], int((P["y"][no_sec] == 1).sum()))
     held_news["note"] = "test pairs without SEC filings; recall here is within candidates"
     held_val = prec_rec(dec[va], P["y"][va], sum(len(r["pos"]) for i, r in enumerate(rows) if part[i] == 1))
+    # variant 2 (per-family thresholds, chosen on validation). DISCLOSED: added after variant 1's
+    # held-out by-source table was seen, so its test number is not an untouched held-out number.
+    pair_fam = np.array([rows[int(i)]["fam"] for i in P["row"]], dtype=object)
+    th_fam = thresholds_by_family(scores[va], P["y"][va], pair_fam[va], th)
+    dec2 = decide_by_family(scores, pair_fam, th_fam, th)
+    v2 = {"thresholds_by_family": th_fam,
+          "held_out_test": prec_rec(dec2[te], P["y"][te], n_pos_test),
+          "held_out_test_without_sec": prec_rec(dec2[no_sec], P["y"][no_sec], int((P["y"][no_sec] == 1).sum())),
+          "held_out_by_source": _group_table(rows, P, part, dec2, lambda r: r["fam"]),
+          "decisions_all_pairs": dict(Counter(dec2.tolist())),
+          "uncertain_rows": len({int(P["row"][j]) for j in np.nonzero(dec2 == "uncertain")[0]}),
+          "caveat": "chosen after the variant-1 held-out by-source table was seen; not a clean held-out number"}
     # rule-tier agreement over every pair (labelled or not)
     rule: dict[str, Counter] = defaultdict(Counter)
     rule_unl: dict[str, Counter] = defaultdict(Counter)
@@ -966,7 +998,8 @@ def tag(out: Path) -> dict:
             h = {x[0]: x for x in row["hub"]}.get(sym)
             fh.write(json.dumps({"schema": SCHEMA, "row_id": row["id"], "source": row["src"],
                                  "eff_utc": row["eff"], "ticker": sym, "score": round(float(scores[j]), 4),
-                                 "decision": str(dec[j]), "rule_tier": h[2] if h else None,
+                                 "decision": str(dec[j]), "decision_v2": str(dec2[j]),
+                                 "rule_tier": h[2] if h else None,
                                  "split": int(rp[j]), "model": model_tag, "classifier": clf_sha},
                                 separators=(",", ":")) + "\n")
     os.replace(str(sc) + ".tmp", sc)
@@ -986,7 +1019,8 @@ def tag(out: Path) -> dict:
     # the uncertain middle = the LLM budget question (no call is made here)
     unc_rows = {int(P["row"][j]) for j in np.nonzero(dec == "uncertain")[0]}
     unc_rows_unl = {int(P["row"][j]) for j in np.nonzero((dec == "uncertain") & (rp == -1))[0]}
-    days = max(1.0, (max(r["ep"] for r in rows) - min(r["ep"] for r in rows)) / 86400)
+    # distinct calendar days that carry rows (a bad published stamp cannot stretch the window)
+    days = float(max(1, len({(r["eff"] or "")[:10] for r in rows if r.get("eff")})))
     price = dict((getattr(C, "LLM_PRICE_PER_MTOK", {}) or {}).get(str(C.NEWS_EMBED_LLM_PRICE_MODEL)) or {})
     tin, tout = int(C.NEWS_EMBED_LLM_IN_TOKENS_PER_ROW), int(C.NEWS_EMBED_LLM_OUT_TOKENS_PER_ROW)
 
@@ -1011,6 +1045,9 @@ def tag(out: Path) -> dict:
         "split": split, "candidate_recall_all_labelled": P["candidate_recall"],
         "thresholds": th, "validation": held_val, "held_out_test": held,
         "held_out_test_dedup_stories": held_dedup, "held_out_test_without_sec": held_news,
+        "validation_without_sec": prec_rec(dec[va_no_sec], P["y"][va_no_sec], int((P["y"][va_no_sec] == 1).sum())),
+        "variant_2_per_family_thresholds": v2,
+        "variants_tried": 2,
         "held_out_by_source": _group_table(rows, P, part, dec, lambda r: r["fam"]),
         "held_out_by_month": _group_table(rows, P, part, dec, lambda r: (r["eff"] or "")[:7]),
         "decisions_all_pairs": dict(Counter(dec.tolist())),

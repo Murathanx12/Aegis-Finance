@@ -144,6 +144,19 @@ def test_choose_thresholds_hits_the_target_on_validation_or_says_unreachable():
     assert list(dec) == ["reject", "uncertain", "about"]
 
 
+def test_per_family_thresholds_fall_back_to_the_global_pair():
+    rng = np.random.default_rng(1)
+    y = np.r_[np.ones(300), np.zeros(900), np.ones(3), np.zeros(50)].astype(int)
+    s = np.r_[rng.uniform(0.5, 1, 300), rng.uniform(0, 0.7, 900), rng.uniform(0, 1, 53)].astype(np.float32)
+    fams = np.array(["a"] * 1200 + ["b"] * 53, dtype=object)
+    glob = NEE.choose_thresholds(s, y)
+    by = NEE.thresholds_by_family(s, y, fams, glob)
+    assert by["a"]["status"] == "OK"
+    assert by["b"]["status"].startswith("GLOBAL_FALLBACK") and by["b"]["about"] == glob["about"]
+    dec = NEE.decide_by_family(s, fams, by, glob)
+    assert set(dec.tolist()) <= set(NEE.DECISIONS)
+
+
 def test_knn_vote_uses_only_strictly_earlier_labelled_rows():
     E = np.eye(4, dtype=np.float32)
     E[3] = E[0]                                             # row 3 is a copy of row 0, later
@@ -222,8 +235,8 @@ def test_pipeline_end_to_end_on_a_synthetic_corpus(paths, tmp_path: Path):
     side = (out / "news_entity_embed_sidecar.jsonl").read_text(encoding="utf-8")
     assert "Market wrap" not in side and "said on the call" not in side
     first = json.loads(side.splitlines()[0])
-    assert set(first) == {"schema", "row_id", "source", "eff_utc", "ticker", "score", "decision", "rule_tier",
-                          "split", "model", "classifier"}
+    assert set(first) == {"schema", "row_id", "source", "eff_utc", "ticker", "score", "decision", "decision_v2",
+                          "rule_tier", "split", "model", "classifier"}
     assert first["decision"] in NEE.DECISIONS
     # the hub's own row ids
     hub_ids = {r["id"] for r in rows}
