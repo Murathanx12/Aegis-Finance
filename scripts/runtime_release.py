@@ -4,6 +4,18 @@
     python -m scripts.runtime_release --tag runtime-20261115             # clone + junctions + preflight
     python -m scripts.runtime_release --retire runtime-20261115 --dry-run   # what a retire removes
     python -m scripts.runtime_release --retire runtime-20261115             # the ONLY safe delete
+    python -m scripts.runtime_release --repoint-plan 20261115a --out <dir>  # READ-ONLY plan + 2 scripts
+
+`--repoint-plan <tag>` (S70 P4, engineer D7) reads the scheduler (read-only `Get-ScheduledTask`,
+no window, bounded; a failed read REFUSES, never an empty plan) and plans every task whose
+action names a release clone: ON_TARGET, ATTENDED (config RUNTIME_REPOINT_ATTENDED_*: can reach
+an order path), SKIP_RUNNING, REFUSED_MODULE_MISSING, REFUSED_CONFIG_DRIFT (a running population's
+declaration.json differs from the target's own `config_snapshot()`), or REPOINT. The whole plan
+refuses unless the target clone exists and its newest `runtime_switch/release_<tag>_*.json`
+preflight is PASS for that clone. With `--out` it writes `repoint_<tag>.ps1` (REPOINT rows only:
+re-checks Running and the action, exports the XML, `Set-ScheduledTask -Action` only) and
+`rollback_<tag>.ps1` (re-registers each from that XML). The tool runs neither. Exit 0; 3 when a
+task was refused; 2 when the plan was.
 
 CH-05 (wrapper PR "W", fixed after review 5). The scheduled tasks stop running from the dirty
 WIP checkout and run from a fresh clone of a tag at `<parent of AEGIS_LIVE_ROOT>\\aegis-runtime-<tag>`
@@ -730,6 +742,480 @@ def render_retire(plan: dict, *, dry_run: bool) -> str:
     return "\n".join(L)
 
 
+# ───────────────────────────────────────────────────── repoint plan (S70 P4, D7)
+#
+# WHY. On 2026-11-15 sixteen scheduled tasks ran from SEVEN release clones, because each
+# release printed per-task lines that a human ran one at a time, so a fix reached only the
+# tasks somebody remembered. `--repoint-plan <tag>` READS the scheduler, decides per task, and
+# WRITES two PowerShell scripts (repoint + rollback) that the brain session runs. The tool
+# itself never changes a task.
+
+#: Every status a planned task can take, in precedence order (the first that applies wins).
+REPOINT_STATUSES = ("REFUSED", "ON_TARGET", "ATTENDED", "SKIP_RUNNING", "REFUSED_MODULE_MISSING",
+                    "REFUSED_CONFIG_DRIFT", "REPOINT")
+#: The statuses that are a guard refusal: the plan still prints, the exit code is 3.
+REPOINT_REFUSALS = frozenset({"REFUSED", "REFUSED_MODULE_MISSING", "REFUSED_CONFIG_DRIFT"})
+CLONE_TOKEN_RE = re.compile(re.escape(RT.CLONE_PREFIX) + r"([A-Za-z0-9][A-Za-z0-9._-]{0,99})", re.I)
+RECEIPT_STAMP_RE = r"\d{8}T\d{6}Z"
+EXEC_ACTION = "MSFT_TaskExecAction"
+
+#: Read-only. Every task (the total proves the scheduler answered), and the actions of the
+#: ones whose action names a release clone.
+_ENUM_PS = r"""
+$ErrorActionPreference = 'Stop'
+$all = @(Get-ScheduledTask)
+$rows = @(foreach ($t in $all) {
+  $acts = @($t.Actions | ForEach-Object { [pscustomobject]@{ kind = "$($_.CimClass.CimClassName)";
+    execute = $_.Execute; arguments = $_.Arguments; working_directory = $_.WorkingDirectory } })
+  $txt = ($acts | ForEach-Object { "$($_.execute) $($_.arguments) $($_.working_directory)" }) -join ' '
+  if ($txt -match '__PREFIX__') {
+    [pscustomobject]@{ name = $t.TaskName; path = $t.TaskPath; state = "$($t.State)"; actions = $acts } }
+})
+[pscustomobject]@{ total = $all.Count; tasks = $rows } | ConvertTo-Json -Depth 6 -Compress
+"""
+
+
+def _repoint_cfg() -> dict:
+    """The declared attended lists and declarations (backend/config.py, one block)."""
+    from backend import config as C  # noqa: PLC0415  (lazy: --tag / --retire stay stdlib-only)
+    return {"tasks": tuple(C.RUNTIME_REPOINT_ATTENDED_TASKS), "flags": tuple(C.RUNTIME_REPOINT_ATTENDED_FLAGS),
+            "modules": tuple(C.RUNTIME_REPOINT_ATTENDED_MODULES),
+            "declarations": dict(C.RUNTIME_REPOINT_DECLARATIONS),
+            "enum_timeout_s": float(C.RUNTIME_REPOINT_ENUM_TIMEOUT_S),
+            "snapshot_timeout_s": float(C.RUNTIME_REPOINT_SNAPSHOT_TIMEOUT_S)}
+
+
+def parse_enumeration(stdout: str) -> dict:
+    """The enumeration's JSON, validated. A malformed answer is a refusal, never 'no tasks'."""
+    try:
+        js = json.loads(stdout or "")
+    except ValueError as exc:
+        raise ReleaseRefused(f"scheduler enumeration returned no JSON ({exc}): no plan from a failed read") from None
+    if not isinstance(js, dict) or not isinstance(js.get("total"), int) or js["total"] <= 0:
+        raise ReleaseRefused("scheduler enumeration reported no tasks at all: a scheduler always holds "
+                             "some, so this is a failed read; no plan")
+    rows = js.get("tasks")
+    rows = [] if rows is None else (rows if isinstance(rows, list) else [rows])
+    out = []
+    for r in rows:
+        if not isinstance(r, dict) or not r.get("name"):
+            raise ReleaseRefused(f"scheduler enumeration row without a name: {str(r)[:120]}")
+        acts = r.get("actions")
+        acts = [] if acts is None else (acts if isinstance(acts, list) else [acts])
+        out.append({"name": str(r["name"]), "path": str(r.get("path") or "\\"), "state": str(r.get("state")),
+                    "actions": [{"kind": str(a.get("kind") or ""), "execute": a.get("execute") or "",
+                                 "arguments": a.get("arguments") or "",
+                                 "working_directory": a.get("working_directory") or ""} for a in acts]})
+    return {"total": js["total"], "tasks": out}
+
+
+def query_clone_tasks(timeout_s: float = 120.0) -> dict:
+    """Read-only `Get-ScheduledTask`, no console window, bounded. Raises ReleaseRefused."""
+    ps = _ENUM_PS.replace("__PREFIX__", RT.CLONE_PREFIX)
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=timeout_s, creationflags=RT.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ReleaseRefused(f"scheduler enumeration failed ({type(exc).__name__}: {exc}): no plan") from None
+    if r.returncode != 0:
+        raise ReleaseRefused(f"scheduler enumeration rc {r.returncode}: {(r.stderr or '')[-300:]}; no plan")
+    return parse_enumeration(r.stdout)
+
+
+def split_args(s: str) -> list[str]:
+    """Windows command-line tokens: whitespace separates, double quotes group (no escapes:
+    every argument in these tasks is a plain path or word)."""
+    out, cur, quoted, have = [], [], False, False
+    for ch in s or "":
+        if ch == '"':
+            quoted, have = not quoted, True
+        elif ch.isspace() and not quoted:
+            if have:
+                out.append("".join(cur))
+            cur, have = [], False
+        else:
+            cur.append(ch)
+            have = True
+    if have:
+        out.append("".join(cur))
+    return out
+
+
+def task_segments(arguments: str) -> Optional[list]:
+    """The wrapper segments a task runs (`-I <clone>\\scripts\\runtime_task.py <wrapper args>`),
+    or bare `-m module args` segments for a task that does not use the wrapper. None when the
+    module cannot be determined."""
+    toks = split_args(arguments)
+    for i, tok in enumerate(toks):
+        if tok.replace("/", "\\").lower().endswith("\\scripts\\runtime_task.py"):
+            try:
+                _opt, segs = RT.parse_argv(toks[i + 1:])
+            except RT.Refused:
+                return None
+            return segs
+    segs = [RT.Segment(module=toks[i + 1], args=toks[i + 2:]) for i, t in enumerate(toks)
+            if t == "-m" and i + 1 < len(toks)]
+    return segs[:1] or None
+
+
+def module_in(clone: Path, module: str) -> bool:
+    base = Path(clone).joinpath(*module.split("."))
+    return (base.with_suffix(".py").is_file() or (base / "__init__.py").is_file()
+            or (base / "__main__.py").is_file())
+
+
+def _seg_value(seg, flag: str) -> Optional[str]:
+    a = list(seg.args)
+    for i, t in enumerate(a):
+        if t == flag and i + 1 < len(a):
+            return a[i + 1]
+        if t.startswith(flag + "="):
+            return t.split("=", 1)[1]
+    return None
+
+
+def attended_reasons(name: str, arguments: str, segs: Optional[list], rc: Mapping) -> list[str]:
+    why = []
+    if name in rc["tasks"]:
+        why.append("declared attended task name")
+    for tok in split_args(arguments):
+        for f in rc["flags"]:
+            if tok == f or tok.startswith(f + "="):
+                why.append(f"argument {tok} (an order/execute flag)")
+    for s in segs or ():
+        for m in rc["modules"]:
+            mod, _, sub = m.partition(" ")
+            if s.module == mod and (not sub or (s.args[:1] == [sub])):
+                why.append(f"runs {m}")
+    return why
+
+
+def _path_re(p: Path) -> re.Pattern:
+    """`p` itself (either slash, any case), not a longer sibling name."""
+    parts = [re.escape(x) for x in re.split(r"[\\/]+", str(p).rstrip("\\/")) if x != ""]
+    return re.compile(r"[\\/]".join(parts) + r"(?![A-Za-z0-9._-])", re.I)
+
+
+def rewrite_clone_path(text: str, src: Path, dest: Path) -> str:
+    """Replace the clone path `src` (and paths under it) with `dest`; nothing else changes."""
+    return _path_re(src).sub(lambda _m: str(dest), text or "")
+
+
+def clones_named(texts: Sequence[str], parent: Path) -> tuple[list[str], list[str]]:
+    """(tags of clones under `parent` the texts name, clone-like names NOT under `parent`)."""
+    tags, stray = [], []
+    for text in texts:
+        for m in CLONE_TOKEN_RE.finditer(text or ""):
+            tag = m.group(1)
+            if _path_re(parent / f"{RT.CLONE_PREFIX}{tag}").search(text):
+                if tag.lower() not in [t.lower() for t in tags]:
+                    tags.append(tag)
+            elif m.group(0) not in stray:
+                stray.append(m.group(0))
+    return tags, stray
+
+
+def find_preflight(tag: str, data_root: Path, dest: Path) -> dict:
+    """The newest `runtime_switch/release_<tag>_<stamp>.json`; refuses unless it is PASS for `dest`."""
+    d = Path(data_root) / "runtime_switch"
+    pat = re.compile(rf"^release_{re.escape(tag)}_{RECEIPT_STAMP_RE}\.json$")
+    found = sorted(p for p in (d.iterdir() if d.is_dir() else ()) if pat.match(p.name))
+    if not found:
+        raise ReleaseRefused(f"no preflight receipt {d}\\release_{tag}_<stamp>.json: the target clone was "
+                             "never verified; release it with --tag first")
+    newest = found[-1]
+    try:
+        rec = json.loads(newest.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError) as exc:
+        raise ReleaseRefused(f"preflight receipt {newest} unreadable ({type(exc).__name__})") from None
+    if rec.get("verdict") != "PASS":
+        raise ReleaseRefused(f"preflight receipt {newest.name} verdict {rec.get('verdict')!r}, not PASS "
+                             f"(failed: {rec.get('failed')})")
+    if _norm(rec.get("checkout") or "") != _norm(str(dest)):
+        raise ReleaseRefused(f"preflight receipt {newest.name} is for {rec.get('checkout')!r}, not {dest}")
+    return {"path": str(newest), "utc": rec.get("utc"), "verdict": rec["verdict"],
+            "warned": rec.get("warned") or []}
+
+
+_SNAPSHOT_CODE = (
+    "import json, sys\n"
+    "sys.path.insert(0, sys.argv[1])\n"
+    "from backend.services.portfolio_intelligence import branch_population_rolling as R\n"
+    "print('SNAPSHOT_FILE=' + R.__file__)\n"
+    "print('SNAPSHOT=' + json.dumps(R.config_snapshot(), sort_keys=True))\n")
+
+
+def target_config_snapshot(dest: Path, cfg: Mapping[str, str], timeout_s: float = 180.0) -> dict:
+    """The TARGET clone's own `branch_population_rolling.config_snapshot()`, computed by the
+    clone's code in a child (a read: it imports config and hashes the contract file)."""
+    py = Path(cfg["AEGIS_VENV_DIR"]) / "Scripts" / "python.exe"
+    env = {k: v for k, v in os.environ.items() if k not in RT.CLEARED}
+    env["AEGIS_IGNORE_DOTENV"] = "1"
+    try:
+        r = subprocess.run([str(py), "-I", "-c", _SNAPSHOT_CODE, str(dest)], cwd=str(dest), env=env,
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout_s,
+                           creationflags=RT.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ReleaseRefused(f"config snapshot in {dest} failed ({type(exc).__name__})") from None
+    lines = (r.stdout or "").splitlines()
+    src = next((ln.split("=", 1)[1] for ln in lines if ln.startswith("SNAPSHOT_FILE=")), "")
+    snap = next((ln.split("=", 1)[1] for ln in lines if ln.startswith("SNAPSHOT=")), None)
+    if r.returncode != 0 or snap is None:
+        raise ReleaseRefused(f"config snapshot in {dest} rc {r.returncode}: {(r.stderr or '')[-300:]}")
+    if not _inside(Path(src), dest):
+        raise ReleaseRefused(f"config snapshot imported {src}, not the target clone's own module")
+    return json.loads(snap)
+
+
+def declaration_drift(declared: Mapping, snap: Mapping) -> list[str]:
+    """The keys whose value differs (the comparison `Store.declare` refuses on)."""
+    return sorted(k for k in set(declared) | set(snap) if declared.get(k) != snap.get(k))
+
+
+def plan_repoint(tag: str, cfg: Mapping[str, str], *, data_root: Optional[Path] = None,
+                 backup_dir: Optional[Path] = None, now: Optional[datetime] = None,
+                 enumerate_tasks: Optional[Callable[[], dict]] = None,
+                 snapshot: Optional[Callable[[Path], dict]] = None,
+                 repoint_cfg: Optional[Mapping] = None) -> dict:
+    """Every task that names a release clone, and what a repoint to `tag` would do with it.
+    Reads only. Raises ReleaseRefused for the WHOLE plan (target missing or not PASS, a failed
+    enumeration); a per-task refusal is a row."""
+    rc = dict(repoint_cfg or _repoint_cfg())
+    dest = clone_dest(tag, cfg)
+    parent = clone_parent(cfg)
+    data_root = Path(data_root or cfg["AEGIS_LIVE_OPTIMUS"])
+    if not dest.is_dir() or _is_reparse_point(dest):
+        raise ReleaseRefused(f"target clone {dest} is not a directory: release {tag} first")
+    if not (dest / "scripts" / "runtime_task.py").is_file():
+        raise ReleaseRefused(f"target clone {dest} has no scripts\\runtime_task.py")
+    preflight = find_preflight(tag, data_root, dest)
+    stamp = (now or datetime.now(timezone.utc)).strftime("%Y%m%dT%H%M%SZ")
+    backup_dir = Path(backup_dir or (data_root / "runtime_switch" / "task_xml_backup" / f"repoint_{tag}_{stamp}"))
+    if production_clone_of(backup_dir, cfg) is not None:
+        raise ReleaseRefused(f"backup dir {backup_dir} is inside a release clone; a retire would delete it")
+    enum = (enumerate_tasks or (lambda: query_clone_tasks(rc["enum_timeout_s"])))()
+    if not isinstance(enum, dict) or not isinstance(enum.get("total"), int) or enum["total"] <= 0:
+        raise ReleaseRefused("scheduler enumeration failed or empty: no plan from a failed read")
+    snap_cache: dict = {}
+
+    def target_snapshot() -> dict:
+        if "v" not in snap_cache:
+            snap_cache["v"] = (snapshot or (lambda d: target_config_snapshot(d, cfg, rc["snapshot_timeout_s"])))(dest)
+        return snap_cache["v"]
+
+    rows = []
+    for t in sorted(enum["tasks"], key=lambda r: (r["path"], r["name"])):
+        acts = t["actions"]
+        texts = [x for a in acts for x in (a["execute"], a["arguments"], a["working_directory"])]
+        tags, stray = clones_named(texts, parent)
+        row = {"task": t["name"], "path": t["path"], "state": t["state"], "from": tags[0] if len(tags) == 1 else tags,
+               "to": tag, "reasons": [], "modules": [], "notes": []}
+        found: list[str] = []
+        if len(acts) != 1 or acts[0]["kind"] != EXEC_ACTION:
+            found.append("REFUSED")
+            row["reasons"].append(f"{len(acts)} action(s) of kind {[a['kind'] for a in acts]}; exactly one exec "
+                                  "action is planned")
+        if stray:
+            found.append("REFUSED")
+            row["reasons"].append(f"names a clone outside {parent}: {stray}")
+        if len(tags) != 1:
+            found.append("REFUSED")
+            row["reasons"].append(f"names {len(tags)} release clones {tags}; exactly one is planned")
+        a = acts[0] if acts else {"execute": "", "arguments": "", "working_directory": ""}
+        segs = task_segments(a["arguments"])
+        row["modules"] = [s.module for s in segs or ()]
+        if len(tags) == 1 and tags[0].lower() == tag.lower():
+            found.append("ON_TARGET")
+        why = attended_reasons(t["name"], a["arguments"], segs, rc)
+        if why:
+            found.append("ATTENDED")
+            row["reasons"] += why
+        if t["state"] == "Running":
+            found.append("SKIP_RUNNING")
+            row["reasons"].append("Running now: never repoint a running task; plan again after it ends")
+        if segs is None:
+            found.append("REFUSED")
+            row["reasons"].append("cannot determine the module this task runs")
+        else:
+            missing = [s.module for s in segs if not module_in(dest, s.module)]
+            if missing:
+                found.append("REFUSED_MODULE_MISSING")
+                row["reasons"].append(f"module(s) {missing} not in {dest}")
+            for s in segs:
+                sub = rc["declarations"].get(s.module)
+                if not sub:
+                    continue
+                out = _seg_value(s, "--out")
+                droot = _seg_value(s, "--data-root") or str(data_root)
+                decl_p = Path(out) / "declaration.json" if out else Path(droot) / sub / "declaration.json"
+                row["declaration"] = str(decl_p)
+                if not decl_p.is_file():
+                    row["notes"].append(f"no {decl_p} yet: nothing is bound")
+                    continue
+                try:
+                    declared = json.loads(decl_p.read_bytes()).get("config")
+                    if not isinstance(declared, dict):
+                        raise ValueError("no config object")
+                    diff = declaration_drift(declared, target_snapshot())
+                except (ReleaseRefused, OSError, ValueError) as exc:
+                    found.append("REFUSED_CONFIG_DRIFT")
+                    row["reasons"].append(f"cannot compare {decl_p} with the target's config ({exc})")
+                    continue
+                if diff:
+                    found.append("REFUSED_CONFIG_DRIFT")
+                    row["reasons"].append(f"target config differs from {decl_p.name} on {diff}: a born "
+                                          "population would refuse every tick")
+                else:
+                    row["notes"].append(f"target config_snapshot() matches {decl_p}")
+        found.append("REPOINT")
+        row["status"] = next(s for s in REPOINT_STATUSES if s in found)
+        if row["status"] == "REPOINT":
+            src = parent / f"{RT.CLONE_PREFIX}{tags[0]}"
+            row["current"] = dict(a)
+            row["new"] = {k: rewrite_clone_path(a[k], src, dest) for k in ("execute", "arguments", "working_directory")}
+        rows.append(row)
+    # which clones would be left with no task (candidates for --retire; nothing is retired)
+    still = {}
+    for r in rows:
+        for x in ([r["from"]] if isinstance(r["from"], str) else r["from"]):
+            keep = r["status"] != "REPOINT"
+            still[x.lower()] = still.get(x.lower(), False) or keep
+    on_disk = sorted(p.name[len(RT.CLONE_PREFIX):] for p in parent.glob(f"{RT.CLONE_PREFIX}*") if p.is_dir())
+    empty_after = [x for x in on_disk if x.lower() != tag.lower() and not still.get(x.lower(), False)]
+    return {"schema": "runtime_repoint_plan/1", "tag": tag, "dest": str(dest), "generated_utc": stamp,
+            "data_root": str(data_root), "preflight": preflight, "backup_dir": str(backup_dir),
+            "scheduler_total_tasks": enum["total"], "tasks": rows,
+            "attended_declared": {"tasks": list(rc["tasks"]), "flags": list(rc["flags"]),
+                                  "modules": list(rc["modules"])},
+            "clones_on_disk": on_disk,
+            "clones_empty_after_plan": empty_after,
+            "clones_with_no_task_now": [x for x in on_disk if x.lower() not in still and x.lower() != tag.lower()],
+            "counts": {s: sum(1 for r in rows if r["status"] == s) for s in REPOINT_STATUSES}}
+
+
+def repoint_script(plan: dict) -> str:
+    """PowerShell: per REPOINT row, re-check (not Running, action unchanged since the plan, no
+    backup already there), export the XML, set the new action ONLY, verify. Never run here."""
+    q = ps_quote
+    L = [f"# repoint_{plan['tag']}.ps1 -- generated {plan['generated_utc']} by "
+         f"`python -m scripts.runtime_release --repoint-plan {plan['tag']}`; NOT run by the tool.",
+         f"# Target clone {plan['dest']} (preflight {plan['preflight']['verdict']}: {plan['preflight']['path']}).",
+         "# Only REPOINT rows are here: ATTENDED, Running, ON_TARGET and REFUSED tasks are not in this file.",
+         "# Set-ScheduledTask -Action changes the action only: triggers, settings and principal stay.",
+         f"# Undo: rollback_{plan['tag']}.ps1 (restores each task from the XML this script exports).",
+         "$ErrorActionPreference = 'Stop'",
+         f"$Backup = {q(plan['backup_dir'])}",
+         "New-Item -ItemType Directory -Force -Path $Backup | Out-Null",
+         "function Repoint-One([string]$Name, [string]$TaskPath, [string]$FromExe, [string]$FromArgs,",
+         "                     [string]$FromWd, [string]$ToExe, [string]$ToArgs, [string]$ToWd) {",
+         "  try {",
+         "    $t = Get-ScheduledTask -TaskName $Name -TaskPath $TaskPath",
+         "    if (\"$($t.State)\" -eq 'Running') { return \"SKIP $Name : Running now; never repoint a running task\" }",
+         "    $acts = @($t.Actions)",
+         "    if ($acts.Count -ne 1) { return \"SKIP $Name : $($acts.Count) actions; the plan saw one\" }",
+         "    $a = $acts[0]",
+         "    if (\"$($a.Execute)\" -cne $FromExe -or \"$($a.Arguments)\" -cne $FromArgs -or \"$($a.WorkingDirectory)\" -cne $FromWd) {",
+         "      return \"SKIP $Name : its action changed since the plan; plan again\" }",
+         "    $xmlPath = Join-Path $Backup ($Name + '.xml')",
+         "    if (Test-Path -LiteralPath $xmlPath) { return \"SKIP $Name : $xmlPath exists (already run?); a backup is never overwritten\" }",
+         "    $xml = Export-ScheduledTask -TaskName $Name -TaskPath $TaskPath",
+         "    [IO.File]::WriteAllText($xmlPath, $xml, [Text.Encoding]::Unicode)",
+         "    $new = New-ScheduledTaskAction -Execute $ToExe -Argument $ToArgs -WorkingDirectory $ToWd",
+         "    Set-ScheduledTask -TaskName $Name -TaskPath $TaskPath -Action $new | Out-Null",
+         "    $b = @((Get-ScheduledTask -TaskName $Name -TaskPath $TaskPath).Actions)[0]",
+         "    if (\"$($b.Execute)\" -ceq $ToExe -and \"$($b.Arguments)\" -ceq $ToArgs -and \"$($b.WorkingDirectory)\" -ceq $ToWd) {",
+         "      return \"OK $Name -> $ToWd (backup $xmlPath)\" }",
+         "    return \"FAILED $Name : the action read back differs from the plan; run the rollback for it\"",
+         "  } catch { return \"FAILED $Name : $($_.Exception.Message)\" }",
+         "}",
+         "$results = @()"]
+    for r in plan["tasks"]:
+        if r["status"] != "REPOINT":
+            continue
+        c, n = r["current"], r["new"]
+        if not n["working_directory"]:
+            raise ReleaseRefused(f"{r['task']}: an empty working directory is not planned")
+        L.append(f"# {r['task']}: {r['from']} -> {r['to']}  ({', '.join(r['modules'])})")
+        L.append("$results += Repoint-One " + " ".join(q(x) for x in (
+            r["task"], r["path"], c["execute"], c["arguments"], c["working_directory"],
+            n["execute"], n["arguments"], n["working_directory"])))
+    L += ["$results | ForEach-Object { Write-Output $_ }",
+          "if (@($results | Where-Object { $_ -like 'FAILED*' }).Count -gt 0) { exit 1 }",
+          "exit 0", ""]
+    return "\r\n".join(L)
+
+
+def rollback_script(plan: dict) -> str:
+    """PowerShell: per REPOINT row, re-register the task from the XML the repoint exported."""
+    q = ps_quote
+    L = [f"# rollback_{plan['tag']}.ps1 -- generated {plan['generated_utc']}; NOT run by the tool.",
+         f"# Restores each task repoint_{plan['tag']}.ps1 changed, from the exact XML it exported.",
+         "# A task with no backup was not changed and is left alone; a Running task is skipped.",
+         "$ErrorActionPreference = 'Stop'",
+         f"$Backup = {q(plan['backup_dir'])}",
+         "function Restore-One([string]$Name, [string]$TaskPath) {",
+         "  try {",
+         "    $xmlPath = Join-Path $Backup ($Name + '.xml')",
+         "    if (-not (Test-Path -LiteralPath $xmlPath)) { return \"SKIP $Name : no backup; the repoint did not change it\" }",
+         "    $t = Get-ScheduledTask -TaskName $Name -TaskPath $TaskPath",
+         "    if (\"$($t.State)\" -eq 'Running') { return \"SKIP $Name : Running now; run this again when it ends\" }",
+         "    $xml = [IO.File]::ReadAllText($xmlPath)",
+         "    Register-ScheduledTask -TaskName $Name -TaskPath $TaskPath -Xml $xml -Force | Out-Null",
+         "    return \"RESTORED $Name from $xmlPath\"",
+         "  } catch { return \"FAILED $Name : $($_.Exception.Message)\" }",
+         "}",
+         "$results = @()"]
+    for r in plan["tasks"]:
+        if r["status"] == "REPOINT":
+            L.append(f"$results += Restore-One {q(r['task'])} {q(r['path'])}")
+    L += ["$results | ForEach-Object { Write-Output $_ }",
+          "if (@($results | Where-Object { $_ -like 'FAILED*' }).Count -gt 0) { exit 1 }",
+          "exit 0", ""]
+    return "\r\n".join(L)
+
+
+def write_repoint(plan: dict, out: Path) -> dict:
+    """Write the plan JSON and both scripts into `out`; never over an earlier plan's scripts
+    (their rollback would lose its backup folder)."""
+    out = Path(out)
+    files = {"repoint": out / f"repoint_{plan['tag']}.ps1", "rollback": out / f"rollback_{plan['tag']}.ps1",
+             "plan": out / f"repoint_plan_{plan['tag']}_{plan['generated_utc']}.json"}
+    clash = [str(p) for p in files.values() if p.exists()]
+    if clash:
+        raise ReleaseRefused(f"{clash} already exist: a regenerated rollback would lose the earlier backup "
+                             "folder; use a new --out")
+    texts = {"repoint": repoint_script(plan), "rollback": rollback_script(plan)}
+    out.mkdir(parents=True, exist_ok=True)
+    for k in ("repoint", "rollback"):
+        # UTF-8 with BOM: Windows PowerShell 5.1 reads a BOM-less file in the ANSI code page
+        files[k].write_text(texts[k], encoding="utf-8-sig", newline="")
+    plan = {**plan, "files": {k: str(v) for k, v in files.items()}}
+    files["plan"].write_text(json.dumps(plan, indent=1, default=str), encoding="utf-8")
+    return plan
+
+
+def render_repoint(plan: dict) -> str:
+    L = [f"# repoint plan -> {plan['tag']} ({plan['dest']}); READ-ONLY: no task was changed",
+         f"# preflight {plan['preflight']['verdict']}: {plan['preflight']['path']}",
+         f"# scheduler answered: {plan['scheduler_total_tasks']} tasks in all, {len(plan['tasks'])} name a release clone",
+         f"# {'task':<26} {'state':<8} {'from':<11} {'status':<22} reason"]
+    for r in plan["tasks"]:
+        frm = r["from"] if isinstance(r["from"], str) else ",".join(r["from"]) or "-"
+        why = "; ".join(r["reasons"] or r["notes"]) or ("-> " + r["to"] if r["status"] == "REPOINT" else "")
+        L.append(f"  {r['task']:<26} {r['state']:<8} {frm:<11} {r['status']:<22} {why}")
+    L.append("# counts: " + ", ".join(f"{k} {v}" for k, v in plan["counts"].items() if v))
+    L.append(f"# attended (never scripted): {[r['task'] for r in plan['tasks'] if r['status'] == 'ATTENDED']}")
+    L.append(f"# clones with no task after this plan (candidates for --retire; NOTHING retired; --retire "
+             f"still checks processes and shortcuts): {plan['clones_empty_after_plan']}")
+    L.append(f"#   of which already have no task today: {plan['clones_with_no_task_now']}")
+    if plan.get("files"):
+        L.append(f"# wrote {plan['files']['repoint']} and {plan['files']['rollback']} (not run), plan {plan['files']['plan']}")
+    else:
+        L.append("# no --out: nothing written")
+    return "\n".join(L)
+
+
 # ───────────────────────────────────────────────────────────── printing
 
 def render(plan: dict, *, dry_run: bool) -> str:
@@ -781,6 +1267,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--tag", help="release this tag to a new clone")
     g.add_argument("--retire", metavar="TAG", help="safely delete the clone of this tag")
+    g.add_argument("--repoint-plan", metavar="TAG",
+                   help="READ-ONLY: plan moving every task that names a release clone to this tag's clone; "
+                        "with --out, write repoint_<tag>.ps1 + rollback_<tag>.ps1 (never run)")
+    ap.add_argument("--out", type=Path, default=None, help="--repoint-plan: where the scripts and plan go")
+    ap.add_argument("--data-root", type=Path, default=None,
+                    help="--repoint-plan: the live data dir (default AEGIS_LIVE_OPTIMUS)")
     ap.add_argument("--dry-run", action="store_true", help="print the plan; create/remove nothing")
     ap.add_argument("--source", type=Path, default=None,
                     help="where to clone from (default AEGIS_LIVE_ROOT's object store)")
@@ -790,6 +1282,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     a = ap.parse_args(argv)
     try:
         cfg = RT.read_config()
+        if a.repoint_plan:
+            plan = plan_repoint(a.repoint_plan, cfg, data_root=a.data_root, backup_dir=a.backup_dir)
+            if a.out is not None:
+                plan = write_repoint(plan, a.out)
+            print(json.dumps(plan, indent=1, default=str) if a.json else render_repoint(plan))
+            return 3 if any(r["status"] in REPOINT_REFUSALS for r in plan["tasks"]) else 0
         if a.retire:
             rp = plan_retire(a.retire, cfg)
             print(json.dumps(rp, indent=1) if a.json else render_retire(rp, dry_run=a.dry_run))
