@@ -15,7 +15,7 @@ none of a page's receipts exists; 422 on a bad `board`; 500 names only the excep
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from backend.routers.arena_v1 import serve
 from backend.services import legibility as L
@@ -41,10 +41,15 @@ def get_theory_lab(board: str = Query(default="sticky")) -> dict:
 
 
 @router.get("/system-health")
-def get_system_health() -> dict:
-    return serve(L.system_health_payload, "system_health", "system health",
-                 "no health/health_<stamp>.json on disk. It is written by `python -m scripts.health_probe` "
-                 "and by the daily pass's last step.", published="system_health")
+def get_system_health(request: Request) -> dict:
+    """Public callers get the SERVE-TIME projection (`health_public.public_system_health`:
+    status words, ids, dates, counts; row detail/proof/where/evidence are null). The desktop
+    control plane or an `X-Health-Token` holder gets the receipt as written."""
+    from backend.services import health_public as hp
+    out = serve(L.system_health_payload, "system_health", "system health",
+                "no health/health_<stamp>.json on disk. It is written by `python -m scripts.health_probe` "
+                "and by the daily pass's last step.", published="system_health")
+    return out if hp.full_view_allowed(request) else hp.public_system_health(out)
 
 
 @router.get("/brain")

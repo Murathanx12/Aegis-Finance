@@ -203,11 +203,12 @@ def main() -> None:
 
     # ── 4. options_pit leaves ABSENT — LOST EVIDENCE if it does not ─────────
     op = health.get("options_pit", {})
+    public_view = health.get("view") == "public"
     if _has_fired("pi_options_pit", now_et):
         add(PASS if op.get("status") != "ABSENT" else FAIL,
             "options_pit accruing",
-            f"{op.get('status')} rows={op.get('rows')} "
-            f"days={op.get('days_held')}"
+            f"{op.get('status')} rows={op.get('rows', 'n/a (not served)')} "
+            f"days={op.get('days_held', 'n/a (not served)')}"
             + ("  <- option chains have NO history; a missed day is gone"
                if op.get("status") == "ABSENT" else ""))
     else:
@@ -227,8 +228,12 @@ def main() -> None:
     # empty and `sync` deliberately will not open the first position. Only the
     # attended seed does that.
     el = health.get("execution_ledger", {})
-    n_targets = el.get("n_targets", 0)
-    if el.get("status") == "ABSENT":
+    n_targets = el.get("n_targets")        # None = not served; never read as 0
+    if public_view or (el.get("status") != "ABSENT" and "n_targets" not in el):
+        add(INFO, "arena broker did NOT trade",
+            "CANNOT DETERMINE - n_targets / status not served"
+            + (" (public health view; set AEGIS_HEALTH_TOKEN)" if public_view else ""))
+    elif el.get("status") == "ABSENT":
         add(PASS if not _has_fired("pi_arena_daily", now_et) else INFO,
             "arena broker did NOT trade",
             "execution_ledger ABSENT - nothing submitted, which is correct "

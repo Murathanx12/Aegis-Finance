@@ -25,7 +25,7 @@ H = {"X-Health-Token": TOKEN}
 
 #: Key names that must carry NO text in a public payload (null is allowed: the
 #: subsystem rows keep the key so the frontend's types still hold).
-BANNED_KEYS = {"reason", "error", "detail", "proof", "where", "probe", "message",
+BANNED_KEYS = {"reason", "error", "detail", "proof", "where", "message",
                "path", "root", "dir", "traceback", "exception", "cost_usd", "usd",
                "balance", "spend", "spent", "daily_budget", "calls_today",
                "recent_warnings", "llm", "fmp_budget", "credential_env", "credentials"}
@@ -63,7 +63,7 @@ def assert_public_clean(payload):
     """The recursive scan: no unsafe SHAPE in any string, no banned KEY with text."""
     for where, key, value in walk(payload):
         if isinstance(value, str):
-            assert not hp.UNSAFE_SHAPES.search(value), (where, key, value)
+            assert not hp._unsafe(value), (where, key, value)
         if key is not None:
             assert not BANNED_KEY_PATTERN.search(str(key)), (where, key)
             if key in BANNED_KEYS:
@@ -158,7 +158,11 @@ class TestPublicHealthFull:
     def test_withhold_unsafe_shapes(self):
         for bad in ("C:\\Users\\a\\b", "see /app/backend/x", "backend/data/x.jsonl",
                     "Traceback (most recent call last)", "cost $4.20", "spent 3 USD",
-                    "FMP_API_KEY missing", "AEGIS_HEALTH_TOKEN"):
+                    "FMP_API_KEY missing", "AEGIS_HEALTH_TOKEN", "ALPACA_SECRET_KEY", "APCA_API_KEY_ID",
+                    "NVIDIA_NIM_API_KEY", "sk-abcdefghijklmnop1234", "12.34 dollars",
+                    "db.internal.example:5432", "10.0.0.5", "KeyError: 'x'",
+                    "/workspace/a/b", "~/.openclaw/openclaw.json", "bill held at $20",
+                    "A" * 60):
             assert hp.withhold_unsafe(bad) == hp.WITHHELD, bad
         for ok in ("ALIVE_PROGRESSING", "STOPPED_BY_OPERATOR", "2026-11-15T10:00:00+00:00",
                    "forecast_population:live_forward", "STRICT_FAILURE_VIEW/1", "nav_not_fresh"):
@@ -196,10 +200,12 @@ class TestFullViewAccess:
         assert client.get("/api/health/detail").status_code == 404
         assert client.get("/api/health/detail", headers=H).status_code == 404
 
-    def test_detail_needs_the_right_token(self, client):
-        assert client.get("/api/health/detail").status_code == 403
-        assert client.get("/api/health/detail",
-                          headers={"X-Health-Token": "nope"}).status_code == 403
+    def test_detail_404s_the_same_whether_or_not_a_token_is_set(self, client):
+        """Do not reveal whether a token is configured: missing and wrong are 404."""
+        a = client.get("/api/health/detail")
+        b = client.get("/api/health/detail", headers={"X-Health-Token": "nope"})
+        assert a.status_code == b.status_code == 404
+        assert a.json() == b.json() == {"detail": "Not Found"}
         r = client.get("/api/health/detail", headers=H)
         assert r.status_code == 200 and r.json()["view"] == "full"
 
@@ -220,7 +226,7 @@ class TestFullViewAccess:
         assert local.get("/api/health/detail").status_code == 200
         remote = TestClient(app)          # Host "testserver" is not loopback
         assert remote.get("/api/health/full").json()["view"] == "public"
-        assert remote.get("/api/health/detail").status_code == 403
+        assert remote.get("/api/health/detail").status_code == 404
 
     def test_control_plane_off_means_no_full_view_without_a_token(self, monkeypatch):
         monkeypatch.delenv("AEGIS_HEALTH_TOKEN", raising=False)
@@ -312,3 +318,171 @@ class TestConsumersStillSatisfied:
         src = open("scripts/monday_gate_check.py", encoding="utf-8").read()
         assert "/api/health/detail" in src and "X-Health-Token" in src
         assert 'health.get("view") == "public"' in src
+
+
+# ------------------------------------------- handler-level poison (reviewer)
+
+POISONS = [
+    "POISON C:\\Users\\mrthn\\x.json", "POISON /app/backend/data/x.jsonl", "POISON /workspace/a/b",
+    "POISON Traceback (most recent call last)", "POISON sk-abcdefghijklmnop1234",
+    "POISON 12.34 dollars", "POISON db.internal.example:5432", "POISON KeyError: 'x'",
+    "POISON ALPACA_SECRET_KEY", "POISON APCA_API_KEY_ID", "POISON NVIDIA_NIM_API_KEY",
+    "POISON bill held at $20", "POISON " + "A" * 60, "POISON ~/.openclaw/openclaw.json",
+]
+
+
+class _Poisoner:
+    def __init__(self):
+        self.i = 0
+
+    def next(self):
+        self.i += 1
+        return POISONS[self.i % len(POISONS)]
+
+    def __call__(self, v, depth=0):
+        if isinstance(v, str):
+            return self.next()
+        if isinstance(v, dict):
+            out = {k: self(x, depth + 1) for k, x in v.items()}
+            if v and all(isinstance(x, dict) for x in v.values()):
+                out[self.next()] = self(next(iter(v.values())), depth + 1)   # a poisoned MAP KEY (row)
+            else:
+                out[self.next()] = self.next()                    # a poisoned MAP KEY
+            if depth < 4:
+                out["extra"] = {self.next(): {self.next(): self.next()}}   # nested extras
+            return out
+        if isinstance(v, (list, tuple)):
+            return [self(x, depth + 1) for x in v] + [self.next()]
+        return v
+
+
+@pytest.fixture
+def poisoned(monkeypatch):
+    """Every collector the health handlers call returns its real output with every
+    string, every map key and every nested dict replaced/extended by poison."""
+    import importlib
+    P = _Poisoner()
+    targets = [
+        ("backend.services.portfolio_intelligence.scheduler", "scheduler_health"),
+        ("backend.services.portfolio_intelligence.scheduler", "overlay_status"),
+        ("backend.services.portfolio_intelligence.scheduler", "lppls_status"),
+        ("backend.services.llm_analyzer", "llm_usage"),
+        ("backend.services.fmp_budget", "snapshot"),
+        ("backend.observability", "event_intel_stats"),
+        ("backend.observability", "source_health"),
+        ("backend.observability", "recent_warnings"),
+        ("backend.services.belief_state", "ledger_health"),
+        ("backend.services.event_store", "health"),
+        ("backend.services.portfolio_intelligence.paper_broker_targets", "health"),
+        ("backend.services.portfolio_intelligence.execution_ledger", "health"),
+        ("backend.services.options_pit_store", "health"),
+        ("backend.services.arena.information_bus", "health"),
+        ("backend.services.arena.selector_identity", "health"),
+        ("backend.services.forecast_populations", "registry_health"),
+        ("backend.services.investment_committee", "ic_health"),
+        ("backend.services.fred_health", "health"),
+        ("backend.services.accrual_canary", "health"),
+        ("backend.services.system_health", "api_block"),
+    ]
+    for mod, name in targets:
+        m = importlib.import_module(mod)
+        orig = getattr(m, name)
+
+        def make(orig):
+            return lambda *a, **k: P(orig(*a, **k))
+        monkeypatch.setattr(m, name, make(orig))
+    from backend.services.providers import registry
+    from types import SimpleNamespace as NS
+    monkeypatch.setattr(registry, "health", lambda: [
+        NS(name=P.next(), available=True, reason=P.next(), capabilities=[P.next(), "equity_history"])
+        for _ in range(3)])
+    monkeypatch.setattr(registry, "_priority", P({"equity_history": ["yfinance"]}))
+    import backend.main as m
+    monkeypatch.setattr(m, "cache_status", lambda: {"status": P.next(), "error": P.next()})
+    monkeypatch.setattr(m, "git_head", lambda: P.next())
+    return P
+
+
+@pytest.mark.parametrize("path", ["/api/health", "/api/health/full", "/api/providers",
+                                  "/health/scheduler"])
+def test_handler_level_poison_never_reaches_a_public_response(client, poisoned, path):
+    r = client.get(path)
+    assert r.status_code in (200, 503), r.text[:200]
+    assert "POISON" not in r.text, [ln for ln in r.text.split('"') if "POISON" in ln][:3]
+    for needle in ("Traceback", "sk-abc", "KeyError", "ALPACA", "APCA_", "NVIDIA_NIM",
+                   "/workspace", "/app/", "dollars", "5432", "openclaw.json"):
+        assert needle not in r.text, needle
+    assert_public_clean(r.json())
+
+
+def test_poison_in_map_keys_is_dropped_and_counted(client, poisoned):
+    body = client.get("/api/health/full").json()
+    assert body["withheld_keys"] > 0
+
+
+def test_health_cache_status_is_a_fixed_word_and_git_head_a_hash(client, poisoned):
+    body = client.get("/api/health").json()
+    assert body["cache_status"] == "other" and body["git_head"] is None
+
+
+def test_scalar_only_pick_drops_containers_under_scalar_keys():
+    full = {"status": "ok", "scheduler": {"running": True, "last_mtm": {"x": "C:\\a"},
+                                           "jobs": {"status": {"a": 1}, "missing": [{"k": 1}, "ok_id"]}},
+            "deploy": {"commit": {"a": 1}, "version": "0.2.0"},
+            "subsystems": {"counts": {"ALIVE": 3, "bad key with spaces": 1, "nested": {"a": 1}},
+                           "rows": [{"name": "n", "alarm": {"light": "RED", "evidence_calendar": {"a": 1},
+                                                            "light_counts": {"RED": 1, "C:\\x": 2}}}]}}
+    pub = hp.public_health_full(full, ["fine_code", "has spaces here"])
+    assert pub["scheduler"]["last_mtm"] is None
+    assert pub["scheduler"]["jobs"]["status"] is None
+    assert pub["scheduler"]["jobs"]["missing"] == ["ok_id"]
+    assert "commit" not in pub["deploy"]
+    assert pub["subsystems"]["counts"] == {"ALIVE": 3}
+    assert pub["degraded_reasons"] == ["fine_code"]
+    assert pub["subsystems"]["rows"][0]["alarm"]["light_counts"] == {"RED": 1}
+    assert "evidence_calendar" not in pub["subsystems"]["rows"][0]["alarm"]
+    assert pub["withheld_keys"] >= 5
+
+
+# ------------------------------------------------ legibility system-health
+
+class TestLegibilitySystemHealth:
+    def test_public_projection_nulls_text_and_keeps_words(self):
+        row = {"name": "x", "probe": "p", "where": "/app/x", "verdict": "DEAD", "state": "DEAD",
+               "detail": "bill held at $20 C:\\a", "proof": "backend/data/x.jsonl",
+               "evidence": "~/.openclaw/a.json",
+               "evidence_utc": "2026-01-01T00:00:00+00:00", "age_s_at_probe": 5, "age_s_now": 9,
+               "same_output": False, "missing_because": "Traceback", "alarm": {"light": "RED", "reason": "x"}}
+        payload = {"schema": "legibility/2", "page": "system_health", "status": "STALE",
+                   "served_from": "public_receipts/system_health/latest.json", "exit_code": 1,
+                   "counts": {"DEAD": 1, "ALIVE": 2}, "health_line": "C:\\x", "read_me_first": "see /app/x",
+                   "receipts": [{"kind": "system_health", "file": "optimus/health/h.json", "line": "x /app",
+                                 "stamp_utc": "t", "age_hours": 1.0, "stale_after_hours": 26.0,
+                                 "status": "STALE"}],
+                   "groups": [{"verdict": "DEAD", "n": 1, "states": {"DEAD": 1}, "rows": [row]}],
+                   "process_census": [row], "same_output_rows": [],
+                   "task_owners": [{"task": "T", "receipt": "night_factory_<d>/a.json", "state": "DEAD",
+                                    "verdict": "DEAD", "detail": "/app/x", "cadence_h": 24.0,
+                                    "hash_rule_off": "because /app", "alarm": {"light": "RED"}}]}
+        pub = hp.public_system_health(payload)
+        assert_public_clean(pub)
+        r = pub["groups"][0]["rows"][0]
+        assert (r["detail"], r["proof"], r["where"], r["evidence"], r["missing_because"]) == (None,) * 5
+        assert r["verdict"] == "DEAD" and r["alarm"] == {"light": "RED"}
+        assert pub["receipts"][0]["file"] is None and pub["receipts"][0]["status"] == "STALE"
+        assert pub["task_owners"][0]["receipt"] is None
+        assert pub["health_line"].startswith("health rc 1")
+        assert pub["read_me_first"] is None
+
+    def test_route_serves_the_projection_publicly_and_the_receipt_to_the_token(self, client):
+        pub = client.get("/api/legibility/v1/system-health")
+        if pub.status_code == 404:
+            pytest.skip("no system_health receipt in this checkout")
+        body = pub.json()
+        assert body["view"] == "public"
+        assert_public_clean(body)
+        for g in body["groups"]:
+            for r in g["rows"]:
+                assert r["detail"] is None and r["proof"] is None and r["where"] is None
+        full = client.get("/api/legibility/v1/system-health", headers=H).json()
+        assert full.get("view") != "public"
