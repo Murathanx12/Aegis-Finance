@@ -1061,11 +1061,16 @@ _SHORT = {"max_drawdown": "max DD", "avg_drawdown": "avg DD", "worst_21d_loss": 
 _TW_SHORT = {"hold_less": "HL", "trend": "TR", "inverse_ctrl": "INV"}
 
 
-def _cell(c: dict | None) -> str:
+def _cell(c: dict | None, meas: str | None = None, hedged: dict | None = None) -> str:
     if c is None:
         return "n/a (no natural size)"
-    return (f"{c['label']} -- s {c['scale']:.3f}, ${c['stats']['terminal_wealth']:.2f}, "
-            f"hedge ahead {c['hedge_ahead_in_n_of'][0]}/{c['hedge_ahead_in_n_of'][1]}")
+    s = (f"{c['label']} -- s {c['scale']:.3f}, ${c['stats']['terminal_wealth']:.2f}, "
+         f"hedge ahead {c['hedge_ahead_in_n_of'][0]}/{c['hedge_ahead_in_n_of'][1]}")
+    if c.get("note") and meas in RISK_MEASURES and hedged is not None:
+        # not matched: the twin cannot be scaled UP, so it is compared at LESS risk
+        s += (f"; UNMATCHED, twin {_SHORT[meas]} {c['stats'][meas] * 100:.1f}% vs hedge "
+              f"{hedged[meas] * 100:.1f}%")
+    return s
 
 
 def measure_sentence(sym: str, sens: dict, setting: str = PRIMARY_SETTING) -> str:
@@ -1108,7 +1113,7 @@ def render_summary(rec: dict) -> str:
         for meas in MEASURES:
             mm = st["measures"][meas]
             L.append(f"| {s} | {_SHORT[meas]} | {st['hedged']['terminal_wealth']:.2f} | "
-                     + " | ".join(_cell(mm["twins"][t]) for t in TWINS)
+                     + " | ".join(_cell(mm["twins"][t], meas, st["hedged"]) for t in TWINS)
                      + f" | **{mm['verdict']}** |")
     L += ["", "## Cost drag per year (premium paid, payoff received, net = payoff - premium; "
           "% of equity, roll grid)", "",
@@ -1225,7 +1230,7 @@ def render_by_year(sym: str, r: dict, run_id: str) -> str:
         L += ["", "| measure | hold_less | trend | inverse_ctrl | overall |", "|---|---|---|---|---|"]
         for m in MEASURES:
             mm = s2["measures"][m]
-            L.append(f"| {_SHORT[m]} | " + " | ".join(_cell(mm["twins"][t]) for t in TWINS)
+            L.append(f"| {_SHORT[m]} | " + " | ".join(_cell(mm["twins"][t], m, s2["hedged"]) for t in TWINS)
                      + f" | {mm['verdict']} |")
         L.append("")
     return "\n".join(L)
