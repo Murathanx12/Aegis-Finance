@@ -1,0 +1,515 @@
+# ---------------------------------------------------------------------------
+# DATA-RIGHTS REGISTER (M0, council 2 business item 3, 2026-11-15).
+#
+# Question this file answers: which data sources may legally reach a PUBLIC
+# page? Before it existed nobody could say. `backend/services/data_rights.py`
+# loads it; `python -m scripts.data_rights_audit --out <dir>` maps every public
+# route to the sources it can serve and lists the ones that are `no`,
+# UNVERIFIED or not listed here.
+#
+# RULES
+#   * A flag is `yes`, `no` or `UNVERIFIED`. UNVERIFIED is the default and is
+#     what a source stays until a PRIMARY terms page (read, not remembered)
+#     says otherwise. A `yes` for public_display or commercial REQUIRES
+#     `terms_url` + `date_read` + `basis`; the loader refuses a register
+#     where that is missing.
+#   * `no` means a primary page read on `date_read` restricts the use (or the
+#     use needs a permission nobody has shown). It is not a legal opinion.
+#   * `terms_read: failed` means the page was tried and could not be
+#     retrieved (403/404/blocked); the flags stay UNVERIFIED.
+#   * `owner_confirm: true` marks sources whose agreement only the owner can
+#     know (HKU WRDS access, paid subscriptions, his brokerage account).
+#   * `hosts` / `detect` drive the static audit. `detect.patterns` are
+#     case-insensitive regexes over a function''s source; `hosts` are the
+#     hostnames that, if found in traced code, belong to this source.
+#   * This is a register of what the CODE uses, not legal advice. It does not
+#     relax anything: UNVERIFIED must be read as "do not show publicly".
+#
+# `date_read` 2026-11-15 for every page below that was fetched.
+# ---------------------------------------------------------------------------
+version: 1
+generated_by: data-rights chunk, 2026-11-15
+sources:
+
+  # ------------------------------ market data ------------------------------
+  - id: yfinance_market_data
+    what: Yahoo Finance prices, fundamentals, options chains, calendars via the unofficial yfinance library
+    obtained: yfinance Python library (scrapes Yahoo endpoints), no key
+    stored: "backend/data/*prices*, cached in memory by backend/cache.py; panels under backend/data/optimus/**"
+    personal: yes
+    academic: yes
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'Yahoo terms s.2(d) bar bots/automated collection and s.2(h) bar distributing or commercially exploiting Yahoo content without written permission; the yfinance README calls the API "intended for personal use only" and research/educational.'
+    owner_confirm: false
+    hosts: [finance.yahoo.com, query1.finance.yahoo.com, query2.finance.yahoo.com]
+    detect:
+      patterns: ['import yfinance', '\byf\.', 'yfinance']
+
+  - id: yfinance_news
+    what: Yahoo Finance per-ticker news headlines and links (yfinance Ticker.news)
+    obtained: yfinance library
+    stored: "in-memory cache; backend/data/optimus/news_digest/** when ingested"
+    personal: yes
+    academic: yes
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://legal.yahoo.com/us/en/yahoo/terms/otos/index.html
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'Same Yahoo terms as yfinance_market_data; news is third-party publisher content on top (s.2(h) bars copying or distributing Yahoo content). The repo news_sources.yaml itself calls this "unofficial".'
+    owner_confirm: false
+    hosts: []
+    detect:
+      patterns: ['fetch_stock_news', '\.news\b', 'yfinance_ticker_news', 'get_news']
+
+  # ------------------------------ public-record data ------------------------------
+  - id: sec_edgar
+    what: SEC EDGAR filings, 8-K feed, XBRL facts, insider (Forms 3/4/5) bulk data sets, 13F filings
+    obtained: sec.gov / data.sec.gov / efts.sec.gov HTTP and edgartools; requires a declared User-Agent and rate limit
+    stored: "backend/data/optimus/sec_insider/**, sec fundamentals tables, news corpus"
+    personal: yes
+    academic: yes
+    public_display: yes
+    commercial: yes
+    terms_url: https://www.sec.gov/about/privacy-information
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'SEC.gov says its information "is considered public information and may be copied or further distributed"; asks for citation and bars use of the SEC seal and the SEC/EDGAR names as a business name. Fair-access rate limits (sec.gov/os/accessing-edgar-data) still apply to collection.'
+    owner_confirm: false
+    hosts: [www.sec.gov, data.sec.gov, efts.sec.gov]
+    detect:
+      patterns: ['sec\.gov', 'edgartools', 'import edgar', 'from edgar', 'sec_insider', 'insider_trading']
+
+  - id: fred
+    what: Federal Reserve Bank of St. Louis FRED macro series (23 series live)
+    obtained: fredapi / api.stlouisfed.org with an API key (name FRED_API_KEY)
+    stored: "in-memory cache; macro tables under backend/data/optimus/**"
+    personal: yes
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: https://fred.stlouisfed.org/docs/api/terms_of_use.html
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'The terms grant no blanket public or commercial right; for third-party series carrying a copyright note, use beyond personal use needs permission ("you must contact the data owner"). Per-series copyright is not audited here, so it stays UNVERIFIED.'
+    owner_confirm: false
+    hosts: [api.stlouisfed.org, fred.stlouisfed.org]
+    detect:
+      patterns: ['fredapi', 'api\.stlouisfed', '\bFred\(', 'FRED_API_KEY', 'pandas_datareader']
+
+  - id: gdelt
+    what: GDELT DOC 2.0 / event tone signals (macro news signal)
+    obtained: api.gdeltproject.org, no key, 20 s spacing
+    stored: "news corpus under backend/data/optimus/**"
+    personal: yes
+    academic: yes
+    public_display: yes
+    commercial: yes
+    terms_url: https://www.gdeltproject.org/about.html
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'GDELT datasets "are available for unlimited and unrestricted use for any academic, commercial, or governmental use"; redistribution allowed with credit and a link to GDELT. Article text/headlines in the feed remain the publishers\'' own.'
+    owner_confirm: false
+    hosts: [api.gdeltproject.org, data.gdeltproject.org]
+    detect:
+      patterns: ['gdelt']
+
+  - id: us_official_sources
+    what: Federal Reserve, US Treasury, CFTC, Federal Register, White House, BLS, Nasdaq calendar pages polled for the world digest
+    obtained: plain HTTP / reader against public agency pages
+    stored: "backend/data/optimus/world_digest/**"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'US federal works are generally public domain, but each agency page and the Nasdaq calendar API (api.nasdaq.com) has its own terms and none was read; UNVERIFIED until each is.'
+    owner_confirm: false
+    hosts: [www.federalreserve.gov, home.treasury.gov, publicreporting.cftc.gov, www.federalregister.gov, www.whitehouse.gov, www.bls.gov, api.nasdaq.com]
+    detect:
+      patterns: ['official_sources', 'federalreserve\.gov', 'treasury\.gov', 'cftc', 'macro_calendar']
+
+  - id: finra_short_volume
+    what: FINRA daily short sale volume files
+    obtained: cdn.finra.org public files
+    stored: "backend/data/optimus/short_interest/**"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'FINRA data terms not read.'
+    owner_confirm: false
+    hosts: [cdn.finra.org]
+    detect:
+      patterns: ['finra']
+
+  - id: congress_disclosures
+    what: US Congress financial disclosures (Senate eFD, House Clerk) and lobbying (LDA), plus FMP congress endpoints
+    obtained: efdsearch.senate.gov, disclosures-clerk.house.gov, lda.senate.gov, financialmodelingprep.com
+    stored: "backend/data/optimus/** (congress trades)"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: https://efdsearch.senate.gov/search/home/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'The Senate eFD page returned HTTP 403 to the fetch. The statute behind these reports is generally understood to restrict commercial or solicitation use, but that was NOT verified here; owner should treat as restricted until read.'
+    owner_confirm: false
+    hosts: [efdsearch.senate.gov, disclosures-clerk.house.gov, docs.house.gov, www.senate.gov, scalise.house.gov, www.congress.gov]
+    detect:
+      patterns: ['congress_trades', 'lobbying_lda', 'efdsearch']
+
+  - id: ken_french_factors
+    what: Fama-French daily factor returns (pinned copy ff_daily_pinned.csv.gz)
+    obtained: Kenneth French data library download, pinned in repo
+    stored: "backend/data/ff_daily_pinned.csv.gz (committed)"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'Library terms not read; the file is committed to a public repo, so this is a live question.'
+    owner_confirm: false
+    hosts: [mba.tuck.dartmouth.edu]
+    detect:
+      patterns: ['ff_daily', 'fama.?french', 'factor_model']
+
+  # ------------------------------ broker / execution ------------------------------
+  - id: alpaca_market_data
+    what: Alpaca market data and Benzinga-sourced news, plus paper brokerage account state
+    obtained: data.alpaca.markets / paper-api.alpaca.markets with the owner''s keys
+    stored: "backend/data/optimus/**, terminal_mirror, paper_portfolios"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: https://alpaca.markets/disclosures
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'The disclosures page only links the NASDAQ OMX Global Subscriber Agreement and NYSE Market Data Display Services Agreement; their terms were not read, so display/redistribution rights are unknown. Account state is the owner\''s own paper data.'
+    owner_confirm: true
+    hosts: [data.alpaca.markets, paper-api.alpaca.markets, docs.alpaca.markets]
+    detect:
+      patterns: ['alpaca']
+
+  # ------------------------------ LLM ------------------------------
+  - id: deepseek_output
+    what: DeepSeek chat model outputs (summaries, extractions, explanations) - the only LLM provider called
+    obtained: api.deepseek.com with DEEPSEEK_API_KEY via provider_budget path
+    stored: "backend/data/optimus/**/*llm*, typed_events, digests"
+    personal: yes
+    academic: yes
+    public_display: yes
+    commercial: yes
+    terms_url: https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'Terms s.4.2: "We assign any rights, title, and interests-if any-in the Outputs of the Services to you." s.8.1 requires telling end users outputs are AI-generated and may contain errors. The OUTPUT is free; it still inherits the rights of any licensed text put INTO the prompt (see licensed_news_text).'
+    owner_confirm: false
+    hosts: [api.deepseek.com, api-docs.deepseek.com]
+    detect:
+      patterns: ['llm_analyzer', 'deepseek', '_call_llm', 'summarize_market_news']
+
+  # ------------------------------ news ------------------------------
+  - id: dowjones_rss_news
+    what: WSJ, MarketWatch, Barron''s free RSS feeds (headline, one-sentence summary, link)
+    obtained: plain HTTP polling of feeds.content.dowjones.io and sibling feeds
+    stored: "gitignored news corpus under backend/data/optimus/news_digest/**"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: https://www.dowjones.com/terms-of-use/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'dowjones.com and wsj.com terms pages could not be fetched. The repo news_sources.yaml quotes "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content"; that is the repo\''s own note, not verified here, and if right means NO for public display.'
+    owner_confirm: true
+    hosts: [feeds.content.dowjones.io, feeds.a.dj.com, www.wsj.com, www.marketwatch.com, www.barrons.com, www.dowjones.com]
+    detect:
+      patterns: ['dowjones', 'wsj_', 'barrons', 'marketwatch', 'mw_topstories']
+
+  - id: licensed_news_text
+    what: Full-text paywalled articles (WSJ, Barron''s, MarketWatch, others) the local reader collects under the owner''s own subscriptions
+    obtained: local browser reader (night_reader / web_reader) logged in as the owner
+    stored: "gitignored backend/data/optimus/reader/**, news_digest/**"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://www.dowjones.com/terms-of-use/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'A consumer subscription is not a redistribution licence and the terms page could not be read; marked no for public display/commercial because no licence to republish text exists in evidence (absence of a grant, not a read prohibition). Derived typed rows and LLM summaries of this text need the same caution.'
+    owner_confirm: true
+    hosts: [www.reuters.com, www.ft.com, www.cnbc.com, apnews.com, www.scmp.com, www.bbc.com]
+    detect:
+      patterns: ['web_reader', 'night_reader', 'reader_report', 'reader_scheduler', 'browser_policy']
+
+  - id: google_news_rss
+    what: Google News RSS searches (breadth-only headline + link) in ten locales
+    obtained: news.google.com RSS, no key
+    stored: "news corpus under backend/data/optimus/**"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: https://policies.google.com/terms
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'Google terms bar "using automated means to access content ... in violation of the machine-readable instructions"; no grant for RSS reuse was found, and the repo registry says "no published ToS grant for automated pulls".'
+    owner_confirm: false
+    hosts: [news.google.com]
+    detect:
+      patterns: ['google_news', 'news\.google']
+
+  - id: social_and_blog_feeds
+    what: Reddit (r/algotrading, r/SecurityAnalysis), StockTwits, Quantocracy, Substack and Nikkei Asia RSS
+    obtained: public RSS / pages
+    stored: "news corpus"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: https://www.redditinc.com/policies/data-api-terms
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'Reddit data-API terms page could not be fetched; Nikkei, StockTwits, Quantocracy terms not read.'
+    owner_confirm: false
+    hosts: [www.reddit.com, stocktwits.com, asia.nikkei.com, quanta72.substack.com, x.com]
+    detect:
+      patterns: ['reddit', 'stocktwits', 'quantocracy', 'nikkei']
+
+  - id: finnhub
+    what: Finnhub company news and analyst recommendation trends
+    obtained: finnhub.io API with a free-tier key
+    stored: "analyst_snapshots.jsonl, news corpus"
+    personal: yes
+    academic: UNVERIFIED
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://finnhub.io/terms-of-service
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'Terms: "All plan listed on Finnhub website is strictly for personal use unless explicitly stated otherwise"; redistribution, including derived results to third parties, needs written approval.'
+    owner_confirm: false
+    hosts: [finnhub.io]
+    detect:
+      patterns: ['finnhub']
+
+  - id: akshare_cn_news
+    what: AKShare wrappers over Eastmoney and Caixin news
+    obtained: akshare library
+    stored: "news corpus"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'Registry notes "research use, commercial use caution"; publisher terms not read.'
+    owner_confirm: false
+    hosts: []
+    detect:
+      patterns: ['akshare']
+
+  - id: wikipedia_pageviews
+    what: Wikimedia pageviews REST API
+    obtained: wikimedia.org REST API
+    stored: "news corpus / attention features"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: https://wikimediafoundation.org/about/policies/api-usage-guidelines/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'Guideline page returned 404. The repo registry says CC0; not verified here.'
+    owner_confirm: false
+    hosts: [wikimedia.org, wikipedia.org]
+    detect:
+      patterns: ['wikipedia']
+
+  - id: issuer_ir_and_ats
+    what: Issuer press releases (e.g. ASML IR) and public job-board JSON (Greenhouse, Lever, Ashby)
+    obtained: plain HTTP
+    stored: "news corpus / hiring signals"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'Registry: "no republication licence asserted". Not read.'
+    owner_confirm: false
+    hosts: [boards-api.greenhouse.io, api.lever.co, api.ashbyhq.com]
+    detect:
+      patterns: ['greenhouse', 'ashby', 'asml_ir']
+
+  # ------------------------------ prediction markets, crypto, other vendors ------------------------------
+  - id: prediction_markets
+    what: Polymarket and Kalshi market probabilities
+    obtained: gamma-api.polymarket.com and Kalshi public API
+    stored: "backend/data/optimus/**"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: "no"
+    terms_url: https://polymarket.com/tos
+    terms_read: ok
+    date_read: "2026-11-15"
+    basis: 'Polymarket terms bar one to "Sell, resell, sublicense, redistribute, or otherwise commercially exploit the Data"; scraping by bots is also prohibited. Kalshi terms not read. Public display (non-commercial) not addressed in the excerpt read.'
+    owner_confirm: false
+    hosts: [gamma-api.polymarket.com, polymarket.com, api.elections.kalshi.com, trading-api.kalshi.com]
+    detect:
+      patterns: ['kalshi', 'polymarket', 'prediction_markets']
+
+  - id: crypto_coingecko_defillama
+    what: CoinGecko and DefiLlama crypto prices and DeFi metrics
+    obtained: public APIs
+    stored: "in-memory cache"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'Not read.'
+    owner_confirm: false
+    hosts: [api.coingecko.com, api.llama.fi, defillama.com, coins.llama.fi]
+    detect:
+      patterns: ['coingecko', 'defillama', 'crypto_market', 'defi_metrics']
+
+  - id: fmp_av_polygon_eodhd
+    what: Financial Modeling Prep, Alpha Vantage, Polygon, EODHD provider adapters (keys optional)
+    obtained: vendor REST APIs, free-tier keys
+    stored: "provider cache"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'Free-tier vendor terms are typically personal-use; none read. Listed because code imports the adapters.'
+    owner_confirm: false
+    hosts: [financialmodelingprep.com, www.alphavantage.co, api.polygon.io, eodhd.com]
+    detect:
+      patterns: ['fmp_provider', 'financialmodelingprep', 'alpha_vantage', '\besg\b', 'expectation_store']
+
+  - id: strategy_library_web
+    what: Strategy ideas catalogued from Quantpedia, Composer, QuantConnect pages
+    obtained: reading public pages
+    stored: "backend/services/strategy_library*.py (text)"
+    personal: UNVERIFIED
+    academic: UNVERIFIED
+    public_display: UNVERIFIED
+    commercial: UNVERIFIED
+    terms_url: null
+    terms_read: not_attempted
+    date_read: null
+    basis: 'Descriptions of third-party strategies; terms not read.'
+    owner_confirm: false
+    hosts: [quantpedia.com, www.composer.trade, www.quantconnect.com]
+    detect:
+      patterns: ['strategy_library']
+
+  # ------------------------------ academic licensed (WRDS) ------------------------------
+  - id: wrds_crsp
+    what: CRSP stock files (monthly/daily, names, delistings) via HKU WRDS
+    obtained: WRDS pull scripts (scripts/wrds_*) under the owner''s university access
+    stored: "backend/data/optimus/wrds/** (gitignored parquet), crsp_pit, learner/**"
+    personal: UNVERIFIED
+    academic: yes
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://wrds-www.wharton.upenn.edu/users/tos/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'WRDS terms page returned 404. Academic = yes only because access is via a university WRDS subscription for research (the owner must confirm the HKU agreement); public display and commercial are no because university-licensed vendor data is not licensed for public redistribution absent a read agreement showing otherwise (absence of grant).'
+    owner_confirm: true
+    hosts: [wrds-www.wharton.upenn.edu, wrds-pgdata.wharton.upenn.edu]
+    detect:
+      patterns: ['crsp', 'wrds']
+
+  - id: wrds_ibes
+    what: I/B/E/S analyst estimates, targets, recommendations via HKU WRDS
+    obtained: WRDS pull scripts
+    stored: "backend/data/optimus/actor_corpus/**, tracker_backtest/** (derived receipts committed)"
+    personal: UNVERIFIED
+    academic: yes
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://wrds-www.wharton.upenn.edu/users/tos/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'Same as wrds_crsp; IBES is an LSEG product licensed through the university, and the repo rules already bar IBES tables from the public repo. Derived aggregate receipts may still be a separate question for the owner.'
+    owner_confirm: true
+    hosts: []
+    detect:
+      patterns: ['\bibes\b', 'ibes_']
+
+  - id: wrds_compustat
+    what: Compustat fundamentals and CRSP-Compustat link tables via HKU WRDS
+    obtained: WRDS pull scripts
+    stored: "backend/data/crosswalks/** (committed link registries!), optimus/wrds/**"
+    personal: UNVERIFIED
+    academic: yes
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://wrds-www.wharton.upenn.edu/users/tos/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'Same as wrds_crsp. Link registries under backend/data are committed to a public repo; whether that is permitted is for the owner to confirm.'
+    owner_confirm: true
+    hosts: []
+    detect:
+      patterns: ['compustat', 'comp_sec', 'crosswalk']
+
+  - id: wrds_optionmetrics
+    what: OptionMetrics Ivy DB option prices and implied volatility via HKU WRDS
+    obtained: WRDS pull scripts
+    stored: "backend/data/optimus/wrds/** (gitignored)"
+    personal: UNVERIFIED
+    academic: yes
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://wrds-www.wharton.upenn.edu/users/tos/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'Same as wrds_crsp.'
+    owner_confirm: true
+    hosts: []
+    detect:
+      patterns: ['optionmetrics', 'options_pit_store']
+
+  - id: wrds_tr13f
+    what: Thomson Reuters 13F institutional holdings via HKU WRDS
+    obtained: WRDS pull scripts
+    stored: "backend/data/optimus/wrds/tr13f_quarterly.json (gitignored)"
+    personal: UNVERIFIED
+    academic: yes
+    public_display: "no"
+    commercial: "no"
+    terms_url: https://wrds-www.wharton.upenn.edu/users/tos/
+    terms_read: failed
+    date_read: "2026-11-15"
+    basis: 'Same as wrds_crsp. (The underlying 13F filings are public on EDGAR; the cleaned vendor table is not.)'
+    owner_confirm: true
+    hosts: []
+    detect:
+      patterns: ['tr13f', 'tr_13f', 'holder_provenance']
