@@ -3560,20 +3560,20 @@ export function piGetReplaySnapshot(laneId: string) {
   return fetchAPI<PIReplaySnapshot>(`/api/pi/reference/${laneId}/snapshot`);
 }
 
-// PI: Force a fresh walk-forward replay (slow, invalidates cache)
+// PI: Force a fresh walk-forward replay (slow, invalidates cache).
+// DESKTOP BUILD ONLY (S70, 2026-11-15): the backend route requires a server-side
+// trigger token off the desktop and answers 404 without it. A token must never
+// be compiled into browser code, so the website does not call this at all (the
+// reference page renders the button only under CONTROL_PLANE_BUILD).
 export function piRefreshReplay(laneId: string) {
   return fetchAPI<PIReplayResult>(`/api/pi/replay/${laneId}/refresh`, {
     method: "POST",
   });
 }
 
-// PI: Manual trigger
-export function piTriggerCheck(laneId?: string) {
-  const params = laneId ? `?lane=${laneId}` : "";
-  return fetchAPI<Record<string, unknown>>(`/api/pi/trigger-check${params}`, {
-    method: "POST",
-  });
-}
+// `piTriggerCheck` (POST /api/pi/trigger-check) was removed on 2026-11-15: no
+// page called it, the route now requires the server-side trigger token, and a
+// browser helper for it would only invite someone to ship that token.
 
 // PI: Conviction lane — decision capture (immutable, forward-only log)
 export interface ConvictionDecisionRequest {

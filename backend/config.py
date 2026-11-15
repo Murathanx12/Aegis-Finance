@@ -2959,6 +2959,35 @@ RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false"
 #: visibility gives an LLM authority over capital.
 PERSONAL_MODE = os.getenv("AEGIS_PERSONAL_MODE", "0") in ("1", "true", "yes")
 
+#: TRIGGER TOKEN (S70, 2026-11-15). The hosted backend is public, and until this
+#: `POST /api/optimus/run_job/{job_id}`, `POST /api/pi/trigger-check` and
+#: `POST /api/pi/replay/{lane_id}/refresh` started scheduler jobs / rebalance
+#: checks / a ten-minute recompute for anyone who sent the request, and
+#: `GET /api/pi/reference/{lane_id}/state` ran a full rebalance check (paper-lane
+#: writes) on every read. `backend.routers.control.require_trigger_token` now
+#: guards them: the caller sends the header below carrying the value of the
+#: environment variable below.
+#:
+#: Only the NAMES live here. The value is read from the environment at request
+#: time, is never stored on a module, never logged and never echoed. FAIL CLOSED:
+#: unset, empty or shorter than the minimum length means the routes answer 404
+#: for every caller except the desktop app's own same-machine page.
+TRIGGER_TOKEN_ENV: str = "AEGIS_TRIGGER_TOKEN"
+TRIGGER_TOKEN_HEADER: str = "X-Aegis-Trigger-Token"
+#: A configured value shorter than this is treated as NOT configured: nothing
+#: rate-limits these routes, so a guessable token is an open route with a delay.
+#: `python -c "import secrets; print(secrets.token_urlsafe(32))"` gives 43 chars.
+TRIGGER_TOKEN_MIN_LENGTH: int = 24
+#: The two journal writes the website's own pages are meant to reach stay open
+#: (`POST /api/pi/conviction/decision`, `POST /api/journal/thesis`; the owner's
+#: decision is pending). An anonymous caller's LIST inputs on them are capped at
+#: this many items (422 above it), so one request cannot write an unbounded row.
+PUBLIC_WRITE_MAX_LIST_ITEMS: int = 25
+#: `POST /api/pm/snapshot` does one enrich fetch and one ledger row PER TICKER.
+#: A caller-supplied list longer than this is refused (422). The blank default
+#: (the whole book + watchlist) is the owner's own list and is not capped.
+PM_SNAPSHOT_MAX_TICKERS: int = 60
+
 #: 2026-09-20: the website backend's warm loop was the Railway bill. Measured
 #: with `railway metrics` on `selfless-courage/Aegis-Finance`: 0.58 vCPU average
 #: (peaks 29.8 vCPU) and 829 MB average, recomputing the 80-ticker screener,

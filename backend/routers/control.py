@@ -175,13 +175,28 @@ def _split_host(value: str) -> tuple[str, int | None] | None:
 IN_PROCESS_CLIENT = "testclient"
 
 
+#: The ASGI extension Starlette's TestClient puts on every scope it builds and no
+#: socket server does (uvicorn's h11/httptools scopes carry no such key). The
+#: peer NAME alone is not proof: behind a proxy that uvicorn was told to trust
+#: (`--forwarded-allow-ips`), `X-Forwarded-For: testclient` becomes the peer. So
+#: the literal counts only on a scope that also carries this marker. If Starlette
+#: ever drops it, the in-process callers are REFUSED (loudly, in the tests), which
+#: is the safe direction.
+IN_PROCESS_SCOPE_MARKER = "http.response.debug"
+
+
+def _scope_is_in_process(request: Request) -> bool:
+    extensions = request.scope.get("extensions")
+    return isinstance(extensions, dict) and IN_PROCESS_SCOPE_MARKER in extensions
+
+
 def _client_is_loopback(request: Request) -> bool:
     import ipaddress
     peer = request.client.host if request.client else None
     if not peer:
         return False
     if peer == IN_PROCESS_CLIENT:
-        return True
+        return _scope_is_in_process(request)
     try:
         ip = ipaddress.ip_address(peer.strip("[]"))
     except ValueError:
@@ -290,6 +305,127 @@ def control_plane_router(**kwargs) -> APIRouter:
     deps = list(kwargs.pop("dependencies", None) or [])
     return APIRouter(route_class=ControlPlaneRoute,
                      dependencies=[Depends(control_plane_gate), *deps], **kwargs)
+
+
+# ------------------------------------------------------------- the trigger token
+#
+# S70 (2026-11-15). The control plane above is a DESKTOP surface and does not
+# exist on the website. A few PUBLIC-prefix routes are not desktop-only but still
+# must not be anyone's to call: they start scheduler jobs or change paper-lane
+# state (`/api/optimus/run_job/{job_id}`, `/api/pi/trigger-check`,
+# `/api/pi/replay/{lane_id}/refresh`). They carry `require_trigger_token`:
+#
+#   * the caller sends `config.TRIGGER_TOKEN_HEADER` holding the value of the
+#     environment variable `config.TRIGGER_TOKEN_ENV`; compared in constant time;
+#   * FAIL CLOSED: variable unset, empty or too short -> 404 for everyone;
+#   * a missing or wrong token -> the same 404. The supplied value is never
+#     echoed and never logged, and neither is the configured one;
+#   * the desktop app is unchanged: with the control plane on, a request that
+#     passes `check_local_request` (this PC's own page) needs no token.
+#
+# A GET that used to write (`/api/pi/reference/{lane_id}/state`) asks
+# `trigger_authorized` instead and serves a side-effect-free read without it.
+#
+# WHAT THE TEST GUARD SEES, exactly (`backend/tests/test_trigger_token_gate.py`).
+# Two lines, and the second is the one that cannot be argued with:
+#   * a walk of each handler's AST for DIRECT reach of the scheduler, the
+#     reference engine, `services.morning` and the lane/replay writers of
+#     `backend.db`: imports and names, attribute chains, `import_module` /
+#     `__import__`, plus ONE level of helpers defined in the handler's own module.
+#     Reach through a helper's helper, through another service, or through
+#     `getattr` with a computed name is NOT seen;
+#   * every POST/PUT/PATCH/DELETE route in the route table must be gated or on a
+#     reviewed list, so a new write route fails whatever its body looks like.
+# A new GET that writes through two levels of indirection is caught by neither.
+#
+# NOT "a path that was never written" in every respect: GET/HEAD on a gated POST
+# path still answers 405 and a trailing slash 307. The gated routes are out of
+# `/openapi.json`; the source is public, so this hides nothing that matters.
+
+
+def trigger_token_status() -> str:
+    """`configured` | `unset` | `too_short` | `non_ascii`. Never the value."""
+    from backend import config as _config
+
+    value = (os.getenv(_config.TRIGGER_TOKEN_ENV, "") or "").strip()
+    if not value:
+        return "unset"
+    if not value.isascii():
+        return "non_ascii"
+    if len(value) < int(_config.TRIGGER_TOKEN_MIN_LENGTH):
+        return "too_short"
+    return "configured"
+
+
+def _configured_trigger_token() -> str | None:
+    """The server-side token, read at request time; None when not usable.
+
+    A non-ASCII value is NOT a token: an HTTP header is decoded as latin-1, so
+    such a value could never match and the routes would be dead with nothing to
+    say why. It counts as unset and `log_trigger_token_status` says so at startup.
+    """
+    from backend import config as _config
+
+    if trigger_token_status() != "configured":
+        return None
+    return (os.getenv(_config.TRIGGER_TOKEN_ENV, "") or "").strip()
+
+
+def log_trigger_token_status() -> str:
+    """One startup line that names the VARIABLE and its state, never its value."""
+    import logging
+
+    from backend import config as _config
+
+    status = trigger_token_status()
+    log = logging.getLogger(__name__)
+    name = _config.TRIGGER_TOKEN_ENV
+    if status == "configured":
+        log.info("%s is configured: the trigger routes accept the %s header",
+                 name, _config.TRIGGER_TOKEN_HEADER)
+    elif status == "unset":
+        log.info("%s is not set: the trigger routes answer 404 (desktop page excepted)", name)
+    else:
+        why = ("contains non-ASCII characters, which no HTTP header can match"
+               if status == "non_ascii"
+               else f"is shorter than {int(_config.TRIGGER_TOKEN_MIN_LENGTH)} characters")
+        log.warning("%s %s: it is treated as NOT SET and the trigger routes answer 404", name, why)
+    return status
+
+
+def _is_desktop_local_request(request: Request) -> bool:
+    """The control plane's own test, as a yes/no: desktop mode AND this machine."""
+    if not _enabled():
+        return False
+    try:
+        check_local_request(request)
+    except HTTPException:
+        return False
+    return True
+
+
+def trigger_authorized(request: Request) -> bool:
+    """True for the desktop's own page, or for a caller holding the trigger token."""
+    import hmac
+
+    from backend import config as _config
+
+    if _is_desktop_local_request(request):
+        return True
+    expected = _configured_trigger_token()
+    if expected is None:
+        return False
+    supplied = request.headers.get(_config.TRIGGER_TOKEN_HEADER)
+    if not supplied:
+        return False
+    return hmac.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8"))
+
+
+def require_trigger_token(request: Request) -> None:
+    """Route dependency: 404, the answer of a path that was never written, unless
+    `trigger_authorized`. One answer for unset / missing / wrong, with no detail."""
+    if not trigger_authorized(request):
+        raise HTTPException(status_code=404, detail="Not Found")
 
 
 router = control_plane_router(tags=["control"])

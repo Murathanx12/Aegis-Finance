@@ -44,4 +44,8 @@ ENV MALLOC_ARENA_MAX=2
 
 EXPOSE ${PORT}
 
-CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}
+# --forwarded-allow-ips is PINNED to uvicorn's own default (S70 review, 2026-11-15):
+# with a wider value (flag or FORWARDED_ALLOW_IPS) the proxy's X-Forwarded-For would
+# become `request.client`, which the control plane's loopback test reads. Railway's
+# edge is not 127.0.0.1, so forwarded headers stay untrusted, exactly as before.
+CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT} --forwarded-allow-ips 127.0.0.1
