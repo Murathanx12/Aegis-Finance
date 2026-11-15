@@ -39,6 +39,20 @@ def test_actions(tmp_path, action, rc, expected):
     assert judge(ctx, p, row).state == expected
 
 
+def test_an_unscheduled_leader_on_a_fresh_calendar_stays_ok(tmp_path):
+    # v3: a leader with no announced next date is named on the row, exit 0, not a fault
+    ctx, p, row = setup(tmp_path, contract_version="v3",
+                        calendar_unscheduled={"GOOGL": ["no announced next date (ONLY_PAST_DATES)"]})
+    assert judge(ctx, p, row).state == "ALIVE_PROGRESSING"
+
+
+def test_a_stale_forward_calendar_reads_degraded_and_names_it(tmp_path):
+    ctx, p, row = setup(tmp_path, action="STALE_CALENDAR", rc=3, contract_version="v3",
+                        calendar_stale={"_forward_calendar": ["STALE: fc_x_receipt.json 3.4 d old"]})
+    j = judge(ctx, p, row)
+    assert j.state == "DEGRADED" and "_forward_calendar" in j.detail
+
+
 def test_a_stale_calendar_names_the_leaders(tmp_path):
     ctx, p, row = setup(tmp_path, action="STALE_CALENDAR", rc=3,
                         calendar_stale={"NVDA": ["newest report 2026-08-26 is 81 days old (> 80)"]})
