@@ -661,7 +661,7 @@ app.include_router(_ticker_hub_router.router)
 # CH-22 (2026-11-14): the owner's "Note to Claude" inbox. Appends a JSONL row the next
 # brain session reads; no LLM, no outbound call, gated like the control plane.
 app.include_router(owner_inbox.router)
-app.include_router(usage.router)  # flag-gated (AEGIS_USAGE_RECEIPT); 404 when off
+usage.register(app)  # only when AEGIS_USAGE_RECEIPT=1 at startup; otherwise absent (404, not in openapi)
 
 
 def mount_desktop_frontend(application: "FastAPI") -> dict:

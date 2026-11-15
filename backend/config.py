@@ -1123,6 +1123,12 @@ config: dict = {
         "beacon_per_visitor_per_min": 30,
         "beacon_global_per_min": 600,
         "beacon_max_body_bytes": 256,
+        "ticker_min_visitors": 5,        # ticker table hidden below this many distinct visitors
+        "ticker_min_requests": 5,        # a ticker row needs at least this many requests
+        # Server-side callers (e.g. the frontend host) to count as "excluded", not human.
+        # Substrings of the user agent / prefixes of the client address. Empty by default.
+        "exclude_ua_substrings": [],
+        "exclude_ip_prefixes": [],
         "ticker_param_names": ["ticker", "symbol"],
         "page_ticker_prefixes": ["stock", "ticker"],
         # Excluded from human counts, counted separately (case-insensitive substrings).
