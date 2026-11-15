@@ -19,6 +19,7 @@ from backend.services.portfolio_intelligence import dynamic_exposure_books as D
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS = ROOT / D.CONTRACTS_REL
+CONTRACTS_V1 = ROOT / D.CONTRACTS_V1_REL
 SPECS_V2 = ROOT / D.SPECS_V2_REL
 DAYS = pd.bdate_range("2024-01-02", periods=330)
 ANCHOR_I = 280
@@ -70,6 +71,7 @@ def earn() -> dict:
 @pytest.fixture()
 def synthetic(monkeypatch):
     monkeypatch.setattr(_config, "ROLLING_COHORT_ANCHOR", DAYS[ANCHOR_I].date().isoformat())
+    monkeypatch.setattr(_config, "DYNAMIC_BOOK_LEADERS", ("AAPL",))     # the only leader with bars here
     bars = make_bars()
     sessions = R.bench_sessions(bars)
     specs, _ = R.load_specs(SPECS_V2)
@@ -100,6 +102,20 @@ def test_contract_hashes_recompute():
     assert {c["personality"] for c in doc["contracts"]} == set(D.PERSONALITIES)
     specs, _ = R.load_specs(SPECS_V2)
     assert set(D.verify_contracts(doc, specs)) == set(D.PERSONALITIES)
+
+
+def test_v1_is_kept_byte_stable_and_superseded_by_v2():
+    v1 = json.loads(CONTRACTS_V1.read_bytes())
+    assert v1["manifest_sha256"] == D.CONTRACTS_V1_MANIFEST
+    for c in v1["contracts"]:
+        assert D.digest({k: v for k, v in c.items() if k != "contract_sha256"}) == c["contract_sha256"]
+    v2 = json.loads(CONTRACTS.read_bytes())
+    assert {c["contract_id"] for c in v2["contracts"]} == {f"DXB-{p}-v2" for p in D.PERSONALITIES}
+    for c in v2["contracts"]:
+        assert c["supersedes"]["manifest_sha256"] == v1["manifest_sha256"]
+        assert "before any return was read" not in json.dumps(c)
+        assert "ALREADY SEEN" in c["base_selection"]["why"]
+    assert not ({c["contract_sha256"] for c in v1["contracts"]} & {c["contract_sha256"] for c in v2["contracts"]})
 
 
 def test_an_edited_contract_is_refused():
@@ -218,14 +234,22 @@ def test_a_row_whose_signal_is_not_before_its_session_is_refused():
 
 # ──────────────────────────────── store ─────────────────────────────────────
 
-def _data_root(tmp_path: Path, bars: pd.DataFrame) -> Path:
-    root = tmp_path / "optimus"
-    (root / "prices_2025_26").mkdir(parents=True)
-    bars.to_parquet(root / R.BARS_REL, index=False)
-    (root / "straddle_forward").mkdir()
+def write_cache(root: Path, dates: dict, pulled: datetime) -> None:
+    (root / "straddle_forward").mkdir(exist_ok=True)
     (root / D.EARNINGS_REL).write_text(json.dumps(
-        {t: {"dates": [d.date().isoformat() for d in v]} for t, v in earn().items()}), encoding="utf8")
-    (root / "potential_universe").mkdir()
+        {t: {"dates": [d.date().isoformat() for d in v], "pulled_utc": pulled.isoformat()}
+         for t, v in dates.items()}), encoding="utf8")
+
+
+def _data_root(tmp_path: Path, bars: pd.DataFrame, *, dates: dict | None = None,
+               pulled: datetime | None = None) -> Path:
+    root = tmp_path / "optimus"
+    (root / "prices_2025_26").mkdir(parents=True, exist_ok=True)
+    bars.to_parquet(root / R.BARS_REL, index=False)
+    last = bars["date"].max()
+    write_cache(root, earn() if dates is None else dates,
+                pulled or datetime.combine(last.date(), time(23, 0), tzinfo=timezone.utc))
+    (root / "potential_universe").mkdir(exist_ok=True)
     with (root / "potential_universe" / "2023-12-01.jsonl").open("w", encoding="utf8") as f:
         for i, s in enumerate(SYMS + ["AAPL"]):
             f.write(json.dumps({"symbol": s, "identity": {"sector": f"Sector{i % 6}"}}) + "\n")
@@ -242,13 +266,16 @@ def test_backfill_then_rerun_is_idempotent_and_flags_backfill(synthetic, tmp_pat
     out = tmp_path / "dxb"
     asof = sessions[ANCHOR_I + 30]
     now = datetime(2030, 1, 1, tzinfo=timezone.utc)
-    row = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=asof, now=now)
+    row = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=asof, now=now,
+                calendar=FakeCal())
     assert row["born"] and row["paths_written"] > 0 and row["marks_written"] > 0
     m = D.stored_marks(out)
     assert set(m["personality"]) == set(D.PERSONALITIES) and m["backfilled"].all()
     assert not m["forward_evidence"].any()
     assert {"worst_case_usd", "beta_adj_excess", "max_drawdown", "sector_top1", "effective_bets"} <= set(m.columns)
-    again = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=asof, now=now)
+    again = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=asof, now=now,
+                  calendar=FakeCal())
+    assert again["stored_rows_rechecked"] == row["paths_written"]
     assert again["born"] == [] and again["paths_written"] == 0 and again["marks_written"] == 0
     for p in (out / "cohorts").glob("dxb_cohort_*.json"):
         assert json.loads(p.read_bytes())["backfilled"] is True
@@ -262,11 +289,11 @@ def test_a_changed_config_under_the_same_out_is_refused(synthetic, tmp_path, mon
     root = _data_root(tmp_path, bars)
     out = tmp_path / "dxb"
     D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=sessions[ANCHOR_I + 8],
-          now=datetime(2030, 1, 1, tzinfo=timezone.utc))
+          now=datetime(2030, 1, 1, tzinfo=timezone.utc), calendar=FakeCal())
     monkeypatch.setattr(_config, "DYNAMIC_BOOK_REPORT_EQUITY_USD", 50_000.0)
     with pytest.raises(D.DynamicBookRefused, match="another config"):
         D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=sessions[ANCHOR_I + 8],
-              now=datetime(2030, 1, 1, tzinfo=timezone.utc))
+              now=datetime(2030, 1, 1, tzinfo=timezone.utc), calendar=FakeCal())
 
 
 def test_step_births_a_forward_cohort_before_its_entry_opens(synthetic, tmp_path):
@@ -279,7 +306,7 @@ def test_step_births_a_forward_cohort_before_its_entry_opens(synthetic, tmp_path
     now = datetime.combine(d.date(), time(23, 0), tzinfo=timezone.utc)
     row = D.run("step", data_root=root, out=tmp_path / "dxb", contracts_path=cpath, asof=d, now=now,
                 calendar=FakeCal())
-    assert row["born"] == [d.date().isoformat()]
+    assert row["born"] == [d.date().isoformat()] and row["rc"] == 0 and row["calendar_stale"] == {}
     rec = json.loads((tmp_path / "dxb" / "cohorts" / f"dxb_cohort_{d.date()}.json").read_bytes())
     assert rec["backfilled"] is False and rec["forward_evidence"] is True
     assert row["paths_written"] == 0                             # nothing marked before the entry session
@@ -296,3 +323,102 @@ def test_out_inside_the_data_root_is_refused(tmp_path):
 def test_a_missing_earnings_calendar_is_refused(tmp_path):
     with pytest.raises(D.DynamicBookRefused, match="earnings calendar"):
         D.load_earnings(tmp_path)
+
+
+# ─────────────────────── review of PR #150: the forward path ───────────────────────
+
+def _contracts(tmp_path):
+    specs, _ = R.load_specs(SPECS_V2)
+    cpath = tmp_path / "contracts.json"
+    cpath.write_text(json.dumps(D.compile_contracts(frozen_utc="x", specs=specs)), encoding="utf8")
+    return cpath
+
+
+def _close(i, hours=0):
+    return datetime.combine(DAYS[i].date(), time(21, 0), tzinfo=timezone.utc) + pd.Timedelta(hours=hours)
+
+
+def test_a_calendar_fact_learned_late_never_acts_retroactively(synthetic, tmp_path):
+    bars, sessions, spec = synthetic
+    cpath, out = _contracts(tmp_path), tmp_path / "dxb"
+    early = {"AAPL": [DAYS[EARN_I - 63]]}                       # the report of EARN_I not yet in the cache
+    # run 1 (declaring): through EARN_I-1, the cache does not know the EARN_I report
+    root = _data_root(tmp_path, bars[bars["date"] <= DAYS[EARN_I - 1]], dates=early, pulled=_close(EARN_I - 1, 1))
+    D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=DAYS[EARN_I - 1],
+          now=_close(EARN_I - 1, 3), calendar=FakeCal())
+    stored1 = pd.read_parquet(next((out / "paths").glob("part-*.parquet")))
+    # run 2: the cache is re-pulled one hour after the reaction session's close
+    root = _data_root(tmp_path, bars[bars["date"] <= DAYS[EARN_I]], pulled=_close(EARN_I, 1))
+    r2 = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=DAYS[EARN_I],
+               now=_close(EARN_I, 2), calendar=FakeCal())
+    ev = [e for e in r2["leader_events"] if e["session"] == DAYS[EARN_I].date().isoformat()]
+    assert len(ev) == 1 and ev[0]["status"] == "LEARNED_LATE"
+    # run 3: ten sessions later
+    root = _data_root(tmp_path, bars[bars["date"] <= DAYS[EARN_I + 10]], pulled=_close(EARN_I + 10, 1))
+    r3 = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=DAYS[EARN_I + 10],
+               now=_close(EARN_I + 10, 2), calendar=FakeCal())
+    assert r3["stored_rows_differ"] == 0 and r3["stored_rows_rechecked"] > len(stored1)
+    paths = pd.concat([pd.read_parquet(x) for x in sorted((out / "paths").glob("part-*.parquet"))])
+    bal = paths[(paths["personality"] == "balanced") & (paths["cohort_id"] == DAYS[ANCHOR_I].date().isoformat())]
+    cut = set(bal.loc[bal["exposure"] < 1, "date"])
+    # EARN_I+1 was decided at the close of EARN_I, before the fact was recorded: never cut
+    assert DAYS[EARN_I + 1].date().isoformat() not in cut
+    assert cut == {DAYS[EARN_I + j].date().isoformat() for j in range(2, 6)}
+    # the rows stored by run 1 are unchanged
+    m = stored1.merge(paths, on=["contract_sha256", "cohort_id", "k"], suffixes=("_1", "_now"))
+    assert len(m) == len(stored1) and (m["exposure_1"] == m["exposure_now"]).all() and (m["nav_1"] == m["nav_now"]).all()
+    assert set(bal.loc[bal["date"] <= DAYS[EARN_I - 1].date().isoformat(), "calendar_observed"]) == {"unknown"}
+    assert set(bal.loc[bal["date"] >= DAYS[EARN_I + 2].date().isoformat(), "calendar_observed"]) == {"recorded"}
+    facts = [json.loads(x) for x in (out / D.FACTS_FILE).read_text(encoding="utf8").splitlines()]
+    late = [f for f in facts if f["earnings_date"] == DAYS[EARN_I].date().isoformat()]
+    assert len(late) == 1 and late[0]["baseline"] is False and late[0]["first_recorded_utc"] == _close(EARN_I, 2).isoformat()
+
+
+def test_a_stored_row_that_no_longer_recomputes_is_refused(synthetic, tmp_path):
+    bars, sessions, spec = synthetic
+    cpath, out = _contracts(tmp_path), tmp_path / "dxb"
+    root = _data_root(tmp_path, bars[bars["date"] <= DAYS[EARN_I + 8]])
+    kw = dict(data_root=root, out=out, contracts_path=cpath, asof=DAYS[EARN_I + 8], now=_close(EARN_I + 8, 3),
+              calendar=FakeCal())
+    D.run("backfill", **kw)
+    part = next((out / "paths").glob("part-*.parquet"))
+    t = pd.read_parquet(part)
+    t.loc[t.index[3], "nav"] = t.loc[t.index[3], "nav"] * 1.01
+    t.to_parquet(part, index=False)
+    with pytest.raises(D.DynamicBookRefused, match="differ from the recompute"):
+        D.run("backfill", **kw)
+
+
+def test_a_step_with_a_stale_leader_calendar_exits_non_zero_and_names_it(synthetic, tmp_path):
+    bars, sessions, spec = synthetic
+    cpath = _contracts(tmp_path)
+    d = sessions[ANCHOR_I + 10]
+    root = _data_root(tmp_path, bars[bars["date"] <= d], pulled=_close(ANCHOR_I + 8))   # pulled before d
+    row = D.run("step", data_root=root, out=tmp_path / "dxb", contracts_path=cpath, asof=d,
+                now=datetime.combine(d.date(), time(23, 0), tzinfo=timezone.utc), calendar=FakeCal())
+    assert row["rc"] == 3 and row["action"] == "STALE_CALENDAR"
+    assert "AAPL" in row["calendar_stale"] and "before the last session" in row["calendar_stale"]["AAPL"][0]
+    old = D.leader_calendar_status({"AAPL": [pd.Timestamp("2024-01-02")]}, {"AAPL": pd.Timestamp("2024-06-01", tz="UTC")},
+                                   now=datetime(2024, 5, 1, tzinfo=timezone.utc), last_session=pd.Timestamp("2024-04-30"))
+    assert old["AAPL"]["status"] == "STALE" and "days old" in old["AAPL"]["why"][0]
+
+
+def test_a_changed_rolling_config_or_code_version_is_refused(synthetic, tmp_path, monkeypatch):
+    bars, sessions, spec = synthetic
+    cpath, out = _contracts(tmp_path), tmp_path / "dxb"
+    root = _data_root(tmp_path, bars[bars["date"] <= DAYS[EARN_I + 4]])
+    kw = dict(data_root=root, out=out, contracts_path=cpath, asof=DAYS[EARN_I + 4], now=_close(EARN_I + 4, 3),
+              calendar=FakeCal())
+    D.run("backfill", **kw)
+    decl = json.loads((out / "declaration.json").read_bytes())
+    assert decl["rolling_config"] == json.loads(json.dumps(R.config_snapshot(), default=list))
+    with monkeypatch.context() as m:
+        m.setattr(_config, "ROLLING_COHORT_RANDOM_CONTROLS", 9)
+        with pytest.raises(D.DynamicBookRefused, match="rolling grading config"):
+            D.run("backfill", **kw)
+    monkeypatch.setattr(R, "code_version", lambda: "f" * 40)
+    with pytest.raises(D.DynamicBookRefused, match="accept-code-version"):
+        D.run("backfill", **kw)
+    row = D.run("backfill", **kw, accept_code_version=True)
+    assert row["code_note"] and row["stored_rows_differ"] == 0
+    assert D.run("backfill", **kw)["code_note"] is None           # accepted once, journaled

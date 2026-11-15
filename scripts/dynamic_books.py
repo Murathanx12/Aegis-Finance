@@ -30,8 +30,9 @@ if str(ROOT) not in sys.path:
 
 def table_lines(table: list[dict]) -> list[str]:
     from backend.services.portfolio_intelligence.dynamic_exposure_books import fmt_pct
-    head = (f"{'cohort':10} {'entry':10} {'personality':12} {'k':>3} {'ret':>8} {'SPY':>8} {'beta':>5} "
-            f"{'b-adj ex':>8} {'maxDD':>8} {'worst$':>8} {'wday$':>7} {'sect1':>5} {'bets':>5}  exposure path")
+    head = (f"{'cohort':10} {'bf':2} {'personality':12} {'k':>3} {'ret':>8} {'SPY':>8} {'beta':>5} "
+            f"{'b-adj ex':>8} {'maxDD':>8} {'worst$':>8} {'wday$':>7} {'gross':>9} {'sqz$':>13} "
+            f"{'sect1':>5} {'bets':>5}  exposure path")
     out = [head, "-" * len(head)]
     for r in table:
         path = (f"cut {r['sessions_cut']}s mean e {r['mean_exposure']:.2f}; hedged {r['sessions_hedged']}s "
@@ -39,13 +40,20 @@ def table_lines(table: list[dict]) -> list[str]:
         if r["first_rule_session"]:
             path += f"; rule {r['first_rule_session']}..{r['last_rule_session']}"
         s1 = r["sector_top1"]
-        out.append(f"{r['cohort_id']:10} {r['entry_session']:10} {r['personality']:12} "
+        gross = f"{r['gross_notional_max']:.2f}/{r['gross_notional_admissible']:.2f}"
+        sqz = f"{r['squeeze_usd_observed']:.0f}/{r['squeeze_usd_admissible']:.0f}"
+        out.append(f"{r['cohort_id']:10} {'BF' if r['backfilled'] else 'FW':2} {r['personality']:12} "
                    f"{r['mark_k']:>3}{'*' if r['provisional'] else ' '}"
                    f"{fmt_pct(r['ret_net']):>8} {fmt_pct(r['spy_ret']):>8} {r['beta_eff']:>5.2f} "
                    f"{fmt_pct(r['beta_adj_excess']):>8} {fmt_pct(r['max_drawdown']):>8} "
-                   f"{r['worst_case_usd']:>8.0f} {r['worst_day_usd']:>7.0f} "
+                   f"{r['worst_case_usd']:>8.0f} {r['worst_day_usd']:>7.0f} {gross:>9} {sqz:>13} "
                    f"{'n/a' if s1 is None else f'{s1:.2f}':>5} "
                    f"{'n/a' if r['effective_bets'] is None else r['effective_bets']:>5}  {path}")
+    out.append("bf: BF = BACKFILLED (never forward evidence; calendar observation time unknown), FW = forward. "
+               "gross = sum |notional| / equity, observed max / largest the contract admits (beta clip 3). "
+               "sqz$ = a one-session +10% QQQ against the hedge on $100k, observed / admissible (longs "
+               "credited 0). The hedge trades AT the close it reads (replay convention, not strictly "
+               "executable); the balanced cut reads the open gap and trades at the close (executable).")
     out.append("k* = provisional running state (not a declared mark). ret = net of the base band round trip "
                "and the rule's own costs. beta = mean exposure x ex-ante book beta - hedge x QQQ beta. "
                "worst$ = every long name gaps -30% at peak stock exposure on a $100k book (hedge credited 0); "
@@ -67,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--data-root", required=True, type=Path, help="the optimus ledger dir (read only)")
         p.add_argument("--out", type=Path, default=None, help="default <data-root>/dynamic_books")
         p.add_argument("--asof", default=None)
+        p.add_argument("--accept-code-version", action="store_true",
+                       help="attended: accept a code version other than the declared one (journaled)")
         p.add_argument("--rolling-out", type=Path, default=None,
                        help="a rolling population to cross-check base holdings against (read only)")
         if name == "backfill":
@@ -98,18 +108,26 @@ def main(argv: list[str] | None = None) -> int:
             bars = R.load_bars(a.data_root, start=anchor - pd.Timedelta(days=400), end=through)
             sessions = R.bench_sessions(bars)
             earn = D.load_earnings(a.data_root)
+            cal = R.XnysCalendar()
+            dec = {s: pd.Timestamp(cal.close_of(s)) for s in sessions if s >= anchor - pd.Timedelta(days=10)}
+            facts_p = out / D.FACTS_FILE
+            facts: dict = {}
+            for line in (facts_p.read_text(encoding="utf8").splitlines() if facts_p.is_file() else []):
+                f = json.loads(line)
+                facts.setdefault((f["leader"], f["earnings_date"]), f)
             res = []
             for p in sorted((out / "cohorts").glob("dxb_cohort_*.json")):
                 c = json.loads(p.read_bytes())
                 res.append(D.pit_recheck(c, bars, sessions, earn, horizon=int(spec["horizon_sessions"]),
-                                         through=sessions[-1]))
+                                         through=sessions[-1], facts=facts or None,
+                                         decision_utc=dec if facts else None))
             print(json.dumps(res, indent=1))
             bad = sum(r["differ"] for r in res)
             print(f"PIT poison check: {sum(r['decisions_checked'] for r in res)} decisions, {bad} moved")
             return 2 if bad else 0
         row = D.run(a.cmd, data_root=a.data_root, out=out, asof=a.asof,
                     date_from=getattr(a, "date_from", None), date_to=getattr(a, "date_to", None),
-                    rolling_out=a.rolling_out)
+                    rolling_out=a.rolling_out, accept_code_version=a.accept_code_version)
     except (D.DynamicBookRefused, R.RollingCohortRefused) as exc:
         print(json.dumps({"task": D.TASK_NAME, "action": "REFUSED", "rc": 2, "reason": str(exc),
                           "utc": datetime.now(timezone.utc).isoformat()}))
@@ -130,7 +148,13 @@ def main(argv: list[str] | None = None) -> int:
     print("\nPER COHORT AND PERSONALITY (latest state through " + row["through"] + ")")
     for line in table_lines(table):
         print(line)
-    return 0
+    if row["calendar_stale"]:
+        print("\nLEADER CALENDAR STALE (the leader-gap rule cannot fire on time for these):")
+        for t, why in sorted(row["calendar_stale"].items()):
+            print(f"  {t}: {'; '.join(why)}")
+    if row["rc"]:
+        print(f"EXIT {row['rc']} ({row['action']})")
+    return int(row["rc"])
 
 
 if __name__ == "__main__":

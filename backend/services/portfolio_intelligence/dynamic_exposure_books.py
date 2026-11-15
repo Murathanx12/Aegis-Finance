@@ -69,7 +69,14 @@ MARK_SCHEMA = "dynamic_exposure_mark/1"
 COHORT_SCHEMA = "dynamic_exposure_cohort/1"
 TASK_NAME = "AegisDynamicBooks"
 REPO = R.REPO
-CONTRACTS_REL = "docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v1.json"
+CONTRACT_VERSION = "v2"
+CONTRACTS_REL = "docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v2.json"
+#: Superseded on 2026-11-15 before any forward decision (only a backfilled dry run in a
+#: work folder ran under it). Kept byte for byte; never edited.
+CONTRACTS_V1_REL = "docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v1.json"
+CONTRACTS_V1_MANIFEST = "328a0c7337ef45b7aa29b6faf4921cf66e65cad82a6bb37db9edb06d6dab9294"
+FACTS_FILE = "calendar_facts.jsonl"
+CODE_VERSIONS_FILE = "code_versions_accepted.jsonl"
 SPECS_V2_REL = "docs/TRIALS/ROLLING-COHORTS-SPECIFICATIONS-v2.json"
 EARNINGS_REL = "straddle_forward/earnings_cache.json"
 UNIVERSE_REL = "potential_universe"
@@ -108,7 +115,18 @@ def _rules() -> dict:
             "reaction_sessions": ("PIT form: the first session on/after the earnings date AND the "
                                   "session after it; each fires on its own gap. Replay: the larger "
                                   "|gap| of the two (peeks at the next open)"),
-            "non_earnings_gaps": "do not fire (as the replay code ran; NVDA 11-09 / 11-12 2026 excluded)"},
+            "non_earnings_gaps": "do not fire (as the replay code ran; NVDA 11-09 / 11-12 2026 excluded)",
+            "calendar_observation": ("a calendar fact (leader, report date) acts only on decisions taken at or "
+                                     "after the run that FIRST RECORDED it (calendar_facts.jsonl, append-only, "
+                                     "run stamp); a fact first recorded after the close of its reaction session "
+                                     "is LEARNED_LATE and never acts retroactively. Facts recorded by the "
+                                     "declaring run have an UNKNOWN observation time (the only pull on record "
+                                     "is 2026-11-11); rows decided before the declaration carry "
+                                     "calendar_observed: unknown"),
+            "calendar_stale_days": c.DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS,
+            "calendar_stale_rule": ("a leader is STALE when its newest known report is older than "
+                                    "calendar_stale_days at the run, or its calendar pull predates the last "
+                                    "session; a step with a STALE leader exits non-zero and names it")},
         "preservation": {
             "id": "b_qqq_trend_hedge",
             "definition": ("if close_(t-1)(QQQ) < SMA_sma_sessions(QQQ closes through t-1): short QQQ "
@@ -144,7 +162,13 @@ def contract_bodies(*, frozen_utc: str, specs: dict) -> list[dict]:
                                    "sector-concentrated momentum spec (top-1 sector 24-33% over the "
                                    "10-15..11-12 cohorts vs 37-60% at 10 names); equal over "
                                    "volatility_aware on a tie (no estimated input). Chosen on "
-                                   "construction and sector share, before any return was read")},
+                                   "construction and sector share, by a session that had ALREADY SEEN "
+                                   "this window's returns (replay sections 1 and 3A and the live rolling "
+                                   "scoreboard of 2026-11-14 preceded the freeze)"),
+                           "hindsight": ("the balanced rule's gain in this window is one event (GOOGL "
+                                         "2026-10-29), mostly one day (11-05), inside the episode the rule "
+                                         "was written about; the replay's long-sample difference for the "
+                                         "rule is +1.0 pp/yr (se 2.0). Not out-of-sample evidence")},
         "cohort_clock": {"anchor": _config.ROLLING_COHORT_ANCHOR,
                          "cadence_sessions": int(_config.ROLLING_COHORT_CADENCE_SESSIONS),
                          "entry": "open of the first session E after cohort date D",
@@ -153,7 +177,18 @@ def contract_bodies(*, frozen_utc: str, specs: dict) -> list[dict]:
                                            if k <= base["horizon_sessions"]],
                          "horizon_sessions": base["horizon_sessions"]},
         "decision_timing": ("exposure for session t is decided at the close of t-1 from data "
-                            "through that close and traded at it; for E, the close of D"),
+                            "through that close and traded at it; for E, the close of D. The balanced "
+                            "cut reads a gap known at the OPEN of s and trades at the close of s "
+                            "(executable). The preservation hedge reads the close of t-1 and trades AT "
+                            "that same close: the replay's convention, not strictly executable (live use "
+                            "needs a close-auction order sized before the close, or the next open)"),
+        "supersedes": {"file": CONTRACTS_V1_REL, "manifest_sha256": CONTRACTS_V1_MANIFEST,
+                       "why": ("v1 was superseded on 2026-11-15 BEFORE any forward decision: only a "
+                               "backfilled dry run in a work folder ran under it. v2 changes: calendar "
+                               "facts act only from their first recorded run (no retroactive cut); a STALE "
+                               "leader calendar exits a step non-zero; the declaration binds the rolling "
+                               "grading config and the code version; the base-selection wording states the "
+                               "hindsight; the hedge timing is stated. Rules and parameters unchanged")},
         "fill_convention": ("base book: buy at the open of E, held (rolling grade rule v2: a name "
                             "with no valid open waits in cash at 0%); exposure and hedge changes at "
                             "the close of the deciding session; daily rebalanced to the exposure "
@@ -176,7 +211,7 @@ def contract_bodies(*, frozen_utc: str, specs: dict) -> list[dict]:
     }
     out = []
     for p in PERSONALITIES:
-        out.append({**common, "contract_id": f"DXB-{p}-v1", "personality": p,
+        out.append({**common, "contract_id": f"DXB-{p}-{CONTRACT_VERSION}", "personality": p,
                     "objective": objectives[p], "rule": rules[p]})
     return out
 
@@ -238,19 +273,84 @@ def load_earnings(data_root: Path) -> dict[str, list[pd.Timestamp]]:
             for t in _config.DYNAMIC_BOOK_LEADERS}
 
 
-def leader_calendar_status(earn: dict, asof: pd.Timestamp) -> dict:
-    """Per leader: the newest known earnings date on/before `asof` and its age.
-    A leader past the stale limit cannot fire the rule: printed, not hidden."""
+def load_earnings_pulls(data_root: Path) -> dict[str, Optional[pd.Timestamp]]:
+    """`pulled_utc` per leader. The cache keeps only reports dated BEFORE its pull,
+    so a report after the pull is invisible until the next pull."""
+    raw = json.loads((Path(data_root) / EARNINGS_REL).read_bytes())
+    out: dict[str, Optional[pd.Timestamp]] = {}
+    for t in _config.DYNAMIC_BOOK_LEADERS:
+        v = (raw.get(t) or {}).get("pulled_utc")
+        if not v:
+            out[t] = None
+            continue
+        ts = pd.Timestamp(v)
+        out[t] = ts.tz_convert("UTC") if ts.tzinfo else ts.tz_localize("UTC")
+    return out
+
+
+def leader_calendar_status(earn: dict, pulls: dict, *, now: datetime, last_session: pd.Timestamp,
+                           leaders_in_bars: Optional[set] = None) -> dict:
+    """Per leader: the newest known report, its age at the run, the pull time, and
+    STALE with the reason. A STALE leader cannot fire the rule on time."""
     lim = float(_config.DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS)
+    today = pd.Timestamp(now.date())
     out = {}
     for t, ds in earn.items():
-        past = [d for d in ds if d <= asof]
-        nxt = [d for d in ds if d > asof]
-        age = None if not past else int((asof - past[-1]).days)
+        past = [d for d in ds if d <= today]
+        age = None if not past else int((today - past[-1]).days)
+        pull = pulls.get(t)
+        why = []
+        if leaders_in_bars is not None and t not in leaders_in_bars:
+            why.append("no bars for the leader")
+        if age is None:
+            why.append("no report date in the calendar")
+        elif age > lim:
+            why.append(f"newest report {past[-1].date()} is {age} days old (> {lim:.0f})")
+        if pull is None:
+            why.append("no pull time recorded")
+        elif pull.tz_convert(None).normalize() < pd.Timestamp(last_session).normalize():
+            why.append(f"calendar pulled {pull.isoformat()} before the last session "
+                       f"{pd.Timestamp(last_session).date()}")
         out[t] = {"last": None if not past else past[-1].date().isoformat(), "age_days": age,
-                  "next_known": None if not nxt else nxt[0].date().isoformat(),
-                  "status": "OK" if (age is not None and age <= lim) or nxt else "STALE"}
+                  "pulled_utc": None if pull is None else pull.isoformat(),
+                  "status": "STALE" if why else "OK", "why": why}
     return out
+
+
+def record_calendar_facts(out: Path, earn: dict, pulls: dict, *, now: datetime, run_id: str,
+                          baseline: bool) -> dict[tuple, dict]:
+    """Append every (leader, report date) not yet on record, stamped with this run.
+    Returns every fact on record. Never rewrites a line."""
+    from backend.services import disk_guard
+    path = Path(out) / FACTS_FILE
+    facts: dict[tuple, dict] = {}
+    if path.is_file():
+        for line in path.read_text(encoding="utf8").splitlines():
+            if line.strip():
+                f = json.loads(line)
+                facts.setdefault((f["leader"], f["earnings_date"]), f)
+    for t, ds in earn.items():
+        for d in ds:
+            key = (t, d.date().isoformat())
+            if key in facts:
+                continue
+            f = {"schema": "dynamic_exposure_calendar_fact/1", "leader": t, "earnings_date": key[1],
+                 "first_recorded_utc": now.isoformat(), "run_id": run_id, "baseline": bool(baseline),
+                 "observation": "UNKNOWN (recorded by the declaring run)" if baseline else "RECORDED",
+                 "cache_pulled_utc": None if pulls.get(t) is None else pulls[t].isoformat()}
+            disk_guard.locked_append_line(path, json.dumps(f, sort_keys=True), fsync=True)
+            facts[key] = f
+    return facts
+
+
+def fact_usable(fact: Optional[dict], decision: Optional[datetime]) -> bool:
+    """A fact acts on a decision only if recorded at or before it (baseline facts:
+    observation time unknown, usable, and the rows say so)."""
+    if fact is None:
+        return False
+    if fact["baseline"]:
+        return True
+    return decision is not None and pd.Timestamp(fact["first_recorded_utc"]) <= pd.Timestamp(decision)
 
 
 def load_sector_map(data_root: Path, *, asof: Optional[pd.Timestamp] = None) -> tuple[dict, str]:
@@ -349,7 +449,8 @@ def _ols_beta(y: np.ndarray, x: np.ndarray, min_obs: int) -> Optional[float]:
 
 def exposure_path(personality: str, *, days: list[pd.Timestamp], sessions: list[pd.Timestamp],
                   base_ret: np.ndarray, q_ret: np.ndarray, q_close: pd.Series,
-                  pre_book_ret: pd.Series, pre_q_ret: pd.Series, events: list[dict]) -> list[dict]:
+                  pre_book_ret: pd.Series, pre_q_ret: pd.Series, events: list[dict],
+                  facts: Optional[dict] = None, decision_utc: Optional[dict] = None) -> list[dict]:
     """Exposure e_k and hedge h_k for each cohort session k, from data through the
     close of the previous session only.
 
@@ -374,7 +475,11 @@ def exposure_path(personality: str, *, days: list[pd.Timestamp], sessions: list[
         for k in range(n):
             i = sidx[days[k]]
             prev = sessions[i - 1]
-            live = [e for j, e in ev if 1 <= i - j <= L]          # event session j <= i-1: known at that close
+            dec = None if decision_utc is None else decision_utc.get(prev)
+            if facts is not None and dec is None:
+                raise DynamicBookRefused(f"no decision time for the close of {prev.date()}")
+            live = [e for j, e in ev if 1 <= i - j <= L            # event session j <= i-1: known at that close
+                    and (facts is None or fact_usable(facts.get((e["leader"], e["earnings_date"])), dec))]
             e_k = gross if live else 1.0
             rows.append({"k": k + 1, "date": days[k], "signal_asof": prev, "exposure": e_k, "hedge": 0.0,
                          "fired": ";".join(f"{e['leader']}@{e['session']}({e['gap']:+.3f})" for e in live) or None})
@@ -531,6 +636,13 @@ def mark_row(contract: dict, cohort: dict, rows: list[dict], k: int, *, spy_cum:
             "worst_case_usd": -book * float(e.max()) * gross_long * float(_config.DYNAMIC_BOOK_WORST_GAP),
             "worst_day_usd": book * float(min(r["ret"] for r in sub)),
             "gross_notional_max": float((e * gross_long + h).max()),
+            "gross_notional_admissible": float(gross_long + (_config.DYNAMIC_BOOK_HEDGE_BETA_CLIP[1]
+                                                             if contract["personality"] == "preservation" else 0.0)),
+            "squeeze_usd_observed": -book * float(h.max()) * float(_config.DYNAMIC_BOOK_SQUEEZE_QQQ_UP),
+            "squeeze_usd_admissible": -book * float(_config.DYNAMIC_BOOK_SQUEEZE_QQQ_UP) * (
+                float(_config.DYNAMIC_BOOK_HEDGE_BETA_CLIP[1]) if contract["personality"] == "preservation"
+                else 0.0),
+            "calendar_observed_unknown_sessions": int(sum(r.get("calendar_observed") == "unknown" for r in sub)),
             "sessions_cut": int((e < 1).sum()), "sessions_hedged": int((h > 0).sum()),
             "mean_exposure": float(e.mean()), "mean_hedge": float(h.mean()),
             "first_rule_session": fired[0]["date"].date().isoformat() if fired else None,
@@ -578,7 +690,7 @@ def output_dir(data_root: Path, out: Optional[Path]) -> Path:
 def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path] = None,
         specs_path: Optional[Path] = None, asof: Any = None, now: Optional[datetime] = None,
         date_from: Any = None, date_to: Any = None, calendar: Any = None,
-        rolling_out: Optional[Path] = None) -> dict:
+        rolling_out: Optional[Path] = None, accept_code_version: bool = False) -> dict:
     """`backfill`: every scheduled cohort in [from, to] whose entry is in the bars,
     flagged backfilled. `step`: the due cohort if its entry has not opened (forward).
     Both then extend the append-only paths and marks. Never writes under data_root
@@ -595,20 +707,47 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
     out.mkdir(parents=True, exist_ok=True)
     decl_p = out / "declaration.json"
     snap = config_snapshot()
-    if decl_p.is_file():
+    rsnap = R.config_snapshot()              # xs_ranker band costs, MIN_PRICE, every ROLLING_COHORT_* filter
+    code = R.code_version()
+    declaring = not decl_p.is_file()
+    code_note = None
+    if not declaring:
         d = json.loads(decl_p.read_bytes())
         if d["contracts_manifest_sha256"] != cdoc["manifest_sha256"] or d["config"] != snap:
             raise DynamicBookRefused("this --out was declared under other contracts or another config; "
                                      "a changed family is a new --out")
+        if d.get("rolling_config") != rsnap:
+            diff = sorted(k for k in set(d.get("rolling_config") or {}) | set(rsnap)
+                          if (d.get("rolling_config") or {}).get(k) != rsnap.get(k))
+            raise DynamicBookRefused(f"the rolling grading config the base book depends on changed since the "
+                                     f"declaration: {', '.join(diff)}. A changed base is a new --out")
+        accepted = {d.get("code_version")}
+        cv_p = out / CODE_VERSIONS_FILE
+        if cv_p.is_file():
+            accepted |= {json.loads(x)["code_version"] for x in cv_p.read_text(encoding="utf8").splitlines()
+                         if x.strip()}
+        if code not in accepted:
+            if not accept_code_version:
+                raise DynamicBookRefused(
+                    f"code version {code} differs from the declared {d.get('code_version')} and from every "
+                    f"accepted one; rerun attended with --accept-code-version (the stored-vs-recompute check "
+                    f"still refuses any changed row)")
+            from backend.services import disk_guard
+            disk_guard.locked_append_line(cv_p, json.dumps({"code_version": code, "accepted_utc": now.isoformat(),
+                                                            "run_id": run_id}, sort_keys=True), fsync=True)
+            code_note = f"code version {code} accepted (attended)"
+        declared_utc = pd.Timestamp(d["declared_utc"])
     else:
-        R._write_once(decl_p, json.dumps({"schema": "dynamic_exposure_declaration/1", "task": TASK_NAME,
+        R._write_once(decl_p, json.dumps({"schema": "dynamic_exposure_declaration/2", "task": TASK_NAME,
                                           "declared_utc": now.isoformat(),
                                           "contracts_manifest_sha256": cdoc["manifest_sha256"],
                                           "contracts": {c["contract_id"]: c["contract_sha256"]
                                                         for c in contracts.values()},
                                           "spec_manifest_sha256": manifest, "config": snap,
-                                          "code_version": R.code_version(), "license": "PRODUCT_EXPERIMENT"},
-                                         sort_keys=True, indent=1))
+                                          "rolling_config": rsnap, "rolling_config_hash": digest(rsnap),
+                                          "code_version": code, "license": "PRODUCT_EXPERIMENT"},
+                                         sort_keys=True, indent=1, default=list))
+        declared_utc = pd.Timestamp(now)
     spec = next(s for s in specs["specifications"] if s["policy_id"] == _config.DYNAMIC_BOOK_BASE_POLICY_ID)
     horizon = int(spec["horizon_sessions"])
     anchor = pd.Timestamp(_config.ROLLING_COHORT_ANCHOR)
@@ -620,8 +759,22 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
     last_bar = sessions[-1]
     sched = R.schedule(sessions, anchor=anchor, cadence=int(_config.ROLLING_COHORT_CADENCE_SESSIONS))
     earn = load_earnings(data_root)
-    cal_status = leader_calendar_status(earn, last_bar)
+    pulls = load_earnings_pulls(data_root)
+    cal = calendar or R.XnysCalendar()
+    in_bars = set(bars.loc[bars["symbol"].isin(list(earn)), "symbol"].unique())
+    cal_status = leader_calendar_status(earn, pulls, now=now, last_session=last_bar, leaders_in_bars=in_bars)
+    stale = {t: v["why"] for t, v in cal_status.items() if v["status"] == "STALE"}
+    facts = record_calendar_facts(out, earn, pulls, now=now, run_id=run_id, baseline=declaring)
+    first = max(0, sessions.index(sched[0]) - 1)
+    decision_utc = {s: pd.Timestamp(cal.close_of(s)) for s in sessions[first:]}
     events = leader_events(bars, earn, sessions)
+    for e in events:
+        f = facts.get((e["leader"], e["earnings_date"]))
+        close_s = decision_utc.get(pd.Timestamp(e["session"]))
+        e["fact_first_recorded_utc"] = None if f is None else f["first_recorded_utc"]
+        e["status"] = ("NOT_RECORDED" if f is None else "BASELINE_OBSERVATION_UNKNOWN" if f["baseline"] else
+                       "ON_TIME" if close_s is not None and pd.Timestamp(f["first_recorded_utc"]) <= close_s
+                       else "LEARNED_LATE")
     cdir = out / "cohorts"
     existing = {}
     if cdir.is_dir():
@@ -674,7 +827,6 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
                 continue
             _birth(d, sessions[i + 1], backfilled=True)
     elif mode == "step":
-        cal = calendar or R.XnysCalendar()
         d = sched[-1]
         if d.date().isoformat() not in existing:
             entry_open = cal.next_open_after(d)
@@ -690,6 +842,10 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
     have_m = _read(out / "marks")
     pkeys = set(zip(have_p["contract_sha256"], have_p["cohort_id"], have_p["k"])) if len(have_p) else set()
     mkeys = set(zip(have_m["contract_sha256"], have_m["cohort_id"], have_m["mark_k"])) if len(have_m) else set()
+    stored = ({(r.contract_sha256, r.cohort_id, int(r.k)): (r.exposure, r.hedge, r.nav)
+               for r in have_p[["contract_sha256", "cohort_id", "k", "exposure", "hedge", "nav"]].itertuples()}
+              if len(have_p) else {})
+    mismatch: list = []
     new_p, new_m, table = [], [], []
     marks_k = [k for k in _config.ROLLING_COHORT_MARK_SESSIONS if k <= horizon]
     for cid in sorted(existing):
@@ -697,12 +853,22 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
         entry = pd.Timestamp(c["entry_session"])
         if entry not in set(sessions):
             continue
-        paths, ser = compute_cohort(c, bars, sessions, earn, horizon=horizon, through=last_bar)
+        paths, ser = compute_cohort(c, bars, sessions, earn, horizon=horizon, through=last_bar, facts=facts,
+                                    decision_utc=decision_utc)
         for p in PERSONALITIES:
             ct = contracts[p]
             rows = paths[p]
             for r in rows:
-                if (ct["contract_sha256"], cid, r["k"]) in pkeys:
+                dec = decision_utc[pd.Timestamp(r["signal_asof"])]
+                r["calendar_observed"] = ("n/a" if p != "balanced" else
+                                          "unknown" if dec < declared_utc else "recorded")
+                key = (ct["contract_sha256"], cid, r["k"])
+                if key in stored:
+                    se, sh, sn = stored[key]
+                    if abs(se - r["exposure"]) > 1e-12 or abs(sh - r["hedge"]) > 1e-12 or abs(sn - r["nav"]) > 1e-12:
+                        mismatch.append({"contract": ct["contract_id"], "cohort": cid, "k": r["k"],
+                                         "stored": [se, sh, sn], "recomputed": [r["exposure"], r["hedge"], r["nav"]]})
+                if key in pkeys:
                     continue
                 new_p.append({"schema": PATH_SCHEMA, "run_id": run_id, "contract_id": ct["contract_id"],
                               "contract_sha256": ct["contract_sha256"], "personality": p, "cohort_id": cid,
@@ -711,7 +877,8 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
                               "signal_asof": pd.Timestamp(r["signal_asof"]).date().isoformat(),
                               "exposure": r["exposure"], "hedge": r["hedge"], "fired": r.get("fired"),
                               "qqq_close_prev": r.get("qqq_close_prev"), "qqq_sma_prev": r.get("qqq_sma_prev"),
-                              "beta_prev": r.get("beta_prev"), "base_ret": r["base_ret"],
+                              "beta_prev": r.get("beta_prev"), "calendar_observed": r["calendar_observed"],
+                              "decision_utc": dec.isoformat(), "base_ret": r["base_ret"],
                               "qqq_ret": r["qqq_ret"], "rule_cost": r["rule_cost"], "ret": r["ret"],
                               "nav": r["nav"]})
             band = float(c["band_round_trip"])
@@ -723,10 +890,18 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
                 table.append(mark_row(ct, c, rows, len(rows), spy_cum=ser["spy_ret_cum"], band=band,
                                       stats=c["stats"], gross_long=c["gross_long"], run_id=run_id,
                                       provisional=len(rows) not in marks_k))
+    if mismatch:
+        raise DynamicBookRefused(
+            f"{len(mismatch)} stored path row(s) differ from the recompute (first: {mismatch[0]}). A stored "
+            f"row is evidence and never changes; nothing was appended. Diagnose the input that moved "
+            f"(bars re-adjusted, calendar, code) before any further run")
     pp = _append(out / "paths", new_p, run_id)
     mp = _append(out / "marks", new_m, run_id)
-    row = {"task": TASK_NAME, "schema": "dynamic_exposure_run/1", "utc": now.isoformat(), "mode": mode,
-           "rc": 0, "run_id": run_id, "through": last_bar.date().isoformat(), "born": born, "skipped": skipped,
+    rc = 3 if (mode == "step" and stale) else 0
+    row = {"task": TASK_NAME, "schema": "dynamic_exposure_run/2", "utc": now.isoformat(), "mode": mode,
+           "rc": rc, "action": "STALE_CALENDAR" if rc == 3 else "OK", "calendar_stale": stale,
+           "stored_rows_rechecked": len(stored), "stored_rows_differ": 0, "code_version": code,
+           "code_note": code_note, "run_id": run_id, "through": last_bar.date().isoformat(), "born": born, "skipped": skipped,
            "cohorts_total": len(existing), "paths_written": len(new_p), "marks_written": len(new_m),
            "paths_part": None if pp is None else str(pp), "marks_part": None if mp is None else str(mp),
            "leader_events": events, "replay_form_events": replay_form_events(bars, earn, sessions),
@@ -743,7 +918,8 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
 
 
 def compute_cohort(c: dict, bars: pd.DataFrame, sessions: list[pd.Timestamp], earn: dict, *,
-                   horizon: int, through: pd.Timestamp) -> tuple[dict, dict]:
+                   horizon: int, through: pd.Timestamp, facts: Optional[dict] = None,
+                   decision_utc: Optional[dict] = None) -> tuple[dict, dict]:
     """The three exposure paths of one born cohort, from bars and the calendar only."""
     events = leader_events(bars, earn, sessions)
     ser = cohort_series(c["long"], bars, sessions, pd.Timestamp(c["cohort_id"]),
@@ -752,7 +928,8 @@ def compute_cohort(c: dict, bars: pd.DataFrame, sessions: list[pd.Timestamp], ea
     for p in PERSONALITIES:
         rows = exposure_path(p, days=ser["days"], sessions=sessions, base_ret=ser["base_ret"],
                              q_ret=ser["q_ret"], q_close=ser["q_close"], pre_book_ret=ser["pre_book_ret"],
-                             pre_q_ret=ser["pre_q_ret"], events=events)
+                             pre_q_ret=ser["pre_q_ret"], events=events, facts=facts,
+                             decision_utc=decision_utc)
         out[p] = apply_path(rows, ser["base_ret"], ser["q_ret"])
     return out, ser
 
@@ -768,16 +945,18 @@ def poison_from(bars: pd.DataFrame, day: pd.Timestamp, seed: int) -> pd.DataFram
 
 
 def pit_recheck(c: dict, bars: pd.DataFrame, sessions: list[pd.Timestamp], earn: dict, *,
-                horizon: int, through: pd.Timestamp, seed: int = 7) -> dict:
+                horizon: int, through: pd.Timestamp, seed: int = 7, facts: Optional[dict] = None,
+                decision_utc: Optional[dict] = None) -> dict:
     """For every session k of the cohort: poison every bar dated >= k, recompute, and
     require the exposure and hedge decided for sessions <= k to be unchanged. A
     decision that moves read data dated on or after the session it was applied to."""
-    ref, ser = compute_cohort(c, bars, sessions, earn, horizon=horizon, through=through)
+    ref, ser = compute_cohort(c, bars, sessions, earn, horizon=horizon, through=through, facts=facts,
+                              decision_utc=decision_utc)
     checked = differ = 0
     bad = []
     for j, day in enumerate(ser["days"]):
         got, _ = compute_cohort(c, poison_from(bars, day, seed + j), sessions, earn,
-                                horizon=horizon, through=through)
+                                horizon=horizon, through=through, facts=facts, decision_utc=decision_utc)
         for p in PERSONALITIES:
             for a, b in zip(ref[p][: j + 1], got[p][: j + 1]):
                 checked += 1

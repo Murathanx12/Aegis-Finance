@@ -4611,9 +4611,10 @@ DYNAMIC_BOOK_LEADER_SINCE = {"AVGO": "2019-01-01"}
 DYNAMIC_BOOK_LEADER_GAP = -0.05
 DYNAMIC_BOOK_LEADER_GROSS = 0.5
 DYNAMIC_BOOK_LEADER_SESSIONS = 5
-#: A leader with no earnings date in the calendar for this many days and none
-#: ahead is printed STALE (the rule cannot fire for it).
-DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS = 100
+#: STALE (a step exits non-zero naming the leader) when a leader's newest known
+#: report is older than this many days, or its calendar pull predates the last
+#: session: the cache stores only reports before its pull (review of PR #150).
+DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS = 80
 #: Rule (b), preservation: QQQ close < SMA(SMA) -> short QQQ at beta x NAV,
 #: beta of the book on QQQ over BETA_WINDOW sessions, clipped.
 DYNAMIC_BOOK_HEDGE_ETF = "QQQ"
@@ -4632,6 +4633,9 @@ DYNAMIC_BOOK_HEDGE_BORROW_BPS_YR = 30.0
 #: window for the effective-bet count at entry.
 DYNAMIC_BOOK_REPORT_EQUITY_USD = 100_000.0
 DYNAMIC_BOOK_WORST_GAP = 0.30
+#: Report only: a one-session QQQ rise against the hedge (longs credited 0), at the
+#: observed hedge and at the largest the beta clip admits (3x: gross 3.95x).
+DYNAMIC_BOOK_SQUEEZE_QQQ_UP = 0.10
 DYNAMIC_BOOK_BETS_WINDOW = 63
 #: The owner's 11-14 forecast, frozen at the 2026-11-13 close (replay section 4):
 #: the EW of the 22 high-beta fleet books beats SPY at the 21st and 63rd session
