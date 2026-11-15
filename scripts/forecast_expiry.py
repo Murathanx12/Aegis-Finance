@@ -176,6 +176,7 @@ def cmd_labels(a: argparse.Namespace) -> int:
     rows = FE.label_stepdown(books, spy_sessions=px.dates("SPY"), p=p, n_trailing=n,
                              vol_cut=float(_config.FORECAST_EXPIRY_REGIME_VOL_CUT))
     down = [r for r in rows if r["would_step_down"]]
+    undet = [r for r in rows if r["step_down"] == "CANNOT_DETERMINE"]
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     receipt = {"schema": FE.SCHEMA + "/labels", "generated_utc": stamp, "run_id": run_id,
                "data_root": str(root), "prices": src, "trailing_sessions": n,
@@ -185,6 +186,8 @@ def cmd_labels(a: argparse.Namespace) -> int:
                "gaps": inputs.get("gaps"), "n_books": len(rows),
                "rebuilt_vs_shipped_label_mismatches": mism,
                "n_would_step_down": len(down), "would_step_down": [r["account"] for r in down],
+               "n_step_down_cannot_determine": len(undet),
+               "step_down_cannot_determine": [r["account"] for r in undet],
                "books": rows, "note": "REPORT ONLY: no label was changed; results_voice is untouched."}
     sub = out / _config.FORECAST_EXPIRY_SUBDIR
     sub.mkdir(parents=True, exist_ok=True)
@@ -197,17 +200,19 @@ def cmd_labels(a: argparse.Namespace) -> int:
     print(f"gaps: {inputs.get('gaps')}")
     print(f"\n{'account':34s} {'label':18s} {'earned':23s} {'regime':22s} {'trailing':18s} {'trail regime':22s}")
     for r in sorted(rows, key=lambda r: (not r["would_step_down"], r["account"])):
-        if not (r["would_step_down"] or not str(r["label"]).startswith("OBSERVED")):
+        if not (r["step_down"] != "NO" or not str(r["label"]).startswith("OBSERVED")):
             continue
         ew, tw = r["earned_window"], r["trailing_window"]
         print(f"{r['account'][:34]:34s} {str(r['label'])[:18]:18s} "
               f"{str(ew['from'])[:10]}..{str(ew['to'])[:10]} {str(r['earned_regime'].get('tag'))[:22]:22s} "
               f"{r['trailing_label'][:18]:18s} {str(r['trailing_regime'].get('tag'))[:22]:22s}"
-              f"{'  STEP DOWN' if r['would_step_down'] else ''}")
-        if r["would_step_down"]:
+              f"{'  STEP DOWN' if r['would_step_down'] else ''}"
+              f"{'  STEP DOWN? CANNOT DETERMINE' if r['step_down'] == 'CANNOT_DETERMINE' else ''}")
+        if r["step_down"] != "NO":
             print(f"    trailing {tw['from']}..{str(tw['to'])[:10]} {tw['sessions']} sessions, excess "
                   f"{tw['excess_pp']} pp: {r['trailing_why']}")
     print(f"\nwould step down: {len(down)}  {[r['account'] for r in down]}")
+    print(f"step-down cannot be determined: {len(undet)}  {[r['account'] for r in undet]}")
     print(f"receipt {path}")
     d = _print_tree_check(before, after)
     return 4 if (d["n_added"] or d["n_removed"]) else 0

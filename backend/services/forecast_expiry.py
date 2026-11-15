@@ -760,13 +760,22 @@ def label_stepdown(books: Sequence[dict], *, spy_sessions: Sequence[str], p: dic
     for e in books:
         tser, tsess, tlo, texcess, tsub, whole = trail[e["account"]]
         rep = next((a for a in by_rule.get(e.get("rule"), []) if a != e["account"] and early[a]), None)
+        # A book younger than the window: the trailing window IS the earned window, so the
+        # fair twin computed on it still applies. Otherwise the twin is not recomputed here.
+        fair = (e.get("fair_twin") or {}).get("excess_over_twin_pp") if whole else None
         tl = BD.evidence_label(sessions=tsess, excess_pp=texcess, sub=tsub,
-                               fair_twin_excess_pp=None, replicated_by=rep, p=p)
+                               fair_twin_excess_pp=fair, replicated_by=rep, p=p)
         cur = (e.get("evidence") or {}).get("label") or "?"
         cur_rung, t_rung = cur.split("(")[0], tl["label"].split("(")[0]
         step = (ladder.index(t_rung) - ladder.index(cur_rung)
                 if cur_rung in ladder and t_rung in ladder else None)
         ser = list(e.get("_series") or [])
+        verdict = "NO" if step is None or step >= 0 else "YES"
+        why_v = None
+        if (verdict == "YES" and cur_rung == "REPLICATED" and t_rung == "EARLY_EVIDENCE"
+                and "fair twin" in str((e.get("evidence") or {}).get("why") or "")):
+            verdict, why_v = "CANNOT_DETERMINE", ("REPLICATED was earned over the fair twin, which this "
+                                                  "report does not recompute on the trailing window")
         rows.append({
             "account": e["account"], "family": e.get("family"), "category": e.get("category"),
             "label": cur, "label_why": (e.get("evidence") or {}).get("why"),
@@ -776,8 +785,11 @@ def label_stepdown(books: Sequence[dict], *, spy_sessions: Sequence[str], p: dic
             "trailing_window": {"from": tlo, "to": e.get("last_mark"), "sessions": tsess,
                                 "n_periods": len(tser), "excess_pp": texcess,
                                 "whole_window": whole,
-                                "subwindows": tsub, "fair_twin": "not recomputed on the trailing window"},
+                                "subwindows": tsub,
+                                "fair_twin": ("the book's own (trailing window = earned window)" if whole
+                                              else "not recomputed on the trailing window")},
             "trailing_regime": regime_of([y for _, _, y in tser], vol_cut),
             "trailing_label": tl["label"], "trailing_why": tl["why"],
-            "rung_change": step, "would_step_down": bool(step is not None and step < 0)})
+            "rung_change": step, "step_down": verdict, "step_down_why": why_v,
+            "would_step_down": verdict == "YES"})
     return rows

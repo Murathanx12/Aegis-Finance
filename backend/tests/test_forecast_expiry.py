@@ -247,3 +247,21 @@ def test_waiting_input_names_a_book_nav_and_a_bar_only_in_the_global_panel(tmp_p
     b = FE.disposition(_row("b", made_at="2025-12-01T15:00:00+00:00", ticker="book:abc",
                             observable="beats_benchmark", benchmark="book:twin"), as_of=AS_OF, panel=panel)
     assert b["disposition"] == FE.WAITING_INPUT and "nav:book:abc" in b["waiting_for"]
+
+
+def test_a_young_book_keeps_its_fair_twin_rung_and_an_old_one_is_cannot_determine():
+    from backend.services import book_dna as BD
+    p = BD.params()
+    sessions = [d.isoformat() for d in FE.session_calendar(date(2025, 1, 2), date(2025, 12, 31))]
+    why = ">= 21 sessions, excess > 0, 3 of 3 sub-windows positive; excess over the fair twin +1.00 pp"
+    young = {"account": "young", "category": "strategy", "rule": None, "inception": sessions[0],
+             "last_mark": sessions[40], "sessions_graded": 40, "excess_pp": 3.0,
+             "fair_twin": {"excess_over_twin_pp": 1.0}, "evidence": {"label": "REPLICATED", "why": why},
+             "_series": [(d, 0.002, 0.001) for d in sessions[1:41]]}
+    old = dict(young, account="old", last_mark=sessions[-1], sessions_graded=len(sessions) - 1,
+               _series=[(d, 0.002, 0.001) for d in sessions[1:]])
+    rows = {r["account"]: r for r in FE.label_stepdown([young, old], spy_sessions=sessions, p=p,
+                                                        n_trailing=63, vol_cut=0.2)}
+    assert rows["young"]["trailing_label"] == "REPLICATED" and rows["young"]["step_down"] == "NO"
+    assert rows["old"]["trailing_label"] == "EARLY_EVIDENCE"
+    assert rows["old"]["step_down"] == "CANNOT_DETERMINE" and rows["old"]["would_step_down"] is False
