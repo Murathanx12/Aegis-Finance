@@ -724,7 +724,8 @@ def r_rolling_cohorts(ctx, task) -> Reading:
 
 
 DYNAMIC_BOOK_ACTIONS = {"BORN": "OK", "MARKED": "OK", "NOTHING_DUE": "IDLE",
-                        "STALE_CALENDAR": "DEGRADED", "REFUSED": "REFUSED"}
+                        "STALE_CALENDAR": "DEGRADED", "STALE_BARS": "DEGRADED",
+                        "MISSED_ENTRY_WINDOW": "DEGRADED", "REFUSED": "REFUSED"}
 
 
 def r_dynamic_books(ctx, task) -> Reading:
@@ -735,6 +736,11 @@ def r_dynamic_books(ctx, task) -> Reading:
     with the leaders named; a refusal (rc 2: contract/config/code drift, or a stored
     row that no longer recomputes) reads REFUSED with its reason. A row claiming
     success with rc != 0 or a non-zero stored-vs-recompute difference is DEGRADED.
+    Contracts v3 (review of PR #158): a missing leader bar (STALE_BARS, rc 3), a due
+    cohort whose entry window passed (MISSED_ENTRY_WINDOW, like the rolling reader), an
+    OVERDUE leader (no announced date ~100 days after its last report) and a firing
+    leader event that is not acting while its cut window is open (MOVED / LEARNED_LATE)
+    each read DEGRADED and are named; UNSCHEDULED leaders are named only.
     """
     from backend.services import system_health as SH
     path = ctx.path("dynamic_book_runs", ctx.optimus_dir / "dynamic_books" / "runs.jsonl")
@@ -753,7 +759,7 @@ def r_dynamic_books(ctx, task) -> Reading:
     stamp = parse_stamp(d.get("utc"))
     if d.get("task") != "AegisDynamicBooks" or stamp is None or stamp > ctx.now + timedelta(seconds=30):
         status, why = "DEGRADED", ["owner identity or receipt UTC is invalid"]
-    expected_rc = {"STALE_CALENDAR": 3, "REFUSED": 2}.get(action, 0)
+    expected_rc = {"STALE_CALENDAR": 3, "STALE_BARS": 3, "REFUSED": 2}.get(action, 0)
     if d.get("rc") != expected_rc:
         status = worst(status, "DEGRADED")
         why.append(f"action {action} with rc {d.get('rc')!r} (expected {expected_rc})")
@@ -761,6 +767,29 @@ def r_dynamic_books(ctx, task) -> Reading:
     if action == "STALE_CALENDAR":
         why.append("leader calendar STALE: " + "; ".join(
             f"{k}: {', '.join(v) if isinstance(v, list) else v}" for k, v in sorted((stale or {}).items())))
+    gaps = d.get("bar_gaps") or []
+    if gaps:
+        status = worst(status, "DEGRADED")
+        why.append("leader bar missing, nothing written: " + "; ".join(
+            f"{g.get('leader')} {g.get('session')} ({g.get('missing')})" for g in gaps if isinstance(g, dict)))
+    missed = d.get("missed") or []
+    if missed:
+        status = worst(status, "DEGRADED")
+        why.append("due cohort(s) missed their entry window: "
+                   + ", ".join(str(m.get("cohort_id")) for m in missed if isinstance(m, dict)))
+    overdue = d.get("calendar_overdue") or []
+    if overdue:
+        status = worst(status, "DEGRADED")
+        why.append("OVERDUE (no announced next date long after the last report): " + ", ".join(map(str, overdue)))
+    unsched = d.get("calendar_unscheduled") or {}
+    if unsched:
+        why.append("UNSCHEDULED: " + ", ".join(sorted(map(str, unsched))))
+    not_acting = d.get("events_not_acting") or []
+    if not_acting:
+        status = worst(status, "DEGRADED")
+        why.append("firing leader event(s) not acting: " + "; ".join(
+            f"{e.get('leader')} {e.get('earnings_date')} gap {e.get('gap')} {e.get('status')}"
+            for e in not_acting if isinstance(e, dict)))
     differ = d.get("stored_rows_differ")
     if action != "REFUSED" and (type(differ) is not int or differ != 0):
         status = worst(status, "DEGRADED")
@@ -770,7 +799,8 @@ def r_dynamic_books(ctx, task) -> Reading:
                    proof=str(path) + "[-1]",
                    detail=(f"dynamic exposure books {action} (mode {d.get('mode')}); through {d.get('through')}; "
                            f"{d.get('cohorts_total')} cohorts, {d.get('paths_written')} path rows written, "
-                           f"{d.get('stored_rows_rechecked')} stored rows rechecked"))
+                           f"{d.get('stored_rows_rechecked')} stored rows rechecked"
+                           + (f"; UNSCHEDULED leaders {', '.join(sorted(map(str, unsched)))}" if unsched else "")))
 
 
 def r_ticker_hub(ctx, task) -> Reading:
