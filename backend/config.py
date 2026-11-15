@@ -7562,6 +7562,14 @@ DAY_FILE_EXCLUDED_FAMILIES = ("murat_book",)
 #: A position with no recorded stop is costed at this gap (CLAUDE.md protocol item 4).
 DAY_FILE_GAP_NO_STOP = 0.30
 DAY_FILE_TOP_WORST = 15
+#: The systems receipt (`system_status/status.json`, rewritten every 15 minutes) is red past this.
+DAY_FILE_STATUS_STALE_HOURS = 1.0
+#: Tasks printed in "scheduled today" (the rest are in the JSON).
+DAY_FILE_TOP_SCHEDULED = 40
+#: The rolling-cohort journal's newest row is red when older than this (the step runs about every 2 h).
+DAY_FILE_COHORT_STALE_HOURS = 8.0
+#: The dynamic-books journal's newest row is red when older than this.
+DAY_FILE_DYNAMIC_STALE_HOURS = 30.0
 
 # -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
 #: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's

@@ -70,13 +70,16 @@ SCHEMA = "day-file/1"
 OK, RED, CD, INFO = "OK", "RED", "CANNOT_DETERMINE", "INFO"
 _SEV = {OK: 0, INFO: 0, RED: 1, CD: 2}
 SECTIONS = (
-    ("red", "1. Red rows (stale, empty, refused or missing sources; scheduled tasks)"),
-    ("dates", "2. Scheduled today and the next sessions (held names, sensors, macro)"),
-    ("events", "3. Open event nodes"),
-    ("books", "4. Books (main accounts first)"),
-    ("worst", "5. Largest dollar worst case across open paper books"),
-    ("forecasts", "6. Forecasts (counts only)"),
-    ("owner_calls", "7. Owner-calls reading (yesterday)"),
+    ("red", "1. Systems headline and red rows (stale, empty, refused or missing sources)"),
+    ("schedule", "2. Scheduled today (task table) and the next sessions (session calendar)"),
+    ("dates", "3. Dated events ahead (held names, sensors, macro)"),
+    ("events", "4. Open event nodes"),
+    ("books", "5. Books (main accounts first)"),
+    ("worst", "6. Largest dollar worst case across open paper books"),
+    ("cohorts", "7. Rolling cohorts and dynamic books"),
+    ("forecasts", "8. Forecasts (counts only)"),
+    ("owner_calls", "9. Owner-calls reading (yesterday)"),
+    ("inbox", "10. Owner inbox (count only)"),
 )
 _STAMP_RE = re.compile(r"^DAY_(\d{4}-\d{2}-\d{2})__(\d{8}T\d{6}Z)\.json$")
 
@@ -186,43 +189,55 @@ def is_session(d: date) -> Optional[bool]:
 
 # ═══════════════════════════════════════════════════════════════ 1. red rows
 
-def _no_network(url: str, timeout: float) -> tuple:
-    return None, 0.0, "NETWORK_DISABLED_IN_DAY_FILE"
-
-
-def _guarded_run(argv: list, timeout: float) -> tuple:
-    """`system_health`'s runner, minus anything that leaves the box but `gh`."""
-    if argv and Path(str(argv[0])).stem.lower() in {"railway", "curl", "wget"}:
-        return 127, ""
-    from backend.services import system_health as SH
-    return SH._default_run(argv, timeout)
-
-
 _LIVE_ONLY_ROWS = {"ram_free", "last_boot", "sleep_settings", "open_prs"}
 
 
-def red_section(data_root: Path, now: datetime, *, replay: bool, repo: Path,
-                status_fn: Optional[Callable[..., dict]] = None) -> dict:
-    lines: list[dict] = []
-    try:
-        if status_fn is None:
-            from backend.services import system_health as SH
-            from scripts import system_status as SS
-            ctx = SH.make_ctx(optimus_dir=data_root, now=now, allow_proc=not replay, repo=repo,
-                              http_json=_no_network, run=_guarded_run)
-            rec = SS.collect(optimus_dir=data_root, repo=repo, now=now, allow_proc=not replay, ctx=ctx,
-                             run=_guarded_run)
-        else:
+STATUS_REL = "system_status/status.json"
+
+
+def collect_status(data_root: Path, now: datetime, *, replay: bool,
+                   status_fn: Optional[Callable[..., dict]] = None) -> tuple[Optional[dict], str]:
+    """The systems receipt, read ONCE: (record, why-not text). The red rows, the schedule and
+    the headline all read this one record. It reads `system_status/status.json` (written
+    every 15 minutes by `scripts.system_status`); it does not re-probe the machine, so the
+    day file runs no `schtasks`, no `gh` and no network of its own."""
+    if status_fn is not None:
+        try:
             rec = status_fn(data_root=data_root, now=now, replay=replay)
-    except Exception as exc:  # noqa: BLE001
-        return section("red", [], error=f"system_status.collect raised {type(exc).__name__}: {str(exc)[:200]}")
+        except Exception as exc:  # noqa: BLE001
+            return None, f"status reader raised {type(exc).__name__}: {str(exc)[:200]}"
+    else:
+        rec = read_json(Path(data_root) / STATUS_REL)
+        if rec is None:
+            return None, f"{STATUS_REL} is absent or unreadable"
+    if not isinstance(rec, dict) or not isinstance(rec.get("sections"), dict):
+        return None, f"{STATUS_REL} has no `sections` record"
+    t = utc(rec.get("generated_utc"))
+    if t is None:
+        return None, f"{STATUS_REL} carries no readable generated_utc"
+    if t > now:
+        return None, (f"{STATUS_REL} is stamped {iso(t)}, after the clock {iso(now)} (only the latest is kept): "
+                      f"the systems state as of that clock cannot be read")
+    return rec, ""
+
+
+def red_section(rec: Optional[dict], err: str, now: datetime, *, replay: bool) -> dict:
+    lines: list[dict] = []
+    if rec is None:
+        return section("red", [], error=err or "no systems record")
     counts = rec.get("counts") or {}
     tasks = (rec.get("sections") or {}).get("tasks", {}).get("rows") or []
     sched_unknown = any(r.get("name") == "scheduler" and r.get("status") == "UNKNOWN" for r in tasks)
+    gen = utc(rec.get("generated_utc"))
+    lim_h = float(_cfg("DAY_FILE_STATUS_STALE_HOURS", 1.0))
+    if gen is not None and (now - gen).total_seconds() > lim_h * 3600:
+        lines.append(line(RED, f"the systems receipt is {fmt_age((now - gen).total_seconds())} old (red after "
+                               f"{lim_h:g} h; it is rewritten every 15 minutes): every row below is as of then, "
+                               f"and the task that writes it is itself not running",
+                          STATUS_REL, gen, now))
     if replay:
-        lines.append(line(CD, "REPLAY: the Windows scheduler, processes, RAM and boot time are live state "
-                              "and cannot be read as of this clock; those rows are left out",
-                          "schtasks /query; GlobalMemoryStatusEx"))
+        lines.append(line(CD, "REPLAY: live machine state (scheduler, processes, RAM) cannot be read as of this clock",
+                          STATUS_REL))
     elif sched_unknown:
         lines.append(line(CD, "`schtasks /query /fo CSV /v` could not be read: which tasks ran, and their "
                               "last result, CANNOT be determined", "schtasks /query /fo CSV /v"))
@@ -247,12 +262,114 @@ def red_section(data_root: Path, now: datetime, *, replay: bool, repo: Path,
                               sev=st))
     lines.sort(key=lambda ln: (-_SEV[ln["status"]], {"DOWN": 0, "DEGRADED": 1, "UNKNOWN": 2}.get(
         (ln.get("extra") or {}).get("sev"), 3), ln["text"]))
+    down = sorted(f"{key}/{r.get('name')}" for key, sec in (rec.get("sections") or {}).items()
+                  for r in sec.get("rows") or [] if r.get("status") == "DOWN" and not r.get("one_shot"))
+    lines.insert(0, line(RED if down else OK, (f"DOWN rows ({len(down)}): " + ", ".join(down)) if down
+                         else "no row is DOWN", STATUS_REL,
+                         gen, now))
     lines.insert(0, line(INFO, f"system_status: {counts.get('OK', 0)} OK, {counts.get('DEGRADED', 0)} degraded, "
                                f"{counts.get('DOWN', 0)} down, {counts.get('UNKNOWN', 0)} unknown; "
                                f"{n_red} non-OK rows listed below",
-                         "scripts/system_status.py collect() (system_health probes + its own rows), run now",
-                         utc(rec.get("generated_utc")), now))
-    return section("red", lines, data={"counts": counts, "undetermined": rec.get("undetermined")})
+                         STATUS_REL, gen, now))
+    return section("red", lines, data={"counts": counts, "down": down, "undetermined": rec.get("undetermined")})
+
+
+# ═══════════════════════════════════════════════════════════════ 2. scheduled today
+
+def _task_cadence_h(name: str) -> Optional[float]:
+    try:
+        from backend.services import task_receipts as TR
+        spec = TR.TASK_RECEIPT.get(name)
+        if spec is not None and spec.cadence_h is not None:
+            return float(spec.cadence_h)
+    except Exception:  # noqa: BLE001
+        pass
+    v = getattr(C, "HEALTH_TASK_CADENCE_H", {}).get(name)
+    return None if v is None else float(v)
+
+
+def _sched_dt(text: Any) -> Optional[datetime]:
+    """A schtasks US-format local date-time (this machine's) -> aware UTC, else None."""
+    t = str(text or "").strip()
+    for fmt in ("%m/%d/%Y %I:%M:%S %p", "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %I:%M %p", "%m/%d/%Y %H:%M"):
+        try:
+            return datetime.strptime(t, fmt).astimezone().astimezone(timezone.utc)
+        except ValueError:
+            continue
+    return None
+
+
+def next_sessions(today: date, n: int) -> Optional[list[date]]:
+    out: list[date] = []
+    d = today
+    for _ in range(n * 4 + 14):
+        d += timedelta(days=1)
+        ok = is_session(d)
+        if ok is None:
+            return None
+        if ok:
+            out.append(d)
+            if len(out) == n:
+                return out
+    return out
+
+
+def schedule_section(rec: Optional[dict], err: str, now: datetime) -> dict:
+    from zoneinfo import ZoneInfo
+    tz = ZoneInfo(str(_cfg("DAY_FILE_TZ", "Asia/Hong_Kong")))
+    today_local = now.astimezone(tz).date()
+    lines: list[dict] = []
+    mday = market_day(now)
+    sess = is_session(mday)
+    n_sess = int(_cfg("DAY_FILE_UPCOMING_SESSIONS", 10))
+    nxt = next_sessions(mday, n_sess)
+    lines.append(line(INFO if sess is not None else CD,
+                      f"New York market date {mday.isoformat()}: "
+                      + ("a session day" if sess else "NOT a session day" if sess is False
+                         else "session status CANNOT be determined"),
+                      "backend/services/market_sessions.py"))
+    lines.append(line(INFO if nxt else CD,
+                      f"next {n_sess} sessions: " + (", ".join(d.isoformat() for d in nxt) if nxt
+                                                      else "CANNOT DETERMINE (calendar unavailable)"),
+                      "backend/services/market_sessions.py"))
+    if rec is None:
+        lines.append(line(CD, f"the task table cannot be read, so what is scheduled today CANNOT be determined: {err}",
+                          STATUS_REL))
+        return section("schedule", lines)
+    rows = [r for r in ((rec.get("sections") or {}).get("tasks") or {}).get("rows") or []
+            if isinstance(r, dict) and not r.get("one_shot") and r.get("name") != "scheduler"]
+    if not rows:
+        lines.append(line(CD, "the systems receipt carries no task rows (the scheduler was not readable)", STATUS_REL))
+        return section("schedule", lines)
+    due, ran, untimed = [], [], 0
+    for r in rows:
+        ex = r.get("extra") or {}
+        nr, lr = _sched_dt(ex.get("next_run")), _sched_dt(ex.get("last_run"))
+        if nr is not None and nr.astimezone(tz).date() == today_local:
+            due.append((nr, r, ex))
+        if lr is not None and lr.astimezone(tz).date() == today_local and lr <= now:
+            ran.append((lr, r, ex))
+        if nr is None and lr is None:
+            untimed += 1
+    due.sort(key=lambda x: (x[0], str(x[1].get("name"))))
+    cap = int(_cfg("DAY_FILE_TOP_SCHEDULED", 40))
+    gen = utc(rec.get("generated_utc"))
+    lines.append(line(INFO, f"{len(rows)} tasks in the task table; {len(due)} have a next run on local day "
+                            f"{today_local.isoformat()} ({_cfg('DAY_FILE_TZ', 'Asia/Hong_Kong')}), {len(ran)} already "
+                            f"ran today, {untimed} carry no readable run time", STATUS_REL, gen, now))
+    for nr, r, ex in due[:cap]:
+        cad = _task_cadence_h(str(r.get("name")))
+        cad_s = "unknown" if cad is None else f"{cad:g} h"
+        lines.append(line(RED if r.get("status") == "DOWN" else INFO,
+                          f"{nr.astimezone(tz).strftime('%H:%M')} {r.get('name')} (cadence {cad_s}; last result "
+                          f"{ex.get('last_result') or '-'}; row {r.get('status')})",
+                          str(r.get("evidence_path") or STATUS_REL), utc(r.get("evidence_utc")), now))
+    if len(due) > cap:
+        lines.append(line(INFO, f"{len(due) - cap} more tasks due today are in the JSON", "DAY_<date>.json"))
+    return section("schedule", lines, data={
+        "today_local": today_local.isoformat(), "due_today": [str(r.get("name")) for _, r, _ in due],
+        "ran_today": [str(r.get("name")) for _, r, _ in ran], "next_sessions": [d.isoformat() for d in nxt or []]})
+
 
 
 # ═══════════════════════════════════════════════════════════════ held names
@@ -543,6 +660,16 @@ def books_section(data_root: Path, now: datetime, rid: Optional[str], roi: Optio
                   f"pair run {rid}: ROI generated {iso(gen)} ({fmt_age(None if age_h is None else age_h * 3600)} old, "
                   f"red after {lim_h:g} h); {len(roi.get('rows') or [])} ROI rows, {len(books)} book_dna books",
                   f"{rr} + {dr}", gen, now)]
+    rv_p = data_root / "paper_accounts" / f"results_voice_{rid}.json"
+    rv = read_json(rv_p)
+    if isinstance(rv, dict) and rv.get("headline_lines"):
+        lines.append(line(INFO, "results voice: " + str(rv["headline_lines"][0])[:400]
+                          + (f"; labels held {(rv.get('claims') or {}).get('labels_held')}"
+                             if (rv.get("claims") or {}).get("labels_held") else ""),
+                          rel(rv_p, data_root), utc(rv.get("roi_generated_utc")), now))
+    else:
+        lines.append(line(CD, f"no results_voice_{rid}.json: the headline count of books ahead of SPY CANNOT be "
+                              f"read from the results voice for this pair", rel(rv_p, data_root)))
     rows_main, rows_other, excluded = [], [], []
     for r in roi.get("rows") or []:
         a, fam = str(r.get("account")), r.get("family")
@@ -652,6 +779,10 @@ def worst_section(data_root: Path, now: datetime, roi: Optional[dict], dna: Opti
     known = sorted((x for x in out if x.get("worst_usd") is not None), key=lambda x: (-x["worst_usd"], x["book"]))
     unknown = [x for x in out if x.get("worst_usd") is None]
     top = int(_cfg("DAY_FILE_TOP_WORST", 15))
+    if known:
+        x = known[0]
+        lines.append(line(INFO, f"LARGEST worst case: {x['book']} ${x['worst_usd']:,.0f} (of {len(known)} books with a "
+                                f"computed worst case; {len(unknown)} cannot be computed)", x["source"], x["stamp"], now))
     for x in known[:top]:
         lines.append(line(INFO, f"{x['book']}: worst ${x['worst_usd']:,.0f} on {x['n_names']} name(s); gross "
                                 f"{x['gross_over_equity']:.2f}x equity ${x['equity']:,.0f}; {x['basis']}",
@@ -666,6 +797,127 @@ def worst_section(data_root: Path, now: datetime, roi: Optional[dict], dna: Opti
     for x in out:
         x["stamp"] = iso(x["stamp"])
     return section("worst", lines, data={"gap_no_stop": gap, "books": known + unknown})
+
+
+# ═══════════════════════════════════════════════════════════════ 7. cohorts + dynamic books
+
+def last_row(path: Path) -> tuple[Optional[dict], str]:
+    """The newest JSON row of a journal, read from its tail: (row, why-not)."""
+    try:
+        with open(path, "rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            size = fh.tell()
+            fh.seek(max(0, size - 262144))
+            tail = fh.read().decode("utf-8", errors="replace")
+    except OSError:
+        return None, f"{path.name} is absent or unreadable"
+    for ln in reversed([x for x in tail.splitlines() if x.strip()]):
+        try:
+            d = json.loads(ln)
+        except ValueError:
+            continue
+        if isinstance(d, dict):
+            return d, ""
+    return None, f"{path.name} has no readable row"
+
+
+def cohorts_section(data_root: Path, now: datetime) -> dict:
+    lines: list[dict] = []
+    rc_dir = data_root / "rolling_cohorts"
+    p = rc_dir / "runs.jsonl"
+    r = rel(p, data_root)
+    row, why = last_row(p)
+    data: dict = {}
+    if row is None:
+        lines.append(line(CD, f"rolling cohorts: no newest journal row ({why}): the newest cohort and the forward "
+                              f"count CANNOT be determined", r))
+    else:
+        t = utc(row.get("utc"))
+        lim_h = float(_cfg("DAY_FILE_COHORT_STALE_HOURS", 8.0))
+        stale = t is None or t > now or (now - t).total_seconds() > lim_h * 3600
+        fa, sl = row.get("forward_age_sessions"), row.get("stale_limit_sessions")
+        fa_bad = type(fa) is not int or (type(sl) is int and fa > sl)
+        bad_act = row.get("action") in ("REFUSED", "STALE_PRICES", "MISSED_ENTRY_WINDOW")
+        lines.append(line(RED if stale or bad_act else OK,
+                          f"rolling cohorts: last step {row.get('action')} rc {row.get('rc')}, through "
+                          f"{row.get('through')}; newest cohort {row.get('newest_cohort')}; newest FORWARD cohort "
+                          f"{row.get('newest_forward_cohort') or 'none yet'}; {row.get('cohorts_forward')} forward of "
+                          f"{row.get('cohorts_total')} cohorts ({row.get('cohorts_live')} live); "
+                          f"{row.get('marks_total')} marks (red when the row is older than {lim_h:g} h)",
+                          f"{r}[-1]", t, now))
+        if fa_bad:
+            lines.append(line(RED, f"forward cohort age is {fa!r} sessions against a limit of {sl!r}: the population is "
+                                   f"not producing forward cohorts", f"{r}[-1]", t, now))
+        sb_name = Path(str(row.get("scoreboard") or "").replace("\\", "/")).name
+        sb_path = rc_dir / sb_name if sb_name else None
+        sb = read_json(sb_path) if sb_path is not None and sb_path.is_file() else None
+        if sb is None:
+            lines.append(line(CD, f"cohort report: the scoreboard named by the newest row ({sb_name or 'none'}) is not "
+                                  f"readable here, so the cohorts still needed CANNOT be determined",
+                              rel(sb_path, data_root) if sb_path else r))
+        else:
+            sm = re.match(r"(\d{8}T\d{6})", str(sb.get("run_id") or ""))
+            st = utc(sm.group(1) + "Z") if sm else None
+            bd = (sb.get("boards") or {}).get("21") or {}
+            need_min = int((bd.get("header_all") or bd.get("header") or {}).get("min_strict_blocks") or 0)
+            fam = bd.get("families_all") or {}
+            needs = {k: max(0, need_min - int(v.get("n_blocks_strict") or 0)) for k, v in fam.items()
+                     if isinstance(v, dict)}
+            hd = bd.get("summary") or {}
+            if need_min and needs:
+                lines.append(line(INFO, f"cohort report (21-session board, run {sb.get('run_id')}, through "
+                                        f"{sb.get('through')}): {len(bd.get('cohorts') or [])} cohorts; every test needs "
+                                        f"{need_min} strict blocks; STILL NEEDED (derived: {need_min} minus a family's "
+                                        f"strict blocks): fewest {min(needs.values())}, most {max(needs.values())} "
+                                        f"across {len(needs)} families; {hd.get('tests_all')} tests, "
+                                        f"{hd.get('cannot_determine_all')} cannot be determined yet",
+                                  rel(sb_path, data_root), st, now))
+            else:
+                lines.append(line(CD, "cohort report has no 21-session board with strict-block counts",
+                                  rel(sb_path, data_root), st, now))
+            data["cohort_report"] = {"run_id": sb.get("run_id"), "needs": needs, "min_strict_blocks": need_min}
+        data["rolling"] = {k: row.get(k) for k in ("action", "through", "newest_cohort", "newest_forward_cohort",
+                                                   "cohorts_forward", "cohorts_total", "cohorts_live", "marks_total")}
+    # dynamic books (CH-45): present or UNKNOWN, never omitted
+    dp = data_root / "dynamic_books" / "runs.jsonl"
+    dr = rel(dp, data_root)
+    drow, dwhy = last_row(dp)
+    if drow is None:
+        lines.append(line(CD, f"dynamic books: no journal row ({dwhy}); nothing has written one, so their status "
+                              f"CANNOT be determined", dr))
+    else:
+        t = utc(drow.get("utc"))
+        lim_h = float(_cfg("DAY_FILE_DYNAMIC_STALE_HOURS", 30.0))
+        stale = t is None or t > now or (now - t).total_seconds() > lim_h * 3600
+        okact = drow.get("action") in ("BORN", "MARKED", "NOTHING_DUE")
+        lines.append(line(RED if stale or not okact else OK,
+                          f"dynamic books: last step {drow.get('action')} rc {drow.get('rc')}, through "
+                          f"{drow.get('through')}; {drow.get('cohorts_total')} cohorts, {drow.get('paths_total')} path "
+                          f"rows; stale calendar {drow.get('calendar_stale') or 'none'} (red when older than "
+                          f"{lim_h:g} h or not BORN/MARKED/NOTHING_DUE)", f"{dr}[-1]", t, now))
+        data["dynamic"] = {k: drow.get(k) for k in ("action", "rc", "through", "cohorts_total", "paths_total")}
+    return section("cohorts", lines, data=data)
+
+
+# ═══════════════════════════════════════════════════════════════ 10. owner inbox
+
+def inbox_section(data_root: Path, now: datetime) -> dict:
+    from scripts import owner_inbox as OI
+    p = OI.inbox_path(data_root)
+    r = rel(p, data_root)
+    if not p.exists():
+        return section("inbox", [line(CD, "no owner_inbox/notes.jsonl: the unread count CANNOT be determined (the "
+                                          "file is written by the first note)", r)])
+    res = OI.list_notes(data_root=data_root)
+    newest = max((utc(n.get("utc")) for n in res["notes"] if utc(n.get("utc"))), default=None)
+    n_un, n_all, bad = int(res["n_unread"]), int(res["n_notes"]), int(res["unreadable_lines"])
+    del res                                     # the note text is never carried into this page
+    ls = [line(RED if n_un else OK, f"{n_un} unread note(s) of {n_all} (count only: read them with "
+                                    f"`python -m scripts.owner_inbox list --unread`)", r, newest, now)]
+    if bad:
+        ls.append(line(RED, f"{bad} unreadable line(s) in the inbox file", r))
+    return section("inbox", ls, data={"n_unread": n_un, "n_notes": n_all, "unreadable_lines": bad})
+
 
 
 # ═══════════════════════════════════════════════════════════════ 6. forecasts
@@ -807,13 +1059,17 @@ def build(data_root: Path, *, now: Optional[datetime] = None, wall: Optional[dat
         rid, roi, dna, why = book_pair(data_root, now)
     except Exception as exc:  # noqa: BLE001
         why = f"book pair read raised {type(exc).__name__}"
-    guard("red", lambda: red_section(data_root, now, replay=replay, repo=repo, status_fn=status_fn))
+    rec, err = collect_status(data_root, now, replay=replay, status_fn=status_fn)
+    guard("red", lambda: red_section(rec, err, now, replay=replay))
+    guard("schedule", lambda: schedule_section(rec, err, now))
     guard("dates", lambda: dates_section(data_root, now, dna, fomc_file=fomc_file))
     guard("events", lambda: events_section(data_root, now))
     guard("books", lambda: books_section(data_root, now, rid, roi, dna, why))
     guard("worst", lambda: worst_section(data_root, now, roi, dna, rid))
+    guard("cohorts", lambda: cohorts_section(data_root, now))
     guard("forecasts", lambda: forecasts_section(data_root, now, forecast_lines))
     guard("owner_calls", lambda: owner_calls_section(data_root, now))
+    guard("inbox", lambda: inbox_section(data_root, now))
     ordered = {k: secs[k] for k, _ in SECTIONS}
     not_ok = [k for k, s in ordered.items() if s["status"] != OK]
     return {"schema": SCHEMA, "receipt": "day_file", "day": local_day(now), "tz": str(_cfg("DAY_FILE_TZ", "Asia/Hong_Kong")),
