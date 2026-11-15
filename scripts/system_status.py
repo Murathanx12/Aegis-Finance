@@ -58,6 +58,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as C  # noqa: E402
+from backend.services import task_receipts as TR  # noqa: E402
 
 SCHEMA = "system_status/1"
 STATUSES = ("OK", "DEGRADED", "DOWN", "UNKNOWN")
@@ -239,7 +240,7 @@ PROBE_SECTION = {
     "bars_panel": None,            # replaced by the two bars rows below
     "iif1_night": None,            # replaced by the richer learning row
     "task": "tasks", "daily_pass": "tasks",
-    "ranking": "universe", "u_funnel": "universe",
+    "ranking": "universe", "u_funnel": "universe", "forward_calendar": "universe",
     "u_plan": "decisions", "decision_contract": "decisions", "policy_state": "decisions",
     "sim_session": "decisions", "live_market_loop": "decisions", "book_grader": "decisions",
     "u_review": "decisions",
@@ -347,6 +348,33 @@ def group_loops(rows: list[dict], *, min_group: int = 4) -> list[dict]:
     return out
 
 
+def _old_rc(name: str, spec: Any, sch: dict, mapped: Optional[dict], now: datetime) -> str:
+    """A non-zero scheduler result that is OLD, or '' when it is current (or cannot be dated).
+
+    Old = the task's own receipt reader judged it OK AND either the receipt is newer than the
+    last run (a later good run wrote it; a weekly task's manual-run rc) or the last run is
+    older than the declared cadence window. Anything else -- no reader, a bad receipt, an
+    unparseable Last Run Time -- stays a current failure ("did not run" is not "passed")."""
+    if not mapped or mapped.get("status") != "OK":
+        return ""
+    d_part, _, t_part = str(sch.get("Last Run Time", "")).strip().partition(" ")
+    last = TR._sched_local({"d": d_part, "t": t_part}, "d", "t")
+    if last is None:
+        return ""
+    rc = str(sch.get("Last Result", "")).strip()
+    receipt = parse_ts(mapped.get("evidence_utc"))
+    window_h = float(spec.cadence_h if spec is not None and spec.cadence_h is not None
+                     else C.HEALTH_TASK_CADENCE_H.get(name, 24.0)) * 1.25
+    age_h = (now - last).total_seconds() / 3600
+    if receipt is not None and receipt > last + timedelta(hours=1):     # a run's own receipt lands within minutes of its start
+        why = f"a newer good receipt exists ({fmt_age((now - receipt).total_seconds())} old)"
+    elif age_h > window_h:
+        why = f"older than its {window_h:.0f} h cadence window"
+    else:
+        return ""
+    return f"old last result {rc} from a run {fmt_age(age_h * 3600)} ago ({why}); not a current failure"
+
+
 def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]:
     """Scheduled tasks: the probe judge (receipt-based) + schtasks' own columns."""
     from backend.services import system_health as SH
@@ -372,18 +400,38 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
         flags = []
         never = str(last_res).strip() == "267011" or "N/A" in str(last_run)
         running = str(last_res).strip() == "267009"
+        try:
+            spec = TR.TASK_RECEIPT.get(name)
+        except Exception:  # noqa: BLE001
+            spec = None
+        retired = (state.strip().lower() == "disabled" and spec is not None
+                   and bool(spec.disabled_ok))
         if str(last_res).strip() not in ("", "0", "267011", "267009", "267008", "267010") and re.fullmatch(r"-?\d+", str(last_res).strip()):
-            flags.append(f"last result {last_res} (non-zero)")
-            status = worst(status, "DEGRADED")
-        if never:
+            old = _old_rc(name, spec, sch, mapped, now)
+            if retired:
+                flags.append(f"last result {last_res} (non-zero; retired task, not judged)")
+            elif old:
+                flags.append(old)               # shown with its age, never a current failure
+            else:
+                flags.append(f"last result {last_res} (non-zero)")
+                status = worst(status, "DEGRADED")
+        if never and (pr or {}).get("state") == "ALIVE_IDLE_EXPECTED":
+            # S69: the receipt reader itself judged the never-run task not due yet
+            # (task_receipts.not_due_yet: first trigger + one cadence still ahead)
+            flags.append("has never run (not due yet)")
+        elif never:
             flags.append("has never run")
             status = worst(status, "DEGRADED")
-        if state.strip().lower() == "disabled":
+        if retired:
+            flags.append("RETIRED: Disabled on purpose -- " + spec.disabled_ok)
+        elif state.strip().lower() == "disabled":
             flags.append("DISABLED")
             status = worst(status, "DEGRADED")
         elif next_run.strip() in ("N/A", "") and not never and not running:
             flags.append("no next run scheduled")
             status = worst(status, "DEGRADED")
+        if retired:
+            status = "OK"      # a retired row claims no health: it is counted out (extra.retired)
         is_one = any(p.search(name) for p in one_shot)
         detail = (f"last run {last_run or '-'} result {last_res or '-'}; next {next_run or '-'}"
                   + (f"; {', '.join(flags)}" if flags else "")
@@ -399,7 +447,8 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
                        evidence=(mapped or {}).get("evidence_path") or "schtasks",
                        stamp=parse_ts((mapped or {}).get("evidence_utc")), now=now,
                        lim=(mapped or {}).get("limit_s"), action=act, required=bool(mapped) and not is_one, one_shot=is_one,
-                       extra={"last_run": last_run, "last_result": last_res, "next_run": next_run, "state": state}))
+                       extra={"last_run": last_run, "last_result": last_res, "next_run": next_run, "state": state,
+                              **({"retired": True} if retired else {})}))
     if not out:
         out.append(row("tasks", "scheduler", "UNKNOWN", "no Aegis* tasks found and none declared",
                        evidence="schtasks", now=now, action="Register the tasks (task_keeper --register) or check the filter."))
@@ -757,14 +806,87 @@ def _powercfg(run: Callable[[list, float], tuple]) -> Optional[tuple[int, int]]:
 
 
 def _default_run(argv: list, timeout: float) -> tuple:
+    # no console window under pythonw / the task scheduler (the attribute exists on Windows only)
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
     try:
-        cp = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False)  # noqa: S603
+        cp = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, check=False,  # noqa: S603
+                            creationflags=flags)
         return cp.returncode, (cp.stdout or "")
     except Exception:  # noqa: BLE001
         return 127, ""
 
 
+#: What the `power` row counts: (event id, provider substring, label). Kernel-Power 41 = the
+#: system rebooted without a clean shutdown; EventLog 6008 = the previous shutdown was
+#: unexpected; WER-SystemErrorReporting 1001 (System log) = a BugCheck was recorded.
+POWER_EVENTS = ((41, "Kernel-Power", "Kernel-Power 41"), (6008, "EventLog", "EventLog 6008"),
+                (1001, "SystemErrorReporting", "BugCheck 1001"))
+_POWER_PS = (
+    "$ErrorActionPreference='Stop'; try { $e = Get-WinEvent -FilterHashtable @{LogName='System'; "
+    "Id=41,6008,1001; StartTime=(Get-Date).AddDays(-%d)} } catch { if ($_.FullyQualifiedErrorId -like "
+    "'NoMatchingEventsFound*' -or $_.Exception.Message -like 'No events were found*') { $e = @() } "
+    "else { Write-Error $_; exit 1 } }; "
+    "$o = @($e | ForEach-Object { [pscustomobject]@{id=$_.Id; provider=$_.ProviderName; "
+    "utc=$_.TimeCreated.ToUniversalTime().ToString('o')} }); "
+    "if ($o.Count -eq 0) { '[]' } else { ConvertTo-Json -InputObject $o -Compress }")
+
+
+def _power_events_default(days: int, run: Callable[[list, float], tuple]) -> Optional[list[dict]]:
+    """Unclean-shutdown events of the last `days` days from the System log, or None when the
+    log could not be read (non-Windows, PowerShell failed, timed out, output not JSON)."""
+    if sys.platform != "win32":
+        return None
+    rc, txt = run(["powershell", "-NoProfile", "-NonInteractive", "-Command", _POWER_PS % days], 60)
+    if rc != 0 or not (txt or "").strip():
+        return None
+    try:
+        data = json.loads(txt)
+    except ValueError:
+        return None
+    if isinstance(data, dict):
+        data = [data]
+    if not isinstance(data, list) or not all(isinstance(e, dict) and {"id", "provider", "utc"} <= set(e) for e in data):
+        return None             # not the shape our own script prints: unknown, never "clean"
+    return data
+
+
+def power_row(now: datetime, events: Optional[list[dict]]) -> dict:
+    """The `power` row: unclean shutdowns / bugchecks in the last 7 days.
+    DOWN if any in the last 24 h, DEGRADED if any in 7 days, OK if the log was read and is
+    clean, UNKNOWN when it could not be read (never OK)."""
+    if events is None:
+        return row("infrastructure", "power", "UNKNOWN",
+                   "the System event log could not be read (not Windows, or Get-WinEvent failed/timed out)",
+                   evidence="Get-WinEvent System 41/6008/1001", now=now, required=False,
+                   action="Run `Get-WinEvent -FilterHashtable @{LogName='System';Id=41,6008,1001}` by hand.")
+    found = []
+    for e in events:
+        if not isinstance(e, dict):
+            continue
+        t = parse_ts(e.get("utc"))
+        label = next((lab for i, prov, lab in POWER_EVENTS
+                      if str(e.get("id")) == str(i) and prov.lower() in str(e.get("provider") or "").lower()), None)
+        if t is None or label is None or t > now + timedelta(seconds=FUTURE_SLACK_S):
+            continue
+        if (now - t) <= timedelta(days=7):
+            found.append((t, label))
+    found.sort(reverse=True)
+    if not found:
+        return row("infrastructure", "power", "OK", "no Kernel-Power 41, EventLog 6008 or BugCheck 1001 in the last 7 days",
+                   evidence="Get-WinEvent System 41/6008/1001 (live)", now=now)
+    last24 = [x for x in found if (now - x[0]) <= timedelta(hours=24)]
+    st = "DOWN" if last24 else "DEGRADED"
+    listing = "; ".join(f"{iso(t)} {lab}" for t, lab in found[:12]) + (f"; +{len(found) - 12} more" if len(found) > 12 else "")
+    return row("infrastructure", "power", st,
+               f"{len(found)} unclean-shutdown event(s) in 7 days ({len(last24)} in 24 h): {listing}",
+               evidence="Get-WinEvent System 41/6008/1001 (live)", stamp=found[0][0], now=now,
+               extra={"events": [{"utc": iso(t), "kind": lab} for t, lab in found]},
+               action="Fast Startup off; never sleep/hibernate on AC; check the charger; read the minidump "
+                      "(C:/Windows/Minidump). The row clears after 7 clean days.")
+
+
 def machine_rows(now: datetime, *, run: Callable[[list, float], tuple] = _default_run,
+                 power_events: Optional[Callable[[int], Optional[list[dict]]]] = None,
                  ram_free: Callable[[], Optional[float]] = _ram_free_gb,
                  boot: Callable[[datetime], Optional[datetime]] = _boot_time,
                  repo_slug: str = "Murathanx12/Aegis-Finance") -> list[dict]:
@@ -799,6 +921,8 @@ def machine_rows(now: datetime, *, run: Callable[[list, float], tuple] = _defaul
         out.append(row("infrastructure", "sleep_settings", st, f"sleep after: on AC {fmt(ac)}, on battery {fmt(dc)}",
                        evidence="powercfg /query SUB_SLEEP STANDBYIDLE", now=now,
                        action="" if st == "OK" else "The PC sleeps on AC, so scheduled night work stops: `powercfg /change standby-timeout-ac 0`."))
+    out.append(power_row(now, (power_events(7) if power_events is not None
+                               else _power_events_default(7, run))))
     rc, txt = run(["gh", "pr", "list", "--repo", repo_slug, "--state", "open", "--json", "number", "--limit", "100"], 30)
     try:
         n = len(json.loads(txt)) if rc == 0 else None
@@ -879,7 +1003,7 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
     for s in sections.values():
         s["rows"].sort(key=lambda r: (-_SEV[_st(r)], r["name"]))
     counted = [r for s in sections.values() for r in s["rows"] if not r.get("one_shot")
-               and not r["name"].startswith("rule ")]
+               and not r["name"].startswith("rule ") and not (r.get("extra") or {}).get("retired")]
     counts = {k: sum(1 for r in counted if r["status"] == k) for k in STATUSES}
     rec = {"receipt": SCHEMA, "generated_utc": iso(now), "optimus_dir": str(optimus_dir), "repo": str(repo),
            "allow_proc": allow_proc, "counts": counts, "sections": sections,
@@ -969,6 +1093,11 @@ main{padding:12px 16px;max-width:1200px;margin:0 auto}h2{font-size:12px;text-tra
 .act{display:block;color:var(--fg);font-size:12px}.act::before{content:"to do: ";color:var(--mut)}
 button{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer;font:inherit}
 a{color:inherit}.stale{color:var(--down);font-weight:600}
+nav.top{flex-basis:100%;display:flex;gap:4px;flex-wrap:wrap;margin:-2px 0 2px}
+nav.top a{text-decoration:none;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:2px 9px}
+nav.top a:hover{color:var(--fg);background:var(--card)}
+.gen{font-size:14px;margin:4px 0 0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.gen.stale{border-color:var(--down)}
 @media (max-width:700px){.r{grid-template-columns:70px 1fr}.r .d{grid-column:1 / -1}}
 """
 
@@ -994,6 +1123,36 @@ def _row_html(r: dict, *, show_section: bool = False) -> str:
             f"<span class=d>{e(r['detail'])}{ev}{act}</span></div>")
 
 
+#: The links back to the rest of the desktop app (CH-22, 2026-11-14). Plain hrefs:
+#: this page is rendered by the backend, the targets are routes of the static
+#: export the same server mounts at `/`. Owner: "you removed everything to add
+#: [this page]" -- it had no way back to the dashboard.
+NAV_LINKS = (("Dashboard", "/"), ("Stocks", "/stock"), ("Watchlist", "/watchlist"),
+             ("News", "/news"), ("Desktop", "/desktop"))
+
+
+def generated_line(rec: dict, *, now: Optional[datetime] = None) -> tuple[str, bool]:
+    """(plain-words sentence, stale?) -- when the receipt was collected and how old it is.
+
+    Compared to `limit_s("status_receipt")`, so the sentence can go red; a receipt
+    with no readable time says so instead of printing a date it does not have.
+    """
+    gen = parse_ts(rec.get("generated_utc"))
+    if gen is None:
+        return ("This status has no readable collection time, so none of it can be called "
+                "current. Refresh: python -m scripts.system_status --html", True)
+    age = ((now or utcnow()) - gen).total_seconds()
+    lim = limit_s("status_receipt")
+    when = f"{gen:%Y-%m-%d %H:%M} UTC ({gen.astimezone():%H:%M} on this PC)"
+    if age < -60:
+        return (f"This status was collected {when} -- {fmt_age(age)} in the FUTURE by this "
+                "PC's clock, so its age cannot be judged.", True)
+    if lim is not None and age > lim:
+        return (f"This status was collected {when}, {fmt_age(age)} ago -- older than the "
+                f"{fmt_age(lim)} limit. Refresh: python -m scripts.system_status --html", True)
+    return f"This status was collected {when}, {fmt_age(age)} ago.", False
+
+
 def render_html(rec: dict, *, now: Optional[datetime] = None) -> str:
     """One self-contained page: no network, no CDN, light/dark aware."""
     e = _html.escape
@@ -1003,12 +1162,17 @@ def render_html(rec: dict, *, now: Optional[datetime] = None) -> str:
     stale = age is not None and lim is not None and age > lim
     red = reds(rec)
     parts = [f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"
-             f"<title>Aegis systems</title><style>{_CSS}</style></head><body><header><h1>Aegis systems</h1>"
+             f"<title>Aegis systems</title><style>{_CSS}</style></head><body><header>"
+             "<nav class=top aria-label='Aegis app'>"
+             + "".join(f"<a href='{e(href, quote=True)}'>{e(label)}</a>" for label, href in NAV_LINKS)
+             + "</nav><h1>Aegis systems</h1>"
              f"<span class=hl>{e(header_line(rec))}</span>"
              f"<span class=mut>collected {e(rec.get('generated_utc') or '?')}"
              + (f" · <span class=stale>{fmt_age(age)} old, refresh: python -m scripts.system_status --html</span>" if stale else
                 f" · {fmt_age(age)} ago") + "</span>"
              "<button id=theme type=button>theme</button></header><main>"]
+    gl, gl_stale = generated_line(rec, now=now)
+    parts.append(f"<p class='gen{' stale' if gl_stale else ''}' id=generated>{e(gl)}</p>")
     if rec.get("undetermined"):
         parts.append("<h2>Could not determine</h2><div class=card>" + "".join(
             f"<div class=r><span class='b UNKNOWN'>UNKNOWN</span><span class=n></span><span class=d>{e(u)}</span></div>"

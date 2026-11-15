@@ -18,6 +18,7 @@ import ast
 from pathlib import Path
 
 import pytest
+from backend.tests.local_control import local_client
 from fastapi.testclient import TestClient
 
 from backend.routers import control
@@ -135,17 +136,21 @@ def test_whitelist_is_derived_from_the_queue_not_retyped():
 def client(monkeypatch):
     from fastapi import FastAPI
 
-    monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
+    # The desktop page: the plane is on (CH-22 follow-up: off the desktop even the
+    # reads are 404) and the request is loopback Host + JSON (H1).
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
     app = FastAPI()
     app.include_router(control.router)
-    return TestClient(app)
+    return local_client(app)
 
 
-def test_reads_work_while_writes_refuse_when_disabled(client):
+def test_off_the_desktop_reads_and_writes_are_both_absent(client, monkeypatch):
     r = client.get("/api/control/jobs")
     assert r.status_code == 200 and r.json()["whitelist"]
+    monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
+    assert client.get("/api/control/jobs").status_code == 404
     for path in ("/api/control/run/D1_reaction_book", "/api/control/night"):
-        assert client.post(path).status_code == 403, f"{path} must refuse while the control plane is off"
+        assert client.post(path).status_code == 404, f"{path} must not exist while the control plane is off"
 
 
 def test_an_unknown_job_is_refused_even_when_enabled(client, monkeypatch):
@@ -171,9 +176,10 @@ def test_services_reports_without_a_night_directory(monkeypatch, tmp_path):
 
     monkeypatch.setattr(control, "NIGHT_DIR", tmp_path / "absent")
     monkeypatch.setattr(control, "RUNS_DIR", tmp_path / "absent_runs")
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
     app = FastAPI()
     app.include_router(control.router)
-    body = TestClient(app).get("/api/control/services").json()
+    body = local_client(app).get("/api/control/services").json()
     assert body["runs"] == [] and body["stop_file_present"] is False
     assert "local_gguf" in body and "reachable" in body["local_gguf"]
 

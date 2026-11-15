@@ -1,6 +1,6 @@
 """
 Aegis Finance — Master Configuration
-======================================
+===============================
 
 Single source of truth for all engine parameters.
 Converted from V7 engine_config.yaml into a pure Python module.
@@ -1105,6 +1105,40 @@ config: dict = {
         "gdelt_cache_ttl": 3600,
         "gdelt_fail_cooldown": 900,
         "slow_request_threshold_s": 10.0,# Requests slower than this get a warning log
+    },
+
+    # ── USAGE RECEIPT (privacy-preserving traffic counter; OFF by default) ───
+    # Enabled only by env AEGIS_USAGE_RECEIPT=1. Summary route needs env
+    # AEGIS_USAGE_TOKEN (refused when unset). Receipt files are written only
+    # when env AEGIS_USAGE_RECEIPT_DIR names a writable directory.
+    # See backend/services/usage_receipt.py.
+    "usage_receipt": {
+        "visitor_cap": 20000,            # distinct-visitor set cap per UTC day
+        "days_kept": 14,                 # finalized days kept in memory
+        "ticker_top_n": 20,              # ticker table rows reported
+        "ticker_max_tracked": 500,       # distinct tickers tracked per day
+        "page_max_tracked": 200,         # distinct page templates tracked per day
+        "route_max_tracked": 400,        # distinct route templates tracked per day
+        "flush_interval_s": 300,         # min seconds between receipt-file writes
+        "beacon_per_visitor_per_min": 30,
+        "beacon_global_per_min": 600,
+        "beacon_max_body_bytes": 256,
+        "ticker_min_visitors": 5,        # ticker table hidden below this many distinct visitors
+        "ticker_min_requests": 5,        # a ticker row needs at least this many requests
+        # Server-side callers (e.g. the frontend host) to count as "excluded", not human.
+        # Substrings of the user agent / prefixes of the client address. Empty by default.
+        "exclude_ua_substrings": [],
+        "exclude_ip_prefixes": [],
+        "ticker_param_names": ["ticker", "symbol"],
+        "page_ticker_prefixes": ["stock", "ticker"],
+        # Excluded from human counts, counted separately (case-insensitive substrings).
+        "monitor_ua_substrings": ["curl/", "python-requests", "python-httpx", "uptimerobot",
+                                  "github-hookshot", "railway", "vercel", "pingdom",
+                                  "statuscake", "go-http-client", "wget/", "healthcheck"],
+        "bot_ua_substrings": ["bot", "spider", "crawl", "slurp", "headless", "facebookexternalhit",
+                              "preview", "scrapy", "httpclient", "okhttp", "axios", "node-fetch"],
+        "health_path_prefixes": ["/api/health", "/docs", "/redoc", "/openapi.json",
+                                 "/favicon.ico", "/static", "/_next"],
     },
 
     # ── FMP DAILY QUOTA BUDGET ───────────────────────────────────────────
@@ -3567,6 +3601,52 @@ DAILY_PASS_STEP_BOX_S: dict = {
 #: sessions. Read from the parquet's own `date` column, never an mtime. 2 =
 #: one missed daily refresh is tolerated, a second is a finding.
 BARS_MAX_AGE_SESSIONS = 2
+# --- bars feed reliability (2026-11-15, engineer defects D2/D3) -------------
+#: Ordered NAMES (never values) the bar puller resolves its market-data
+#: credential from; the first pair that is present AND authenticates wins.
+#: scope "env" = this process's environment, "terminal_env" = the sibling
+#: repo's .env (read-only), "env+terminal_env" = either. `paper` marks a pair
+#: that belongs to a paper TRADING account: retiring/resetting that account
+#: silently stops the feed, so the receipt flags it. The dedicated data-only
+#: pair goes FIRST; adding it to the environment/.env is the owner's step.
+#: Order below the first entry is the order the code has always used.
+BARS_DATA_CREDENTIAL_ORDER = (
+    {"label": "dedicated_data", "key": "ALPACA_DATA_KEY_ID", "secret": "ALPACA_DATA_SECRET_KEY",
+     "scope": "env+terminal_env", "paper": False, "verify": True},
+    {"label": "process_env", "key": "APCA_API_KEY_ID", "secret": "APCA_API_SECRET_KEY",
+     "scope": "env", "paper": None, "verify": False},   # None = unknown (Alpaca trading-key names)
+    {"label": "HACK1", "key": "AAT_HACK1_KEY_ID", "secret": "AAT_HACK1_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK2", "key": "AAT_HACK2_KEY_ID", "secret": "AAT_HACK2_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK4", "key": "AAT_HACK4_KEY_ID", "secret": "AAT_HACK4_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK5", "key": "AAT_HACK5_KEY_ID", "secret": "AAT_HACK5_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK6", "key": "AAT_HACK6_KEY_ID", "secret": "AAT_HACK6_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK3", "key": "AAT_HACK3_KEY_ID", "secret": "AAT_HACK3_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+)
+#: Bounded wait for DNS of the data host before the first call (boot burst of
+#: 2026-11-14 02:44: the task ran before the network was up). tries x interval.
+BARS_NETWORK_WAIT_TRIES = 3
+BARS_NETWORK_WAIT_INTERVAL_S = 45.0
+#: Foreign symbols whose failure DEGRADES (rc 3) rather than REFUSES the bars
+#: refresh: the five frozen non-US constituents, which the US SIP panels cannot
+#: supply. Any other failed symbol, and any US gated panel behind the last
+#: closed session, is REFUSED (rc 2).
+BARS_REFRESH_OPTIONAL_FOREIGN_SYMBOLS = ("EVO.ST", "HAG.DE", "KOG.OL", "RHM.DE", "SAAB-B.ST")
+#: Exit codes of `python -m scripts.pull_bars_refresh`. 0 = OK / unchanged.
+#: The network-down status is spelled `refused_network` so any status reader
+#: that matches the REFUS prefix (task_receipts.map_status) reads it RED; a
+#: `WAIT_` spelling reads IDLE there.
+BARS_REFRESH_RC = {"ok": 0, "unchanged": 0, "dry_run": 0, "refused": 2,
+                   "degraded": 3, "refused_network": 4}
+#: A US gated panel "reached the last close" only if at least this share of the
+#: symbols that had the PREVIOUS closed session's bar also has the last closed
+#: session's bar (a panel's max date alone passes when one name advanced).
+BARS_REFRESH_MIN_COVERAGE = 0.90
 #: `forecast_grader` voids a due forecast as UNRESOLVABLE when its ticker's bars
 #: STOPPED at least this many sessions before the panel's newest bar (the name
 #: delisted: AVB and EA on 2026-09-26, both `inactive` at the venue) and its
@@ -4546,6 +4626,106 @@ LLM_BOOK_REQUIRED_SERIES = ("URTH", "BETZ", "BOTZ", "GRID", "IGV", "ITA", "LIT",
                             "QTUM", "URA", "XBI", "XLB", "SPY", "IWM", "SMH",
                             "MTUM")
 
+# -- Rolling live cohorts of the branching population (CH-16 / M3, 2026-11-14) --
+#: `branch_population_rolling` re-enters the declared spec grid as a NEW dated
+#: cohort every CADENCE sessions from ANCHOR (the 2026-10-15 freeze day), so
+#: about four 21-session cohorts are always live. A born book never changes.
+ROLLING_COHORT_ANCHOR = "2026-10-15"
+ROLLING_COHORT_CADENCE_SESSIONS = 5
+#: Marks per cohort: interim weekly points plus the 21/63/126 horizons.
+ROLLING_COHORT_MARK_SESSIONS = (5, 10, 15, 21, 42, 63, 84, 105, 126)
+ROLLING_COHORT_HORIZONS = (21, 63, 126)
+#: Random same-liquidity-band portfolios per DISTINCT holding set per cohort.
+ROLLING_COHORT_RANDOM_CONTROLS = 5
+#: Seeds are sha256(tag|cohort|holdings|k)[:15 hex] (>= 2**56 in practice),
+#: outside every literal seed in the repo (all < 1e9 on 2026-11-14).
+ROLLING_COHORT_SEED_TAG = "rolling-cohorts-v2|2026-11-14"
+#: Costs: names pay xs_ranker's band round trip (half at entry, half at the
+#: mark); a SPY short leg pays SPY's band and this borrow fee, accrued per
+#: session; cash and short collateral earn nothing (conservative).
+ROLLING_COHORT_SPY_COST_BPS = 6.0
+ROLLING_COHORT_SHORT_BORROW_BPS_YR = 30.0
+#: Any cost <= 0 (bands, SPY, borrow) is REFUSED unless this is True; then
+#: every cohort and mark row carries `zero_cost_diagnostic: true`.
+ROLLING_COHORT_ZERO_COST_DIAGNOSTIC = False
+#: The bars panel's symbol list is the universe file of this date (xs_ranker,
+#: "names alive on 2026-09-01"): survivor-selected before it. Carried on every
+#: bars-only book and random control as `panel_universe_asof`.
+ROLLING_COHORT_PANEL_UNIVERSE_ASOF = "2026-09-01"
+#: Below these a family is WAIT_INPUT for the cohort (a row with the count),
+#: never entered on thin or stale input.
+ROLLING_COHORT_REVISION_MIN_EVENTS = 200        # revision events in the 90-day window
+ROLLING_COHORT_REVISION_MAX_STALE_DAYS = 6.0    # newest first_seen before the cutoff
+ROLLING_COHORT_NEWS_MIN_ITEMS = 50              # usable typed items, 5 days before decision
+ROLLING_COHORT_NEWS_MAX_STALE_DAYS = 2.0
+#: Health: DEGRADED when no forward cohort was born for more than this many cadences.
+ROLLING_COHORT_STALE_CADENCES = 2
+#: A missing closed session in the bars is a WAIT only this many hours after
+#: that session's close; past it the step and both readers say DEGRADED
+#: ("bars have not advanced since <date>"). Measured: every historical wait <= 2 h.
+ROLLING_COHORT_PRICE_GRACE_H = 18.0
+#: Scoreboard: Student t on strict blocks of 2 x horizon sessions, two-sided
+#: ALPHA, MDE at POWER; no label below MIN_STRICT_BLOCKS; BH-FDR at q = ALPHA
+#: across every distinct test of one run.
+ROLLING_COHORT_ALPHA = 0.05
+ROLLING_COHORT_POWER = 0.80
+ROLLING_COHORT_MIN_STRICT_BLOCKS = 6
+#: One pass per output folder: a second pass waits this long for `run.lock`,
+#: then journals WAIT_LOCK with rc 0.
+ROLLING_COHORT_LOCK_WAIT_S = 60.0
+
+# -- Dynamic exposure book family (CH-45, 2026-11-15) --
+#: NOT prefixed ROLLING_COHORT_: `branch_population_rolling.config_snapshot`
+#: binds every ROLLING_COHORT_* key into the live population's declaration, and
+#: a new one would make that population refuse. These values are FROZEN in
+#: docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v1.json; `dynamic_exposure_books`
+#: refuses to run when they differ (a changed rule is a new contract id).
+#: Rules and parameters are the 11-14 market replay's (replay_findings.txt
+#: section 0/0b, s3_rules.py), not tuned.
+#: Base selection: v2 spec momentum_12_1 / liquid / equal / 40 names / h126, hedge none.
+DYNAMIC_BOOK_BASE_POLICY_ID = "c79397f92fd9d3562378388e"
+#: Rule (d), balanced: leader earnings-session gap <= GAP -> stock exposure GROSS
+#: for the next SESSIONS sessions. AVGO counts from 2019 (replay).
+DYNAMIC_BOOK_LEADERS = ("AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "AVGO")
+DYNAMIC_BOOK_LEADER_SINCE = {"AVGO": "2019-01-01"}
+DYNAMIC_BOOK_LEADER_GAP = -0.05
+DYNAMIC_BOOK_LEADER_GROSS = 0.5
+DYNAMIC_BOOK_LEADER_SESSIONS = 5
+#: STALE (a step exits non-zero naming the leader) when a leader's newest known
+#: report is older than this many days, or its calendar pull predates the last
+#: session: the cache stores only reports before its pull (review of PR #150).
+DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS = 80
+#: Rule (b), preservation: QQQ close < SMA(SMA) -> short QQQ at beta x NAV,
+#: beta of the book on QQQ over BETA_WINDOW sessions, clipped.
+DYNAMIC_BOOK_HEDGE_ETF = "QQQ"
+DYNAMIC_BOOK_HEDGE_SMA = 50
+DYNAMIC_BOOK_HEDGE_BETA_WINDOW = 126
+DYNAMIC_BOOK_HEDGE_BETA_MIN_OBS = 126     # the replay's rolling(126): a full window
+DYNAMIC_BOOK_HEDGE_BETA_CLIP = (0.0, 3.0)
+#: Rule costs (replay: 10 bps per unit of stock exposure changed, 2 bps per unit
+#: of ETF hedge changed) plus the rolling machinery's short borrow (the replay
+#: charged 0; stated). The base book also pays its band round trip.
+DYNAMIC_BOOK_COST_STOCK_BPS = 10.0
+DYNAMIC_BOOK_COST_ETF_BPS = 2.0
+DYNAMIC_BOOK_HEDGE_BORROW_BPS_YR = 30.0
+#: Report only: worst case on a book of this size if every long name gaps
+#: -WORST_GAP at the peak stock exposure (hedge credited nothing), and the
+#: window for the effective-bet count at entry.
+DYNAMIC_BOOK_REPORT_EQUITY_USD = 100_000.0
+DYNAMIC_BOOK_WORST_GAP = 0.30
+#: Report only: a one-session QQQ rise against the hedge (longs credited 0), at the
+#: observed hedge and at the largest the beta clip admits (3x: gross 3.95x).
+DYNAMIC_BOOK_SQUEEZE_QQQ_UP = 0.10
+DYNAMIC_BOOK_BETS_WINDOW = 63
+#: The owner's 11-14 forecast, frozen at the 2026-11-13 close (replay section 4):
+#: the EW of the 22 high-beta fleet books beats SPY at the 21st and 63rd session
+#: after REF_DATE, IF SPY is up; graded vs SPY and vs beta x SPY. Its own prefix
+#: so the dynamic-book declaration above is not touched. Before a grade date the
+#: grader prints NOT_DUE with the running state, never a verdict.
+OWNER_REBOUND_FORECAST_REF_DATE = "2026-11-13"
+OWNER_REBOUND_FORECAST_REF_CLOSES = {"SPY": 754.37, "QQQ": 679.89, "SMH": 486.75}
+OWNER_REBOUND_FORECAST_GRADES = {"21": "2026-12-15", "63": "2027-02-17"}
+
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).
 BOOK_FACTORY_CAP_USD = 1.0
@@ -4742,6 +4922,11 @@ OPENCLAW_BROWSER_HOSTS = OPENCLAW_USER_TAB_HOSTS + OPENCLAW_SOCIAL_HOSTS
 OPENCLAW_REPAIRS_PER_HOUR = 3
 OPENCLAW_REPAIR_BACKOFF_S = 60.0
 OPENCLAW_REPAIR_PORT_WAIT_S = 240.0
+#: A dependency repair that ends unhealthy this many times in a row writes a
+#: DOWN row (journal `gateway_down` + reader_status state DOWN). 2026-11-14.
+OPENCLAW_REPAIR_FAILS_BEFORE_DOWN = 2
+#: A failure streak older than this is history, not a streak.
+OPENCLAW_REPAIR_STREAK_MAX_AGE_S = 6 * 3600.0
 #: No gateway (re)start below this much free RAM: the kill test of 2026-09-28
 #: 14:30 restarted it at 0.5-0.8 GB free and it did not bind its port for more
 #: than 15 minutes (handoff 09-28: "would not open its port under 1 GB free").
@@ -5248,6 +5433,53 @@ BOOK_DNA_LANE_FAMILY_CORR = 0.85
 BOOK_DNA_LANE_IDENTITY_JACCARD = 0.90
 #: How many tickers name a cluster's shared basket on the collapse line.
 BOOK_DNA_BASKET_TOP = 5
+#: CH-11 note (2026-11-13, "the books won only because the market was rising"):
+#: up-capture / down-capture need at least this many SPY-up AND SPY-down periods
+#: in the book's period-return series; below it they say CANNOT DETERMINE.
+BOOK_DNA_MIN_CAPTURE_OBS = 8
+#: CH-11 fix round (review of PR #140, 2026-11-14). B1: the C15 date-stamp test runs per
+#: calendar month (months with >= this many periods); a month FAILS when its correlation with
+#: SPY shifted back one session is at least MIN_LAG_CORR AND beats the same-day correlation by
+#: more than GAP_SE standard errors (sqrt(2/(n-3))) in Fisher-z units. A detection rule, not a 5%
+#: test: a month holds 9-22 periods, and on the lanes' August (16) a one-sided 5% test needs a z
+#: gap of 0.645 against the 0.46-0.63 observed. market_exposure is then estimated after the last
+#: failing month.
+BOOK_DNA_STAMP_MONTH_MIN_OBS = 8
+BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR = 0.30
+BOOK_DNA_STAMP_MONTH_GAP_SE = 1.0
+#: M1: the beta's window is comparable with the receipt window only when it covers at least
+#: this share of the receipt sessions AND its compounded book return is within this many pp of
+#: the receipt return; otherwise the receipt-window beta-adjusted excess is CANNOT DETERMINE
+#: and the beta window's own figure is printed, labelled with its window.
+BOOK_DNA_EXPOSURE_MIN_COVER = 0.80
+BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP = 2.0
+#: M2: an up/down capture whose standard error (delta method) is above this is CANNOT DETERMINE.
+BOOK_DNA_MAX_CAPTURE_SE = 0.25
+#: house rule "the MDE beside every alpha": MDE = this x SE (80% power, 5% two-sided).
+BOOK_DNA_MDE_Z = 2.8
+#: m2: rf = 0 is declared; the row also prints (1 - beta) x rf x T at this ASSUMED cash rate
+#: (not a measured rate) so the reader sees how much the declaration favours a low-beta book.
+BOOK_DNA_RF_ANNUAL_ASSUMED = 0.04
+#: claims-none (owner 2026-11-14, "improve the labeling and classification"): FLAGS beside the
+#: evidence label -- they never raise or lower it. IDLE_CASH = gross / equity below IDLE_GROSS
+#: for the last >= IDLE_MIN_SESSIONS sessions; an idle book's excess is "from cash, not from
+#: positions" when more than FROM_CASH_SHARE of it accrued while idle. SAME_BET_AS = daily
+#: excess correlation >= SAME_BET_CORR over >= SAME_BET_MIN_OBS common sessions. BELOW_MDE uses
+#: the raw-excess MDE (BOOK_DNA_MDE_Z x SE, >= MDE_MIN_OBS periods). ONE_NAME = top-1 holding >
+#: ONE_NAME_SHARE of the gain (BOOK_DNA_ONE_NAME_SHARE, 0.50, still drives the loser rules).
+#: HIGH_BETA = beta > HIGH_BETA.
+BOOK_DNA_FLAG_IDLE_GROSS = 0.05
+BOOK_DNA_FLAG_IDLE_MIN_SESSIONS = 5
+BOOK_DNA_FLAG_FROM_CASH_SHARE = 0.5
+BOOK_DNA_FLAG_SAME_BET_CORR = 0.90
+BOOK_DNA_FLAG_SAME_BET_MIN_OBS = 20
+BOOK_DNA_FLAG_MDE_MIN_OBS = 20
+BOOK_DNA_FLAG_ONE_NAME_SHARE = 0.40
+BOOK_DNA_FLAG_HIGH_BETA = 1.5
+#: PR #146 follow-up: CLAIMS PROMOTED names a rise only once the higher label has held for this
+#: many consecutive DAILY runs (this run included; one run per UTC day, by run id, never mtime);
+#: until then the voice prints "LABELS RISING, NOT YET HELD (k of N runs)". A fall is immediate.
+RESULTS_VOICE_PROMOTION_HOLD_RUNS = 3
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
@@ -5300,6 +5532,40 @@ MATCHED_TWIN_REEVAL_LOOKBACK_DAYS = 140
 #: A reconstruction that misses the receipt's own return by more than this is
 #: flagged RECON_GAP (the twins are still computed on the reconstruction).
 MATCHED_TWIN_REEVAL_MAX_RECON_GAP_PP = 1.0
+# ── CH-38 conditional dip study (2026-11-13, `scripts/ch38_dip_study.py`) ─────
+#: Every threshold below was fixed BEFORE any forward return was read and is
+#: hashed into the study's declaration. The owner's rule: a name >= 30% below
+#: its 52-week high (close / max of the trailing 252 closes - 1, total-return
+#: index; the 11-11 screen's `off_high`).
+CH38_DIP_DRAWDOWN = 0.30
+#: Arm A = the market itself had fallen: the FF value-weighted market's
+#: total-return index >= 10% below its trailing 252-session high on the signal
+#: date (the conventional "correction"); arm B = the company fell, the market
+#: had not (market drawdown < 10%).
+CH38_MARKET_DRAWDOWN = 0.10
+#: Liquid only: price >= 5 USD AND among the top 1,800 common stocks by
+#: 63-session median dollar volume on the signal date (the 11-11 screen held
+#: 1,868 names at >= 20 M USD; a rank floor is the same breadth in every era).
+CH38_MIN_PRICE = 5.0
+CH38_LIQUID_TOP_N = 1800
+#: Nominal floor of the paper book today, run as a labelled sensitivity line.
+CH38_NOMINAL_DOLLAR_VOLUME = 20e6
+CH38_HORIZONS = (21, 63, 126)
+CH38_VOL_WINDOW = 63
+CH38_BETA_WINDOW = 252
+#: Stop for the future book: exit at the close AFTER the first close at or below
+#: entry x (1 - 3 x the name's trailing 63-session daily sigma); cash after.
+CH38_STOP_SIGMA = 3.0
+#: Twin draws per signal date (matched_twins.draw_twins, band x vol tercile).
+CH38_TWIN_DRAWS = 40
+CH38_SEED = 20261113
+#: Labelled sensitivity sweeps (read at their WORST cell, never used to admit).
+CH38_SWEEP_DIP_DRAWDOWN = (0.20, 0.40)
+CH38_SWEEP_MARKET_DRAWDOWN = (0.05, 0.15)
+CH38_ALPHA = 0.05
+CH38_POWER = 0.80
+CH38_FIRST_YEAR = 1991
+CH38_LAST_YEAR = 2024
 
 # ── Telegram replies (LANE A phase 2, 2026-09-28) ────────────────────────────
 #: `backend/services/alerts_replies.py`, called by the existing poller in
@@ -6402,6 +6668,25 @@ HEALTH_TASK_CADENCE_H = {
 #: consecutive probes AND for longer than the allowed age, with no declared idle
 #: reason, is STALE even though its stamps keep moving (roadmap §7).
 HEALTH_PROGRESS_SAME_HASH_PROBES = 2
+#: S69 (2026-11-14, CH-22a §5.8): the tasks registered 11-11 .. 11-14, cadences read from
+#: their live triggers. `task_receipts` judges each by the receipt its job writes.
+HEALTH_TASK_CADENCE_H.update({
+    "AegisEventNodes": 0.5, "AegisForwardCalendar": 24.0, "AegisOwnerCallsRecord": 24.0,
+    "AegisDiscoveryAutopsy": 24.0, "AegisRawSecCollection": 1.0, "AegisLabNight": 24.0,
+    "AegisNewsOverlayBook": 24.0, "AegisLLMSelectorBook": 168.0, "AegisSystemStatus": 0.25,
+    "AegisOwnerEventWarning": 1.0 / 6.0,
+})
+#: S70: `AegisTickerHub` (`scripts.ticker_hub build`, trigger every 30 min).
+HEALTH_TASK_CADENCE_H["AegisTickerHub"] = 0.5
+#: bytes of `runtime_switch/runtime_task_runs.jsonl` read for wrapper rcs (~140 kB/day
+#: measured 2026-11-14, so this covers about two weeks: a weekly job's last run included)
+TASK_RECEIPT_WRAPPER_TAIL_BYTES = 2_000_000
+#: AegisLabNight: trigger 23:00 local (UTC+8) + ExecutionTimeLimit PT7H15M, in UTC
+LAB_NIGHT_WINDOW_UTC = ("15:00", "22:15")
+#: minutes after the window opens before a night with no tick reads DEGRADED
+LAB_NIGHT_FIRST_TICK_GRACE_MIN = 30
+#: AegisNewsOverlayBook's declared ET window (the step's own NEWS_OVERLAY_STEP_WINDOW_ET)
+NEWS_OVERLAY_TASK_WINDOW_START_ET, NEWS_OVERLAY_TASK_WINDOW_END_ET = NEWS_OVERLAY_STEP_WINDOW_ET
 #: `task_keeper analyst`: the weekly analyst-target pull (~60-80 min measured).
 ANALYST_PULL_TIMEOUT_MIN = 150
 #: `task_keeper brain`: `tools/refresh_aegis.py` in the sibling Optimus repo.
@@ -6969,6 +7254,118 @@ EVENT_NODES_FOREIGN_NAME_ALIASES: dict = {
     "美光公司": ("MU", "Micron's Chinese name with 'company' (美光公司)"),
     "台灣美光": ("MU", "Micron's Taiwan entity (台灣美光)"),
 }
+# ── TICKER HUB (ROADMAP CH-22 / M-universe: one page per ticker) ─────────────────
+#: `backend/services/ticker_hub.py` indexes the local news corpus by ticker
+#: (`python -m scripts.ticker_hub build`). The cache lives under `<data root>/<dirname>`.
+TICKER_HUB_DIRNAME = "ticker_hub"
+#: A first build indexes corpus day files / reader day folders at most this old.
+TICKER_HUB_INDEX_DAYS = 90
+#: The index is STALE (payload says so, with its age) past this many hours.
+TICKER_HUB_STALE_HOURS = 6.0
+#: Body characters handed to the strict resolver per row (titles are always read whole).
+TICKER_HUB_BODY_CHARS = 4000
+#: In a body longer than this (a reader page snapshot carries sidebars and "most read"
+#: lists) an issuer NAME must occur at least TICKER_HUB_BODY_MIN_MENTIONS times; the first
+#: real build tagged "Trump says war with Iran is over" (AP) NVDA from a sidebar headline.
+TICKER_HUB_SHORT_BODY_CHARS = 600
+TICKER_HUB_BODY_MIN_MENTIONS = 2
+#: Page-chrome phrases cut from reader bodies before tagging (BBC prints "Add as preferred
+#: on Google" on every article; share buttons name Facebook).
+TICKER_HUB_BODY_BOILERPLATE: tuple = ("add as preferred on google", "share on facebook",
+                                      "follow us on facebook", "sign in with google",
+                                      "get it on google play", "continue with google",
+                                      "continue with facebook", "share via facebook")
+#: More single-word names that are also surnames, places or adjectives in this corpus's
+#: titles (first real build: "Rogers", "Lindsay", "Manchester", "Costar" = co-star,
+#: "Bullish"; fix-round about-tier sample: "NATO Waters" -> WAT, "Universal early childhood
+#: education" -> UVV, "Scott Kirby" -> KEX); like EVENT_NODES_COMMON_WORD_NAMES they then
+#: need an ATTACHED cue.
+TICKER_HUB_COMMON_WORD_NAMES: tuple = ("rogers", "lindsay", "manchester", "costar", "bullish",
+                                       "waters", "universal", "kirby")
+#: Name keys that never tag a row in the hub ("Financial Institutions in Asia ...").
+TICKER_HUB_DROP_NAME_KEYS: tuple = ("financial institutions",)
+#: A reader front/search-page link becomes a headline row only with this much text.
+TICKER_HUB_MIN_LINK_CHARS = 25
+TICKER_HUB_MIN_LINK_WORDS = 4
+#: Request caps.
+TICKER_HUB_DEFAULT_DAYS = 30
+TICKER_HUB_MAX_DAYS = 120
+TICKER_HUB_NEWS_LIMIT = 200
+TICKER_HUB_FEED_LIMIT = 500
+TICKER_HUB_FACET_TOP = 40
+TICKER_HUB_SECTOR_PEERS = 25
+#: Sources that are not headlines (search pages, media pages) and are not indexed.
+TICKER_HUB_SKIP_SOURCES: tuple = ("social", "media_transcripts", "dj_digest_inbox")
+#: Reader page kinds that are not news (quote pages, media pages).
+TICKER_HUB_SKIP_PAGE_KINDS: tuple = ("stock_text", "media", "front_text")
+#: Well-known short names the strict resolver cannot take (under its 5-character
+#: floor, or ambiguous without a cue). CASE-SENSITIVE, whole word, symbol must be in the
+#: issuer table. "Apple" is the one accepted risk (the fruit, capitalised in a title).
+TICKER_HUB_CASED_ALIASES: dict = {"Meta": "META", "AMD": "AMD", "TSMC": "TSM", "Apple": "AAPL",
+                                  "Facebook": "META", "AWS": "AMZN"}
+#: Cased aliases that are also common nouns: taken only with company context (a possessive,
+#: an attached cue, a cue word nearby, or another company named in the same title). The final
+#: real build tagged a food column about apple varieties AAPL.
+TICKER_HUB_CASED_ALIASES_NEED_CONTEXT: tuple = ("Apple",)
+#: Words anywhere in the same text that also give that context ("Apple unveils new iPhone",
+#: "Apple hits fresh all-time intraday high"). Lowercase, substring.
+TICKER_HUB_CASED_CONTEXT_WORDS: tuple = ("iphone", "ipad", "macbook", "airpods", "app store",
+                                         "tim cook", "cupertino", "all-time high", "intraday",
+                                         "market cap", "market value", "trillion", "nasdaq",
+                                         "s&p 500")
+#: Share classes read together on one ticker page.
+TICKER_HUB_SIBLINGS: dict = {"GOOGL": ("GOOG",), "GOOG": ("GOOGL",), "BRK.B": ("BRK.A",),
+                             "BRK.A": ("BRK.B",)}
+#: Fix round (review of PR #145). Index layout version: a cache written by another version
+#: is rebuilt from scratch, never mixed (row ids changed in v2).
+TICKER_HUB_INDEX_SCHEMA = "ticker-hub-index/2"
+#: Boilerplate cut from a row's body BEFORE tagging, per source-id prefix ("*" = every
+#: source). Google News ends every cluster with a "full coverage" link in the edition's
+#: language; one "Google" in it tagged GOOGL on ~4,100 unrelated rows (review F1).
+TICKER_HUB_SOURCE_BOILERPLATE: dict = {
+    "google_news_rss_": ("See more headlines and perspectives on Google News",
+                         "See more headlines & perspectives on Google News",
+                         "View Full Coverage on Google News",
+                         "在Google 新闻上查看更多头条新闻和观点",
+                         "前往 Google 新聞瀏覽更多頭條新聞和觀點",
+                         "Google ニュースで見出しと意見をもっと見る",
+                         "Google 뉴스에서 헤드라인 및 의견 더보기"),
+}
+#: A publisher's or aggregator's OWN ticker is never taken from its body (page chrome,
+#: footers, "on Google News"); only from the title. Source-id prefix -> symbols.
+TICKER_HUB_PUBLISHER_TICKERS: dict = {
+    "google_news_rss_": ("GOOGL", "GOOG"),
+    "dj_reader_": ("NWSA", "NWS"), "wsj_": ("NWSA", "NWS"), "mw_": ("NWSA", "NWS"),
+    "barrons_magazine": ("NWSA", "NWS"), "reader:wsj": ("NWSA", "NWS"),
+    "reader:barrons": ("NWSA", "NWS"), "reader:marketwatch": ("NWSA", "NWS"),
+    "reader:cnbc": ("CMCSA",), "reader:yahoo": ("YHOO",),
+}
+#: Reader headline links that are quote chips, not news ("TSEM Tower Semiconductor Ltd.
+#: 154.61 -11.87 (-7.13%)", "NVDA, price 164.10, down 5.55 percent").
+TICKER_HUB_QUOTE_CHIP_PATTERNS: tuple = (
+    r"^[A-Z][A-Z.\-]{0,6}\s.*\s[+\-]?\d[\d,]*\.\d+\s[+\-]\d[\d,]*\.?\d*\s\([+\-]?\d+(?:\.\d+)?%\)$",
+    r"^[A-Z][A-Z.\-]{0,6},\s*price\s[\d,.]+,\s*(?:up|down)\s[\d.]+\s*percent$",
+)
+#: A source whose newest row is older than this is listed as stale (red) on the hub and
+#: the news page. Per-source overrides for feeds that are slow by nature.
+TICKER_HUB_SOURCE_STALE_HOURS = 48.0
+TICKER_HUB_SOURCE_STALE_HOURS_BY_SOURCE: dict = {"quantocracy_rss": 240.0,
+                                                 "reddit_securityanalysis_rss": 168.0,
+                                                 "reader:fed": 720.0, "reader:treasury": 168.0,
+                                                 "reader:bls": 720.0, "reader:sec": 168.0}
+#: A published time later than first_seen by more than this is not believed (a wrong zone);
+#: the row is then placed by its first_seen.
+TICKER_HUB_PUBLISHED_FUTURE_SLACK_S = 3600
+#: Two times on a row are both shown when they differ by more than this.
+TICKER_HUB_SHOW_BOTH_TIMES_S = 86400
+#: A normalised title shorter than this never joins two rows into one story by title alone.
+TICKER_HUB_MIN_STORY_TITLE_CHARS = 12
+#: Co-mention window for ranking related names.
+TICKER_HUB_COMENTION_DAYS = 90
+#: Stories per News page ("load more" fetches the next page).
+TICKER_HUB_NEWS_PAGE = 50
+#: Generations of the index kept on disk (current + previous); older ones are deleted.
+TICKER_HUB_KEEP_GENERATIONS = 2
 #: The UNADJUSTED IBES EPS summary (`ibes.statsumu_epsus`, US firms, FY1+FY2, 1985-2026),
 #: pulled 2026-08-10 into the Aegis module's raw WRDS folder: the consensus AS QUOTED at
 #: `statpers`, on that day's share basis. `backend.services.ibes_pit_consensus` reads it for
@@ -7165,6 +7562,19 @@ DAY_FILE_EXCLUDED_FAMILIES = ("murat_book",)
 #: A position with no recorded stop is costed at this gap (CLAUDE.md protocol item 4).
 DAY_FILE_GAP_NO_STOP = 0.30
 DAY_FILE_TOP_WORST = 15
+=======
+# -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
+#: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's
+#: "Note to Claude" box appends one row to `<OPTIMUS_LEDGER_DIR>/owner_inbox/notes.jsonl`.
+#: No LLM call, nothing is sent anywhere: the next brain session reads the file.
+#: A note longer than this many characters is refused (422), never cut.
+OWNER_INBOX_MAX_CHARS = 8000
+#: `GET /api/control/owner-notes` default and ceiling for `limit`.
+OWNER_INBOX_LIST_DEFAULT = 20
+OWNER_INBOX_LIST_MAX = 500
+#: Seconds a writer waits for the inbox lock (thread + cross-process) before the
+#: request is refused with 503 -- never a silent drop (PR #143 review, M1).
+OWNER_INBOX_LOCK_WAIT_S = 5.0
 # ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
 #: `scripts/night_investigator_news.py`: the investigator's own process and contract,
 #: plus typed world-digest rows about the name and its graph neighbours (context only),

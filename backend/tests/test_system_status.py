@@ -285,6 +285,30 @@ def test_stale_receipt_is_flagged_on_the_page():
     assert "refresh: python -m scripts.system_status --html" in page
 
 
+def test_page_links_back_to_the_rest_of_the_app():
+    """CH-22 (2026-11-14): the page had no way back to the dashboard."""
+    page = S.render_html(_rec([_r(k, "x", "OK") for k, _ in S.SECTIONS]), now=NOW)
+    for href in ("/", "/stock", "/watchlist", "/news", "/desktop"):
+        assert f"href='{href}'" in page, href
+    for label in ("Dashboard", "Stocks", "Watchlist", "News", "Desktop"):
+        assert f">{label}</a>" in page
+    assert page.index("aria-label='Aegis app'") < page.index("Needs attention")
+
+
+def test_page_says_in_plain_words_when_it_was_collected_and_how_old():
+    rec = _rec([_r(k, "x", "OK") for k, _ in S.SECTIONS])
+    fresh = S.render_html(rec, now=NOW + timedelta(minutes=20))
+    assert "This status was collected 2026-11-10 18:00 UTC" in fresh and "20 min ago." in fresh
+    assert "<p class='gen' id=generated>" in fresh
+    assert fresh.index("id=generated") < fresh.index("Needs attention")
+    old = S.render_html(rec, now=NOW + timedelta(hours=5))
+    assert "<p class='gen stale' id=generated>" in old and "older than the 60 min limit" in old
+    undated = S.render_html(dict(rec, generated_utc=None), now=NOW)
+    assert "no readable collection time" in undated and "gen stale" in undated
+    ahead = S.render_html(rec, now=NOW - timedelta(hours=2))
+    assert "in the FUTURE" in ahead
+
+
 def test_write_atomic_leaves_no_temp(tmp_path):
     p = S.write_atomic(tmp_path / "d" / "status.json", "{}")
     assert p.read_text() == "{}" and [x.name for x in p.parent.iterdir()] == ["status.json"]
@@ -307,19 +331,24 @@ def _client(monkeypatch, tmp_path, enabled=True):
         monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
     app = FastAPI()
     app.include_router(R.router)
-    return TestClient(app)
+    # the desktop page: loopback Host with the served port (reads are checked too)
+    return TestClient(app, base_url="http://127.0.0.1:8000")
 
 
 def test_routes_refuse_when_the_control_plane_is_off(monkeypatch, tmp_path):
+    # CH-22 follow-up: off the desktop the routes do not exist (404, not 403)
     c = _client(monkeypatch, tmp_path, enabled=False)
-    assert c.get("/system-status").status_code == 403
-    assert c.get("/api/control/system-status").status_code == 403
+    for url in ("/system-status", "/api/control/system-status"):
+        r = c.get(url)
+        assert r.status_code == 404 and r.json() == {"detail": "Not Found"}, url
 
 
 def test_page_without_a_receipt_names_the_command(monkeypatch, tmp_path):
     c = _client(monkeypatch, tmp_path)
     r = c.get("/system-status")
     assert r.status_code == 404 and "python -m scripts.system_status --html" in r.text
+    for href in ("/", "/stock", "/watchlist", "/news", "/desktop"):   # L3: a way back
+        assert f"href='{href}'" in r.text, href
     assert c.get("/api/control/system-status").status_code == 404
 
 

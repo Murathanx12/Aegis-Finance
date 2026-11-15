@@ -18,6 +18,7 @@ import { ErrorCard } from "@/components/error-card";
 import { TwoSidedCard } from "@/components/stock/two-sided-card";
 import { FactorLensCard } from "@/components/stock/factor-lens-card";
 import { EventsCard } from "@/components/stock/events-card";
+import { AegisFileCard } from "./aegis-file";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Cell, ReferenceLine,
@@ -749,6 +750,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
 
       {/* EVENT-INTEL: structured descriptive events (filings, earnings, news) */}
       <EventsCard ticker={upperTicker} />
+
+      {/* CH-22: our own collected news, forecasts, calendar, related (desktop only; renders nothing off it) */}
+      {ready && <AegisFileCard ticker={upperTicker} />}
 
       {stockLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

@@ -14,6 +14,7 @@ import {
   Newspaper,
 } from "lucide-react";
 import { DesktopGuide } from "@/components/desktop/guide";
+import { CONTROL_PLANE_BUILD } from "@/lib/control-api";
 import { cn } from "@/lib/utils";
 
 /**
@@ -49,6 +50,27 @@ export default function DesktopLayout({ children }: { children: React.ReactNode 
   // The static desktop build uses trailing slashes; strip one so /desktop/night/
   // and /desktop/night are the same tab.
   const pathname = raw.length > 1 && raw.endsWith("/") ? raw.slice(0, -1) : raw;
+
+  // CH-22 follow-up (2026-11-15): the control plane exists only inside the desktop
+  // app; on the website every `/api/control/*` route is 404. The website build
+  // still contains these routes (one tree, two builds), so off the desktop build
+  // say what this is instead of rendering pages whose every card would read
+  // "not built yet" -- and send no request at all.
+  if (!CONTROL_PLANE_BUILD) {
+    return (
+      <div className="space-y-3 animate-slide-up">
+        <h1 className="text-2xl font-bold tracking-tight">Aegis Desktop</h1>
+        <p className="text-sm text-muted-foreground">
+          Desktop only. These pages are the operator surface of the Aegis desktop app and read
+          a control plane that runs on the owner&apos;s own machine; it is not served by this
+          website.
+        </p>
+        <Link href="/" className="text-sm underline underline-offset-4">
+          Back to the dashboard
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 animate-slide-up">
