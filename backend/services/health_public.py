@@ -357,7 +357,9 @@ def public_system_health(payload: dict) -> dict:
     and counts only. Row `detail`/`proof`/`where`/`evidence`/`missing_because`,
     the receipt file name and line, `read_me_first`, `same_output_rule` and the
     task owners' receipt column are null; `health_line` is rebuilt from the
-    counts. The tracked copy under `public_receipts/` is NOT changed by this."""
+    counts. The publisher applies the same projection before it writes the tracked
+    copy under `public_receipts/` (`publish_receipts._public_system_health`), so
+    this call at serve time is defence in depth (and covers a live receipt)."""
     t = _Tally()
     p = payload if isinstance(payload, dict) else {}
     counts = _scalar_map(p.get("counts"), t)
