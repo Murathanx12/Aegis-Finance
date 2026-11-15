@@ -7566,6 +7566,8 @@ DAY_FILE_TOP_WORST = 15
 DAY_FILE_STATUS_STALE_HOURS = 1.0
 #: Tasks printed in "scheduled today" (the rest are in the JSON).
 DAY_FILE_TOP_SCHEDULED = 40
+#: Earnings dates printed in the dates section (sensors first); the rest are in the JSON.
+DAY_FILE_TOP_DATES = 25
 #: The rolling-cohort journal's newest row is red when older than this (the step runs about every 2 h).
 DAY_FILE_COHORT_STALE_HOURS = 8.0
 #: The dynamic-books journal's newest row is red when older than this.

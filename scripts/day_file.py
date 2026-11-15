@@ -13,9 +13,10 @@ what is red, where does each main account stand" from this one page.
 
 WHAT IT REUSES (it does not re-probe)
 =====================================
-1. Red rows: `scripts.system_status.collect` (which runs every `system_health`
-   probe without its public redaction, plus its own learning/universe/books/night/
-   machine rows and the `schtasks` view). Only non-OK rows are printed.
+1. Systems rows: the newest `system_status/status.json` (written every 15 minutes by
+   `scripts.system_status`; this page runs no probe, no `schtasks` and no `gh` itself).
+   Its age is compared to DAY_FILE_STATUS_STALE_HOURS; only non-OK rows are printed, and
+   the DOWN rows are named. The same record gives the schedule (each task's next run).
 2. Dates: `forward_calendar.next_dates` / `next_macro` (point-in-time readers that
    never use a row pulled after `--now`) and `macro_calendar.fomc_table`.
 3. Event nodes: `event_nodes.nodes_known_at` (the store as it stood at `--now`).
@@ -44,8 +45,7 @@ RULES IT KEEPS
   reason, never 0. A date is compared to a limit, never just printed.
 * `--now` in the past is a REPLAY: rows written after it are skipped by the
   readers; live-only state (Windows scheduler, RAM, processes) is CANNOT DETERMINE.
-* No network except `gh` (through system_status). Railway HTTP and the `railway`
-  CLI are refused inside this run.
+* No network, no broker, no LLM, no subprocess.
 * Exit 0 written and nothing red or undeterminable; 2 written with a red or
   CANNOT DETERMINE section (printed); 3 could not be written.
 """
@@ -486,7 +486,13 @@ def dates_section(data_root: Path, now: datetime, dna: Optional[dict], *, fomc_f
                                   f"sensor {t}: {r.get('label')} ({r.get('reason')})"
                                   + (f"; last reported {r['last_reported']['date']}" if r.get("last_reported") else ""),
                                   store, utc(r.get("pulled_utc")), now))
-        for t, r in upcoming:
+        cap_d = int(_cfg("DAY_FILE_TOP_DATES", 25))
+        shown = sorted(upcoming, key=lambda tr: (tr[0] not in sensors, tr[1]["date"], tr[0]))[:cap_d]
+        shown = sorted(shown, key=lambda tr: (tr[1]["date"], tr[0]))
+        if len(upcoming) > len(shown):
+            lines.append(line(INFO, f"{len(upcoming)} names report within {n_sess} sessions; the {len(shown)} printed are "
+                                    f"the sensors first, then the soonest (all are in the JSON)", store))
+        for t, r in shown:
             who = "sensor" if t in sensors else "held"
             lines.append(line(INFO, f"{r['date']} ({r['sessions_away']} session(s) away, {r.get('timing') or 'time ?'}, "
                                     f"{r.get('confirmation') or 'unconfirmed'}): {t} earnings [{who}]",
@@ -730,7 +736,7 @@ def worst_section(data_root: Path, now: datetime, roi: Optional[dict], dna: Opti
                         "worst_usd": float(wc["worst_usd"]), "n_names": wc.get("n_names"),
                         "gross_over_equity": _num(wc.get("gross_over_equity")),
                         "equity": _num(a.get("equity")),
-                        "basis": "fleet manager: resting stop per name, else its own gap rule"})
+                        "basis": "fleet manager: resting stop per name, else its own gap rule", "broker": True})
     # (b) the PC paper account (no stop recorded in its snapshot -> the gap)
     sp, sd, why = pc_snapshot(data_root, now)
     if sd is None:
@@ -743,7 +749,7 @@ def worst_section(data_root: Path, now: datetime, roi: Optional[dict], dna: Opti
         if pos and len(mv) == len(pos) and eq:
             out.append({"book": "PC-PAPER", "source": rel(sp, data_root), "stamp": utc(sd.get("t")),
                         "worst_usd": round(sum(mv) * gap, 2), "n_names": len(pos),
-                        "gross_over_equity": round(sum(mv) / eq, 4), "equity": eq,
+                        "gross_over_equity": round(sum(mv) / eq, 4), "equity": eq, "broker": True,
                         "basis": f"no stop recorded in this snapshot: |market value| x {gap:.0%} gap"})
         elif pos:
             out.append({"book": "PC-PAPER", "source": rel(sp, data_root), "stamp": utc(sd.get("t")), "worst_usd": None,
@@ -783,6 +789,14 @@ def worst_section(data_root: Path, now: datetime, roi: Optional[dict], dna: Opti
         x = known[0]
         lines.append(line(INFO, f"LARGEST worst case: {x['book']} ${x['worst_usd']:,.0f} (of {len(known)} books with a "
                                 f"computed worst case; {len(unknown)} cannot be computed)", x["source"], x["stamp"], now))
+    brk = [x for x in known if x.get("broker")]
+    if brk:
+        x = brk[0]
+        lines.append(line(INFO, f"LARGEST among broker-held accounts (fleet receipt + PC paper): {x['book']} "
+                                f"${x['worst_usd']:,.0f} on {x['n_names']} name(s)", x["source"], x["stamp"], now))
+    else:
+        lines.append(line(CD, "no broker-held account's positions were readable, so the largest real-account worst "
+                              "case CANNOT be determined", "fleet_manager/runs, pc_snapshot"))
     for x in known[:top]:
         lines.append(line(INFO, f"{x['book']}: worst ${x['worst_usd']:,.0f} on {x['n_names']} name(s); gross "
                                 f"{x['gross_over_equity']:.2f}x equity ${x['equity']:,.0f}; {x['basis']}",
@@ -1078,7 +1092,8 @@ def build(data_root: Path, *, now: Optional[datetime] = None, wall: Optional[dat
             "sections_cannot_determine": [k for k, s in ordered.items() if s["status"] == CD],
             "read_me_first": ("Built only from receipts on disk; every line names its receipt and that receipt's age "
                               "relative to now_utc. CANNOT_DETERMINE is never fine and never 0. Read-only: no broker, "
-                              "no LLM, no network but gh.")}
+                              "no LLM, no network, no probe of its own: the systems rows are the newest "
+                              "system_status/status.json.")}
 
 
 def _md_line(ln: dict) -> str:
