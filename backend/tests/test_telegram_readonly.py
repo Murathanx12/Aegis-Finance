@@ -117,7 +117,7 @@ def test_help_and_aliases():
 
 def test_the_table_is_exactly_the_read_commands():
     assert set(RO.COMMANDS) == {"status", "budget", "digest", "books", "nav", "positions"}
-    assert set(RO.HANDLERS) == set(RO.COMMANDS) | {"help"} | set(RO.ALIASES)
+    assert set(RO.HANDLERS) == set(RO.COMMANDS) | {"help", "note"} | set(RO.ALIASES)
     for forbidden in ("sim", "approve", "deny", "deep", "ask", "research", "broker", "pending"):
         assert forbidden not in RO.HANDLERS
 
@@ -165,7 +165,7 @@ def test_an_owner_round_trip_through_poll(wire, trapped):
     msg(3, "/sim start 8")
     TG.poll(RO.HANDLERS, text_handler=RO.text_reply, callback_handler=RO.callback_reply)
     assert [s["chat_id"] for s in sent] == [OWNER] * 3
-    assert sent[0]["text"].startswith("Status: 30 OK") and "parse_mode" not in sent[0]
+    assert sent[0]["text"].startswith("Systems: OK 30") and "parse_mode" not in sent[0]
     assert "DEEPSEEK BUDGET" in sent[1]["text"]
     assert sent[2]["text"].startswith("Not supported: /sim")
     assert TG._offset() == 3

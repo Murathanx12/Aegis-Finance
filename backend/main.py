@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from backend.services.campaign_ledger_startup import enforce_production
 enforce_production()  # Verify preserved accounting before any application/router imports.
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.cache import cache_clear, set_cache_status, cache_ready, cache_status
@@ -293,6 +293,10 @@ async def lifespan(app: FastAPI):
     import asyncio
 
     logger.info("Aegis Finance API starting")
+    try:  # one line: is the trigger token usable (names the variable, never the value)
+        control.log_trigger_token_status()
+    except Exception as e:
+        logger.warning("trigger-token status line failed (non-fatal): %s", e)
     # RSS high-water sampler first, so the very first prewarm spike is on the
     # record with the name of what was running.
     try:
@@ -904,16 +908,18 @@ def git_head() -> str | None:
 
 
 @app.get("/api/health")
-async def health():
+async def health(request: Request):
+    """Railway's healthcheck path and the desktop splash's probe: 200, no auth,
+    a few words. The cache error text (an exception string) is for the control
+    plane / token holder only."""
+    from backend.services import health_public as hp
     cs = cache_status()
-    return {
-        "status": "ok",
-        "version": "0.2.0",
-        "cache_ready": cache_ready(),
-        "cache_status": cs["status"],
-        "cache_error": cs.get("error"),
-        "git_head": git_head(),
-    }
+    body = hp.public_health_minimal(
+        cache_ready=cache_ready(), cache_status=cs["status"], version="0.2.0",
+        git_head=git_head())
+    if hp.full_view_allowed(request):
+        body["cache_error"] = cs.get("error")
+    return body
 
 
 def _process_rss_mb() -> float | None:
@@ -938,8 +944,38 @@ def _rss_high_water() -> dict | None:
 
 
 @app.get("/api/health/full")
-async def health_full():
+async def health_full(request: Request):
+    """The PUBLIC health view -- or the full payload for the control plane.
+
+    Anyone gets `services.health_public.public_health_full` (status words, freshness
+    dates, per-lane NAV; no log lines, spend, paths or failure text). A desktop
+    control-plane request or a caller with the `X-Health-Token` header gets the
+    full payload below, marked `"view": "full"`. `/api/health/detail` always
+    serves the full payload to those callers and answers 404 to everyone else.
+    """
+    from backend.services import health_public as hp
+    full, codes = _build_health_full()
+    if hp.full_view_allowed(request):
+        return {"view": "full", **full}
+    return hp.public_health_full(full, codes)
+
+
+@app.get("/api/health/detail", include_in_schema=False)
+async def health_detail(request: Request):
+    """The full health payload. Control plane (desktop) or `X-Health-Token` only;
+    404 while no token is configured and the control plane is off."""
+    from backend.services import health_public as hp
+    hp.require_full_view(request)
+    full, _codes = _build_health_full()
+    return {"view": "full", **full}
+
+
+def _build_health_full() -> tuple[dict, list[str]]:
     """One-call session status: everything /go Phase 0 needs.
+
+    Returns (full payload, coarse degraded codes). The codes are the public
+    `degraded_reasons`: the same conditions as the full reasons, as words that
+    carry no producer text.
 
     Aggregates deploy identity (commit, uptime), scheduler + per-lane NAV
     freshness, track-record state (per-lane latest NAV + since-inception
@@ -1176,6 +1212,9 @@ async def health_full():
     # status check decorative: prediction_ledger could sit DEGRADED for weeks
     # and never page. Fold the canaries that must page into the top level.
     _degraded_reasons = []
+    #: The public twin of `_degraded_reasons`: one coarse code per condition,
+    #: appended beside every reason below. No producer text, no paths.
+    _codes: list[str] = []
     # NAME THE POPULATION. "prediction_ledger not ok" sent a reviewer and very
     # nearly a session to rebuild the arena, which was working — the silence
     # was live_forward's. A reason that does not say which population is a
@@ -1187,15 +1226,19 @@ async def health_full():
             _problems = _row.get("problems") or [_row.get("reason") or _st]
             _degraded_reasons.append(
                 f"forecast population {_pid}: {'; '.join(str(p) for p in _problems)}")
+            _codes.append(f"forecast_population:{_pid}")
     if not forecast_populations.get("populations") and \
             str(prediction_ledger.get("status", "")) != "ok":
         # Registry unavailable — fall back to the single-ledger row rather than
         # reporting green on a check that did not run.
         _degraded_reasons.append("prediction_ledger (live_forward) not ok")
+        _codes.append("prediction_ledger")
     if not (sched.get("nav") or {}).get("all_fresh"):
         _degraded_reasons.append("nav not fresh")
+        _codes.append("nav_not_fresh")
     if str(investment_committee_health.get("status", "")) != "ok":
         _degraded_reasons.append("ic funnel unavailable")
+        _codes.append("ic_funnel")
     # NIGHT-13 §8: a rolling deploy's old replica deleted `pi_ledger_resolve`
     # from the shared jobstore and the count still looked plausible. Name the
     # missing id — "scheduler degraded" would send the next session hunting.
@@ -1203,11 +1246,15 @@ async def health_full():
     # and must not fabricate one; the dead-scheduler case is /health/scheduler's.
     for _jid in ((sched.get("jobs") or {}).get("missing") or []):
         _degraded_reasons.append(f"scheduler job missing: {_jid}")
+        _codes.append(f"scheduler_job_missing:{_jid}")
     for _jid in ((sched.get("jobs") or {}).get("unexpected") or []):
         _degraded_reasons.append(f"scheduler job undeclared: {_jid}")
+        _codes.append(f"scheduler_job_undeclared:{_jid}")
     # Named, never counted: "fred degraded" would send the next reader hunting
     # through 23 series to find out which one stopped arriving.
     _degraded_reasons.extend(fred_source_health.get("degraded_reasons") or [])
+    if fred_source_health.get("degraded_reasons"):
+        _codes.append("fred_health")
     # Forecasts that stopped accruing, and an OpenClaw call that came back
     # EMPTY, page by NAME (C0). Collector liveness stays inside the block: on a
     # replica that never ran a collector it would be a permanent red line, and
@@ -1216,6 +1263,7 @@ async def health_full():
         _r = accrual_canary_health.get(_k) or {}
         if _r.get("status") == "DEGRADED":
             _degraded_reasons.append(f"{_k}: {_r.get('reason')}")
+            _codes.append(_k)
     # Every long-running subsystem, each verdict DERIVED from evidence its
     # producer wrote (review 2026-09-26 §4). Informational: it does not fold
     # into `status`, whose paging semantics are older than this block.
@@ -1224,7 +1272,7 @@ async def health_full():
         subsystems = _sh.api_block()
     except Exception as e:                                     # noqa: BLE001
         subsystems = {"source": "error", "rows": [], "error": str(e)}
-    return {
+    full = {
         "status": "ok" if not _degraded_reasons else "DEGRADED",
         "degraded_reasons": _degraded_reasons,
         "deploy": {
@@ -1267,10 +1315,11 @@ async def health_full():
         "recent_warnings": recent_warnings(),
         "subsystems": subsystems,
     }
+    return full, _codes
 
 
 @app.get("/health/scheduler")
-async def health_scheduler():
+async def health_scheduler(request: Request):
     """Canary for the Portfolio Intelligence scheduler (point UptimeRobot here).
 
     Returns HTTP 503 when the scheduler is not running or its jobs are missing
@@ -1280,13 +1329,18 @@ async def health_scheduler():
     from fastapi.responses import JSONResponse
     from backend.services.portfolio_intelligence.scheduler import scheduler_health
 
+    from backend.services import health_public as hp
+
     h = scheduler_health()
     healthy = h.get("running") and h.get("n_jobs", 0) >= 3 and h.get("persistent")
-    return JSONResponse(status_code=200 if healthy else 503, content=h)
+    # The status code is the canary; the body is public (running, job count,
+    # per-lane NAV dates, job ids) unless the control plane / token asks.
+    body = h if hp.full_view_allowed(request) else hp.public_scheduler_health(h)
+    return JSONResponse(status_code=200 if healthy else 503, content=body)
 
 
 @app.get("/api/providers")
-async def providers():
+async def providers(request: Request):
     """Data provider inventory + current availability.
 
     Reports which upstream sources (yfinance/FRED/Polygon/FMP/Finnhub/AV)
@@ -1295,8 +1349,10 @@ async def providers():
     """
     from backend.services.providers import registry
 
+    from backend.services import health_public as hp
+
     healths = registry.health()
-    return {
+    payload = {
         "providers": [
             {
                 "name": h.name,
@@ -1308,3 +1364,7 @@ async def providers():
         ],
         "priority": registry._priority,
     }
+    # `reason` (what is missing, which key) is for the control plane / token only.
+    if hp.full_view_allowed(request):
+        return {"view": "full", **payload}
+    return hp.public_providers(payload)

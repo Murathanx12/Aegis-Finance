@@ -52,6 +52,13 @@ NAMES_THE_FILE: dict[str, str] = {
     "backend/services/query_planner.py": "via the layer (logical_lines, fingerprint)",
     "backend/services/system_health.py": "via the layer (logical_lines; accrual canary)",
     "nn_lab/config.py": "FORECAST_LEDGER, read by nn_lab.table.ledger via the layer",
+    "backend/config.py": ("FORECAST_EXPIRY_CAMPAIGN_PATH: a git path for `git show` of the last "
+                          "committed campaign copy, never a filesystem read"),
+    "backend/services/forecast_expiry.py": ("read-only sweep of the single legacy file; refuses when "
+                                            "forecast_ledger.backend_for is not legacy"),
+    "scripts/day_file.py": "via the layer (exists, logical_lines); a count only",
+    "scripts/paper_tables.py": ("dated read-only table builder that hashes the bytes it reads; refuses "
+                                "when forecast_ledger.backend_for is not legacy"),
     "scripts/bridge_report.py": "via the layer (magnitude_rows -> logical_lines)",
     "scripts/daily_learning_report.py": "via the layer (read_rows; accrual canary)",
     "scripts/decision_autopsy.py": "via the layer (load_predictions -> logical_lines)",

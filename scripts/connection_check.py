@@ -902,11 +902,15 @@ def probe_website() -> Probe:
     tr = (d.get("track_record") or {}).get("lanes") or {}
     summary = {
         "status": d.get("status"),
-        "commit": str(d.get("commit") or d.get("build") or "")[:12],
-        "uptime_s": d.get("uptime_seconds"),
+        "commit": str(d.get("commit") or d.get("build")
+                      or (d.get("deploy") or {}).get("commit") or "")[:12],
+        "uptime_s": d.get("uptime_seconds") or (d.get("deploy") or {}).get("uptime_seconds"),
+        "view": d.get("view"),
         "top_level_keys": sorted(d)[:20],
         "lane_count": len(tr),
-        "warning_count": len(d.get("recent_warnings") or []),
+        # The public view carries no log lines; None is "not served", never 0.
+        "warning_count": (len(d.get("recent_warnings") or [])
+                          if "recent_warnings" in d else None),
         "payload_bytes": len(r["body"]),
     }
     p.endpoints[-1]["summary"] = summary
@@ -915,7 +919,8 @@ def probe_website() -> Probe:
         return p.fail(CANNOT, f"reachable but status={summary['status']!r}",
                       entitlement="ours")
     return p.ok(f"status={summary['status']!r}, {summary['lane_count']} lanes, "
-                f"{summary['warning_count']} recent warnings "
+                f"{summary['warning_count'] if summary['warning_count'] is not None else 'n/a (public view)'} "
+                f"recent warnings "
                 f"({summary['payload_bytes']} B sliced away)",
                 entitlement="ours")
 

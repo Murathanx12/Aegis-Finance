@@ -2066,6 +2066,17 @@ def _case_news_entity_embed():
             "an embedding tagger run with no news corpus")
 
 
+def _case_news_tag_demotion():
+    # CH-46d: a hub asked to apply demotions with no demotion sidecar must get a named
+    # refusal (rc 2), never an empty map that reads as "nothing to hide".
+    from pathlib import Path as _P
+
+    from backend.services.news_tag_demotion import DemotionRefused, read_sidecar
+    nowhere = _P("does/not/exist/news_tag_demotion_sidecar.jsonl")
+    return (lambda: read_sidecar(nowhere), DemotionRefused,
+            "applying hub demotions with no demotion sidecar")
+
+
 def _case_llm_selector_book():
     # llm-book-ruler (CH-17/CH-11): with no funnel snapshot and no bars panel
     # there is no candidate set to choose from; that must be a refusal (red
@@ -2119,6 +2130,29 @@ def test_global_price_admission_positive_control_is_pure(monkeypatch):
 # -- end CH-05 rescue R3 ------------------------------------------------------
 
 
+# -- CH-47 (s70/ch47-insider-copy): insider copy book ------------------------
+def _case_insider_copy():
+    import pandas as pd
+
+    from backend.services.insider_copy import InsiderCopyRefused, aggregate_trades
+
+    return (lambda: aggregate_trades(pd.DataFrame()), InsiderCopyRefused,
+            "an insider copy book with no open-market purchases")
+# -- end CH-47 -----------------------------------------------------------------
+
+# -- CH-42 forecast and evidence expiry ----------------------------------------
+def _case_forecast_expiry():
+    import pathlib
+    import tempfile
+
+    from backend.services.forecast_expiry import ForecastExpiryRefused, sweep
+
+    empty = pathlib.Path(tempfile.mkdtemp(prefix="ch42-guard-")) / "optimus"
+    return (lambda: sweep(data_root=empty, out_dir=empty.parent.parent / "ch42-guard-out", write=False),
+            ForecastExpiryRefused, "an expiry sweep over a data root with no forecast ledger")
+# -- end CH-42 -----------------------------------------------------------------
+
+
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
@@ -2145,6 +2179,7 @@ CASES = {
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
     "bar_defects_empty_book": _case_bar_defects_empty_book,
+    "forecast_expiry": _case_forecast_expiry,
     "calendar_offsets": _case_calendar_offsets,
     "lib_forward_trial": _case_lib_forward_trial,
     "investment_committee": _case_investment_committee,
@@ -2269,6 +2304,8 @@ CASES = {
     "forward_calendar": _case_forward_calendar,
     "ticker_hub": _case_ticker_hub,
     "news_entity_embed": _case_news_entity_embed,
+    "news_tag_demotion": _case_news_tag_demotion,
+    "insider_copy": _case_insider_copy,
 }
 
 

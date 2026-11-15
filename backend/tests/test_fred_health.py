@@ -230,7 +230,7 @@ def test_health_full_names_the_missing_series_in_degraded_reasons():
     FH.record_miss("initial_claims")
     FH.record_miss("initial_claims")
 
-    body = TestClient(app).get("/api/health/full").json()
+    body = TestClient(app).get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
     assert "fred_health" in body
     joined = " ".join(body["degraded_reasons"])
     assert "initial_claims" in joined and "ICSA" in joined

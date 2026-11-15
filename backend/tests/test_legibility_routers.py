@@ -27,6 +27,8 @@ from backend.services import legibility_sanitise as S
 NOW = datetime.now(timezone.utc).replace(microsecond=0)
 HOME = r"C:\Users\someone\aegis-finance\backend\data\optimus\x.json"
 
+PAGE_COUNT_SENTINEL = "91827364055"
+
 #: Nothing matching any of these may appear in a served payload.
 DENY_PATTERNS = {
     "account number": r"PA9SECRET0001",
@@ -38,7 +40,10 @@ DENY_PATTERNS = {
     "dollar keys": r'"(equity|cash|start_capital|sum_equity|sum_start_capital|pnl|last_equity|buying_power)"',
     "equity value": r"123456\.78|98765\.43",
     "publisher": r"(?i)dow ?jones|barron",
-    "page counts": r"14347",
+    # A planted sentinel must be unmistakable: the old 5-digit "14347" collided with sha256 digests
+    # and ages in served payloads (CI flake 2026-11-15, three tests, passed on rerun). Long + -bounded
+    # so it cannot match inside a hex digest or a longer number.
+    "page counts": rf"\b{PAGE_COUNT_SENTINEL}\b",
     "owner personal": r"murat_live|murat_book|murat_core",
     "broker host": r"paper-api\.alpaca\.markets",
 }
@@ -166,7 +171,7 @@ def _health(base: Path, gen: datetime) -> dict:
          "detail": "sim_run: 1 live instance(s); parents: 1 x parent pid 4242 [python]"},
         {"name": "openclaw_gateway", "probe": "openclaw_gateway", "verdict": "ALIVE", "state": "ALIVE",
          "evidence_utc": gen.isoformat(), "evidence": "GET http://127.0.0.1:18789/health",
-         "detail": "dowjones reader: 14347 page loads total; REDDIT_KEYS_ABSENT", "proof": "port 18789 answers"},
+         "detail": "dowjones reader: " + PAGE_COUNT_SENTINEL + " page loads total; REDDIT_KEYS_ABSENT", "proof": "port 18789 answers"},
         {"name": "railway_backend", "probe": "railway_backend", "verdict": "UNKNOWN", "state": "UNKNOWN",
          "evidence_utc": None, "age_s": None, "detail": "GET :8080/health; FAKE_BROKER_KEY_ID unset"},
     ]
@@ -318,7 +323,7 @@ def test_whole_payloads_carry_no_secret_and_urls_keep_their_path(client):
     _health(base, NOW - timedelta(hours=1))
     _theory(base)
     for path in ("/api/arena/v1/latest", "/api/legibility/v1/system-health", "/api/legibility/v1/theory-lab"):
-        r = c.get(path)
+        r = c.get(path, headers={"X-Health-Token": "test-health-token"})
         assert r.status_code == 200, path
         assert_clean(r.json())
     a = c.get("/api/arena/v1/latest").json()
@@ -329,7 +334,7 @@ def test_whole_payloads_carry_no_secret_and_urls_keep_their_path(client):
     assert a["by_family"]["pc_paper"] == {"n": 1, "n_priced": 1, "roi_pct": 0.27}
     assert a["clusters"][0]["members"] == ["hack2"]
     assert a["numbers"]["n_owner_personal_dropped"] == 2
-    h = c.get("/api/legibility/v1/system-health").json()
+    h = c.get("/api/legibility/v1/system-health", headers={"X-Health-Token": "test-health-token"}).json()
     proofs = {x["name"]: x for x in h["groups"][-1]["rows"]}
     assert proofs["sim_session"]["proof"] == ""
     assert proofs["sim_session"]["alarm"]["light"] == "AMBER"
@@ -524,7 +529,7 @@ def test_system_health_shape_groups_and_same_output(client):
     c, base = client
     _health(base, NOW - timedelta(hours=30))                 # older receipt: must not be served
     rec = _health(base, NOW - timedelta(hours=1))
-    d = c.get("/api/legibility/v1/system-health").json()
+    d = c.get("/api/legibility/v1/system-health", headers={"X-Health-Token": "test-health-token"}).json()
     assert d["receipts"][0]["file"].endswith(f"health_{_stamp(NOW - timedelta(hours=1))}.json")
     assert d["status"] == "FRESH"
     assert [g["verdict"] for g in d["groups"]] == ["STALE", "UNKNOWN", "ALIVE"]
@@ -625,9 +630,19 @@ def test_qualified_static_health_proof_survives_without_promoting_legacy_sim(cli
         'detail':'synthetic tool configuration verified','proof':'synthetic source-owned configuration proof'})
     rec['counts']['ALIVE']+=1
     _w(base/'health'/f"health_{_stamp(NOW-timedelta(hours=1))}.json",rec)
-    L._CACHE.clear();out=c.get('/api/legibility/v1/system-health').json()
+    L._CACHE.clear();out=c.get('/api/legibility/v1/system-health', headers={"X-Health-Token": "test-health-token"}).json()
     rows={r['name']:r for g in out['groups'] for r in g['rows']}
     assert rows['openclaw_tool_scope']['alarm']['light']=='GREEN'
     assert rows['openclaw_tool_scope']['proof']=='synthetic source-owned configuration proof'
     assert rows['sim_session']['alarm']['light']=='AMBER' and rows['sim_session']['proof']==''
     assert rec['rows'][0]==before['rows'][0]
+
+
+def test_page_count_guard_bites_on_a_raw_count_but_not_on_a_digest():
+    # Bites: the sanitiser's job is to turn the planted count into "page loads"; bypassed, the guard fails.
+    raw = {"detail": f"reader: {PAGE_COUNT_SENTINEL} page loads total"}
+    with pytest.raises(AssertionError, match="page counts leaked"):
+        assert_clean(raw)
+    assert_clean({"detail": S.scrub_str(raw["detail"])})
+    # Does not cry wolf: the old flake's shape - the digits inside a sha256 or a longer number.
+    assert_clean({"sha256": "ab" + PAGE_COUNT_SENTINEL + "cd" + "0" * 50, "n": PAGE_COUNT_SENTINEL + "7"})

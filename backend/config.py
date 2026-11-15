@@ -16,7 +16,15 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
-# ── Project root ──────────────────────────────────────────────────────────────
+# A windowless process (a `pythonw.exe` scheduled task, the packaged app) must never open a
+# console window for a child: on 2026-11-15 `scripts.system_status` put ~10 Terminal windows
+# in the foreground every 15 minutes. Installed here because nearly every entry point imports
+# this module first; it does nothing in a process that has a console (shell, pytest, CI).
+from backend.services.quiet_subprocess import install_windowless_default as _install_windowless_default
+
+_install_windowless_default()
+
+# ── Project root──────────────────────────────────────────────────────────────
 
 
 def _repo_root() -> Path:
@@ -2959,6 +2967,35 @@ RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false"
 #: visibility gives an LLM authority over capital.
 PERSONAL_MODE = os.getenv("AEGIS_PERSONAL_MODE", "0") in ("1", "true", "yes")
 
+#: TRIGGER TOKEN (S70, 2026-11-15). The hosted backend is public, and until this
+#: `POST /api/optimus/run_job/{job_id}`, `POST /api/pi/trigger-check` and
+#: `POST /api/pi/replay/{lane_id}/refresh` started scheduler jobs / rebalance
+#: checks / a ten-minute recompute for anyone who sent the request, and
+#: `GET /api/pi/reference/{lane_id}/state` ran a full rebalance check (paper-lane
+#: writes) on every read. `backend.routers.control.require_trigger_token` now
+#: guards them: the caller sends the header below carrying the value of the
+#: environment variable below.
+#:
+#: Only the NAMES live here. The value is read from the environment at request
+#: time, is never stored on a module, never logged and never echoed. FAIL CLOSED:
+#: unset, empty or shorter than the minimum length means the routes answer 404
+#: for every caller except the desktop app's own same-machine page.
+TRIGGER_TOKEN_ENV: str = "AEGIS_TRIGGER_TOKEN"
+TRIGGER_TOKEN_HEADER: str = "X-Aegis-Trigger-Token"
+#: A configured value shorter than this is treated as NOT configured: nothing
+#: rate-limits these routes, so a guessable token is an open route with a delay.
+#: `python -c "import secrets; print(secrets.token_urlsafe(32))"` gives 43 chars.
+TRIGGER_TOKEN_MIN_LENGTH: int = 24
+#: The two journal writes the website's own pages are meant to reach stay open
+#: (`POST /api/pi/conviction/decision`, `POST /api/journal/thesis`; the owner's
+#: decision is pending). An anonymous caller's LIST inputs on them are capped at
+#: this many items (422 above it), so one request cannot write an unbounded row.
+PUBLIC_WRITE_MAX_LIST_ITEMS: int = 25
+#: `POST /api/pm/snapshot` does one enrich fetch and one ledger row PER TICKER.
+#: A caller-supplied list longer than this is refused (422). The blank default
+#: (the whole book + watchlist) is the owner's own list and is not capped.
+PM_SNAPSHOT_MAX_TICKERS: int = 60
+
 #: 2026-09-20: the website backend's warm loop was the Railway bill. Measured
 #: with `railway metrics` on `selfless-courage/Aegis-Finance`: 0.58 vCPU average
 #: (peaks 29.8 vCPU) and 829 MB average, recomputing the 80-ticker screener,
@@ -3655,6 +3692,30 @@ FORECAST_VOID_DELISTED_MIN_SESSIONS = 10
 #: ...or when no local panel has ANY bar for its ticker and its resolution date
 #: is this many calendar days in the past while the panel covers that date.
 FORECAST_VOID_NO_BAR_GRACE_DAYS = 21
+# -- CH-42 forecast and evidence expiry (backend/services/forecast_expiry.py) --
+#: The side ledger the expiry sweep appends to, relative to `--out`. Never under
+#: the data root: the forecast ledger rows are frozen and the sweep only reads them.
+FORECAST_EXPIRY_SUBDIR = "forecast_expiry"
+#: The last committed copy of the campaign ledger (predictions.jsonl) before #108
+#: untracked it on 2026-11-11. A Railway image built from main before #108 carries
+#: this copy as its campaign ledger, which is where the council's 14,658 came from.
+FORECAST_EXPIRY_CAMPAIGN_REF = "7e3fb909^"
+FORECAST_EXPIRY_CAMPAIGN_PATH = "backend/data/optimus/predictions.jsonl"
+#: The overdue count the council quoted on 2026-11-13 (B_portfolio_risk.md §5),
+#: printed beside the count this sweep derives so a difference is explained.
+FORECAST_EXPIRY_CAMPAIGN_QUOTED = 14658
+#: Evidence-label step-down: the trailing window, in SPY sessions ending at a
+#: book's last mark. 63 sessions is one quarter and three times the 21-session
+#: EARLY_EVIDENCE floor, so the floor stays reachable inside the window.
+FORECAST_EXPIRY_LABEL_TRAILING_SESSIONS = 63
+#: The regime a label was earned in: SPY's compounded return over the window
+#: (up when >= 0) and its annualised daily-return volatility (VOLATILE when
+#: above this). Two coarse cuts, printed with their numbers, nothing tuned.
+FORECAST_EXPIRY_REGIME_VOL_CUT = 0.20
+#: A sweep that would move forecasts BACKWARDS exits 3 and prints at most this many
+#: ids; the full list is in the `regress_refused_<stamp>.json` it writes under --out.
+FORECAST_EXPIRY_REGRESS_PRINT_MAX = 50
+# -- end CH-42 --------------------------------------------------------------
 #: The Telegram agent is DEAD when its own heartbeat line is older than this
 #: (it polls every `--interval` s, default 60). Read by `stack_health`-style
 #: probes from `telegram/heartbeat.json`, never from the bot token.
@@ -5327,6 +5388,53 @@ ALERT_MAX_SEND_ATTEMPTS = 3
 #: purchases (code P) whose filings became public within the lookback.
 ALERT_INSIDER_CLUSTER_MIN_BUYERS = 2
 ALERT_INSIDER_CLUSTER_LOOKBACK_DAYS = 30
+# -- CH-47 insider copy book (backend/services/insider_copy.py) --------------
+#: The owner's claim (2026-11-14), tested as stated: copy the insiders whose
+#: record was good AS KNOWN AT THE FILING DATE. Licence PRODUCT_EXPERIMENT,
+#: historical backtest; TRIAL-INSIDER-IC / TRIAL-CMP-INSIDER-IC are forward
+#: trials and are neither re-registered nor read by this module.
+#: Holding horizons in CRSP sessions.
+INSIDER_COPY_HORIZONS = (21, 63, 126)
+#: Extra horizon used ONLY for the owner's "made 300%" descriptive question.
+INSIDER_COPY_OWNER_LONG_HORIZON = 252
+INSIDER_COPY_OWNER_MULTIPLE = 3.0          # "+300%" = raw return >= 3.0
+#: Filing window (the CRSP vintage ends 2024-12-31; 2025-26 rows carry no permno).
+INSIDER_COPY_FIRST_FILING = "2006-01-01"
+INSIDER_COPY_LAST_FILING = "2024-12-31"
+#: Prior record: an insider is ranked only with >= this many prior purchases
+#: whose outcome window CLOSED strictly before the filing date.
+INSIDER_COPY_MIN_PRIOR = 3
+#: Score = sum(prior excess) / (n + K): shrinks a short record toward zero.
+INSIDER_COPY_SHRINK_K = 3.0
+#: Top / poor = at or above / at or below these percentiles of the scores of
+#: eligible trades filed in the trailing window strictly before the month.
+INSIDER_COPY_TOP_PCT = 80.0
+INSIDER_COPY_POOR_PCT = 20.0
+INSIDER_COPY_CUTOFF_LOOKBACK_DAYS = 365
+INSIDER_COPY_CUTOFF_MIN_SCORES = 50
+#: Entry: the OPEN of the first CRSP session strictly after the filing date
+#: (the public bound is FILING_DATE 22:00 ET; the bulk files carry no
+#: acceptance time). Never the filing-day print.
+INSIDER_COPY_ENTRY = "next_open"
+INSIDER_COPY_MIN_PRICE = 1.0               # entry price floor, USD
+#: Round-trip cost in bps by the trade's median daily dollar volume over the
+#: 21 sessions before entry (thresholds USD, descending). Never zero.
+INSIDER_COPY_COST_BANDS = ((1e9, 10.0), (1e8, 20.0), (2e7, 40.0), (1e6, 80.0), (0.0, 200.0))
+INSIDER_COPY_DV_LOOKBACK = 21
+#: Random control (d): this many same-date, same-size-decile CRSP names per trade.
+INSIDER_COPY_CONTROLS_PER_TRADE = 5
+INSIDER_COPY_SIZE_BUCKETS = 10
+INSIDER_COPY_SEED = 47
+#: Large-cap cell, reported separately (market cap on the session before entry).
+INSIDER_COPY_LARGE_CAP_USD = 10e9
+#: A trade is in a cluster when >= this many distinct insiders filed buys.
+INSIDER_COPY_CLUSTER_MIN = 3
+#: Missing CRSP delisting return on a performance delisting (codes 500-599):
+#: Shumway (1997) convention.
+INSIDER_COPY_PERF_DELIST_RET = -0.30
+#: Variants that may be tried, declared before the run (max 6, all reported).
+INSIDER_COPY_MAX_VARIANTS = 6
+# -- end CH-47 ----------------------------------------------------------------
 #: Discovery-lane headlines may CONFIRM an alert inside this window around the
 #: event, never originate one.
 ALERT_CONFIRM_WINDOW_BEFORE_H = 24
@@ -5504,6 +5612,29 @@ BOOK_DNA_FLAG_HIGH_BETA = 1.5
 #: many consecutive DAILY runs (this run included; one run per UTC day, by run id, never mtime);
 #: until then the voice prints "LABELS RISING, NOT YET HELD (k of N runs)". A fall is immediate.
 RESULTS_VOICE_PROMOTION_HOLD_RUNS = 3
+#: paper tables (S70, council 2 item 7/8; `scripts/paper_tables.py`, offline, no LLM). Table 1:
+#: forecasts made on/before PAPER_TABLES_CUT_DAY are the §64 era, later ones the new holdout;
+#: the §64 shrink (0.65 toward the base rate) is applied to the holdout UNCHANGED, as fixed then.
+#: Table 2: no-edge books drawn per (window, k, band) cell; NOT a tuned value, a sample size.
+PAPER_TABLES_CUT_DAY = "2026-09-24"
+PAPER_TABLES_SHRINK_FROM_S64 = 0.65
+PAPER_TABLES_N_BOOT = 1000
+PAPER_TABLES_SEED = 20261115
+PAPER_TABLES_WINDOWS: tuple = (21, 35, 45, 55, 78, 111)
+PAPER_TABLES_KS: tuple = (5, 10, 20, 30, 75)
+PAPER_TABLES_BOOKS_PER_CELL = 300
+#: fix round after the adversarial review (2026-11-15). A cluster interval is READ only at or
+#: above this many blocks (date blocks in Table 1, start quarters in Table 2); below it the
+#: interval is printed and the verdict is CANNOT_DISTINGUISH / too few blocks, never a win.
+PAPER_TABLES_MIN_CLUSTERS_FOR_VERDICT = 10
+#: Table 2 headline interval: books are resampled in blocks of the window's START period
+#: (pandas period alias; "Q" = calendar quarter), because books in one window are one draw.
+PAPER_TABLES_TIME_BLOCK_FREQ = "Q"
+#: the exactly-zero-edge comparator: books with iid symmetric log returns against an
+#: independent benchmark of the same kind, labelled by the real rule. A sample size and a
+#: scale (the label is scale-free in the symmetric case), not tuned values.
+PAPER_TABLES_ZERO_EDGE_DRAWS = 20000
+PAPER_TABLES_ZERO_EDGE_DAILY_SD = 0.01
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
@@ -5656,6 +5787,17 @@ TELEGRAM_AGENT_MODE = os.getenv("AEGIS_TELEGRAM_AGENT_MODE", "read_only").strip(
 TELEGRAM_READONLY_STATUS_STALE_H = 6.0
 #: `positions` answers from the newest fleet-manager run receipt; older than this, STALE.
 TELEGRAM_READONLY_POSITIONS_STALE_H = 26.0
+# CH-48 slice 1 (2026-11-15, `backend/services/telegram_owner_commands.py`): /status /books /note /help.
+#: Commands one chat may send per hour before it is told to wait (a reply, owner only).
+TELEGRAM_OWNER_CMD_MAX_PER_H = 30
+#: Of those, how many may be /note (each writes one inbox row).
+TELEGRAM_OWNER_NOTE_MAX_PER_H = 10
+#: Refused (non-owner) journal rows per hour; beyond this they are dropped and counted.
+TELEGRAM_OWNER_REFUSED_JOURNAL_MAX_PER_H = 20
+#: `/books` says STALE when the newest results voice is older than this many hours.
+TELEGRAM_OWNER_BOOKS_STALE_H = 36.0
+#: A reply is cut to this many UTF-16 units (Telegram's limit is 4096) with a count of omitted lines.
+TELEGRAM_OWNER_REPLY_MAX_CHARS = 3500
 
 # ── Stitched tickers (review 2026-09-29 F4, `backend/services/stitched_tickers.py`) ──
 #: A symbol whose bars stop for MORE than this many market sessions and then
@@ -6164,6 +6306,55 @@ STRADDLE_FWD_UNDERLYING_STALE_MIN = 30.0
 STRADDLE_FWD_RATE = 0.04
 STRADDLE_FWD_BUDGET = 0.02
 STRADDLE_FWD_EQUITY_NOTIONAL = 1_000_000.0
+
+#: CH-20a (2026-11-13, scripts/ch20a_hedge_replay.py): replay of an index / SMH PUT
+#: SPREAD hedge on REAL OptionMetrics quotes (SPY/QQQ/IWM/SMH, the only listed quotes we
+#: hold), laid over the underlying ETF at 100%, against three twins (unhedged; the same
+#: book at lower gross with equal AVERAGE drawdown; a 200-day trend rule) and an inverse
+#: -1x fund control. FROZEN before any result was read (commit precedes the first run).
+#: Roll: on the settlement day of the previous spread, buy the put nearest LONG_MONEYNESS
+#: x spot (inside LONG_BAND), sell the put nearest SHORT_MONEYNESS x spot (inside
+#: SHORT_BAND), same expiry, the expiry whose calendar DTE is nearest DTE_TARGET inside
+#: [DTE_MIN, DTE_MAX] (the pulled file holds DTE 14..45 only, so "1-3 months" is ~1
+#: month here). Fills: pay the ASK buying, receive the BID selling, never the mid; a
+#: missing / crossed long leg SKIPS the day (recorded) and the next session retries; a
+#: missing short leg buys the long put alone (recorded). Held to expiry and settled at
+#: intrinsic on the last session's close (PM-settled ETF options). Contracts = equity /
+#: (spot x MULT), fractional. BUDGET_PER_YEAR is the ONE declared alternative: spend
+#: capped at that share of equity per year, pro rata to the roll's DTE. Trend twin: in
+#: the underlying when the total-return index's prior close > its TREND_SMA-session
+#: mean, else cash; SWITCH_COST_BPS per switch. Inverse control: daily -1x of the
+#: underlying's total return less INVERSE_FEE per year. Cash and financing at 0%
+#: (handicaps the lower-gross twin, i.e. points in the hedge's favour).
+CH20A_HEDGE_SYMBOLS = ("SPY", "QQQ", "IWM", "SMH")
+CH20A_HEDGE_LONG_MONEYNESS = 0.95
+CH20A_HEDGE_LONG_BAND = (0.93, 0.97)
+CH20A_HEDGE_SHORT_MONEYNESS = 0.85
+CH20A_HEDGE_SHORT_BAND = (0.80, 0.87)
+CH20A_HEDGE_DTE_TARGET = 35
+CH20A_HEDGE_DTE_MIN = 28
+CH20A_HEDGE_DTE_MAX = 45
+CH20A_HEDGE_MULT = 100.0
+CH20A_HEDGE_BUDGET_PER_YEAR = 0.02
+CH20A_HEDGE_TREND_SMA = 200
+CH20A_HEDGE_SWITCH_COST_BPS = 5.0
+CH20A_HEDGE_INVERSE_FEE = 0.0095
+CH20A_HEDGE_CRASH_YEARS = (2000, 2001, 2002, 2008, 2020, 2022)
+CH20A_HEDGE_BOOK_USD = 35_000.0
+#: CH-20a fix round (review of PR #139, 2026-11-15) -- POST-HOC sensitivity, NOT part of
+#: the frozen spec above (its sha256 is unchanged). Daily marks: the held legs are marked
+#: every session from their own quotes (long at the liquidation side, short at the
+#: buy-back side) and at intrinsic once the file stops quoting them (DTE < 14) or across a
+#: split. Every twin is matched to the hedged book on EACH risk measure in turn (max
+#: drawdown, average drawdown, worst WORST_WINDOW-session loss), scaling DOWN only; plus
+#: terminal wealth at full size. FILLS: share of the half-spread paid on each leg (1.0 =
+#: ask/bid, the frozen primary; 0.5 = mid + 1/4 of the spread; 0.0 = mid). Cash: 0% (the
+#: frozen convention) and the Kenneth French daily 1-month T-bill `rf` (file RF_FILE,
+#: relative to the wrds data folder) on idle cash, on the inverse control's financing.
+CH20A_SENS_FILLS = (("ask_bid", 1.0), ("mid_plus_quarter_spread", 0.5), ("mid", 0.0))
+CH20A_SENS_WORST_WINDOW = 21
+CH20A_SENS_SCALE_STEPS = 200
+CH20A_SENS_RF_FILE = "ff_factors_daily.parquet"
 
 # ── the reader: X handle timelines (2026-09-29) ──────────────────────────────
 # The source registry's X handles are read as profile/timeline pages inside
@@ -7471,6 +7662,22 @@ NEWS_EMBED_LLM_IN_TOKENS_PER_ROW = 650
 NEWS_EMBED_LLM_OUT_TOKENS_PER_ROW = 40
 NEWS_EMBED_SIDECAR_NAME = "news_entity_embed_sidecar.jsonl"
 NEWS_EMBED_THEME_SIDECAR_NAME = "news_theme_embed_sidecar.jsonl"
+#: CH-46d -- the classifier's REJECT as a DEMOTION filter (`backend/services/news_tag_demotion.py`,
+#: `python -m scripts.news_tag_demotion sheet|evaluate --work DIR --ch46 DIR`). Offline and
+#: attended; the hub does not read the demotion sidecar. Only body-match and digest `mentions`
+#: tags can be hidden; an `about`-tier tag never is. Rows above `llm_language.NON_LATIN_BAR`
+#: non-Latin script are routed to `uncertain` before any decision (an English-only encoder).
+NEWS_DEMOTE_SIDECAR_NAME = "news_tag_demotion_sidecar.jsonl"
+#: The ONE declared alternative threshold: the score under which this share of VALIDATION
+#: positives lie (variant 1 is the CH-46 `reject` threshold, NEWS_EMBED_REJECT_POS_SHARE).
+NEWS_DEMOTE_ALT_POS_SHARE = 0.01
+NEWS_DEMOTE_PRECISION_BAR = 0.90
+NEWS_DEMOTE_SAMPLE_REJECT = 120
+NEWS_DEMOTE_SAMPLE_KEPT = 60
+NEWS_DEMOTE_SEED = 116
+NEWS_DEMOTE_BOOTSTRAP = 2000
+#: Hub-effect table: the largest companies by market cap present in the hub universe.
+NEWS_DEMOTE_TOP_N = 30
 
 # ── UNIVERSE GRAPH v1 (ROADMAP §2a, CH-30) ─────────────────────────────────
 #: The universe as a typed, weighted graph (`backend/services/universe_graph.py`).
@@ -7616,6 +7823,60 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+# ── DAY_FILE: one generated page per day from receipts (ROADMAP CH-44 part 1, 2026-11-13) ──
+#: `scripts/day_file.py`. Reads receipts only; every line names its receipt and age.
+DAY_FILE_DIRNAME = "day_file"
+#: The owner's local day names the file (DAY_<date>); the machine runs on UTC+8.
+DAY_FILE_TZ = "Asia/Hong_Kong"
+#: A `--now` further than this from the wall clock is a REPLAY (live-only state CANNOT DETERMINE).
+DAY_FILE_REPLAY_SLACK_S = 3600
+#: The `day_file` health probe goes STALE when the newest run is older than this.
+DAY_FILE_STALE_HOURS = 26.0
+#: Earnings dates printed for held names + sensors within this many XNYS sessions.
+DAY_FILE_UPCOMING_SESSIONS = 10
+#: Macro dates (CPI / NFP / FOMC) printed within this many calendar days.
+DAY_FILE_MACRO_HORIZON_DAYS = 16
+#: The mega-cap SENSORS (CLAUDE.md: the mega-cap tells us what world we are in).
+DAY_FILE_SENSOR_TICKERS = ("NVDA", "MSFT", "AAPL", "AMZN", "GOOGL", "META", "AVGO", "TSM", "TSLA")
+#: The event-node store is red when its newest build is older than this on a session day.
+DAY_FILE_EVENT_NODES_STALE_HOURS = 6.0
+DAY_FILE_TOP_EVENTS = 5
+#: The ROI + book_dna pair is red when the ROI receipt is older than this.
+DAY_FILE_BOOKS_STALE_HOURS = 36.0
+#: The forecast ledger is red when its newest row is older than this.
+DAY_FILE_FORECAST_STALE_HOURS = 48.0
+#: The main accounts the owner may copy by hand come first in their own table.
+#: Main accounts: broker-held families, plus the accounts the site shows (twins/controls `__` never).
+DAY_FILE_BROKER_FAMILIES = ("alpaca_fleet", "pc_paper")
+DAY_FILE_SHOWN_ACCOUNTS = ("aggressive", "balanced", "conservative", "conviction", "mirror", "smallmid-quality")
+DAY_FILE_MAIN_ACCOUNT_PATTERNS = (r"^PC-PAPER$", r"^murat_core_satellite", r"^hack[1-4]$", r"^revision_flow_v0$")
+#: Families left out of the page: the owner's own holdings are not reviewed (owner, 2026-11-13).
+DAY_FILE_EXCLUDED_FAMILIES = ("murat_book",)
+#: A position with no recorded stop is costed at this gap (CLAUDE.md protocol item 4).
+DAY_FILE_GAP_NO_STOP = 0.30
+DAY_FILE_TOP_WORST = 15
+#: The systems receipt (`system_status/status.json`, rewritten every 15 minutes) is red past this.
+DAY_FILE_STATUS_STALE_HOURS = 1.0
+#: Tasks printed in "scheduled today" (the rest are in the JSON).
+DAY_FILE_TOP_SCHEDULED = 40
+#: Earnings dates printed in the dates section (sensors first); the rest are in the JSON.
+DAY_FILE_TOP_DATES = 12
+#: The opening TODAY block is at most this many lines.
+DAY_FILE_TODAY_MAX_LINES = 15
+#: Non-OK systems rows printed (the rest are counted; all are in the JSON).
+DAY_FILE_TOP_RED_ROWS = 10
+#: Best and worst other books printed in the books tables.
+DAY_FILE_BOOKS_TOP_BOTTOM = 5
+#: A book is left out of the worst-case ranking (and counted) when its family is listed or its name matches.
+DAY_FILE_WORST_EXCLUDE_FAMILIES = ("llm_portfolio:competition", "llm_portfolio:twin")
+DAY_FILE_WORST_EXCLUDE_RE = r"(rehearsal|__|_random_twin|random_same_band|-control$|^matched_)"
+#: The cohort report (`scripts.rolling_cohorts report`, run by hand) is red when older than this.
+DAY_FILE_COHORT_REPORT_STALE_HOURS = 192.0
+#: The rolling-cohort journal's newest row is red when older than this (the step runs about every 2 h).
+DAY_FILE_COHORT_STALE_HOURS = 8.0
+#: The dynamic-books journal's newest row is red when older than this.
+DAY_FILE_DYNAMIC_STALE_HOURS = 30.0
+
 # -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
 #: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's
 #: "Note to Claude" box appends one row to `<OPTIMUS_LEDGER_DIR>/owner_inbox/notes.jsonl`.
@@ -7658,3 +7919,15 @@ INVESTIGATOR_NEWS_MAX_NEIGHBOUR_ROWS = 3
 #: would void the epoch. `forecast_writers()` therefore lists the prefix as
 #: "NOT READ (no reason registered)"; E[r] reads `investigator:` only, so the plan
 #: cannot read this arm. Registering the reason belongs with the next attended epoch.
+
+# -- Public health trim (S70, 2026-11-15) --------------------------------------
+#: `/api/health/full`, `/api/providers` and `/health/scheduler` are PUBLIC on the
+#: hosted site and used to print LLM spend, recent WARNING log lines, provider
+#: failure reasons and absolute paths. They now return a coarse public view
+#: (`backend/services/health_public.py`); the full payload is served only (a) in
+#: desktop/control mode through `control.control_plane_gate`, or (b) on the
+#: hosted site to a caller sending this header with a value equal to the
+#: environment variable below. With the variable UNSET `/api/health/detail`
+#: answers 404 (the usage-summary pattern): never an open default.
+HEALTH_TOKEN_ENV = "AEGIS_HEALTH_TOKEN"
+HEALTH_TOKEN_HEADER = "X-Health-Token"

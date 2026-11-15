@@ -43,6 +43,19 @@
 # deliberate split, and it was fixed in the app (4545d48/18506c8), not here.
 # The monitor was right to be loud once and wrong to be loud nine times.
 
+# S70 (2026-11-15): /api/health/full is now a PUBLIC COARSE VIEW (no log lines,
+# spend, paths or failure text; see backend/services/health_public.py). This
+# monitor stays TOKENLESS on purpose: every field it reads is in that view --
+#   status                         -> status word
+#   scheduler.nav.all_fresh        -> NAV freshness
+#   prediction_ledger.status       -> ledger status word
+#   degraded_reasons               -> now coarse CODES (nav_not_fresh,
+#                                     forecast_population:live_forward, ...),
+#                                     not sentences; the sentences are on
+#                                     /api/health/detail (X-Health-Token).
+# `prediction_ledger.problems` no longer exists publicly and reads as empty.
+# A body that lacks a field reads "missing" and goes RED, never green.
+
 name: Prod monitor
 
 on:

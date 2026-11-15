@@ -27,6 +27,7 @@ E4_BACKEND = (
     "backend/services/owner_decision_bridge.py",
     "backend/services/owner_decision_view.py",
     "backend/services/provisional_event_review.py",
+    "backend/services/quiet_subprocess.py",   # imported by backend/config.py (windowless default)
     "backend/services/world_digest.py",
 )
 
