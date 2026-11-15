@@ -71,6 +71,7 @@ DECL_V1_SHA = "880dc87e3655d7c4"
 #: so every code-P purchase is the union of these three.
 BUY_TYPES = ("insider_open_market_buy", "insider_opportunistic_buy", "insider_routine_buy")
 RECEIPT_NAME = "insider_copy_receipt.json"
+TABLES_NAME = "insider_copy_tables.txt"
 
 #: The variants, declared before the run. V1 is the primary; the others are
 #: counted and reported, never chosen among after the fact.
@@ -527,12 +528,24 @@ def part_run(out: Path) -> int:
 
     base = trades[["insider_cik", "permno", "symbol", "filing_date", "entry_idx", "entry_date", "entry_year",
                    "cmp_class", "cluster", "is_officer", "is_director", "is_tenpercent", "large_cap", "cost"]]
+    base = base.assign(g_date=base["entry_idx"].to_numpy(),
+                       g_fw=base["permno"].astype(str) + "_" + base["filing_date"].dt.to_period("W").astype(str))
     filing_day = trades["filing_date"].to_numpy(dtype="datetime64[D]").astype(np.int64)
+    in_span = sessions >= np.datetime64(CFG.INSIDER_COPY_FIRST_FILING)
+    bh = float(np.prod(1.0 + mk[in_span]))
+    bh_years = float(in_span.sum()) / 252.0
+    market_bh = {"span": [str(sessions[in_span][0]), str(sessions[-1])], "sessions": int(in_span.sum()),
+                 "growth": bh, "annualised": bh ** (1.0 / bh_years) - 1.0,
+                 "note": "buy-and-hold FF market (mktrf+rf) over the filing span; added after the review"}
     receipt: dict = {"schema": "ch47/insider_copy_receipt/1", "declaration_sha16": decl["sha16"],
                      "declaration_written_utc": decl["written_utc"], "run_started_utc": t_start,
                      "licence": decl["licence"], "inputs": {}, "funnel": funnel, "trade_info": tinfo,
                      "delistings": dinfo, "market_missing_sessions": mk_missing, "variants": {},
-                     "variants_tried": list(VARIANTS), "variants_count": len(VARIANTS)}
+                     "variants_tried": list(VARIANTS), "variants_count": len(VARIANTS),
+                     "distinct_cells": ("17 (6 variants x 3 horizons; V6 at H=21 is V1 at H=21). Every split "
+                                        "(CMP class, cluster, large cap, weightings, robustness rows) is "
+                                        "UNDECLARED and descriptive."),
+                     "market_buy_and_hold": market_bh}
     for vname, v in VARIANTS.items():
         vres: dict = {"spec": v, "horizons": {}}
         roles_ok = np.ones(len(base), dtype=bool)
@@ -571,6 +584,20 @@ def part_run(out: Path) -> int:
                     "top_large_cap": _sleeve_report("top_large_cap", top[top["large_cap"]], H),
                     "all_large_cap": _sleeve_report("all_large_cap", allt[allt["large_cap"]], H),
                     "top_compounding": _compound(top, H), "all_compounding": _compound(allt, H)}
+            hres["weightings"] = _weightings(top, poor, allt, H)
+            if vname == "V1_primary":
+                hres["robustness"] = {
+                    f"{col}__{w}": IC.robustness(top[col].to_numpy(), top["entry_idx"].to_numpy(), H,
+                                                 top["symbol"].to_numpy(),
+                                                 None if w == "trade" else top["g_fw"].to_numpy())
+                    for col in ("ex_mkt_net", "ex_ctrl_net") for w in ("trade", "firmweek")}
+                hres["by_year_top_minus_poor"] = {
+                    col: IC.by_year_diff(top[col].to_numpy(), top["entry_idx"].to_numpy(),
+                                         top["entry_year"].to_numpy(), poor[col].to_numpy(),
+                                         poor["entry_idx"].to_numpy(), poor["entry_year"].to_numpy(), H)
+                    for col in ("ex_mkt_net", "ex_ctrl_net")}
+                hres["poor_compounding"] = _compound(poor, H)
+                hres["cluster_share_of_top_trades"] = float(top["cluster"].mean()) if len(top) else None
             yrs = hres["top"].get("by_year_vs_control_net", [])
             share_pos = (np.mean([r["mean_block"] > 0 for r in yrs]) if yrs else 0.0)
             hres["share_years_positive_vs_control"] = float(share_pos)
@@ -595,9 +622,115 @@ def part_run(out: Path) -> int:
     receipt["live_file_counts_after"] = count_live()
     receipt["finished_utc"] = _now()
     _write(rp, _clean(receipt))
+    write_tables(json.loads(rp.read_text(encoding="utf-8")), out / TABLES_NAME)
     say(f"live folder file counts after: {receipt['live_file_counts_after']}")
     say(f"-> {rp} ({time.time()-t0:.0f}s)")
     return 0
+
+
+def _weightings(top: pd.DataFrame, poor: pd.DataFrame, allt: pd.DataFrame, H: int) -> dict:
+    """Every contrast under three units: per trade, per entry date, per firm-week
+    (permno x filing week: one decision filed by several CIKs counts once)."""
+    res = {}
+    for w, gk in (("trade", None), ("date", "g_date"), ("firmweek", "g_fw")):
+        def g(df: pd.DataFrame, gk: str | None = gk):
+            return None if gk is None else df[gk].to_numpy()
+        row = {}
+        for col, tag in (("ex_mkt_net", "vs_market"), ("ex_ctrl_net", "vs_control")):
+            row[f"top_{tag}"] = IC.stats(top[col].to_numpy(), top["entry_idx"].to_numpy(), H, g(top))
+            row[f"poor_{tag}"] = IC.stats(poor[col].to_numpy(), poor["entry_idx"].to_numpy(), H, g(poor))
+            row[f"all_{tag}"] = IC.stats(allt[col].to_numpy(), allt["entry_idx"].to_numpy(), H, g(allt))
+            row[f"top_minus_poor_{tag}"] = IC.diff_stats(top[col].to_numpy(), top["entry_idx"].to_numpy(),
+                                                         poor[col].to_numpy(), poor["entry_idx"].to_numpy(),
+                                                         H, g(top), g(poor))
+            row[f"top_minus_all_{tag}"] = IC.diff_stats(top[col].to_numpy(), top["entry_idx"].to_numpy(),
+                                                        allt[col].to_numpy(), allt["entry_idx"].to_numpy(),
+                                                        H, g(top), g(allt))
+        res[w] = row
+    return res
+
+
+def _pc(x) -> str:
+    return "nan" if x is None else f"{x * 100:+.2f}%"
+
+
+def _tt(x) -> str:
+    return "nan" if x is None else f"{x:+.2f}"
+
+
+def _fmt(st: dict | None) -> str:
+    """The mean that belongs to each t: all blocks with NW t; the declared parity; both parities."""
+    if not st:
+        return "n/a"
+    pr = st.get("parity") or [{}, {}]
+    k = st.get("declared_parity", 0)
+    return (f"all-blocks {_pc(st.get('mean_block'))} NW t {_tt(st.get('t_nw1_all_blocks'))} | declared "
+            f"(parity {k}) {_pc(st.get('mean_nonoverlap'))} t {_tt(st.get('t_nonoverlap'))} MDE "
+            f"{_pc(st.get('mde_nonoverlap'))} | p0 {_pc(pr[0].get('mean'))} t {_tt(pr[0].get('t'))}, "
+            f"p1 {_pc(pr[1].get('mean'))} t {_tt(pr[1].get('t'))} | nb {st.get('n_blocks')}")
+
+
+def write_tables(R: dict, path: Path) -> None:
+    """Plain-text tables regenerated from the receipt, so a rerun reproduces them."""
+    L: list[str] = []
+    v1 = R["variants"]["V1_primary"]["horizons"]
+    bh = R.get("market_buy_and_hold", {})
+    L.append("CH-47 tables, regenerated from insider_copy_receipt.json. Net of costs. Block = H sessions.")
+    L.append("Each cell: all-blocks mean + Newey-West(1) t [ADDED AFTER REVIEW] | the DECLARED test "
+             "(alternate-block parity with the larger SE): its OWN mean, t and MDE | both parities.")
+    L.append(f"Distinct declared cells: {R.get('distinct_cells')}")
+    keys = ("top_vs_market", "poor_vs_market", "all_vs_market", "top_minus_poor_vs_market",
+            "top_minus_all_vs_market", "top_vs_control", "poor_vs_control", "all_vs_control",
+            "top_minus_poor_vs_control", "top_minus_all_vs_control")
+    for H, h in v1.items():
+        L.append(f"\n===== H = {H} sessions, V1 primary; declared verdict: {h['verdict']}")
+        L.append(f"top n {h['top']['n_trades']} trades, {h['top']['n_dates']} dates, {h['top']['n_insiders']} "
+                 f"insiders; cluster share of top trades {h.get('cluster_share_of_top_trades') or 0:.2f}")
+        for w in ("firmweek", "date", "trade"):
+            tag = "  (HEADLINE: one decision counts once)" if w == "firmweek" else ""
+            L.append(f"-- weighting: per {w}{tag}")
+            for key in keys:
+                L.append(f"   {key:27s} {_fmt(h['weightings'][w].get(key))}")
+        L.append("-- robustness (top sleeve): full / drop top-1 name / drop top-5 names / winsorised 1-99")
+        for key, rb in h.get("robustness", {}).items():
+            L.append(f"   {key}: drop1={rb['drop_top1'].get('dropped')} drop5={rb['drop_top5'].get('dropped')}")
+            for r in ("full", "drop_top1", "drop_top5", "winsor_1_99"):
+                L.append(f"     {r:12s} {_fmt(rb.get(r))}")
+        L.append("-- by entry year, per-trade block means: top vs mkt | top vs ctrl | top-poor vs mkt | "
+                 "top-poor vs ctrl | poor vs mkt")
+        vm = {r["year"]: r for r in h["top"].get("by_year_vs_market_net", [])}
+        vc = {r["year"]: r for r in h["top"].get("by_year_vs_control_net", [])}
+        pm = {r["year"]: r for r in h["poor"].get("by_year_vs_market_net", [])}
+        byd = h.get("by_year_top_minus_poor", {})
+        dm = {r["year"]: r for r in byd.get("ex_mkt_net", [])}
+        dc = {r["year"]: r for r in byd.get("ex_ctrl_net", [])}
+
+        def c(dd: dict, y: int) -> str:
+            x = dd.get(y, {}).get("mean_block")
+            return "    n/a" if x is None else f"{x * 100:+6.2f}%"
+        for y in sorted(vm):
+            L.append(f"   {y}  n {vm[y]['n_trades']:5d}  {c(vm, y)} | {c(vc, y)} | {c(dm, y)} | {c(dc, y)} | {c(pm, y)}")
+        tc, ac, pq = h.get("top_compounding", {}), h.get("all_compounding", {}), h.get("poor_compounding", {})
+        bha = bh.get("annualised") or float("nan")
+        L.append(f"-- compounding (approximate): top book {(tc.get('annualised_book_net') or 0) * 100:.2f}%/yr; "
+                 f"trade-timed market {(tc.get('annualised_market') or 0) * 100:.2f}%/yr; all purchases "
+                 f"{(ac.get('annualised_book_net') or 0) * 100:.2f}%/yr; poor {(pq.get('annualised_book_net') or 0) * 100:.2f}%/yr; "
+                 f"BUY-AND-HOLD market {bha * 100:.2f}%/yr over {bh.get('span')}; top / buy-and-hold = "
+                 f"{(tc.get('annualised_book_net') or 0) / bha:.2f}x")
+    o = R["owner_question"]
+    L.append("\n===== owner question (H=126, per trade)")
+    L.append(f"   copied after first +300% outcome closed: n {o.get('after_discovery_n_trades')} trades, mean "
+             f"{_pc(o.get('after_discovery_mean_net_excess_126'))}; {_fmt(o.get('after_discovery_stats'))}")
+    L.append(f"   picked afterwards, all their trades {_pc(o.get('expost_selected_mean_net_excess_126_all_their_trades'))}; "
+             f"excluding the hits {_pc(o.get('expost_selected_mean_net_excess_126_excluding_the_hits'))}")
+    L.append("\n===== all variants (firm-week): top vs market | top-poor vs control")
+    for vn, v in R["variants"].items():
+        for H, h in v["horizons"].items():
+            fw = h["weightings"]["firmweek"]
+            L.append(f"   {vn:26s} H={H:>3s} {h['verdict']}")
+            L.append(f"      top vs mkt     {_fmt(fw['top_vs_market'])}")
+            L.append(f"      top-poor ctrl  {_fmt(fw['top_minus_poor_vs_control'])}")
+    path.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
 def owner_question(base: pd.DataFrame, outc: dict, d126: pd.DataFrame) -> dict:
