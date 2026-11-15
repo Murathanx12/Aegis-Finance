@@ -5575,6 +5575,29 @@ BOOK_DNA_FLAG_HIGH_BETA = 1.5
 #: many consecutive DAILY runs (this run included; one run per UTC day, by run id, never mtime);
 #: until then the voice prints "LABELS RISING, NOT YET HELD (k of N runs)". A fall is immediate.
 RESULTS_VOICE_PROMOTION_HOLD_RUNS = 3
+#: paper tables (S70, council 2 item 7/8; `scripts/paper_tables.py`, offline, no LLM). Table 1:
+#: forecasts made on/before PAPER_TABLES_CUT_DAY are the §64 era, later ones the new holdout;
+#: the §64 shrink (0.65 toward the base rate) is applied to the holdout UNCHANGED, as fixed then.
+#: Table 2: no-edge books drawn per (window, k, band) cell; NOT a tuned value, a sample size.
+PAPER_TABLES_CUT_DAY = "2026-09-24"
+PAPER_TABLES_SHRINK_FROM_S64 = 0.65
+PAPER_TABLES_N_BOOT = 1000
+PAPER_TABLES_SEED = 20261115
+PAPER_TABLES_WINDOWS: tuple = (21, 35, 45, 55, 78, 111)
+PAPER_TABLES_KS: tuple = (5, 10, 20, 30, 75)
+PAPER_TABLES_BOOKS_PER_CELL = 300
+#: fix round after the adversarial review (2026-11-15). A cluster interval is READ only at or
+#: above this many blocks (date blocks in Table 1, start quarters in Table 2); below it the
+#: interval is printed and the verdict is CANNOT_DISTINGUISH / too few blocks, never a win.
+PAPER_TABLES_MIN_CLUSTERS_FOR_VERDICT = 10
+#: Table 2 headline interval: books are resampled in blocks of the window's START period
+#: (pandas period alias; "Q" = calendar quarter), because books in one window are one draw.
+PAPER_TABLES_TIME_BLOCK_FREQ = "Q"
+#: the exactly-zero-edge comparator: books with iid symmetric log returns against an
+#: independent benchmark of the same kind, labelled by the real rule. A sample size and a
+#: scale (the label is scale-free in the symmetric case), not tuned values.
+PAPER_TABLES_ZERO_EDGE_DRAWS = 20000
+PAPER_TABLES_ZERO_EDGE_DAILY_SD = 0.01
 
 # ── Results voice (chunk "SPEAK WITH RESULTS", 2026-10-07) ───────────────────
 #: `backend/services/results_voice.py` reads the newest roi_<run>.json +
