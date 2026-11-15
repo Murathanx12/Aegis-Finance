@@ -531,7 +531,45 @@ def holdout_shrink(d: pd.DataFrame) -> dict:
     return out
 
 
-def run_table1(ledger: Path, sessions: np.ndarray, n_boot: int, seed: int) -> dict:
+def vol_prior_rows(x: pd.DataFrame, bars_path: Path | None, n_boot: int,
+                   rng: np.random.Generator) -> list[dict]:
+    """PROCESS magnitude rows vs the $0 trailing-vol prior on the SAME rows
+    (`forecast_reputation._trailing_sigma` / `_abs_move_p`), same stratum reference."""
+    from backend.services import forecast_reputation as FR
+    g = x[(x["kind"] == PROCESS) & (x["observable"] == "abs_move_exceeds")].copy()
+    if g.empty or bars_path is None or not Path(bars_path).exists():
+        return [{"status": "CANNOT_DETERMINE", "why": "no magnitude rows or no bars panel"}]
+    bars = pd.read_parquet(bars_path, columns=["symbol", "date", "close"],
+                           filters=[("symbol", "in", sorted(set(g["ticker"].str.upper())))])
+    sig = FR._trailing_sigma(g.assign(made_at=g["made_ts"]), bars)
+    thr = pd.to_numeric(g["threshold"], errors="coerce")
+    ok = sig.notna() & thr.notna() & (sig > 0)
+    g = g[ok].copy()
+    g["p_vol"] = np.nan
+    for h, idx in g.groupby("h").groups.items():
+        g.loc[idx, "p_vol"] = FR._abs_move_p(thr[idx].to_numpy(float), sig[idx].to_numpy(float),
+                                             float(h))
+    out = []
+    for (per, h), sub in g.groupby(["period", "h"]):
+        llm = sub.copy()
+        vol = sub.assign(p=sub["p_vol"])
+        vol["bs"] = (vol["p"] - vol["y"]) ** 2
+        both = pd.concat([llm.assign(kind="LLM"), vol.assign(kind="VOL")])
+        bd = cluster_bootstrap(both, "block", n_boot, rng, by="kind", order=("LLM", "VOL"))
+        r = {"period": per, "h": int(h), "n": int(len(sub)), "n_rows_without_sigma":
+             int((~ok).sum()), "n_date_blocks": int(sub["block"].nunique()),
+             "bss_llm": skill_of(llm)["bss"], "bss_vol_prior": skill_of(vol)["bss"],
+             "llm_minus_vol_ci_date_blocks": [bd["diff"]["lo"], bd["diff"]["hi"]],
+             "days_vol_prior_wins": int(sum(
+                 float(((d["p_vol"] - d["y"]) ** 2).mean()) < float(d["bs"].mean())
+                 for _, d in sub.groupby("made_day"))),
+             "n_days": int(sub["made_day"].nunique())}
+        out.append(r)
+    return out
+
+
+def run_table1(ledger: Path, sessions: np.ndarray, n_boot: int, seed: int,
+               bars_path: Path | None = None) -> dict:
     t0 = time.time()
     D, O, stats = stream_ledger(ledger)
     cm = classify_forecasters(D[["specialist", "model"]])
@@ -601,6 +639,8 @@ def run_table1(ledger: Path, sessions: np.ndarray, n_boot: int, seed: int) -> di
     splits += 3
     res["reproduce_s64"] = reproduce_s64(x)
     res["holdout_shrink"] = holdout_shrink(x)
+    res["vol_prior"] = vol_prior_rows(x, bars_path, n_boot, rng)
+    splits += len(res["vol_prior"])
     res["splits_looked_at"] = splits
     res["seconds"] = round(time.time() - t0, 1)
     return res
@@ -936,7 +976,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"calendar: {len(sessions)} SPY sessions {sessions[0]}..{sessions[-1]}", flush=True)
     if a.table in ("1", "both"):
         ledger = Path(a.ledger) if a.ledger else root / LIVE_LEDGER.name
-        r1 = run_table1(ledger, sessions, a.n_boot, a.seed)
+        r1 = run_table1(ledger, sessions, a.n_boot, a.seed,
+                        bars_path=root / "prices_2025_26" / "bars.parquet")
         p1 = out / f"table1_{stamp}.json"
         p1.write_text(json.dumps(r1, indent=1, default=str), encoding="utf-8")
         print(f"table 1 -> {p1} ({r1['seconds']}s, {r1['splits_looked_at']} splits)", flush=True)
