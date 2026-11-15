@@ -777,9 +777,69 @@ def _ledger_present(p: Path, ctx: "ProbeCtx") -> bool:
         return False
 
 
-_RA = re.compile(r'"resolves_after":\s*"([^"]+)"')
-_RS = re.compile(r'"resolved_at":\s*(?:null|"([^"]*)")')
 _MA = re.compile(r'"made_at":\s*"([^"]+)"')
+
+#: The one `forecast_grader.bucket_of` bucket that means "the due date has not arrived".
+GRADER_NOT_YET_DUE = "not_yet_due"
+
+
+def grade_owed_counts(recs, today: date) -> dict:
+    """The forecast ledger's rows by the GRADER's own rule, called, not copied.
+
+    Every row is bucketed by `forecast_grader.bucket_of(rec, today=today)`:
+
+    * ``grade_owed``  -- today >= `resolves_after`, no outcome, no void (any of the
+      grader's refusal buckets);
+    * ``voided``      -- `void_reason` set. A void never carries `resolved_at`, which
+      is how the old regex count read 576 on a ledger that owed 171;
+    * ``graded`` / ``not_yet_due`` -- the grader's own buckets;
+    * ``undated``     -- an open row whose `resolves_after` cannot be read. The grader
+      does not call that "not yet due" at ANY `today`, which is how it is told
+      apart here (asked again at `date.min`) without a second date parser. It is
+      NOT counted as owed: whether it is due cannot be determined.
+    * ``window_closed_not_due`` -- of the not-yet-due rows, those whose trading
+      window has already closed (`forecast_expiry.classify`); None when the
+      session calendar is unavailable (not computed, never 0).
+
+    `recs` yields dicts; anything else is counted ``unparsed``."""
+    from backend.services import forecast_grader as FG              # noqa: PLC0415
+    n = {"grade_owed": 0, "voided": 0, "graded": 0, "not_yet_due": 0,
+         "undated": 0, "unparsed": 0}
+    by_bucket: dict = {}
+    waiting: list = []
+    for rec in recs:
+        if not isinstance(rec, dict):
+            n["unparsed"] += 1
+            continue
+        b = FG.bucket_of(rec, today=today)
+        if b == "graded":
+            n["graded"] += 1
+        elif b == "VOID":
+            n["voided"] += 1
+        elif b == GRADER_NOT_YET_DUE:
+            n["not_yet_due"] += 1
+            waiting.append(rec)
+        elif FG.bucket_of(rec, today=date.min) != GRADER_NOT_YET_DUE:
+            n["undated"] += 1
+        else:
+            n["grade_owed"] += 1
+            by_bucket[b] = by_bucket.get(b, 0) + 1
+    n["owed_by_bucket"] = by_bucket
+    n["window_closed_not_due"] = _window_closed_not_due(waiting, today)
+    return n
+
+
+def _window_closed_not_due(waiting: list, today: date) -> Optional[int]:
+    if not waiting:
+        return 0
+    try:
+        from backend.services import forecast_expiry as FE          # noqa: PLC0415
+        sessions = FE.session_calendar(today - timedelta(days=800), today + timedelta(days=400))
+        return sum(1 for r in waiting
+                   if FE.classify(r, as_of=today, sessions=sessions)["state"]
+                   == FE.WINDOW_CLOSED_NOT_DUE)
+    except Exception:                                               # noqa: BLE001
+        return None
 
 
 def _ledger_scan(ctx: ProbeCtx) -> Optional[dict]:
@@ -789,30 +849,44 @@ def _ledger_scan(ctx: ProbeCtx) -> Optional[dict]:
     out: Optional[dict] = None
     if _ledger_present(p, ctx):
         today = ctx.now.date().isoformat()
-        rows = made_today = due_unresolved = 0
+        # the grader's clock is the UTC date (forecast_grader.run)
+        grader_today = (ctx.now.astimezone(timezone.utc) if ctx.now.tzinfo else ctx.now).date()
+        rows = made_today = 0
         newest_made = newest_resolved = None
-        try:
+
+        def _recs():
+            nonlocal rows, made_today, newest_made, newest_resolved
             # the legacy file's lines, or the monthly streams' rows with each
             # record's grade folded in (forecast_ledger.logical_lines)
             for line in _FL().logical_lines(p):
                 if not line.strip():
                     continue
                 rows += 1
-                m = _MA.search(line)
-                if m:
-                    if newest_made is None or m.group(1) > newest_made:
-                        newest_made = m.group(1)
-                    if m.group(1)[:10] == today:
+                try:
+                    rec = json.loads(line)
+                except ValueError:
+                    rec = None
+                if not isinstance(rec, dict):
+                    yield None
+                    continue
+                made = rec.get("made_at")
+                if isinstance(made, str) and made:
+                    if newest_made is None or made > newest_made:
+                        newest_made = made
+                    if made[:10] == today:
                         made_today += 1
-                r = _RS.search(line)
-                if r and r.group(1):
-                    if newest_resolved is None or r.group(1) > newest_resolved:
-                        newest_resolved = r.group(1)
-                else:
-                    a = _RA.search(line)
-                    if a and a.group(1)[:10] < today:
-                        due_unresolved += 1
-            out = {"rows": rows, "made_today": made_today, "due_unresolved": due_unresolved,
+                res = rec.get("resolved_at")
+                if isinstance(res, str) and res:
+                    if newest_resolved is None or res > newest_resolved:
+                        newest_resolved = res
+                yield rec
+
+        try:
+            counts = grade_owed_counts(_recs(), grader_today)
+            # `due_unresolved` IS the grade-owed count (kept under its old name
+            # for task_receipts.read_daily_pass_receipt).
+            out = {"rows": rows, "made_today": made_today,
+                   "due_unresolved": counts["grade_owed"], **counts,
                    "newest_made": newest_made, "newest_resolved": newest_resolved}
         except OSError:
             out = None
@@ -1173,9 +1247,22 @@ def p_forecast_grader(ctx: ProbeCtx) -> ProbeResult:
     L = _ledger_scan(ctx)
     if not L:
         return _unknown(ctx.cache.get("ledger_refused") or "no forecast ledger")
+    readable = L["rows"] - L["unparsed"]
+    if L["rows"] and not readable:
+        return _unknown(f"CANNOT DETERMINE: none of {L['rows']} ledger row(s) could be parsed, "
+                        f"so the grade-owed count is unknown (not 0)")
+    n_open = readable - L["graded"] - L["voided"]
+    if L["undated"] and L["undated"] == n_open:
+        return _unknown(f"CANNOT DETERMINE: all {L['undated']} open row(s) carry an unreadable "
+                        f"resolves_after, so what is owed cannot be dated (not 0)")
     newest = _ts(L["newest_resolved"])
-    notes = [f"{L['due_unresolved']} due-but-unresolved row(s); newest resolved_at "
-             f"{L['newest_resolved']}"]
+    wc = L["window_closed_not_due"]
+    head = (f"grade owed: {L['grade_owed']}; voided: {L['voided']}; window closed, not yet due: "
+            f"{'not computed (no session calendar)' if wc is None else wc}")
+    if L["undated"] or L["unparsed"]:
+        head += (f"; NOT counted: {L['undated']} row(s) with an unreadable resolves_after, "
+                 f"{L['unparsed']} unparseable line(s)")
+    notes = [head + f" (forecast_grader.bucket_of); newest resolved_at {L['newest_resolved']}"]
     _, dp = _newest_daily_pass(ctx)
     wait = None
     if dp:
@@ -1192,19 +1279,19 @@ def p_forecast_grader(ctx: ProbeCtx) -> ProbeResult:
     if newest is None:
         if L["due_unresolved"]:
             return ProbeResult("STALE", None, None,
-                               "; ".join(notes) + " -- no row has EVER resolved while due rows exist",
+                               "; ".join(notes) + " -- no row has EVER resolved while grades are owed",
                                proof="predictions.jsonl resolved_at")
         return _unknown("no resolved row and nothing due; the grader has not been exercised")
     age = _age(newest, ctx.now)
     v: Verdict = "ALIVE"
     if L["due_unresolved"] and age > 86400 * (1 + GRACE) + 86400:
         v = "STALE"
-        notes.append("resolved_at has not moved while due rows exist")
+        notes.append("resolved_at has not moved while grades are owed")
     if wait and first_seen and (ctx.now - first_seen).days > NO_BAR_STALE_DAYS:
         v = "STALE"
         notes.append(f"rows have waited on a bar for > {NO_BAR_STALE_DAYS} d")
     return ProbeResult(v, _iso(newest), age, "; ".join(notes),
-                       proof="predictions.jsonl max(resolved_at) vs due rows")
+                       proof="predictions.jsonl max(resolved_at) vs forecast_grader.bucket_of grade-owed rows")
 
 
 #: The daily pass's book-grading steps (2026-09-27). A row of theirs that is
@@ -2131,7 +2218,7 @@ PROBES: tuple[Probe, ...] = (
     Probe("u_plan", "pc", D1, "pc_book/<d>/intended_book.json: t, asof, invested_frac", p_u_plan),
     Probe("policy_state", "pc", D1, "pc_book/<d>/decisions.jsonl: a plan within 2 sessions carrying policy_state_used", p_policy_state),
     Probe("decision_contract", "pc", D1, "decisions/<d>.json: written_utc + n_considered run", p_decision_contract),
-    Probe("forecast_grader", "pc", D1, "predictions.jsonl: max(resolved_at) vs due rows; daily_pass 'wait on a bar'", p_forecast_grader),
+    Probe("forecast_grader", "pc", D1, "predictions.jsonl: max(resolved_at) vs grade-owed rows (forecast_grader.bucket_of); daily_pass 'wait on a bar'", p_forecast_grader),
     Probe("book_grader", "pc", D1, "daily_pass scoreboard.nav_vs_spy.window.last_date + llm_portfolio/leaderboard_<day>.json (bars_through, status_counts) + the pass's book-grading steps", p_book_grader),
     Probe("learn_rota", "pc", D1, "pc_book/<d>/learn_*.json: status / skipped", p_learn_rota),
     Probe("daily_pass", "pc", D1, "night_factory_<d>/daily_pass_<d>.json: steps[*].utc/status (+ schtasks)", p_daily_pass),
