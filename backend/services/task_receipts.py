@@ -1696,8 +1696,9 @@ def r_system_status(ctx, task) -> Reading:
 _PS1_FILE = re.compile(r"""-File\s+(?:"([^"]+\.ps1)"|(\S+\.ps1))""", re.IGNORECASE)
 #: `-File "<path` with no closing quote and no `.ps1`: `schtasks /query /fo CSV /v` cut the
 #: action (measured 2026-11-16: 261 characters; the `conhost.exe --headless` prefix added on
-#: 11-15 pushed AegisRawSecCollection's script path past the cut).
-_PS1_CUT = re.compile(r"""-File\s+"([^"]+)$""", re.IGNORECASE)
+#: 11-15 pushed AegisRawSecCollection's script path past the cut). The CSV reader also
+#: leaves a stray closing quote after the cut text, so one is tolerated.
+_PS1_CUT = re.compile(r"""-File\s+"?([^"]+)"?\s*$""", re.IGNORECASE)
 
 
 def _cut_harness_dir(prefix: str, script: str, n_chars: int) -> tuple[Optional[Path], Optional[str]]:
