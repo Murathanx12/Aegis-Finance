@@ -248,6 +248,12 @@ def _labels(work: Path, key: list[dict]) -> dict[int, int]:
     return lab
 
 
+def _reasons(work: Path) -> dict[int, str]:
+    """lid -> the labeller's reason code (codes only, never text)."""
+    with open(_need(work / LABELS_NAME), encoding="utf-8", newline="") as fh:
+        return {int(r["lid"]): str(r.get("reason") or "").strip() for r in csv.DictReader(fh)}
+
+
 def wrong_table(items: list[tuple[str, int]]) -> dict:
     """{group: rate of label 0 among labels 0/1} plus the cannot-tell count."""
     g: dict = defaultdict(Counter)
@@ -501,6 +507,15 @@ def cmd_evaluate(work: Path, ch46: Path, declaration: Path, data_root: Path, pro
         "all_cannot_tell_wrong": _rate(k_wrong_r + n2r, len(rej_s)),
         "all_cannot_tell_right": _rate(k_wrong_r, len(rej_s)),
         "note": "bounds, not variants: the verdict uses labels 0/1 only, as declared"}
+    reasons = _reasons(work)
+    nie = [(k, v) for k, v in r01 if reasons.get(int(k["lid"])) == "not_in_excerpt"]
+    v1["by_reason"] = {"reject": dict(Counter(reasons.get(int(k["lid"]), "") for k, _v in rej_s).most_common()),
+                       "kept": dict(Counter(reasons.get(int(k["lid"]), "") for k, _v in kept_s).most_common())}
+    v1["cannot_tell_sensitivity"]["not_in_excerpt_as_cannot_tell"] = {
+        **_rate(k_wrong_r - len(nie), len(r01) - len(nie)),
+        "note": ("the excerpt is the first 600 characters plus a window at the first rule mention, cut at 1,500; "
+                 "a company absent from it was labelled wrong when the article's subject was clearly something "
+                 "else. Counting those as cannot-tell instead gives this")}
     p_r = k_wrong_r / len(r01) if r01 else None
     p_k = sum(1 for _k, v in k01 if v == 0) / len(k01) if k01 else None
     if p_r is not None and p_k is not None:
