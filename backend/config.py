@@ -7135,6 +7135,36 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+# ── DAY_FILE: one generated page per day from receipts (ROADMAP CH-44 part 1, 2026-11-13) ──
+#: `scripts/day_file.py`. Reads receipts only; every line names its receipt and age.
+DAY_FILE_DIRNAME = "day_file"
+#: The owner's local day names the file (DAY_<date>); the machine runs on UTC+8.
+DAY_FILE_TZ = "Asia/Hong_Kong"
+#: A `--now` further than this from the wall clock is a REPLAY (live-only state CANNOT DETERMINE).
+DAY_FILE_REPLAY_SLACK_S = 3600
+#: The `day_file` health probe goes STALE when the newest run is older than this.
+DAY_FILE_STALE_HOURS = 26.0
+#: Earnings dates printed for held names + sensors within this many XNYS sessions.
+DAY_FILE_UPCOMING_SESSIONS = 10
+#: Macro dates (CPI / NFP / FOMC) printed within this many calendar days.
+DAY_FILE_MACRO_HORIZON_DAYS = 16
+#: The mega-cap SENSORS (CLAUDE.md: the mega-cap tells us what world we are in).
+DAY_FILE_SENSOR_TICKERS = ("NVDA", "MSFT", "AAPL", "AMZN", "GOOGL", "META", "AVGO", "TSM", "TSLA")
+#: The event-node store is red when its newest build is older than this on a session day.
+DAY_FILE_EVENT_NODES_STALE_HOURS = 6.0
+DAY_FILE_TOP_EVENTS = 10
+#: The ROI + book_dna pair is red when the ROI receipt is older than this.
+DAY_FILE_BOOKS_STALE_HOURS = 36.0
+#: The forecast ledger is red when its newest row is older than this.
+DAY_FILE_FORECAST_STALE_HOURS = 48.0
+#: The main accounts the owner may copy by hand come first in their own table.
+DAY_FILE_MAIN_FAMILIES = ("website_lane",)
+DAY_FILE_MAIN_ACCOUNT_PATTERNS = (r"^PC-PAPER$", r"^murat_core_satellite", r"^hack[1-4]$", r"^revision_flow_v0$")
+#: Families left out of the page: the owner's own holdings are not reviewed (owner, 2026-11-13).
+DAY_FILE_EXCLUDED_FAMILIES = ("murat_book",)
+#: A position with no recorded stop is costed at this gap (CLAUDE.md protocol item 4).
+DAY_FILE_GAP_NO_STOP = 0.30
+DAY_FILE_TOP_WORST = 15
 # ── INVESTIGATOR_NEWS: the paired news arm (S65 news-arm; ROADMAP CH-31 first wire) ──
 #: `scripts/night_investigator_news.py`: the investigator's own process and contract,
 #: plus typed world-digest rows about the name and its graph neighbours (context only),
