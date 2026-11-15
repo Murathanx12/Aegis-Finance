@@ -142,7 +142,10 @@ def read_json(p: Path) -> Any:
         return None
 
 
-_ABS = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:(?:\\|/(?!/))[^\s'\"`;,)\]]*")
+#: A Windows drive path, or a POSIX absolute path of at least two segments (a receipt written
+#: on Linux, e.g. CI or Railway). A relative `a/b`, a URL and `<data root>/x` are not matched.
+_ABS = re.compile(r"(?<![A-Za-z0-9])[A-Za-z]:(?:\\|/(?!/))[^\s'\"`;,)\]]*"
+                  r"|(?<![A-Za-z0-9_.:/<>~-])/(?:[A-Za-z0-9_.+-]+/)+[A-Za-z0-9_.+-]*")
 
 
 def clean_path(text: str) -> str:
