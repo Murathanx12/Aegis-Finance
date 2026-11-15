@@ -366,7 +366,7 @@ def _old_rc(name: str, spec: Any, sch: dict, mapped: Optional[dict], now: dateti
     window_h = float(spec.cadence_h if spec is not None and spec.cadence_h is not None
                      else C.HEALTH_TASK_CADENCE_H.get(name, 24.0)) * 1.25
     age_h = (now - last).total_seconds() / 3600
-    if receipt is not None and receipt > last:
+    if receipt is not None and receipt > last + timedelta(hours=1):     # a run's own receipt lands within minutes of its start
         why = f"a newer good receipt exists ({fmt_age((now - receipt).total_seconds())} old)"
     elif age_h > window_h:
         why = f"older than its {window_h:.0f} h cadence window"
@@ -405,7 +405,7 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
         except Exception:  # noqa: BLE001
             spec = None
         retired = (state.strip().lower() == "disabled" and spec is not None
-                   and bool(spec.retired or spec.disabled_ok))
+                   and bool(spec.disabled_ok))
         if str(last_res).strip() not in ("", "0", "267011", "267009", "267008", "267010") and re.fullmatch(r"-?\d+", str(last_res).strip()):
             old = _old_rc(name, spec, sch, mapped, now)
             if retired:
@@ -423,7 +423,7 @@ def tasks_section(ctx: Any, now: datetime, probe_rows: list[dict]) -> list[dict]
             flags.append("has never run")
             status = worst(status, "DEGRADED")
         if retired:
-            flags.append("RETIRED: Disabled on purpose -- " + (spec.disabled_ok or "declared retired in task_receipts"))
+            flags.append("RETIRED: Disabled on purpose -- " + spec.disabled_ok)
         elif state.strip().lower() == "disabled":
             flags.append("DISABLED")
             status = worst(status, "DEGRADED")

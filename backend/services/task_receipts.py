@@ -2055,11 +2055,12 @@ def _judge(ctx, name: str, task: Optional[dict], spec: Optional[TaskSpec]) -> Ju
     if spec is None:
         return Judgement("UNKNOWN", f"no receipt is declared for {name}: add it to "
                                     f"task_receipts.TASK_RECEIPT")
-    if (spec.retired or spec.disabled_ok) and task is not None             and str(task.get("Scheduled Task State")) == "Disabled":
-        # Disabled AND declared retired/disabled-on-purpose in code with its reason: a RETIRED
-        # row, not a fault. An enabled retired task falls through to the line below.
+    if spec.disabled_ok and task is not None and str(task.get("Scheduled Task State")) == "Disabled":
+        # Disabled AND declared disabled-on-purpose in code with its reason: a RETIRED row, not
+        # a fault. (`retired=True` tasks keep their "delete it" DEGRADED row: that is a cleanup
+        # the owner asked to be named.)
         return Judgement("STOPPED_BY_OPERATOR",
-                         f"RETIRED (Disabled on purpose): {spec.disabled_ok or spec.receipt}"[:240],
+                         f"RETIRED (Disabled on purpose): {spec.disabled_ok}"[:240],
                          proof="task_receipts.TASK_RECEIPT disabled_ok", extra={"retired": True})
     if spec.retired:
         return Judgement("DEGRADED", f"retired task still registered ({spec.receipt}); delete it: "

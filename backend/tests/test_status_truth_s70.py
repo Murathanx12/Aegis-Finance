@@ -102,6 +102,13 @@ def test_current_nonzero_rc_stays_degraded(monkeypatch):
     assert rows[name]["status"] == "DEGRADED"
 
 
+def test_nonzero_rc_whose_receipt_is_the_same_runs_own_stays_degraded(monkeypatch):
+    name = "AegisFleetDailyCheck"
+    rows = _tasks(monkeypatch, _sch(name, NOW - timedelta(hours=14), 1),
+                  [_probe(name, "ALIVE", NOW - timedelta(hours=14) + timedelta(minutes=2))])
+    assert rows[name]["status"] == "DEGRADED"
+
+
 def test_nonzero_rc_with_no_receipt_reader_or_a_bad_receipt_stays_not_ok(monkeypatch):
     rows = _tasks(monkeypatch, {**_sch("AegisNoReader", NOW - timedelta(days=9), 2),
                                 **_sch("AegisBadReceipt", NOW - timedelta(days=9), 2)},
