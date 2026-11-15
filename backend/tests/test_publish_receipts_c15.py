@@ -140,7 +140,7 @@ def test_routers_serve_the_published_copy_where_no_live_receipt_exists(world, mo
     for path in ("/api/arena/v1/latest", "/api/legibility/v1/theory-lab?board=sticky",
                  "/api/legibility/v1/theory-lab?board=basket", "/api/legibility/v1/system-health",
                  "/api/legibility/v1/brain", "/api/legibility/v1/forecast-lab"):
-        r = c.get(path)
+        r = c.get(path, headers={"X-Health-Token": "test-health-token"})
         assert r.status_code == 200, (path, r.text[:200])
         body = r.json()
         assert body["served_from"].startswith("public_receipts/"), path
@@ -201,7 +201,7 @@ def test_routers_serve_the_real_committed_receipts_when_live_dir_is_empty_but_pr
     for path in ("/api/arena/v1/latest", "/api/legibility/v1/forecast-lab",
                  "/api/legibility/v1/theory-lab?board=sticky", "/api/legibility/v1/system-health",
                  "/api/legibility/v1/brain"):
-        r = c.get(path)
+        r = c.get(path, headers={"X-Health-Token": "test-health-token"})
         assert r.status_code == 200, (path, r.status_code, r.text[:300])
         assert r.json().get("served_from"), f"{path} did not report served_from=published"
     r = c.get("/api/opportunities/latest")

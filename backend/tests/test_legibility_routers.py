@@ -323,7 +323,7 @@ def test_whole_payloads_carry_no_secret_and_urls_keep_their_path(client):
     _health(base, NOW - timedelta(hours=1))
     _theory(base)
     for path in ("/api/arena/v1/latest", "/api/legibility/v1/system-health", "/api/legibility/v1/theory-lab"):
-        r = c.get(path)
+        r = c.get(path, headers={"X-Health-Token": "test-health-token"})
         assert r.status_code == 200, path
         assert_clean(r.json())
     a = c.get("/api/arena/v1/latest").json()
@@ -334,7 +334,7 @@ def test_whole_payloads_carry_no_secret_and_urls_keep_their_path(client):
     assert a["by_family"]["pc_paper"] == {"n": 1, "n_priced": 1, "roi_pct": 0.27}
     assert a["clusters"][0]["members"] == ["hack2"]
     assert a["numbers"]["n_owner_personal_dropped"] == 2
-    h = c.get("/api/legibility/v1/system-health").json()
+    h = c.get("/api/legibility/v1/system-health", headers={"X-Health-Token": "test-health-token"}).json()
     proofs = {x["name"]: x for x in h["groups"][-1]["rows"]}
     assert proofs["sim_session"]["proof"] == ""
     assert proofs["sim_session"]["alarm"]["light"] == "AMBER"
@@ -529,7 +529,7 @@ def test_system_health_shape_groups_and_same_output(client):
     c, base = client
     _health(base, NOW - timedelta(hours=30))                 # older receipt: must not be served
     rec = _health(base, NOW - timedelta(hours=1))
-    d = c.get("/api/legibility/v1/system-health").json()
+    d = c.get("/api/legibility/v1/system-health", headers={"X-Health-Token": "test-health-token"}).json()
     assert d["receipts"][0]["file"].endswith(f"health_{_stamp(NOW - timedelta(hours=1))}.json")
     assert d["status"] == "FRESH"
     assert [g["verdict"] for g in d["groups"]] == ["STALE", "UNKNOWN", "ALIVE"]
@@ -630,7 +630,7 @@ def test_qualified_static_health_proof_survives_without_promoting_legacy_sim(cli
         'detail':'synthetic tool configuration verified','proof':'synthetic source-owned configuration proof'})
     rec['counts']['ALIVE']+=1
     _w(base/'health'/f"health_{_stamp(NOW-timedelta(hours=1))}.json",rec)
-    L._CACHE.clear();out=c.get('/api/legibility/v1/system-health').json()
+    L._CACHE.clear();out=c.get('/api/legibility/v1/system-health', headers={"X-Health-Token": "test-health-token"}).json()
     rows={r['name']:r for g in out['groups'] for r in g['rows']}
     assert rows['openclaw_tool_scope']['alarm']['light']=='GREEN'
     assert rows['openclaw_tool_scope']['proof']=='synthetic source-owned configuration proof'

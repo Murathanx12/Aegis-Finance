@@ -498,7 +498,7 @@ def test_health_full_carries_the_subsystems_block(monkeypatch):
     from backend.main import app
     stub = {"generated_utc": "x", "source": "pc_request", "counts": {}, "exit_code": 0, "rows": []}
     monkeypatch.setattr(SH, "api_block", lambda **kw: stub)
-    body = TestClient(app).get("/api/health/full").json()
+    body = TestClient(app).get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
     assert body["subsystems"] == stub
 
 
