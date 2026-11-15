@@ -7428,6 +7428,49 @@ IBES_LINK_MAX_SCORE = 2
 #: has happened. Absent -> revisions refuse, levels are unaffected.
 IBES_ADJ_FACTORS_PATH = Path(os.getenv(
     "AEGIS_IBES_ADJ_PATH", str(OPTIMUS_LEDGER_DIR / "wrds" / "bulk" / "ibes__adj.parquet")))
+#: CH-46 -- news entity and theme tagging by EMBEDDINGS (`backend/services/news_entity_embed.py`,
+#: `python -m scripts.news_entity_embed build-index|tag|eval --out DIR`). Offline and attended:
+#: nothing calls it on a schedule and the hub does not read its sidecar yet. The model is a small
+#: open-licence sentence encoder read from the local Hugging Face cache (a download only with
+#: `--allow-download`); the revision is pinned so two runs embed with the same weights.
+NEWS_EMBED_MODEL_ID = "BAAI/bge-small-en-v1.5"
+NEWS_EMBED_MODEL_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+NEWS_EMBED_MODEL_LICENCE = "MIT (model card)"
+#: bge models are trained with CLS pooling; "mean" is the other accepted value.
+NEWS_EMBED_POOLING = "cls"
+NEWS_EMBED_MAX_LENGTH = 256
+NEWS_EMBED_BATCH = 64
+#: CPU threads for torch and BLAS (the PC is shared with the reader and the simulator).
+NEWS_EMBED_THREADS = 4
+#: Body characters embedded per row (title text removed first, so a title label cannot leak).
+NEWS_EMBED_TEXT_CHARS = 1500
+#: A row whose body, title removed, is shorter than this is not classified (title-only feed).
+NEWS_EMBED_MIN_TEXT_CHARS = 40
+#: Candidates per row: top-k companies by cosine to the company reference vectors, plus the
+#: top-n companies by nearest-neighbour vote, plus every rule mention, provider and digest tag.
+NEWS_EMBED_TOPK_COMPANIES = 5
+NEWS_EMBED_KNN_K = 25
+NEWS_EMBED_KNN_CANDIDATES = 3
+#: Labelled rows split by TIME (train, validation, test), never at random; rows within the
+#: embargo after a boundary are dropped from the later part.
+NEWS_EMBED_SPLIT: tuple = (0.6, 0.2, 0.2)
+NEWS_EMBED_EMBARGO_HOURS = 24
+#: The `about` threshold is the lowest score whose validation precision is at least this; the
+#: `reject` threshold leaves at most this share of validation positives below it.
+NEWS_EMBED_TARGET_PRECISION = 0.90
+NEWS_EMBED_REJECT_POS_SHARE = 0.05
+NEWS_EMBED_MIN_ABOUT_N = 30
+NEWS_EMBED_SEED = 46
+#: Theme labels: nearest centroid over potential-universe sectors holding at least this many
+#: companies; a row is "covered" when its best centroid beats the second by the margin.
+NEWS_EMBED_THEME_MIN_COMPANIES = 5
+NEWS_EMBED_THEME_MARGIN = 0.02
+#: The LLM budget estimate for the uncertain middle (no call is made by this module).
+NEWS_EMBED_LLM_PRICE_MODEL = "deepseek-v4-flash"
+NEWS_EMBED_LLM_IN_TOKENS_PER_ROW = 650
+NEWS_EMBED_LLM_OUT_TOKENS_PER_ROW = 40
+NEWS_EMBED_SIDECAR_NAME = "news_entity_embed_sidecar.jsonl"
+NEWS_EMBED_THEME_SIDECAR_NAME = "news_theme_embed_sidecar.jsonl"
 
 # ── UNIVERSE GRAPH v1 (ROADMAP §2a, CH-30) ─────────────────────────────────
 #: The universe as a typed, weighted graph (`backend/services/universe_graph.py`).
