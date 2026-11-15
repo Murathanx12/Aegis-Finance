@@ -75,7 +75,7 @@ class TestSourceHealth:
 
 class TestHealthFullEndpoint:
     def test_shape(self):
-        response = client.get("/api/health/full")
+        response = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"})
         assert response.status_code == 200
         body = response.json()
         for key in ("status", "deploy", "scheduler", "track_record",
@@ -107,7 +107,7 @@ class TestHealthFullEndpoint:
         finally:
             conn.close()
 
-        body = client.get("/api/health/full").json()
+        body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
         tr = body["track_record"]
         assert tr["inception_date"] == "2026-06-08"
         assert tr["age_days"] >= 2
@@ -129,7 +129,7 @@ class TestHealthFullEndpoint:
         funnel = tmp_path / "funnel.json"
         funnel.write_text(json.dumps({"generated_at": generated, "candidates": []}), encoding="utf-8")
         monkeypatch.setattr(cfg, "IC_FUNNEL_PATH", funnel)
-        body = client.get("/api/health/full").json()
+        body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
         ic = body["investment_committee"]
         assert ic["funnel_available"] is True
         assert ic["funnel_generated_at"] == generated
@@ -144,7 +144,7 @@ class TestHealthFullEndpoint:
             assert 0 <= ic["funnel_age_days"] <= IC.FUNNEL_STALE_DAYS
 
         monkeypatch.setattr(cfg, "IC_FUNNEL_PATH", tmp_path / "absent-funnel.json")
-        body = client.get("/api/health/full").json()
+        body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
         ic = body["investment_committee"]
         assert ic["funnel_available"] is False and ic["status"] == "DEGRADED"
         assert "ic funnel unavailable" in body["degraded_reasons"]
@@ -152,7 +152,7 @@ class TestHealthFullEndpoint:
     def test_warnings_flow_through(self):
         obs.install_log_buffer()
         logging.getLogger("aegis.test.flow").warning("endpoint-flow-check")
-        body = client.get("/api/health/full").json()
+        body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
         assert any("endpoint-flow-check" in r["message"]
                    for r in body["recent_warnings"])
 

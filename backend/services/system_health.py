@@ -1912,7 +1912,8 @@ def p_fred_macro_inputs(ctx: ProbeCtx) -> ProbeResult:
                            proof="GET /api/health/full fred_health.by_status")
     cause = fh.get("last_no_fetch_reason") or next(
         (str(w.get("message", ""))[:140] for w in reversed(body.get("recent_warnings") or [])
-         if "api_key" in str(w.get("message", "")).lower()), "unknown -- see recent_warnings")
+         if "api_key" in str(w.get("message", "")).lower()), "unknown -- the public health view carries no warnings; read "
+        "/api/health/detail (X-Health-Token) or the desktop control plane")
     old = isinstance(up, (int, float)) and up > 86400
     return ProbeResult("DEAD" if old else "STALE", None, None,
                        f"0/{len(crit)} critical FRED series loaded in {passes} pass(es), "

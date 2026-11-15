@@ -164,7 +164,7 @@ def test_an_unreadable_jobstore_is_unavailable_not_ok(monkeypatch):
 def test_health_full_names_the_missing_job_in_degraded_reasons(monkeypatch):
     live = set(sched_mod.EXPECTED_JOB_IDS) - {"pi_ledger_resolve"}
     monkeypatch.setattr(sched_mod, "_scheduler", _FakeScheduler(live))
-    body = client.get("/api/health/full").json()
+    body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
     jobs = body["scheduler"]["jobs"]
     assert jobs["missing"] == ["pi_ledger_resolve"]
     assert body["status"] == "DEGRADED"
@@ -175,7 +175,7 @@ def test_health_full_names_the_missing_job_in_degraded_reasons(monkeypatch):
 def test_health_full_adds_no_job_reason_when_the_set_is_whole(monkeypatch):
     monkeypatch.setattr(sched_mod, "_scheduler",
                         _FakeScheduler(sched_mod.EXPECTED_JOB_IDS))
-    body = client.get("/api/health/full").json()
+    body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
     jobs = body["scheduler"]["jobs"]
     assert jobs["status"] == "ok"
     # Other canaries (nav freshness, ledger) may legitimately degrade in a test
@@ -186,7 +186,7 @@ def test_health_full_adds_no_job_reason_when_the_set_is_whole(monkeypatch):
 
 def test_health_full_carries_the_jobs_block_even_with_no_scheduler(monkeypatch):
     monkeypatch.setattr(sched_mod, "_scheduler", None)
-    body = client.get("/api/health/full").json()
+    body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
     jobs = body["scheduler"]["jobs"]
     assert jobs["status"] == "unavailable"
     assert jobs["expected"] == sorted(sched_mod.EXPECTED_JOB_IDS)

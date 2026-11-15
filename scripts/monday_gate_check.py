@@ -32,6 +32,7 @@ EXIT CODE: 0 if nothing FAILED (pending is fine), 1 if anything FAILED.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import urllib.request
@@ -69,7 +70,7 @@ PASS, FAIL, PEND, INFO = "PASS", "FAIL", "PENDING", "INFO"
 _ICON = {PASS: "[ok]  ", FAIL: "[FAIL]", PEND: "[wait]", INFO: "[--]  "}
 
 
-def _get(path: str, attempts: int = 4) -> dict:
+def _get(path: str, attempts: int = 4, headers: dict | None = None) -> dict:
     """Fetch with retries, because a dropped connection is not a finding.
 
     Railway resets the connection on the large health payload often enough that
@@ -81,13 +82,26 @@ def _get(path: str, attempts: int = 4) -> dict:
     last = None
     for i in range(attempts):
         try:
-            with urllib.request.urlopen(BASE + path, timeout=90) as r:
+            req = urllib.request.Request(BASE + path, headers=headers or {})
+            with urllib.request.urlopen(req, timeout=90) as r:
                 return json.loads(r.read().decode("utf-8"))
         except Exception as e:                               # noqa: BLE001
             last = e
             if i < attempts - 1:
                 time.sleep(5 * (i + 1))
     raise RuntimeError(f"{type(last).__name__}: {last} (after {attempts} tries)")
+
+
+def _get_health() -> dict:
+    """The health payload this gate needs. `/api/health/full` is a PUBLIC coarse
+    view since S70; the rows below that read deep fields need `/api/health/detail`,
+    which takes the `X-Health-Token` header (value in env AEGIS_HEALTH_TOKEN). With
+    no token the public view is read and `view == "public"` makes those rows say
+    CANNOT DETERMINE instead of reading a missing field as a pass or a fail."""
+    token = os.environ.get("AEGIS_HEALTH_TOKEN", "")
+    if token:
+        return _get("/api/health/detail", headers={"X-Health-Token": token})
+    return _get("/api/health/full")
 
 
 def _last_chance(job: str, now_et: datetime) -> datetime:
@@ -135,7 +149,7 @@ def main() -> None:
     print()
 
     try:
-        health = _get("/api/health/full")
+        health = _get_health()
         arena = _get("/api/arena/status")
     except Exception as e:                                   # noqa: BLE001
         print(f"{_ICON[FAIL]} could not reach production: "
@@ -238,7 +252,11 @@ def main() -> None:
 
     # ── 8. today's additions ────────────────────────────────────────────────
     si = health.get("selector_identity", {})
-    if si.get("status") == "ok":
+    public_view = health.get("view") == "public"
+    if public_view:
+        add(INFO, "selector identity",
+            "CANNOT DETERMINE - public health view (set AEGIS_HEALTH_TOKEN)")
+    elif si.get("status") == "ok":
         comp = si["selectors"]["arena_composite"]
         ok = all(comp["at_seed_baseline"].values())
         add(PASS if ok else FAIL, "selector identity at seed baseline",
@@ -252,8 +270,12 @@ def main() -> None:
 
     llm = health.get("llm", {})
     prov = llm.get("providers", {})
-    add(PASS if prov.get("matches_declaration") else FAIL, "llm provider",
-        f"active={prov.get('active')} refusals={llm.get('language_refusals')}")
+    if public_view:
+        add(INFO, "llm provider",
+            "CANNOT DETERMINE - public health view (set AEGIS_HEALTH_TOKEN)")
+    else:
+        add(PASS if prov.get("matches_declaration") else FAIL, "llm provider",
+            f"active={prov.get('active')} refusals={llm.get('language_refusals')}")
 
     # ── report ──────────────────────────────────────────────────────────────
     for status, name, detail in rows:

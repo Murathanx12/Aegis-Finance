@@ -257,7 +257,7 @@ def test_health_full_carries_the_accrual_row_and_names_a_quiet_ledger(monkeypatc
     from backend.main import app
 
     client = TestClient(app)
-    body = client.get("/api/health/full").json()
+    body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
     row = body["accrual_canary"]
     assert row["status"] in ("ok", "DEGRADED", "UNKNOWN")
     assert "forecast_accrual" in row
@@ -268,7 +268,7 @@ def test_health_full_carries_the_accrual_row_and_names_a_quiet_ledger(monkeypatc
             "openclaw": {"status": "IDLE"}, "n_considered": {"status": "ok"},
             "collectors": []}
     monkeypatch.setattr(ac, "health", lambda **k: fake)
-    body = client.get("/api/health/full").json()
+    body = client.get("/api/health/detail", headers={"X-Health-Token": "test-health-token"}).json()
     assert any(r.startswith("forecast_accrual:") and "0 new rows" in r
                for r in body["degraded_reasons"]), body["degraded_reasons"]
 

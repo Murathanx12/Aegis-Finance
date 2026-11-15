@@ -100,6 +100,15 @@ def _host_of(address):
 
 
 @pytest.fixture(autouse=True)
+def _health_token_for_tests(monkeypatch):
+    """S70: `/api/health/detail` (the full health payload) needs `X-Health-Token`.
+    Tests that read deep fields send `test-health-token`; the public-view tests
+    (`test_health_public.py`) send nothing or delete this variable."""
+    monkeypatch.setenv("AEGIS_HEALTH_TOKEN", "test-health-token")
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _fresh_fmp_budget():
     """Reset the FMP daily-quota ledger around every test (2026-07-17).
 

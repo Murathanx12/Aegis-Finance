@@ -7574,3 +7574,15 @@ INVESTIGATOR_NEWS_MAX_NEIGHBOUR_ROWS = 3
 #: would void the epoch. `forecast_writers()` therefore lists the prefix as
 #: "NOT READ (no reason registered)"; E[r] reads `investigator:` only, so the plan
 #: cannot read this arm. Registering the reason belongs with the next attended epoch.
+
+# -- Public health trim (S70, 2026-11-15) --------------------------------------
+#: `/api/health/full`, `/api/providers` and `/health/scheduler` are PUBLIC on the
+#: hosted site and used to print LLM spend, recent WARNING log lines, provider
+#: failure reasons and absolute paths. They now return a coarse public view
+#: (`backend/services/health_public.py`); the full payload is served only (a) in
+#: desktop/control mode through `control.control_plane_gate`, or (b) on the
+#: hosted site to a caller sending this header with a value equal to the
+#: environment variable below. With the variable UNSET `/api/health/detail`
+#: answers 404 (the usage-summary pattern): never an open default.
+HEALTH_TOKEN_ENV = "AEGIS_HEALTH_TOKEN"
+HEALTH_TOKEN_HEADER = "X-Health-Token"
