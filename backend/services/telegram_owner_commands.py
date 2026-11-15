@@ -3,7 +3,7 @@
     /status        the systems receipt headline (counts, every DOWN row by name, age, STALE)
     /books         the six headline lines of the newest results voice, stamp and age
     /note <text>   one row in the owner inbox (same function and file as the desktop app)
-    /help          these, and the existing read-only table
+    /help          the whole read-only table (every older command) plus these
 
 The owner no longer wants alerts; he wants to send a message and get an answer. Everything
 here is DETERMINISTIC: no model, no broker, no subprocess, no network, no job start.
@@ -12,22 +12,29 @@ THE ONLY THINGS A MESSAGE CAN CAUSE (audited 2026-11-15, see the tests)
 =======================================================================
   * a read of `system_status/status.json` or the newest `paper_accounts/results_voice_*.md`;
   * ONE append to `owner_inbox/notes.jsonl` (`scripts.owner_inbox.add_note`, source "telegram");
-  * ONE append to `telegram/owner_commands.jsonl` (the journal: command name, sender-check
-    result, reply length, stamp -- never the note text, never the chat id).
+  * ONE append to `telegram/owner_commands.jsonl` via `Path.open` (the journal: command name,
+    sender-check result, outcome, reply length, stamp -- never the note text, never any chat id
+    or a hash of one).
 A note is UNVERIFIED text for the brain. Nothing in this module parses it as a command, and
 `/note` text is never passed to anything but `add_note`.
 
 HANDING TASKS TO OPENCLAW OR STARTING JOBS FROM CHAT IS NOT HERE and is the owner's open
 permission decision (ROADMAP CH-48). `COMMANDS` is a closed tuple; an unknown command falls
 through to today's behaviour (`telegram_readonly`), and `test_telegram_owner_commands` pins that
-this module imports no subprocess, socket, model, broker or sim entry point.
+no call to a subprocess, shell, exec/eval, importlib, socket, HTTP client, model, broker or the
+bridge's send exists on the path of these four commands (AST over this module and the handler
+that routes to it).
+
+WHO IS ANSWERED. The bridge (`telegram_bridge.poll`) admits only the configured owner chat; a
+stranger's message is journaled THERE (`telegram/inbox.jsonl`, "refused") and never reaches a
+handler. `dispatch` checks the chat id again as defence in depth; its own `refused` journal row
+is for that case only and is normally unreachable.
 
 The functions take (data root, now, message) so tests need no network; sending is injected.
 """
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 import threading
@@ -86,22 +93,34 @@ def age_line(stamp: Any, limit_h: float, what: str, *, now: datetime) -> str:
     return f"{what}: {t:%Y-%m-%d %H:%M} UTC, {h:.1f} h old{flag}"
 
 
-def cap_reply(text: str, max_chars: Optional[int] = None) -> str:
-    """Cut to the limit at a line boundary and say how many lines were left out."""
-    lim = int(max_chars or _cfg.TELEGRAM_OWNER_REPLY_MAX_CHARS)
-    if len(text) <= lim:
+def u16(text: str) -> int:
+    """Length in UTF-16 code units, which is how Telegram counts its 4096 limit."""
+    return len(text.encode("utf-16-le")) // 2
+
+
+def _fit(line: str, budget: int) -> str:
+    while line and u16(line) > budget:
+        line = line[:-1]
+    return line
+
+
+def cap_reply(text: str, max_units: Optional[int] = None) -> str:
+    """Cut to `max_units` UTF-16 units at a line boundary; say how many lines were left out."""
+    lim = int(max_units or _cfg.TELEGRAM_OWNER_REPLY_MAX_CHARS)
+    if u16(text) <= lim:
         return text
+    budget = lim - 40                                    # room for the omitted-lines marker
     lines = text.split("\n")
     keep: list[str] = []
     used = 0
-    reserve = 40
     for ln in lines:
-        if used + len(ln) + 1 > lim - reserve:
+        if used + u16(ln) + 1 > budget:
             break
-        keep.append(ln[: lim - reserve] if not keep and len(ln) > lim - reserve else ln)
-        used += len(ln) + 1
-    omitted = len(lines) - len(keep)
-    return "\n".join(keep + [f"... {omitted} more line(s) omitted"])
+        keep.append(ln)
+        used += u16(ln) + 1
+    if not keep:                                         # even the first line is too long
+        keep = [_fit(lines[0], budget)]
+    return "\n".join(keep + [f"... {len(lines) - len(keep)} more line(s) omitted"])
 
 
 # ──────────────────────────────────────────────────────────────── the readers
@@ -173,7 +192,7 @@ def books_reply(root: Optional[Path] = None, *, now: Optional[datetime] = None) 
         out.append(f"headline lines missing from the file: {', '.join(missing)}")
     out.append(head.get("CLAIMS PROMOTED", f"CLAIMS PROMOTED: {CANNOT} (line absent from the file)"))
     # cap the body but keep the claims line last
-    body = cap_reply(_scrub("\n".join(out[:-1])), int(_cfg.TELEGRAM_OWNER_REPLY_MAX_CHARS) - len(out[-1]) - 2)
+    body = cap_reply(_scrub("\n".join(out[:-1])), int(_cfg.TELEGRAM_OWNER_REPLY_MAX_CHARS) - u16(out[-1]) - 2)
     return body + "\n" + _scrub(out[-1])
 
 
@@ -195,13 +214,10 @@ def note_reply(text: str, root: Optional[Path] = None, *, now: Optional[datetime
 
 
 def help_reply() -> str:
-    return "\n".join([
-        "AEGIS owner commands (deterministic, no model):",
-        "/status -- systems receipt: counts, each DOWN row, its age",
-        "/books -- headline of the newest results voice, with its age",
-        "/note <text> -- leave an unverified note for the brain (same inbox as the app)",
-        "/help -- this list",
-        "Nothing here starts a job, places an order or runs a command."])
+    """The agent's whole read-only help (every older command) -- it lists the three owner
+    commands too, so `/help` and `/start` are the same text."""
+    from backend.services import telegram_readonly as RO   # lazy: RO imports this module
+    return RO.help_text()
 
 
 # ─────────────────────────────────────────────────────────── rate limit + journal
@@ -212,6 +228,12 @@ class RateLimiter:
     def __init__(self) -> None:
         self._t: dict[tuple[str, str], list[float]] = {}
         self._lock = threading.Lock()
+
+    def would_allow(self, chat: str, kind: str, limit: int, *, now_s: Optional[float] = None) -> bool:
+        """True when `allow` would succeed; consumes nothing."""
+        now_s = time.time() if now_s is None else now_s
+        with self._lock:
+            return len([t for t in self._t.get((chat, kind), []) if now_s - t < 3600.0]) < limit
 
     def allow(self, chat: str, kind: str, limit: int, *, now_s: Optional[float] = None) -> bool:
         now_s = time.time() if now_s is None else now_s
@@ -244,8 +266,17 @@ def command_of(text: Any) -> Optional[str]:
     s = str(text or "").strip()
     if not s.startswith("/"):
         return None
-    name = s.split(None, 1)[0][1:].split("@")[0].lower()
+    # lstrip, not [1:]: the bridge routes "//note x" as `note` (lstrip("/")), so both must agree
+    name = s.split(None, 1)[0].lstrip("/").split("@")[0].lower()
     return name if name in COMMANDS else None
+
+
+_FORWARD_KEYS = ("forward_origin", "forward_from", "forward_from_chat", "forward_date",
+                 "forward_sender_name")
+
+
+def _forwarded(msg: dict) -> bool:
+    return any((msg or {}).get(k) for k in _FORWARD_KEYS)
 
 
 def _chat_id(msg: dict) -> str:
@@ -272,8 +303,7 @@ def dispatch(msg: dict, *, data_root: Optional[Path] = None, now: Optional[datet
     cid = _chat_id(msg)
     owner = str(owner_chat_id or "")
     now_s = now.timestamp()
-    ident = hashlib.sha256(cid.encode()).hexdigest()[:8] if cid else ""
-    row: dict[str, Any] = {"t": now.isoformat(timespec="seconds"), "cmd": cmd, "chat_sha8": ident}
+    row: dict[str, Any] = {"t": now.isoformat(timespec="seconds"), "cmd": cmd}
     if not owner or cid != owner:
         row["sender_ok"] = False
         row["outcome"] = "refused"
@@ -283,7 +313,9 @@ def dispatch(msg: dict, *, data_root: Optional[Path] = None, now: Optional[datet
     row["sender_ok"] = True
     if not lim.allow(cid, "cmd", int(_cfg.TELEGRAM_OWNER_CMD_MAX_PER_H), now_s=now_s):
         reply, row["outcome"] = "Rate limit: too many commands this hour; try again later.", "rate_limited"
-    elif cmd == "note" and not lim.allow(cid, "note", int(_cfg.TELEGRAM_OWNER_NOTE_MAX_PER_H), now_s=now_s):
+    elif cmd == "note" and _forwarded(msg):
+        reply, row["outcome"] = "Forwarded messages are not saved as notes; type the note yourself.", "refused_forwarded"
+    elif cmd == "note" and not lim.would_allow(cid, "note", int(_cfg.TELEGRAM_OWNER_NOTE_MAX_PER_H), now_s=now_s):
         reply, row["outcome"] = "Rate limit: too many notes this hour; nothing was saved.", "rate_limited"
     else:
         try:
@@ -296,11 +328,13 @@ def dispatch(msg: dict, *, data_root: Optional[Path] = None, now: Optional[datet
             else:
                 parts = text.strip().split(None, 1)
                 reply = note_reply(parts[1] if len(parts) > 1 else "", data_root, now=now)
+                if reply.startswith("Note saved"):          # only a SAVED note uses a slot
+                    lim.allow(cid, "note", int(_cfg.TELEGRAM_OWNER_NOTE_MAX_PER_H), now_s=now_s)
             row["outcome"] = "answered"
         except Exception as exc:                          # noqa: BLE001 -- a reply, never silence
             reply, row["outcome"] = f"/{cmd} {CANNOT} ({type(exc).__name__})", "error"
     reply = cap_reply(reply)
-    row["reply_chars"] = len(reply)
+    row["reply_chars"] = u16(reply)
     try:
         _journal(data_root, row)
     except OSError:

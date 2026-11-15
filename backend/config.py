@@ -5652,7 +5652,7 @@ TELEGRAM_OWNER_NOTE_MAX_PER_H = 10
 TELEGRAM_OWNER_REFUSED_JOURNAL_MAX_PER_H = 20
 #: `/books` says STALE when the newest results voice is older than this many hours.
 TELEGRAM_OWNER_BOOKS_STALE_H = 36.0
-#: A reply is cut to this many characters (Telegram's limit is 4096) with a count of omitted lines.
+#: A reply is cut to this many UTF-16 units (Telegram's limit is 4096) with a count of omitted lines.
 TELEGRAM_OWNER_REPLY_MAX_CHARS = 3500
 
 # ── Stitched tickers (review 2026-09-29 F4, `backend/services/stitched_tickers.py`) ──

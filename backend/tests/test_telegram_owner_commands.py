@@ -122,10 +122,11 @@ def test_books_picks_newest_run(env):
     assert "run 2026-05-31T000000Z" in go("/books")
 
 
-def test_help_lists_the_three(env):
+def test_help_keeps_every_old_command_and_start_matches(env):
     _, _, go = env
     r = go("/help")
-    assert all(c in r for c in ("/status", "/books", "/note"))
+    assert all(c in r for c in ("/status", "/books", "/note", "/budget", "/digest", "/nav", "/positions"))
+    assert r == RO.help_text() == RO.answer("/start")["text"]
 
 
 def test_note_writes_one_inbox_row_readable_by_the_cli(env):
@@ -152,7 +153,7 @@ def test_note_empty_too_long_and_journal_has_no_text(env):
     raw = OC.journal_path(root).read_text(encoding="utf-8")
     assert "SECRETNOTEWORD" not in raw and OWNER not in raw
     last = _journal(root)[-1]
-    assert set(last) == {"t", "cmd", "chat_sha8", "sender_ok", "outcome", "reply_chars"}
+    assert set(last) == {"t", "cmd", "sender_ok", "outcome", "reply_chars"}
     assert last["cmd"] == "note" and last["sender_ok"] is True and last["reply_chars"] > 0
 
 
@@ -228,21 +229,114 @@ def test_handler_wiring_through_the_real_poller(env, monkeypatch, tmp_path):
     assert "parse_mode" not in sent[0]
 
 
-def test_module_has_no_way_to_start_anything():
-    """Static audit: no subprocess/os/socket/model/broker/sim import, no exec/eval/open call."""
-    src = (REPO / "backend" / "services" / "telegram_owner_commands.py").read_text(encoding="utf-8")
-    tree = ast.parse(src)
-    mods = set()
+def test_forwarded_note_is_refused_and_journaled(env):
+    root, _, go = env
+    for key in ("forward_origin", "forward_from", "forward_from_chat"):
+        m = _msg("/note forwarded text")
+        m[key] = {"x": 1}
+        r = OC.dispatch(m, data_root=root, now=NOW, owner_chat_id=OWNER, limiter=OC.RateLimiter())
+        assert "Forwarded" in r
+    assert not (root / "owner_inbox").exists()
+    assert [x["outcome"] for x in _journal(root)] == ["refused_forwarded"] * 3
+
+
+def test_multi_slash_parses_the_same_in_both_places(env):
+    root, _, go = env
+    assert OC.command_of("//note x") == "note" == RO.command_of("//note x")
+    assert "saved" in go("//note two slashes")
+    assert OC.command_of("///status") == "status"
+
+
+def test_failed_notes_do_not_use_the_note_slot(env, monkeypatch):
+    root, _, go = env
+    monkeypatch.setattr(C, "TELEGRAM_OWNER_NOTE_MAX_PER_H", 2)
+    for _ in range(5):
+        go("/note")                                        # usage, nothing saved
+        go("/note " + "x" * (C.OWNER_INBOX_MAX_CHARS + 1))  # refused
+    assert "saved" in go("/note a") and "saved" in go("/note b")
+    assert "Rate limit" in go("/note c")
+
+
+def test_cap_counts_utf16_units_and_cuts_a_long_first_line(env):
+    root, _, go = env
+    text = "\n".join(chr(0x1F600) * 100 for _ in range(60))        # 2 units per emoji
+    r = OC.cap_reply(text)
+    assert OC.u16(r) <= C.TELEGRAM_OWNER_REPLY_MAX_CHARS and "omitted" in r
+    r2 = OC.cap_reply("y" * 9000)
+    assert OC.u16(r2) <= C.TELEGRAM_OWNER_REPLY_MAX_CHARS
+
+
+# ---- static audit: nothing on the path of the four commands can start or call anything ----
+
+_BANNED_MODS = {"subprocess", "socket", "requests", "httpx", "urllib", "http", "ctypes", "asyncio",
+                "importlib", "multiprocessing", "threading_start"}
+_BANNED_PREFIX = ("backend.services.llm_analyzer", "backend.services.pc_broker",
+                  "backend.services.sim_session", "backend.services.model_routing",
+                  "backend.services.provider_budget", "backend.services.telegram_cockpit")
+_BANNED_NAMES = {"exec", "eval", "__import__", "system", "popen", "Popen", "run", "call",
+                 "check_output", "startfile", "spawn", "create_subprocess_exec", "import_module"}
+#: the only things the owner handler may take from the bridge: reading the configured owner id
+_BRIDGE_ALLOWED = {"owner_chat_id"}
+
+
+def _audit(tree, label):
+    problems = []
+    bridge_aliases = set()
     for n in ast.walk(tree):
         if isinstance(n, ast.Import):
-            mods |= {a.name.split(".")[0] for a in n.names}
+            for a in n.names:
+                if a.name.split(".")[0] in _BANNED_MODS or a.name.startswith(_BANNED_PREFIX):
+                    problems.append(f"{label}: import {a.name}")
         elif isinstance(n, ast.ImportFrom):
-            mods.add((n.module or "").split(".")[0])
-            mods |= {f"{n.module}.{a.name}" for a in n.names}
-    banned = {"subprocess", "os", "socket", "requests", "urllib", "http", "ctypes", "asyncio",
-              "backend.services.llm_analyzer", "backend.services.pc_broker",
-              "backend.services.sim_session", "backend.services.telegram_bridge"}
-    assert not (mods & banned), mods & banned
-    calls = {n.func.id for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
-    assert not (calls & {"exec", "eval", "compile", "__import__"})
-    assert {m for m in mods if m.startswith("scripts")} <= {"scripts", "scripts.owner_inbox"}
+            m = n.module or ""
+            for a in n.names:
+                full = f"{m}.{a.name}"
+                if m.split(".")[0] in _BANNED_MODS or full.startswith(_BANNED_PREFIX):
+                    problems.append(f"{label}: from {m} import {a.name}")
+                if full == "backend.services.telegram_bridge":
+                    bridge_aliases.add(a.asname or a.name)
+        elif isinstance(n, ast.Call):
+            f = n.func
+            name = f.id if isinstance(f, ast.Name) else (f.attr if isinstance(f, ast.Attribute) else "")
+            if name in _BANNED_NAMES:
+                problems.append(f"{label}: call {name}")
+        elif isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id in bridge_aliases:
+            if n.attr not in _BRIDGE_ALLOWED:
+                problems.append(f"{label}: bridge attribute {n.attr}")
+    return problems
+
+
+def _func(tree, name):
+    return next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == name)
+
+
+def test_no_path_from_the_four_commands_can_start_or_call_anything():
+    oc = ast.parse((REPO / "backend/services/telegram_owner_commands.py").read_text(encoding="utf-8"))
+    ro = ast.parse((REPO / "backend/services/telegram_readonly.py").read_text(encoding="utf-8"))
+    ib = ast.parse((REPO / "scripts/owner_inbox.py").read_text(encoding="utf-8"))
+    problems = _audit(oc, "owner_commands") + _audit(_func(ro, "_owner_handler"), "readonly._owner_handler") \
+        + _audit(_func(ro, "help_text"), "readonly.help_text") + _audit(ib, "owner_inbox")
+    assert problems == []
+    # the audit itself bites: a tree with a banned call is reported
+    assert _audit(ast.parse("import subprocess; subprocess.run([1]); from backend.services import telegram_bridge as T; T.send(2)"), "t")
+    # and the owner handler is what HANDLERS routes the four commands to
+    assert all(RO.HANDLERS[c].__name__ == f"owner_{c}" for c in RO.OWNER_COMMANDS)
+
+
+def test_list_strips_control_and_bidi_characters_and_prints_source(tmp_path, capsys):
+    from scripts import owner_inbox as IB
+    bad = "a" + chr(27) + "[31mb" + chr(7) + chr(0x202E) + "c" + chr(0x200B) + "d\ne\tf"
+    # a pre-existing row (written raw, as before this fix) must be stripped on the way out
+    p = IB.inbox_path(tmp_path)
+    p.parent.mkdir(parents=True)
+    raw = {"kind": "note", "id": "old1", "utc": "t", "text": bad, "page": None, "status": "unread"}
+    p.write_text(json.dumps(raw) + "\n", encoding="utf-8")
+    stored = IB.add_note(bad, data_root=tmp_path, source="telegram")
+    assert chr(27) not in stored["text"] and chr(0x202E) not in stored["text"] and stored["source"] == "telegram"
+    assert chr(27) in p.read_text(encoding="utf-8").splitlines()[0].encode().decode("unicode_escape")  # old row untouched
+    assert IB.main(["list", "--data-root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert chr(27) not in out and chr(7) not in out and chr(0x202E) not in out and chr(0x200B) not in out
+    assert "source=telegram" in out and "source=-" in out
+    assert "stripped from this note" in out and "(app or telegram)" in out
+    assert "d\ne\tf" in out
