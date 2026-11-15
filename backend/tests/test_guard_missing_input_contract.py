@@ -2043,6 +2043,17 @@ def _case_ticker_hub():
             "a ticker-hub build with no news corpus")
 
 
+def _case_news_entity_embed():
+    # CH-46: with no news corpus there is nothing to embed or classify; that must be a
+    # named refusal (rc 2), never an empty receipt that reads as a measured precision.
+    from pathlib import Path as _P
+
+    from backend.services.news_entity_embed import EmbedTagRefused, check_inputs, default_paths
+    nowhere = _P("does/not/exist/news_entity_embed")
+    return (lambda: check_inputs(default_paths(nowhere)), EmbedTagRefused,
+            "an embedding tagger run with no news corpus")
+
+
 def _case_llm_selector_book():
     # llm-book-ruler (CH-17/CH-11): with no funnel snapshot and no bars panel
     # there is no candidate set to choose from; that must be a refusal (red
@@ -2244,6 +2255,7 @@ CASES = {
     "news_overlay_book": _case_news_overlay_book,
     "forward_calendar": _case_forward_calendar,
     "ticker_hub": _case_ticker_hub,
+    "news_entity_embed": _case_news_entity_embed,
 }
 
 
