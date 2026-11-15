@@ -5435,6 +5435,41 @@ INSIDER_COPY_PERF_DELIST_RET = -0.30
 #: Variants that may be tried, declared before the run (max 6, all reported).
 INSIDER_COPY_MAX_VARIANTS = 6
 # -- end CH-47 ----------------------------------------------------------------
+# -- CH-58 revision flow as a RELATIVE position (scripts/ch58_revision_relative.py)
+#: PRODUCT_EXPERIMENT study. Signal, eligibility and the long leg's cost rate are
+#: the earlier long-only backtest's, unchanged; everything below was declared in
+#: the chunk report before any hedged number was computed.
+CH58_START_YEAR = 2004
+CH58_END_YEAR = 2024
+CH58_K = 20
+CH58_HOLD_SESSIONS = 21
+CH58_SIGNAL_WINDOW_DAYS = 90
+#: A month with fewer names than this on either leg is dropped (and counted).
+CH58_MIN_NAMES = 5
+#: Round trip per name by 21-session median dollar volume, bps; charged in full
+#: every month on every name of BOTH legs.
+CH58_COST_BPS_BANDS = ((1e9, 6.0), (1e8, 10.0), (2e7, 18.0), (0.0, 35.0))
+#: Borrow proxy on the short leg, annual, by the same bands (general collateral).
+CH58_BORROW_ANNUAL_BANDS = ((1e9, 0.0030), (1e8, 0.0050), (2e7, 0.0100), (0.0, 0.0300))
+CH58_MARKET_COST_BPS = 6.0
+CH58_MARKET_BORROW_ANNUAL = 0.0030
+#: Sensitivity: the borrow proxy multiplied by this (names with many cuts can be special).
+CH58_BORROW_STRESS_MULT = 3.0
+CH58_TWIN_DRAWS = 21
+CH58_BETA_LOOKBACK = 252
+CH58_BETA_MIN_OBS = 120
+#: Shumway: a missing delisting return on performance codes 500-599 (CH-47's convention).
+CH58_PERF_DELIST_RET = -0.30
+CH58_SPLIT_YEAR = 2017
+CH58_T_PASS = 1.5
+CH58_MDE_MULT = 2.8
+#: Ceiling of a plausible effect per hold: the largest twin-relative monthly spread
+#: on record (+0.65%, 2017-2024). An MDE above it on every primary cell = CANNOT_DISTINGUISH.
+CH58_PLAUSIBLE_MAX_EFFECT = 0.0065
+CH58_TOP_MONTHS = 5
+CH58_N_RANDOM = 200
+CH58_SEED = 58
+# -- end CH-58 ----------------------------------------------------------------
 #: Discovery-lane headlines may CONFIRM an alert inside this window around the
 #: event, never originate one.
 ALERT_CONFIRM_WINDOW_BEFORE_H = 24
