@@ -292,6 +292,73 @@ def control_plane_router(**kwargs) -> APIRouter:
                      dependencies=[Depends(control_plane_gate), *deps], **kwargs)
 
 
+# ------------------------------------------------------------- the trigger token
+#
+# S70 (2026-11-15). The control plane above is a DESKTOP surface and does not
+# exist on the website. A few PUBLIC-prefix routes are not desktop-only but still
+# must not be anyone's to call: they start scheduler jobs or change paper-lane
+# state (`/api/optimus/run_job/{job_id}`, `/api/pi/trigger-check`,
+# `/api/pi/replay/{lane_id}/refresh`). They carry `require_trigger_token`:
+#
+#   * the caller sends `config.TRIGGER_TOKEN_HEADER` holding the value of the
+#     environment variable `config.TRIGGER_TOKEN_ENV`; compared in constant time;
+#   * FAIL CLOSED: variable unset, empty or too short -> 404 for everyone;
+#   * a missing or wrong token -> the same 404. The supplied value is never
+#     echoed and never logged, and neither is the configured one;
+#   * the desktop app is unchanged: with the control plane on, a request that
+#     passes `check_local_request` (this PC's own page) needs no token.
+#
+# A GET that used to write (`/api/pi/reference/{lane_id}/state`) asks
+# `trigger_authorized` instead and serves a side-effect-free read without it.
+# `backend/tests/test_trigger_token_gate.py` enumerates the running app's write
+# routes and fails on one that reaches the scheduler without this dependency.
+
+
+def _configured_trigger_token() -> str | None:
+    """The server-side token, read at request time; None when not usable."""
+    from backend import config as _config
+
+    value = (os.getenv(_config.TRIGGER_TOKEN_ENV, "") or "").strip()
+    if len(value) < int(_config.TRIGGER_TOKEN_MIN_LENGTH):
+        return None
+    return value
+
+
+def _is_desktop_local_request(request: Request) -> bool:
+    """The control plane's own test, as a yes/no: desktop mode AND this machine."""
+    if not _enabled():
+        return False
+    try:
+        check_local_request(request)
+    except HTTPException:
+        return False
+    return True
+
+
+def trigger_authorized(request: Request) -> bool:
+    """True for the desktop's own page, or for a caller holding the trigger token."""
+    import hmac
+
+    from backend import config as _config
+
+    if _is_desktop_local_request(request):
+        return True
+    expected = _configured_trigger_token()
+    if expected is None:
+        return False
+    supplied = request.headers.get(_config.TRIGGER_TOKEN_HEADER)
+    if not supplied:
+        return False
+    return hmac.compare_digest(supplied.encode("utf-8"), expected.encode("utf-8"))
+
+
+def require_trigger_token(request: Request) -> None:
+    """Route dependency: 404, the answer of a path that was never written, unless
+    `trigger_authorized`. One answer for unset / missing / wrong, with no detail."""
+    if not trigger_authorized(request):
+        raise HTTPException(status_code=404, detail="Not Found")
+
+
 router = control_plane_router(tags=["control"])
 
 

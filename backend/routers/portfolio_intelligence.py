@@ -7,7 +7,7 @@ GET  /api/pi/reference/{lane_id}/state — Current allocation + metrics
 GET  /api/pi/reference/{lane_id}/history?period= — Equity curve + rebalance log
 GET  /api/pi/reference/{lane_id}/explain — Most recent rebalance explanation
 GET  /api/pi/compare?ids=&period=      — All lanes + benchmarks side-by-side
-POST /api/pi/trigger-check             — Manual rebalance check (Railway cron target)
+POST /api/pi/trigger-check             — Manual rebalance check (trigger token required)
 GET  /api/pi/replay/{lane_id}          — Replay backtest results
 """
 
@@ -17,7 +17,7 @@ import logging
 from datetime import date, datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel as _BaseModel, Field as _PydField
 
 from backend.schemas.portfolio_intelligence import (
@@ -34,6 +34,7 @@ from backend.schemas.portfolio_intelligence import (
     TrackRecordPoint,
     TrackRecordResponse,
 )
+from backend.routers.control import require_trigger_token, trigger_authorized
 from backend.services.portfolio_intelligence.real_analyzer import analyze_portfolio
 
 router = APIRouter(prefix="/api/pi", tags=["portfolio-intelligence"])
@@ -69,16 +70,30 @@ async def analyze_real_portfolio(request: AnalyzePortfolioRequest):
 
 
 @router.get("/reference/{lane_id}/state", response_model=SnapshotResponse)
-async def get_reference_state(lane_id: str):
-    """Get current state of a reference portfolio lane."""
+async def get_reference_state(lane_id: str, request: Request) -> SnapshotResponse:
+    """Get current state of a reference portfolio lane.
+
+    A READ, AND NOW ONLY A READ (S70, 2026-11-15). This GET used to call
+    `run_reference_check`, which initialises the lane, writes audit rows and,
+    when the drift/cadence trigger fires, books a REBALANCE -- so any visitor
+    (and the read-only OpenClaw bridge) could move a paper lane by loading a
+    URL. A caller without the trigger token now gets `read_reference_state`:
+    the open book as it stands, marked to market, nothing written. The check
+    still runs for the desktop's own page and for a caller holding the token
+    (`control.trigger_authorized`); the scheduler does it daily regardless.
+    """
     if lane_id not in _VALID_LANES:
         raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
 
-    from backend.services.portfolio_intelligence.reference_engine import run_reference_check
+    from backend.services.portfolio_intelligence.reference_engine import (
+        read_reference_state,
+        run_reference_check,
+    )
 
     try:
-        result = await asyncio.to_thread(run_reference_check, lane_id)
-        return result
+        if trigger_authorized(request):
+            return await asyncio.to_thread(run_reference_check, lane_id)
+        return await asyncio.to_thread(read_reference_state, lane_id)
     except Exception as e:
         logger.error("Reference state failed for %s: %s", lane_id, e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -1045,9 +1060,11 @@ def _compute_benchmark_metrics(name: str, start_d: date, end_d: date) -> Optiona
     )
 
 
-@router.post("/trigger-check")
-async def trigger_check(lane_id: Optional[str] = None):
-    """Manual rebalance check — Railway cron target.
+@router.post("/trigger-check", dependencies=[Depends(require_trigger_token)])
+async def trigger_check(lane_id: Optional[str] = None) -> dict:
+    """Manual rebalance check. Requires the trigger token (S70, 2026-11-15):
+    it can book a rebalance on every reference lane, and it answered anyone.
+    404 without `X-Aegis-Trigger-Token`; the desktop's own page is unchanged.
 
     POST /api/pi/trigger-check          — check all lanes
     POST /api/pi/trigger-check?lane_id=conservative — check one lane
@@ -1150,15 +1167,21 @@ async def get_replay_snapshot(lane_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/replay/{lane_id}/refresh", response_model=ReplayResult)
+@router.post("/replay/{lane_id}/refresh", response_model=ReplayResult,
+             dependencies=[Depends(require_trigger_token)])
 async def refresh_replay(
     lane_id: str,
     start_date: str = Query(default="2021-01-01"),
     end_date: Optional[str] = Query(default=None),
-):
+) -> ReplayResult:
     """Invalidate cache and recompute the walk-forward replay.
 
     Slow (10+ minutes) — frontend should show a progress indicator.
+
+    Requires the trigger token (S70, 2026-11-15): it DELETES the cached replay
+    the public reference page reads and starts a ten-minute recompute, and it
+    answered anyone. The website no longer offers the button; the desktop app's
+    own page still does.
     """
     if lane_id not in _VALID_LANES:
         raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")

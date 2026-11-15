@@ -14,8 +14,9 @@ import asyncio
 import json
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from backend.routers.control import require_trigger_token
 from backend.services import job_receipts as JR
 
 router = APIRouter(prefix="/api/optimus", tags=["optimus"])
@@ -122,8 +123,8 @@ async def get_digest(day: str | None = None):
     return body
 
 
-@router.post("/run_job/{job_id}")
-async def run_job_now(job_id: str):
+@router.post("/run_job/{job_id}", dependencies=[Depends(require_trigger_token)])
+async def run_job_now(job_id: str) -> dict:
     """Run one scheduled job INLINE, now, and return when it finishes.
 
     WHY A TRIGGER ENDPOINT EXISTS (2026-09-01). The app sleeps between wakes,
@@ -136,6 +137,12 @@ async def run_job_now(job_id: str):
     is nothing to do, and each writes the same dated receipt a scheduled run
     would, so a triggered run is indistinguishable in the record (as it should
     be: the evidence convention does not care who pressed the button).
+
+    NOT PUBLIC (S70, 2026-11-15). `pi_daily_check` ends in the Alpaca PAPER
+    mirror sync, and this route answered anyone. It now requires the trigger
+    token (`control.require_trigger_token`): without `AEGIS_TRIGGER_TOKEN` set
+    on the server, or without the right `X-Aegis-Trigger-Token` header, it is a
+    plain 404. The desktop app's own page is unchanged.
     """
     from backend.services.portfolio_intelligence import scheduler as _sched
 

@@ -23,6 +23,7 @@ import {
   piGetReplaySnapshot, piRefreshReplay,
   type PIReplayResult, type PIRebalanceEvent,
 } from "@/lib/api";
+import { CONTROL_PLANE_BUILD } from "@/lib/control-api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { fmtMoney, fmtPct } from "@/lib/format";
 
@@ -92,15 +93,21 @@ function ReferencePageContent() {
             {meta.alloc} · simulated 2021&ndash;2025, not the live track record
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refreshMutation.mutate()}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`} />
-          {isRefreshing ? "Re-running…" : "Re-run backtest"}
-        </Button>
+        {/* S70 (2026-11-15): the re-run deletes the cached replay and starts a
+            ten-minute recompute, so the backend route now needs a server-side
+            token a browser must never hold. Only the desktop build (same machine,
+            no token needed) offers the button; the website reads the cache. */}
+        {CONTROL_PLANE_BUILD && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refreshMutation.mutate()}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Re-running…" : "Re-run backtest"}
+          </Button>
+        )}
       </div>
 
       {/* Lane Tabs */}
@@ -128,8 +135,10 @@ function ReferencePageContent() {
           <CardContent className="py-3 flex items-center gap-2 text-xs text-amber-400/80">
             <Clock className="h-3.5 w-3.5" />
             <span>
-              Showing cached result from {snapshot.cached_at.slice(0, 10)}. Click
-              &ldquo;Re-run backtest&rdquo; for fresh numbers.
+              Showing cached result from {snapshot.cached_at.slice(0, 10)}.
+              {CONTROL_PLANE_BUILD
+                ? " Click “Re-run backtest” for fresh numbers."
+                : " The backtest is re-run from the desktop app, not from this site."}
             </span>
           </CardContent>
         </Card>
@@ -167,8 +176,9 @@ function ReferencePageContent() {
               No backtest results cached yet for this lane.
             </p>
             <p className="text-xs text-muted-foreground">
-              Click &ldquo;Re-run backtest&rdquo; above to compute the walk-forward replay.
-              Takes several minutes; subsequent loads are instant for 24 hours.
+              {CONTROL_PLANE_BUILD
+                ? "Click “Re-run backtest” above to compute the walk-forward replay. Takes several minutes; subsequent loads are instant for 24 hours."
+                : "The walk-forward replay is computed from the desktop app, not from this site."}
             </p>
           </CardContent>
         </Card>

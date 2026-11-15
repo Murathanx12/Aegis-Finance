@@ -493,6 +493,53 @@ def run_reference_check(
         conn.close()
 
 
+def read_reference_state(lane_id: str, db_path=None) -> SnapshotResponse:
+    """The lane's open book as it stands, marked to market. WRITES NOTHING.
+
+    The public `GET /api/pi/reference/{lane_id}/state` serves this to a caller
+    without the trigger token (S70, 2026-11-15). `run_reference_check` is a
+    CHECK: it initialises the lane, appends audit rows and may book a rebalance,
+    which is the scheduler's job and not a page view's.
+
+    The database is opened READ-ONLY (`mode=ro`), so "no write" is enforced by
+    SQLite and not by the absence of an INSERT in this function. A database or
+    table that does not exist yet is an empty book, never a reason to create one.
+    """
+    import sqlite3
+    from pathlib import Path
+
+    from backend import db as _db
+
+    today = date.today().isoformat()
+    empty = SnapshotResponse(portfolio_id=lane_id, date=today, weights={})
+    if _get_lane_config(lane_id) is None:
+        return empty
+    path = Path(db_path or _db.DB_PATH)
+    if not path.exists():
+        return empty
+
+    conn = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
+    conn.row_factory = sqlite3.Row
+    try:
+        try:
+            held = [r["ticker"] for r in conn.execute(
+                "SELECT ticker FROM paper_positions "
+                "WHERE portfolio_id = ? AND closed_at IS NULL", (lane_id,)).fetchall()]
+        except sqlite3.OperationalError as e:
+            if "no such table" in str(e).lower():
+                return empty
+            raise
+        prices = _get_current_prices([t for t in held if t != CASH_TICKER]) if held else {}
+        weights = _get_current_weights(conn, lane_id, prices)
+    finally:
+        conn.close()
+    return SnapshotResponse(
+        portfolio_id=lane_id,
+        date=today,
+        weights={t: round(w, 6) for t, w in weights.items()},
+    )
+
+
 def _price_fetch_window(now: datetime | None = None) -> tuple[str, str]:
     """(start, end) for the live daily-bar fetch, with an INCLUSIVE end.
 
