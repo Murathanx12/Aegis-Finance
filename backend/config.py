@@ -16,7 +16,15 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
-# ── Project root ──────────────────────────────────────────────────────────────
+# A windowless process (a `pythonw.exe` scheduled task, the packaged app) must never open a
+# console window for a child: on 2026-11-15 `scripts.system_status` put ~10 Terminal windows
+# in the foreground every 15 minutes. Installed here because nearly every entry point imports
+# this module first; it does nothing in a process that has a console (shell, pytest, CI).
+from backend.services.quiet_subprocess import install_windowless_default as _install_windowless_default
+
+_install_windowless_default()
+
+# ── Project root──────────────────────────────────────────────────────────────
 
 
 def _repo_root() -> Path:
