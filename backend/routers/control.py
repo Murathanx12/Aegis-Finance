@@ -22,9 +22,11 @@ Three rules are enforced here rather than intended:
    `backend/tests/test_control_router_authority.py` walks this module's AST and
    fails if a broker/order symbol ever appears.
 
-The mutating endpoints additionally refuse unless `AEGIS_CONTROL_ENABLED=1`, so
-the router is inert on the Railway website deployment and live only in the
-desktop shell, which sets the flag when it starts the backend on localhost.
+Every route, reads included, is behind `control_plane_gate` (below): unless
+`AEGIS_CONTROL_ENABLED=1` the whole plane answers 404 as if it did not exist, so
+it is absent on the Railway website deployment and live only in the desktop
+shell, which sets the flag when it starts the backend on localhost; there every
+request must also pass `check_local_request`.
 """
 
 from __future__ import annotations
@@ -39,11 +41,11 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi.routing import APIRoute
+from starlette.routing import Match
 
 from backend.services import quiet_subprocess as qsp  # noqa: E402
-
-router = APIRouter(prefix="/api/control", tags=["control"])
 
 def _repo_root() -> Path:
     """The repository the control plane reads and writes.
@@ -117,6 +119,180 @@ def _require_enabled() -> None:
             status_code=403,
             detail=("the control plane is disabled. It runs local jobs, so it is off unless "
                     "AEGIS_CONTROL_ENABLED=1 is set by the desktop shell on localhost."))
+
+
+# ------------------------------------------------------------- local-request guard
+#
+# CH-22 review of PR #143, finding H1 (2026-11-14), CONFIRMED in a real Chromium:
+# `fetch(url, {mode: "no-cors", body: new Blob([json])})` from ANY web page sends
+# no Content-Type, so it is a CORS "simple request": no preflight, the CORS
+# allow-list never gets a say, and FastAPI parsed the body as JSON. An
+# environment flag (`_require_enabled`) says nothing about WHO is asking. Every
+# state-changing control route -- the job-starting POSTs included -- and both
+# owner-note routes now go through this one guard first:
+#
+#   * the TCP peer must be loopback (CH-22 follow-up: a LAN peer of a server bound
+#     to 0.0.0.0 could otherwise just type a loopback Host header);
+#   * Host must be a loopback name with the port this server is bound to
+#     (defeats DNS rebinding: a rebound name arrives with the attacker's Host);
+#   * an Origin, when present, must be exactly http://<that Host>;
+#   * Sec-Fetch-Site, when present, must be same-origin or none;
+#   * an unsafe method must carry Content-Type: application/json, which a
+#     cross-origin page can only send after a preflight (415 otherwise).
+#
+# The desktop pages call these routes same-origin through `lib/control-api.ts`,
+# which always sends `Content-Type: application/json`, so they pass unchanged.
+
+LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
+UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+
+
+def _split_host(value: str) -> tuple[str, int | None] | None:
+    """`127.0.0.1:8000` -> ("127.0.0.1", 8000); `[::1]:8000` -> ("[::1]", 8000).
+    No port -> (name, None). Unparseable -> None."""
+    v = (value or "").strip().lower()
+    if not v:
+        return None
+    if v.startswith("["):
+        end = v.find("]")
+        if end < 0:
+            return None
+        name, rest = v[: end + 1], v[end + 1:]
+    else:
+        name, sep, port = v.partition(":")
+        rest = f":{port}" if sep else ""
+    if not rest:
+        return name, None
+    if not rest.startswith(":") or not rest[1:].isdigit():
+        return None
+    return name, int(rest[1:])
+
+
+#: The peer name Starlette's in-process TestClient reports. No socket can produce
+#: it (a real server fills `client` from the TCP peer address), so accepting it
+#: lets the in-process callers (`scripts/seed_first_books.py`, the tests) through
+#: without opening the plane to any network peer.
+IN_PROCESS_CLIENT = "testclient"
+
+
+def _client_is_loopback(request: Request) -> bool:
+    import ipaddress
+    peer = request.client.host if request.client else None
+    if not peer:
+        return False
+    if peer == IN_PROCESS_CLIENT:
+        return True
+    try:
+        ip = ipaddress.ip_address(peer.strip("[]"))
+    except ValueError:
+        return False
+    mapped = getattr(ip, "ipv4_mapped", None)
+    return bool(ip.is_loopback or (mapped is not None and mapped.is_loopback))
+
+
+def check_local_request(request: Request) -> None:
+    """Refuse anything that is not this PC's own page talking to this server."""
+    if not _client_is_loopback(request):
+        peer = request.client.host if request.client else None
+        raise HTTPException(status_code=403, detail=(
+            f"control plane refused: the client {peer!r} is not this machine (loopback only)"))
+    host_raw = request.headers.get("host") or ""
+    parsed = _split_host(host_raw)
+    if parsed is None or parsed[0] not in LOOPBACK_HOSTS:
+        raise HTTPException(status_code=403, detail=(
+            f"control plane refused: Host {host_raw!r} is not a loopback address "
+            "(127.0.0.1, localhost or [::1])"))
+    server = request.scope.get("server")
+    served_port = int(server[1]) if server and len(server) > 1 and server[1] is not None else None
+    host_port = parsed[1] if parsed[1] is not None else 80
+    if served_port is None or host_port != served_port:
+        raise HTTPException(status_code=403, detail=(
+            f"control plane refused: Host port {host_port} is not the port this app serves "
+            f"({served_port})"))
+    origin = request.headers.get("origin")
+    if origin is not None and origin.strip().lower() != f"http://{host_raw.strip().lower()}":
+        raise HTTPException(status_code=403, detail=(
+            f"control plane refused: cross-origin request from {origin!r}"))
+    sfs = request.headers.get("sec-fetch-site")
+    if sfs is not None and sfs.strip().lower() not in ("same-origin", "none"):
+        raise HTTPException(status_code=403, detail=(
+            f"control plane refused: Sec-Fetch-Site {sfs!r} (same-origin only)"))
+    if request.method.upper() in UNSAFE_METHODS:
+        ctype = (request.headers.get("content-type") or "").split(";", 1)[0].strip().lower()
+        if ctype != "application/json":
+            raise HTTPException(status_code=415, detail=(
+                "control plane refused: a state-changing request must be sent with "
+                "Content-Type: application/json"))
+
+
+def guard_unsafe_methods(request: Request) -> None:
+    """Kept for importers; superseded by `control_plane_gate`, which checks every
+    method. Every POST/PUT/PATCH/DELETE is checked."""
+    if request.method.upper() in UNSAFE_METHODS:
+        check_local_request(request)
+
+
+# ------------------------------------------------------------- the one gate
+#
+# CH-22 follow-up (2026-11-15). Until this, only the mutating routes were checked:
+# on the website deployment every READ of the control plane answered (the source
+# tree and text files of the deployed checkout, provider balances, the fleet, the
+# app log, run logs ...). The whole plane is a desktop surface, so off the desktop
+# it does not exist at all:
+#
+#   * desktop mode is `AEGIS_CONTROL_ENABLED=1` (`_enabled`), the flag the desktop
+#     shell sets on its own process and the in-process seed scripts set around
+#     their TestClient. Off -> 404 for EVERY method of EVERY route, the same answer
+#     as a path that was never written: no 403, no 405, no 422 to say it is there.
+#   * on -> `check_local_request` for reads too (loopback Host with the served
+#     port, no foreign Origin, Sec-Fetch-Site same-origin/none).
+#
+# It cannot be forgotten on a new route: every control-plane router is built by
+# `control_plane_router()`, and `backend/tests/test_control_plane_gate.py`
+# enumerates `app.routes` under CONTROL_PLANE_PREFIXES and fails on any route
+# that lacks `control_plane_gate` or the route class.
+
+#: Paths that belong to the desktop control plane. `/system-status` is the
+#: backend-rendered systems page (CH-22a).
+CONTROL_PLANE_PREFIXES: tuple[str, ...] = ("/api/control", "/system-status")
+
+
+def control_plane_gate(request: Request) -> None:
+    """Router-level dependency on every control-plane route, reads included."""
+    if not _enabled():
+        raise HTTPException(status_code=404, detail="Not Found")
+    check_local_request(request)
+
+
+class ControlPlaneRoute(APIRoute):
+    """A route that is not routed at all while the control plane is off.
+
+    The dependency alone answers 404 for a matched method, but Starlette decides
+    405 (wrong method) and FastAPI decides 422 (malformed JSON body) BEFORE any
+    dependency runs, and both say "this path exists". Not matching makes the
+    router fall through to its ordinary 404.
+    """
+
+    def matches(self, scope):  # type: ignore[override]
+        match, child = super().matches(scope)
+        if match is not Match.NONE and not _enabled():
+            return Match.NONE, {}
+        return match, child
+
+
+def control_plane_router(**kwargs) -> APIRouter:
+    """The ONE constructor for a control-plane router: prefix `/api/control` unless
+    given, `ControlPlaneRoute`, `control_plane_gate` before any other dependency,
+    and out of the OpenAPI schema (the website's public `/openapi.json` would
+    otherwise list every route of a plane that answers 404 there)."""
+    kwargs.setdefault("prefix", "/api/control")
+    kwargs.setdefault("include_in_schema", False)
+    deps = list(kwargs.pop("dependencies", None) or [])
+    return APIRouter(route_class=ControlPlaneRoute,
+                     dependencies=[Depends(control_plane_gate), *deps], **kwargs)
+
+
+router = control_plane_router(tags=["control"])
 
 
 def queue_jobs() -> list[str]:

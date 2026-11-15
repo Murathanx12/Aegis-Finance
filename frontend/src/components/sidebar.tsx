@@ -34,18 +34,30 @@ import {
   LineChart,
   FlaskConical,
   HeartPulse,
+  Gauge,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useBeginnerMode } from "@/hooks/use-beginner-mode";
 import { isPersonalMode } from "@/lib/personal-mode";
+import { CONTROL_PLANE_BUILD } from "@/lib/control-api";
 
 type NavItem = {
   href: string; label: string; icon: typeof LayoutDashboard; code: string;
   advancedOnly?: boolean; // dense analytics surfaces, hidden in casual mode
+  // A page the BACKEND renders (not a route of the static export): a plain <a>,
+  // because a client-side <Link> would look for it in the export and 404.
+  external?: boolean;
 };
-type NavGroup = { title: string | null; items: NavItem[]; advancedOnly?: boolean };
+type NavGroup = {
+  title: string | null;
+  items: NavItem[];
+  advancedOnly?: boolean;
+  // Only in the desktop build, where the local control plane exists.
+  controlPlaneOnly?: boolean;
+};
 
 // Grouped navigation: 5 sections instead of a flat 15-item list, with the
 // previously unreachable pages (Track Record, World Markets) surfaced.
@@ -55,6 +67,19 @@ const NAV_GROUPS: NavGroup[] = [
     title: null,
     items: [
       { href: "/", label: "Dashboard", icon: LayoutDashboard, code: "DASH" },
+    ],
+  },
+  {
+    // CH-22 (2026-11-14): the desktop app's own surfaces, one click from every
+    // page. NOT advancedOnly: casual mode shows them. Compiled out of the public
+    // website (CONTROL_PLANE_BUILD is false there), where none of them works.
+    title: "This PC",
+    controlPlaneOnly: true,
+    items: [
+      { href: "/system-status", label: "Systems status", icon: Gauge, code: "SYS", external: true },
+      { href: "/desktop", label: "Aegis Desktop", icon: MonitorCog, code: "DESK" },
+      { href: "/desktop/reader", label: "Reader", icon: Newspaper, code: "READ" },
+      { href: "/desktop/ask", label: "Ask Aegis", icon: MessageSquare, code: "ASK" },
     ],
   },
   {
@@ -105,7 +130,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/copilot", label: "Copilot", icon: Sparkles, code: "AI" },
       { href: "/workspace", label: "Workspace", icon: LayoutGrid, code: "WORK" },
-      { href: "/desktop", label: "Aegis Desktop", icon: MonitorCog, code: "DESK" },
       { href: "/brain", label: "Optimus Brain", icon: Brain, code: "BRAIN" },
       { href: "/dev", label: "Dev", icon: LayoutGrid, code: "DEV" },
       { href: "/about", label: "About", icon: Info, code: "ABOUT" },
@@ -121,6 +145,7 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
     <nav className="flex flex-col gap-1 px-3" data-tour="nav">
       {NAV_GROUPS.map((group) => {
         if (group.advancedOnly && beginner) return null;
+        if (group.controlPlaneOnly && !CONTROL_PLANE_BUILD) return null;
         return (
           <div key={group.title ?? "top"} className="flex flex-col gap-0.5">
             {group.title && (
@@ -130,9 +155,12 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
             )}
             {group.items.map((item) => {
               if (item.advancedOnly && beginner) return null;
-              const active = pathname === item.href;
+              // the desktop export uses trailing slashes: /desktop/ask/ is /desktop/ask
+              const here = pathname && pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
+              const active = here === item.href;
+              const Anchor = item.external ? "a" : Link;
               return (
-                <Link
+                <Anchor
                   key={item.href}
                   href={item.href}
                   onClick={onClick}
@@ -155,7 +183,7 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
                   >
                     {item.code}
                   </span>
-                </Link>
+                </Anchor>
               );
             })}
           </div>

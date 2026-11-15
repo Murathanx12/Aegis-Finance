@@ -8,14 +8,21 @@ survives the page being rewritten.
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
+from backend.tests.local_control import local_client
 
 from backend.main import app
 from backend.services import book_cadence as BC
 from backend.services import paper_books as PB
 from backend.tests.book_helpers import make_strategy, seeded_db, synthetic_bars
 
-client = TestClient(app)
+client = local_client(app)  # H1: loopback Host + JSON, like the desktop page
+
+
+@pytest.fixture(autouse=True)
+def _desktop_mode(monkeypatch):
+    """CH-22 follow-up: off the desktop even the reads are 404, so the reads below
+    run as the desktop app does. A test of the off state deletes the flag itself."""
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
 
 
 @pytest.fixture()
@@ -154,7 +161,7 @@ def test_the_worst_case_in_dollars_is_on_every_row(books_db, bars):
 def test_create_is_control_plane_gated(books_db, monkeypatch):
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
     r = client.post("/api/control/books/create-from-contract", json={})
-    assert r.status_code == 403
+    assert r.status_code == 404      # off the desktop the route does not exist
 
 
 def test_create_refuses_a_human_text_origin(books_db, monkeypatch):

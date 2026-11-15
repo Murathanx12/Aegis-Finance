@@ -22,6 +22,9 @@ it before writing) plus each book's holdings and return series, and writes
   from this module), the TAIL check (top-1 / top-2 holdings' share of the excess),
   top sector weight and HHI, beta vs SPY where a long enough series exists, cash
   fraction, `one_name_dependence`;
+* per book (CH-11 note, 2026-11-13): `market_exposure` -- up-capture, down-capture,
+  the beta-adjusted excess (return - beta x SPY leg) and the residual by month, from
+  the same series as the beta; CANNOT DETERMINE with a reason when it is not answerable;
 * clusters of the non-twin books ahead: holdings Jaccard (threshold in config,
   with the count at every sensitivity threshold printed) plus return correlation
   where series exist; members, shared basket, cluster excess;
@@ -42,8 +45,10 @@ it cannot compute says NOT_COMPUTABLE with a reason -- never 0, never absent.
 """
 from __future__ import annotations
 
+import bisect
 import json
 import math
+import re
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
@@ -57,6 +62,9 @@ SCHEMA = "book_dna/1"
 NOT_COMPUTABLE = "NOT_COMPUTABLE"
 #: a number that computes but is not believed (C15: beta on a date-stamp-lagged series)
 NOT_CREDIBLE = "NOT_CREDIBLE"
+#: CH-11 note (2026-11-13): a market-exposure field that cannot be answered (series too
+#: short, beta not credible, no SPY leg) -- printed with its reason, never 0 or blank.
+CANNOT_DETERMINE = "CANNOT DETERMINE"
 #: The ladder from roadmap section 7. This module may award only the first three.
 LABEL_LADDER = ("OBSERVED", "EARLY_EVIDENCE", "REPLICATED", "VALIDATED_EDGE")
 LABEL_CEILING = "REPLICATED"
@@ -99,6 +107,15 @@ def params() -> dict:
         "corr_threshold": float(_cfg("BOOK_DNA_CORR_THRESHOLD", 0.80)),
         "min_corr_obs": int(_cfg("BOOK_DNA_MIN_CORR_OBS", 15)),
         "min_beta_obs": int(_cfg("BOOK_DNA_MIN_BETA_OBS", 20)),
+        "min_capture_obs": int(_cfg("BOOK_DNA_MIN_CAPTURE_OBS", 8)),
+        "stamp_month_min_obs": int(_cfg("BOOK_DNA_STAMP_MONTH_MIN_OBS", 8)),
+        "stamp_month_min_lag_corr": float(_cfg("BOOK_DNA_STAMP_MONTH_MIN_LAG_CORR", 0.30)),
+        "stamp_month_gap_se": float(_cfg("BOOK_DNA_STAMP_MONTH_GAP_SE", 1.0)),
+        "exposure_min_cover": float(_cfg("BOOK_DNA_EXPOSURE_MIN_COVER", 0.80)),
+        "exposure_max_return_gap_pp": float(_cfg("BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP", 2.0)),
+        "max_capture_se": float(_cfg("BOOK_DNA_MAX_CAPTURE_SE", 0.25)),
+        "mde_z": float(_cfg("BOOK_DNA_MDE_Z", 2.8)),
+        "rf_annual_assumed": float(_cfg("BOOK_DNA_RF_ANNUAL_ASSUMED", 0.04)),
         "early_min_sessions": int(_cfg("BOOK_DNA_EARLY_MIN_SESSIONS", 21)),
         "fair_twin_kinds": list(_cfg("BOOK_DNA_FAIR_TWIN_KINDS",
                                      ("matched_twin21", "matched_random", "random_same_band"))),
@@ -116,6 +133,16 @@ def params() -> dict:
         "lane_family_corr": float(_cfg("BOOK_DNA_LANE_FAMILY_CORR", 0.85)),
         "lane_identity_jaccard": float(_cfg("BOOK_DNA_LANE_IDENTITY_JACCARD", 0.90)),
         "basket_top": int(_cfg("BOOK_DNA_BASKET_TOP", 5)),
+        "flag_idle_gross": float(_cfg("BOOK_DNA_FLAG_IDLE_GROSS", 0.05)),
+        "flag_idle_min_sessions": int(_cfg("BOOK_DNA_FLAG_IDLE_MIN_SESSIONS", 5)),
+        "flag_from_cash_share": float(_cfg("BOOK_DNA_FLAG_FROM_CASH_SHARE", 0.5)),
+        "flag_same_bet_corr": float(_cfg("BOOK_DNA_FLAG_SAME_BET_CORR", 0.90)),
+        "flag_same_bet_min_obs": int(_cfg("BOOK_DNA_FLAG_SAME_BET_MIN_OBS", 20)),
+        "flag_mde_min_obs": int(_cfg("BOOK_DNA_FLAG_MDE_MIN_OBS", 20)),
+        "flag_one_name_share": float(_cfg("BOOK_DNA_FLAG_ONE_NAME_SHARE", 0.40)),
+        "flag_high_beta": float(_cfg("BOOK_DNA_FLAG_HIGH_BETA", 1.5)),
+        "flag_control_name_markers": list(_cfg("RESULTS_VOICE_CONTROL_NAME_MARKERS",
+                                               ("_random_twin", "comparato", "__", "-control"))),
     }
 
 
@@ -172,15 +199,17 @@ def load_prices(symbols: Iterable[str], bars: Optional[pd.DataFrame] = None) -> 
     if bars is None:
         try:
             from backend.services import xs_ranker
-            b = xs_ranker.load_bars()
+            # review m6 (PR #140): a parquet filter, never the whole deep panel in RAM
+            b = xs_ranker.load_bars(symbols=sorted(want))
             frames.append(b[b["symbol"].isin(want)])
-            srcs.append("xs_ranker.load_bars()")
+            srcs.append("xs_ranker.load_bars(symbols=)")
         except Exception as e:                      # a missing panel is a named gap
             srcs.append(f"xs_ranker.load_bars() FAILED: {type(e).__name__}: {e}"[:200])
         g = LLM_DIR / "global_bars.parquet"
         if g.exists():
             try:
-                gb = pd.read_parquet(g, columns=["symbol", "date", "open", "close"])
+                gb = pd.read_parquet(g, columns=["symbol", "date", "open", "close"],
+                                     filters=[("symbol", "in", sorted(want))])
                 frames.append(gb[gb["symbol"].isin(want)])
                 srcs.append("llm_portfolio/global_bars.parquet")
             except Exception as e:
@@ -208,6 +237,28 @@ def _read_jsonl(p: Path) -> list[dict]:
     return out
 
 
+def _night_decisions(conn: Any, gaps: dict) -> Optional[dict]:
+    """{book_id: [(asof_date, {ticker: weight})]} from paper_book_decisions, oldest first.
+    None (with a gap) when the table cannot be read -- never {} for "could not read", because
+    {} means "no book ever decided" and that is what NEVER_INVESTED would then report."""
+    try:
+        rows = conn.execute("SELECT book_id, asof_date, weights_json FROM paper_book_decisions "
+                            "ORDER BY book_id, asof_date").fetchall()
+    except Exception as e:                       # noqa: BLE001 -- a named gap, never raised
+        gaps["paper_book_decisions"] = f"{type(e).__name__}: {e}"[:200]
+        return None
+    out: dict = {}
+    for r in rows:
+        try:
+            w = json.loads(r[2] or "{}")
+        except ValueError:
+            gaps[f"paper_book_decisions/{r[0]}/{r[1]}"] = "weights_json unreadable"
+            continue
+        if isinstance(w, dict):
+            out.setdefault(str(r[0]), []).append((str(r[1])[:10], {str(k): _num(v) for k, v in w.items()}))
+    return out
+
+
 def _session_date_of_stamp(t: str) -> Optional[str]:
     """US session a broker equity stamp marks: after 16:00 ET -> that day; before
     09:30 ET -> the previous weekday; intraday -> None (not a close)."""
@@ -232,9 +283,11 @@ def _session_date_of_stamp(t: str) -> Optional[str]:
 
 
 def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
-                fetch_lanes: bool = True) -> dict:
+                fetch_lanes: bool = True, read_only_db: bool = False) -> dict:
     """Read every holdings / series source this module uses. Each source that
-    fails is recorded in `inputs["gaps"]`, never raised."""
+    fails is recorded in `inputs["gaps"]`, never raised. `read_only_db=True` (an
+    out-of-band rebuild against the live data root) opens the paper-books database
+    with `mode=ro` instead of through `init_db`."""
     gaps: dict = {}
     inp: dict = {"gaps": gaps}
     recs = [r for r in _read_jsonl(LLM_DIR / "books.jsonl") if r.get("schema") != "llm_portfolio/void"]
@@ -269,6 +322,23 @@ def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
     else:
         gaps["fleet_daily"] = "no fleet_daily/fleet_*.json"
     inp["fleet_positions"] = fleet_pos
+    # flags (claims-none 2026-11-14): gross / equity at EVERY fleet_daily read, dated by the
+    # read's own stamp (never the file's mtime), so IDLE_CASH can say since when
+    fg: dict = {}
+    for f in fd:
+        try:
+            d = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            gaps[f"fleet_daily/{f.name}"] = "unreadable"
+            continue
+        sess = _session_date_of_stamp(str(d.get("stamp_utc") or ""))
+        if not sess:
+            continue
+        for a in d.get("accounts") or []:
+            g = _num(a.get("gross_over_equity"))
+            if a.get("status") == "ok" and g is not None:
+                fg.setdefault(a.get("role"), {})[sess] = g
+    inp["fleet_gross"] = {r: sorted(v.items()) for r, v in fg.items()}
     st: dict = {}
     for f in sorted((PA_DIR / "fleet_manager" / "state").glob("hack*.json")):
         try:
@@ -290,18 +360,50 @@ def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
         inp["pc_state"] = None
         gaps["pc_snapshot"] = f"unreadable: {type(e).__name__}"
     pcn: dict = {}
+    pcg: dict = {}
     last_t = None
     for r in _read_jsonl(PC_NAV):
         last_t = r.get("t") or last_t
         d = _session_date_of_stamp(r.get("t") or "")
         if d and r.get("equity") is not None:
             pcn[d] = float(r["equity"])
+            eqv, lm, sm = _num(r.get("equity")), _num(r.get("long_market_value")), _num(r.get("short_market_value"))
+            if eqv and lm is not None:
+                pcg[d] = (abs(lm) + abs(sm or 0.0)) / eqv
+            elif r.get("n_positions") == 0:
+                pcg[d] = 0.0
     inp["pc_nav"] = sorted(pcn.items())
+    inp["pc_gross"] = sorted(pcg.items())
     inp["pc_manager_last_run"] = last_t
     # night books
     try:
         from backend.services import paper_books as PB
-        inp["night_nav"] = PB.nav_series()
+        if read_only_db:
+            # a reader must not run init_db (schema DDL) against the live database
+            import sqlite3
+            from backend import db as _db
+            # claims-none (2026-11-14): with no WAL content there is nothing a mode=ro open could
+            # read that the main file lacks, so open it immutable -- mode=ro CREATED an empty -wal
+            # and a -shm beside the live database on the 2026-11-14 rebuild. With a non-empty WAL,
+            # mode=ro (immutable would miss the rows still in it; it only moves the -shm mtime).
+            dbp = Path(_db.DB_PATH)
+            wal = dbp.with_name(dbp.name + "-wal")
+            imm = not wal.exists() or wal.stat().st_size == 0
+            ro = sqlite3.connect(f"file:{dbp.as_posix()}?{'immutable=1' if imm else 'mode=ro'}", uri=True)
+            inp["db_open_mode"] = "immutable=1 (no WAL content)" if imm else "mode=ro (WAL present)"
+            ro.row_factory = sqlite3.Row
+            try:
+                inp["night_nav"] = PB.nav_series(conn=ro)
+                inp["night_decisions"] = _night_decisions(ro, gaps)
+            finally:
+                ro.close()
+        else:
+            inp["night_nav"] = PB.nav_series()
+            c = PB._conn()
+            try:
+                inp["night_decisions"] = _night_decisions(c, gaps)
+            finally:
+                c.close()
     except Exception as e:
         inp["night_nav"] = {}
         gaps["paper_books.nav_series"] = f"{type(e).__name__}: {e}"[:200]
@@ -421,6 +523,286 @@ def beta_of(series: Optional[list], min_obs: int) -> Any:
                    why=(f"beta: NOT_CREDIBLE (date stamp lag): corr vs SPY lag -1 "
                         f"{lag:+.2f} beats same-day {(corr if corr is not None else float('nan')):+.2f} "
                         f"over {len(pts)} periods; the series looks stamped a period late"))
+    return out
+
+
+def _cd(why: str, **extra: Any) -> dict:
+    return {"value": CANNOT_DETERMINE, "why": why, **extra}
+
+
+_ISO_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}")
+
+
+def stamp_screen(series: Optional[list], *, min_month_obs: int, min_lag_corr: float, gap_se: float,
+                 spy_close: Optional[dict] = None) -> tuple[dict, list]:
+    """CH-11 fix B1 (review of PR #140): the C15 date-stamp test per CALENDAR MONTH.
+
+    `beta_of` compares lag -1 with same-day correlation over the whole series. A series
+    stamped a session late in one stretch and on the right day in another (the website
+    lanes: late June-August, right from September) averages out and passes. Here each
+    month with >= `min_month_obs` periods is tested on its own: it FAILS when
+    corr(book_t, SPY lagged) >= `min_lag_corr` AND atanh(corr lagged) - atanh(corr same
+    period) > `gap_se` x sqrt(2/(n-3)) -- the lag is the better alignment by at least that
+    many standard errors, and it is material. A detection rule, not a 5% test (a month has
+    too few periods for one); each month prints both correlations and the SE of the gap.
+    Returns (the check, the periods to estimate on): every period after the LAST failing
+    month, or the whole series when no month fails. Dates are never shifted: a lagged
+    stretch is dropped, and the row says which months and why.
+
+    "SPY lagged" for a period (d_prev, d] is SPY over the same sessions shifted back one
+    session, read from `spy_close` (date -> close). Without it, the previous PERIOD's SPY
+    return stands in -- which is the wrong number after a multi-session gap: on the lanes'
+    August (16 periods, several gaps) it gave lag -1 corr +0.21 where SPY's own previous
+    session gives about +0.6, and the lag went unseen."""
+    pts = [(str(d), float(b), float(s)) for d, b, s in series or []
+           if _num(b) is not None and _num(s) is not None]
+    cal = sorted(k for k, v in (spy_close or {}).items() if _num(v) is not None and _ISO_DAY.match(str(k)))
+    pos = {d: i for i, d in enumerate(cal)}
+    months: dict = {}
+    n_unpriced = 0
+    for i in range(1, len(pts)):
+        if cal:
+            a, b = pos.get(pts[i - 1][0][:10]), pos.get(pts[i][0][:10])
+            if a is None or b is None or a < 1 or b <= a:
+                n_unpriced += 1
+                continue
+            lagged = float(spy_close[cal[b - 1]]) / float(spy_close[cal[a - 1]]) - 1.0
+        else:
+            lagged = pts[i - 1][2]
+        months.setdefault(pts[i][0][:7], []).append((pts[i][1], pts[i][2], lagged))
+    rows, failing = [], []
+    for m, v in sorted(months.items()):
+        n = len(v)
+        row: dict = {"month": m, "n_periods": n}
+        y = np.array([q[0] for q in v])
+        x0 = np.array([q[1] for q in v])
+        xm = np.array([q[2] for q in v])
+        if n < max(min_month_obs, 4):
+            row["status"] = "not tested: too few periods"
+        elif min(np.std(y), np.std(x0), np.std(xm)) == 0:
+            row["status"] = "not tested: a constant series"
+        else:
+            c0 = float(np.corrcoef(y, x0)[0, 1])
+            c1 = float(np.corrcoef(y, xm)[0, 1])
+            gap = float(np.arctanh(np.clip(c1, -0.999, 0.999)) - np.arctanh(np.clip(c0, -0.999, 0.999)))
+            fail = c1 >= min_lag_corr and gap > gap_se * math.sqrt(2.0 / (n - 3))
+            row.update(corr_same_day=round(c0, 3), corr_lag_minus_1=round(c1, 3),
+                       z_gap=round(gap, 3), z_gap_se=round(math.sqrt(2.0 / (n - 3)), 3))
+            row["status"] = "FAIL: lag -1 beats same-day" if fail else "ok"
+            if fail:
+                failing.append(m)
+        rows.append(row)
+    check = {"method": (f"per calendar month with >= {min_month_obs} periods: FAIL when atanh(corr vs SPY "
+                        f"shifted back one session) >= {min_lag_corr} and atanh(that) - atanh(corr vs SPY "
+                        f"same period) > {gap_se:g} x sqrt(2/(n-3)) (a detection rule, not a 5% test); "
+                        f"lagged SPY from {'SPY session closes' if cal else 'the previous period (no calendar)'}; "
+                        "exposure is estimated after the last failing month; dates are never shifted"),
+             "months": rows, "failing_months": failing, "n_periods_without_a_lagged_spy": n_unpriced}
+    if not failing:
+        return check, list(series or [])
+    kept = [q for q in series or [] if str(q[0])[:7] > failing[-1]]
+    check.update(kept_from=kept[0][0] if kept else None, kept_periods=len(kept),
+                 dropped_periods=len(series or []) - len(kept))
+    return check, kept
+
+
+def _session_spans(series: list, session_dates: Optional[list]) -> list:
+    """Sessions each period spans (None = unknown: the first period, a non-ISO date, or
+    no calendar). m4: capture uses one-session periods, so a 4-session gap is not
+    averaged in as if it were one day."""
+    if not session_dates or not series:
+        return [None] * len(series or [])
+    sd = sorted({str(d)[:10] for d in session_dates})
+    out: list = [None]
+    for i in range(1, len(series)):
+        a, b = str(series[i - 1][0])[:10], str(series[i][0])[:10]
+        if not (_ISO_DAY.match(a) and _ISO_DAY.match(b)):
+            out.append(None)
+            continue
+        out.append(bisect.bisect_right(sd, b) - bisect.bisect_right(sd, a))
+    return out
+
+
+def _capture(pts: list, side: str, min_obs: int, max_se: Optional[float] = None) -> dict:
+    """Mean book period return / mean SPY period return over the periods where SPY
+    went `side` (up: > 0, down: < 0). Down-capture < 1 = the book lost less than SPY
+    on SPY's down periods; > 1 = it lost more. M2: its standard error by the delta
+    method, SE = sd(r_book - c x r_SPY) / (sqrt(n) x |mean r_SPY|); above `max_se`
+    the capture is CANNOT DETERMINE (the estimate and SE are kept, labelled)."""
+    sel = [(b, s) for b, s in pts if (s > 0 if side == "up" else s < 0)]
+    if len(sel) < min_obs:
+        return {**_cd(f"{len(sel)} SPY-{side} periods < {min_obs}"), "n_periods": len(sel)}
+    sb = np.array([b for b, _ in sel])
+    ss = np.array([s for _, s in sel])
+    ms, mb = float(ss.mean()), float(sb.mean())
+    c = mb / ms
+    se = float(np.std(sb - c * ss, ddof=1) / (math.sqrt(len(sel)) * abs(ms))) if len(sel) > 1 else float("inf")
+    base = {"n_periods": len(sel), "mean_book_pct": round(100 * mb, 4), "mean_spy_pct": round(100 * ms, 4),
+            "estimate": round(c, 3), "se": round(se, 3)}
+    if max_se is not None and se > max_se:
+        return {**base, **_cd(f"estimate {c:.2f} with SE {se:.2f} > {max_se:.2f} over {len(sel)} SPY-{side} "
+                              f"periods: cannot be told apart from noise")}
+    return {**base, "value": round(c, 3)}
+
+
+def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_leg_pct: Any,
+                    min_capture_obs: Optional[int] = None, sessions: Optional[int] = None,
+                    window: Optional[tuple] = None, session_dates: Optional[list] = None,
+                    spy_close: Optional[dict] = None, p: Optional[dict] = None) -> dict:
+    """CH-11 note (2026-11-13): how much of a book's return is plain SPY exposure.
+
+    From the book's period-return series (the one `beta_of` used): beta with its SE,
+    up-capture and down-capture with SE and n, the beta-adjusted excess over the
+    receipt's own window (`return - beta x SPY leg`, beside the raw excess
+    `return - SPY leg`) with SE and MDE, and the residual `r_book - beta x r_SPY`
+    compounded per calendar month. rf = 0 by declaration (the row prints what an assumed
+    cash rate would change), and the beta is in-sample: a description of the book's
+    exposure, not a forecast of it.
+
+    Fix round (review of PR #140):
+    * B1 -- `stamp_screen` runs the date-stamp test per month; when a month fails, the
+      beta and captures are estimated only after the last failing month and the row says so.
+    * M1 -- the beta's window must cover >= `exposure_min_cover` of the receipt sessions
+      and reproduce the receipt return within `exposure_max_return_gap_pp`; otherwise the
+      receipt-window beta-adjusted excess is CANNOT DETERMINE ("not comparable") and the
+      beta window's own figure is printed with its window.
+    * M2 -- capture SE gate; m1 -- a flat NAV is CANNOT DETERMINE, never 0.00 / -0.00.
+    A beta that is NOT_COMPUTABLE, or NOT_CREDIBLE with no clean trailing window, makes
+    every field CANNOT DETERMINE with that reason."""
+    q = params() if p is None else p
+    mco = int(q["min_capture_obs"] if min_capture_obs is None else min_capture_obs)
+    method = ("beta: OLS slope of book period returns on SPY period returns (same periods), SE from the "
+              "OLS residuals; capture: mean book / mean SPY return over one-session SPY-up (SPY-down) "
+              "periods, SE by the delta method (arithmetic per-period convention; "
+              "benchmark_analytics._compute_capture_ratios is monthly-geometric and needs >= 6 months); "
+              "beta-adjusted excess: receipt return - beta x receipt SPY leg, SE = sqrt(n var(r_book - "
+              "beta r_SPY) + SE(beta)^2 SPY leg^2) over the n beta-window periods (iid periods), "
+              f"MDE = {q['mde_z']} x SE; by month: compound(1 + r_book - beta x r_SPY) - 1; rf = 0 declared")
+    bval = beta.get("value") if isinstance(beta, dict) else None
+    rp, sp = _num(return_pct), _num(spy_leg_pct)
+    out: dict = {"method": method, "n_obs": (beta or {}).get("n_obs", 0)}
+
+    def all_cd(why: str) -> dict:
+        out.update(beta=_cd(why), up_capture=_cd(why), down_capture=_cd(why),
+                   beta_adjusted_excess_pp=_cd(why), by_month=_cd(why),
+                   series_beta_adjusted_pp=_cd(why))
+        return out
+
+    numeric = isinstance(bval, (int, float)) and not isinstance(bval, bool)
+    if not numeric and bval != NOT_CREDIBLE:
+        return all_cd(f"beta {bval}: {(beta or {}).get('why') or 'no beta'}")
+    if session_dates is None and spy_close:
+        session_dates = sorted(spy_close)
+    # the beta window lies inside the receipt window: a period-return series read later than
+    # the receipt (a --rebuild-dna on an old receipt reads today's leaderboards) is cut at its mark
+    last = str((window or (None, None))[1] or "")[:10]
+    if _ISO_DAY.match(last) and series:
+        kept_s = [q for q in series if not (_ISO_DAY.match(str(q[0])) and str(q[0])[:10] > last)]
+        if len(kept_s) < len(series):
+            out["n_periods_after_the_receipt_mark_dropped"] = len(series) - len(kept_s)
+            series = kept_s
+    check, est = stamp_screen(series, min_month_obs=int(q["stamp_month_min_obs"]),
+                              min_lag_corr=float(q["stamp_month_min_lag_corr"]),
+                              gap_se=float(q["stamp_month_gap_se"]), spy_close=spy_close)
+    out["stamp_check"] = check
+    if check["failing_months"]:
+        fm = "; ".join(f"{r['month']} same-day {r['corr_same_day']:+.2f} / lag -1 {r['corr_lag_minus_1']:+.2f}"
+                       for r in check["months"] if r["month"] in check["failing_months"])
+        lead = f"date stamp lag in {len(check['failing_months'])} month(s) ({fm})"
+        if not est:
+            return all_cd(f"{lead}; no period after the last failing month")
+        b2 = beta_of(est, int(q["min_beta_obs"]))
+        if not isinstance(b2.get("value"), float):
+            return all_cd(f"{lead}; on the {len(est)} periods after it: beta {b2.get('value')}: {b2.get('why')}")
+        bval = b2["value"]
+        out["n_obs"] = b2["n_obs"]
+        out["stamp_note"] = (f"{lead}: exposure estimated on {est[0][0]}..{est[-1][0]} only "
+                             f"({len(est)} periods, lag 0 there); dates were not shifted")
+    elif not numeric:
+        return all_cd(f"beta {bval}: {(beta or {}).get('why') or 'no beta'}")
+    b = float(bval)
+    spans = _session_spans(est, session_dates)
+    rows = [(d, float(x), float(y), sp_) for (d, x, y), sp_ in zip(est, spans)
+            if _num(x) is not None and _num(y) is not None]
+    yv = np.array([x for _, x, _, _ in rows])
+    xv = np.array([y for _, _, y, _ in rows])
+    n = len(rows)
+    if n == 0 or np.std(yv) == 0:
+        return all_cd("flat NAV over the whole series (all cash, never held a position, or a NAV that did "
+                      "not update): exposure is undefined, not 0")
+    sxx = float(np.sum((xv - xv.mean()) ** 2))
+    resid = yv - (yv.mean() - b * xv.mean()) - b * xv
+    se_b = math.sqrt(float(np.sum(resid ** 2)) / max(n - 2, 1) / sxx) if sxx > 0 else float("inf")
+    d0, d1 = rows[0][0], rows[-1][0]
+    out["beta"] = {"value": round(b, 3), "se": round(se_b, 3), "n_obs": n, "from": d0, "to": d1}
+    one = [(x, y) for _, x, y, s_ in rows if s_ is None or s_ <= 1]
+    out["n_multi_session_periods_excluded_from_capture"] = n - len(one)
+    out["up_capture"] = _capture(one, "up", mco, float(q["max_capture_se"]))
+    out["down_capture"] = _capture(one, "down", mco, float(q["max_capture_se"]))
+    cb = float(np.prod(1 + yv) - 1)
+    cs = float(np.prod(1 + xv) - 1)
+    reasons = []
+    cover = (n / sessions) if sessions else None
+    if cover is not None and cover < float(q["exposure_min_cover"]):
+        reasons.append(f"it covers {n} of {sessions} receipt sessions ({cover:.0%} < "
+                       f"{float(q['exposure_min_cover']):.0%})")
+    gap = (100 * cb - rp) if rp is not None else None
+    if gap is not None and abs(gap) > float(q["exposure_max_return_gap_pp"]):
+        reasons.append(f"its book return {100 * cb:+.2f}% is {gap:+.2f} pp from the receipt return {rp:+.2f}% "
+                       f"(> {float(q['exposure_max_return_gap_pp']):.1f} pp)")
+    rw = window or (None, None)
+    out["estimation_window"] = {
+        "from": d0, "to": d1, "n_periods": n, "receipt_from": rw[0], "receipt_to": rw[1],
+        "receipt_sessions": sessions, "coverage": None if cover is None else round(cover, 3),
+        "series_book_pct": round(100 * cb, 3), "series_spy_pct": round(100 * cs, 3),
+        "return_gap_pp": None if gap is None else round(gap, 3), "comparable": not reasons,
+        "why": "; ".join(reasons) or None}
+    ve = float(np.var(yv - b * xv, ddof=1)) if n > 1 else float("inf")
+
+    def se_pp(spy_frac: float) -> float:
+        return 100 * math.sqrt(n * ve + (se_b * spy_frac) ** 2)
+
+    fig = 100 * (float(np.prod(1 + yv - b * xv)) - 1)
+    fse = se_pp(cs)
+    out["series_beta_adjusted_pp"] = {
+        "value": round(fig, 3), "se_pp": round(fse, 3), "mde_pp": round(float(q["mde_z"]) * fse, 3),
+        "series_book_pct": round(100 * cb, 3), "series_spy_pct": round(100 * cs, 3),
+        "from": d0, "to": d1, "n_periods": n,
+        "note": "compounded over the beta window's own periods (the estimation_window)"}
+    if rp is None or sp is None:
+        out["beta_adjusted_excess_pp"] = _cd("the receipt row has no return or no SPY leg")
+    elif reasons:
+        out["beta_adjusted_excess_pp"] = _cd(
+            f"not comparable: beta measured on {d0}..{d1} ({n} periods) and the receipt window is "
+            f"{rw[0]}..{rw[1]} ({sessions} sessions): {'; '.join(reasons)}. Over the beta's own window "
+            f"the beta-adjusted excess is {fig:+.2f} pp (SE {fse:.2f}); this beta applied to the whole "
+            f"receipt window would give {rp - b * sp:+.2f} pp, a number whose beta never saw most of that window",
+            window_figure_pp=round(fig, 3), window_figure_se_pp=round(fse, 3), window_from=d0, window_to=d1,
+            window_n_periods=n, receipt_window_with_this_beta_pp=round(rp - b * sp, 3))
+    else:
+        se = se_pp(sp / 100.0)
+        rf = float(q["rf_annual_assumed"])
+        rfe = (1.0 - b) * rf * (sessions / 252.0) * 100 if sessions else None
+        out["beta_adjusted_excess_pp"] = {
+            "value": round(rp - b * sp, 3), "raw_excess_pp": round(rp - sp, 3),
+            "beta_part_pp": round((b - 1.0) * sp, 3), "basis": "receipt window",
+            "se_pp": round(se, 3), "mde_pp": round(float(q["mde_z"]) * se, 3),
+            "rf_effect_pp": None if rfe is None else round(rfe, 3),
+            "rf_note": (None if rfe is None else
+                        f"rf = 0 declared; with cash at an ASSUMED {rf:.0%}/yr over {sessions} sessions, "
+                        f"Jensen's alpha = this value - {rfe:+.2f} pp ((1 - beta) x rf x T)")}
+    months: dict = {}
+    for d, x, y, _ in rows:
+        months.setdefault(str(d)[:7], []).append((x, y))
+    bm = []
+    for m, v in sorted(months.items()):
+        mb_ = float(np.prod([1 + x for x, _ in v]) - 1)
+        ms_ = float(np.prod([1 + y for _, y in v]) - 1)
+        cr = float(np.prod([1 + x - b * y for x, y in v]) - 1)
+        bm.append({"month": m, "n_periods": len(v), "book_pct": round(100 * mb_, 3),
+                   "spy_pct": round(100 * ms_, 3), "raw_excess_pp": round(100 * (mb_ - ms_), 3),
+                   "beta_adjusted_pp": round(100 * cr, 3)})
+    out["by_month"] = bm
     return out
 
 
@@ -561,6 +943,489 @@ def evidence_label(*, sessions: Optional[int], excess_pp: Optional[float], sub: 
     return {"label": lab, "why": why}
 
 
+# ───────────────────────────── flags (claims-none, 2026-11-14) ──────────────
+#
+# The owner (2026-11-14): "see how we can improve the labeling and classification overall".
+# The S69 fleet review had to work out by hand that hack2 was "ahead" only through a calendar
+# exit to cash, that a REPLICATED pharma book did what its equal-weight version did, that five
+# books never held a position, that an "abstention" book was its comparator, that the leaders
+# were one bet, and that every excess sat far below its MDE. These FLAGS print that beside the
+# label. A flag never raises (or lowers) a label; each one is derived from this receipt's own
+# data or says CANNOT DETERMINE with the reason.
+
+FLAG_SET, FLAG_CLEAR, FLAG_NA = "SET", "CLEAR", "N/A"
+FLAG_ORDER = ("NEVER_INVESTED", "IDLE_CASH", "SAME_BET", "MDE", "ONE_MONTH", "ONE_NAME",
+              "SIZING_ADDED_NOTHING", "IDENTICAL_TO_COMPARATOR", "HIGH_BETA")
+
+
+def _fcd(why: str, **extra: Any) -> dict:
+    return {"status": CANNOT_DETERMINE, "why": why, **extra}
+
+
+def _spy_sessions(px: Prices, inception: Optional[str], last_mark: Optional[str]) -> list[str]:
+    inc, lm = str(inception or "")[:10], str(last_mark or "")[:10]
+    return [d for d in px.dates("SPY") if (not inc or d >= inc) and (not lm or d <= lm)]
+
+
+def gross_path(e: dict, inputs: dict, sessions: list[str]) -> dict:
+    """Gross exposure / equity per session from inception to the last mark, from the most
+    direct source each family has; a session before the first observation is None (unknown).
+    Sources: alpaca fleet = gross_over_equity at every fleet_daily read; PC-PAPER = long + |short|
+    market value / equity per nav.jsonl row; night books = the weights of each recorded decision
+    (cash before the first one); llm books = the frozen entry weights; otherwise the NAV-unchanged
+    proxy (a period whose NAV did not move counts as idle) -- which cannot tell all cash from a
+    NAV that did not update, and says so in its basis."""
+    fam, acct = e["family"], e["account"]
+    pts: Optional[list] = None
+    basis = ""
+    if fam == "alpaca_fleet":
+        g = (inputs.get("fleet_gross") or {}).get(acct)
+        if g:
+            pts, basis = list(g), "gross_over_equity at each fleet_daily read (step until the next read)"
+    elif fam == "pc_paper":
+        g = inputs.get("pc_gross")
+        if g:
+            pts, basis = list(g), "(long + |short| market value) / equity per pc nav.jsonl row"
+    elif fam in ("night_books", "night_books_twin"):
+        dec = inputs.get("night_decisions")
+        if isinstance(dec, dict):
+            rows = dec.get(str(e.get("book_id"))) or []
+            pts = [(sessions[0] if sessions else str(e.get("inception"))[:10], 0.0)] if sessions else []
+            pts += [(d, sum(abs(w) for t, w in wts.items() if t not in CASH_TICKERS and w is not None))
+                    for d, wts in rows]
+            basis = (f"paper_book_decisions weights ({len(rows)} decision(s); cash before the first)"
+                     if rows else "paper_book_decisions: no decision recorded for this book")
+    elif fam.startswith("llm_portfolio"):
+        w = [v for t, v in (e.get("weights") or {}).items() if t not in CASH_TICKERS and v is not None]
+        if e.get("weights") is not None and sessions:
+            pts, basis = [(sessions[0], float(sum(abs(x) for x in w)))], "frozen entry weights (constant)"
+    if pts is None:
+        ser = e.get("_series") or []
+        if not ser or not sessions:
+            return {"status": CANNOT_DETERMINE, "why": "no gross source and no period-return series"}
+        periods, prev = [], sessions[0]
+        for d, b, _ in ser:
+            if _num(b) is not None:
+                periods.append((prev, str(d)[:10], 0.0 if abs(float(b)) < 1e-9 else 1.0))
+            prev = str(d)[:10]
+        per = []
+        for s in sessions:
+            st = next((g for a, d, g in periods if a < s <= d), None)
+            if st is None and s == sessions[0] and periods:
+                st = periods[0][2]
+            per.append((s, st))
+        return {"status": "OK", "basis": ("NAV-unchanged proxy: a period whose NAV did not move counts as "
+                                          "idle (cannot tell all cash from a NAV that did not update)"),
+                "per_session": per, "proxy": True, "last_observation": ser[-1][0] if ser else None}
+    pts = sorted((str(d)[:10], float(g)) for d, g in pts if g is not None)
+    per, j, cur = [], 0, None
+    for s in sessions:
+        while j < len(pts) and pts[j][0] <= s:
+            cur = pts[j][1]
+            j += 1
+        per.append((s, cur))
+    return {"status": "OK", "basis": basis, "per_session": per, "proxy": False,
+            "last_observation": pts[-1][0] if pts else None}
+
+
+def idle_flags(e: dict, gp: dict, p: dict) -> tuple[dict, dict, dict]:
+    """(IDLE_CASH, NEVER_INVESTED, excess-while-idle). IDLE_CASH: gross < flag_idle_gross for the
+    last >= flag_idle_min_sessions sessions of the window (since = the first of them, i.e. the
+    first read that saw it idle). NEVER_INVESTED: every session from inception below it. The
+    excess accrued while idle compounds the book and SPY over the periods that START idle (the
+    holdings over (d0, d1] are those at d0); "from cash, not from positions" when it carries more
+    than flag_from_cash_share of the receipt excess, in the same direction."""
+    if gp.get("status") != "OK":
+        cd = _fcd(gp.get("why") or "no gross path")
+        return cd, dict(cd), dict(cd)
+    thr, mins = float(p["flag_idle_gross"]), int(p["flag_idle_min_sessions"])
+    per = gp["per_session"]
+    known = [(d, g) for d, g in per if g is not None]
+    if not known:
+        cd = _fcd(f"no gross observation inside the window ({gp['basis']})")
+        return cd, dict(cd), dict(cd)
+    base = {"basis": gp["basis"], "threshold_gross": thr, "last_observation": gp.get("last_observation")}
+    run: list = []
+    for d, g in reversed(per):
+        if g is None or g >= thr:
+            break
+        run.append(d)
+    run.reverse()
+    if run and len(run) >= mins:
+        idle = {"status": FLAG_SET, "since": run[0], "sessions": len(run), **base}
+    else:
+        idle = {"status": FLAG_CLEAR, "trailing_idle_sessions": len(run), **base}
+    if any(g >= thr for _, g in known):
+        never = {"status": FLAG_CLEAR, "max_gross": round(max(g for _, g in known), 3), **base}
+    elif per[0][1] is None:
+        never = _fcd(f"the gross path starts {known[0][0]}, after inception {per[0][0]}; every observed "
+                     f"session is below {thr:.0%}", **base)
+    elif len(per) < mins:
+        never = _fcd(f"{len(per)} sessions < {mins}", **base)
+    else:
+        never = {"status": FLAG_SET, "sessions": len(per), **base}
+        if gp.get("proxy") or "no decision recorded" in gp["basis"]:
+            never["note"] = "read from a NAV that never moved / no recorded decision, not from holdings"
+    # excess while idle
+    ex = _num(e.get("excess_pp"))
+    if never.get("status") == FLAG_SET:
+        return idle, never, {"status": "OK", "idle_sessions": len(per), "excess_while_idle_pp": ex,
+                             "receipt_excess_pp": ex, "from_cash": bool(ex),
+                             "basis": "never invested: the whole excess is cash against SPY"}
+    gross_at = dict(per)
+    ser = e.get("_series") or []
+    sess_sorted = [d for d, _ in per]
+    proxy = bool(gp.get("proxy"))
+    # a session is idle-HELD when the book carried cash from its close into the next session;
+    # the window's last session holds nothing inside the window (proxy: the period itself)
+    idle_days = {d for d, g in per if g is not None and g < thr and (proxy or d != sess_sorted[-1])}
+    if not idle_days:
+        wi = {"status": "OK", "idle_sessions": 0, "excess_while_idle_pp": 0.0, "from_cash": False}
+        return idle, never, wi
+    if not ser:
+        return idle, never, _fcd("no period-return series to split the excess by idle periods")
+    prev, pb, ps, covered = None, 1.0, 1.0, set()
+    for d, b, s in ser:
+        d = str(d)[:10]
+        start = prev
+        prev = d
+        if start is None:
+            continue
+        g0 = gross_at.get(d) if proxy else gross_at.get(start)
+        if g0 is not None and g0 < thr:
+            pb *= 1 + float(b)
+            ps *= 1 + float(s)
+            covered |= ({x for x in sess_sorted if start < x <= d} if proxy
+                        else {x for x in sess_sorted if start <= x < d})
+    wi_pp = 100 * (pb - ps)
+    unc = len(idle_days - covered - ({sess_sorted[0]} if proxy else set()))
+    wi = {"status": "OK", "idle_sessions": len(idle_days), "idle_sessions_not_in_series": unc,
+          "excess_while_idle_pp": round(wi_pp, 3), "receipt_excess_pp": ex,
+          "basis": ("periods whose NAV did not move" if proxy else
+                    "periods that START with gross below the threshold (holdings at the period's start)")}
+    if unc > 0.2 * len(idle_days):
+        return idle, never, {**wi, **_fcd(f"{unc} of {len(idle_days)} idle sessions are not in the "
+                                          f"period-return series")}
+    wi["from_cash"] = bool(ex is not None and ex != 0 and wi_pp * ex > 0
+                           and abs(wi_pp) > float(p["flag_from_cash_share"]) * abs(ex))
+    return idle, never, wi
+
+
+def _per_session_excess(series: list, session_dates: list) -> tuple[np.ndarray, list]:
+    spans = _session_spans(series, session_dates)
+    x, sp = [], []
+    for (d, b, s), k in zip(series, spans):
+        if _num(b) is None or _num(s) is None:
+            continue
+        k = k if (k and k > 0) else 1
+        x.append((float(b) - float(s)) / math.sqrt(k))
+        sp.append(k)
+    return np.array(x), sp
+
+
+def mde_flag(e: dict, session_dates: list, p: dict) -> dict:
+    """BELOW_MDE / ABOVE_MDE: |receipt excess| against MDE = mde_z x SE of the RAW excess, SE =
+    sd per session x sqrt(receipt sessions) (per-session sd from the period series, each period
+    scaled by sqrt(its sessions); iid sessions). The beta-adjusted excess and the MDE book_dna
+    already computed for it (market_exposure) are printed beside it when they exist."""
+    ex = _num(e.get("excess_pp"))
+    ser = e.get("_series") or []
+    n_s = e.get("sessions_graded")
+    if ex is None:
+        return _fcd("no excess on the receipt row")
+    x, sp = _per_session_excess(ser, session_dates)
+    if len(x) < int(p["flag_mde_min_obs"]):
+        return _fcd(f"{len(x)} period returns < {p['flag_mde_min_obs']}", excess_pp=ex)
+    sessions = int(n_s) if n_s else int(sum(sp))
+    se = 100 * float(np.std(x, ddof=1)) * math.sqrt(sessions)
+    mde = float(p["mde_z"]) * se
+    out = {"status": "BELOW_MDE" if abs(ex) < mde else "ABOVE_MDE", "excess_pp": round(ex, 3),
+           "se_pp": round(se, 3), "mde_pp": round(mde, 3), "n_periods": len(x), "sessions": sessions,
+           "basis": (f"raw excess vs SPY; per-session sd from {len(x)} periods ({ser[0][0]}..{ser[-1][0]}) "
+                     f"scaled to {sessions} receipt sessions; MDE = {p['mde_z']:g} x SE")}
+    bx = ((e.get("market_exposure") or {}).get("beta_adjusted_excess_pp") or {})
+    if isinstance(bx.get("value"), (int, float)) and _num(bx.get("mde_pp")) is not None:
+        out["beta_adjusted_excess_pp"] = bx["value"]
+        out["beta_adjusted_mde_pp"] = bx["mde_pp"]
+    return out
+
+
+def one_month_flag(e: dict, session_dates: list, p: dict) -> dict:
+    """ONE_MONTH: leaving out the calendar month that contributes most in the direction of the
+    excess flips its sign. Read on the period series, which must cover >= exposure_min_cover of
+    the receipt sessions and agree with the receipt excess in sign."""
+    ex = _num(e.get("excess_pp"))
+    ser = [(str(d)[:10], float(b), float(s)) for d, b, s in e.get("_series") or []
+           if _num(b) is not None and _num(s) is not None]
+    if ex is None or ex == 0:
+        return _fcd("no non-zero excess on the receipt row")
+    if len(ser) < 3:
+        return _fcd(f"{len(ser)} period returns")
+    spans = [k if (k and k > 0) else 1 for k in _session_spans(ser, session_dates)]
+    n_s = e.get("sessions_graded") or 0
+    cov = sum(spans) / n_s if n_s else None
+    if cov is not None and cov < float(p["exposure_min_cover"]):
+        return _fcd(f"the series covers {sum(spans)} of {n_s} receipt sessions ({cov:.0%})")
+
+    def excess(rows: list) -> float:
+        return 100 * (float(np.prod([1 + b for _, b, _ in rows])) - float(np.prod([1 + s for _, _, s in rows])))
+    full = excess(ser)
+    if full * ex <= 0:
+        return _fcd(f"the series' own excess {full:+.2f} pp disagrees in sign with the receipt's {ex:+.2f} pp")
+    months = sorted({d[:7] for d, _, _ in ser})
+    if len(months) < 2:
+        return _fcd("the series spans one calendar month")
+    sgn = 1.0 if full > 0 else -1.0
+    loo = {m: excess([q for q in ser if q[0][:7] != m]) for m in months}
+    best = min(months, key=lambda m: (sgn * loo[m], m))
+    flips = sgn * loo[best] <= 0
+    return {"status": FLAG_SET if flips else FLAG_CLEAR, "month": best,
+            "excess_without_month_pp": round(loo[best], 3), "series_excess_pp": round(full, 3),
+            "n_months": len(months)}
+
+
+def one_name_flag(e: dict, p: dict) -> dict:
+    """ONE_NAME: one holding carries more than flag_one_name_share of the GAIN (top-1 share of the
+    same-direction active contributions, the same gates as `_one_name`)."""
+    ex = _num(e.get("excess_pp"))
+    if e.get("category") == "twin":
+        return {"status": FLAG_NA, "why": "twin"}
+    if ex is None or ex <= 0:
+        return {"status": FLAG_NA, "why": "no gain to attribute (excess <= 0)"}
+    t = e.get("tail") or {}
+    if t.get("status") != "OK":
+        return _fcd(f"tail NOT_COMPUTABLE: {t.get('why')}")
+    if t.get("basis") != "active_contribution":
+        return _fcd(f"tail basis is {t.get('basis')} (open positions' P&L), not the gain over SPY")
+    if abs(ex) < float(p["one_name_min_excess_pp"]):
+        return _fcd(f"|excess| {ex:.2f} < {p['one_name_min_excess_pp']} pp: a share of noise")
+    gap = abs(float(t.get("reconstructed_excess_pp") or 0.0) - ex)
+    if gap > float(p["one_name_max_recon_gap_pp"]):
+        return _fcd(f"the holdings reconstruction is off the receipt by {gap:.2f} pp")
+    top = t.get("top1") or {}
+    sh = _num(top.get("share"))
+    if sh is None:
+        return _fcd("no same-direction contribution")
+    return {"status": FLAG_SET if sh > float(p["flag_one_name_share"]) else FLAG_CLEAR,
+            "ticker": top.get("ticker"), "share": round(sh, 3), "threshold": float(p["flag_one_name_share"])}
+
+
+def _diff_se_pp(a: list, b: list, session_dates: list, sessions: Optional[int]) -> Optional[tuple]:
+    db = {str(d)[:10]: float(x) for d, x, _ in b if _num(x) is not None}
+    rows = [(str(d)[:10], float(x) - db[str(d)[:10]], 0.0) for d, x, _ in a
+            if _num(x) is not None and str(d)[:10] in db]
+    x, sp = _per_session_excess(rows, session_dates)
+    if len(x) < 3:
+        return None
+    n = int(sessions) if sessions else int(sum(sp))
+    return 100 * float(np.std(x, ddof=1)) * math.sqrt(n), len(x)
+
+
+def sizing_flag(e: dict, ew: Optional[dict], px: Prices, session_dates: list, mde: dict) -> dict:
+    """SIZING_ADDED_NOTHING: the equal-weight version of the same names is within one SE of the
+    book. Needs FROZEN holdings (llm books). The equal-weight figure is the grader's own `ew`
+    twin when one exists (SE of the book-minus-twin difference series), else a reconstruction
+    from the bars at the same invested fraction (SE of the book's excess)."""
+    if not str(e.get("family")).startswith("llm_portfolio") or e.get("category") == "twin":
+        return _fcd("needs frozen holdings: this book's positions change over the window and the "
+                    "holdings path is not replayed here")
+    w = {t: v for t, v in (e.get("weights") or {}).items() if t not in CASH_TICKERS}
+    if not w:
+        return _fcd("no holdings")
+    vals = [v for v in w.values() if v is not None]
+    is_ew = bool(vals) and len(vals) == len(w) and max(vals) - min(vals) < 1e-6
+    if ew is not None and _num(ew.get("return_pct")) is not None and _num(e.get("return_pct")) is not None:
+        diff = float(e["return_pct"]) - float(ew["return_pct"])
+        se_n = _diff_se_pp(e.get("_series") or [], ew.get("_series") or [], session_dates, e.get("sessions_graded"))
+        if se_n:
+            se, basis = se_n[0], f"SE of the book-minus-ew-twin difference ({se_n[1]} periods)"
+        elif _num(mde.get("se_pp")) is not None:
+            se, basis = float(mde["se_pp"]), "SE of the book's excess (no common twin series)"
+        else:
+            return _fcd("no SE: neither a common twin series nor an excess SE", diff_pp=round(diff, 3))
+        src = f"ew twin {ew['account']}"
+        ew_ret = float(ew["return_pct"])
+        book_ret = float(e["return_pct"])
+    else:
+        inc, lm = e.get("inception"), e.get("last_mark")
+        rets, unpriced = {}, 0.0
+        for t, v in w.items():
+            o, c = px.open_on(t, inc), px.close_on_or_before(t, lm)
+            if v is None or not (o > 0 and c == c):
+                unpriced += abs(v or 0.0)
+                continue
+            rets[t] = c / o - 1
+        inv = sum(abs(v) for v in w.values() if v is not None)
+        if not rets or (inv and unpriced / inv > 0.2):
+            return _fcd(f"{unpriced / inv if inv else 1:.0%} of the weight has no entry open / exit close")
+        priced = {t: w[t] for t in rets}
+        book_ret = 100 * sum(priced[t] * rets[t] for t in rets)
+        ew_ret = 100 * sum(priced.values()) * float(np.mean(list(rets.values())))
+        diff = book_ret - ew_ret
+        if _num(mde.get("se_pp")) is None:
+            return _fcd("no SE for the book's excess (see MDE)", diff_pp=round(diff, 3))
+        se, basis = float(mde["se_pp"]), "SE of the book's excess"
+        src = "equal weight of the same priced names, reconstructed from the bars (before costs)"
+    out = {"status": FLAG_SET if abs(diff) < se else FLAG_CLEAR, "book_return_pct": round(book_ret, 3),
+           "ew_return_pct": round(ew_ret, 3), "diff_pp": round(diff, 3), "se_pp": round(se, 3),
+           "ew_source": src, "se_basis": basis}
+    if is_ew:
+        out["note"] = "the book is itself equal-weight"
+    return out
+
+
+def holdings_hash(e: dict, inputs: dict) -> tuple[Optional[str], str]:
+    """A hash of what the book holds: the decision-weights PATH for night books, the frozen entry
+    weights for llm books, the holdings at the last read otherwise."""
+    import hashlib
+    fam = str(e.get("family"))
+    if fam in ("night_books", "night_books_twin"):
+        dec = inputs.get("night_decisions")
+        if not isinstance(dec, dict):
+            return None, "paper_book_decisions not read"
+        path = [(d, sorted((t, round(v, 4)) for t, v in w.items() if v is not None))
+                for d, w in dec.get(str(e.get("book_id"))) or []]
+        blob, basis = json.dumps(path), f"decision-weights path ({len(path)} decisions)"
+    else:
+        w = e.get("weights")
+        if not w:
+            return None, "no holdings source"
+        blob = json.dumps(sorted((t, None if v is None else round(v, 3)) for t, v in w.items()))
+        basis = ("frozen entry weights" if fam.startswith("llm_portfolio") else "holdings at the last read")
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16], basis
+
+
+def comparators_of(e: dict, books: list[dict], markers: list[str]) -> list[dict]:
+    """The books that are this book's control: its twins (twin_of), `<name>__control`, and any
+    book of the same family whose name carries a control marker (the night books' comparators
+    are linked by name only)."""
+    acct = e["account"]
+    out = []
+    for b in books:
+        if b is e or b["account"] == acct:
+            continue
+        if b.get("twin_of") == acct or b["account"] == f"{acct}__control":
+            out.append(b)
+        elif b.get("family") == e.get("family") and any(m in b["account"] for m in markers) \
+                and not any(m in acct for m in markers):
+            out.append(b)
+    return out
+
+
+def identical_flag(e: dict, comps: list[dict], hashes: dict) -> dict:
+    if e.get("category") in ("twin", "control"):
+        return {"status": FLAG_NA, "why": f"{e.get('category')}: a comparator itself"}
+    if not comps:
+        return {"status": FLAG_NA, "why": "no comparator or control recorded for this book"}
+    h, basis = hashes.get(e["account"], (None, "no holdings"))
+    hits, unknown = [], []
+    for c in comps:
+        hc = hashes.get(c["account"], (None, ""))[0]
+        if hc is None:
+            unknown.append(c["account"])
+        elif h is not None and hc == h:
+            hits.append(c["account"])
+    nav_same = []
+    for c in comps:
+        if e.get("_series") and c.get("_series"):
+            _, nc, ident = _series_corr(e["_series"], c["_series"])
+            if ident and nc >= 2:
+                nav_same.append({"account": c["account"], "n_periods": nc})
+    if h is None:
+        return _fcd(f"this book's holdings are not known ({basis})", nav_identical=nav_same)
+    if hits:
+        return {"status": FLAG_SET, "comparators": hits, "basis": basis, "nav_identical": nav_same}
+    if len(unknown) == len(comps):
+        return _fcd("no comparator's holdings are known", comparators=unknown, nav_identical=nav_same)
+    return {"status": FLAG_CLEAR, "n_comparators": len(comps), "basis": basis, "nav_identical": nav_same,
+            "comparators_holdings_unknown": unknown}
+
+
+def high_beta_flag(e: dict, p: dict) -> dict:
+    b = ((e.get("market_exposure") or {}).get("beta") or {})
+    v = b.get("value")
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        return _fcd(f"beta {v}: {b.get('why') or 'not computed'}")
+    return {"status": FLAG_SET if v > float(p["flag_high_beta"]) else FLAG_CLEAR, "beta": v,
+            "se": b.get("se"), "threshold": float(p["flag_high_beta"])}
+
+
+def same_bet_peers(books: list[dict], p: dict, never: Optional[set] = None) -> dict:
+    """{account: {status, peers: [{account, corr, n}]}}: daily-excess (r_book - r_SPY) correlation
+    >= flag_same_bet_corr on >= flag_same_bet_min_obs common period dates, among the non-twin
+    books. Periods are matched on their end date (the convention of `_series_corr`).
+
+    A NEVER_INVESTED book (`never`) is a peer only of another never-invested book: its excess is
+    exactly -SPY, so every low-beta book's excess correlates with it (tsmom-overlay at 0.97 on
+    2026-11-14) -- that says "under-exposed to SPY", not "the same bet as cash"."""
+    never = never or set()
+    thr, mo = float(p["flag_same_bet_corr"]), int(p["flag_same_bet_min_obs"])
+    cols = {}
+    for b in books:
+        if b.get("category") == "twin":
+            continue
+        s = {str(d)[:10]: float(x) - float(y) for d, x, y in b.get("_series") or []
+             if _num(x) is not None and _num(y) is not None}
+        if len(s) >= mo:
+            cols[b["account"]] = s
+    out: dict = {}
+    for b in books:
+        if b.get("category") == "twin":
+            continue
+        if b["account"] not in cols:
+            out[b["account"]] = _fcd(f"{len(b.get('_series') or [])} period returns < {mo}")
+    if cols:
+        df = pd.DataFrame(cols)
+        m = df.notna().astype(float)
+        nmat = m.T.dot(m)
+        cm = df.corr(min_periods=mo)
+        for a in cols:
+            peers = []
+            for c in cols:
+                if c == a:
+                    continue
+                v = cm.at[a, c]
+                if (a in never) != (c in never):
+                    continue
+                if v == v and v >= thr and nmat.at[a, c] >= mo:
+                    peers.append({"account": c, "corr": round(float(v), 3), "n": int(nmat.at[a, c])})
+            out[a] = {"status": "OK", "peers": sorted(peers, key=lambda q: (-q["corr"], q["account"])),
+                      "threshold": thr, "min_obs": mo}
+    return out
+
+
+def attach_flags(books: list[dict], inputs: dict, px: Prices, p: dict) -> None:
+    """Every book gets `flags` (FLAG_ORDER keys). Twins get them too (cheap), but only the
+    non-twin books are compared for SAME_BET."""
+    spy_dates = px.dates("SPY")
+    idles = {}
+    for e in books:
+        sess = _spy_sessions(px, e.get("inception"), e.get("last_mark"))
+        idles[e["account"]] = idle_flags(e, gross_path(e, inputs, sess), p)
+    peers = same_bet_peers(books, p, {a for a, v in idles.items() if v[1].get("status") == FLAG_SET})
+    hashes = {b["account"]: holdings_hash(b, inputs) for b in books}
+    markers = list(p["flag_control_name_markers"])
+    twins_by_parent: dict = {}
+    for b in books:
+        if b.get("twin_of"):
+            twins_by_parent.setdefault(b["twin_of"], []).append(b)
+    for e in books:
+        idle, never, wi = idles[e["account"]]
+        mde = mde_flag(e, spy_dates, p)
+        ew = next((t for t in twins_by_parent.get(e["account"], []) if t.get("twin_kind") == "ew"), None)
+        e["flags"] = {
+            "NEVER_INVESTED": never, "IDLE_CASH": idle, "EXCESS_WHILE_IDLE": wi,
+            "SAME_BET": peers.get(e["account"], {"status": FLAG_NA, "why": "twin"}),
+            "MDE": mde, "ONE_MONTH": one_month_flag(e, spy_dates, p), "ONE_NAME": one_name_flag(e, p),
+            "SIZING_ADDED_NOTHING": sizing_flag(e, ew, px, spy_dates, mde),
+            "IDENTICAL_TO_COMPARATOR": identical_flag(e, comparators_of(e, books, markers), hashes),
+            "HIGH_BETA": high_beta_flag(e, p),
+            "holdings_hash": hashes.get(e["account"], (None, ""))[0],
+            "rule": ("flags never raise or lower a label; each is derived from this receipt's data or "
+                     "says CANNOT DETERMINE with its reason"),
+        }
+
+
 # ───────────────────────────── holdings / series per family ─────────────────
 
 def _llm_index(inputs: dict) -> tuple[dict, dict, dict]:
@@ -652,6 +1517,8 @@ def _twin_parent_night(row: dict, rows: list) -> Optional[str]:
 def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> list[dict]:
     rows = receipt.get("rows") or []
     books, newest, llm_series = _llm_index(inputs)
+    # CH-11 fix B1: SPY's session closes, for the per-month date-stamp test and capture spans
+    spy_close = ({str(d): float(v) for d, v in px.close["SPY"].dropna().items()} if px.has("SPY") else {})
     smap = inputs.get("sector_map") or {}
     names = {b: r.get("name") for b, r in books.items()}
     rule_of = {b: str(r.get("model"))[5:] for b, r in books.items()
@@ -810,6 +1677,10 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
         e["one_name_dependence"], e["one_name_why"] = _one_name(e, tail, p)
         e["concentration"] = concentration(weights, smap)
         e["beta_vs_spy"] = beta_of(series, p["min_beta_obs"])
+        e["market_exposure"] = market_exposure(series, e["beta_vs_spy"], return_pct=e["return_pct"],
+                                               spy_leg_pct=spy_leg, min_capture_obs=p["min_capture_obs"],
+                                               sessions=sessions, window=(r.get("inception"), r.get("last_mark")),
+                                               spy_close=spy_close, p=p)
         e["cash_fraction"] = cash
         e["n_series_periods"] = len(series)
         sub = subwindows(series, sessions)
@@ -1173,6 +2044,7 @@ def build(receipt: dict, inputs: dict, px: Prices, *, today: Optional[date] = No
     p = params()
     today = today or date.today()
     books = book_rows(receipt, inputs, px, p, today)
+    attach_flags(books, inputs, px, p)
     ahead = [b for b in books if b["excess_pp"] is not None and b["excess_pp"] > 0]
     twins = [b for b in ahead if b["category"] == "twin"]
     controls = [b for b in ahead if b["category"] == "control"]
@@ -1393,11 +2265,13 @@ def write(dna: dict, out_dir: Path, run_id: str) -> Path:
 
 def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd.DataFrame] = None,
         inputs: Optional[dict] = None, http_get: Optional[Callable] = None,
-        fetch_lanes: bool = True, today: Optional[date] = None) -> tuple[dict, Path]:
+        fetch_lanes: bool = True, today: Optional[date] = None,
+        read_only_db: bool = False) -> tuple[dict, Path]:
     """Load, build, write. Raises on failure: the caller turns that into a REFUSED
     summary on the ROI receipt (never a silent absence)."""
     inputs = inputs if inputs is not None else load_inputs(receipt, http_get=http_get,
-                                                            fetch_lanes=fetch_lanes)
+                                                            fetch_lanes=fetch_lanes,
+                                                            read_only_db=read_only_db)
     syms: set = set()
     for b in inputs.get("books") or []:
         syms |= {str(x.get("ticker")) for x in b.get("positions") or [] if x.get("ticker")}
@@ -1412,7 +2286,8 @@ def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd
     return dna, path
 
 
-__all__ = ["SCHEMA", "LABEL_LADDER", "LABEL_CEILING", "ERROR_TYPES", "NOT_COMPUTABLE",
+__all__ = ["SCHEMA", "LABEL_LADDER", "LABEL_CEILING", "ERROR_TYPES", "NOT_COMPUTABLE", "CANNOT_DETERMINE",
+           "market_exposure",
            "Prices", "build", "classify_loser", "cluster", "collapse_line", "evidence_label",
            "exante_bets", "participation_ratio", "top_line",
            "jaccard", "lanes_block", "load_inputs", "params", "refused_summary", "run",

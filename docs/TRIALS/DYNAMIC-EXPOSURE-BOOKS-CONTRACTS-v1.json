@@ -1,0 +1,240 @@
+{
+ "chunk": "CH-45",
+ "contracts": [
+  {
+   "base_selection": {
+    "params": {
+     "construction": "equal",
+     "control_role": "treatment",
+     "family": "momentum_12_1",
+     "gross_target": 0.95,
+     "hedge": "none",
+     "horizon_sessions": 126,
+     "liquidity_segment": "liquid",
+     "max_names": 40,
+     "mechanism": "mom_12_1",
+     "name_cap": 0.05
+    },
+    "policy_id": "c79397f92fd9d3562378388e",
+    "semantic_sha256": "c79397f92fd9d3562378388ea48eb125efeb2b14541076d11f97a19ec7e42339",
+    "spec_file": "docs/TRIALS/ROLLING-COHORTS-SPECIFICATIONS-v2.json",
+    "spec_manifest_sha256": "3505cb4f370a94506d8ef31568a43c40b24da959dd4d72c7518bb3ecab0a3c4f",
+    "why": "momentum is the high-beta family the fleet held (the replay's subject); hedge none so the preservation hedge is the only hedge; horizon 126 so 21/63/126 are marked; 40 names: the least sector-concentrated momentum spec (top-1 sector 24-33% over the 10-15..11-12 cohorts vs 37-60% at 10 names); equal over volatility_aware on a tie (no estimated input). Chosen on construction and sector share, before any return was read"
+   },
+   "chunk": "CH-45",
+   "cohort_clock": {
+    "anchor": "2026-10-15",
+    "cadence_sessions": 5,
+    "cutoff": "E 00:00 UTC (branch_population_rolling.clocks)",
+    "entry": "open of the first session E after cohort date D",
+    "horizon_sessions": 126,
+    "mark_sessions": [
+     5,
+     10,
+     15,
+     21,
+     42,
+     63,
+     84,
+     105,
+     126
+    ]
+   },
+   "contract_id": "DXB-growth-v1",
+   "contract_sha256": "9934a0e6361ffd6bf414c4f4253413210d5c504c82c3f3652a160bddcc7915c6",
+   "costs": {
+    "base_round_trip": "xs_ranker.COST_BPS_BY_BAND per name, half at entry, half at the mark",
+    "etf_hedge_change_bps": 2.0,
+    "exposure_starts_at": 1.0,
+    "hedge_borrow_bps_yr": 30.0,
+    "hedge_starts_at": 0.0,
+    "stock_exposure_change_bps": 10.0
+   },
+   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D",
+   "evidence_in_replay": "every rule difference near or below its MDE (3-21 pp/yr); no skill claim",
+   "family": "dynamic_exposure_book",
+   "fill_convention": "base book: buy at the open of E, held (rolling grade rule v2: a name with no valid open waits in cash at 0%); exposure and hedge changes at the close of the deciding session; daily rebalanced to the exposure fraction; cash and short collateral earn 0",
+   "frozen_utc": "2026-11-14T17:03:51.549557+00:00",
+   "inputs": [
+    "prices_2025_26/bars.parquet (open, close, volume)",
+    "straddle_forward/earnings_cache.json",
+    "potential_universe/<newest>.jsonl identity.sector (report only)"
+   ],
+   "license": "PRODUCT_EXPERIMENT",
+   "objective": "terminal wealth, aggressive personality: full exposure, no drawdown control",
+   "personality": "growth",
+   "rule": {
+    "definition": "stock exposure 1.0 every session; no hedge",
+    "id": "hold"
+   },
+   "source": "aegis-recovery-evidence/s69-reports-20261114/council/replay/replay_findings.txt sections 0, 0b, 3; s3_rules.py run_rule()"
+  },
+  {
+   "base_selection": {
+    "params": {
+     "construction": "equal",
+     "control_role": "treatment",
+     "family": "momentum_12_1",
+     "gross_target": 0.95,
+     "hedge": "none",
+     "horizon_sessions": 126,
+     "liquidity_segment": "liquid",
+     "max_names": 40,
+     "mechanism": "mom_12_1",
+     "name_cap": 0.05
+    },
+    "policy_id": "c79397f92fd9d3562378388e",
+    "semantic_sha256": "c79397f92fd9d3562378388ea48eb125efeb2b14541076d11f97a19ec7e42339",
+    "spec_file": "docs/TRIALS/ROLLING-COHORTS-SPECIFICATIONS-v2.json",
+    "spec_manifest_sha256": "3505cb4f370a94506d8ef31568a43c40b24da959dd4d72c7518bb3ecab0a3c4f",
+    "why": "momentum is the high-beta family the fleet held (the replay's subject); hedge none so the preservation hedge is the only hedge; horizon 126 so 21/63/126 are marked; 40 names: the least sector-concentrated momentum spec (top-1 sector 24-33% over the 10-15..11-12 cohorts vs 37-60% at 10 names); equal over volatility_aware on a tie (no estimated input). Chosen on construction and sector share, before any return was read"
+   },
+   "chunk": "CH-45",
+   "cohort_clock": {
+    "anchor": "2026-10-15",
+    "cadence_sessions": 5,
+    "cutoff": "E 00:00 UTC (branch_population_rolling.clocks)",
+    "entry": "open of the first session E after cohort date D",
+    "horizon_sessions": 126,
+    "mark_sessions": [
+     5,
+     10,
+     15,
+     21,
+     42,
+     63,
+     84,
+     105,
+     126
+    ]
+   },
+   "contract_id": "DXB-balanced-v1",
+   "contract_sha256": "2d4ed89b0ec285fac8f0db02e5457b52796f61a5eb43ad92d1745dd7c25e248b",
+   "costs": {
+    "base_round_trip": "xs_ranker.COST_BPS_BY_BAND per name, half at entry, half at the mark",
+    "etf_hedge_change_bps": 2.0,
+    "exposure_starts_at": 1.0,
+    "hedge_borrow_bps_yr": 30.0,
+    "hedge_starts_at": 0.0,
+    "stock_exposure_change_bps": 10.0
+   },
+   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D",
+   "evidence_in_replay": "every rule difference near or below its MDE (3-21 pp/yr); no skill claim",
+   "family": "dynamic_exposure_book",
+   "fill_convention": "base book: buy at the open of E, held (rolling grade rule v2: a name with no valid open waits in cash at 0%); exposure and hedge changes at the close of the deciding session; daily rebalanced to the exposure fraction; cash and short collateral earn 0",
+   "frozen_utc": "2026-11-14T17:03:51.549557+00:00",
+   "inputs": [
+    "prices_2025_26/bars.parquet (open, close, volume)",
+    "straddle_forward/earnings_cache.json",
+    "potential_universe/<newest>.jsonl identity.sector (report only)"
+   ],
+   "license": "PRODUCT_EXPERIMENT",
+   "objective": "terminal wealth with a declared event cut: balanced personality",
+   "personality": "balanced",
+   "rule": {
+    "definition": "at the close of a leader's earnings-reaction session s with open_s / close_(s-1) - 1 <= gap_threshold, stock exposure = gross_after_event for sessions s+1 .. s+sessions_after_event (overlapping events: the minimum)",
+    "earnings_dates": "straddle_forward/earnings_cache.json (dates[] per leader)",
+    "gap_threshold": -0.05,
+    "gross_after_event": 0.5,
+    "id": "d_leader_gap",
+    "leader_since": {
+     "AVGO": "2019-01-01"
+    },
+    "leaders": [
+     "AAPL",
+     "MSFT",
+     "NVDA",
+     "GOOGL",
+     "AMZN",
+     "META",
+     "AVGO"
+    ],
+    "non_earnings_gaps": "do not fire (as the replay code ran; NVDA 11-09 / 11-12 2026 excluded)",
+    "reaction_sessions": "PIT form: the first session on/after the earnings date AND the session after it; each fires on its own gap. Replay: the larger |gap| of the two (peeks at the next open)",
+    "sessions_after_event": 5
+   },
+   "source": "aegis-recovery-evidence/s69-reports-20261114/council/replay/replay_findings.txt sections 0, 0b, 3; s3_rules.py run_rule()"
+  },
+  {
+   "base_selection": {
+    "params": {
+     "construction": "equal",
+     "control_role": "treatment",
+     "family": "momentum_12_1",
+     "gross_target": 0.95,
+     "hedge": "none",
+     "horizon_sessions": 126,
+     "liquidity_segment": "liquid",
+     "max_names": 40,
+     "mechanism": "mom_12_1",
+     "name_cap": 0.05
+    },
+    "policy_id": "c79397f92fd9d3562378388e",
+    "semantic_sha256": "c79397f92fd9d3562378388ea48eb125efeb2b14541076d11f97a19ec7e42339",
+    "spec_file": "docs/TRIALS/ROLLING-COHORTS-SPECIFICATIONS-v2.json",
+    "spec_manifest_sha256": "3505cb4f370a94506d8ef31568a43c40b24da959dd4d72c7518bb3ecab0a3c4f",
+    "why": "momentum is the high-beta family the fleet held (the replay's subject); hedge none so the preservation hedge is the only hedge; horizon 126 so 21/63/126 are marked; 40 names: the least sector-concentrated momentum spec (top-1 sector 24-33% over the 10-15..11-12 cohorts vs 37-60% at 10 names); equal over volatility_aware on a tie (no estimated input). Chosen on construction and sector share, before any return was read"
+   },
+   "chunk": "CH-45",
+   "cohort_clock": {
+    "anchor": "2026-10-15",
+    "cadence_sessions": 5,
+    "cutoff": "E 00:00 UTC (branch_population_rolling.clocks)",
+    "entry": "open of the first session E after cohort date D",
+    "horizon_sessions": 126,
+    "mark_sessions": [
+     5,
+     10,
+     15,
+     21,
+     42,
+     63,
+     84,
+     105,
+     126
+    ]
+   },
+   "contract_id": "DXB-preservation-v1",
+   "contract_sha256": "6d7600637451c006e48949e852bd7b7ea684c7abbf67afa40b4daa10cb929033",
+   "costs": {
+    "base_round_trip": "xs_ranker.COST_BPS_BY_BAND per name, half at entry, half at the mark",
+    "etf_hedge_change_bps": 2.0,
+    "exposure_starts_at": 1.0,
+    "hedge_borrow_bps_yr": 30.0,
+    "hedge_starts_at": 0.0,
+    "stock_exposure_change_bps": 10.0
+   },
+   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D",
+   "evidence_in_replay": "every rule difference near or below its MDE (3-21 pp/yr); no skill claim",
+   "family": "dynamic_exposure_book",
+   "fill_convention": "base book: buy at the open of E, held (rolling grade rule v2: a name with no valid open waits in cash at 0%); exposure and hedge changes at the close of the deciding session; daily rebalanced to the exposure fraction; cash and short collateral earn 0",
+   "frozen_utc": "2026-11-14T17:03:51.549557+00:00",
+   "inputs": [
+    "prices_2025_26/bars.parquet (open, close, volume)",
+    "straddle_forward/earnings_cache.json",
+    "potential_universe/<newest>.jsonl identity.sector (report only)"
+   ],
+   "license": "PRODUCT_EXPERIMENT",
+   "objective": "drawdown first (preservation personality): accepts the replay's long-run cost of the hedge (9-13 pp/yr) for a shallower drawdown",
+   "personality": "preservation",
+   "rule": {
+    "beta_clip": [
+     0.0,
+     3.0
+    ],
+    "beta_min_obs": 126,
+    "beta_window_sessions": 126,
+    "book_returns_for_beta": "sessions <= D: the entry weights held at constant weight (backcast, cash at 0); sessions >= E: the book's realised NAV return, paired with QQQ over the same interval (E: open to close)",
+    "definition": "if close_(t-1)(QQQ) < SMA_sma_sessions(QQQ closes through t-1): short QQQ over session t with notional beta_(t-1) x NAV; beta_(t-1) = OLS beta of the book's daily returns on QQQ's over the beta_window sessions ending t-1, clipped to beta_clip; otherwise no hedge",
+    "etf": "QQQ",
+    "id": "b_qqq_trend_hedge",
+    "sma_sessions": 50
+   },
+   "source": "aegis-recovery-evidence/s69-reports-20261114/council/replay/replay_findings.txt sections 0, 0b, 3; s3_rules.py run_rule()"
+  }
+ ],
+ "license": "PRODUCT_EXPERIMENT",
+ "manifest_sha256": "328a0c7337ef45b7aa29b6faf4921cf66e65cad82a6bb37db9edb06d6dab9294",
+ "note": "immutable once written: a changed rule or parameter is a new contract id in a new file, never an edit of this one",
+ "schema": "dynamic_exposure_contracts/1"
+}

@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { isPersonalMode } from "@/lib/personal-mode";
+import { LocalNewsFeed } from "./local-feed";
 
 function EventScoreGauge({ score, interpretation }: { score: number; interpretation: string }) {
   const pct = Math.round(score * 100);
@@ -94,6 +95,9 @@ export default function NewsPage() {
           <span>Educational tool only. Not financial advice. Sentiment scores are algorithmic estimates, not recommendations.</span>
         </div>
       )}
+
+      {/* CH-22: our own corpus, filtered by ticker / sector / source (desktop only) */}
+      <LocalNewsFeed />
 
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

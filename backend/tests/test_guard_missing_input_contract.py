@@ -1964,6 +1964,29 @@ def _case_universe_graph():
             "empty return panel")
 
 
+def _case_branch_population_rolling():
+    import pandas as pd
+
+    from backend.services.portfolio_intelligence.branch_population_rolling import (
+        RollingCohortRefused, market_features)
+    # CH-16 rolling cohorts: a cohort cannot be born on a bars panel with no SPY bar
+    # on its own date -- the clock every feature and every mark is counted on.
+    return (lambda: market_features(pd.DataFrame(columns=["symbol", "date", "open", "close", "volume"]),
+                                    pd.Timestamp("2026-01-02")),
+            RollingCohortRefused, "empty bars panel")
+
+
+def _case_dynamic_exposure_books():
+    from pathlib import Path as _P
+
+    from backend.services.portfolio_intelligence.dynamic_exposure_books import (
+        DynamicBookRefused, load_earnings)
+    # CH-45: the leader-gap rule's missing input is the earnings calendar. Without
+    # it the balanced book would silently never cut; refused instead.
+    return (lambda: load_earnings(_P("this/path/does/not/exist")), DynamicBookRefused,
+            "absent earnings calendar")
+
+
 def _case_owner_calls():
     # CH-01: the missing input is THE PRICE PANEL. A call logged with no bars
     # would carry no base-rate twin, and a call without a twin grades against
@@ -2006,6 +2029,29 @@ def _case_event_nodes():
     nowhere = _P("does/not/exist/event_nodes")
     return (lambda: check_inputs(default_paths(nowhere)), EventNodesRefused,
             "an event-node build with no corpus, filings, graph or calendar")
+
+
+def _case_forward_calendar():
+    # CH-35/CH-08: with no data root there is no universe to pull a calendar for;
+    # that must be a named refusal (rc 2), never an empty pull that reads green.
+    from datetime import datetime, timezone
+    from pathlib import Path as _P
+
+    from backend.services.forward_calendar import ForwardCalendarRefused, build_universe
+    nowhere = _P("does/not/exist/forward_calendar")
+    return (lambda: build_universe(nowhere, datetime.now(timezone.utc)), ForwardCalendarRefused,
+            "a forward-calendar pull with no data root to build a universe from")
+
+
+def _case_ticker_hub():
+    # CH-22: with no news corpus there is nothing to index by ticker; that must be a
+    # named refusal (rc 2), never an empty hub that reads green.
+    from pathlib import Path as _P
+
+    from backend.services.ticker_hub import TickerHubRefused, check_inputs, default_paths
+    nowhere = _P("does/not/exist/ticker_hub")
+    return (lambda: check_inputs(default_paths(nowhere)), TickerHubRefused,
+            "a ticker-hub build with no news corpus")
 
 
 def _case_llm_selector_book():
@@ -2064,6 +2110,8 @@ def test_global_price_admission_positive_control_is_pure(monkeypatch):
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
+    "branch_population_rolling": _case_branch_population_rolling,
+    "dynamic_exposure_books": _case_dynamic_exposure_books,
     "owner_calls": _case_owner_calls,
     "dowjones_claims": _case_dowjones_claims,
     "issuer_ir_html": _case_issuer_ir_html,
@@ -2206,6 +2254,8 @@ CASES = {
     "event_nodes": _case_event_nodes,
     "llm_selector_book": _case_llm_selector_book,
     "news_overlay_book": _case_news_overlay_book,
+    "forward_calendar": _case_forward_calendar,
+    "ticker_hub": _case_ticker_hub,
 }
 
 

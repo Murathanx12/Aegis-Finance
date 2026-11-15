@@ -69,6 +69,7 @@ def params() -> dict:
                                         "random_sleeve"))),
         "label_ladder": list(_dna.LABEL_LADDER),
         "label_ceiling_of_book_dna": _dna.LABEL_CEILING,
+        "promotion_hold_runs": max(1, int(_cfg("RESULTS_VOICE_PROMOTION_HOLD_RUNS", 3))),
     }
 
 
@@ -98,6 +99,129 @@ def newest_shared_run_id(folder: Path = PA_DIR) -> str:
     if not shared:
         raise ResultsVoiceRefused(f"no run id has both roi_<run>.json and book_dna_<run>.json in {rel(folder)}")
     return max(shared)
+
+
+def previous_dna(folder: Path, run_id: str) -> Optional[dict]:
+    """The book_dna receipt of the run before `run_id`: the largest run id < `run_id` among
+    `book_dna_<run>.json` in `folder`, ordered by the run id in the file NAME (the receipt's own
+    stamp) -- never by mtime, which on a fresh checkout is "today" for every file (CLAUDE.md
+    protocol item 7). None when there is no earlier receipt; {"error": ...} when it is unreadable."""
+    ids = sorted(r for r in run_ids(folder, "book_dna") if r < str(run_id))
+    if not ids:
+        return None
+    rid = ids[-1]
+    p = Path(folder) / f"book_dna_{rid}.json"
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return {"run_id": rid, "path": rel(p), "error": f"{type(e).__name__}"}
+    if not isinstance(d, dict) or not isinstance(d.get("books"), list):
+        return {"run_id": rid, "path": rel(p), "error": "no books list"}
+    return {"run_id": rid, "path": rel(p), "dna": d, "generated_utc": d.get("generated_utc")}
+
+
+def _rung(label: Any) -> Optional[int]:
+    r = str(label or "").split("(")[0]
+    return _dna.LABEL_LADDER.index(r) if r in _dna.LABEL_LADDER else None
+
+
+def label_changes(accounts: list[str], books: dict, prev: Optional[dict]) -> dict:
+    """A label ROSE when this run's rung is strictly higher than the same account's rung in the
+    previous run's receipt; it FELL when strictly lower. A book absent from the previous receipt
+    is new, not promoted."""
+    out = {"compared_with": None, "promoted": [], "lowered": [], "new_accounts": [], "n_compared": 0}
+    if not prev or prev.get("error"):
+        out["why"] = ("no earlier run to compare" if not prev
+                      else f"the earlier receipt {prev['path']} is unreadable ({prev['error']})")
+        return out
+    out["compared_with"] = {"run_id": prev["run_id"], "path": prev["path"], "generated_utc": prev.get("generated_utc")}
+    pb = {str(b.get("account")): b for b in prev["dna"]["books"]}
+    for a in accounts:
+        now = ((books.get(a) or {}).get("evidence") or {}).get("label")
+        if a not in pb:
+            out["new_accounts"].append(a)
+            continue
+        was = (pb[a].get("evidence") or {}).get("label")
+        rn, rw = _rung(now), _rung(was)
+        if rn is None or rw is None:
+            continue
+        out["n_compared"] += 1
+        row = {"account": a, "label": now, "previous_label": was}
+        if rn > rw:
+            out["promoted"].append(row)
+        elif rn < rw:
+            out["lowered"].append(row)
+    return out
+
+
+def label_history(folder: Path, run_id: str, n_days: int) -> dict:
+    """The labels of the last `n_days` DAILY runs before `run_id`'s UTC day, oldest first. One run
+    per UTC day counts once: the latest run id of each day (by the run id in the file name, never
+    mtime); runs on the same UTC day as `run_id` are left out (this run stands for its day).
+    {"days": [{"day", "run_id", "path", "labels": {account: label}}], "unreadable": [...],
+     "n_earlier_days": <all earlier days on disk>}."""
+    day0 = str(run_id)[:10]
+    by_day: dict = {}
+    for r in run_ids(folder, "book_dna"):
+        if r < str(run_id) and r[:10] < day0:
+            by_day[r[:10]] = max(by_day.get(r[:10], r), r)
+    days = sorted(by_day)
+    out: dict = {"days": [], "unreadable": [], "n_earlier_days": len(days)}
+    for d in days[-n_days:] if n_days > 0 else []:
+        rid = by_day[d]
+        p = Path(folder) / f"book_dna_{rid}.json"
+        try:
+            dna = json.loads(p.read_text(encoding="utf-8"))
+            labels = {str(b.get("account")): (b.get("evidence") or {}).get("label") for b in dna.get("books") or []}
+        except (OSError, ValueError, AttributeError) as e:
+            out["unreadable"].append({"run_id": rid, "path": rel(p), "error": type(e).__name__})
+            continue
+        out["days"].append({"day": d, "run_id": rid, "path": rel(p), "labels": labels})
+    return out
+
+
+def _rung_name(label: Any) -> str:
+    return str(label or "UNLABELLED").split("(")[0]
+
+
+def promotion_status(accounts: list[str], books: dict, history: Optional[dict], hold: int) -> dict:
+    """PROMOTED only when the label is strictly higher than the one held BEFORE the rise AND the
+    higher rung has held for `hold` consecutive daily runs (this run included); printed once, on the
+    run where the hold completes. A rise that has held k < hold runs is RISING (k of hold). A label
+    that flickers (EARLY_EVIDENCE -> OBSERVED -> EARLY_EVIDENCE) restarts at 1 and never promotes
+    until it holds."""
+    out = {"hold_runs": hold, "promoted": [], "rising": [], "days": [], "why": None}
+    days = (history or {}).get("days") or []
+    out["days"] = [{"day": d["day"], "run_id": d["run_id"], "path": d["path"]} for d in days]
+    if (history or {}).get("unreadable"):
+        out["unreadable"] = history["unreadable"]
+    if not days:
+        out["why"] = "no earlier run to compare"
+    elif len(days) < hold:
+        out["why"] = "not enough earlier runs to confirm a rise"
+    for a in accounts:
+        now = ((books.get(a) or {}).get("evidence") or {}).get("label")
+        rn = _rung(now)
+        seq = [_rung(d["labels"].get(a)) if a in d["labels"] else None for d in days]
+        if rn is None:
+            continue
+        k, before, i = 1, None, len(seq) - 1
+        while i >= 0 and seq[i] is not None and seq[i] >= rn:
+            k += 1
+            i -= 1
+        if i >= 0:
+            before = seq[i]
+        if before is None or before >= rn:
+            continue                                   # no rise visible in the loaded history
+        row = {"account": a, "label": now, "rung": _rung_name(now),
+               "previous_label": next(d["labels"].get(a) for d in reversed(days[:i + 1])),
+               "previous_rung": _dna.LABEL_LADDER[before], "held_runs": k,
+               "held_since_run": days[i + 1]["run_id"] if i + 1 < len(days) else None}
+        if k == hold:
+            out["promoted"].append(row)
+        elif k < hold:
+            out["rising"].append(row)
+    return out
 
 
 def load_pair(run_id: str, folder: Path = PA_DIR) -> tuple[dict, dict, Path, Path]:
@@ -262,6 +386,287 @@ def twin_of(account_set: list[str], books: dict[str, dict], parent: dict, kinds:
     return None
 
 
+# ───────────────────────────────────────────────────────────── market exposure (CH-11 note)
+
+_EXPOSURE_FIELDS = (("beta", "beta"), ("up_capture", "up-capture"), ("down_capture", "down-capture"),
+                    ("beta_adjusted_excess_pp", "beta-adjusted excess"))
+
+
+def exposure_view(book: Optional[dict], dna_name: str = "the book_dna receipt") -> dict:
+    """CH-11 note (2026-11-13, the owner: "the books won only because the market was
+    rising"): beta, up/down capture and the beta-adjusted excess of one book, read from
+    book_dna's `market_exposure` -- never recomputed here. Each field is a number or
+    `CANNOT DETERMINE` with its reason; never 0-for-unknown, never blank.
+
+    Fix round (review of PR #140): also the SE beside each number (n beside each capture,
+    MDE beside the beta-adjusted excess), the window the beta was estimated on against the
+    receipt window, the date-stamp note when months were dropped (B1), and -- when the two
+    windows are not comparable (M1) -- the beta window's own figure, labelled with its window."""
+    cd = _dna.CANNOT_DETERMINE
+    if not book:
+        why = "no book_dna row for this account"
+        me = None
+    else:
+        me = book.get("market_exposure")
+        why = (f"{dna_name} predates the market_exposure fields (CH-11 note 2026-11-13); "
+               f"rebuild book_dna on this ROI receipt") if not isinstance(me, dict) else ""
+    me = me if isinstance(me, dict) else {}
+    out: dict = {}
+    for k, _ in _EXPOSURE_FIELDS:
+        f = me.get(k) if isinstance(me.get(k), dict) else {}
+        v = f.get("value")
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            out[k], out[f"{k}_why"] = float(v), None
+        else:
+            out[k], out[f"{k}_why"] = cd, (why or str(f.get("why") or "not computed by book_dna"))
+        out[f"{k}_se"] = _fnum(f.get("se_pp" if k == "beta_adjusted_excess_pp" else "se"))
+        out[f"{k}_n"] = f.get("n_periods") if k in ("up_capture", "down_capture") else None
+    bx = me.get("beta_adjusted_excess_pp") if isinstance(me.get("beta_adjusted_excess_pp"), dict) else {}
+    out["beta_adjusted_excess_pp_mde"] = _fnum(bx.get("mde_pp"))
+    out["rf_effect_pp"] = _fnum(bx.get("rf_effect_pp"))
+    out["not_comparable"] = ({"figure_pp": float(bx["window_figure_pp"]),
+                              "se_pp": _fnum(bx.get("window_figure_se_pp")),
+                              "from": bx.get("window_from"), "to": bx.get("window_to"),
+                              "n_periods": bx.get("window_n_periods")}
+                             if _fnum(bx.get("window_figure_pp")) is not None else None)
+    w = me.get("estimation_window") if isinstance(me.get("estimation_window"), dict) else None
+    out["window"] = w
+    rs = (w or {}).get("receipt_sessions")
+    out["window_label"] = (f"{w.get('from')}..{w.get('to')}, {w.get('n_periods')} p of "
+                           f"{rs if rs is not None else '?'} s" if w else None)
+    out["stamp_note"] = me.get("stamp_note")
+    out["n_obs"] = me.get("n_obs")
+    out["by_month"] = me.get("by_month") if isinstance(me.get("by_month"), list) else None
+    return out
+
+
+def _fnum(x: Any) -> Optional[float]:
+    return float(x) if isinstance(x, (int, float)) and not isinstance(x, bool) and x == x else None
+
+
+def _signed(v: float, nd: int = 2) -> str:
+    v = 0.0 if abs(v) < 0.5 * 10 ** -nd else v          # review m1: never "-0.00"
+    return f"{v:+.{nd}f}"
+
+
+def _fmt_exp(x: dict, k: str, unit: str = "", short: bool = False) -> str:
+    """One field: '0.36 ±0.05', '0.43 ±0.08 (n 22)', '+6.51 pp ±2.10 (MDE 5.88)', or
+    'NOT COMPARABLE: +1.38 pp on A..B (31 p)' / CANNOT DETERMINE. The SE, n and MDE print
+    when book_dna supplied them; `short` drops n and the MDE."""
+    v = x.get(k)
+    if isinstance(v, (int, float)):
+        base = f"{_signed(v)}{unit}" if unit else f"{(0.0 if abs(v) < 0.005 else v):.2f}"
+        se = x.get(f"{k}_se")
+        if se is not None:
+            base += f" ±{se:.2f}"
+        if not short:
+            n = x.get(f"{k}_n")
+            if n is not None:
+                base += f" (n {n})"
+            mde = x.get(f"{k}_mde")
+            if mde is not None:
+                base += f" (MDE {mde:.2f})"
+        return base
+    nc = x.get("not_comparable") if k == "beta_adjusted_excess_pp" else None
+    if nc:
+        return (f"NOT COMPARABLE: {_signed(nc['figure_pp'])} pp on {nc['from']}..{nc['to']}"
+                + ("" if short else f" ({nc['n_periods']} p)"))
+    return _dna.CANNOT_DETERMINE
+
+
+def exposure_line(x: dict) -> str:
+    """'beta b, up-capture u, down-capture d, beta-adjusted excess x pp' (with SE, n, MDE
+    and the beta window when book_dna supplied them) -- the CANNOT DETERMINE reasons and
+    the date-stamp note follow once, de-duplicated."""
+    parts = []
+    for k, label in _EXPOSURE_FIELDS:
+        cell = f"{label} {_fmt_exp(x, k, ' pp' if k == 'beta_adjusted_excess_pp' else '')}"
+        if k == "beta" and x.get("window_label") and isinstance(x.get("beta"), float):
+            cell += f" on {x['window_label']}"
+        parts.append(cell)
+    whys = []
+    for k, _ in _EXPOSURE_FIELDS:
+        w = x.get(f"{k}_why")
+        if w and w not in whys:
+            whys.append(w)
+    tail = f" (CANNOT DETERMINE: {'; '.join(w[:800] for w in whys)})" if whys else ""
+    if x.get("stamp_note") and isinstance(x.get("beta"), float):
+        tail += f" ({x['stamp_note'][:400]})"
+    return ", ".join(parts) + tail
+
+
+def beta_adjusted_ranking(rows: list[dict]) -> dict:
+    """The strategy accounts (same exclusions as the headline) ranked by beta-adjusted
+    excess over the receipt window; then the accounts whose beta window is NOT COMPARABLE
+    with the receipt window (by their beta window's own figure, labelled); then those that
+    cannot be determined, with their reason."""
+    def bax(r: dict) -> Any:
+        return r["market_exposure"]["beta_adjusted_excess_pp"]
+
+    det = sorted((r for r in rows if isinstance(bax(r), float)), key=lambda r: (-bax(r), r["account"]))
+    nc = sorted((r for r in rows if not isinstance(bax(r), float) and r["market_exposure"].get("not_comparable")),
+                key=lambda r: (-r["market_exposure"]["not_comparable"]["figure_pp"], r["account"]))
+    und = sorted((r for r in rows if not isinstance(bax(r), float)
+                  and not r["market_exposure"].get("not_comparable")), key=lambda r: r["account"])
+    sess = [r["sessions_graded"] for r in rows if isinstance(r.get("sessions_graded"), int)]
+    return {"rows": det + nc + und, "n_determined": len(det), "n_not_comparable": len(nc),
+            "n_cannot_determine": len(nc) + len(und),
+            "sessions_min": min(sess) if sess else None, "sessions_max": max(sess) if sess else None,
+            "note": ("Ranked after the fact over each account's own window; the top of this table is "
+                     "biased upward exactly like the leader table. Beta is in-sample (rf = 0; the "
+                     "rf column says what an ASSUMED cash rate would change): it says how much of the "
+                     "return was SPY exposure, not that the rest is skill. An account whose beta was "
+                     "measured on a window that does not cover its receipt window is NOT COMPARABLE "
+                     "and follows the ranked ones with its beta window's own figure.")}
+
+
+# ───────────────────────────────────────────────────────────── flags (claims-none, 2026-11-14)
+
+FLAGS_PREDATE = ("the book_dna receipt predates the flags (claims-none, 2026-11-14); rebuild book_dna on "
+                 "this ROI receipt")
+
+
+def same_bet_as(accounts: list[str], books: dict) -> dict:
+    """{account: SAME_BET_AS view}: the EARLIEST-LISTED strategy account (accounts are in headline
+    order, best excess first) among the book's daily-excess peers from book_dna."""
+    pos = {a: i for i, a in enumerate(accounts)}
+    out = {}
+    for a in accounts:
+        fl = (books.get(a) or {}).get("flags")
+        sb = (fl or {}).get("SAME_BET") if isinstance(fl, dict) else None
+        if not isinstance(sb, dict):
+            out[a] = {"status": _dna.CANNOT_DETERMINE, "why": FLAGS_PREDATE}
+        elif sb.get("status") != "OK":
+            out[a] = {"status": _dna.CANNOT_DETERMINE, "why": sb.get("why") or "no peers computed"}
+        else:
+            earlier = sorted((q for q in sb.get("peers") or [] if pos.get(q["account"], 10 ** 9) < pos[a]),
+                             key=lambda q: pos[q["account"]])
+            out[a] = ({"status": "SET", "account": earlier[0]["account"], "corr": earlier[0]["corr"],
+                       "n": earlier[0]["n"]} if earlier else {"status": "CLEAR"})
+            out[a]["peers_in_strategy_list"] = [q["account"] for q in sb.get("peers") or [] if q["account"] in pos]
+    return out
+
+
+def _flag_text(name: str, f: dict, book: dict) -> Optional[str]:
+    """The SET-flag phrase, or None when the flag is not set."""
+    s = f.get("status")
+    if name == "MDE":
+        if s in ("BELOW_MDE", "ABOVE_MDE"):
+            op = "<" if s == "BELOW_MDE" else ">="
+            t = f"{s} (|{f['excess_pp']:+.2f}| {op} MDE {f['mde_pp']:.2f} pp"
+            if f.get("beta_adjusted_mde_pp") is not None:
+                t += f"; beta-adjusted {f['beta_adjusted_excess_pp']:+.2f} vs MDE {f['beta_adjusted_mde_pp']:.2f}"
+            return t + ")"
+        return None
+    if s != "SET":
+        return None
+    if name == "NEVER_INVESTED":
+        return f"NEVER_INVESTED ({f.get('sessions')} sessions below {f.get('threshold_gross', 0.05):.0%} gross)"
+    if name == "IDLE_CASH":
+        return f"IDLE_CASH since {f['since']} ({f['sessions']} sessions)"
+    if name == "SAME_BET":
+        return f"SAME_BET_AS {f['account']} (excess corr {f['corr']:.2f}, {f['n']} sessions)"
+    if name == "ONE_MONTH":
+        return f"ONE_MONTH {f['month']} (without it {f['excess_without_month_pp']:+.2f} pp)"
+    if name == "ONE_NAME":
+        return f"ONE_NAME {f['ticker']} {f['share']:.0%} of the gain"
+    if name == "SIZING_ADDED_NOTHING":
+        return (f"SIZING_ADDED_NOTHING (equal weight {f['ew_return_pct']:+.2f}% vs {f['book_return_pct']:+.2f}%: "
+                f"{f['diff_pp']:+.2f} pp, within SE {f['se_pp']:.2f}"
+                + (f"; {f['note']}" if f.get("note") else "") + ")")
+    if name == "IDENTICAL_TO_COMPARATOR":
+        return f"IDENTICAL_TO_COMPARATOR {', '.join(short_name(c, 40) for c in f['comparators'])} ({f['basis']})"
+    if name == "HIGH_BETA":
+        return f"HIGH_BETA {f['beta']:.1f}" + (f" ±{f['se']:.2f}" if f.get("se") is not None else "")
+    return None
+
+
+def flags_view(book: Optional[dict], sb: dict) -> dict:
+    """The flags of one strategy account: `set` (phrases), `cannot_determine` ({flag: why}),
+    `from_cash` (the idle-excess sentence or None), `mde` / `high_beta` statuses, and `line`."""
+    fl = (book or {}).get("flags") if book else None
+    names = [n for n in _dna.FLAG_ORDER]
+    if not isinstance(fl, dict):
+        why = FLAGS_PREDATE if book else "no book_dna row for this account"
+        return {"set": [], "cannot_determine": {n: why for n in names}, "from_cash": None,
+                "mde": _dna.CANNOT_DETERMINE, "high_beta": False, "never_invested": False,
+                "line": f"flags CANNOT DETERMINE ({why})"}
+    fl = {**fl, "SAME_BET": sb}
+    out_set, cd = [], {}
+    never = (fl.get("NEVER_INVESTED") or {}).get("status") == "SET"
+    for n in names:
+        f = fl.get(n) or {}
+        if n == "IDLE_CASH" and never:
+            continue                                   # subsumed: idle since inception
+        if f.get("status") == _dna.CANNOT_DETERMINE:
+            cd[n] = str(f.get("why") or "not computed")
+            continue
+        t = _flag_text(n, f, book or {})
+        if t:
+            out_set.append(t)
+    wi = fl.get("EXCESS_WHILE_IDLE") or {}
+    fc = None
+    if wi.get("from_cash"):
+        fc = (f"excess from cash, not from positions ({wi['excess_while_idle_pp']:+.2f} of "
+              f"{wi['receipt_excess_pp']:+.2f} pp accrued while gross < {(fl.get('IDLE_CASH') or {}).get('threshold_gross', 0.05):.0%})")
+        out_set.insert(min(1, len(out_set)), fc)
+    mde = (fl.get("MDE") or {}).get("status") or _dna.CANNOT_DETERMINE
+    line = ", ".join(out_set) if out_set else "no flag set"
+    if cd:
+        line += f"; cannot determine: {', '.join(cd)}"
+    return {"set": out_set, "cannot_determine": cd, "from_cash": fc, "mde": mde,
+            "high_beta": (fl.get("HIGH_BETA") or {}).get("status") == "SET", "never_invested": never,
+            "line": line}
+
+
+def bets_after_same_bet(accounts: list[str], jaccard_bet_of: dict, sb: dict, books: dict,
+                        by_acc: dict) -> dict:
+    """Distinct bets after joining the holdings-Jaccard bets with the SAME_BET (daily excess
+    correlation) peers; a bet is ahead when any member is ahead; it is above its MDE when its
+    first-listed member that is ahead is ABOVE_MDE."""
+    parent = {a: a for a in accounts}
+
+    def find(x: str) -> str:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a: str, b: str) -> None:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[max(ra, rb)] = min(ra, rb)
+    for a in accounts:
+        for m in jaccard_bet_of.get(a) or []:
+            if m in parent:
+                union(a, m)
+        for m in (sb.get(a) or {}).get("peers_in_strategy_list") or []:
+            union(a, m)
+    comps: dict = {}
+    for a in accounts:                                  # accounts are in headline order
+        comps.setdefault(find(a), []).append(a)
+    ahead, above, cd = [], 0, 0
+    for members in comps.values():
+        up = [m for m in members if float(by_acc[m]["vs_spy_pp"]) > 0]
+        if not up:
+            continue
+        ahead.append(members)
+        st = ((((books.get(up[0]) or {}).get("flags") or {}).get("MDE")) or {}).get("status")
+        if st == "ABOVE_MDE":
+            above += 1
+        elif st != "BELOW_MDE":
+            cd += 1
+    line = (f"Distinct bets ahead of SPY: {len(ahead)} of {len(comps)} (after SAME_BET clustering); "
+            f"above their MDE: {above}" + (f" (MDE cannot be determined for {cd})" if cd else ""))
+    return {"n_bets": len(comps), "n_bets_ahead": len(ahead), "n_ahead_above_mde": above,
+            "n_ahead_mde_cannot_determine": cd, "bets": [m for m in comps.values() if len(m) > 1],
+            "line": line}
+
+
+def _bax_short(x: dict) -> str:
+    return _fmt_exp(x.get("market_exposure") or {}, "beta_adjusted_excess_pp", " pp", short=True)
+
+
 # ───────────────────────────────────────────────────────────── build
 
 def _r(x: Any, nd: int = 3) -> Optional[float]:
@@ -271,7 +676,11 @@ def _r(x: Any, nd: int = 3) -> Optional[float]:
         return None
 
 
-def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: str) -> dict:
+def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: str,
+          prev: Optional[dict] = None, history: Optional[dict] = None) -> dict:
+    """`prev`: `previous_dna(...)` -- the previous run's book_dna receipt, against which a label
+    FELL (LABELS LOWERED). `history`: `label_history(...)` -- the earlier DAILY runs a rise must
+    hold through before CLAIMS PROMOTED names it. None = no earlier run."""
     if not isinstance(roi, dict) or not roi.get("rows"):
         raise ResultsVoiceRefused("the ROI receipt is missing or has no rows")
     if not isinstance(dna, dict) or not isinstance(dna.get("books"), list):
@@ -311,9 +720,15 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
                  "median_vs_spy_pp": round(statistics.median(v), 3)}
                 for f, v in sorted(fams.items(), key=lambda kv: (-statistics.median(kv[1]), kv[0]))]
 
+    dna_name = Path(str(dna_path)).name
+    sb = same_bet_as(accounts, books)
+
     def row_view(a: str) -> dict:
         r, b = by_acc[a], books.get(a) or {}
-        return {"account": a, "family": r.get("family"), "roi_pct": _r(r.get("roi_pct")),
+        ex = exposure_view(books.get(a), dna_name)
+        return {"market_exposure": ex, "exposure_line": exposure_line(ex),
+                "flags": flags_view(books.get(a), sb[a]),
+                "account": a, "family": r.get("family"), "roi_pct": _r(r.get("roi_pct")),
                 "spy_same_window_pct": _r(r.get("spy_same_window_pct")), "vs_spy_pp": _r(r.get("vs_spy_pp")),
                 "inception": r.get("inception"), "last_mark": r.get("last_mark"),
                 "sessions_graded": b.get("sessions_graded"),
@@ -357,14 +772,33 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
     ladder = list(_dna.LABEL_LADDER)
     above = sorted((x for x in rungs if x in ladder and ladder.index(x) > 0), key=ladder.index)
     top_rung = max((x for x in rungs if x in ladder), key=ladder.index, default="UNLABELLED")
-    promoted = [{"account": a, "label": (books.get(a) or {}).get("evidence", {}).get("label")}
-                for a in accounts
-                if str(((books.get(a) or {}).get("evidence") or {}).get("label") or "").split("(")[0] in above]
-    claims_line = ("CLAIMS PROMOTED: " + (
-        ", ".join(f"{x['account']} {x['label']}" for x in promoted) if promoted else
-        f"none -- the highest label any strategy account holds is {top_rung}; leaders are chosen after "
-        f"the fact from {len(accounts)} accounts, so the top of the table is biased upward"))
+    # owner 2026-11-14: CLAIMS PROMOTED prints "none" until a label actually RISES against the
+    # previous run's receipt (it used to list every account above OBSERVED, risen or not)
+    # coordinator 2026-11-14 (PR #146 follow-up): a rise must HOLD for P["promotion_hold_runs"]
+    # consecutive daily runs before it is a promotion; a fall is reported at once
+    ch = label_changes(accounts, books, prev)
+    ps = promotion_status(accounts, books, history, P["promotion_hold_runs"])
+    promoted = ps["promoted"]
+    hold = P["promotion_hold_runs"]
+    since = f" (since run {ch['compared_with']['run_id']})" if ch["compared_with"] else ""
+    if promoted:
+        claims_line = ("CLAIMS PROMOTED: " + ", ".join(
+            f"{x['account']} {x['previous_rung']} -> {x['rung']} (held {x['held_runs']} daily runs since run "
+            f"{x['held_since_run']})" for x in promoted))
+    elif ps["why"]:
+        claims_line = f"CLAIMS PROMOTED: none ({ps['why']})"
+    else:
+        claims_line = "CLAIMS PROMOTED: none"
+    rising_lines = []
+    for k in sorted({x["held_runs"] for x in ps["rising"]}):
+        rising_lines.append(f"LABELS RISING, NOT YET HELD ({k} of {hold} runs): " + ", ".join(
+            f"{x['account']} {x['previous_rung']} -> {x['rung']}" for x in ps["rising"] if x["held_runs"] == k))
+    lowered_line = ("LABELS LOWERED: " + ", ".join(f"{x['account']} {_rung_name(x['previous_label'])} -> "
+                                                   f"{_rung_name(x['label'])}" for x in ch["lowered"]) + since
+                    ) if ch["lowered"] else None
+    bets2 = bets_after_same_bet(accounts, cl["bet_of"], sb, books, by_acc)
 
+    ranking = beta_adjusted_ranking([{**row_view(a), "bet_members": cl["bet_of"][a]} for a in accounts])
     summ = dna.get("summary") or {}
     voice = {
         "schema": SCHEMA, "receipt": "results_voice", "licence": roi.get("licence") or "PRODUCT_EXPERIMENT",
@@ -376,6 +810,7 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
                      "older_marks": [m for m in marks if m != as_of],
                      "n_excluded_controls": len(excluded),
                      "n_distinct_bets": cl["n_bets"], "n_distinct_bets_ahead": len(bet_ahead),
+                     "same_bet_clustering": bets2,
                      "receipts": receipts},
         "families": families,
         "clusters": {"bet_jaccard": P["bet_jaccard"], "n_distinct_bets": cl["n_bets"],
@@ -392,8 +827,24 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
                      "receipts": receipts},
         "leaders": leaders,
         "losers": losers,
+        "beta_adjusted_ranking": {**ranking, "receipts": receipts},
+        "flags_rows": [{"account": a, "vs_spy_pp": _r(by_acc[a].get("vs_spy_pp")),
+                        "evidence_label": ((books.get(a) or {}).get("evidence") or {}).get("label"),
+                        "family": by_acc[a].get("family"),
+                        "flags": flags_view(books.get(a), sb[a])} for a in accounts],
         "claims": {"labels_held": dict(sorted(rungs.items())), "claimable_above_observed": above,
-                   "top_rung": top_rung, "promoted": promoted, "line": claims_line,
+                   "top_rung": top_rung, "promoted": promoted, "rising": ps["rising"],
+                   "lowered": ch["lowered"], "promotion_days": ps["days"],
+                   "promotion_why": ps["why"], "hold_runs": hold,
+                   "compared_with": ch["compared_with"], "compare_why": ch.get("why"),
+                   "n_compared": ch["n_compared"], "new_since_previous": ch["new_accounts"],
+                   "rule": (f"PROMOTED when the rung on {' < '.join(_dna.LABEL_LADDER)} is strictly higher than "
+                            f"the rung held before the rise AND has held for {hold} consecutive daily runs "
+                            "(this one included; one run per UTC day, the latest run id of that day; receipts "
+                            "ordered by the run id in their file name, never by mtime); printed once, on the run "
+                            "where the hold completes. A shorter rise prints LABELS RISING, NOT YET HELD. "
+                            "LOWERED = lower than the previous receipt's rung, reported at once."),
+                   "line": claims_line, "lowered_line": lowered_line, "rising_lines": rising_lines,
                    "ceiling_note": (f"book_dna awards at most {_dna.LABEL_CEILING}; VALIDATED_EDGE needs a "
                                     f"validator on data the idea never saw"),
                    "receipts": receipts},
@@ -405,13 +856,37 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
 
 # ───────────────────────────────────────────────────────────── voice
 
+def exposure_short(x: dict) -> str:
+    e = x.get("market_exposure") or {}
+    return (f"beta {_fmt_exp(e, 'beta', short=True)}, up {_fmt_exp(e, 'up_capture', short=True)}, "
+            f"down {_fmt_exp(e, 'down_capture', short=True)}, "
+            f"beta-adj {_fmt_exp(e, 'beta_adjusted_excess_pp', ' pp', short=True)}")
+
+
+def _flags_of(x: dict) -> dict:
+    return x.get("flags") or {}
+
+
+def _hb_lead(x: dict) -> str:
+    """HIGH_BETA: the beta-adjusted excess is printed FIRST, the raw excess after it."""
+    return f"beta-adjusted {_bax_short(x)} (HIGH_BETA), raw " if _flags_of(x).get("high_beta") else ""
+
+
+def _flags_tail(x: dict) -> str:
+    f = _flags_of(x)
+    return f" FLAGS: {'; '.join(f['set'])}." if f.get("set") else ""
+
+
 def _leader_short(x: dict) -> str:
-    return (f"{short_name(x['account'], 48)} {x['vs_spy_pp']:+.2f} pp ({x['sessions_graded']} s, "
-            f"{x['evidence_label']})")
+    return (f"{short_name(x['account'], 48)} {_hb_lead(x)}{x['vs_spy_pp']:+.2f} pp ({x['sessions_graded']} s, "
+            f"{x['evidence_label']}; {exposure_short(x)}"
+            + (f"; {'; '.join(_flags_of(x)['set'])}" if _flags_of(x).get("set") else "") + ")")
 
 
 def headline_lines(v: dict) -> list[str]:
-    """The six lines a handoff, the morning report and the phone all open with."""
+    """The lines a handoff, the morning report and the phone all open with: the six of
+    2026-10-07, then "Distinct bets ahead of SPY" (claims-none, 2026-11-14), a LABELS LOWERED
+    line when a label fell, and the claim boundary LAST."""
     h, L = v["headline"], v["leaders"]
     rid = v.get("run_id")
     lines = [f"RESULTS as of the {h['as_of_mark']} marks (run {rid}): {h['n_ahead']} of "
@@ -422,9 +897,10 @@ def headline_lines(v: dict) -> list[str]:
     if L:
         x = L[0]
         same = f" (with {', '.join(x['same_names_as'])}: same names)" if x["same_names_as"] else ""
-        lines.append(f"LEADER {x['account']}{same}: {x['roi_pct']:+.2f}% vs SPY {x['spy_same_window_pct']:+.2f}% "
-                     f"= {x['vs_spy_pp']:+.2f} pp, {x['inception']} -> {x['last_mark']}, "
-                     f"{x['sessions_graded']} sessions, {x['evidence_label']}. {x['mechanism']}.")
+        lines.append(f"LEADER {x['account']}{same}: {_hb_lead(x)}{x['roi_pct']:+.2f}% vs SPY "
+                     f"{x['spy_same_window_pct']:+.2f}% = {x['vs_spy_pp']:+.2f} pp, {x['inception']} -> "
+                     f"{x['last_mark']}, {x['sessions_graded']} sessions, {x['evidence_label']}; "
+                     f"{x['exposure_line']}. {x['mechanism']}.{_flags_tail(x)}")
         lines.append("NEXT: " + "; ".join(_leader_short(y) for y in L[1:4]) if len(L) > 1 else "NEXT: none")
         rz = x["raise"]
         lines.append(f"WHAT RAISES IT: {x['account']} -> {rz.get('next_label')}: {rz['line']}. "
@@ -434,12 +910,86 @@ def headline_lines(v: dict) -> list[str]:
     if v["losers"]:
         w = v["losers"][0]
         lines.append(f"BEHIND: {h['n_behind']} of {h['n_strategy_accounts']}; worst {short_name(w['account'], 48)} "
-                     f"{w['vs_spy_pp']:+.2f} pp ({w['family']}, {w['inception']} -> {w['last_mark']}, "
-                     f"{w['sessions_graded']} s).")
+                     f"{_hb_lead(w)}{w['vs_spy_pp']:+.2f} pp ({w['family']}, {w['inception']} -> {w['last_mark']}, "
+                     f"{w['sessions_graded']} s; {w['exposure_line']}).{_flags_tail(w)}")
     else:
         lines.append(f"BEHIND: {h['n_behind']} of {h['n_strategy_accounts']}.")
+    sbc = h.get("same_bet_clustering")
+    if sbc:
+        lines.append(sbc["line"] + ".")
+    if v["claims"].get("lowered_line"):
+        lines.append(v["claims"]["lowered_line"] + ".")
+    lines += [ln + "." for ln in v["claims"].get("rising_lines") or []]
     lines.append(v["claims"]["line"] + ".")
     return lines
+
+
+_EXP_HEAD = "beta | up-capture | down-capture | beta-adjusted excess | beta window"
+_EXP_ALIGN = "---:|---:|---:|---:|---"
+
+
+def _exp_cells(x: dict) -> str:
+    """beta, up, down, beta-adjusted excess (each with SE / n / MDE when book_dna gave them)
+    and the beta window: 'from..to, n p of N s' -- review M1: the periods behind the beta
+    are printed beside the sessions of the receipt window."""
+    e = x.get("market_exposure") or {}
+    return (f"{_fmt_exp(e, 'beta')} | {_fmt_exp(e, 'up_capture')} | {_fmt_exp(e, 'down_capture')} | "
+            f"{_fmt_exp(e, 'beta_adjusted_excess_pp', ' pp')} | {e.get('window_label') or 'n/a'}")
+
+
+def _rf_cell(x: dict) -> str:
+    """m2: what rf = 0 is worth -- Jensen's alpha at an ASSUMED cash rate."""
+    e = x.get("market_exposure") or {}
+    v, rf = e.get("beta_adjusted_excess_pp"), e.get("rf_effect_pp")
+    if isinstance(v, float) and rf is not None:
+        return f"{_signed(v - rf)} pp"
+    return "n/a"
+
+
+def _exp_whys(rows: list[dict]) -> list[str]:
+    """One line per row that has a CANNOT DETERMINE field: the reason, never a blank cell."""
+    out = []
+    for x in rows:
+        e = x.get("market_exposure") or {}
+        whys = []
+        for k, label in _EXPOSURE_FIELDS:
+            w = e.get(f"{k}_why")
+            if w:
+                whys.append(f"{label}: {w}")
+        if whys:
+            # collapse identical reasons (one bad beta makes all four CANNOT DETERMINE)
+            reasons = sorted({w.split(': ', 1)[1] for w in whys})
+            fields = ", ".join(w.split(':', 1)[0] for w in whys)
+            out.append(f"- {x['account']} — CANNOT DETERMINE ({fields}): {'; '.join(r[:800] for r in reasons)}")
+        if e.get("stamp_note") and isinstance(e.get("beta"), float):
+            out.append(f"- {x['account']} — beta window: {e['stamp_note'][:400]}")
+    return ([""] + out) if out else []
+
+
+def render_ranking_md(v: dict, rc: str) -> list[str]:
+    rk = v.get("beta_adjusted_ranking")
+    if not rk:
+        return []
+    out = ["", f"## Books ranked by beta-adjusted excess — receipts: {rc}", "",
+           f"Strategy accounts only (controls and twins excluded by the same rule as the headline). "
+           f"{rk['n_determined']} accounts have a beta-adjusted excess over their receipt window, "
+           f"{rk['n_cannot_determine']} CANNOT DETERMINE ({rk.get('n_not_comparable', 0)} of them NOT COMPARABLE: "
+           f"beta measured on a shorter window, its own figure shown). Sessions per account range "
+           f"{rk['sessions_min']}–{rk['sessions_max']}, each over its own window. ± is one standard error; "
+           f"MDE = {_dna.params()['mde_z']:g} x SE. 'Jensen at assumed rf' subtracts (1 - beta) x "
+           f"{_dna.params()['rf_annual_assumed']:.0%}/yr x T (an ASSUMED cash rate, not a measured one). "
+           f"{rk['note']}", "",
+           f"| # | account | sessions | return | SPY same window | raw excess | {_EXP_HEAD} | "
+           "Jensen at assumed rf | label |",
+           f"|---:|---|---:|---:|---:|---:|{_EXP_ALIGN}|---:|---|"]
+    for i, x in enumerate(rk["rows"], 1):
+        mem = len(x.get("bet_members") or [])
+        acc = x["account"] + (f" (one bet with {mem - 1} other account(s))" if mem > 1 else "")
+        out.append(f"| {i} | {acc} | {x['sessions_graded']} | {x['roi_pct']:+.2f}% | "
+                   f"{x['spy_same_window_pct']:+.2f}% | {x['vs_spy_pp']:+.2f} pp | {_exp_cells(x)} | "
+                   f"{_rf_cell(x)} | {x['evidence_label']} |")
+    out += _exp_whys(rk["rows"])
+    return out
 
 
 def render_md(v: dict) -> str:
@@ -453,16 +1003,18 @@ def render_md(v: dict) -> str:
     out += ["", f"## Leaders: the top {len(v['leaders'])} DISTINCT bets — receipts: {rc}", "",
             "Chosen after the fact from the whole table; a leader over a few sessions is an observation, "
             "not a skill claim.", "",
-            "| # | account (bet members) | return | SPY same window | vs SPY | window | sessions | label | random twin |",
-            "|---:|---|---:|---:|---:|---|---:|---|---|"]
+            f"| # | account (bet members) | return | SPY same window | vs SPY | {_EXP_HEAD} | "
+            "window | sessions | label | random twin |",
+            f"|---:|---|---:|---:|---:|{_EXP_ALIGN}|---|---:|---|---|"]
     for x in v["leaders"]:
         tw = x["random_twin"]
         twc = (f"{tw['return_pct']:+.2f}% ({tw['kind']}), gap {tw['gap_pp']:+.2f} pp"
                if tw and tw.get("gap_pp") is not None else "none seeded")
         mem = f" ({', '.join(m for m in x['bet_members'] if m != x['account'])})" if len(x["bet_members"]) > 1 else ""
         out.append(f"| {x['rank']} | {x['account']}{mem} | {x['roi_pct']:+.2f}% | {x['spy_same_window_pct']:+.2f}% | "
-                   f"{x['vs_spy_pp']:+.2f} pp | {x['inception']} -> {x['last_mark']} | {x['sessions_graded']} | "
-                   f"{x['evidence_label']} | {twc} |")
+                   f"{x['vs_spy_pp']:+.2f} pp | {_exp_cells(x)} | {x['inception']} -> {x['last_mark']} | "
+                   f"{x['sessions_graded']} | {x['evidence_label']} | {twc} |")
+    out += _exp_whys(v["leaders"])
     out += ["", "Mechanisms:", ""]
     out += [f"- **{x['account']}** — {x['mechanism']} _(source: {x['mechanism_source']})_" for x in v["leaders"]]
     out += ["", f"## What would raise each leader's label — rule: `backend/services/book_dna.py` evidence_label; "
@@ -472,12 +1024,16 @@ def render_md(v: dict) -> str:
         out.append(f"- **{x['account']}** {rz['label']} -> {rz.get('next_label')}: {rz['line']}. "
                    f"{x['twin_line'][0].upper()}{x['twin_line'][1:]}.")
     out += ["", f"## Behind SPY: the worst {len(v['losers'])}, named with the same honesty — receipts: {rc}", "",
-            "| account | family | return | SPY same window | vs SPY | window | sessions | label |",
-            "|---|---|---:|---:|---:|---|---:|---|"]
+            f"| account | family | return | SPY same window | vs SPY | {_EXP_HEAD} | "
+            "window | sessions | label |",
+            f"|---|---|---:|---:|---:|{_EXP_ALIGN}|---|---:|---|"]
     for x in v["losers"]:
         out.append(f"| {x['account']} | {x['family']} | {x['roi_pct']:+.2f}% | {x['spy_same_window_pct']:+.2f}% | "
-                   f"{x['vs_spy_pp']:+.2f} pp | {x['inception']} -> {x['last_mark']} | {x['sessions_graded']} | "
-                   f"{x['evidence_label']} |")
+                   f"{x['vs_spy_pp']:+.2f} pp | {_exp_cells(x)} | {x['inception']} -> {x['last_mark']} | "
+                   f"{x['sessions_graded']} | {x['evidence_label']} |")
+    out += _exp_whys(v["losers"])
+    out += render_ranking_md(v, rc)
+    out += render_flags_md(v, rc)
     c = v["clusters"]
     out += ["", f"## Clusters: accounts that are one bet — receipts: {rc}", "",
             f"- exact same ticker set: {c['exact_same_names'] or 'none'}",
@@ -487,9 +1043,37 @@ def render_md(v: dict) -> str:
             f"{c['book_dna_context']['n_holdings_clusters_ahead']} holdings clusters ahead; ex-ante effective bets "
             f"{c['book_dna_context']['effective_bets_exante']}"]
     cl = v["claims"]
-    out += ["", f"## Claims — receipts: {rc}", "", f"- {cl['line']}.",
-            f"- labels held by strategy accounts: {cl['labels_held']}", f"- {cl['ceiling_note']}.", ""]
+    cw = cl.get("compared_with")
+    out += ["", f"## Claims — receipts: {rc}", ""]
+    if cl.get("lowered_line"):
+        out.append(f"- {cl['lowered_line']}.")
+    out += [f"- {ln}." for ln in cl.get("rising_lines") or []]
+    out += [f"- {cl['line']}.",
+            f"- daily runs a rise must hold through ({cl.get('hold_runs')}): "
+            + (", ".join(f"{d['day']} (run {d['run_id']})" for d in cl.get("promotion_days") or []) or "none on disk")
+            + " + this run",
+            f"- compared with: {('run ' + cw['run_id'] + ' (`' + cw['path'] + '`), ' + str(cl.get('n_compared')) + ' accounts on both receipts, ' + str(len(cl.get('new_since_previous') or [])) + ' new since') if cw else cl.get('compare_why')}",
+            f"- rule: {cl.get('rule')}",
+            f"- labels held by strategy accounts: {cl['labels_held']} (a label held is not a label that rose)",
+            f"- {cl['ceiling_note']}.", ""]
     return "\n".join(out)
+
+
+def render_flags_md(v: dict, rc: str) -> list[str]:
+    rows = v.get("flags_rows")
+    if not rows:
+        return []
+    out = ["", f"## Flags beside the labels — rule: `backend/services/book_dna.py` attach_flags; receipts: {rc}", "",
+           "A flag never raises or lowers a label. Each is derived from the receipt's own data or says CANNOT "
+           "DETERMINE with its reason. BELOW_MDE: the excess cannot be told from noise at that sample size. "
+           "SAME_BET_AS names the earlier-listed account whose daily excess moves with this one.", "",
+           "| account | vs SPY | label | flags | cannot determine |", "|---|---:|---|---|---|"]
+    for x in rows:
+        f = x["flags"]
+        cd = "; ".join(f"{k}: {w[:160]}" for k, w in f["cannot_determine"].items()) or "none"
+        out.append(f"| {x['account']} | {x['vs_spy_pp']:+.2f} pp | {x['evidence_label']} | "
+                   f"{'; '.join(f['set']) or 'none'} | {cd} |")
+    return out
 
 
 def write(v: dict, out_dir: Path, run_id: str) -> tuple[Path, Path]:
@@ -507,15 +1091,38 @@ def write(v: dict, out_dir: Path, run_id: str) -> tuple[Path, Path]:
     return jp, mp
 
 
-def run(run_id: Optional[str] = None, folder: Path = PA_DIR, *, write_files: bool = True) -> dict:
+def run(run_id: Optional[str] = None, folder: Path = PA_DIR, *, write_files: bool = True,
+        out_dir: Optional[Path] = None, rebuild_dna: bool = False, bars: Any = None) -> dict:
+    """`out_dir`: write the voice there instead of beside the receipts. `rebuild_dna`:
+    re-run book_dna on the ROI receipt (current code, lanes NOT fetched, the paper-books
+    database opened read-only) and write the new book_dna_<run>.json into `out_dir` --
+    how a receipt written before a book_dna field existed gets that field without
+    touching the live folder. A rebuild REFUSES without a separate `out_dir`."""
     folder = Path(folder)
-    rid = run_id or newest_shared_run_id(folder)
-    roi, dna, rp, dp = load_pair(rid, folder)
-    v = build(roi, dna, roi_path=rel(rp), dna_path=rel(dp))
+    dest = Path(out_dir) if out_dir is not None else folder
+    if rebuild_dna:
+        if out_dir is None or dest.resolve() == folder.resolve():
+            raise ResultsVoiceRefused("rebuild_dna needs an out_dir that is not the receipts folder")
+        rid = run_id or max(run_ids(folder, "roi") or {""})
+        rp = folder / f"roi_{rid}.json"
+        if not RUN_ID_RE.match(str(rid)) or not rp.is_file():
+            raise ResultsVoiceRefused(f"no roi_<run>.json for run id {rid!r} in {rel(folder)}")
+        roi = json.loads(rp.read_text(encoding="utf-8"))
+        dest.mkdir(parents=True, exist_ok=True)
+        try:
+            dna, dp = _dna.run(roi, out_dir=dest, run_id=rid, fetch_lanes=False, read_only_db=True, bars=bars)
+        except Exception as exc:                                   # noqa: BLE001 -- refused with its reason
+            raise ResultsVoiceRefused(f"book_dna rebuild failed: {type(exc).__name__}: {str(exc)[:240]}") from exc
+    else:
+        rid = run_id or newest_shared_run_id(folder)
+        roi, dna, rp, dp = load_pair(rid, folder)
+    v = build(roi, dna, roi_path=rel(rp), dna_path=rel(dp), prev=previous_dna(folder, rid),
+              history=label_history(folder, rid, params()["promotion_hold_runs"]))
     v["run_id"] = rid
     v["headline_lines"] = headline_lines(v)
     if write_files:
-        jp, mp = write(v, folder, rid)
+        dest.mkdir(parents=True, exist_ok=True)
+        jp, mp = write(v, dest, rid)
         return {"status": "ok", "run_id": rid, "json": rel(jp), "md": rel(mp), "voice": v}
     return {"status": "ok", "run_id": rid, "voice": v}
 
@@ -537,10 +1144,17 @@ def public_view(v: dict, is_personal) -> dict:
     """The /arena section: flat, scalar leaves only (the sanitiser's allow-list is
     `legibility_sanitise.RESULTS_VOICE`), owner-personal books dropped from every list
     and every headline line that names one. No dollars exist in `v` to begin with."""
-    fam_of = {x["account"]: x.get("family") for x in v.get("leaders", []) + v.get("losers", [])}
+    fam_of = {x["account"]: x.get("family") for x in
+              (v.get("flags_rows") or []) + ((v.get("beta_adjusted_ranking") or {}).get("rows") or [])
+              + v.get("leaders", []) + v.get("losers", [])}
+    cl0 = v.get("claims") or {}
+    for x in (cl0.get("promoted") or []) + (cl0.get("lowered") or []) + (cl0.get("rising") or []):
+        fam_of.setdefault(x["account"], None)
 
     def personal(a: Any) -> bool:
         return bool(is_personal(a, fam_of.get(a)))
+    # a headline line that names ANY owner-personal strategy account is dropped (the flags and
+    # the LABELS LOWERED / CLAIMS lines can name accounts that are neither leader nor loser)
     personal_names = [a for a in fam_of if personal(a)]
     h = v["headline"]
     lines = [ln for ln in v.get("headline_lines") or [] if not any(n in ln for n in personal_names)]
@@ -572,7 +1186,13 @@ def public_view(v: dict, is_personal) -> dict:
         "same_names_groups": [" = ".join(m for m in g if not is_personal(m, None))
                               for g in c.get("exact_same_names") or []],
         "one_bet_groups": [" ~ ".join(m for m in g if not is_personal(m, None)) for g in c.get("jaccard_bets") or []],
-        "claims_line": cl.get("line"), "claimable_above_observed": cl.get("claimable_above_observed"),
+        "claims_line": (cl.get("line") if not any(n in str(cl.get("line")) for n in personal_names) else
+                        "CLAIMS PROMOTED: " + ", ".join(
+                            [f"{x['account']} {x['previous_rung']} -> {x['rung']}"
+                             for x in cl.get("promoted") or [] if not personal(x["account"])]
+                            + [f"{sum(1 for x in cl.get('promoted') or [] if personal(x['account']))} "
+                               "owner-personal account(s), names withheld"])),
+        "claimable_above_observed": cl.get("claimable_above_observed"),
         "top_rung": cl.get("top_rung"), "ceiling_note": cl.get("ceiling_note"),
         "receipt_files": v.get("receipts"),
     }
@@ -590,15 +1210,23 @@ def newest_voice_path(folder: Path = PA_DIR, suffix: str = ".md") -> Optional[Pa
     return (Path(folder) / f"results_voice_{max(ids)}{suffix}") if ids else None
 
 
-def headline_block(folder: Path = PA_DIR, n: int = 6) -> tuple[Optional[Path], list[str]]:
-    """The first `n` headline lines of the newest .md (the lines after its preamble)."""
+HEADLINE_PREFIXES = ("RESULTS ", "LEADER", "NEXT:", "WHAT RAISES IT:", "BEHIND:", "Distinct bets ahead of SPY:",
+                     "LABELS LOWERED:", "LABELS RISING, NOT YET HELD", "CLAIMS PROMOTED:")
+
+
+def headline_block(folder: Path = PA_DIR, n: Optional[int] = None) -> tuple[Optional[Path], list[str]]:
+    """The headline lines of the newest .md, up to and including the first CLAIMS PROMOTED line
+    (the claim boundary is the last headline line), at most `n` when given."""
     p = newest_voice_path(folder, ".md")
     if p is None:
         return None, []
-    lines = p.read_text(encoding="utf-8").splitlines()
-    body = [ln for ln in lines if ln.startswith(("RESULTS ", "LEADER", "NEXT:", "WHAT RAISES IT:", "BEHIND:",
-                                                 "CLAIMS PROMOTED:"))]
-    return p, body[:n]
+    body = []
+    for ln in p.read_text(encoding="utf-8").splitlines():
+        if ln.startswith(HEADLINE_PREFIXES):
+            body.append(ln)
+            if ln.startswith("CLAIMS PROMOTED:"):
+                break
+    return p, body[:n] if n else body
 
 
 __all__ = ["SCHEMA", "ResultsVoiceRefused", "build", "cluster_bets", "control_reason", "headline_block",

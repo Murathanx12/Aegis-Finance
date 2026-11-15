@@ -330,12 +330,73 @@ def pull_chunked(symbols: list[str], start: str, get: Callable[[dict], dict], *,
 def _pull_default(symbols: list[str], start: str) -> Any:
     """P6's credential resolver and HTTP call, with per-symbol rejection."""
     from scripts import night_p6_bars_and_regret as P6             # noqa: PLC0415
-    kid, sec, src = P6.data_credential()
-    print(f"    credential: {src}", flush=True)
-    df, rejected = pull_chunked(symbols, start,
-                                lambda params: P6._get("/v2/stocks/bars", params, kid, sec))
+    cred = P6.data_credential_detail()
+    kid, sec = cred.pop("key_id"), cred.pop("secret")
+    info = _public_credential(cred)
+    print(f"    credential: {info['source']}", flush=True)
+    if info.get("warning"):
+        print(f"    WARNING: {info['warning']}", flush=True)
+    try:
+        df, rejected = pull_chunked(symbols, start,
+                                    lambda params: P6._get("/v2/stocks/bars", params, kid, sec))
+    except Exception as exc:                                       # noqa: BLE001
+        # A vendor error body can echo a header value: scrub both before the
+        # text reaches a receipt, the index or stdout.
+        msg = str(exc)
+        for v in (kid, sec):
+            if v:
+                msg = msg.replace(v, "<redacted>")
+        raise RuntimeError(f"{type(exc).__name__}: {msg}") from None
     df.attrs["rejected_symbols"] = rejected
-    return df, src
+    return df, info
+
+
+def _public_credential(cred: Any) -> dict:
+    """The receipt-safe view of a credential: NAMES and flags, never a value.
+
+    Accepts the dict `data_credential_detail` returns (values already popped,
+    or not: they are dropped here too) or a plain source string from a test
+    puller. Only whitelisted keys survive.
+    """
+    if not isinstance(cred, dict):
+        return {"source": str(cred), "name": None, "kind": None,
+                "credential_is_paper_account": None, "warning": None, "tried": None}
+    return {k: cred.get(k) for k in ("source", "name", "label", "kind",
+                                     "credential_is_paper_account", "warning", "tried")}
+
+
+def wait_for_network(host_url: str | None = None, *, resolver: Callable | None = None,
+                     sleep: Callable[[float], None] = time.sleep,
+                     tries: int | None = None, interval_s: float | None = None) -> dict:
+    """Resolve the data host's DNS, up to `tries` times `interval_s` apart.
+
+    2026-11-14 02:44 UTC: the task fired at boot, before DNS, and the receipt
+    blamed the credentials. Returns `{"ok": bool, "tries": n, "waited_s": s,
+    "host": h, "error": last_error_or_None}`. `resolver` and `sleep` are the
+    test seams; nothing here sends a request.
+    """
+    import socket                                                  # noqa: PLC0415
+    from urllib.parse import urlparse                              # noqa: PLC0415
+    if host_url is None:
+        from scripts import night_p6_bars_and_regret as P6         # noqa: PLC0415
+        host_url = P6.DATA_HOST
+    host = urlparse(host_url).hostname or host_url
+    resolver = resolver or socket.getaddrinfo
+    tries = int(_config.BARS_NETWORK_WAIT_TRIES if tries is None else tries)
+    interval = float(_config.BARS_NETWORK_WAIT_INTERVAL_S if interval_s is None else interval_s)
+    err = None
+    waited = 0.0
+    for i in range(1, max(1, tries) + 1):
+        try:
+            if resolver(host, 443):
+                return {"ok": True, "tries": i, "waited_s": waited, "host": host, "error": None}
+            err = "empty DNS answer"
+        except OSError as exc:
+            err = f"{type(exc).__name__}: {str(exc)[:120]}"
+        if i < tries:
+            sleep(interval)
+            waited += interval
+    return {"ok": False, "tries": max(1, tries), "waited_s": waited, "host": host, "error": err}
 
 
 def drift_symbols(path: Path, new_df, *, overlap_start: date, newest: date) -> list[str]:
@@ -493,11 +554,23 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
             dry_run: bool = False,
             puller: Callable[[list[str], str], Any] | None = None,
             receipt_dir: Path | None = None, index: Path | None = None,
-            required_mark_refresher: Callable | None = None) -> dict:
+            required_mark_refresher: Callable | None = None,
+            network_waiter: Callable[[], dict] | None = None) -> dict:
     """Refresh every panel that exists. Returns the receipt (and writes it).
 
-    `puller(symbols, start) -> (DataFrame, credential_source)` is the network
-    seam; tests inject a fake.
+    `puller(symbols, start) -> (DataFrame, credential)` is the network seam;
+    tests inject a fake. `credential` is a source string or the dict
+    `_public_credential` accepts. `network_waiter() -> {"ok": bool, ...}` is
+    the bounded DNS wait before the first call; it defaults to
+    `wait_for_network` ONLY when the real puller is used (an injected puller
+    never touches DNS).
+
+    STATUS (also the exit code, `config.BARS_REFRESH_RC`): `ok` / `unchanged`
+    (0) when every US gated panel reached the last closed session; `degraded`
+    (3) when ONLY declared-optional foreign symbols failed; `refused` (2) when
+    a US panel did not advance, a panel swap failed, or an undeclared symbol
+    failed; `refused_network` (4, read: WAIT_NETWORK) when the data host never resolved or could not
+    be reached to verify a key -- distinct from a rejected credential.
     """
     import pandas as pd                                            # noqa: PLC0415
     import pyarrow.compute as pc                                   # noqa: PLC0415
@@ -506,7 +579,10 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
     t0 = time.time()
     default_panels = panels is None
     panels = dict(panels or PANELS)
+    use_default_puller = puller is None
     puller = puller or _pull_default
+    if network_waiter is None and use_default_puller and not dry_run:
+        network_waiter = wait_for_network
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     keep_through, cal = last_closed_session(now_utc)
     before = bars_age({k: v for k, v in panels.items() if k in GATED_PANELS} or panels,
@@ -543,13 +619,30 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         receipt["status"] = "dry_run"
         return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=False)
 
+    if network_waiter is not None:
+        net = network_waiter()
+        receipt["network"] = {k: net.get(k) for k in ("ok", "tries", "waited_s", "host", "error")}
+        if not net.get("ok"):
+            receipt["status"] = "refused_network"
+            receipt["reason"] = (f"WAIT_NETWORK: {net.get('host')} did not resolve after "
+                                 f"{net.get('tries')} try(ies) ({net.get('error')}); no credential "
+                                 f"was tried, nothing overwritten")
+            return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
+
     try:
         new_df, cred = puller(all_syms, start.isoformat())
     except BaseException as exc:                                   # noqa: BLE001  SystemExit from the credential refusal
-        receipt["status"] = "refused"
+        receipt["status"] = ("refused_network" if type(exc).__name__ == "DataNetworkUnavailable"
+                             else "refused")
         receipt["reason"] = f"pull failed, nothing overwritten: {type(exc).__name__}: {str(exc)[:300]}"
         return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
-    receipt["pull"]["credential_source"] = cred
+    ci = _public_credential(cred)
+    receipt["pull"]["credential_source"] = ci["source"]
+    receipt["credential"] = {"name": ci["name"], "label": ci.get("label"), "kind": ci["kind"],
+                             "credential_is_paper_account": ci["credential_is_paper_account"],
+                             "tried": ci["tried"]}
+    if ci.get("warning"):
+        receipt["warning"] = str(ci["warning"])
     receipt["pull"]["rows_returned"] = int(len(new_df)) if new_df is not None else 0
     rejected = list(getattr(new_df, "attrs", {}).get("rejected_symbols") or [])
     receipt["pull"]["rejected_symbols"] = rejected
@@ -557,8 +650,9 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         # Loud, not fatal: a rejected name keeps its old bars and stops advancing,
         # which the per-symbol age of the panel shows. It is NOT a reason to
         # freeze the other 4,900 names (that is what 09-29 -> 10-02 was).
-        receipt["warning"] = (f"VENDOR_REJECTED {len(rejected)} symbol(s): "
-                              f"{rejected[:10]} -- their bars do not advance")
+        rj = (f"VENDOR_REJECTED {len(rejected)} symbol(s): "
+              f"{rejected[:10]} -- their bars do not advance")
+        receipt["warning"] = "; ".join(x for x in (receipt.get("warning"), rj) if x)
     if new_df is None or not len(new_df):
         receipt["status"] = "refused"
         receipt["reason"] = "the venue returned no bars; nothing overwritten"
@@ -595,8 +689,9 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         m = merge_panel(p, new_df, keep_through=keep_through, repulled=repulled,
                         overlap_start=newest_bar_date(p) - timedelta(days=REFRESH_OVERLAP_DAYS))
         table = m.pop("table")
+        cov = panel_coverage(table, keep_through, exclude=set(rejected))
         row = {"path": str(p), **{kk: v for kk, v in m.items() if kk != "readjusted_symbols"},
-               "readjusted": len(m["readjusted_symbols"])}
+               "readjusted": len(m["readjusted_symbols"]), "coverage": cov}
         if m["newest_after"] < m["newest_before"]:
             row["status"], row["reason"] = "refused", "merged newest date is OLDER than before"
         elif m["duplicate_keys"]:
@@ -639,14 +734,128 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
             receipt["frozen_constituents"] = {"status": "refused",
                 "reason": f"{type(exc).__name__}: {str(exc)[:300]}",
                 "required_session": keep_through.isoformat()}
-        if receipt["frozen_constituents"]["status"] != "ok":
-            statuses.append("refused")
-            receipt["reason"] = "frozen constituents: " + str(receipt["frozen_constituents"].get("reason"))
-        elif receipt["frozen_constituents"].get("n_new_rows", 0):
-            statuses.append("ok")
-    receipt["status"] = ("refused" if "refused" in statuses else
-                         "ok" if "ok" in statuses else "unchanged")
+    status, feed, reason = classify_feed(receipt, present, panels, statuses, keep_through)
+    receipt["feed"] = feed
+    receipt["status"] = status
+    if reason:
+        receipt["reason"] = reason
     return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
+
+
+def panel_coverage(table, keep_through: date, exclude: set | None = None) -> dict:
+    """Share of the symbols that had the PREVIOUS closed session's bar which
+    also carry `keep_through`'s bar. Names that stopped trading earlier are not
+    in the denominator; a panel whose max date advanced for one name is not
+    "current". `exclude` = symbols the VENDOR rejected as invalid this run
+    (named loudly in the receipt, 2026-09-29 contract: one bad ticker must not
+    freeze the other names); they leave the denominator and are counted in
+    `n_rejected_excluded`."""
+    import pyarrow as pa                                           # noqa: PLC0415
+    import pyarrow.compute as pc                                   # noqa: PLC0415
+    days, _ = _sessions(keep_through - timedelta(days=14), keep_through)
+    prev = [d for d in days if d < keep_through]
+    if not prev:
+        return {"n_prev": 0, "n_reached": 0, "share": None}
+
+    def at(d: date) -> set:
+        m = pc.equal(table["date"], pa.scalar(datetime(d.year, d.month, d.day), table["date"].type))
+        return set(pc.unique(table.filter(m)["symbol"]).to_pylist())
+    a, b = at(prev[-1]), at(keep_through)
+    excl = set(exclude or ())
+    n_excl = len(a & excl)
+    a -= excl
+    return {"prev_session": prev[-1].isoformat(), "n_rejected_excluded": n_excl, "n_prev": len(a),
+            "n_reached": len(a & b), "share": round(len(a & b) / len(a), 4) if a else None,
+            "floor": float(_config.BARS_REFRESH_MIN_COVERAGE)}
+
+
+def failed_foreign_symbols(required: dict) -> list[str] | None:
+    """The symbols a refused frozen-constituent stage names, or None.
+
+    Read from the stage's own receipt: `errors[].symbol`, coverage rows that are
+    not FRESH_AT_REQUIRED_SESSION, and history rows with missing/invalid
+    sessions. None = the stage refused but names no symbol (a calendar or
+    schema failure): that is CANNOT DETERMINE, never "only optional symbols".
+    """
+    out: set[str] = set()
+    for e in required.get("errors") or []:
+        if isinstance(e, dict) and e.get("symbol"):
+            out.add(str(e["symbol"]))
+    for r in (required.get("coverage") or {}).get("symbols") or []:
+        if isinstance(r, dict) and r.get("status") != "FRESH_AT_REQUIRED_SESSION" and r.get("symbol"):
+            out.add(str(r["symbol"]))
+    for r in (required.get("history_coverage") or {}).get("symbols") or []:
+        if isinstance(r, dict) and r.get("symbol") and (r.get("missing_sessions") or r.get("invalid_sessions")):
+            out.add(str(r["symbol"]))
+    return sorted(out) if out else None
+
+
+def classify_feed(receipt: dict, present: dict[str, Path], panels: dict[str, Path],
+                  panel_statuses: list[str], keep_through: date) -> tuple[str, dict, str | None]:
+    """Per-panel states and the honest overall status.
+
+    OK/unchanged: every US gated panel reached `keep_through` and no panel
+    swap failed. DEGRADED: that, plus the frozen foreign stage failed for
+    declared-optional symbols only. REFUSED otherwise. The frozen stage
+    refusing without naming a symbol is REFUSED (cannot determine).
+    """
+    rows = receipt.get("panels") or {}
+    us: dict[str, dict] = {}
+    problems: list[str] = []
+    for k in GATED_PANELS:
+        if k not in panels:
+            continue
+        row = rows.get(k) or {}
+        newest = row.get("newest_after")
+        cov = row.get("coverage") or {}
+        floor = float(_config.BARS_REFRESH_MIN_COVERAGE)
+        if cov.get("n_prev"):
+            reached = bool(cov["share"] >= floor)
+        else:                                   # no previous-session set to compare: panel max date
+            reached = bool(newest and newest >= keep_through.isoformat())
+        us[k] = {"status": row.get("status", "absent"), "newest_after": newest,
+                 "last_closed_session": keep_through.isoformat(),
+                 "reached_last_close": reached, "coverage": cov or None,
+                 "state": "OK" if reached and row.get("status") in ("ok", "unchanged") else "NOT_ADVANCED"}
+        if us[k]["state"] != "OK":
+            problems.append(f"US panel {k} did not reach {keep_through.isoformat()} "
+                            f"(newest {newest}, status {row.get('status', 'absent')})")
+    other_bad = [k for k, r in rows.items() if k not in GATED_PANELS and (r or {}).get("status") == "refused"]
+    if other_bad:
+        problems.append(f"panel(s) refused: {other_bad}")
+    declared = set(getattr(_config, "BARS_REFRESH_OPTIONAL_FOREIGN_SYMBOLS", ()))
+    foreign: dict = {"declared_optional": sorted(declared)}
+    degraded_syms: list[str] = []
+    fc = receipt.get("frozen_constituents")
+    if isinstance(fc, dict):
+        foreign["status"] = fc.get("status")
+        if fc.get("status") != "ok":
+            failed = failed_foreign_symbols(fc)
+            foreign["failed_symbols"] = failed
+            if failed is None:
+                problems.append("frozen constituents refused and name no symbol: "
+                                + str(fc.get("reason"))[:200])
+            else:
+                undeclared = [x for x in failed if x not in declared]
+                foreign["undeclared_failed"] = undeclared
+                if undeclared:
+                    problems.append(f"frozen constituents failed for undeclared symbol(s) {undeclared}")
+                else:
+                    degraded_syms = failed
+    if problems:
+        overall, reason = "refused", "; ".join(problems)
+    elif degraded_syms:
+        overall = "degraded"
+        reason = (f"DEGRADED: all US panels reached {keep_through.isoformat()}; only declared-optional "
+                  f"foreign symbol(s) failed: {degraded_syms}")
+    else:
+        advanced = "ok" in panel_statuses or (isinstance(fc, dict) and fc.get("n_new_rows"))
+        overall = "ok" if advanced else "unchanged"
+        reason = None
+    feed = {"overall": overall, "exit_code": _config.BARS_REFRESH_RC[overall],
+            "us_panels": us, "us_panels_ok": all(v["state"] == "OK" for v in us.values()),
+            "foreign": foreign}
+    return overall, feed, reason
 
 
 def _finish(receipt: dict, t0: float, receipt_dir: Path | None, index: Path | None,
@@ -655,6 +864,7 @@ def _finish(receipt: dict, t0: float, receipt_dir: Path | None, index: Path | No
     gated = {k: v for k, v in (panels or PANELS).items() if k in GATED_PANELS}
     after = bars_age(gated or panels, now_utc=now_utc)
     receipt["age_after"] = after
+    receipt["exit_code"] = int(_config.BARS_REFRESH_RC.get(str(receipt.get("status")), 2))
     receipt["line"] = after["line"]
     receipt["elapsed_s"] = round(time.time() - t0, 1)
     receipt["written_utc"] = _now()
@@ -693,13 +903,14 @@ def main(argv=None) -> int:
     rec = refresh(dry_run=a.dry_run)
     if a.json:
         print("<<<" + json.dumps({k: rec.get(k) for k in
-                                  ("status", "headline", "line", "path", "panels", "reason", "frozen_constituents")},
+                                  ("status", "headline", "line", "path", "panels", "reason",
+                                   "frozen_constituents", "feed", "credential", "exit_code")},
                                  default=str) + ">>>")
     print(rec["headline"])
     # rc 2 = REFUSED (nothing overwritten). A refusal is a finding the caller must
     # read, and a subprocess that exits 0 on refusal is how 2026-09-24's funnel
     # remedy reported success while changing nothing.
-    return 2 if rec.get("status") == "refused" else 0
+    return int(_config.BARS_REFRESH_RC.get(str(rec.get("status")), 2))
 
 
 if __name__ == "__main__":

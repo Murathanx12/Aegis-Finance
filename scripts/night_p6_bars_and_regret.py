@@ -77,66 +77,137 @@ def _r(v, nd=4):
 
 # ------------------------------------------------------------- credentials
 
-def data_credential() -> tuple[str, str, str]:
-    """The DATA key, and where it came from. Never an order path.
+class DataNetworkUnavailable(SystemExit):
+    """The data host could not be REACHED while verifying a credential.
 
-    Preference order: this process's own environment, then the terminal repo's
-    `.env` (the loops' own credential, read-only). The caller prints the source
-    so a receipt says which key produced the bars.
+    A SystemExit subclass so every existing `except SystemExit` caller still
+    sees a refusal, but distinguishable from a credential the venue REJECTED
+    (2026-11-14 02:44: the boot burst ran before DNS, every probe failed, and
+    the receipt blamed six keys for a network that was not up yet).
     """
-    kid, sec = os.getenv("APCA_API_KEY_ID"), os.getenv("APCA_API_SECRET_KEY")
-    if kid and sec:
-        return kid, sec, "process environment (APCA_API_KEY_ID)"
-    env_path = TERMINAL / ".env"
-    if not env_path.exists():
-        raise SystemExit(f"REFUSED: no data credential in the environment and no {env_path}")
-    env: dict[str, str] = {}
-    for line in env_path.read_text(encoding="utf-8").splitlines():
-        if "=" in line and not line.strip().startswith("#"):
-            k, v = line.split("=", 1)
-            env[k.strip()] = v.strip()
-    # VERIFY THE PAIR WITH ONE CALL BEFORE RETURNING IT.
-    #
-    # The list used to start at HACK3 and return the first pair that merely
-    # EXISTED. hack3 was retired on 2026-09-22 and its keys revoked, so from
-    # that day every caller of this function received a dead credential, got a
-    # 401, and pulled no bars -- while five working pairs sat further down the
-    # list, never reached. Presence is not validity.
-    #
-    # This is the same lesson as 2026-09-21, when aliasing a credential onto
-    # APCA_* pre-empted a child's own working pair: 401, no bars, night lost.
-    # The rule written down then was "test a pair with one call before the
-    # night", and this is that rule, enforced instead of remembered.
-    #
-    # HACK3 is also no longer first: a retired role should not be the default
-    # even if it were somehow alive.
-    tried: list[str] = []
-    for role in ("HACK1", "HACK2", "HACK4", "HACK5", "HACK6", "HACK3"):
-        kid, sec = env.get(f"AAT_{role}_KEY_ID"), env.get(f"AAT_{role}_SECRET_KEY")
-        if not (kid and sec):
-            continue
-        if _credential_works(kid, sec):
-            return kid, sec, f"terminal repo .env, {role} (data endpoint only, verified)"
-        tried.append(role)
-    raise SystemExit(
-        f"REFUSED: no AAT_HACK*_KEY_ID / _SECRET_KEY pair in the terminal .env "
-        f"authenticates against the data endpoint. Tried: {tried or 'none found'}. "
-        f"A 401 here is a revoked key, not a missing file -- hack3's pair was "
-        f"revoked on 2026-09-22 and stayed first in this list.")
 
 
-def _credential_works(kid: str, sec: str, *, timeout: float = 20.0) -> bool:
-    """One cheap call. True only on a 200; any other answer is 'not this pair'."""
+def _credential_probe(kid: str, sec: str, *, timeout: float = 20.0) -> str:
+    """One cheap call -> "ok" | "rejected" (401/403/other 4xx) | "network".
+
+    "network" is DNS/connect/timeout/5xx/429: nothing was learned about the
+    key. Only an authoritative HTTP answer can condemn a key.
+    """
     import urllib.error
     import urllib.request
     req = urllib.request.Request(
-        "https://data.alpaca.markets/v2/stocks/bars?symbols=AAPL&timeframe=1Day&limit=1",
+        f"{DATA_HOST}/v2/stocks/bars?symbols=AAPL&timeframe=1Day&limit=1",
         headers={"APCA-API-KEY-ID": kid, "APCA-API-SECRET-KEY": sec})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as fh:  # noqa: S310
-            return fh.status == 200
-    except (urllib.error.HTTPError, urllib.error.URLError, OSError):
-        return False
+            return "ok" if fh.status == 200 else "rejected"
+    except urllib.error.HTTPError as exc:
+        return "network" if exc.code == 429 or exc.code >= 500 else "rejected"
+    except (urllib.error.URLError, OSError):
+        return "network"
+
+
+def _credential_works(kid: str, sec: str, *, timeout: float = 20.0) -> bool:
+    """Back-compat boolean: True only on a 200."""
+    return _credential_probe(kid, sec, timeout=timeout) == "ok"
+
+
+def _read_env_file(path: Path) -> dict[str, str]:
+    env: dict[str, str] = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.split("=", 1)
+                env[k.strip()] = v.strip()
+    return env
+
+
+def data_credential_detail(*, environ: dict | None = None, terminal_env: Path | None = None,
+                           probe=None, order=None) -> dict:
+    """The DATA key, where it came from and WHICH NAME. Never an order path.
+
+    Walks `config.BARS_DATA_CREDENTIAL_ORDER` (key NAMES; the dedicated
+    data-only pair first, then the historic fallbacks in their historic order).
+    A pair is used only if it is present AND, where the entry says `verify`,
+    one call authenticates it (presence is not validity: hack3 stayed first
+    for days after its key was revoked). Returns a dict with the values under
+    `key_id` / `secret` (callers must never serialise those) and, safe to
+    record, `name`, `kind`, `credential_is_paper_account`, `source`, `warning`
+    and `tried` (name -> outcome).
+
+    Refuses with `DataNetworkUnavailable` when a probe could not reach the
+    venue and no key was proven, and with a plain `SystemExit` when every
+    present pair was authoritatively rejected or none exists.
+    """
+    from backend import config as _cfg
+    environ = os.environ if environ is None else environ
+    probe = probe or _credential_probe
+    order = order or _cfg.BARS_DATA_CREDENTIAL_ORDER
+    env_path = (TERMINAL / ".env") if terminal_env is None else Path(terminal_env)
+    tenv = _read_env_file(env_path)
+    tried: dict[str, str] = {}
+    unreachable: list[str] = []
+    for ent in order:
+        scope = ent["scope"]
+        kid = sec = None
+        where = ""
+        if "env" in scope.split("+") and environ.get(ent["key"]) and environ.get(ent["secret"]):
+            kid, sec, where = environ[ent["key"]], environ[ent["secret"]], "process environment"
+        elif "terminal_env" in scope and tenv.get(ent["key"]) and tenv.get(ent["secret"]):
+            kid, sec, where = tenv[ent["key"]], tenv[ent["secret"]], "terminal repo .env"
+        if not (kid and sec):
+            tried[ent["label"]] = "absent"
+            continue
+        verdict = "unverified"
+        if ent.get("verify"):
+            verdict = probe(kid, sec)
+            tried[ent["label"]] = verdict
+            if verdict == "network":
+                unreachable.append(ent["label"])
+                continue
+            if verdict != "ok":
+                continue
+        else:
+            tried[ent["label"]] = "present_unverified"
+        paper = ent.get("paper")                 # True / False / None (unknown)
+        out = {"key_id": kid, "secret": sec, "name": ent["key"], "label": ent["label"],
+               "kind": "paper_trading_account" if paper is True else (
+                   "dedicated_data_key" if ent["label"] == "dedicated_data" else "process_environment"),
+               "credential_is_paper_account": paper, "tried": tried,
+               "source": f"{where}, {ent['label']} ({ent['key']})"
+                         + (" (data endpoint only, verified)" if ent.get("verify") else ""),
+               "warning": None}
+        warns = []
+        if tried.get("dedicated_data") == "rejected":
+            warns.append(f"DEDICATED_DATA_KEY_REJECTED: {order[0]['key']} is present but the venue "
+                         f"rejected it; the feed fell back to {ent['key']}. Replace the dedicated pair.")
+        if paper is True:
+            warns.append(f"CREDENTIAL_IS_PAPER_ACCOUNT: the bar feed is using {ent['key']} "
+                              f"({ent['label']}), a paper TRADING account key; retiring or "
+                              f"resetting that account stops the price feed. Add "
+                              f"{order[0]['key']} / {order[0]['secret']} (a data-only pair).")
+        out["warning"] = "; ".join(warns) or None
+        return out
+    if unreachable:
+        raise DataNetworkUnavailable(
+            f"WAIT_NETWORK: could not reach {DATA_HOST} to verify a data credential "
+            f"(unreachable while probing: {unreachable}); no key was rejected")
+    names = [f"{e['key']}/{e['secret']}" for e in order]
+    raise SystemExit(
+        f"REFUSED: no data credential authenticates against the data endpoint. "
+        f"Looked at (names only): {names}. Outcomes: {tried}. A 401 here is a revoked "
+        f"key, not a missing file -- hack3's pair was revoked on 2026-09-22 and stayed "
+        f"first in this list.")
+
+
+def data_credential() -> tuple[str, str, str]:
+    """The DATA key, and where it came from -> (key_id, secret, source text).
+
+    Unchanged signature for the nine callers; the resolution (ordered NAMES in
+    `config.BARS_DATA_CREDENTIAL_ORDER`) lives in `data_credential_detail`.
+    """
+    d = data_credential_detail()
+    return d["key_id"], d["secret"], d["source"]
 
 
 def _get(path: str, params: dict, kid: str, sec: str, timeout: float = 90.0) -> dict:

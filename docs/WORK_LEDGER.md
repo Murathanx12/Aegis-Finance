@@ -15,6 +15,10 @@ removed when that chunk merges.
 
 | Chunk | Agent / session | Worktree | Files claimed | Opened | Status | Receipt / PR |
 |---|---|---|---|---|---|---|
+| CH-38 dip study | builder (Opus), S68 | `aegis-wt/ch38-dip-study` | `scripts/ch38_dip_study.py`, its tests, one block in `backend/config.py` | 2026-11-13 | building | branch `s68/ch38-dip-study` |
+| CH-20a hedge replay | builder (Opus), S68 | `aegis-wt/ch20a-hedge-replay` | `scripts/ch20a_hedge_replay.py`, its tests, one block in `backend/config.py` | 2026-11-13 | building | branch `s68/ch20a-hedge-replay` |
+| CH-11 note: beta print | builder (Opus), S68 | `aegis-wt/ch11-beta-print` | `backend/services/book_dna.py`, `scripts/results_voice.py`, their tests | 2026-11-13 | building | branch `s68/ch11-beta-print` |
+| CH-35 wiring, CH-14b observe-only runs, roadmap and ledger | Claude S68 (brain) | `aegis-wt/s68-docs` | `docs/ROADMAP.md`, `docs/WORK_LEDGER.md`; runtime-side steps | 2026-11-13 | in progress | PR #136 first |
 | CH-13 autopsy | none (builder stopped 11-12; brief a fresh one) | `aegis-wt/ch13-autopsy` | `backend/services/discovery_autopsy.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch13-autopsy` `19cb296b` |
 | CH-11 twins | none (builder stopped 11-12) | `aegis-wt/ch11-twins` | `scripts/matched_twin_reeval.py`, its tests, one block in `backend/config.py` | 2026-11-11 | interrupted, unreviewed | branch `s65/ch11-twins` `d6c2979d` |
 | CH-12 news grade | none (builder stopped 11-12) | `aegis-wt/ch12-news-grade` | `scripts/ch12_news_grade.py`, its tests | 2026-11-11 | interrupted, unreviewed | branch `s65/ch12-news-grade` `97039739` |
@@ -25,6 +29,7 @@ removed when that chunk merges.
 
 | Chunk | Agent | Closed | Outcome |
 |---|---|---|---|
+| S69 builders and reviewers (#140 fix round, #142 review, #143 desktop home + owner inbox, #144 task receipts, #145 ticker hub; each reviewed, one fix round) + audits (accounts, branching, market replay) + roadmap rows CH-45..48 | Claude S69 + builders | 2026-11-14 | merged to main; releases `20261114a/b`; tasks `AegisSystemStatus`, `AegisTickerHub`; open: #146 labels, #147 rolling cohorts (in review), #139 hedge replay fix round, CH-44, CH-42; worktrees under `aegis-wt\` kept until the rows close |
 | roadmap S67 council amendment (docs/ROADMAP.md only): CH-40..44, CH-20 a/b/c, notes on CH-01/11/13/14b/15/18/26/35/38, §5.8–5.10 | Claude S67 + three council experts | 2026-11-13 | docs only; no code, order or schedule change; positions in `aegis-recovery-evidence\s67-council-20261113\` |
 | S65 handoff: CH-02 safety snapshot (no repo file; evidence folder, bundle, keep refs, two pushed branches); `run-a-chunk` skill (`.claude/skills/run-a-chunk/*`); roadmap and ledger amendments | Claude S65 | 2026-11-12 | done; #117 merged before it |
 | S65 late night: CH-01 owner calls (`backend/services/owner_calls.py`, `scripts/owner_calls.py`, `backend/tests/test_owner_calls.py`, `docs/TRIALS/OWNER-CALLS-CONTRACT-v1.json`, three `docs/TRIALS/TRIAL-OWNER-CALL-*` documents) | Claude S65 | 2026-11-11 | frozen and pushed before the 11-12 UTC inception; owner signature, three probabilities and `register` pending (OD-13); `record` has no scheduled caller yet, so forward days are pinned by hand until a later release |
