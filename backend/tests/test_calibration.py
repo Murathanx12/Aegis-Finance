@@ -183,7 +183,7 @@ def test_an_empty_ledger_reports_rather_than_dividing_by_zero():
     assert out["groups"] == {}
 
 
-def test_the_ledger_route_carries_the_decomposition():
+def test_the_ledger_route_carries_the_decomposition(monkeypatch):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
@@ -191,7 +191,9 @@ def test_the_ledger_route_carries_the_decomposition():
 
     app = FastAPI()
     app.include_router(control.router)
-    body = TestClient(app).get("/api/control/ledger").json()
+    # CH-22 follow-up: the control plane's reads answer only the desktop's own page
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
+    body = TestClient(app, base_url="http://127.0.0.1:8000").get("/api/control/ledger").json()
     assert "decomposition" in body
     d = body["decomposition"]
     # either a report or a named failure -- never a missing key, which a card

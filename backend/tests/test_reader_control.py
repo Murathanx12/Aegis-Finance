@@ -428,11 +428,15 @@ def client(monkeypatch, tmp_path):
     return local_client(app)  # H1: loopback Host + JSON, like the desktop page
 
 
-def test_router_reads_while_disabled_and_refuses_writes(client, tmp_path):
+def test_router_reads_while_disabled_and_refuses_writes(client, tmp_path, monkeypatch):
+    # CH-22 follow-up: off the desktop the reader routes do not exist at all (404),
+    # reads included; on the desktop the read answers.
+    assert client.get("/api/control/reader").status_code == 404
+    for path in ("/api/control/reader/on", "/api/control/reader/off"):
+        assert client.post(path).status_code == 404
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
     r = client.get("/api/control/reader")
     assert r.status_code == 200 and r.json()["desired"] == "ON"
-    for path in ("/api/control/reader/on", "/api/control/reader/off"):
-        assert client.post(path).status_code == 403
     assert not (tmp_path / "dowjones" / "SUPERVISOR_STOP").exists()
 
 

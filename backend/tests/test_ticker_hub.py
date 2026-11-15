@@ -569,8 +569,9 @@ def test_routes_guarded_403_404_and_dns_rebinding(data_root, paths, tmp_path, mo
     app.include_router(R.router)
     c = local_client(app)
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
-    assert c.get("/api/control/ticker/NVDA/hub").status_code == 403
-    assert c.get("/api/control/news/feed?ticker=NVDA").status_code == 403
+    # CH-22 follow-up: off the desktop the routes do not exist (404, not 403)
+    assert c.get("/api/control/ticker/NVDA/hub").status_code == 404
+    assert c.get("/api/control/news/feed?ticker=NVDA").status_code == 404
     monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
     monkeypatch.setattr(TH, "default_data_root", lambda: data_root)
     monkeypatch.setattr(TH, "hub_dir", lambda dr, o=None: out)

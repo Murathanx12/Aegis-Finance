@@ -331,13 +331,16 @@ def _client(monkeypatch, tmp_path, enabled=True):
         monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
     app = FastAPI()
     app.include_router(R.router)
-    return TestClient(app)
+    # the desktop page: loopback Host with the served port (reads are checked too)
+    return TestClient(app, base_url="http://127.0.0.1:8000")
 
 
 def test_routes_refuse_when_the_control_plane_is_off(monkeypatch, tmp_path):
+    # CH-22 follow-up: off the desktop the routes do not exist (404, not 403)
     c = _client(monkeypatch, tmp_path, enabled=False)
-    assert c.get("/system-status").status_code == 403
-    assert c.get("/api/control/system-status").status_code == 403
+    for url in ("/system-status", "/api/control/system-status"):
+        r = c.get(url)
+        assert r.status_code == 404 and r.json() == {"detail": "Not Found"}, url
 
 
 def test_page_without_a_receipt_names_the_command(monkeypatch, tmp_path):
