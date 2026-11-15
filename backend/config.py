@@ -5327,6 +5327,53 @@ ALERT_MAX_SEND_ATTEMPTS = 3
 #: purchases (code P) whose filings became public within the lookback.
 ALERT_INSIDER_CLUSTER_MIN_BUYERS = 2
 ALERT_INSIDER_CLUSTER_LOOKBACK_DAYS = 30
+# -- CH-47 insider copy book (backend/services/insider_copy.py) --------------
+#: The owner's claim (2026-11-14), tested as stated: copy the insiders whose
+#: record was good AS KNOWN AT THE FILING DATE. Licence PRODUCT_EXPERIMENT,
+#: historical backtest; TRIAL-INSIDER-IC / TRIAL-CMP-INSIDER-IC are forward
+#: trials and are neither re-registered nor read by this module.
+#: Holding horizons in CRSP sessions.
+INSIDER_COPY_HORIZONS = (21, 63, 126)
+#: Extra horizon used ONLY for the owner's "made 300%" descriptive question.
+INSIDER_COPY_OWNER_LONG_HORIZON = 252
+INSIDER_COPY_OWNER_MULTIPLE = 3.0          # "+300%" = raw return >= 3.0
+#: Filing window (the CRSP vintage ends 2024-12-31; 2025-26 rows carry no permno).
+INSIDER_COPY_FIRST_FILING = "2006-01-01"
+INSIDER_COPY_LAST_FILING = "2024-12-31"
+#: Prior record: an insider is ranked only with >= this many prior purchases
+#: whose outcome window CLOSED strictly before the filing date.
+INSIDER_COPY_MIN_PRIOR = 3
+#: Score = sum(prior excess) / (n + K): shrinks a short record toward zero.
+INSIDER_COPY_SHRINK_K = 3.0
+#: Top / poor = at or above / at or below these percentiles of the scores of
+#: eligible trades filed in the trailing window strictly before the month.
+INSIDER_COPY_TOP_PCT = 80.0
+INSIDER_COPY_POOR_PCT = 20.0
+INSIDER_COPY_CUTOFF_LOOKBACK_DAYS = 365
+INSIDER_COPY_CUTOFF_MIN_SCORES = 50
+#: Entry: the OPEN of the first CRSP session strictly after the filing date
+#: (the public bound is FILING_DATE 22:00 ET; the bulk files carry no
+#: acceptance time). Never the filing-day print.
+INSIDER_COPY_ENTRY = "next_open"
+INSIDER_COPY_MIN_PRICE = 1.0               # entry price floor, USD
+#: Round-trip cost in bps by the trade's median daily dollar volume over the
+#: 21 sessions before entry (thresholds USD, descending). Never zero.
+INSIDER_COPY_COST_BANDS = ((1e9, 10.0), (1e8, 20.0), (2e7, 40.0), (1e6, 80.0), (0.0, 200.0))
+INSIDER_COPY_DV_LOOKBACK = 21
+#: Random control (d): this many same-date, same-size-decile CRSP names per trade.
+INSIDER_COPY_CONTROLS_PER_TRADE = 5
+INSIDER_COPY_SIZE_BUCKETS = 10
+INSIDER_COPY_SEED = 47
+#: Large-cap cell, reported separately (market cap on the session before entry).
+INSIDER_COPY_LARGE_CAP_USD = 10e9
+#: A trade is in a cluster when >= this many distinct insiders filed buys.
+INSIDER_COPY_CLUSTER_MIN = 3
+#: Missing CRSP delisting return on a performance delisting (codes 500-599):
+#: Shumway (1997) convention.
+INSIDER_COPY_PERF_DELIST_RET = -0.30
+#: Variants that may be tried, declared before the run (max 6, all reported).
+INSIDER_COPY_MAX_VARIANTS = 6
+# -- end CH-47 ----------------------------------------------------------------
 #: Discovery-lane headlines may CONFIRM an alert inside this window around the
 #: event, never originate one.
 ALERT_CONFIRM_WINDOW_BEFORE_H = 24

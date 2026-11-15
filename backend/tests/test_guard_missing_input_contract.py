@@ -2130,6 +2130,17 @@ def test_global_price_admission_positive_control_is_pure(monkeypatch):
 # -- end CH-05 rescue R3 ------------------------------------------------------
 
 
+# -- CH-47 (s70/ch47-insider-copy): insider copy book ------------------------
+def _case_insider_copy():
+    import pandas as pd
+
+    from backend.services.insider_copy import InsiderCopyRefused, aggregate_trades
+
+    return (lambda: aggregate_trades(pd.DataFrame()), InsiderCopyRefused,
+            "an insider copy book with no open-market purchases")
+# -- end CH-47 -----------------------------------------------------------------
+
+
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
     "universe_graph": _case_universe_graph,
@@ -2281,6 +2292,7 @@ CASES = {
     "ticker_hub": _case_ticker_hub,
     "news_entity_embed": _case_news_entity_embed,
     "news_tag_demotion": _case_news_tag_demotion,
+    "insider_copy": _case_insider_copy,
 }
 
 
