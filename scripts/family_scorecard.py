@@ -99,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         age = sc["input_age"]
         print(f"input age: {age['age_days']} days (generated {age['generated_utc']}, limit {age['stale_days']:g})")
         print(sc["top_line"] + ".")
+        print(sc["second_line"] + ".")
         lead, worst = FS.ends(sc)
         for i, f in enumerate(lead, 1):
             print(f"LEADING {i}: {FS.family_line(f)}")

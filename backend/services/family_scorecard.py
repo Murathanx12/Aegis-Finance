@@ -276,6 +276,8 @@ def family_row(members: list[str], rows: dict, books: dict, ff: dict, voice: dic
     marks = sorted({str(m["last_mark"]) for m in mrows if m["last_mark"]})
     incs = sorted({str(m["inception"]) for m in mrows if m["inception"]})
     mech, msrc = RV.mechanism(name, books.get(name), rows[name].get("family"))
+    sbs = [((((books.get(a) or {}).get("flags") or {}).get("SAME_BET")) or {}).get("status") for a in members]
+    untested = sum(1 for x in sbs if x != "OK")
     return {
         "family": name, "n_members": n, "members": members,
         "n_distinct_bets_by_holdings": len({tuple(m["bet_members"]) for m in mrows}),
@@ -289,6 +291,10 @@ def family_row(members: list[str], rows: dict, books: dict, ff: dict, voice: dic
                      {"min": None, "max": None, "median": None}),
         "window": {"first_inception": incs[0] if incs else None, "last_mark": marks[-1] if marks else None},
         "flags_set": dict(sorted(flags.items())),
+        # a member whose daily excess could not be compared with the others (too few common
+        # sessions) is its own family by DEFAULT, not because it was found to be different
+        "independence_tested": untested == 0,
+        "n_members_same_bet_not_comparable": untested,
         "ahead_raw": bool(raw and statistics.fmean(raw) > 0),
         "ahead_beta_adjusted": (bool(bax["value"] > 0) if isinstance(bax["value"], float) else None),
         "member_rows": mrows,
@@ -345,24 +351,51 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
     n = len(fams)
     n_raw = sum(1 for f in fams if f["ahead_raw"])
     n_bax = sum(1 for f in det if f["ahead_beta_adjusted"])
+
+    def beyond(f: dict, sign: int) -> bool:
+        x = f["beta_adjusted_excess_pp"]
+        mde = x.get("mde_pp_member_median")
+        return mde is not None and sign * x["value"] > mde
+    n_up, n_dn = sum(1 for f in det if beyond(f, 1)), sum(1 for f in det if beyond(f, -1))
+    betas = sorted(f["beta"]["value"] for f in fams if isinstance(f["beta"]["value"], float))
+    hb = float(_dna.params()["flag_high_beta"])
+    n_untested = sum(1 for f in fams if not f["independence_tested"])
+    sbc = v["headline"].get("same_bet_clustering") or {}
     h = v["headline"]
     summ = dna.get("summary") or {}
     top = (f"FAMILY SCORECARD as of the {h['as_of_mark']} marks (run {run_id or v.get('run_id')}): {n} independent "
            f"families from {h['n_strategy_accounts']} live strategy books ({h['n_excluded_controls']} controls/twins "
            f"excluded); ahead of SPY on raw excess: {n_raw} of {n}; ahead on beta-adjusted excess: {n_bax} of "
            f"{len(det)} determinable ({n - len(det)} {CD}, not counted as behind)")
+    second = (f"Of the {len(det)} determinable: {n_up} ahead and {n_dn} behind by more than their MDE "
+              f"({_dna.params()['mde_z']:g} x SE); the other {len(det) - n_up - n_dn} cannot be distinguished from "
+              f"zero. Family beta: median {statistics.median(betas):.2f} over {len(betas)} with a beta, "
+              f"{sum(1 for b in betas if b > 1.0)} above 1.0, {sum(1 for b in betas if b > hb)} above {hb:g}. "
+              f"{n_untested} of the {n} families could not be compared with the others (too few common "
+              f"sessions), so {n} is an upper bound on independent bets"
+              if betas else
+              f"No family has a determinable beta. {n_untested} of the {n} families could not be compared with "
+              f"the others, so {n} is an upper bound on independent bets")
     sc = {
         "schema": SCHEMA, "receipt": "family_scorecard", "licence": roi.get("licence") or "PRODUCT_EXPERIMENT",
         "status": "FAILED" if failures else "OK", "failures": failures,
         "run_id": run_id or v.get("run_id"), "receipts": [roi_path, dna_path],
         "input_age": age, "params": P,
-        "top_line": top,
+        "top_line": top, "second_line": second,
         "counts": {"n_families": n, "n_strategy_books": h["n_strategy_accounts"],
                    "n_excluded_controls_twins": h["n_excluded_controls"],
                    "n_ahead_raw_excess": n_raw, "n_beta_adjusted_determinable": len(det),
                    "n_ahead_beta_adjusted": n_bax, "n_beta_adjusted_cannot_determine": n - len(det),
                    "n_families_with_more_than_one_book": sum(1 for f in fams if f["n_members"] > 1),
                    "largest_family_books": max((f["n_members"] for f in fams), default=0),
+                   "n_beta_adjusted_ahead_beyond_mde": n_up, "n_beta_adjusted_behind_beyond_mde": n_dn,
+                   "n_families_with_a_beta": len(betas),
+                   "family_beta_median": round(statistics.median(betas), 3) if betas else None,
+                   "n_family_beta_above_1": sum(1 for b in betas if b > 1.0),
+                   "n_family_beta_above_high_beta_flag": sum(1 for b in betas if b > hb),
+                   "n_families_independence_not_testable": n_untested,
+                   # the results voice counts a bet ahead when ANY member is ahead; here: the mean
+                   "results_voice_n_bets_ahead_any_member": sbc.get("n_bets_ahead"),
                    "book_dna_effective_bets_exante": summ.get("effective_bets_exante")},
         "family_definition": (
             f"one component of results_voice.bets_after_same_bet: strategy accounts joined when their holdings "
@@ -434,7 +467,7 @@ def render_md(sc: dict) -> str:
            f"(limit {P['stale_days']:g}). Status **{sc['status']}**.", ""]
     if sc["failures"]:
         out += [f"FAILED: {x}" for x in sc["failures"]] + [""]
-    out += [sc["top_line"] + ".", "",
+    out += [sc["top_line"] + ".", "", sc["second_line"] + ".", "",
             f"Families holding more than one book: {c['n_families_with_more_than_one_book']}; the largest holds "
             f"{c['largest_family_books']}. {sc['label_false_fire'].get('line')}.", "",
             f"- A family: {sc['family_definition']}.",
@@ -449,8 +482,8 @@ def render_md(sc: dict) -> str:
     out += ["", f"## Every family — receipts: {rc}", "",
             "| # | family | books | bets by holdings | return | SPY same window | raw excess | beta | "
             "beta-adjusted excess (± member SE) | # by beta-adj | max drawdown | twin gap | sessions | "
-            "labels [false-fire] |",
-            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
+            "labels [false-fire] | flags (members) |",
+            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|"]
     for f in fams:
         b, x, dd, tw, s = f["beta"], f["beta_adjusted_excess_pp"], f["max_drawdown_pct"], f["twin_gap_pp"], f["sessions"]
         se = x.get("se_pp_member_median")
@@ -462,7 +495,9 @@ def render_md(sc: dict) -> str:
             f"{_num(b['value'], signed=False)}{_of(b)} | {_num(x['value'], ' pp')}"
             f"{(' ±' + format(se, '.2f')) if se is not None else ''}{_of(x)} | {f.get('rank_beta_adjusted', '—')} | "
             f"{_num(dd['value'], '%')} | {_num(tw['value'], ' pp') if tw['value'] is not None else 'none seeded'} | "
-            f"{sess} | {labels} |")
+            f"{sess} | {labels} | "
+            f"{', '.join(f'{k} x{n_}' for k, n_ in f['flags_set'].items()) or 'none'}"
+            f"{'' if f['independence_tested'] else '; independence not testable'} |")
     cds = []
     for f in fams:
         for key, label in (("beta", "beta"), ("beta_adjusted_excess_pp", "beta-adjusted excess"),

@@ -205,6 +205,13 @@ def test_scorecard_groups_the_two_copies_into_one_family(world):
     assert c["n_ahead_raw_excess"] == sum(1 for f in sc["families"] if f["raw_excess_pp"] > 0)
     assert c["n_beta_adjusted_determinable"] == 2 and c["n_beta_adjusted_cannot_determine"] == 1
     assert 0.3 < fams["indep"]["beta"]["value"] < 0.7
+    # the 2 x SPY family is ahead raw and NOT ahead after beta; nothing clears its MDE both ways
+    assert c["n_beta_adjusted_ahead_beyond_mde"] == 0 and c["family_beta_median"] == pytest.approx(1.2, abs=0.2)
+    assert c["n_family_beta_above_high_beta_flag"] == 1
+    # `short` has too few sessions to be compared with anyone: its own family by default
+    assert fams["short"]["independence_tested"] is False and twin_family["independence_tested"] is True
+    assert c["n_families_independence_not_testable"] == 1
+    assert "1 of the 3 families could not be compared" in sc["second_line"]
     lead, worst = FS.ends(sc)
     assert len(lead) == 2 and len(worst) == 1 and not {f["family"] for f in lead} & {f["family"] for f in worst}
     assert c["n_ahead_beta_adjusted"] == sum(
@@ -243,6 +250,7 @@ def test_label_rate_for_each_rung_and_for_a_changed_rule():
     assert RV.label_tag("OBSERVED(12)", ff) == ("OBSERVED(12) [floor label, no evidence claimed; 35.8% of random "
                                                 "books rise above it]")
     assert RV.label_rate("VALIDATED_EDGE", ff)["rate"] == D.CANNOT_DETERMINE
+    assert RV.label_rate("SOMETHING_ELSE", ff)["rate"] == D.CANNOT_DETERMINE
     # the measurement holds only for the rule it was taken under
     changed = RV.label_false_fire({"early_min_sessions": C.BOOK_DNA_EARLY_MIN_SESSIONS + 9})
     assert changed["status"] == D.CANNOT_DETERMINE and "label rule changed" in changed["why"]

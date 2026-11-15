@@ -480,8 +480,8 @@ def label_false_fire(p_dna: Optional[dict] = None, table: Optional[dict] = None)
     out["line"] = (f"LABEL FALSE-FIRE RATES: EARLY_EVIDENCE fires on {_pct1(e['rate'])} of random books nobody "
                    f"selected{spread(e)}; REPLICATED on {_pct1(r['rate'])} of those with a random twin{sib}; "
                    f"OBSERVED(n) is the floor every book starts on. Measured {str(out['measured_utc'])[:10]} on "
-                   f"{f'{int(n):,}' if isinstance(n, (int, float)) else 'n/a'} books ({out['source']}). All live "
-                   f"books share one window, so a label is not evidence of edge")
+                   f"{f'{int(n):,}' if isinstance(n, (int, float)) else 'n/a'} books (CH-53). All live books share "
+                   f"one window, so a label is not evidence of edge")
     return out
 
 
@@ -505,6 +505,9 @@ def label_rate(label: Any, ff: Optional[dict]) -> dict:
         v = rates[rung]["rate"]
         return {"rung": rung, "rate": v, "why": None,
                 "tag": f"false-fire {_pct1(v)} of random books with a random twin"}
+    if rung == "VALIDATED_EDGE":
+        why = "never awarded by book_dna, so no false-fire rate was measured for it"
+        return {"rung": rung, "rate": cd, "why": why, "tag": why}
     why = f"no measured rate for the label {rung}"
     return {"rung": rung, "rate": cd, "why": why, "tag": f"false-fire rate {cd}: {why}"}
 
@@ -1244,7 +1247,9 @@ def render_md(v: dict) -> str:
             f"- compared with: {('run ' + cw['run_id'] + ' (`' + cw['path'] + '`), ' + str(cl.get('n_compared')) + ' accounts on both receipts, ' + str(len(cl.get('new_since_previous') or [])) + ' new since') if cw else cl.get('compare_why')}",
             f"- rule: {cl.get('rule')}",
             f"- labels held by strategy accounts: {cl['labels_held']} (a label held is not a label that rose)",
-            f"- {(v.get('label_false_fire') or {}).get('line') or 'LABEL FALSE-FIRE RATES: ' + _dna.CANNOT_DETERMINE}.",
+            f"- {(v.get('label_false_fire') or {}).get('line') or 'LABEL FALSE-FIRE RATES: ' + _dna.CANNOT_DETERMINE}"
+            f" (source: {(v.get('label_false_fire') or {}).get('source')}; "
+            f"{(v.get('label_false_fire') or {}).get('rule_check')}).",
             f"- {cl['ceiling_note']}.", ""]
     return "\n".join(out)
 

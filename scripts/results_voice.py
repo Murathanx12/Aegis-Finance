@@ -5,9 +5,13 @@
     python -m scripts.results_voice --json                # one JSON summary line
 
 Writes `paper_accounts/results_voice_<run>.json` + `.md` beside the receipts and
-prints the headline block (the six lines of 2026-10-07, the "Distinct bets ahead of SPY" line, a
+prints the headline block (the six lines of 2026-10-07, the BETA-ADJUSTED line and the LABEL
+FALSE-FIRE RATES line (CH-55, 2026-11-16: how many accounts are ahead after removing beta x SPY
+session by session, and how often each label fires on a random book -- also printed in brackets
+beside every label), the "Distinct bets ahead of SPY" line, a
 LABELS LOWERED line when a label fell, and CLAIMS PROMOTED last: "none" until a label rises
 against the previous run's book_dna receipt). rc 2 = REFUSED (no pair / no rows), with why.
+The family view of the same receipts: `python -m scripts.family_scorecard`.
 """
 from __future__ import annotations
 
