@@ -11,6 +11,12 @@ Options (before the first `-m`):
     --stop-file PATH     exit 0 without running when PATH exists (repeatable; relative = the clone)
     --allow-breakaway    processes the module STARTS may outlive the task (see KILL SEMANTICS);
                          only for a task whose job is to start something long-lived
+    --min-free-gb N      the task's declared MEMORY FLOOR (CH-57): when free physical memory is
+                         below N GB the wrapper starts nothing, writes a `refused` row with
+                         reason LOW_MEMORY and the measured figure, and exits 93. Off unless
+                         given, so a task that declares no floor behaves exactly as before.
+                         A figure that cannot be measured is logged CANNOT DETERMINE and the
+                         task runs (a guard that cannot read its input does not refuse on it)
     --print-plan         print what would run (JSON) and exit 0; runs nothing
 Segments:
     [--log PATH] -m <module> [args...] [--then [--log PATH] -m <module> [args...]]...
@@ -103,6 +109,12 @@ CONFIG_PATH = Path(__file__).resolve().with_name("runtime_task.config")
 #: The wrapper itself refused (configuration, interpreter, split brain). Distinct from any
 #: module's own codes, which pass through unchanged.
 REFUSED_RC = 90
+#: A task declared `--min-free-gb` and the machine has less free physical memory than that
+#: (CH-57). Distinct from 90 so a scheduler row says "deferred for memory", not "misconfigured".
+#: `backend.config.RUNTIME_LOW_MEMORY_RC` is the one other copy, pinned equal by test.
+LOW_MEMORY_RC = 93
+LOW_MEMORY = "LOW_MEMORY"
+GIB = 1024 ** 3
 
 CONFIG_KEYS: tuple[str, ...] = (
     "AEGIS_LIVE_ROOT", "AEGIS_LIVE_OPTIMUS", "AEGIS_LIVE_PI_DB", "AEGIS_DOTENV_PATH",
@@ -150,6 +162,7 @@ class Options:
     stop_files: list[str] = field(default_factory=list)
     print_plan: bool = False
     allow_breakaway: bool = False
+    min_free_gb: Optional[float] = None
 
 
 # ───────────────────────────────────────────────────────────── config
@@ -199,11 +212,19 @@ def parse_argv(argv: Sequence[str]) -> tuple[Options, list[Segment]]:
             setattr(opt, _FLAG_NO_VALUE[tok], True)
             i += 1
             continue
-        if tok in ("--set", "--stop-file"):
+        if tok in ("--set", "--stop-file", "--min-free-gb"):
             if i + 1 >= len(a):
                 raise Refused(f"{tok} needs a value")
             val = a[i + 1]
-            if tok == "--set":
+            if tok == "--min-free-gb":
+                try:
+                    floor = float(val)
+                except ValueError:
+                    floor = float("nan")
+                if not (0 < floor < float("inf")):
+                    raise Refused(f"--min-free-gb {val!r} is not a positive number of GB")
+                opt.min_free_gb = floor
+            elif tok == "--set":
                 name, sep, value = val.partition("=")
                 if not sep or name not in SETTABLE:
                     raise Refused(f"--set {name!r} is not allowed (allowed: {', '.join(sorted(SETTABLE))})")
@@ -362,6 +383,7 @@ def build_plan(argv: Sequence[str], *, clone: Path = CLONE, config_path: Path = 
             "run_log": str(Path(cfg["AEGIS_LIVE_OPTIMUS"]) / RUN_LOG_REL),
             "stop_files": [str(_in_clone(p, clone)) for p in opt.stop_files],
             "job": "breakaway" if opt.allow_breakaway else "tree",
+            "min_free_gb": opt.min_free_gb,
             "print_plan": opt.print_plan, "runs": runs}
 
 
@@ -408,6 +430,70 @@ def _say(msg: str) -> None:
 
 def _windowless() -> bool:
     return sys.stdout is None or Path(sys.executable).name.lower() == "pythonw.exe"
+
+
+# ───────────────────────────────────────────────────────────── memory floor (CH-57)
+
+def free_physical_bytes() -> Optional[int]:
+    """Free (available) physical memory in bytes, or None when it cannot be measured.
+
+    Stdlib only: `GlobalMemoryStatusEx().ullAvailPhys` on Windows (the figure
+    `Win32_OperatingSystem.FreePhysicalMemory` reports), `MemAvailable` from /proc/meminfo
+    elsewhere. None is CANNOT DETERMINE, and the caller does not refuse on it."""
+    try:
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+
+            class _MEMORYSTATUSEX(ctypes.Structure):
+                _fields_ = [("dwLength", wintypes.DWORD), ("dwMemoryLoad", wintypes.DWORD),
+                            *[(n, ctypes.c_uint64) for n in (
+                                "ullTotalPhys", "ullAvailPhys", "ullTotalPageFile",
+                                "ullAvailPageFile", "ullTotalVirtual", "ullAvailVirtual",
+                                "ullAvailExtendedVirtual")]]
+
+            st = _MEMORYSTATUSEX()
+            st.dwLength = ctypes.sizeof(st)
+            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            k32.GlobalMemoryStatusEx.restype = wintypes.BOOL
+            k32.GlobalMemoryStatusEx.argtypes = [ctypes.POINTER(_MEMORYSTATUSEX)]
+            if not k32.GlobalMemoryStatusEx(ctypes.byref(st)):
+                return None
+            return int(st.ullAvailPhys)
+        with open("/proc/meminfo", encoding="ascii", errors="replace") as fh:
+            for line in fh:
+                if line.startswith("MemAvailable:"):
+                    return int(line.split()[1]) * 1024
+        return None
+    except Exception:                 # noqa: BLE001  any failure to measure is "cannot determine"
+        return None
+
+
+def check_memory_floor(plan: dict, base: dict, free_memory=free_physical_bytes) -> Optional[int]:
+    """None when the plan may run; LOW_MEMORY_RC (after writing the refusal row) when the
+    task's declared floor is above the measured free memory. No floor declared = no
+    measurement and no row."""
+    floor = plan.get("min_free_gb")
+    if floor is None:
+        return None
+    log = plan.get("run_log")
+    argv = [r["argv"][1:] for r in plan.get("runs", [])]
+    free = free_memory()
+    if free is None:
+        _run_row(log, {**base, "utc": _utc(), "event": "memory_floor",
+                       "verdict": "CANNOT DETERMINE", "min_free_gb": floor,
+                       "why": "free physical memory could not be measured; not refused"})
+        _say("runtime_task: memory floor CANNOT DETERMINE (free memory unreadable); running")
+        return None
+    free_gb = round(free / GIB, 2)
+    if free >= floor * GIB:
+        return None
+    why = f"{LOW_MEMORY}: {free_gb} GB free physical memory is below this task's floor of {floor} GB"
+    _run_row(log, {**base, "utc": _utc(), "event": "refused", "reason": LOW_MEMORY, "why": why,
+                   "free_gb": free_gb, "free_bytes": int(free), "min_free_gb": floor,
+                   "argv": argv, "rc": LOW_MEMORY_RC})
+    _say(f"runtime_task REFUSED: {why}; nothing ran (exit {LOW_MEMORY_RC})")
+    return LOW_MEMORY_RC
 
 
 # ───────────────────────────────────────────────────────────── job object (M1)
@@ -515,10 +601,12 @@ def windows_exit_code(rc: int) -> int:
     return rc
 
 
-def run_plan(plan: dict, *, popen=subprocess.Popen, job_factory=None) -> int:
+def run_plan(plan: dict, *, popen=subprocess.Popen, job_factory=None,
+             free_memory=free_physical_bytes) -> int:
     """Run every segment. `job_factory(mode)` makes the Job Object; the default is the real
     one only with the real Popen on Windows (an in-process test must never put the test
-    runner into a kill-on-close job)."""
+    runner into a kill-on-close job). `free_memory()` is read only when the plan declares
+    a memory floor."""
     clone, log = Path(plan["clone"]), plan.get("run_log")
     base = {"wrapper_pid": os.getpid(), "clone": str(clone), "head": clone_head(clone)}
     for sf in plan["stop_files"]:
@@ -526,6 +614,9 @@ def run_plan(plan: dict, *, popen=subprocess.Popen, job_factory=None) -> int:
             _run_row(log, {**base, "utc": _utc(), "event": "stopped", "stop_file": sf, "rc": 0})
             _say(f"runtime_task: STOP file present ({sf}); nothing ran")
             return 0
+    low = check_memory_floor(plan, base, free_memory)   # before the job, before any launch
+    if low is not None:
+        return low
     mode = plan.get("job", "tree")
     if job_factory is None:
         job_factory = make_job if popen is subprocess.Popen else (lambda _m: None)
