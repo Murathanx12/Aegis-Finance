@@ -161,7 +161,8 @@ def test_budget_variant_caps_spend(synth):
     assert (pr["cost_pct"].to_numpy() <= caps + 1e-12).all()
 
 
-def test_decide_rule_is_symmetric():
+def test_decide_rule_is_one_sided():
+    """The hedge must beat ALL three twins; ANY one robust twin wins for the twins."""
     m = {x: {"terminal_wealth": 1.0} for x in R.TWINS}
     m["hedged"] = {"terminal_wealth": 2.0}
     ahead = {x: {"hedge_ahead_full": True, "hedge_ahead_in_n_of": [5, 5]} for x in R.TWINS}
@@ -172,6 +173,83 @@ def test_decide_rule_is_symmetric():
     m2 = {**m, "hold_less": {"terminal_wealth": 3.0}}
     v = R.decide(m2, behind)
     assert v["label"] == "TWIN_WINS" and v["twin"] == "hold_less"
+    # one-sided: a single robust twin is enough, the other two may lose to the hedge
+    mixed = {**ahead, "trend": {"hedge_ahead_full": False, "hedge_ahead_in_n_of": [0, 5]}}
+    mixed["hold_less"] = {"hedge_ahead_full": True, "hedge_ahead_in_n_of": [5, 5]}
+    assert R.decide(m, mixed)["label"] == "TWIN_WINS"
+    assert R._overall({"a": {"label": "HEDGE"}, "b": {"label": "TWIN"}}) == "TWIN_WINS"
+    assert R._overall({"a": {"label": "HEDGE"}, "b": {"label": "HEDGE"}}) == "HEDGE_BEATS_TWINS"
+    assert R._overall({"a": {"label": "HEDGE"},
+                       "b": {"label": "CANNOT_DISTINGUISH"}}) == "CANNOT_DISTINGUISH"
+
+
+def test_fill_cost_ask_bid_quarter_and_mid(synth):
+    u, q = _frames(*synth)
+    roll = R.run_rolls(u, q, _spec())
+    r0 = roll["rolls"][0]
+    assert R.fill_cost(r0, 1.0) == pytest.approx(r0["cost"])          # frozen = ask/bid
+    mid = ((r0["l_bid"] + r0["l_ask"]) / 2 - (r0["s_bid"] + r0["s_ask"]) / 2) / r0["spot"]
+    assert R.fill_cost(r0, 0.0) == pytest.approx(mid)
+    assert R.fill_cost(r0, 0.0) < R.fill_cost(r0, 0.5) < R.fill_cost(r0, 1.0)
+
+
+def test_daily_marks_end_where_the_roll_grid_ends(synth):
+    u, q = _frames(*synth)
+    spec = _spec()
+    roll = R.run_rolls(u, q, spec)
+    pr = R.period_returns(u, roll, R.daily_indices(u, spec), spec, "base")
+    dh = R.daily_hedged(u, roll["rolls"], q, 1.0)
+    assert dh["equity"][-1] == pytest.approx(float(np.prod(1.0 + pr["hedged"].to_numpy())))
+    assert dh["mark_days_quote"] > 0 and dh["mark_days_intrinsic"] > 0
+    # marking the long at the bid makes the day after entry worse than the mid mark
+    assert R.daily_hedged(u, roll["rolls"], q, 0.0)["equity"][-1] > dh["equity"][-1]
+
+
+def test_worst_window_loss_and_drawdowns():
+    r = np.zeros(60)
+    r[30] = -0.10
+    r[31] = -0.10
+    assert R.risk_of(r, "max_drawdown", 21) == pytest.approx(0.19)
+    assert R.risk_of(r, "worst_21d_loss", 21) == pytest.approx(0.19)
+    assert R.risk_of(np.full(30, 0.01), "worst_21d_loss", 21) < 0     # never lost: negative
+
+
+def test_sensitivity_matches_every_measure_and_prints_by_year(synth):
+    u, q = _frames(*synth)
+    spec = _spec()
+    roll = R.run_rolls(u, q, spec)
+    rf = np.full(len(u), 0.0001)
+    s = R.sensitivity(u, roll["rolls"], q, spec, rf, (("ask_bid", 1.0), ("mid", 0.0)), 21, 100)
+    assert set(s["settings"]) == {"ask_bid|cash_0pct", "ask_bid|cash_tbill",
+                                  "mid|cash_0pct", "mid|cash_tbill"}
+    st = s["settings"]["ask_bid|cash_0pct"]
+    h = st["hedged"]
+    for meas in R.RISK_MEASURES:
+        mm = st["measures"][meas]
+        assert mm["verdict"] in {"HEDGE_BEATS_TWINS", "TWIN_WINS", "CANNOT_DISTINGUISH"}
+        for t in R.TWINS:
+            c = mm["twins"][t]
+            assert c["label"] in {"HEDGE", "TWIN", "CANNOT_DISTINGUISH"}
+            if 0.0 < c["scale"] < 1.0:                   # matched, not at a bound
+                assert c["stats"][meas] == pytest.approx(h[meas], rel=0.03, abs=2e-3)
+    tw = st["measures"]["terminal_wealth_full_size"]["twins"]
+    assert tw["hold_less"]["scale"] == 1.0 and tw["inverse_ctrl"] is None
+    assert tw["hold_less"]["stats"]["terminal_wealth"] == pytest.approx(
+        st["unhedged"]["terminal_wealth"])
+    years = {row["year"] for row in st["by_year"]}
+    assert years == set(pd.DatetimeIndex(u["date"].iloc[roll["rolls"][0]["entry_i"] + 1:
+                                                       roll["rolls"][-1]["settle_i"] + 1]).year)
+    assert "ret:hold_less@max_drawdown" in st["by_year"][0]
+    # cash at the T-bill rate can only help the lower-gross twin
+    a = st["measures"]["max_drawdown"]["twins"]["hold_less"]
+    b = s["settings"]["ask_bid|cash_tbill"]["measures"]["max_drawdown"]["twins"]["hold_less"]
+    if a["scale"] < 1.0:
+        assert b["stats"]["terminal_wealth"] > a["stats"]["terminal_wealth"]
+    # mid fills: a lower net drag than ask/bid
+    assert (s["settings"]["mid|cash_0pct"]["cost_drag"]["net_drag_per_year"]
+            < st["cost_drag"]["net_drag_per_year"])
+    assert st["cost_drag"]["net_drag_per_year"] == pytest.approx(
+        st["cost_drag"]["gross_cost_per_year"] - st["cost_drag"]["payoff_per_year"])
 
 
 def test_main_writes_receipt_and_leaves_data_folder_unchanged(synth, tmp_path: Path):
@@ -198,6 +276,13 @@ def test_main_writes_receipt_and_leaves_data_folder_unchanged(synth, tmp_path: P
     assert "SPY" in rec["verdict_lines"]
     md = js[0].with_suffix(".md").read_text(encoding="utf-8")
     assert "Verdicts" in md and "hold_less" in md
+    assert "NET drag" in md and "depends on the risk measure" in md
+    run = rec["run_id"]
+    summ = (out / f"ch20a_by_measure_{run}.md").read_text(encoding="utf-8")
+    for meas in ("max DD", "avg DD", "worst 21d", "TW full size", "net drag /yr"):
+        assert meas in summ
+    assert (out / f"ch20a_by_year_SPY_{run}.md").exists()
+    assert "sensitivity" in spy and not rec["sensitivity_spec"]["rf_file_exists"]
 
 
 def test_empty_data_dir_is_a_red_exit_and_files_nothing(tmp_path: Path):

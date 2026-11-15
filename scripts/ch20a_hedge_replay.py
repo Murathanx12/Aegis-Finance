@@ -332,6 +332,11 @@ def run_rolls(under: pd.DataFrame, puts: pd.DataFrame, spec: dict) -> dict:
                 "short_leg_missing" if sband.empty else "short_leg_crossed_or_no_bid"),
             "cost": debit / spot, "pay": pay / spot,
             "split_in_hold": bool(cfadj[j] != cfadj[k]),
+            # the entry quotes, so the fill sensitivity can re-price the same legs
+            "spot": float(spot), "kl": kl, "ks": ks,
+            "l_bid": float(L["best_bid"]), "l_ask": float(L["best_offer"]),
+            "s_bid": float(S["best_bid"]) if short_ok else float("nan"),
+            "s_ask": float(S["best_offer"]) if short_ok else float("nan"),
         })
         k = j                                      # next entry attempt: settlement day
     return {"rolls": rolls, "skipped": skipped, "end_reason": end_reason}
@@ -505,9 +510,10 @@ def compare(pr: pd.DataFrame, spec: dict) -> dict:
 
 
 def decide(m: dict, loyo: dict) -> dict:
-    """Frozen rule. Hedge wins only if ahead of all three on terminal wealth in the
-    full sample AND in every leave-one-year-out; a twin wins only if ahead of the
-    hedge in the full sample AND in every leave-one-year-out; else CANNOT_DISTINGUISH.
+    """Frozen rule, and it is ONE-SIDED. The hedge wins only if it is ahead of ALL
+    three twins on terminal wealth in the full sample AND in every leave-one-year-out;
+    a twin wins if ANY ONE twin is ahead of the hedge in the full sample AND in every
+    leave-one-year-out ("a cheaper alternative exists"); else CANNOT_DISTINGUISH.
     """
     if all(loyo[x]["hedge_ahead_full"] and loyo[x]["hedge_ahead_in_n_of"][0]
            == loyo[x]["hedge_ahead_in_n_of"][1] for x in TWINS):
@@ -523,6 +529,7 @@ def decide(m: dict, loyo: dict) -> dict:
 def plain_sentence(sym: str, res: dict) -> str:
     m, v, sc = res["metrics"], res["verdict"], res["scales"]
     cost = res["hedge_cost_per_year"]
+    net = cost - res["hedge_payoff_per_year"]
     h = m["hedged"]["terminal_wealth"]
     hl = m["hold_less"]["terminal_wealth"]
     if sc["hold_less_gross"] >= 0.999:
@@ -531,19 +538,347 @@ def plain_sentence(sym: str, res: dict) -> str:
     else:
         alt = (f"simply holding {sc['hold_less_gross']:.0%} in {sym} and the rest in cash "
                f"(same average drawdown) turned $1 into ${hl:.2f}")
-    base = (f"{sym}: the monthly put spread cost about {cost:.1%} of the book a year and "
-            f"turned $1 into ${h:.2f}; {alt}")
+    base = (f"{sym}: the monthly put spread cost about {cost:.1%} of the book a year in premium "
+            f"and paid back {res['hedge_payoff_per_year']:.1%}, a NET drag of {net:.1%} a year; "
+            f"it turned $1 into ${h:.2f}; {alt}")
     if v["label"] == "HEDGE_BEATS_TWINS":
         return base + " -- the hedge came out ahead of every cheaper alternative in every year-dropped check."
     if v["label"] == "TWIN_WINS":
         tw = m[v["twin"]]["terminal_wealth"]
-        return (base + f" -- the cheaper '{v['twin']}' alternative (${tw:.2f}) ended with more "
-                f"money and stayed ahead whichever single year is removed.")
+        return (base + f" -- at equal AVERAGE drawdown (the frozen roll-grid measure) the cheaper "
+                f"'{v['twin']}' alternative (${tw:.2f}) ended with more money and stayed ahead "
+                f"whichever single year is removed; other risk measures are in the measure table.")
     return base + " -- the gap is not stable when single years are removed, so the data cannot tell them apart."
 
 
+# ------------------------------------------------------------------- sensitivity (post hoc)
+# Review of PR #139: the verdict depends on the risk measure the twins are matched on.
+# Nothing below changes the frozen primary above; it prints the verdict under EVERY
+# measure side by side, on daily marks, under three fills and two cash rates.
+RISK_MEASURES = ("max_drawdown", "avg_drawdown", "worst_21d_loss")
+MEASURES = RISK_MEASURES + ("terminal_wealth_full_size",)
+
+
+def load_rf(path: Path | None, dates: pd.Series) -> np.ndarray | None:
+    """Daily 1-month T-bill return aligned to `dates` (forward-filled); None if absent."""
+    if path is None or not Path(path).exists():
+        return None
+    f = pd.read_parquet(path, columns=["date", "rf"])
+    f["date"] = pd.to_datetime(f["date"])
+    s = f.drop_duplicates("date").set_index("date")["rf"].astype(float).sort_index()
+    out = s.reindex(pd.to_datetime(dates)).ffill().fillna(0.0).to_numpy()
+    return out
+
+
+def load_leg_marks(data_dir: Path, secid: int, rolls: list[dict]) -> pd.DataFrame:
+    """Every quote of the legs actually held (exdate, strike), one year file at a time."""
+    legs = set()
+    for r in rolls:
+        legs.add((pd.Timestamp(r["expiry"]), float(r["kl"])))
+        if np.isfinite(r["ks"]):
+            legs.add((pd.Timestamp(r["expiry"]), float(r["ks"])))
+    if not legs:
+        return pd.DataFrame(columns=["date", "exdate", "strike", "best_bid", "best_offer"])
+    want = pd.DataFrame(sorted(legs), columns=["exdate", "strike"])
+    exds = set(want["exdate"])
+    cols = ["date", "exdate", "strike", "best_bid", "best_offer", "ss_flag"]
+    parts = []
+    for y in _years(data_dir, "quotes"):
+        q = pd.read_parquet(data_dir / f"quotes_{y}.parquet", columns=cols,
+                            filters=[("secid", "=", float(secid)), ("cp_flag", "=", "P")])
+        if not len(q):
+            continue
+        q = q[q["ss_flag"].astype(str) == "0"].drop(columns=["ss_flag"])
+        q["exdate"] = pd.to_datetime(q["exdate"])
+        q = q[q["exdate"].isin(exds)]
+        q["strike"] = q["strike"].astype(float)
+        parts.append(q.merge(want, on=["exdate", "strike"], how="inner"))
+        del q
+    if not parts:
+        return pd.DataFrame(columns=["date", "exdate", "strike", "best_bid", "best_offer"])
+    m = pd.concat(parts, ignore_index=True)
+    m["date"] = pd.to_datetime(m["date"])
+    return m.drop_duplicates(["date", "exdate", "strike"]).reset_index(drop=True)
+
+
+def _px(bid: float, ask: float, x: float, side: int) -> float:
+    """Price at share x of the half-spread: side +1 buys (mid + x*half), -1 sells."""
+    if not (np.isfinite(bid) and bid > 0):
+        return ask if side > 0 else float("nan")
+    mid, half = (bid + ask) / 2.0, (ask - bid) / 2.0
+    return mid + side * x * half
+
+
+def fill_cost(r: dict, x: float) -> float:
+    """The roll's debit as a fraction of entry spot when paying share x of each half-spread."""
+    buy = _px(r["l_bid"], r["l_ask"], x, +1)
+    sell = _px(r["s_bid"], r["s_ask"], x, -1) if np.isfinite(r["ks"]) else 0.0
+    return (buy - sell) / r["spot"]
+
+
+def daily_hedged(under: pd.DataFrame, rolls: list[dict], marks: pd.DataFrame,
+                 x: float) -> dict:
+    """Hedged equity on EVERY session from the first entry to the last settlement.
+
+    Between a settlement and the next entry the book is the ETF alone. Inside a hold:
+    equity = E_entry * ((1 - cost_x) * tr_t / tr_entry + mark_t / spot_entry), the long
+    leg marked where it would be SOLD and the short where it would be BOUGHT back (share x
+    of the half-spread from the mid), at intrinsic where the file has no quote for that
+    leg that day (DTE < 14 is outside the pull) or a split happened inside the hold.
+    """
+    tr = np.cumprod(1.0 + under["ret"].to_numpy(float))
+    close = under["close"].astype(float).to_numpy()
+    cfa = under["cfadj"].astype(float).to_numpy()
+    dates = under["date"].to_numpy()
+    key = {}
+    if len(marks):
+        for (ex, k), g in marks.groupby(["exdate", "strike"]):
+            key[(pd.Timestamp(ex), float(k))] = g.set_index("date")[["best_bid", "best_offer"]]
+    start, end = rolls[0]["entry_i"], rolls[-1]["settle_i"]
+    H = np.ones(end - start + 1)
+    E, prev = 1.0, start
+    n_quote = n_intr = 0
+    for r in rolls:
+        te, b = r["entry_i"], r["settle_i"]
+        for t in range(prev + 1, te + 1):
+            H[t - start] = E * tr[t] / tr[prev]
+        Ete = E * tr[te] / tr[prev]
+        c = fill_cost(r, x)
+        spot, kl, ks = r["spot"], r["kl"], r["ks"]
+        has_s = np.isfinite(ks)
+        Lq = key.get((pd.Timestamp(r["expiry"]), float(kl)))
+        Sq = key.get((pd.Timestamp(r["expiry"]), float(ks))) if has_s else None
+        for t in range(te + 1, b + 1):
+            d = pd.Timestamp(dates[t])
+            st = close[t] * cfa[t] / cfa[te]
+            intrinsic = max(kl - st, 0.0) - (max(ks - st, 0.0) if has_s else 0.0)
+            v = float("nan")
+            if t < b and cfa[t] == cfa[te] and Lq is not None and d in Lq.index:
+                lb, la = Lq.loc[d, "best_bid"], Lq.loc[d, "best_offer"]
+                lv = _px(float(lb), float(la), x, -1)
+                if has_s:
+                    if Sq is not None and d in Sq.index:
+                        sb, sa = Sq.loc[d, "best_bid"], Sq.loc[d, "best_offer"]
+                        sv = _px(float(sb), float(sa), x, +1)
+                    else:
+                        sv = float("nan")
+                else:
+                    sv = 0.0
+                v = lv - sv
+            if np.isfinite(v):
+                n_quote += 1
+            else:
+                v = intrinsic
+                n_intr += 1
+            H[t - start] = Ete * ((1.0 - c) * tr[t] / tr[te] + v / spot)
+        E, prev = H[b - start], b
+    return {"equity": H, "start": start, "end": end, "mark_days_quote": n_quote,
+            "mark_days_intrinsic": n_intr}
+
+
+def _eq(r: np.ndarray) -> np.ndarray:
+    return np.concatenate([[1.0], np.cumprod(1.0 + r)])
+
+
+def risk_of(r: np.ndarray, measure: str, window: int) -> float:
+    """Risk as a positive number (bigger = worse)."""
+    e = _eq(r)
+    if measure == "max_drawdown":
+        return float((1.0 - e / np.maximum.accumulate(e)).max())
+    if measure == "avg_drawdown":
+        return float((1.0 - e / np.maximum.accumulate(e)).mean())
+    if measure == "worst_21d_loss":
+        if len(e) <= window:
+            return float(1.0 - e[-1] / e[0])
+        return float(-(e[window:] / e[:-window] - 1.0).min())
+    raise ValueError(measure)
+
+
+def daily_stats(r: np.ndarray, window: int, years: float, book: float) -> dict:
+    tw = float(np.prod(1.0 + r))
+    out = {m: risk_of(r, m, window) for m in RISK_MEASURES}
+    out.update({"terminal_wealth": tw,
+                "cagr": float(tw ** (1.0 / years) - 1.0) if years > 0 and tw > 0 else float("nan"),
+                "max_drawdown_usd": -out["max_drawdown"] * book,
+                "worst_21d_loss_usd": -out["worst_21d_loss"] * book})
+    return out
+
+
+def _solve(build, target: float, f, steps: int) -> float:
+    """Scale in [0, 1] whose f(build(s)) is nearest target: coarse grid, then a refine."""
+    grid = np.linspace(0.0, 1.0, steps + 1)
+    vals = np.array([f(build(s)) for s in grid])
+    i = int(np.argmin(np.abs(vals - target)))
+    lo, hi = grid[max(i - 1, 0)], grid[min(i + 1, steps)]
+    fine = np.linspace(lo, hi, steps + 1)
+    fv = np.array([f(build(s)) for s in fine])
+    return float(fine[int(np.argmin(np.abs(fv - target)))])
+
+
+def twin_builders(u: np.ndarray, trend_r: np.ndarray, iv: np.ndarray,
+                  rf: np.ndarray) -> dict:
+    """Daily-rebalanced twins. hold_less: s in the ETF, rest at rf. trend: s in the trend
+    rule (whose own out-of-market days earn rf), rest at rf. inverse_ctrl: the ETF plus w
+    of a -1x fund on the ETF's excess return, the w financed at rf (reduces to U + w*IV
+    when rf is 0, the frozen construction)."""
+    return {"hold_less": lambda s: s * u + (1.0 - s) * rf,
+            "trend": lambda s: s * trend_r + (1.0 - s) * rf,
+            "inverse_ctrl": lambda w: u + w * (iv + rf)}
+
+
+def match_scale(name: str, build, h_r: np.ndarray, measure: str, window: int,
+                steps: int) -> tuple[float, str]:
+    """Scale DOWN only. hold_less/trend start at 1 (full gross); inverse starts at 0."""
+    if measure == "terminal_wealth_full_size":
+        return (0.0 if name == "inverse_ctrl" else 1.0), "full size, no risk match"
+    target = risk_of(h_r, measure, window)
+    full = 0.0 if name == "inverse_ctrl" else 1.0
+    if risk_of(build(full), measure, window) <= target:
+        return full, ("the unhedged book already has <= the hedge's risk" if name == "inverse_ctrl"
+                      else "full gross already has <= the hedge's risk; cannot scale up")
+    s = _solve(build, target, lambda r: risk_of(r, measure, window), steps)
+    return s, ""
+
+
+def pair_label(h_r: np.ndarray, t_r: np.ndarray, year: np.ndarray) -> dict:
+    """The frozen LOYO rule for one twin: HEDGE / TWIN / CANNOT_DISTINGUISH."""
+    full = float(np.prod(1.0 + h_r)) > float(np.prod(1.0 + t_r))
+    ys = sorted(set(year.tolist()))
+    ahead = 0
+    for y in ys:
+        k = year != y
+        ahead += int(np.prod(1.0 + h_r[k]) > np.prod(1.0 + t_r[k]))
+    if full and ahead == len(ys):
+        lab = "HEDGE"
+    elif not full and ahead == 0:
+        lab = "TWIN"
+    else:
+        lab = "CANNOT_DISTINGUISH"
+    return {"label": lab, "hedge_ahead_full": full, "hedge_ahead_in_n_of": [ahead, len(ys)]}
+
+
+def _overall(pairs: dict) -> str:
+    """One-sided, as `decide`: the hedge must beat every twin; any one robust twin wins."""
+    labs = [p["label"] for p in pairs.values() if p is not None]
+    if labs and all(lab == "HEDGE" for lab in labs):
+        return "HEDGE_BEATS_TWINS"
+    if any(lab == "TWIN" for lab in labs):
+        return "TWIN_WINS"
+    return "CANNOT_DISTINGUISH"
+
+
+def sensitivity(under: pd.DataFrame, rolls: list[dict], marks: pd.DataFrame, spec: dict,
+                rf_full: np.ndarray | None, fills: tuple, window: int, steps: int) -> dict:
+    """Every (fill, cash) setting x every measure x every twin, daily, with LOYO and by year."""
+    start, end = rolls[0]["entry_i"], rolls[-1]["settle_i"]
+    sl = slice(start + 1, end + 1)
+    dates = pd.to_datetime(under["date"]).to_numpy()[sl]
+    year = pd.DatetimeIndex(dates).year.to_numpy()
+    ret = under["ret"].to_numpy(float)
+    u = ret[sl]
+    idx = daily_indices(under, spec)
+    pos = idx["pos"]
+    switch = np.concatenate([[0.0], (np.diff(pos) != 0).astype(float)])
+    sw = switch * spec["CH20A_HEDGE_SWITCH_COST_BPS"] / 1e4
+    iv = (-ret - spec["CH20A_HEDGE_INVERSE_FEE"] / 252.0)[sl]
+    years = (pd.Timestamp(dates[-1]) - pd.Timestamp(under["date"].iloc[start])).days / 365.25
+    book = float(spec["CH20A_HEDGE_BOOK_USD"])
+    cash_rates = {"cash_0pct": np.zeros(len(ret))}
+    if rf_full is not None:
+        cash_rates["cash_tbill"] = rf_full
+    settle_year = np.array([pd.Timestamp(r["settle"]).year for r in rolls])
+    pay = np.array([r["pay"] for r in rolls])
+    out: dict[str, Any] = {"window": [str(pd.Timestamp(under["date"].iloc[start]).date()),
+                                      str(pd.Timestamp(dates[-1]).date())],
+                           "sessions": int(len(u)), "years": years, "settings": {},
+                           "cash_tbill_available": rf_full is not None}
+    hedged_cache: dict[float, dict] = {}
+    for fill_name, x in fills:
+        if x not in hedged_cache:
+            hedged_cache[x] = daily_hedged(under, rolls, marks, x)
+        dh = hedged_cache[x]
+        H = dh["equity"]
+        h_r = H[1:] / H[:-1] - 1.0
+        cost = np.array([fill_cost(r, x) for r in rolls])
+        drag = {"gross_cost_per_year": float(cost.sum() / years),
+                "payoff_per_year": float(pay.sum() / years),
+                "net_drag_per_year": float((cost.sum() - pay.sum()) / years),
+                "mean_cost_per_roll_pct_spot": float(cost.mean())}
+        drag_by_year = {int(y): {"cost": float(cost[settle_year == y].sum()),
+                                 "payoff": float(pay[settle_year == y].sum()),
+                                 "net": float(pay[settle_year == y].sum()
+                                              - cost[settle_year == y].sum())}
+                        for y in sorted(set(settle_year.tolist()))}
+        for cash_name, rfa in cash_rates.items():
+            rf = rfa[sl]
+            trend_r = (pos * ret + (1.0 - pos) * rfa - sw)[sl]
+            B = twin_builders(u, trend_r, iv, rf)
+            st: dict[str, Any] = {"fill": fill_name, "half_spread_share": x, "cash": cash_name,
+                                  "cost_drag": drag, "cost_drag_by_year": drag_by_year,
+                                  "mark_days_quote": dh["mark_days_quote"],
+                                  "mark_days_intrinsic": dh["mark_days_intrinsic"],
+                                  "hedged": daily_stats(h_r, window, years, book),
+                                  "unhedged": daily_stats(u, window, years, book),
+                                  "measures": {}}
+            series_for_year: dict[str, np.ndarray] = {"hedged": h_r, "unhedged": u}
+            for meas in MEASURES:
+                cell: dict[str, Any] = {}
+                for name, b in B.items():
+                    if meas == "terminal_wealth_full_size" and name == "inverse_ctrl":
+                        cell[name] = None      # no natural size without a risk match
+                        continue
+                    s, note = match_scale(name, b, h_r, meas, window, steps)
+                    t_r = b(s)
+                    series_for_year[f"{name}@{meas}"] = t_r
+                    cell[name] = {"scale": s, "note": note,
+                                  "stats": daily_stats(t_r, window, years, book),
+                                  **pair_label(h_r, t_r, year)}
+                pairs = {k: v for k, v in cell.items() if v is not None}
+                st["measures"][meas] = {"twins": cell, "verdict": _overall(pairs),
+                                        "twins_that_win": [k for k, v in pairs.items()
+                                                           if v["label"] == "TWIN"],
+                                        "twins_hedge_beats": [k for k, v in pairs.items()
+                                                              if v["label"] == "HEDGE"]}
+            # equal terminal wealth: same money at the end -- which one hurt less?
+            dual = {}
+            tw_h = float(np.prod(1.0 + h_r))
+            for name, b in B.items():
+                full = 0.0 if name == "inverse_ctrl" else 1.0
+                tw_full = float(np.prod(1.0 + b(full)))
+                if tw_full < tw_h:
+                    dual[name] = {"feasible": False,
+                                  "note": "even at full size the twin ends with less money"}
+                    continue
+                s = _solve(b, tw_h, lambda r: float(np.prod(1.0 + r)), steps)
+                t_r = b(s)
+                ds = daily_stats(t_r, window, years, book)
+                dual[name] = {"feasible": True, "scale": s, "stats": ds,
+                              "hedge_lower_risk": {m: st["hedged"][m] < ds[m]
+                                                   for m in RISK_MEASURES}}
+            st["equal_terminal_wealth"] = dual
+            # by calendar year: returns, max drawdown inside the year, worst 21-session loss
+            by_year = []
+            for y in sorted(set(year.tolist())):
+                k = year == y
+                row: dict[str, Any] = {"year": int(y), "sessions": int(k.sum()),
+                                       "crash": int(y) in set(spec["CH20A_HEDGE_CRASH_YEARS"]),
+                                       **{f"hedge_{a}": drag_by_year.get(int(y), {}).get(a)
+                                          for a in ("cost", "payoff", "net")}}
+                for nm, rr in series_for_year.items():
+                    row[f"ret:{nm}"] = float(np.prod(1.0 + rr[k]) - 1.0)
+                    row[f"maxdd:{nm}"] = risk_of(rr[k], "max_drawdown", window)
+                    row[f"w21:{nm}"] = risk_of(rr[k], "worst_21d_loss", window)
+                by_year.append(row)
+            st["by_year"] = by_year
+            out["settings"][f"{fill_name}|{cash_name}"] = st
+    hd = hedged_cache[fills[0][1]]
+    out["daily_terminal_hedged_primary_fill"] = float(hd["equity"][-1])
+    return out
+
+
 # ------------------------------------------------------------------- per symbol
-def replay_symbol(sym: str, data_dir: Path, secid: int, spec: dict) -> dict:
+def replay_symbol(sym: str, data_dir: Path, secid: int, spec: dict,
+                  rf_file: Path | None = None, sens: bool = True) -> dict:
     wait_for_ram(f"{sym} load")
     under = load_under(data_dir, secid)
     if under.empty:
@@ -599,6 +934,20 @@ def replay_symbol(sym: str, data_dir: Path, secid: int, spec: dict) -> dict:
         res["n_periods"] = int(len(pr))
         res["plain"] = plain_sentence(sym, res)
         out["variants"][v] = res
+    if sens:
+        wait_for_ram(f"{sym} leg marks")
+        marks = load_leg_marks(data_dir, secid, roll["rolls"])
+        rf = load_rf(rf_file, under["date"])
+        print(f"  {sym}: leg-mark quote rows {len(marks):,}; T-bill cash "
+              f"{'loaded' if rf is not None else 'NOT RUN (no rf file at ' + str(rf_file) + ')'}",
+              flush=True)
+        s = sensitivity(under, roll["rolls"], marks, spec, rf,
+                        tuple(tuple(f) for f in C.CH20A_SENS_FILLS),
+                        int(C.CH20A_SENS_WORST_WINDOW), int(C.CH20A_SENS_SCALE_STEPS))
+        del marks
+        s["roll_grid_terminal_hedged"] = out["variants"]["base"]["metrics"]["hedged"][
+            "terminal_wealth"]
+        out["sensitivity"] = s
     return out
 
 
@@ -622,6 +971,16 @@ def render_md(rec: dict) -> str:
             L.append(f"- **{s}** [{v}]: `{vd['label']}`"
                      + (f" ({vd['twin']})" if vd.get("twin") else "")
                      + f" -- {r['variants'][v]['plain']}")
+    sens_syms = [s for s, r in rec["symbols"].items() if r.get("sensitivity")]
+    if sens_syms:
+        L += ["", "## The verdict depends on the risk measure (post-hoc, daily marks, "
+              "ask/bid, cash 0%)", ""]
+        for s in sens_syms:
+            L.append(f"- {measure_sentence(s, rec['symbols'][s]['sensitivity'])}")
+        L.append("")
+        L.append("Full table, every fill and cash setting, cost drag and the $35k worst case: "
+                 f"`ch20a_by_measure_{rec['run_id']}.md`; by year per underlying: "
+                 f"`ch20a_by_year_<SYM>_{rec['run_id']}.md`.")
     L += ["", "## Quote-file inventory", "",
           f"Directory `{rec['inventory']['data_dir']}`; files {rec['inventory']['n_files']}; "
           f"newest underlying date **{rec['inventory']['newest_date']}**; years by symbol "
@@ -660,7 +1019,8 @@ def render_md(rec: dict) -> str:
                   f"periods {res['n_periods']} over {res['years']:.1f} y. "
                   + (" ".join(res["notes"])), "",
                   "| construction | terminal $1 | CAGR | vol | max DD | avg DD | worst period | "
-                  "worst period $35k | max DD $35k |", "|---|---|---|---|---|---|---|---|---|"]
+                  "worst period $35k (roll grid) | max DD $35k (roll grid; daily-mark dollars "
+                  "are in the by-measure file) |", "|---|---|---|---|---|---|---|---|---|"]
             for k, mm in res["metrics"].items():
                 L.append(f"| {k} | {mm['terminal_wealth']:.2f} | {_pct(mm['cagr'])} | "
                          f"{_pct(mm['vol_ann'])} | {_pct(mm['max_drawdown'])} | "
@@ -695,6 +1055,182 @@ def render_md(rec: dict) -> str:
     return "\n".join(L)
 
 
+PRIMARY_SETTING = "ask_bid|cash_0pct"
+_SHORT = {"max_drawdown": "max DD", "avg_drawdown": "avg DD", "worst_21d_loss": "worst 21d",
+          "terminal_wealth_full_size": "TW full size"}
+_TW_SHORT = {"hold_less": "HL", "trend": "TR", "inverse_ctrl": "INV"}
+
+
+def _cell(c: dict | None) -> str:
+    if c is None:
+        return "n/a (no natural size)"
+    return (f"{c['label']} -- s {c['scale']:.3f}, ${c['stats']['terminal_wealth']:.2f}, "
+            f"hedge ahead {c['hedge_ahead_in_n_of'][0]}/{c['hedge_ahead_in_n_of'][1]}")
+
+
+def measure_sentence(sym: str, sens: dict, setting: str = PRIMARY_SETTING) -> str:
+    st = sens["settings"][setting]
+    parts = []
+    for meas in MEASURES:
+        mm = st["measures"][meas]
+        w = mm["twins_that_win"]
+        b = mm["twins_hedge_beats"]
+        if mm["verdict"] == "HEDGE_BEATS_TWINS":
+            parts.append(f"{_SHORT[meas]}: the hedge beats every twin")
+        elif w:
+            parts.append(f"{_SHORT[meas]}: {', '.join(w)} beat(s) the hedge"
+                         + (f" (the hedge beats {', '.join(b)})" if b else ""))
+        else:
+            parts.append(f"{_SHORT[meas]}: cannot distinguish"
+                         + (f" (the hedge beats {', '.join(b)})" if b else ""))
+    return f"{sym}: " + "; ".join(parts) + "."
+
+
+def render_summary(rec: dict) -> str:
+    """ONE table: measure x twin -> winner, per underlying, with the cost drag per year."""
+    L = [f"# CH-20a hedge replay -- verdict by measure, run {rec['run_id']}", "",
+         "POST-HOC sensitivity requested by the review of PR #139; the frozen primary (roll grid, "
+         "average drawdown, ask/bid, cash 0%) is unchanged and printed in the main receipt. "
+         "Daily marks. Each twin is scaled DOWN only to match the hedged book on the named risk "
+         "measure, then terminal wealth decides with the frozen leave-one-year-out rule: HEDGE "
+         "= hedge ahead in the full sample and in every year-dropped sample; TWIN = twin ahead "
+         "in all of them; else CANNOT_DISTINGUISH. The overall rule is one-sided (the hedge "
+         "must beat all three; any one robust twin wins). Observations, no skill claim. "
+         "CLAIMS PROMOTED: none.", "",
+         f"## Primary setting `{PRIMARY_SETTING}` (ask/bid fills, cash at 0%)", "",
+         "| underlying | measure | hedged $1 | hold_less | trend | inverse_ctrl | overall |",
+         "|---|---|---|---|---|---|---|"]
+    for s, r in rec["symbols"].items():
+        sens = r.get("sensitivity")
+        if not sens:
+            continue
+        st = sens["settings"][PRIMARY_SETTING]
+        for meas in MEASURES:
+            mm = st["measures"][meas]
+            L.append(f"| {s} | {_SHORT[meas]} | {st['hedged']['terminal_wealth']:.2f} | "
+                     + " | ".join(_cell(mm["twins"][t]) for t in TWINS)
+                     + f" | **{mm['verdict']}** |")
+    L += ["", "## Cost drag per year (premium paid, payoff received, net = payoff - premium; "
+          "% of equity, roll grid)", "",
+          "| underlying | fill | mean debit / roll (% spot) | gross premium /yr | payoff /yr | "
+          "net drag /yr |", "|---|---|---|---|---|---|"]
+    for s, r in rec["symbols"].items():
+        sens = r.get("sensitivity")
+        if not sens:
+            continue
+        for f, _x in C.CH20A_SENS_FILLS:
+            d = sens["settings"][f"{f}|cash_0pct"]["cost_drag"]
+            L.append(f"| {s} | {f} | {_pct(d['mean_cost_per_roll_pct_spot'], 2)} | "
+                     f"{_pct(d['gross_cost_per_year'], 2)} | {_pct(d['payoff_per_year'], 2)} | "
+                     f"{_pct(-d['net_drag_per_year'], 2)} |")
+    L += ["", "## Overall verdict under every fill and cash setting", "",
+          "| underlying | setting | " + " | ".join(_SHORT[m] for m in MEASURES) + " |",
+          "|---|---|" + "---|" * len(MEASURES)]
+    for s, r in rec["symbols"].items():
+        sens = r.get("sensitivity")
+        if not sens:
+            continue
+        for key, st in sens["settings"].items():
+            cells = []
+            for m in MEASURES:
+                mm = st["measures"][m]
+                tag = mm["verdict"]
+                if mm["twins_that_win"]:
+                    tag += " (" + ",".join(_TW_SHORT[t] for t in mm["twins_that_win"]) + ")"
+                cells.append(tag)
+            L.append(f"| {s} | {key} | " + " | ".join(cells) + " |")
+    L += ["", "## Equal terminal wealth (twin scaled to end with the hedge's money): does the "
+          "hedge hurt less?", "",
+          "| underlying | twin | scale | " + " | ".join(
+              f"{_SHORT[m]} hedged / twin" for m in RISK_MEASURES) + " |",
+          "|---|---|---|" + "---|" * len(RISK_MEASURES)]
+    for s, r in rec["symbols"].items():
+        sens = r.get("sensitivity")
+        if not sens:
+            continue
+        st = sens["settings"][PRIMARY_SETTING]
+        for t, d in st["equal_terminal_wealth"].items():
+            if not d["feasible"]:
+                L.append(f"| {s} | {t} | -- | " + " | ".join(
+                    [d["note"]] + [""] * (len(RISK_MEASURES) - 1)) + " |")
+                continue
+            L.append(f"| {s} | {t} | {d['scale']:.3f} | " + " | ".join(
+                f"{st['hedged'][m] * 100:.1f}% / {d['stats'][m] * 100:.1f}%"
+                + (" hedge lower" if d["hedge_lower_risk"][m] else " twin lower")
+                for m in RISK_MEASURES) + " |")
+    L += ["", "## Who wins under which measure (primary setting)", ""]
+    for s, r in rec["symbols"].items():
+        if r.get("sensitivity"):
+            L.append(f"- {measure_sentence(s, r['sensitivity'])}")
+    L += ["", "## $35,000 book, daily marks, primary setting (worst case in dollars)", "",
+          "| underlying | construction | max DD $ | worst 21-session $ | terminal $1 |",
+          "|---|---|---|---|---|"]
+    for s, r in rec["symbols"].items():
+        sens = r.get("sensitivity")
+        if not sens:
+            continue
+        st = sens["settings"][PRIMARY_SETTING]
+        rows = [("hedged", st["hedged"]), ("unhedged", st["unhedged"])]
+        for t in TWINS:
+            c = st["measures"]["max_drawdown"]["twins"][t]
+            rows.append((f"{t} (matched on max DD, s {c['scale']:.3f})", c["stats"]))
+        for nm, d in rows:
+            L.append(f"| {s} | {nm} | ${d['max_drawdown_usd']:,.0f} | "
+                     f"${d['worst_21d_loss_usd']:,.0f} | {d['terminal_wealth']:.2f} |")
+    L.append("")
+    return "\n".join(L)
+
+
+def render_by_year(sym: str, r: dict, run_id: str) -> str:
+    sens = r["sensitivity"]
+    st = sens["settings"][PRIMARY_SETTING]
+    L = [f"# CH-20a {sym} by year -- run {run_id}", "",
+         f"Daily marks, window {sens['window'][0]} .. {sens['window'][1]} "
+         f"({sens['sessions']} sessions); legs marked from quotes on {st['mark_days_quote']} "
+         f"hold days and at intrinsic on {st['mark_days_intrinsic']}. Daily terminal "
+         f"{sens['daily_terminal_hedged_primary_fill']:.4f} vs roll-grid terminal "
+         f"{sens['roll_grid_terminal_hedged']:.4f}. Setting `{PRIMARY_SETTING}`. Twins: HL = "
+         "hold_less, TR = trend, INV = inverse_ctrl, each matched on the measure after the @.",
+         "", "## Returns by calendar year (hedge cost / payoff / net by settlement year, % equity)",
+         ""]
+    keys = ["hedged", "unhedged"] + [f"{t}@{m}" for m in RISK_MEASURES for t in TWINS] + \
+        [f"{t}@terminal_wealth_full_size" for t in ("hold_less", "trend")]
+    present = [k for k in keys if f"ret:{k}" in st["by_year"][0]]
+
+    def lab(k: str) -> str:
+        if "@" not in k:
+            return k
+        t, m = k.split("@")
+        return f"{_TW_SHORT[t]}@{_SHORT[m]}"
+    L.append("| year | crash | cost | payoff | net | " + " | ".join(lab(k) for k in present) + " |")
+    L.append("|---|---|---|---|---|" + "---|" * len(present))
+    for y in st["by_year"]:
+        L.append(f"| {y['year']} | {'Y' if y['crash'] else ''} | {_pct(y['hedge_cost'])} | "
+                 f"{_pct(y['hedge_payoff'])} | {_pct(y['hedge_net'])} | "
+                 + " | ".join(_pct(y[f'ret:{k}']) for k in present) + " |")
+    risk_keys = ["hedged", "unhedged"] + [f"{t}@max_drawdown" for t in TWINS]
+    L += ["", "## Risk inside each year: max drawdown / worst 21-session loss", "",
+          "| year | " + " | ".join(lab(k) for k in risk_keys) + " |",
+          "|---|" + "---|" * len(risk_keys)]
+    for y in st["by_year"]:
+        L.append(f"| {y['year']} | " + " | ".join(
+            f"{y[f'maxdd:{k}'] * 100:.1f}% / {y[f'w21:{k}'] * 100:.1f}%" for k in risk_keys)
+            + " |")
+    L += ["", "## Verdict by measure, every setting", ""]
+    for key, s2 in sens["settings"].items():
+        L.append(f"### `{key}` -- net drag {_pct(-s2['cost_drag']['net_drag_per_year'], 2)}/yr "
+                 f"(gross {_pct(s2['cost_drag']['gross_cost_per_year'], 2)}, payoff "
+                 f"{_pct(s2['cost_drag']['payoff_per_year'], 2)}); hedged $1 -> "
+                 f"{s2['hedged']['terminal_wealth']:.2f}")
+        L += ["", "| measure | hold_less | trend | inverse_ctrl | overall |", "|---|---|---|---|---|"]
+        for m in MEASURES:
+            mm = s2["measures"][m]
+            L.append(f"| {_SHORT[m]} | " + " | ".join(_cell(mm["twins"][t]) for t in TWINS)
+                     + f" | {mm['verdict']} |")
+        L.append("")
+    return "\n".join(L)
+
+
 METHOD_NOTES = [
     "Fills: long put at BEST OFFER, short put at BEST BID; never the mid. Settled at intrinsic "
     "on the last session on/before expiry (PM-settled ETF options); no exit quote is used.",
@@ -713,8 +1249,14 @@ METHOD_NOTES = [
     "Hedge cost/payoff by year are sums of per-roll fractions of equity at entry.",
     "Contracts sized to equity / (spot x 100), fractional. Inverse control is hypothetical for "
     "SMH (no -1x SMH fund exists); modelled as -1x daily total return less the stated fee.",
-    "Verdict rule frozen in code (decide): a side wins only if it is ahead on terminal wealth in "
-    "the full sample AND in every leave-one-year-out sample.",
+    "Verdict rule frozen in code (decide), ONE-SIDED: the hedge wins only if it is ahead of ALL "
+    "three twins on terminal wealth in the full sample AND in every leave-one-year-out sample; "
+    "ANY one twin ahead in all of them wins for the twins.",
+    "POST-HOC sensitivity (review of PR #139): daily marks, twins matched on max drawdown, "
+    "average drawdown and worst 21-session loss in turn, plus terminal wealth at full size and "
+    "an equal-terminal-wealth dual; fills ask/bid, mid + 1/4 spread and mid; cash 0% and the "
+    "French 1-month T-bill. Daily twins are rebalanced daily (the roll-grid twins once a roll). "
+    "Variants: 2 frozen + 3 fills x 2 cash rates x 5 measure cells, all printed.",
 ]
 
 
@@ -723,6 +1265,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--data-dir", default=str(DEFAULT_DATA))
     ap.add_argument("--symbols", default=",".join(C.CH20A_HEDGE_SYMBOLS))
+    ap.add_argument("--rf-file", default=None,
+                    help="daily T-bill file (default: <data-dir>/../" + C.CH20A_SENS_RF_FILE + ")")
+    ap.add_argument("--no-sensitivity", action="store_true",
+                    help="frozen primary only (skips the post-hoc measure / fill / cash table)")
     args = ap.parse_args(argv)
 
     data_dir = Path(args.data_dir)
@@ -731,7 +1277,16 @@ def main(argv: list[str] | None = None) -> int:
     if not data_dir.exists():
         print(f"REFUSED: data dir {data_dir} does not exist")
         return 2
+    try:                                       # cap native threads (shared, RAM-tight PC)
+        import pyarrow as pa
+        pa.set_cpu_count(4)
+        pa.set_io_thread_count(4)
+    except Exception:                          # noqa: BLE001
+        pass
+    rf_file = Path(args.rf_file) if args.rf_file else data_dir.parent / C.CH20A_SENS_RF_FILE
     n_before = len(list(data_dir.glob("*")))
+    n_rf_before = len(list(rf_file.parent.glob("*"))) if rf_file.parent.exists() else 0
+    print(f"rf folder file count BEFORE: {n_rf_before} ({rf_file.parent})")
     spec = frozen_spec()
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     print(f"CH-20a hedge replay  run {run_id}  spec {spec['sha256'][:12]}")
@@ -753,7 +1308,8 @@ def main(argv: list[str] | None = None) -> int:
         for sym in [s.strip() for s in args.symbols.split(",") if s.strip()]:
             if sym not in SECIDS:
                 raise HedgeReplayRefused(f"unknown symbol {sym}")
-            r = replay_symbol(sym, data_dir, SECIDS[sym], spec["values"])
+            r = replay_symbol(sym, data_dir, SECIDS[sym], spec["values"], rf_file,
+                              sens=not args.no_sensitivity)
             sym_res[sym] = r
             if r.get("status") == "OK":
                 for v in VARIANTS:
@@ -765,8 +1321,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"REFUSED: {exc}")
         return 3
     n_after = len(list(data_dir.glob("*")))
+    n_rf_after = len(list(rf_file.parent.glob("*"))) if rf_file.parent.exists() else 0
     print(f"live data folder file count AFTER: {n_after}")
-    if n_after != n_before:
+    print(f"rf folder file count AFTER: {n_rf_after}")
+    if n_after != n_before or n_rf_after != n_rf_before:
         print("REFUSED: the live data folder changed during a read-only run")
         return 4
     ok = [s for s, r in sym_res.items() if r.get("status") == "OK"]
@@ -774,7 +1332,12 @@ def main(argv: list[str] | None = None) -> int:
            "generated_at": datetime.now(timezone.utc).isoformat(), "git": _git_head(),
            "spec": spec, "inventory": inv, "variants_tried": list(VARIANTS),
            "symbols": sym_res, "method_notes": METHOD_NOTES,
-           "live_folder_files": {"before": n_before, "after": n_after},
+           "live_folder_files": {"before": n_before, "after": n_after,
+                                 "rf_folder_before": n_rf_before, "rf_folder_after": n_rf_after},
+           "sensitivity_spec": {"post_hoc": True, "fills": [list(f) for f in C.CH20A_SENS_FILLS],
+                                "worst_window": C.CH20A_SENS_WORST_WINDOW,
+                                "scale_steps": C.CH20A_SENS_SCALE_STEPS,
+                                "rf_file": str(rf_file), "rf_file_exists": rf_file.exists()},
            "verdict_lines": {s: {v: sym_res[s]["variants"][v]["verdict"]["label"]
                                  + (f" ({sym_res[s]['variants'][v]['verdict']['twin']})"
                                     if sym_res[s]["variants"][v]["verdict"].get("twin") else "")
@@ -784,6 +1347,16 @@ def main(argv: list[str] | None = None) -> int:
     mp = out / f"ch20a_hedge_replay_{run_id}.md"
     mp.write_text(render_md(rec), encoding="utf-8")
     print(f"receipt -> {jp}\n         -> {mp}")
+    if any(sym_res[s].get("sensitivity") for s in ok):
+        sp = out / f"ch20a_by_measure_{run_id}.md"
+        sp.write_text(render_summary(rec), encoding="utf-8")
+        print(f"         -> {sp}")
+        for s in ok:
+            if sym_res[s].get("sensitivity"):
+                yp = out / f"ch20a_by_year_{s}_{run_id}.md"
+                yp.write_text(render_by_year(s, sym_res[s], run_id), encoding="utf-8")
+                print(f"         -> {yp}")
+                print("  " + measure_sentence(s, sym_res[s]["sensitivity"]), flush=True)
     if not ok:
         print("REFUSED: no symbol produced a replay")
         return 5
