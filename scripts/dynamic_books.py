@@ -232,7 +232,8 @@ def main(argv: list[str] | None = None) -> int:
                     date_from=getattr(a, "date_from", None), date_to=getattr(a, "date_to", None),
                     rolling_out=a.rolling_out, accept_code_version=a.accept_code_version)
     except (D.DynamicBookRefused, R.RollingCohortRefused) as exc:
-        refusal = {"task": D.TASK_NAME, "schema": "dynamic_exposure_run/2", "mode": a.cmd, "action": "REFUSED",
+        refusal = {"task": D.TASK_NAME, "schema": "dynamic_exposure_run/3", "contract_version": D.CONTRACT_VERSION,
+                   "mode": a.cmd, "action": "REFUSED",
                    "rc": 2, "reason": str(exc), "utc": datetime.now(timezone.utc).isoformat()}
         print(json.dumps(refusal))
         if a.cmd in ("backfill", "step"):              # the task receipt reads this journal
