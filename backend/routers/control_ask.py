@@ -34,14 +34,14 @@ from __future__ import annotations
 import os
 import time
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import HTTPException
 
-from backend.routers.control import _now, _require_enabled, guard_unsafe_methods
+from backend.routers.control import _now, _require_enabled, control_plane_router
 from backend.services import ask_tools
 
-# H1 (PR #143 review): the ask POST is state-changing (it can start the model server).
-router = APIRouter(prefix="/api/control", tags=["control"],
-                   dependencies=[Depends(guard_unsafe_methods)])
+# H1 (PR #143 review) + CH-22 follow-up: the one control-plane gate (404 off the
+# desktop, local-request check on it) on every route of this router.
+router = control_plane_router(tags=["control"])
 
 
 ASK_SYSTEM = (

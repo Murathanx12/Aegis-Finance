@@ -643,8 +643,13 @@ app.include_router(candidates.router)
 # read-only mirror. Writes only append-only JSONL under backend/data/human_loop;
 # places nothing, seals nothing.
 app.include_router(journal.router)
-# Aegis Desktop control plane (roadmap 2026-09-08 section 10.7): reads are always on,
-# every mutating route refuses unless AEGIS_CONTROL_ENABLED=1, so this is inert on Railway.
+# Aegis Desktop control plane (roadmap 2026-09-08 section 10.7). Every control-plane
+# router below (control, control_ask, system_status, ticker_hub, owner_inbox) is built
+# by `control.control_plane_router()`: unless AEGIS_CONTROL_ENABLED=1 each of its routes,
+# reads included, answers 404 as if it did not exist, so the plane is absent on Railway;
+# on the desktop every request must pass `check_local_request`.
+# `backend/tests/test_control_plane_gate.py` fails on any route under
+# `control.CONTROL_PLANE_PREFIXES` that is mounted without that gate.
 app.include_router(control.router)
 # The assistant answers from its OWN module (roadmap O6). Split out so an AST test
 # can prove a negative over a narrow file: no write, no subprocess, no broker and

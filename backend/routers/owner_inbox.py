@@ -7,7 +7,8 @@ A note is one append-only JSONL row under `<OPTIMUS_LEDGER_DIR>/owner_inbox/`
 (`scripts/owner_inbox.py` owns the file format and the CLI a Claude session reads
 it with). This router calls no LLM, sends nothing anywhere and imports no broker.
 
-Two gates, both on BOTH routes (review of PR #143, H1):
+Two gates, both on BOTH routes (review of PR #143, H1), applied by
+`control.control_plane_gate` (off the desktop the routes answer 404 first):
   * `control.check_local_request` -- loopback Host with the served port, a
     same-origin Origin if any, Sec-Fetch-Site same-origin/none, and
     `Content-Type: application/json` on the POST. A hostile page's no-cors
@@ -20,13 +21,13 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi import Body, HTTPException, Query, Request
 
 from backend import config as C
-from backend.routers.control import _require_enabled, check_local_request
+from backend.routers.control import _require_enabled, control_plane_router
 
-router = APIRouter(prefix="/api/control", tags=["owner-inbox"],
-                   dependencies=[Depends(check_local_request)])
+# `control_plane_gate` (404 off the desktop, then `check_local_request`) on both routes.
+router = control_plane_router(tags=["owner-inbox"])
 
 
 def _inbox():
