@@ -50,6 +50,9 @@ from backend.services import data_rights  # noqa: E402
 
 VERBS = {"get", "post", "put", "delete", "patch"}
 GUARD = "check_local_request"
+#: router-level guard that applies check_local_request to POST/PUT/PATCH/DELETE
+#: only: GET routes on such a router are NOT local-only (reads are served)
+UNSAFE_GUARD = "guard_unsafe_methods"
 #: hosts that are not data sources (schemas, code hosting, our own deploys, loopback)
 IGNORED_HOSTS = {
     "www.w3.org", "purl.org", "json-schema.org", "github.com", "doi.org", "127.0.0.1",
@@ -162,9 +165,13 @@ def _const(node: ast.AST) -> str | None:
     return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
 
 
+def _mentions(node: ast.AST, name: str) -> bool:
+    return any((isinstance(n, ast.Name) and n.id == name)
+               or (isinstance(n, ast.Attribute) and n.attr == name) for n in ast.walk(node))
+
+
 def _mentions_guard(node: ast.AST) -> bool:
-    return any((isinstance(n, ast.Name) and n.id == GUARD)
-               or (isinstance(n, ast.Attribute) and n.attr == GUARD) for n in ast.walk(node))
+    return _mentions(node, GUARD)
 
 
 def find_routes(m: Module) -> list[dict[str, Any]]:
@@ -183,7 +190,9 @@ def find_routes(m: Module) -> list[dict[str, Any]]:
                 routers[node.targets[0].id] = {
                     "prefix": prefix,
                     "guarded": any(kw.arg == "dependencies" and _mentions_guard(kw.value)
-                                   for kw in node.value.keywords)}
+                                   for kw in node.value.keywords),
+                    "unsafe_guarded": any(kw.arg == "dependencies" and _mentions(kw.value, UNSAFE_GUARD)
+                                          for kw in node.value.keywords)}
     out = []
     for fn in ast.walk(m.tree):
         if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -194,13 +203,14 @@ def find_routes(m: Module) -> list[dict[str, Any]]:
                 continue
             owner = dec.func.value.id
             if owner == "app":
-                info = {"prefix": "", "guarded": False}
+                info = {"prefix": "", "guarded": False, "unsafe_guarded": False}
             elif owner in routers:
                 info = routers[owner]
             else:
                 continue
             path = _const(dec.args[0]) if dec.args else ""
-            guarded = info["guarded"] or _mentions_guard(dec) or _mentions_guard(fn.args)
+            guarded = (info["guarded"] or _mentions_guard(dec) or _mentions_guard(fn.args)
+                       or (info.get("unsafe_guarded") and dec.func.attr != "get"))
             out.append({"method": dec.func.attr.upper(), "path": (info["prefix"] or "") + (path or ""),
                         "module": m.name, "handler": fn.name, "node": fn, "local_only": guarded})
     return out
