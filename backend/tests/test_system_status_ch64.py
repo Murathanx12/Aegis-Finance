@@ -242,7 +242,7 @@ def test_raw_sec_receipt_is_found_when_schtasks_cut_the_action(tmp_path):
     rp = _raw_receipt(h / "receipts", t)
     ctx = _ctx(tmp_path, now)
     # the second shape is verbatim what csv.reader returned on the live machine: a stray closing quote
-    for cut in (str(h), str(h) + '"', str(h)[:-3], str(h) + "\\", str(h / "run_raw_coll")):
+    for cut in (str(h), str(h) + '"', str(h)[:-3], str(h) + os.sep, str(h / "run_raw_coll")):
         rd = TR.r_raw_sec(ctx, _cut_task(_CONHOST + cut))
         assert rd.unknown_reason is None, (cut, rd.unknown_reason)
         assert rd.stamp == t + timedelta(seconds=5) and rd.status == "OK"
