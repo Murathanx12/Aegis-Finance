@@ -22,6 +22,8 @@ it before writing) plus each book's holdings and return series, and writes
   from this module), the TAIL check (top-1 / top-2 holdings' share of the excess),
   top sector weight and HHI, beta vs SPY where a long enough series exists, cash
   fraction, `one_name_dependence`;
+* per book (CH-55, 2026-11-16): `max_drawdown` -- the largest peak-to-trough fall of the same
+  series, or CANNOT DETERMINE with a reason;
 * per book (CH-11 note, 2026-11-13): `market_exposure` -- up-capture, down-capture,
   the beta-adjusted excess (return - beta x SPY leg) and the residual by month, from
   the same series as the beta; CANNOT DETERMINE with a reason when it is not answerable;
@@ -804,6 +806,31 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
                    "beta_adjusted_pp": round(100 * cr, 3)})
     out["by_month"] = bm
     return out
+
+
+def drawdown_of(series: Optional[list], sessions: Optional[int] = None) -> dict:
+    """CH-55 (2026-11-16): the largest peak-to-trough fall of the book's compounded
+    period-return series (the one `beta_of` used), in percent (<= 0), with the dates of
+    the peak and the trough. Starts from 1.0 before the first period. CANNOT DETERMINE
+    with a reason when there is no series -- never 0 for "unknown". A series shorter than
+    the receipt window still gives a number; `n_periods` beside `receipt_sessions` says
+    how much of the window it saw (an unseen stretch can only make the true figure worse)."""
+    pts = [(str(d), float(b)) for d, b, _ in series or [] if _num(b) is not None]
+    if not pts:
+        return {**_cd("no period-return series: the fall from a peak cannot be read off one "
+                      "window return"), "n_periods": 0}
+    nav, peak, peak_d = 1.0, 1.0, None
+    worst, w_peak, w_trough = 0.0, None, None
+    for d, r in pts:
+        nav *= 1.0 + r
+        if nav > peak:
+            peak, peak_d = nav, d
+        dd = nav / peak - 1.0
+        if dd < worst:
+            worst, w_peak, w_trough = dd, peak_d, d
+    return {"value": round(100 * worst, 3), "peak": w_peak, "trough": w_trough,
+            "n_periods": len(pts), "receipt_sessions": sessions, "from": pts[0][0], "to": pts[-1][0],
+            "basis": "compounded period returns, start = 1.0 before the first period"}
 
 
 def subwindows(series: Optional[list], sessions: Optional[int], min_cover: float = 0.8) -> dict:
@@ -1681,6 +1708,7 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
                                                spy_leg_pct=spy_leg, min_capture_obs=p["min_capture_obs"],
                                                sessions=sessions, window=(r.get("inception"), r.get("last_mark")),
                                                spy_close=spy_close, p=p)
+        e["max_drawdown"] = drawdown_of(series, sessions)
         e["cash_fraction"] = cash
         e["n_series_periods"] = len(series)
         sub = subwindows(series, sessions)
@@ -2287,7 +2315,7 @@ def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd
 
 
 __all__ = ["SCHEMA", "LABEL_LADDER", "LABEL_CEILING", "ERROR_TYPES", "NOT_COMPUTABLE", "CANNOT_DETERMINE",
-           "market_exposure",
+           "market_exposure", "drawdown_of",
            "Prices", "build", "classify_loser", "cluster", "collapse_line", "evidence_label",
            "exante_bets", "participation_ratio", "top_line",
            "jaccard", "lanes_block", "load_inputs", "params", "refused_summary", "run",

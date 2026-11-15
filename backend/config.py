@@ -5665,6 +5665,40 @@ RESULTS_VOICE_MECHANISMS: dict = {
                  "threshold, monthly"),
     "hack2": "Alpaca paper broker mirroring the frozen revision_flow_v0 book (v2)",
 }
+# ── CH-55 family scorecard + the labels' false-fire rates (2026-11-16) ────────
+#: `backend/services/family_scorecard.py` / `python -m scripts.family_scorecard`: one row per
+#: independent family (the SAME_BET components `results_voice` already computes), each with
+#: beta, beta-adjusted excess, drawdown, the twin gap and its labels. The ROI receipt's own
+#: `generated_utc` older than this many days REFUSES (non-zero exit); an undateable stamp is
+#: UNKNOWN and refuses too. Four days = a Friday receipt read on the following Monday night
+#: (the PAPER_ACCOUNT_MARK_STALE_DAYS reasoning).
+FAMILY_SCORECARD_STALE_DAYS = 4
+#: How many families the scorecard's markdown names at each end (leading / worst).
+FAMILY_SCORECARD_N_ENDS = 3
+#: How often `book_dna.evidence_label` awards each label to a book NOBODY selected: MEASURED by
+#: `scripts/paper_tables.py` table 2 (roadmap row CH-53), never tuned. 39,460 random
+#: equal-weight books 2016-2026, the production label function and entry cost. `ci95` resamples
+#: start quarters; `single_window` is the min..max rate inside one window (every live book
+#: shares one window, so the fleet's rate on a given day is ONE draw from that spread).
+#: REPLICATED is the share of random books WITH a random twin that reach it;
+#: `upper_bound_with_sibling` adds an independent same-rule sibling. `results_voice` prints the
+#: rate beside every label and the scorecard refuses to print a label without one. The
+#: measurement holds only for the rule it was taken under: when `BOOK_DNA_EARLY_MIN_SESSIONS`
+#: differs from `early_min_sessions` below, every rate reads CANNOT DETERMINE until table 2 is
+#: re-run (pass the new receipt with `--false-fire-receipt`, then update this block).
+LABEL_FALSE_FIRE_MEASURED: dict = {
+    "source": "scripts.paper_tables table 2 (CH-53), receipt table2_20261115T073305Z.json "
+              "(sha256 ff17caee00ef0aac...), code commit 93f362bf",
+    "measured_utc": "2026-11-15T07:33:05+00:00",
+    "n_books": 39460,
+    "early_min_sessions": 21,
+    "rates": {
+        "EARLY_EVIDENCE": {"rate": 0.358, "ci95": (0.305, 0.412), "single_window": (0.009, 0.982)},
+        "REPLICATED": {"rate": 0.256, "ci95": (0.225, 0.284), "single_window": (0.009, 0.545),
+                       "upper_bound_with_sibling": 0.321},
+    },
+    "zero_edge_symmetric_early": 0.422,
+}
 # ── CH-11 matched-twin re-evaluation (2026-11-12) ─────────────────────────────
 #: `scripts/matched_twin_reeval.py` re-reads the leaders and the worst books
 #: against N same-band random twins instead of book_dna's single draw.
