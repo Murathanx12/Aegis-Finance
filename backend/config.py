@@ -1107,6 +1107,40 @@ config: dict = {
         "slow_request_threshold_s": 10.0,# Requests slower than this get a warning log
     },
 
+    # ── USAGE RECEIPT (privacy-preserving traffic counter; OFF by default) ───
+    # Enabled only by env AEGIS_USAGE_RECEIPT=1. Summary route needs env
+    # AEGIS_USAGE_TOKEN (refused when unset). Receipt files are written only
+    # when env AEGIS_USAGE_RECEIPT_DIR names a writable directory.
+    # See backend/services/usage_receipt.py.
+    "usage_receipt": {
+        "visitor_cap": 20000,            # distinct-visitor set cap per UTC day
+        "days_kept": 14,                 # finalized days kept in memory
+        "ticker_top_n": 20,              # ticker table rows reported
+        "ticker_max_tracked": 500,       # distinct tickers tracked per day
+        "page_max_tracked": 200,         # distinct page templates tracked per day
+        "route_max_tracked": 400,        # distinct route templates tracked per day
+        "flush_interval_s": 300,         # min seconds between receipt-file writes
+        "beacon_per_visitor_per_min": 30,
+        "beacon_global_per_min": 600,
+        "beacon_max_body_bytes": 256,
+        "ticker_min_visitors": 5,        # ticker table hidden below this many distinct visitors
+        "ticker_min_requests": 5,        # a ticker row needs at least this many requests
+        # Server-side callers (e.g. the frontend host) to count as "excluded", not human.
+        # Substrings of the user agent / prefixes of the client address. Empty by default.
+        "exclude_ua_substrings": [],
+        "exclude_ip_prefixes": [],
+        "ticker_param_names": ["ticker", "symbol"],
+        "page_ticker_prefixes": ["stock", "ticker"],
+        # Excluded from human counts, counted separately (case-insensitive substrings).
+        "monitor_ua_substrings": ["curl/", "python-requests", "python-httpx", "uptimerobot",
+                                  "github-hookshot", "railway", "vercel", "pingdom",
+                                  "statuscake", "go-http-client", "wget/", "healthcheck"],
+        "bot_ua_substrings": ["bot", "spider", "crawl", "slurp", "headless", "facebookexternalhit",
+                              "preview", "scrapy", "httpclient", "okhttp", "axios", "node-fetch"],
+        "health_path_prefixes": ["/api/health", "/docs", "/redoc", "/openapi.json",
+                                 "/favicon.ico", "/static", "/_next"],
+    },
+
     # ── FMP DAILY QUOTA BUDGET ───────────────────────────────────────────
     # FMP free tier is ~250 requests/day shared by ALL callers (provider
     # fallback, ESG, congress collector). The pre-registered congress-IC
