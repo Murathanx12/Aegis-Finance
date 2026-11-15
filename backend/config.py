@@ -4633,6 +4633,14 @@ DYNAMIC_BOOK_HEDGE_BORROW_BPS_YR = 30.0
 DYNAMIC_BOOK_REPORT_EQUITY_USD = 100_000.0
 DYNAMIC_BOOK_WORST_GAP = 0.30
 DYNAMIC_BOOK_BETS_WINDOW = 63
+#: The owner's 11-14 forecast, frozen at the 2026-11-13 close (replay section 4):
+#: the EW of the 22 high-beta fleet books beats SPY at the 21st and 63rd session
+#: after REF_DATE, IF SPY is up; graded vs SPY and vs beta x SPY. Its own prefix
+#: so the dynamic-book declaration above is not touched. Before a grade date the
+#: grader prints NOT_DUE with the running state, never a verdict.
+OWNER_REBOUND_FORECAST_REF_DATE = "2026-11-13"
+OWNER_REBOUND_FORECAST_REF_CLOSES = {"SPY": 754.37, "QQQ": 679.89, "SMH": 486.75}
+OWNER_REBOUND_FORECAST_GRADES = {"21": "2026-12-15", "63": "2027-02-17"}
 
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).
