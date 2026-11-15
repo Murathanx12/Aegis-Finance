@@ -169,19 +169,24 @@ def data_credential_detail(*, environ: dict | None = None, terminal_env: Path | 
                 continue
         else:
             tried[ent["label"]] = "present_unverified"
-        paper = bool(ent.get("paper"))
+        paper = ent.get("paper")                 # True / False / None (unknown)
         out = {"key_id": kid, "secret": sec, "name": ent["key"], "label": ent["label"],
-               "kind": "paper_trading_account" if paper else (
+               "kind": "paper_trading_account" if paper is True else (
                    "dedicated_data_key" if ent["label"] == "dedicated_data" else "process_environment"),
                "credential_is_paper_account": paper, "tried": tried,
                "source": f"{where}, {ent['label']} ({ent['key']})"
                          + (" (data endpoint only, verified)" if ent.get("verify") else ""),
                "warning": None}
-        if paper:
-            out["warning"] = (f"CREDENTIAL_IS_PAPER_ACCOUNT: the bar feed is using {ent['key']} "
+        warns = []
+        if tried.get("dedicated_data") == "rejected":
+            warns.append(f"DEDICATED_DATA_KEY_REJECTED: {order[0]['key']} is present but the venue "
+                         f"rejected it; the feed fell back to {ent['key']}. Replace the dedicated pair.")
+        if paper is True:
+            warns.append(f"CREDENTIAL_IS_PAPER_ACCOUNT: the bar feed is using {ent['key']} "
                               f"({ent['label']}), a paper TRADING account key; retiring or "
                               f"resetting that account stops the price feed. Add "
                               f"{order[0]['key']} / {order[0]['secret']} (a data-only pair).")
+        out["warning"] = "; ".join(warns) or None
         return out
     if unreachable:
         raise DataNetworkUnavailable(

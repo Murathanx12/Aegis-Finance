@@ -104,7 +104,7 @@ def test_us_advanced_and_only_the_five_foreign_failed_is_degraded_rc3(tmp_path):
 
 def test_main_returns_the_documented_exit_code(tmp_path, monkeypatch, capsys):
     for status, rc in (("ok", 0), ("unchanged", 0), ("refused", 2), ("degraded", 3),
-                       ("wait_network", 4)):
+                       ("refused_network", 4)):
         monkeypatch.setattr(BR, "refresh", lambda **kw: {"status": status, "headline": "h"})
         assert BR.main([]) == rc, status
     capsys.readouterr()
@@ -180,7 +180,7 @@ def test_wait_for_network_is_bounded_and_injectable():
     assert ok["ok"] is True and ok["tries"] == 2
 
 
-def test_the_network_never_coming_up_is_wait_network_and_no_key_is_tried(tmp_path):
+def test_the_network_never_coming_up_is_refused_network_and_no_key_is_tried(tmp_path):
     """Replay of 20261114T024403Z (boot burst): red rc 4, not a credential refusal."""
     panels = _two_panels(tmp_path, grader_back=1, ranker_back=1)
     before = {k: v.read_bytes() for k, v in panels.items()}
@@ -191,7 +191,7 @@ def test_the_network_never_coming_up_is_wait_network_and_no_key_is_tried(tmp_pat
                network_waiter=lambda: {"ok": False, "tries": 3, "waited_s": 90.0,
                                        "host": "data.example.test",
                                        "error": "OSError: getaddrinfo failed"})
-    assert rec["status"] == "wait_network" and rec["exit_code"] == 4
+    assert rec["status"] == "refused_network" and rec["exit_code"] == 4
     assert "WAIT_NETWORK" in rec["reason"] and "no credential was tried" in rec["reason"]
     assert before == {k: v.read_bytes() for k, v in panels.items()}
 
@@ -276,7 +276,7 @@ def test_refresh_maps_the_two_refusals_to_the_two_statuses(tmp_path):
 
     def cred(*a):
         raise SystemExit("REFUSED: no data credential authenticates")
-    assert _run(tmp_path, panels, net, _frozen_ok)["status"] == "wait_network"
+    assert _run(tmp_path, panels, net, _frozen_ok)["status"] == "refused_network"
     assert _run(tmp_path / "c", _two_panels(tmp_path / "c"), cred, _frozen_ok)["status"] == "refused"
 
 
@@ -328,3 +328,82 @@ def test_config_declares_the_dedicated_pair_first_and_the_old_order_after():
     assert not first["paper"] and all(e["paper"] for e in config.BARS_DATA_CREDENTIAL_ORDER[2:])
     assert set(config.BARS_REFRESH_OPTIONAL_FOREIGN_SYMBOLS) == set(FIVE)
     assert len(set(config.BARS_REFRESH_RC.values())) == 4     # 0/2/3/4 all distinct codes
+
+
+# ───────────────────────── review-149 fixes ─────────────────────────────────
+
+def test_one_of_two_names_advancing_is_not_a_current_panel(tmp_path):
+    """Coverage, not the panel's max date: AAA reached the close, BBB did not."""
+    panels = _two_panels(tmp_path)
+    rec = _run(tmp_path, panels, lambda s, st: (_bars(["AAA"], LAST), "fixture"), _frozen_ok)
+    assert rec["status"] == "refused" and rec["exit_code"] == 2
+    cov = rec["feed"]["us_panels"]["ranker_deep"]["coverage"]
+    assert cov["n_prev"] == 2 and cov["n_reached"] == 1 and cov["share"] == 0.5
+    assert rec["panels"]["ranker_deep"]["coverage"]["share"] == 0.5     # printed per panel
+    assert rec["feed"]["us_panels"]["ranker_deep"]["state"] == "NOT_ADVANCED"
+
+
+def test_full_coverage_is_ok_and_the_threshold_is_config(tmp_path, monkeypatch):
+    panels = _two_panels(tmp_path)
+    rec = _run(tmp_path, panels, lambda s, st: (_bars(["AAA", "BBB"], LAST), "fixture"), _frozen_ok)
+    assert rec["status"] == "ok"
+    assert rec["feed"]["us_panels"]["grader_2025_26"]["coverage"]["share"] == 1.0
+    assert config.BARS_REFRESH_MIN_COVERAGE == 0.90
+
+
+def test_the_process_env_pair_is_unknown_not_not_paper(tmp_path):
+    c = P6.data_credential_detail(
+        environ={"APCA_API_KEY_ID": "I1", "APCA_API_SECRET_KEY": "S1"},
+        terminal_env=tmp_path / "none.env", probe=lambda k, s: pytest.fail("unverified entry probed"))
+    assert c["name"] == "APCA_API_KEY_ID" and c["credential_is_paper_account"] is None
+    assert c["warning"] is None
+    assert [e for e in config.BARS_DATA_CREDENTIAL_ORDER if e["label"] == "process_env"][0]["paper"] is None
+
+
+def test_a_rejected_dedicated_pair_leaves_a_warning_in_the_receipt(tmp_path):
+    env = _terminal_env(tmp_path, [f"AAT_HACK1_KEY_ID={SECRET_A}", f"AAT_HACK1_SECRET_KEY={SECRET_B}"])
+    c = P6.data_credential_detail(
+        environ={"ALPACA_DATA_KEY_ID": "dead", "ALPACA_DATA_SECRET_KEY": "dead2"},
+        terminal_env=env, probe=lambda k, s: "rejected" if k == "dead" else "ok")
+    assert "DEDICATED_DATA_KEY_REJECTED" in c["warning"] and "CREDENTIAL_IS_PAPER_ACCOUNT" in c["warning"]
+    assert "dead" not in c["warning"].replace("DEDICATED_DATA_KEY_REJECTED", "").replace(
+        "ALPACA_DATA_KEY_ID", "")
+    rec = _run(tmp_path, _two_panels(tmp_path),
+               lambda s, st: (_bars(["AAA", "BBB"], LAST), {**c, "key_id": None, "secret": None}),
+               _frozen_ok)
+    assert "DEDICATED_DATA_KEY_REJECTED" in rec["warning"]
+
+
+def test_the_network_down_status_can_never_read_idle_in_map_status():
+    from backend.services import task_receipts as TR
+    assert TR.map_status("refused_network") == "REFUSED"
+    assert TR.map_status("degraded") == "DEGRADED"
+    assert "refused_network" in config.BARS_REFRESH_RC
+    assert TR.map_status("wait_network") == "IDLE"          # why the word was renamed
+
+
+def test_the_no_secret_assertion_holds_on_the_refusal_paths_too(tmp_path, monkeypatch, capsys):
+    fake = {"key_id": SECRET_A, "secret": SECRET_B, "name": "AAT_HACK1_KEY_ID", "label": "HACK1",
+            "kind": "paper_trading_account", "credential_is_paper_account": True,
+            "tried": {"HACK1": "ok"}, "source": "terminal repo .env, HACK1 (AAT_HACK1_KEY_ID)",
+            "warning": "CREDENTIAL_IS_PAPER_ACCOUNT: x"}
+    monkeypatch.setattr(P6, "data_credential_detail", lambda **kw: dict(fake))
+    monkeypatch.setattr(P6, "_get", lambda *a, **k: (_ for _ in ()).throw(
+        RuntimeError(f"boom with {SECRET_A} {SECRET_B}")))        # a venue error that echoes a key
+    panels = {"ranker_deep": _panel(tmp_path / "k.parquet", 1, ("AAA",))}
+    ok_net = lambda: {"ok": True, "tries": 1, "waited_s": 0.0, "host": "h", "error": None}  # noqa: E731
+    rec = BR.refresh(panels, now_utc=NOW, receipt_dir=tmp_path / "r", index=tmp_path / "r" / "i.jsonl",
+                     network_waiter=ok_net, required_mark_refresher=_frozen_ok)
+    assert rec["status"] == "refused"
+    blob = json.dumps(rec, default=str) + Path(rec["path"]).read_text(encoding="utf-8") \
+        + capsys.readouterr().out
+    # the vendor's own error text is the one place a value could leak: it must be scrubbed
+    assert SECRET_A not in blob and SECRET_B not in blob
+    # and the network-down path
+    rec2 = BR.refresh({"ranker_deep": _panel(tmp_path / "k2.parquet", 1, ("AAA",))}, now_utc=NOW,
+                      receipt_dir=tmp_path / "r2", index=tmp_path / "r2" / "i.jsonl",
+                      network_waiter=lambda: {"ok": False, "tries": 3, "waited_s": 90.0,
+                                              "host": "h", "error": "OSError"},
+                      required_mark_refresher=_frozen_ok)
+    assert rec2["status"] == "refused_network"
+    assert SECRET_A not in Path(rec2["path"]).read_text(encoding="utf-8")

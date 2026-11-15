@@ -336,8 +336,17 @@ def _pull_default(symbols: list[str], start: str) -> Any:
     print(f"    credential: {info['source']}", flush=True)
     if info.get("warning"):
         print(f"    WARNING: {info['warning']}", flush=True)
-    df, rejected = pull_chunked(symbols, start,
-                                lambda params: P6._get("/v2/stocks/bars", params, kid, sec))
+    try:
+        df, rejected = pull_chunked(symbols, start,
+                                    lambda params: P6._get("/v2/stocks/bars", params, kid, sec))
+    except Exception as exc:                                       # noqa: BLE001
+        # A vendor error body can echo a header value: scrub both before the
+        # text reaches a receipt, the index or stdout.
+        msg = str(exc)
+        for v in (kid, sec):
+            if v:
+                msg = msg.replace(v, "<redacted>")
+        raise RuntimeError(f"{type(exc).__name__}: {msg}") from None
     df.attrs["rejected_symbols"] = rejected
     return df, info
 
@@ -560,7 +569,7 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
     (0) when every US gated panel reached the last closed session; `degraded`
     (3) when ONLY declared-optional foreign symbols failed; `refused` (2) when
     a US panel did not advance, a panel swap failed, or an undeclared symbol
-    failed; `wait_network` (4) when the data host never resolved or could not
+    failed; `refused_network` (4, read: WAIT_NETWORK) when the data host never resolved or could not
     be reached to verify a key -- distinct from a rejected credential.
     """
     import pandas as pd                                            # noqa: PLC0415
@@ -614,7 +623,7 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         net = network_waiter()
         receipt["network"] = {k: net.get(k) for k in ("ok", "tries", "waited_s", "host", "error")}
         if not net.get("ok"):
-            receipt["status"] = "wait_network"
+            receipt["status"] = "refused_network"
             receipt["reason"] = (f"WAIT_NETWORK: {net.get('host')} did not resolve after "
                                  f"{net.get('tries')} try(ies) ({net.get('error')}); no credential "
                                  f"was tried, nothing overwritten")
@@ -623,7 +632,7 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
     try:
         new_df, cred = puller(all_syms, start.isoformat())
     except BaseException as exc:                                   # noqa: BLE001  SystemExit from the credential refusal
-        receipt["status"] = ("wait_network" if type(exc).__name__ == "DataNetworkUnavailable"
+        receipt["status"] = ("refused_network" if type(exc).__name__ == "DataNetworkUnavailable"
                              else "refused")
         receipt["reason"] = f"pull failed, nothing overwritten: {type(exc).__name__}: {str(exc)[:300]}"
         return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
@@ -680,8 +689,9 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         m = merge_panel(p, new_df, keep_through=keep_through, repulled=repulled,
                         overlap_start=newest_bar_date(p) - timedelta(days=REFRESH_OVERLAP_DAYS))
         table = m.pop("table")
+        cov = panel_coverage(table, keep_through)
         row = {"path": str(p), **{kk: v for kk, v in m.items() if kk != "readjusted_symbols"},
-               "readjusted": len(m["readjusted_symbols"])}
+               "readjusted": len(m["readjusted_symbols"]), "coverage": cov}
         if m["newest_after"] < m["newest_before"]:
             row["status"], row["reason"] = "refused", "merged newest date is OLDER than before"
         elif m["duplicate_keys"]:
@@ -732,6 +742,27 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
     return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
 
 
+def panel_coverage(table, keep_through: date) -> dict:
+    """Share of the symbols that had the PREVIOUS closed session's bar which
+    also carry `keep_through`'s bar. Names that stopped trading earlier are not
+    in the denominator; a panel whose max date advanced for one name is not
+    "current"."""
+    import pyarrow as pa                                           # noqa: PLC0415
+    import pyarrow.compute as pc                                   # noqa: PLC0415
+    days, _ = _sessions(keep_through - timedelta(days=14), keep_through)
+    prev = [d for d in days if d < keep_through]
+    if not prev:
+        return {"n_prev": 0, "n_reached": 0, "share": None}
+
+    def at(d: date) -> set:
+        m = pc.equal(table["date"], pa.scalar(datetime(d.year, d.month, d.day), table["date"].type))
+        return set(pc.unique(table.filter(m)["symbol"]).to_pylist())
+    a, b = at(prev[-1]), at(keep_through)
+    return {"prev_session": prev[-1].isoformat(), "n_prev": len(a),
+            "n_reached": len(a & b), "share": round(len(a & b) / len(a), 4) if a else None,
+            "floor": float(_config.BARS_REFRESH_MIN_COVERAGE)}
+
+
 def failed_foreign_symbols(required: dict) -> list[str] | None:
     """The symbols a refused frozen-constituent stage names, or None.
 
@@ -770,10 +801,15 @@ def classify_feed(receipt: dict, present: dict[str, Path], panels: dict[str, Pat
             continue
         row = rows.get(k) or {}
         newest = row.get("newest_after")
-        reached = bool(newest and newest >= keep_through.isoformat())
+        cov = row.get("coverage") or {}
+        floor = float(_config.BARS_REFRESH_MIN_COVERAGE)
+        if cov.get("n_prev"):
+            reached = bool(cov["share"] >= floor)
+        else:                                   # no previous-session set to compare: panel max date
+            reached = bool(newest and newest >= keep_through.isoformat())
         us[k] = {"status": row.get("status", "absent"), "newest_after": newest,
                  "last_closed_session": keep_through.isoformat(),
-                 "reached_last_close": reached,
+                 "reached_last_close": reached, "coverage": cov or None,
                  "state": "OK" if reached and row.get("status") in ("ok", "unchanged") else "NOT_ADVANCED"}
         if us[k]["state"] != "OK":
             problems.append(f"US panel {k} did not reach {keep_through.isoformat()} "

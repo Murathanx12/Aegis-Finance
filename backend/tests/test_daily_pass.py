@@ -1026,8 +1026,23 @@ def test_a_degraded_bars_refresh_is_a_degraded_row_and_still_runs_the_audit(
 
 def test_wait_network_is_a_refused_row(out, calls, rth_open, monkeypatch) -> None:
     monkeypatch.setattr(DP, "run_bars_refresh", lambda **kw: {
-        "status": "wait_network", "rc": 4, "line": "BARS_FRESH: newest=x sessions_old=1",
+        "status": "refused_network", "rc": 4, "line": "BARS_FRESH: newest=x sessions_old=1",
         "reason": "WAIT_NETWORK: data host did not resolve", "panels": {}})
     rec = DP.run_daily_pass(day=_today())
     row = next(r for r in rec["steps"] if r["step"] == "bars_refresh")
-    assert row["status"] == "refused" and row["bars_refresh_status"] == "wait_network"
+    assert row["status"] == "refused" and row["bars_refresh_status"] == "refused_network"
+
+
+def test_the_degraded_note_survives_an_audit_refusal_and_the_headline_counts_it(
+        out, calls, rth_open, monkeypatch) -> None:
+    from scripts import survivorship_cache_producer as SCP
+    monkeypatch.setattr(SCP, "produce", lambda **kw: {"status": "refused", "reason": "audit fixture"})
+    monkeypatch.setattr(DP, "run_bars_refresh", lambda **kw: {
+        "status": "degraded", "rc": 3, "line": "BARS_FRESH: newest=x sessions_old=0",
+        "reason": "DEGRADED: only declared-optional foreign symbol(s) failed: ['EVO.ST']",
+        "panels": {"ranker_deep": {"status": "ok", "rows_added": 5}}})
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "bars_refresh")
+    assert row["status"] == "refused"
+    assert any("EVO.ST" in r for r in row["refusals"]) and any("audit fixture" in r for r in row["refusals"])
+    assert " degraded / " in rec["headline"]

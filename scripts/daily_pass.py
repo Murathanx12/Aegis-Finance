@@ -911,11 +911,11 @@ def step_bars_refresh(ctx: dict) -> dict:
     added += int((res.get("frozen_constituents") or {}).get("n_new_rows") or 0)
     # `bars_refresh` statuses (scripts.pull_bars_refresh): ok / unchanged /
     # degraded (rc 3: only declared-optional foreign symbols failed, every US
-    # panel current) / refused (rc 2) / wait_network (rc 4, red: the venue was
+    # panel current) / refused (rc 2) / refused_network (rc 4, red: the venue was
     # never reached). A row `degraded` is NOT a refusal: the US panels are
     # current, so the survivorship audit still runs.
     degraded = st == "degraded"
-    status = ("refused" if st in ("refused", "wait_network") or (
+    status = ("refused" if st in ("refused", "refused_network") or (
                   st not in ("ok", "unchanged", "nothing_to_do", "degraded")) else
               "degraded" if degraded else
               "ok" if st == "ok" and added else "nothing_to_do")
@@ -935,7 +935,7 @@ def step_bars_refresh(ctx: dict) -> dict:
         refusals.append("survivorship_audit: " + str(audit.get("reason")))
         status = "refused"
     # a degraded row keeps its reason visible (task_receipts prints refusals[0])
-    refusals = (soft_notes + refusals) if status == "degraded" else refusals
+    refusals = soft_notes + refusals          # the foreign note survives an audit refusal
     return _row("bars_refresh", status, rows=added,
                 seconds=round(time.time() - t0, 2), refusals=refusals,
                 bars_line=res.get("line"), receipt=res.get("path"),
@@ -1542,7 +1542,8 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
             "or asks a model for anything."),
         "headline": (
             f"{counts['ok']} ok / {counts['nothing_to_do']} nothing-to-do / "
-            f"{counts['refused']} refused / {counts['error']} error / "
+            f"{counts['refused']} refused / {counts['degraded']} degraded / "
+            f"{counts['error']} error / "
             f"{counts['skipped']} skipped / {counts['timeout']} timed out "
             f"over {len(STEPS)} steps"),
     }
