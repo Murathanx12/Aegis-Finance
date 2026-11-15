@@ -4674,6 +4674,17 @@ ROLLING_COHORT_MIN_STRICT_BLOCKS = 6
 #: then journals WAIT_LOCK with rc 0.
 ROLLING_COHORT_LOCK_WAIT_S = 60.0
 
+# -- Read-only cohort report (CH-16 follow-up). Keys deliberately do NOT start
+# -- with the rolling-cohort prefix: that prefix is bound into the live declaration.
+#: Fewest common sessions before an effective-bets count is printed.
+COHORT_REPORT_MIN_SESSIONS = 20
+#: Pairwise excess-path correlation above this counts as "the same bet".
+COHORT_REPORT_HIGH_CORR = 0.9
+#: Declared target MDE (net excess, fraction) the report counts cohorts toward,
+#: per matured horizon in sessions. 21 sessions: 2 pp; longer holds scale with sqrt(h/21).
+COHORT_REPORT_TARGET_MDE = {21: 0.02, 63: 0.035, 126: 0.049}
+COHORT_REPORT_TOP_NAMES = 10
+
 #: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
 #: ledger `llm_analyzer` writes (purpose `book_factory`).
 BOOK_FACTORY_CAP_USD = 1.0
