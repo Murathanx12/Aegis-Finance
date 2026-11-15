@@ -111,6 +111,12 @@ EXCEPTION_BASES = {"RuntimeError", "Exception", "ValueError", "LookupError",
 #: each says why in one line so that "exempt" costs a sentence instead of
 #: nothing. A new module lands in neither table and fails the enrolment test.
 NOT_INPUT_GUARDS: dict[str, str] = {
+    "data_rights": (
+        "DataRightsError is raised when the committed register YAML is malformed "
+        "or claims a `yes` it cannot cite; it validates a static file, infers "
+        "nothing from missing input, and is exercised directly (bad flag, "
+        "duplicate id, uncited yes) in test_data_rights.py. Report-only: no "
+        "runtime caller."),
     "earnings_calendar_capture": (
         "CaptureRefused is an explicit offline fetch, private-directory and "
         "response-integrity refusal. No provider failure is converted to an "
