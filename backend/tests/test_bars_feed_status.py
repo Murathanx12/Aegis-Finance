@@ -407,3 +407,15 @@ def test_the_no_secret_assertion_holds_on_the_refusal_paths_too(tmp_path, monkey
                       required_mark_refresher=_frozen_ok)
     assert rec2["status"] == "refused_network"
     assert SECRET_A not in Path(rec2["path"]).read_text(encoding="utf-8")
+
+
+def test_vendor_rejected_symbols_leave_the_coverage_denominator_but_stay_named(tmp_path):
+    """The 2026-09-29 contract: one invalid ticker must not freeze/refuse the rest,
+    and it is still named loudly. An UNREJECTED laggard still refuses."""
+    panels = _two_panels(tmp_path)
+    new = _bars(["AAA"], LAST)
+    new.attrs["rejected_symbols"] = ["BBB"]
+    rec = _run(tmp_path, panels, lambda s, st: (new, "fixture"), _frozen_ok)
+    assert rec["status"] == "ok" and "VENDOR_REJECTED 1" in rec["warning"]
+    cov = rec["feed"]["us_panels"]["ranker_deep"]["coverage"]
+    assert cov["n_rejected_excluded"] == 1 and cov["share"] == 1.0

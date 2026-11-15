@@ -689,7 +689,7 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
         m = merge_panel(p, new_df, keep_through=keep_through, repulled=repulled,
                         overlap_start=newest_bar_date(p) - timedelta(days=REFRESH_OVERLAP_DAYS))
         table = m.pop("table")
-        cov = panel_coverage(table, keep_through)
+        cov = panel_coverage(table, keep_through, exclude=set(rejected))
         row = {"path": str(p), **{kk: v for kk, v in m.items() if kk != "readjusted_symbols"},
                "readjusted": len(m["readjusted_symbols"]), "coverage": cov}
         if m["newest_after"] < m["newest_before"]:
@@ -742,11 +742,14 @@ def refresh(panels: dict[str, Path] | None = None, *, now_utc: datetime | None =
     return _finish(receipt, t0, receipt_dir, index, now_utc=now_utc, panels=panels, write=True)
 
 
-def panel_coverage(table, keep_through: date) -> dict:
+def panel_coverage(table, keep_through: date, exclude: set | None = None) -> dict:
     """Share of the symbols that had the PREVIOUS closed session's bar which
     also carry `keep_through`'s bar. Names that stopped trading earlier are not
     in the denominator; a panel whose max date advanced for one name is not
-    "current"."""
+    "current". `exclude` = symbols the VENDOR rejected as invalid this run
+    (named loudly in the receipt, 2026-09-29 contract: one bad ticker must not
+    freeze the other names); they leave the denominator and are counted in
+    `n_rejected_excluded`."""
     import pyarrow as pa                                           # noqa: PLC0415
     import pyarrow.compute as pc                                   # noqa: PLC0415
     days, _ = _sessions(keep_through - timedelta(days=14), keep_through)
@@ -758,7 +761,10 @@ def panel_coverage(table, keep_through: date) -> dict:
         m = pc.equal(table["date"], pa.scalar(datetime(d.year, d.month, d.day), table["date"].type))
         return set(pc.unique(table.filter(m)["symbol"]).to_pylist())
     a, b = at(prev[-1]), at(keep_through)
-    return {"prev_session": prev[-1].isoformat(), "n_prev": len(a),
+    excl = set(exclude or ())
+    n_excl = len(a & excl)
+    a -= excl
+    return {"prev_session": prev[-1].isoformat(), "n_rejected_excluded": n_excl, "n_prev": len(a),
             "n_reached": len(a & b), "share": round(len(a & b) / len(a), 4) if a else None,
             "floor": float(_config.BARS_REFRESH_MIN_COVERAGE)}
 
