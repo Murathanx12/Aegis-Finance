@@ -126,9 +126,12 @@ def code_version() -> Optional[str]:
     """`git rev-parse HEAD` of the checkout this module runs from; None when unknowable."""
     if "v" not in _CODE_VERSION:
         import subprocess
+        import sys
+        # a console window must not flash under pythonw / the task scheduler (Windows only)
+        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
         try:
             r = subprocess.run(["git", "-C", str(REPO), "rev-parse", "HEAD"], capture_output=True,
-                               text=True, timeout=5)
+                               text=True, timeout=5, creationflags=flags)
             _CODE_VERSION["v"] = r.stdout.strip() if r.returncode == 0 and len(r.stdout.strip()) == 40 else None
         except (OSError, subprocess.SubprocessError):
             _CODE_VERSION["v"] = None
@@ -1476,5 +1479,9 @@ def _run_locked(mode: str, *, data_root: Path, store: "Store", specs_path: Path,
            "summary_21": boards.get("21", {}).get("summary"),
            "spec_manifest_sha256": manifest, "llm_spend_usd": 0.0, "broker_calls": 0,
            "runtime_s": round((datetime.now(timezone.utc) - t0).total_seconds(), 2), "rss_mb": _rss_mb()}
+    if versions["code_version"] is None:
+        # git missing from the task PATH or not a checkout: say so on the run row instead of
+        # recording None silently (the row's other keys and every hash are unchanged)
+        row["code_version_warning"] = "code_version unknowable: `git rev-parse HEAD` failed or git is not on PATH"
     store.journal(row)
     return row
