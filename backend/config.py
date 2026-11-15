@@ -6165,6 +6165,55 @@ STRADDLE_FWD_RATE = 0.04
 STRADDLE_FWD_BUDGET = 0.02
 STRADDLE_FWD_EQUITY_NOTIONAL = 1_000_000.0
 
+#: CH-20a (2026-11-13, scripts/ch20a_hedge_replay.py): replay of an index / SMH PUT
+#: SPREAD hedge on REAL OptionMetrics quotes (SPY/QQQ/IWM/SMH, the only listed quotes we
+#: hold), laid over the underlying ETF at 100%, against three twins (unhedged; the same
+#: book at lower gross with equal AVERAGE drawdown; a 200-day trend rule) and an inverse
+#: -1x fund control. FROZEN before any result was read (commit precedes the first run).
+#: Roll: on the settlement day of the previous spread, buy the put nearest LONG_MONEYNESS
+#: x spot (inside LONG_BAND), sell the put nearest SHORT_MONEYNESS x spot (inside
+#: SHORT_BAND), same expiry, the expiry whose calendar DTE is nearest DTE_TARGET inside
+#: [DTE_MIN, DTE_MAX] (the pulled file holds DTE 14..45 only, so "1-3 months" is ~1
+#: month here). Fills: pay the ASK buying, receive the BID selling, never the mid; a
+#: missing / crossed long leg SKIPS the day (recorded) and the next session retries; a
+#: missing short leg buys the long put alone (recorded). Held to expiry and settled at
+#: intrinsic on the last session's close (PM-settled ETF options). Contracts = equity /
+#: (spot x MULT), fractional. BUDGET_PER_YEAR is the ONE declared alternative: spend
+#: capped at that share of equity per year, pro rata to the roll's DTE. Trend twin: in
+#: the underlying when the total-return index's prior close > its TREND_SMA-session
+#: mean, else cash; SWITCH_COST_BPS per switch. Inverse control: daily -1x of the
+#: underlying's total return less INVERSE_FEE per year. Cash and financing at 0%
+#: (handicaps the lower-gross twin, i.e. points in the hedge's favour).
+CH20A_HEDGE_SYMBOLS = ("SPY", "QQQ", "IWM", "SMH")
+CH20A_HEDGE_LONG_MONEYNESS = 0.95
+CH20A_HEDGE_LONG_BAND = (0.93, 0.97)
+CH20A_HEDGE_SHORT_MONEYNESS = 0.85
+CH20A_HEDGE_SHORT_BAND = (0.80, 0.87)
+CH20A_HEDGE_DTE_TARGET = 35
+CH20A_HEDGE_DTE_MIN = 28
+CH20A_HEDGE_DTE_MAX = 45
+CH20A_HEDGE_MULT = 100.0
+CH20A_HEDGE_BUDGET_PER_YEAR = 0.02
+CH20A_HEDGE_TREND_SMA = 200
+CH20A_HEDGE_SWITCH_COST_BPS = 5.0
+CH20A_HEDGE_INVERSE_FEE = 0.0095
+CH20A_HEDGE_CRASH_YEARS = (2000, 2001, 2002, 2008, 2020, 2022)
+CH20A_HEDGE_BOOK_USD = 35_000.0
+#: CH-20a fix round (review of PR #139, 2026-11-15) -- POST-HOC sensitivity, NOT part of
+#: the frozen spec above (its sha256 is unchanged). Daily marks: the held legs are marked
+#: every session from their own quotes (long at the liquidation side, short at the
+#: buy-back side) and at intrinsic once the file stops quoting them (DTE < 14) or across a
+#: split. Every twin is matched to the hedged book on EACH risk measure in turn (max
+#: drawdown, average drawdown, worst WORST_WINDOW-session loss), scaling DOWN only; plus
+#: terminal wealth at full size. FILLS: share of the half-spread paid on each leg (1.0 =
+#: ask/bid, the frozen primary; 0.5 = mid + 1/4 of the spread; 0.0 = mid). Cash: 0% (the
+#: frozen convention) and the Kenneth French daily 1-month T-bill `rf` (file RF_FILE,
+#: relative to the wrds data folder) on idle cash, on the inverse control's financing.
+CH20A_SENS_FILLS = (("ask_bid", 1.0), ("mid_plus_quarter_spread", 0.5), ("mid", 0.0))
+CH20A_SENS_WORST_WINDOW = 21
+CH20A_SENS_SCALE_STEPS = 200
+CH20A_SENS_RF_FILE = "ff_factors_daily.parquet"
+
 # ── the reader: X handle timelines (2026-09-29) ──────────────────────────────
 # The source registry's X handles are read as profile/timeline pages inside
 # x.com's EXISTING caps (WEB_READER_MAX_PER_DAY_BY_HOST is not raised). Once a
