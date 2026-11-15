@@ -272,6 +272,7 @@ def family_row(members: list[str], rows: dict, books: dict, ff: dict, voice: dic
     for m in mrows:
         for f in m["flags_set"]:
             k = str(f).split(" ")[0].split("(")[0]
+            k = k if k.isupper() else str(f)[:48]          # a flag that is a sentence keeps its words
             flags[k] = flags.get(k, 0) + 1
     marks = sorted({str(m["last_mark"]) for m in mrows if m["last_mark"]})
     incs = sorted({str(m["inception"]) for m in mrows if m["inception"]})
