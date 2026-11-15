@@ -4793,6 +4793,8 @@ OPENCLAW_REPAIR_PORT_WAIT_S = 240.0
 #: A dependency repair that ends unhealthy this many times in a row writes a
 #: DOWN row (journal `gateway_down` + reader_status state DOWN). 2026-11-14.
 OPENCLAW_REPAIR_FAILS_BEFORE_DOWN = 2
+#: A failure streak older than this is history, not a streak.
+OPENCLAW_REPAIR_STREAK_MAX_AGE_S = 6 * 3600.0
 #: No gateway (re)start below this much free RAM: the kill test of 2026-09-28
 #: 14:30 restarted it at 0.5-0.8 GB free and it did not bind its port for more
 #: than 15 minutes (handoff 09-28: "would not open its port under 1 GB free").

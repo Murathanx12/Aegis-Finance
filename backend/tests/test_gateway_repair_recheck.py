@@ -127,3 +127,145 @@ def test_newest_startup_failed_reads_the_newest_record(tmp_path):
             json.dumps({"generatedAt": "g", "process": {"pid": 2},
                         "error": {"name": "E", "message": msg}}), encoding="utf-8")
     assert GR.newest_startup_failed(tmp_path)["reason"] == "new"
+
+
+# ───────────── fix round: a failed listing is not "none alive" ─────────────
+
+import subprocess  # noqa: E402
+from datetime import datetime, timedelta  # noqa: E402
+
+import pytest  # noqa: E402
+
+
+class FlakyLister(Machine):
+    """gateway_procs fails on the n-th call (1 = first list, 2 = re-list)."""
+
+    def __init__(self, fail_on, how, **kw):
+        super().__init__(**kw)
+        self.fail_on, self.how, self.calls = fail_on, how, 0
+
+    def deps(self):
+        d = super().deps()
+        base = d.gateway_procs
+
+        def lister():
+            self.calls += 1
+            if self.calls == self.fail_on:
+                if self.how == "none":
+                    return None
+                raise subprocess.TimeoutExpired("powershell", 30)
+            return base()
+        d.gateway_procs = lister
+        return d
+
+
+@pytest.mark.parametrize("fail_on,alive", [(1, True), (1, False), (2, True)])
+@pytest.mark.parametrize("how", ["none", "timeout"])
+def test_a_failed_listing_starts_nothing_and_names_itself(fail_on, alive, how):
+    m = FlakyLister(fail_on, how, alive_at_entry=alive)
+    r = GR.repair("GATEWAY_DOWN", deps=m.deps())            # must not raise
+    assert m.starts == 0 and not r["healthy"]
+    assert "GATEWAY_LIST_FAILED" in r["stopped_because"]
+    assert any(x["failed"] for x in r["gateway_procs"])
+
+
+def test_every_pass_journals_pids_and_creation_times():
+    class M(Machine):
+        def deps(self):
+            d = super().deps()
+            d.gateway_procs = lambda: ([{"pid": 7, "ppid": 3, "created": "T0"}]
+                                       if self.alive else [])
+            return d
+    m = M()
+    r = GR.repair("GATEWAY_DOWN", deps=m.deps())
+    first = r["gateway_procs"][0]
+    assert first["which"] == "at_entry" and first["procs"] == [
+        {"pid": 7, "ppid": 3, "created": "T0"}]
+    assert r["gateway_procs"][1]["which"] == "after_wait"
+
+
+def test_the_real_lister_returns_none_on_error_and_timeout(monkeypatch):
+    def boom(*a, **k):
+        raise subprocess.TimeoutExpired("powershell", 30)
+    monkeypatch.setattr(GR.subprocess, "run", boom)
+    assert GR._gateway_procs() is None
+
+    class R:
+        returncode, stdout = 1, ""
+    monkeypatch.setattr(GR.subprocess, "run", lambda *a, **k: R())
+    assert GR._gateway_procs() is None
+
+    class Empty:
+        returncode, stdout = 0, ""
+    monkeypatch.setattr(GR.subprocess, "run", lambda *a, **k: Empty())
+    assert GR._gateway_procs() == []
+
+    class One:
+        returncode, stdout = 0, '{"ProcessId":5,"ParentProcessId":1,"created":"c"}'
+    monkeypatch.setattr(GR.subprocess, "run", lambda *a, **k: One())
+    assert GR._gateway_procs() == [{"pid": 5, "ppid": 1, "created": "c"}]
+
+
+# ───────────── fix round: the DOWN status survives the tick ─────────────
+
+BAD = {"fault": "GATEWAY_DOWN", "healthy": False, "cleared_by": None, "steps": [],
+       "stopped_because": "x", "startup_failed": SF}
+
+
+def _quiet(monkeypatch):
+    rows = []
+    monkeypatch.setattr(S, "log", lambda **r: rows.append(r))
+    monkeypatch.setattr(S, "write_status", lambda *a, **k: None)
+    return rows
+
+
+def test_the_ticks_own_status_is_down_after_two_failed_passes_and_normal_after_health(
+        tmp_path, monkeypatch):
+    _quiet(monkeypatch)
+    sp = tmp_path / "streak.json"
+    S.log_repair(BAD, streak_path=sp)
+    assert S.apply_gateway_down(S.REPAIRING, "repair", None, streak_path=sp)[0] == S.REPAIRING
+    S.log_repair(BAD, streak_path=sp)
+    st, nxt, err = S.apply_gateway_down(S.REPAIRING, "repair", None, streak_path=sp)
+    assert st == S.DOWN and err
+    # a healthy repair pass: back to normal
+    S.log_repair({"fault": "GATEWAY_DOWN", "healthy": True, "steps": []}, streak_path=sp)
+    assert S.apply_gateway_down(S.REPAIRING, "repair", None, streak_path=sp)[0] == S.REPAIRING
+    # and a READING tick clears a standing streak
+    S.log_repair(BAD, streak_path=sp)
+    S.log_repair(BAD, streak_path=sp)
+    assert S.apply_gateway_down(S.READING, "x", None, streak_path=sp)[0] == S.READING
+    assert S.streak_down(sp) is False
+
+
+# ───────────── fix round: the streak file ─────────────
+
+@pytest.mark.parametrize("content", ['{"fails": null}', "not json", '{"fails": 5}',
+                                     '{"fails": "x", "t": "y"}'])
+def test_a_null_or_corrupt_streak_is_zero_and_journaled(tmp_path, monkeypatch, content):
+    rows = _quiet(monkeypatch)
+    sp = tmp_path / "s.json"
+    sp.write_text(content, encoding="utf-8")
+    out = S.log_repair(BAD, streak_path=sp)                  # must not raise
+    assert out["fails_in_a_row"] == 1 and out["down"] is False
+    assert any(r["event"] == "repair_streak_note" for r in rows)
+
+
+def test_a_stale_streak_is_ignored(tmp_path, monkeypatch):
+    rows = _quiet(monkeypatch)
+    sp = tmp_path / "s.json"
+    old = (datetime.now().astimezone() - timedelta(hours=7)).isoformat(timespec="seconds")
+    sp.write_text(json.dumps({"fails": 1, "t": old}), encoding="utf-8")
+    assert S.log_repair(BAD, streak_path=sp)["down"] is False
+    assert any("old" in r.get("note", "") for r in rows if r["event"] == "repair_streak_note")
+
+
+def test_a_chrome_failure_is_not_counted_as_gateway_down(tmp_path, monkeypatch):
+    rows = _quiet(monkeypatch)
+    sp = tmp_path / "s.json"
+    chrome = {"fault": "CHROME_DOWN", "healthy": False, "steps": [], "stopped_because": "c"}
+    for _ in range(3):
+        assert S.log_repair(chrome, streak_path=sp)["down"] is False
+    assert not [r for r in rows if r["event"] == "gateway_down"]
+    assert [r for r in rows if r["event"] == "dependency_repair_failed"]
+    assert not sp.exists()
