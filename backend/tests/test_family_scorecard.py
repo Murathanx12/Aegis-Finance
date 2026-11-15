@@ -657,3 +657,18 @@ def test_item6_a_constant_drift_book_is_not_called_a_flat_nav():
     assert "flat NAV" not in why and "constant period return (+0.1000% in each of 60 periods" in why
     flat = [(d, 0.0, float(x)) for d, x in zip(dates, _spy_returns())]
     assert "flat NAV" in D.market_exposure(flat, D.beta_of(flat, 20), return_pct=0.0, spy_leg_pct=5.0)["beta"]["why"]
+
+
+def test_blocker1_the_matrix_keeps_as_many_families_as_share_the_dates():
+    """Five families on one calendar and one long family on another: the odd one is dropped,
+    not the five (dropping fewest-dates-first kept 6 of 45 families on live data)."""
+    n = int(C.FAMILY_SCORECARD_EFFECTIVE_MIN_DATES)
+    dates = _sessions(3 * n)
+    rng = np.random.default_rng(11)
+    books = {f"f{i}": {"period_returns": [[d, float(x), 0.0] for d, x in zip(dates[-n:], rng.normal(0, 0.01, n))]}
+             for i in range(5)}
+    books["long_odd"] = {"period_returns": [[d, float(x), 0.0] for d, x in
+                                            zip(dates[: 3 * n - 5], rng.normal(0, 0.01, 3 * n - 5))]}
+    eb = FS.effective_bets([{"family": k, "members": [k]} for k in books], books)
+    assert eb["status"] == "OK" and eb["n_families"] == 5 and eb["n_dates"] == n
+    assert eb["families_left_out"]["dropped_to_reach_common_dates"] == ["long_odd"]

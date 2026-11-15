@@ -242,7 +242,8 @@ def effective_bets(fams: list[dict], books: dict, P: Optional[dict] = None) -> d
     The participation ratio (`book_dna.participation_ratio`: N for N uncorrelated series, 1
     for N copies) of the correlation matrix of the families' period returns, on RAW returns and
     on EXCESS returns (r - r_SPY), over the families that share at least `effective_min_dates`
-    period-end dates. Families are dropped fewest-dates-first until the rest share that many;
+    period-end dates: the `effective_min_dates` most widely shared dates are taken (ties: the
+    later date) and every family that has all of them is used, on the dates they all share;
     a family whose series never moves on those dates is dropped (no correlation). Beside it:
     the median pairwise correlation, the number of components when families are joined at
     `loose_join_corr` (excess, the join rule's own quantity; raw beside it), and the share of
@@ -267,11 +268,15 @@ def effective_bets(fams: list[dict], books: dict, P: Optional[dict] = None) -> d
 
     def common(keys: list) -> list:
         return sorted(set.intersection(*(set(ser[k]) for k in keys))) if keys else []
-    dropped = []
+    # the `md` most widely shared period-end dates (ties: the later date), then every family
+    # that has all of them; the common dates of those families are the sample. Dropping
+    # families fewest-dates-first kept 6 of 45 on live data: the many short books went first.
+    count = Counter(d for k in cand for d in ser[k])
+    ranked = sorted(count, key=lambda d: (count[d], d), reverse=True)[:md]
+    core = set(ranked)
+    dropped = [k for k in cand if not core <= set(ser[k])] if len(core) >= md else list(cand)
+    cand = [k for k in cand if k not in dropped]
     dates = common(cand)
-    while len(dates) < md and len(cand) > mf:
-        dropped.append(cand.pop())                     # fewest dates last
-        dates = common(cand)
     if len(cand) < mf or len(dates) < md:
         return cd(f"{len(cand)} families share {len(dates)} period-end dates (needs >= {mf} families on >= {md} "
                   f"dates); {len(short)} families have fewer than {md} dates",
