@@ -378,7 +378,9 @@ def test_the_review_route_reads_the_receipt_rather_than_recomputing(
     day = BC.latest_bar_date(bars)
     M.run_morning(today=day, do_network=False, predictions_path=ledger,
                   out_dir=out_dir)
-    body = TestClient(app).get(f"/api/control/agency/review?day={day}").json()
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")   # CH-22 follow-up: desktop-only reads
+    body = TestClient(app, base_url="http://127.0.0.1:8000").get(
+        f"/api/control/agency/review?day={day}").json()
     assert body["ran"] is True
     assert body["n_calls"] >= 1
     assert body["vocabulary"] == list(A.DECISIONS)
@@ -392,6 +394,8 @@ def test_the_route_says_the_morning_has_not_run_rather_than_404(tmp_path,
     from backend.main import app
     from backend.services import morning as M
     monkeypatch.setattr(M, "MORNING_DIR", tmp_path / "empty")
-    r = TestClient(app).get("/api/control/agency/review?day=2026-01-01")
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")   # CH-22 follow-up: desktop-only reads
+    r = TestClient(app, base_url="http://127.0.0.1:8000").get(
+        "/api/control/agency/review?day=2026-01-01")
     assert r.status_code == 200
     assert r.json()["ran"] is False

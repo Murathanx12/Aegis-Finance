@@ -189,7 +189,9 @@ def test_the_routes_all_return_the_limits(monkeypatch, tmp_path):
 
     from backend.main import app
     monkeypatch.setattr(A, "FLIPS_PATH", tmp_path / "flips.jsonl")
-    client = TestClient(app)
+    # CH-22 follow-up: the control plane's reads answer only the desktop's own page
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
+    client = TestClient(app, base_url="http://127.0.0.1:8000")
     for url in ("/api/control/agency/questionnaire",
                 "/api/control/agency/protect-first",
                 "/api/control/agency/review?day=2026-01-01"):

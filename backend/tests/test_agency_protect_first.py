@@ -376,7 +376,10 @@ def test_the_flip_route_is_a_read_and_the_unflip_is_gated(db, bars, flips,
     from backend.main import app
     client = local_client(app)
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
-    assert client.post("/api/control/agency/unflip", json={}).status_code == 403
+    # CH-22 follow-up: off the desktop neither route exists; on it the read answers
+    assert client.post("/api/control/agency/unflip", json={}).status_code == 404
+    assert client.get("/api/control/agency/protect-first").status_code == 404
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
     body = client.get("/api/control/agency/protect-first").json()
     assert body["n_flips"] == 0
     assert "base_rate_control" in body["reading"]

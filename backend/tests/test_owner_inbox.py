@@ -158,9 +158,10 @@ def test_a_row_records_where_it_came_from(monkeypatch, tmp_path):
 # -- the basic contract ----------------------------------------------------------------
 
 def test_both_routes_refuse_when_the_control_plane_is_off(monkeypatch, tmp_path):
+    # CH-22 follow-up: off the desktop the routes do not exist (404, not 403)
     c = _client(monkeypatch, tmp_path, enabled=False)
-    assert c.post("/api/control/owner-note", json={"text": "hi"}).status_code == 403
-    assert c.get("/api/control/owner-notes").status_code == 403
+    assert c.post("/api/control/owner-note", json={"text": "hi"}).status_code == 404
+    assert c.get("/api/control/owner-notes").status_code == 404
     assert not _file(tmp_path).exists()
 
 
