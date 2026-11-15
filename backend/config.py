@@ -146,6 +146,155 @@ def _pi_db_path() -> Path:
 
 PI_DB_PATH = _pi_db_path()
 
+# ── CH-57 isolation guards (2026-11-16): one block ────────────────────────────
+#
+# A release clone is `<parent>\aegis-runtime-<tag>` (`scripts/runtime_release.py`). Its
+# `backend\data\optimus` is a junction to the LIVE data and it holds no `aegis_pi.db`: the
+# wrapper (`scripts/runtime_task.py`) points every task at the live file. On 2026-11-15 a
+# smoke test started `python -m uvicorn backend.main:app` in a clone WITHOUT the wrapper;
+# sqlite created an empty `backend\data\aegis_pi.db` there and the wrapper's split-brain
+# check then refused 13 scheduled runs (rc 90) for an hour. That check is after the fact.
+# The guard below refuses the CREATION.
+#
+# WHY AN AUDIT HOOK AND NOT A RAISE IN `_pi_db_path`: importing this module from a clone
+# without the wrapper is a legitimate READ (`runtime_release.target_config_snapshot` does
+# it on every repoint), so the path resolution must keep returning a path. The damage is
+# `sqlite3.connect` on a file that is not there, from any of the many call sites; CPython
+# raises the audit event `sqlite3.connect` before it opens the file, so one hook covers
+# every writer, including one added later. The hook is installed ONLY when this process
+# runs from a release clone and was not started through the wrapper; a dev checkout, CI
+# and every wrapped task get no hook at all.
+#
+#: The folder-name prefix of a release clone. One copy of `runtime_task.CLONE_PREFIX`
+#: (the wrapper is stdlib-only and imports nothing from the repo); pinned equal by
+#: `test_isolation_guards.py`.
+RUNTIME_CLONE_PREFIX = "aegis-runtime-"
+#: The variable the wrapper sets on every child to the clone it runs from
+#: (`runtime_task.child_env`). Set and naming THIS clone = started through the wrapper.
+RUNTIME_WRAPPER_MARK_ENV = "AEGIS_RUNTIME_CLONE"
+#: Exit code when a process in an unwrapped release clone tries to create a database.
+RELEASE_CLONE_DB_REFUSED_RC = 91
+#: Exit code of a test session aborted by `backend/tests/conftest.py` because the data it
+#: would write is live data (a release clone, or a data directory that is a junction).
+TEST_ISOLATION_ABORT_RC = 92
+#: Exit code of the wrapper's `--min-free-gb` refusal. One copy of
+#: `runtime_task.LOW_MEMORY_RC`, pinned equal by the same test.
+RUNTIME_LOW_MEMORY_RC = 93
+
+
+class ReleaseCloneDatabaseRefused(SystemExit):
+    """A new database file would have been created inside an unwrapped release clone.
+
+    A SystemExit on purpose: `backend.main` wraps `init_db()` in `except Exception` and
+    carries on ("non-fatal"), which is how the 2026-11-15 server kept running beside the
+    file it had just created. A refusal has to end the process with a non-zero code."""
+
+    def __init__(self, why: str) -> None:
+        super().__init__(RELEASE_CLONE_DB_REFUSED_RC)
+        self.why = why
+
+    def __str__(self) -> str:
+        return self.why
+
+
+def _real(path: "os.PathLike[str] | str") -> str:
+    """Case-normalised real path (junctions and symlinks followed; the tail may not exist)."""
+    return os.path.normcase(os.path.realpath(os.fspath(path)))
+
+
+def _is_inside(child: "os.PathLike[str] | str", parent: "os.PathLike[str] | str") -> bool:
+    c, p = _real(child), _real(parent)
+    return c == p or c.startswith(p.rstrip("\\/") + os.sep)
+
+
+def is_release_clone(root: Path) -> bool:
+    """True when `root` is named like a release clone (`aegis-runtime-<tag>`)."""
+    name = Path(root).name.lower()
+    return name.startswith(RUNTIME_CLONE_PREFIX) and len(name) > len(RUNTIME_CLONE_PREFIX)
+
+
+def started_through_wrapper(root: Path, environ: "dict[str, str] | None" = None) -> bool:
+    """True when the wrapper's mark is set AND names `root` (a mark inherited from another
+    clone's task is not this clone's wrapper)."""
+    env = os.environ if environ is None else environ
+    mark = (env.get(RUNTIME_WRAPPER_MARK_ENV) or "").strip()
+    return bool(mark) and _real(mark) == _real(root)
+
+
+def _sqlite_target(database: object) -> "str | None":
+    """The file `sqlite3.connect(database)` would open for writing, or None when it opens
+    no file of its own (in-memory, a read-only URI, a non-path argument)."""
+    if isinstance(database, bytes):
+        database = os.fsdecode(database)
+    elif isinstance(database, os.PathLike):
+        database = os.fspath(database)
+    if not isinstance(database, str) or not database or database == ":memory:":
+        return None
+    if database.startswith("file:"):
+        from urllib.parse import parse_qs, unquote, urlsplit
+        parts = urlsplit(database)
+        mode = (parse_qs(parts.query).get("mode") or [""])[0]
+        if mode in ("memory", "ro") or parts.path in ("", ":memory:"):
+            return None
+        database = unquote(parts.path)
+        if os.name == "nt" and len(database) > 2 and database[0] == "/" and database[2] == ":":
+            database = database[1:]                    # file:///C:/x -> C:/x
+    return os.path.abspath(database)
+
+
+def new_database_refusal(database: object, clone_root: Path,
+                         environ: "dict[str, str] | None" = None) -> "str | None":
+    """Why this `sqlite3.connect` must not happen, or None when it may.
+
+    Refuses only when all of these are real state: `clone_root` is a release clone; the
+    wrapper's mark does not name it; the target file does not exist; and it would be
+    created inside the clone (a path through the data junction resolves to the live data
+    and is not this guard's business)."""
+    root = Path(clone_root)
+    if not is_release_clone(root) or started_through_wrapper(root, environ):
+        return None
+    target = _sqlite_target(database)
+    if target is None or os.path.lexists(target) or not _is_inside(target, root):
+        return None
+    return (f"REFUSED RELEASE_CLONE_DATABASE: {target} does not exist and this process runs "
+            f"from the release clone {root} without the wrapper ({RUNTIME_WRAPPER_MARK_ENV} is "
+            "unset or names another folder). Opening it would create a new, empty database "
+            "inside the clone, and scripts/runtime_task.py would then refuse every scheduled "
+            f"task there (exit 90). Start it through the wrapper instead: <venv>\\Scripts\\"
+            f"python.exe -I {root / 'scripts' / 'runtime_task.py'} -m <module> [args] "
+            f"(exit {RELEASE_CLONE_DB_REFUSED_RC}).")
+
+
+def _install_release_clone_db_guard() -> "tuple[Path, ...]":
+    """Install the audit hook when this process runs from an unwrapped release clone.
+    Returns the clone roots it guards (empty = no hook, which is every ordinary run)."""
+    import sys
+    roots = tuple(r for r in dict.fromkeys((PROJECT_ROOT, _MODULE_BACKEND_DIR.parent))
+                  if is_release_clone(r) and not started_through_wrapper(r))
+    if not roots:
+        return ()
+
+    def _hook(event: str, args: tuple) -> None:
+        if event != "sqlite3.connect" or not args:
+            return
+        for root in roots:
+            why = new_database_refusal(args[0], root)
+            if why:
+                if sys.stderr is not None:             # pythonw has no stderr
+                    try:
+                        print(why, file=sys.stderr, flush=True)
+                    except OSError:
+                        pass
+                raise ReleaseCloneDatabaseRefused(why)
+
+    sys.addaudithook(_hook)
+    return roots
+
+
+#: The release clone(s) this process is guarded in; `()` everywhere else.
+RELEASE_CLONE_DB_GUARD_ROOTS = _install_release_clone_db_guard()
+# ── end CH-57 block ───────────────────────────────────────────────────────────
+
 #: WHICH `.env`: `PROJECT_ROOT / ".env"` unless `AEGIS_DOTENV_PATH` names one file
 #: explicitly (CH-05, 2026-11-11). The scheduled tasks are to move from the WIP
 #: checkout to a clean checkout of a tagged main commit, and the keys must not be

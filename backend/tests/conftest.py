@@ -60,7 +60,80 @@ _BLOCK_MESSAGE = (
 _LEDGER_AT_START: dict = {}
 
 
+# ── CH-57: the suite must never run against live data ─────────────────────────
+#
+# The fixtures below redirect named ledgers one by one, which is a deny-list: a new
+# writer is unprotected until someone adds a fixture. That is tolerable in a dev checkout
+# or CI, where `backend/data` is the checkout's own folder. It is not in a RELEASE CLONE
+# (`aegis-runtime-<tag>`), where `backend\data\optimus` is a junction to the LIVE data:
+# there every unredirected write lands in production. So the session refuses to start.
+
+def suite_data_dirs(repo=None) -> list:
+    """The directories this suite's default paths write under: the checkout's own
+    `backend/data`, each directory directly inside it (where a junction would sit), and
+    config's DATA_DIR / OPTIMUS_LEDGER_DIR when they are (lexically) in the checkout. A
+    data dir deliberately pointed elsewhere by AEGIS_DATA_DIR is the caller's declared
+    choice, not a junction, and is not listed."""
+    import os
+    from pathlib import Path
+    repo = Path(repo) if repo is not None else ledger_guard.REPO
+    data = repo / "backend" / "data"
+    dirs = [data, data / "optimus"]
+    try:
+        dirs += sorted(p for p in data.iterdir() if p.is_dir())
+    except OSError:
+        pass
+    try:
+        from backend import config as _cfg
+        lexical_repo = os.path.normcase(os.path.abspath(repo))
+        for d in (getattr(_cfg, "DATA_DIR", None), getattr(_cfg, "OPTIMUS_LEDGER_DIR", None)):
+            if d is not None and os.path.normcase(os.path.abspath(d)).startswith(
+                    lexical_repo.rstrip("\\/") + os.sep):
+                dirs.append(Path(d))
+    except Exception:                                            # noqa: BLE001
+        pass
+    return list(dict.fromkeys(dirs))
+
+
+def data_isolation_refusal(repo, data_dirs, clone_prefix: str = "aegis-runtime-"):
+    """Why a test session in `repo` must not start, or None when it may.
+
+    Two conditions, both read from real state (the folder's name, where a path resolves):
+    the checkout is a release clone; or a data directory resolves, through a junction or
+    a symlink, outside the checkout the tests run from."""
+    import os
+    from pathlib import Path
+
+    def real(p) -> str:
+        return os.path.normcase(os.path.realpath(os.fspath(p)))
+
+    repo = Path(repo)
+    name = repo.name.lower()
+    if name.startswith(clone_prefix.lower()) and len(name) > len(clone_prefix):
+        return (f"TEST SESSION ABORTED (RELEASE_CLONE): {repo} is a release clone. Its "
+                "backend\\data\\optimus is a junction to the LIVE data, so tests run here write "
+                "into production. Run the suite from a dev checkout or a worktree of the "
+                "same commit; nothing was collected and nothing was written.")
+    root = real(repo)
+    for d in data_dirs:
+        if not os.path.lexists(d):
+            continue
+        r = real(d)
+        if r != root and not r.startswith(root.rstrip("\\/") + os.sep):
+            return (f"TEST SESSION ABORTED (DATA_OUTSIDE_CHECKOUT): {d} resolves to {r}, "
+                    f"outside the checkout {root} (a junction or symlink to another data "
+                    "folder). Tests run here would write into that folder. Run the suite "
+                    "from a checkout whose backend/data is its own; nothing was collected "
+                    "and nothing was written.")
+    return None
+
+
 def pytest_sessionstart(session):
+    from backend import config as _cfg
+    why = data_isolation_refusal(ledger_guard.REPO, suite_data_dirs(),
+                                 _cfg.RUNTIME_CLONE_PREFIX)
+    if why:
+        pytest.exit(why, returncode=_cfg.TEST_ISOLATION_ABORT_RC)
     _LEDGER_AT_START.clear()
     _LEDGER_AT_START.update(ledger_guard.fingerprint())
 
