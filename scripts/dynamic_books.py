@@ -277,7 +277,17 @@ def main(argv: list[str] | None = None) -> int:
         print("\nFORWARD CALENDAR STALE (the leader-gap rule cannot fire on time for these):")
         for t, why in sorted(row["calendar_stale"].items()):
             print(f"  {t}: {'; '.join(why)}")
-    if row["rc"]:
+    for key, title in (("bar_gaps", "LEADER BAR MISSING (nothing written)"),
+                       ("missed", "MISSED ENTRY WINDOW"),
+                       ("events_not_acting", "FIRING LEADER EVENTS NOT ACTING (cut window open)")):
+        if row.get(key):
+            print()
+            print(title)
+            for x in row[key]:
+                print("  " + json.dumps(x, default=str))
+    if row.get("calendar_overdue"):
+        print("OVERDUE leaders: " + ", ".join(row["calendar_overdue"]))
+    if row["rc"] or row["action"] == "MISSED_ENTRY_WINDOW":
         print(f"EXIT {row['rc']} ({row['action']})")
     return int(row["rc"])
 

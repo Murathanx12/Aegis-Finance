@@ -4700,6 +4700,9 @@ DYNAMIC_BOOK_LEADER_SESSIONS = 5
 DYNAMIC_BOOK_FORWARD_CALENDAR_STALE_DAYS = 3.0
 DYNAMIC_BOOK_CALENDAR_HORIZON_DAYS = 120
 DYNAMIC_BOOK_UNSCHEDULED_OVERDUE_DAYS = 100
+#: A run reads only sessions whose close plus this grace is at or before the run (a
+#: partial or just-closed bar is never read or stored; review of PR #158).
+DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN = 20
 #: Rule (b), preservation: QQQ close < SMA(SMA) -> short QQQ at beta x NAV,
 #: beta of the book on QQQ over BETA_WINDOW sessions, clipped.
 DYNAMIC_BOOK_HEDGE_ETF = "QQQ"

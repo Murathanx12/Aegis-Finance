@@ -1,5 +1,6 @@
 {
  "chunk": "CH-45",
+ "compile_history": "first compiled 2026-11-15T03:49Z (manifest 2038d14ad1c565610018ddd71663c756e8a3c6877df1544f7fceaf569ad10522, PR #158 commit 87baff19); recompiled in the fix round of PR #158's review (MOVED is now judged before the EVENT time, not the reaction close; a missing leader bar is STALE_BARS; closed sessions only; MISSED_ENTRY_WINDOW; FULL_UNIVERSE pulls only; a cohort born inside a cut window enters at the cut exposure). No forward row existed under the first compile: no task was scheduled, and only a backfilled dry run in a work folder (ch45fc_work/out_v3) ran under it; it was never merged",
  "contracts": [
   {
    "base_selection": {
@@ -42,7 +43,7 @@
     ]
    },
    "contract_id": "DXB-growth-v3",
-   "contract_sha256": "4bb7faf39cfe29e79418fd7881fb448bd677948ddd08db645f322cc20461d917",
+   "contract_sha256": "1ec1b1803d5d1be162f06b5ee852d915aace9c51fbfc038ab23b0f92f5499b0f",
    "costs": {
     "base_round_trip": "xs_ranker.COST_BPS_BY_BAND per name, half at entry, half at the mark",
     "etf_hedge_change_bps": 2.0,
@@ -51,11 +52,11 @@
     "hedge_starts_at": 0.0,
     "stock_exposure_change_bps": 10.0
    },
-   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D. The balanced cut reads a gap known at the OPEN of s and trades at the close of s (executable). The preservation hedge reads the close of t-1 and trades AT that same close: the replay's convention, not strictly executable (live use needs a close-auction order sized before the close, or the next open)",
+   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D. A run reads only sessions whose close plus DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN is at or before the run, so a partial or just-closed bar is never read or stored. A due cohort whose entry open passes before a step sees its close is MISSED_ENTRY_WINDOW (named, never born late). The balanced cut reads a gap known at the OPEN of s and trades at the close of s (executable). The preservation hedge reads the close of t-1 and trades AT that same close: the replay's convention, not strictly executable (live use needs a close-auction order sized before the close, or the next open)",
    "evidence_in_replay": "every rule difference near or below its MDE (3-21 pp/yr); no skill claim",
    "family": "dynamic_exposure_book",
    "fill_convention": "base book: buy at the open of E, held (rolling grade rule v2: a name with no valid open waits in cash at 0%); exposure and hedge changes at the close of the deciding session; daily rebalanced to the exposure fraction; cash and short collateral earn 0",
-   "frozen_utc": "2026-11-15T03:54:10.961096+00:00",
+   "frozen_utc": "2026-11-15T04:18:53.490822+00:00",
    "inputs": [
     "prices_2025_26/bars.parquet (open, close, volume)",
     "forward_calendar/snapshots (FULL_UNIVERSE pulls; receipts for freshness)",
@@ -123,7 +124,7 @@
     ]
    },
    "contract_id": "DXB-balanced-v3",
-   "contract_sha256": "c67341857cb2ed7f08c50572f35b74f144393dac1f26564ef1ec0de5b27694f1",
+   "contract_sha256": "befefb85e6015150bffe191ae36ab071ca0e5c9b9e2c656ed98ecd427464e813",
    "costs": {
     "base_round_trip": "xs_ranker.COST_BPS_BY_BAND per name, half at entry, half at the mark",
     "etf_hedge_change_bps": 2.0,
@@ -132,11 +133,11 @@
     "hedge_starts_at": 0.0,
     "stock_exposure_change_bps": 10.0
    },
-   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D. The balanced cut reads a gap known at the OPEN of s and trades at the close of s (executable). The preservation hedge reads the close of t-1 and trades AT that same close: the replay's convention, not strictly executable (live use needs a close-auction order sized before the close, or the next open)",
+   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D. A run reads only sessions whose close plus DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN is at or before the run, so a partial or just-closed bar is never read or stored. A due cohort whose entry open passes before a step sees its close is MISSED_ENTRY_WINDOW (named, never born late). The balanced cut reads a gap known at the OPEN of s and trades at the close of s (executable). The preservation hedge reads the close of t-1 and trades AT that same close: the replay's convention, not strictly executable (live use needs a close-auction order sized before the close, or the next open)",
    "evidence_in_replay": "every rule difference near or below its MDE (3-21 pp/yr); no skill claim",
    "family": "dynamic_exposure_book",
    "fill_convention": "base book: buy at the open of E, held (rolling grade rule v2: a name with no valid open waits in cash at 0%); exposure and hedge changes at the close of the deciding session; daily rebalanced to the exposure fraction; cash and short collateral earn 0",
-   "frozen_utc": "2026-11-15T03:54:10.961096+00:00",
+   "frozen_utc": "2026-11-15T04:18:53.490822+00:00",
    "inputs": [
     "prices_2025_26/bars.parquet (open, close, volume)",
     "forward_calendar/snapshots (FULL_UNIVERSE pulls; receipts for freshness)",
@@ -147,12 +148,12 @@
    "personality": "balanced",
    "rule": {
     "calendar_horizon_days": 120,
-    "calendar_observation": "every pull's answer for every leader is appended once to calendar_facts.jsonl (append-only) with the row's OWN pulled_utc as observed_utc, its pull_id and source. A report date d acts on the decision at time T only while the newest observation with observed_utc <= T names d (as next_date or last_reported_date); FAILED rows and rows naming no date carry no information and are skipped. So a date announced ahead acts on time; a date first observed after its reaction session's close is LEARNED_LATE and acts only on decisions after its observation (never retroactively; stored rows never change); a date replaced before its reaction close is MOVED and never acts",
+    "calendar_observation": "every FULL_UNIVERSE pull's answer for every leader is appended once to calendar_facts.jsonl (append-only) with the row's OWN pulled_utc as observed_utc, its pull_id and source (PARTIAL --tickers/--limit pulls are not read); FAILED rows and rows naming no date carry no information. A report date d is ANNOUNCED when the newest observation BEFORE ITS EVENT TIME names d (as next_date or last_reported_date): it acts on every decision from the first observation of that unbroken run, i.e. on time. It is MOVED when it was named before its event time but the newest pre-event observation names another date or none; a MOVED date never acts unless an observation after the event names it again (then it acts from that observation). Observations after the event time never cancel a date: a vendor that rolls forward to its next estimate after the report, with or without last_reported_date, is not a move. A date first named only after its event acts only on decisions at or after that observation; when that is after its reaction session's close it is LEARNED_LATE (never retroactive; stored rows never change)",
     "calendar_stale_days": 3.0,
     "calendar_stale_rule": "at the run: the forward calendar is STALE when its newest FULL_UNIVERSE receipt is older than calendar_stale_days, not OK, or its snapshot is damaged (forward_calendar.freshness), or a leader's own row is CALENDAR_STALE / NOT_COVERED / served from an older snapshot, or a leader has no bars; a step then exits 3 naming it. A leader whose fresh row holds no next date is UNSCHEDULED: named (OVERDUE when its last report is older than unscheduled_overdue_days), exit 0. A next date beyond calendar_horizon_days is SCHEDULED_FAR: healthy",
-    "definition": "at the close of a leader's earnings-reaction session s with open_s / close_(s-1) - 1 <= gap_threshold, stock exposure = gross_after_event for sessions s+1 .. s+sessions_after_event (overlapping events: the minimum)",
+    "definition": "at the close of a leader's earnings-reaction session s with open_s / close_(s-1) - 1 <= gap_threshold, stock exposure = gross_after_event for sessions s+1 .. s+sessions_after_event (overlapping events: the minimum). The window is in CALENDAR sessions (as the replay's s3_rules.py indexes e[i+k], k=1..5): a cohort born inside a cut window enters at the cut exposure for the window's remaining sessions (its entry is charged as a change from 1.0)",
     "earnings_dates": "forward_calendar/snapshots/fc_<stamp>_<h6>.jsonl (task AegisForwardCalendar, forward_calendar.py): per pull and leader the vendor's next_date, timing, event_utc, event_time_known, confirmation, last_reported_date. The v1/v2 past-report cache straddle_forward/earnings_cache.json is not read",
-    "gap": "open_s / close_(s-1) - 1 of the leader on the reaction session s, from the bars",
+    "gap": "open_s / close_(s-1) - 1 of the leader on the reaction session s, from the bars. A leader with no open on s, or no close on s-1, while s exists in the benchmark bars, is a data gap: the run is STALE_BARS (exit 3) and writes nothing (a missing bar is never stored as no event)",
     "gap_threshold": -0.05,
     "gross_after_event": 0.5,
     "id": "d_leader_gap",
@@ -228,7 +229,7 @@
     ]
    },
    "contract_id": "DXB-preservation-v3",
-   "contract_sha256": "b82ed08fec421f915e6b618d115f26265eba0672e7f798dcd41d1b8e9e0ca7bd",
+   "contract_sha256": "65ccf04b87135ffd44681452b2f8bd6ed9a5c63f581d3384f2636ddfbb1c70fe",
    "costs": {
     "base_round_trip": "xs_ranker.COST_BPS_BY_BAND per name, half at entry, half at the mark",
     "etf_hedge_change_bps": 2.0,
@@ -237,11 +238,11 @@
     "hedge_starts_at": 0.0,
     "stock_exposure_change_bps": 10.0
    },
-   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D. The balanced cut reads a gap known at the OPEN of s and trades at the close of s (executable). The preservation hedge reads the close of t-1 and trades AT that same close: the replay's convention, not strictly executable (live use needs a close-auction order sized before the close, or the next open)",
+   "decision_timing": "exposure for session t is decided at the close of t-1 from data through that close and traded at it; for E, the close of D. A run reads only sessions whose close plus DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN is at or before the run, so a partial or just-closed bar is never read or stored. A due cohort whose entry open passes before a step sees its close is MISSED_ENTRY_WINDOW (named, never born late). The balanced cut reads a gap known at the OPEN of s and trades at the close of s (executable). The preservation hedge reads the close of t-1 and trades AT that same close: the replay's convention, not strictly executable (live use needs a close-auction order sized before the close, or the next open)",
    "evidence_in_replay": "every rule difference near or below its MDE (3-21 pp/yr); no skill claim",
    "family": "dynamic_exposure_book",
    "fill_convention": "base book: buy at the open of E, held (rolling grade rule v2: a name with no valid open waits in cash at 0%); exposure and hedge changes at the close of the deciding session; daily rebalanced to the exposure fraction; cash and short collateral earn 0",
-   "frozen_utc": "2026-11-15T03:54:10.961096+00:00",
+   "frozen_utc": "2026-11-15T04:18:53.490822+00:00",
    "inputs": [
     "prices_2025_26/bars.parquet (open, close, volume)",
     "forward_calendar/snapshots (FULL_UNIVERSE pulls; receipts for freshness)",
@@ -298,7 +299,7 @@
   }
  ],
  "license": "PRODUCT_EXPERIMENT",
- "manifest_sha256": "2038d14ad1c565610018ddd71663c756e8a3c6877df1544f7fceaf569ad10522",
+ "manifest_sha256": "e5a35af073bd9fe10a17e1a056a56d770065de2b10a8f1dff1c4a97da8ed9905",
  "note": "immutable once written: a changed rule or parameter is a new contract id in a new file, never an edit of this one",
  "schema": "dynamic_exposure_contracts/1"
 }

@@ -108,6 +108,15 @@ SPECS_V2_REL = "docs/TRIALS/ROLLING-COHORTS-SPECIFICATIONS-v2.json"
 #: v1/v2's past-report cache; v3 does not read it (kept for the receipt of what v2 read).
 EARNINGS_REL = "straddle_forward/earnings_cache.json"
 FORWARD_CALENDAR_REL = "forward_calendar/snapshots"
+#: Stated in the v3 file itself: v3 was compiled twice on 2026-11-15, both before any
+#: forward row existed.
+V3_COMPILE_HISTORY = (
+    "first compiled 2026-11-15T03:49Z (manifest 2038d14ad1c565610018ddd71663c756e8a3c6877df1544f7fceaf569ad10522, "
+    "PR #158 commit 87baff19); recompiled in the fix round of PR #158's review (MOVED is now judged before "
+    "the EVENT time, not the reaction close; a missing leader bar is STALE_BARS; closed sessions only; "
+    "MISSED_ENTRY_WINDOW; FULL_UNIVERSE pulls only; a cohort born inside a cut window enters at the cut "
+    "exposure). No forward row existed under the first compile: no task was scheduled, and only a backfilled "
+    "dry run in a work folder (ch45fc_work/out_v3) ran under it; it was never merged")
 UNIVERSE_REL = "potential_universe"
 PERSONALITIES = ("growth", "balanced", "preservation")
 REPLAY_SOURCE = ("aegis-recovery-evidence/s69-reports-20261114/council/replay/"
@@ -134,7 +143,10 @@ def _rules() -> dict:
             "definition": ("at the close of a leader's earnings-reaction session s with "
                            "open_s / close_(s-1) - 1 <= gap_threshold, stock exposure = "
                            "gross_after_event for sessions s+1 .. s+sessions_after_event "
-                           "(overlapping events: the minimum)"),
+                           "(overlapping events: the minimum). The window is in CALENDAR sessions (as the "
+                           "replay's s3_rules.py indexes e[i+k], k=1..5): a cohort born inside a cut "
+                           "window enters at the cut exposure for the window's remaining sessions (its "
+                           "entry is charged as a change from 1.0)"),
             "leaders": list(c.DYNAMIC_BOOK_LEADERS),
             "leader_since": dict(c.DYNAMIC_BOOK_LEADER_SINCE),
             "gap_threshold": c.DYNAMIC_BOOK_LEADER_GAP,
@@ -144,16 +156,22 @@ def _rules() -> dict:
                                "forward_calendar.py): per pull and leader the vendor's next_date, timing, "
                                "event_utc, event_time_known, confirmation, last_reported_date. The v1/v2 "
                                "past-report cache " + EARNINGS_REL + " is not read"),
-            "calendar_observation": ("every pull's answer for every leader is appended once to "
+            "calendar_observation": ("every FULL_UNIVERSE pull's answer for every leader is appended once to "
                                      "calendar_facts.jsonl (append-only) with the row's OWN pulled_utc as "
-                                     "observed_utc, its pull_id and source. A report date d acts on the decision "
-                                     "at time T only while the newest observation with observed_utc <= T names "
-                                     "d (as next_date or last_reported_date); FAILED rows and rows naming no date "
-                                     "carry no information and are skipped. So a date announced ahead acts on "
-                                     "time; a date first observed after its reaction session's close is "
-                                     "LEARNED_LATE and acts only on decisions after its observation (never "
-                                     "retroactively; stored rows never change); a date replaced before its "
-                                     "reaction close is MOVED and never acts"),
+                                     "observed_utc, its pull_id and source (PARTIAL --tickers/--limit pulls are "
+                                     "not read); FAILED rows and rows naming no date carry no information. A "
+                                     "report date d is ANNOUNCED when the newest observation BEFORE ITS EVENT "
+                                     "TIME names d (as next_date or last_reported_date): it acts on every "
+                                     "decision from the first observation of that unbroken run, i.e. on time. "
+                                     "It is MOVED when it was named before its event time but the newest "
+                                     "pre-event observation names another date or none; a MOVED date never acts "
+                                     "unless an observation after the event names it again (then it acts from "
+                                     "that observation). Observations after the event time never cancel a date: "
+                                     "a vendor that rolls forward to its next estimate after the report, with or "
+                                     "without last_reported_date, is not a move. A date first named only after "
+                                     "its event acts only on decisions at or after that observation; when that "
+                                     "is after its reaction session's close it is LEARNED_LATE (never "
+                                     "retroactive; stored rows never change)"),
             "reaction_session": ("the first session whose OPEN is strictly after the report time. The report "
                                  "time is the newest pre-event observation's event_utc when the calendar states "
                                  "the time (event_time_known: BMO -> the report date's own session, AMC or "
@@ -163,7 +181,10 @@ def _rules() -> dict:
                                  "it existed. A date first named only after its event takes its time from that "
                                  "first observation (last_reported_utc when stated, else the close of the date). "
                                  "One reaction session per report (v2 checked two)"),
-            "gap": "open_s / close_(s-1) - 1 of the leader on the reaction session s, from the bars",
+            "gap": ("open_s / close_(s-1) - 1 of the leader on the reaction session s, from the bars. A "
+                    "leader with no open on s, or no close on s-1, while s exists in the benchmark bars, is a "
+                    "data gap: the run is STALE_BARS (exit 3) and writes nothing (a missing bar is never "
+                    "stored as no event)"),
             "non_earnings_gaps": "do not fire (as the replay code ran; NVDA 11-09 / 11-12 2026 excluded)",
             "calendar_stale_days": c.DYNAMIC_BOOK_FORWARD_CALENDAR_STALE_DAYS,
             "calendar_horizon_days": c.DYNAMIC_BOOK_CALENDAR_HORIZON_DAYS,
@@ -257,7 +278,11 @@ def contract_bodies(*, frozen_utc: str, specs: dict) -> list[dict]:
                                            if k <= base["horizon_sessions"]],
                          "horizon_sessions": base["horizon_sessions"]},
         "decision_timing": ("exposure for session t is decided at the close of t-1 from data "
-                            "through that close and traded at it; for E, the close of D. The balanced "
+                            "through that close and traded at it; for E, the close of D. A run reads only "
+                            "sessions whose close plus DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN is at or before "
+                            "the run, so a partial or just-closed bar is never read or stored. A due cohort "
+                            "whose entry open passes before a step sees its close is MISSED_ENTRY_WINDOW "
+                            "(named, never born late). The balanced "
                             "cut reads a gap known at the OPEN of s and trades at the close of s "
                             "(executable). The preservation hedge reads the close of t-1 and trades AT "
                             "that same close: the replay's convention, not strictly executable (live use "
@@ -313,6 +338,8 @@ def compile_contracts(*, frozen_utc: str, specs: dict) -> dict:
            "note": ("immutable once written: a changed rule or parameter is a new contract id in a new "
                     "file, never an edit of this one"),
            "contracts": cs}
+    if CONTRACT_VERSION == "v3":
+        doc["compile_history"] = V3_COMPILE_HISTORY
     doc["manifest_sha256"] = digest({k: v for k, v in doc.items() if k != "manifest_sha256"})
     return doc
 
@@ -394,18 +421,21 @@ def read_observations(out: Path) -> list[dict]:
     return rows
 
 
-def ingest_forward_calendar(out: Path, data_root: Path, *, now: datetime, run_id: str) -> dict:
-    """Append, once per (pull, leader), the forward calendar's answer for each leader:
-    the row's OWN pulled_utc is the observation stamp. Only FULL pulls finalised under
-    a stamp at or before `now` are read; a damaged snapshot (bad lines, or fewer rows
-    than its index) is skipped and named. Never rewrites a line."""
-    from backend.services import disk_guard
+def ingest_forward_calendar(out: Path, data_root: Path, *, now: datetime, run_id: str,
+                            write: bool = True) -> dict:
+    """Collect, once per (pull, leader), the forward calendar's answer for each leader:
+    the row's OWN pulled_utc is the observation stamp. Only FULL_UNIVERSE pulls (the
+    header's scope; a --tickers/--limit pull is PARTIAL and skipped) finalised under a
+    stamp at or before `now` are read; a damaged snapshot (bad lines, or fewer rows than
+    its index) is skipped and named. With `write`, the new rows are appended to
+    `calendar_facts.jsonl` (never a rewrite); without it they are returned as `pending`
+    for `commit_observations` (a run that refuses or goes STALE writes nothing)."""
     from backend.services import forward_calendar as FC
     leaders = tuple(_config.DYNAMIC_BOOK_LEADERS)
     have = read_observations(out)
     seen_pulls = {r["pull_id"] for r in have}
     files, _after = FC._final_snapshots(Path(data_root), now)
-    new, damaged, opened = [], [], 0
+    new, damaged, partial, opened = [], [], [], 0
     for _stamp, f in files:
         pid = f.name[:-len(".jsonl")]
         if pid in seen_pulls:
@@ -419,6 +449,9 @@ def ingest_forward_calendar(out: Path, data_root: Path, *, now: datetime, run_id
             damaged.append({"pull_id": pid, "n_bad_lines": n_bad, "short_vs_index": bool(short)})
             continue
         hdr = next((r for r in rows if r.get("row_kind") == "pull_header"), {})
+        if hdr.get("scope") != FC.FULL_UNIVERSE:
+            partial.append(pid)
+            continue
         for r in rows:
             if r.get("row_kind") != "earnings" or r.get("ticker") not in leaders:
                 continue
@@ -435,42 +468,50 @@ def ingest_forward_calendar(out: Path, data_root: Path, *, now: datetime, run_id
                         "source": f"{r.get('source')} via {FORWARD_CALENDAR_REL}/{f.name}",
                         "first_recorded_utc": now.isoformat(), "run_id": run_id})
     new.sort(key=lambda r: (r["observed_utc"], r["leader"]))
+    res = {"observations": have + new, "appended": 0, "pending": new, "snapshots_read": opened,
+           "snapshots_damaged": damaged, "snapshots_partial_skipped": partial}
+    if write:
+        res["appended"] = commit_observations(out, new)
+        res["pending"] = []
+    return res
+
+
+def commit_observations(out: Path, rows: list[dict]) -> int:
+    from backend.services import disk_guard
     p = Path(out) / FACTS_FILE
-    for r in new:
+    for r in rows:
         disk_guard.locked_append_line(p, json.dumps(r, sort_keys=True), fsync=True)
-    return {"observations": have + new, "appended": len(new), "snapshots_read": opened,
-            "snapshots_damaged": damaged}
+    return len(rows)
 
 
 def _informative(o: dict) -> bool:
     return o.get("status") in ("DATE", "NO_DATE") and bool(o.get("next_date") or o.get("last_reported_date"))
 
 
-def _belief_intervals(rows: list[dict], d: str) -> list[list[Optional[str]]]:
-    """[start, end) spans of observed_utc during which the newest informative
-    observation names `d` (as next_date or last_reported_date)."""
-    spans: list[list[Optional[str]]] = []
-    for o in rows:
-        names = d in (o.get("next_date"), o.get("last_reported_date"))
-        if names and (not spans or spans[-1][1] is not None):
-            spans.append([o["observed_utc"], None])
-        elif not names and spans and spans[-1][1] is None:
-            spans[-1][1] = o["observed_utc"]
-    return spans
+def _names(o: dict, d: str) -> bool:
+    return d in (o.get("next_date"), o.get("last_reported_date"))
 
 
 def believed(fact: dict, decision: Any) -> bool:
-    """A report date acts on a decision at `decision` only inside a belief span."""
-    if decision is None:
+    """A report date acts on a decision at `decision` once it is observed (`acts_from_utc`
+    <= decision) unless it was MOVED (replaced before its event time: never acts)."""
+    if decision is None or fact.get("acts_from_utc") is None:
         return False
-    t = _utc_ts(decision)
-    return any(_utc_ts(a) <= t and (b is None or t < _utc_ts(b)) for a, b in fact["belief_spans"])
+    return _utc_ts(fact["acts_from_utc"]) <= _utc_ts(decision)
 
 
 def leader_facts(observations: list[dict], *, cal: Any, as_of: Optional[datetime] = None) -> list[dict]:
     """One fact per (leader, report date) the calendar ever named, from observations
-    with observed_utc <= `as_of` only: the report time and reaction session, the first
-    observation, whether it was announced before the event, and its belief spans."""
+    with observed_utc <= `as_of` only.
+
+    The report time is the newest pre-event observation's (event_utc when stated, else
+    the close of the date). ANNOUNCED: the newest informative observation BEFORE THE
+    EVENT TIME names the date; it acts from the first observation of that unbroken run.
+    MOVED: the date was named before the event but the newest pre-event observation
+    names another date (or none); it acts only if an observation after the event names
+    it again (then from that observation). Not named before the event: acts from its
+    first observation (after the event). Rows after the event never cancel a date: a
+    vendor rolling forward to its next estimate after the report is not a move."""
     cut = None if as_of is None else _utc_ts(as_of)
     by: dict[str, list[dict]] = {}
     for o in observations:
@@ -494,7 +535,7 @@ def leader_facts(observations: list[dict], *, cal: Any, as_of: Optional[datetime
                 t_ev = (_utc_ts(o["event_utc"]) if o.get("event_time_known") and o.get("event_utc") else close_d)
                 if _utc_ts(o["observed_utc"]) < t_ev:
                     pre = (o, t_ev)
-            first = next(o for o in rows if d in (o.get("next_date"), o.get("last_reported_date")))
+            first = next(o for o in rows if _names(o, d))
             if pre is not None:
                 src, t_event = pre
                 timing, basis = (src.get("timing") or "UNKNOWN"), ("stated" if src.get("event_time_known")
@@ -505,20 +546,40 @@ def leader_facts(observations: list[dict], *, cal: Any, as_of: Optional[datetime
                 t_event = _utc_ts(first["last_reported_utc"]) if stated else close_d
                 timing, basis = ("STATED_AFTER" if stated else "UNKNOWN"), ("stated after the event" if stated
                                                                            else "unstated: close of the date")
+            before = [o for o in rows if _utc_ts(o["observed_utc"]) < t_event]
+            after = [o for o in rows if _utc_ts(o["observed_utc"]) >= t_event]
+            named_before = any(_names(o, d) for o in before)
+            if before and _names(before[-1], d):
+                kind = "ANNOUNCED"
+                k = len(before) - 1
+                while k > 0 and _names(before[k - 1], d):
+                    k -= 1
+                acts_from = before[k]["observed_utc"]
+            elif named_before:
+                kind = "MOVED"
+                conf = next((o for o in after if _names(o, d)), None)
+                acts_from = None if conf is None else conf["observed_utc"]
+            else:
+                kind = "FIRST_SEEN_AFTER_EVENT"
+                acts_from = next(o for o in after if _names(o, d))["observed_utc"]
             out.append({"leader": leader, "earnings_date": d, "timing": timing, "time_basis": basis,
                         "event_utc_assumed": t_event.isoformat(),
                         "reaction_session": _open_after(cal, t_event).tz_convert(None).normalize().date().isoformat(),
-                        "announced_before_event": pre is not None,
+                        "announced_before_event": kind == "ANNOUNCED", "observation_kind": kind,
+                        "acts_from_utc": acts_from,
                         "first_observed_utc": first["observed_utc"], "first_pull_id": first["pull_id"],
-                        "confirmation": src.get("confirmation"), "source_pull_id": src["pull_id"],
-                        "belief_spans": _belief_intervals(rows, d)})
+                        "confirmation": src.get("confirmation"), "source_pull_id": src["pull_id"]})
     return out
 
 
-def leader_events(bars: pd.DataFrame, facts: list[dict], sessions: list[pd.Timestamp]) -> list[dict]:
+def leader_events(bars: pd.DataFrame, facts: list[dict], sessions: list[pd.Timestamp],
+                  gaps: Optional[list] = None) -> list[dict]:
     """The gap of each fact's reaction session, from the bars: one row per fact whose
-    reaction session is in `sessions` and has a previous session. `fires` when the gap
-    is at or below the threshold; whether it ACTS on a decision is `believed`."""
+    reaction session is in `sessions` (the benchmark's) and has a previous session.
+    `fires` when the gap is at or below the threshold; whether it ACTS on a decision is
+    `believed`. A leader with no open on the reaction session or no close on the session
+    before it, while the session exists, is appended to `gaps` (the caller goes STALE:
+    a missing bar must never be stored as 'no event')."""
     thr = float(_config.DYNAMIC_BOOK_LEADER_GAP)
     if not facts:
         return []
@@ -530,24 +591,32 @@ def leader_events(bars: pd.DataFrame, facts: list[dict], sessions: list[pd.Times
     for f in facts:
         s = pd.Timestamp(f["reaction_session"])
         j = sidx.get(s)
-        if j is None or j < 1 or f["leader"] not in opn.columns:
+        if j is None or j < 1:
             continue
-        g = opn[f["leader"]].iloc[j] / cls[f["leader"]].iloc[j - 1] - 1.0
-        if np.isfinite(g):
-            out.append({**f, "session": s.date().isoformat(), "gap": float(g), "fires": bool(g <= thr)})
+        o = opn[f["leader"]].iloc[j] if f["leader"] in opn.columns else np.nan
+        c = cls[f["leader"]].iloc[j - 1] if f["leader"] in cls.columns else np.nan
+        if not (np.isfinite(o) and np.isfinite(c) and c > 0):
+            if gaps is not None:
+                gaps.append({"leader": f["leader"], "earnings_date": f["earnings_date"],
+                             "session": s.date().isoformat(), "prior_session": sessions[j - 1].date().isoformat(),
+                             "missing": ("open of the reaction session" if not np.isfinite(o) else
+                                         "close of the prior session")})
+            continue
+        g = o / c - 1.0
+        out.append({**f, "session": s.date().isoformat(), "gap": float(g), "fires": bool(g <= thr)})
     return sorted(out, key=lambda e: (e["session"], e["leader"]))
 
 
 def event_status(e: dict, decision_utc: dict) -> str:
-    """ON_TIME: believed at the reaction close (announced ahead, or seen after the event
-    but before that close); LEARNED_LATE: first observed after it; MOVED: named before it
-    but replaced by then."""
+    """ON_TIME: acts at the reaction close (announced before the event, or first seen
+    after the event but before that close); LEARNED_LATE: acts only from a later
+    observation; MOVED: replaced before its event time and never confirmed after it."""
     dec = decision_utc.get(pd.Timestamp(e["session"]))
     if believed(e, dec):
         return "ON_TIME" if e["announced_before_event"] else "ON_TIME_SEEN_AFTER_EVENT"
-    if dec is not None and _utc_ts(e["first_observed_utc"]) > _utc_ts(dec):
-        return "LEARNED_LATE"
-    return "MOVED"
+    if e.get("acts_from_utc") is None:
+        return "MOVED"
+    return "LEARNED_LATE"
 
 
 def calendar_health(data_root: Path, *, now: datetime, leaders_in_bars: Optional[set] = None) -> dict:
@@ -565,6 +634,7 @@ def calendar_health(data_root: Path, *, now: datetime, leaders_in_bars: Optional
     today = pd.Timestamp(nd["market_date"])
     stale: dict[str, list[str]] = {}
     unscheduled: dict[str, list[str]] = {}
+    overdue: list[str] = []
     if fresh["verdict"] != "ALIVE":
         stale["_forward_calendar"] = [f"{fresh['verdict']}: {fresh['detail']}"]
     per = {}
@@ -591,12 +661,14 @@ def calendar_health(data_root: Path, *, now: datetime, leaders_in_bars: Optional
         else:
             age = None if not last else int((today - pd.Timestamp(last)).days)
             row["state"] = "UNSCHEDULED"
+            if age is None or age > od:
+                overdue.append(t)
             unscheduled[t] = [f"no announced next date ({v.get('reason')}); last report {last}"
                               + ("" if age is None else f", {age} days ago")
                               + (" -- OVERDUE" if age is None or age > od else "")]
         per[t] = row
     return {"freshness": fresh, "market_date": nd["market_date"], "stale_days": sd, "horizon_days": hz,
-            "leaders": per, "stale": stale, "unscheduled": unscheduled}
+            "leaders": per, "stale": stale, "unscheduled": unscheduled, "overdue": overdue}
 
 
 def load_sector_map(data_root: Path, *, asof: Optional[pd.Timestamp] = None) -> tuple[dict, str]:
@@ -934,7 +1006,9 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
             disk_guard.locked_append_line(cv_p, json.dumps({"code_version": code, "accepted_utc": now.isoformat(),
                                                             "run_id": run_id}, sort_keys=True), fsync=True)
             code_note = f"code version {code} accepted (attended)"
+        declared_at = pd.Timestamp(d["declared_utc"])
     else:
+        declared_at = pd.Timestamp(now)
         R._write_once(decl_p, json.dumps({"schema": "dynamic_exposure_declaration/3", "task": TASK_NAME,
                                           "contract_version": CONTRACT_VERSION,
                                           "declared_utc": now.isoformat(),
@@ -949,24 +1023,38 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
     horizon = int(spec["horizon_sessions"])
     anchor = pd.Timestamp(_config.ROLLING_COHORT_ANCHOR)
     through = pd.Timestamp(asof).normalize() if asof is not None else pd.Timestamp(now.date())
-    bars = R.load_bars(data_root, start=anchor - pd.Timedelta(days=400), end=through)
+    cal = calendar or R.XnysCalendar()
+    bars, unclosed = closed_bars(R.load_bars(data_root, start=anchor - pd.Timedelta(days=400), end=through),
+                                 cal, now)
     sessions = R.bench_sessions(bars)
     if not sessions or sessions[-1] < anchor:
         raise DynamicBookRefused(f"the bars do not reach the anchor {anchor.date()}")
     last_bar = sessions[-1]
     sched = R.schedule(sessions, anchor=anchor, cadence=int(_config.ROLLING_COHORT_CADENCE_SESSIONS))
-    cal = calendar or R.XnysCalendar()
     leaders = list(_config.DYNAMIC_BOOK_LEADERS)
     in_bars = set(bars.loc[bars["symbol"].isin(leaders), "symbol"].unique())
     health = calendar_health(data_root, now=now, leaders_in_bars=in_bars)
     stale = health["stale"]
-    ing = ingest_forward_calendar(out, data_root, now=now, run_id=run_id)
+    ing = ingest_forward_calendar(out, data_root, now=now, run_id=run_id, write=False)
     first = max(0, sessions.index(sched[0]) - 1)
     decision_utc = {s: pd.Timestamp(cal.close_of(s)) for s in sessions[first:]}
     facts = leader_facts(ing["observations"], cal=cal)
-    events = leader_events(bars, facts, sessions)
+    bar_gaps: list = []
+    events = leader_events(bars, facts, sessions, gaps=bar_gaps)
+    bar_gaps = [g for g in bar_gaps if pd.Timestamp(g["session"]) in decision_utc]   # history before the anchor is moot
     for e in events:
         e["status"] = event_status(e, decision_utc) if pd.Timestamp(e["session"]) in decision_utc else "BEFORE_ANCHOR"
+    recent = set(sessions[-int(_config.DYNAMIC_BOOK_LEADER_SESSIONS):])
+    not_acting = [{k: e[k] for k in ("leader", "earnings_date", "session", "gap", "status", "first_observed_utc")}
+                  for e in events if e["fires"] and e["status"] in ("MOVED", "LEARNED_LATE")
+                  and pd.Timestamp(e["session"]) in recent]
+    if bar_gaps:
+        # a missing leader bar must never be stored as "no event" (it would recompute differently
+        # once the bar lands and refuse forever): write nothing, exit 3, name it
+        for g in bar_gaps:
+            stale.setdefault(g["leader"], []).append(
+                f"no {g['missing']} for the {g['earnings_date']} report (reaction session {g['session']}, "
+                f"prior {g['prior_session']}) while the session exists in the benchmark bars")
     cdir = out / "cohorts"
     existing = {}
     if cdir.is_dir():
@@ -1009,7 +1097,7 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
     if mode == "backfill":
         lo = pd.Timestamp(date_from) if date_from is not None else anchor
         hi = pd.Timestamp(date_to) if date_to is not None else last_bar
-        for d in sched:
+        for d in ([] if bar_gaps else sched):
             if not lo <= d <= hi or d.date().isoformat() in existing:
                 continue
             i = sessions.index(d)
@@ -1019,16 +1107,28 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
                 continue
             _birth(d, sessions[i + 1], backfilled=True)
     elif mode == "step":
-        d = sched[-1]
-        if d.date().isoformat() not in existing:
-            entry_open = cal.next_open_after(d)
-            if d == last_bar and now < entry_open:
-                _birth(d, pd.Timestamp(entry_open.date()), backfilled=False)
-            else:
-                skipped.append({"cohort_id": d.date().isoformat(),
-                                "why": f"entry open {entry_open.isoformat()} passed or bars not at {d.date()}"})
+        if not bar_gaps:
+            d = sched[-1]
+            if d.date().isoformat() not in existing:
+                entry_open = cal.next_open_after(d)
+                if d == last_bar and now < entry_open:
+                    _birth(d, pd.Timestamp(entry_open.date()), backfilled=False)
     else:
         raise DynamicBookRefused(f"unknown mode {mode!r}")
+    missed = []
+    if mode == "step":
+        # a due cohort whose entry opened while this family existed and that was never born
+        # (bars landed after the open, or no step ran in between) is MISSED, never silent;
+        # named while it would still be alive (its horizon)
+        alive_from = sessions[max(0, len(sessions) - horizon)]
+        for d in sched:
+            if d.date().isoformat() in existing or d < alive_from:
+                continue
+            eo = pd.Timestamp(cal.next_open_after(d))
+            if eo > declared_at and pd.Timestamp(now) >= eo:
+                missed.append({"cohort_id": d.date().isoformat(), "entry_open_utc": eo.isoformat(),
+                               "bars_through": last_bar.date().isoformat(),
+                               "why": "its entry open passed before a step saw its close in the bars"})
 
     have_p = _read(out / "paths")
     have_m = _read(out / "marks")
@@ -1086,18 +1186,29 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
             f"{len(mismatch)} stored path row(s) differ from the recompute (first: {mismatch[0]}). A stored "
             f"row is evidence and never changes; nothing was appended. Diagnose the input that moved "
             f"(bars re-adjusted, calendar, code) before any further run")
-    pp = _append(out / "paths", new_p, run_id)
-    mp = _append(out / "marks", new_m, run_id)
-    rc = 3 if (mode == "step" and stale) else 0
+    if bar_gaps:
+        new_p, new_m = [], []
+        pp = mp = None
+        appended = 0
+    else:
+        pp = _append(out / "paths", new_p, run_id)
+        mp = _append(out / "marks", new_m, run_id)
+        appended = commit_observations(out, ing["pending"])
+    rc = 3 if (bar_gaps or (mode == "step" and stale)) else 0
+    action = ("STALE_BARS" if bar_gaps else "STALE_CALENDAR" if rc == 3 else "BORN" if born else
+              "MISSED_ENTRY_WINDOW" if missed else "MARKED" if (new_p or new_m) else "NOTHING_DUE")
     row = {"task": TASK_NAME, "schema": "dynamic_exposure_run/3", "contract_version": CONTRACT_VERSION, "utc": now.isoformat(), "mode": mode,
-           "rc": rc, "action": ("STALE_CALENDAR" if rc == 3 else "BORN" if born else "MARKED" if (new_p or new_m) else "NOTHING_DUE"), "calendar_stale": stale,
+           "rc": rc, "action": action, "calendar_stale": stale, "bar_gaps": bar_gaps, "missed": missed,
+           "events_not_acting": not_acting, "calendar_overdue": health["overdue"],
+           "sessions_unclosed_dropped": unclosed,
            "stored_rows_rechecked": len(stored), "stored_rows_differ": 0, "code_version": code,
            "code_note": code_note, "run_id": run_id, "through": last_bar.date().isoformat(), "born": born, "skipped": skipped,
            "cohorts_total": len(existing), "paths_total": len(have_p) + len(new_p), "paths_written": len(new_p), "marks_written": len(new_m),
            "paths_part": None if pp is None else str(pp), "marks_part": None if mp is None else str(mp),
-           "leader_events": [{k: v for k, v in e.items() if k != "belief_spans"} for e in events],
+           "leader_events": events,
            "leader_calendar": health["leaders"], "calendar_unscheduled": health["unscheduled"],
-           "forward_calendar": {"freshness": health["freshness"], "observations_appended": ing["appended"],
+           "forward_calendar": {"freshness": health["freshness"], "observations_appended": appended,
+                                "snapshots_partial_skipped": ing["snapshots_partial_skipped"],
                                 "observations_total": len(ing["observations"]),
                                 "snapshots_read": ing["snapshots_read"],
                                 "snapshots_damaged": ing["snapshots_damaged"]},
@@ -1110,6 +1221,23 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
                                                "backfilled") if kk in v} | {"rolling_crosscheck": v.get("rolling_crosscheck")}
                       for k, v in existing.items()}
     return row
+
+
+def closed_bars(bars: pd.DataFrame, cal: Any, now: datetime) -> tuple[pd.DataFrame, list[str]]:
+    """Only sessions whose close plus DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN is at or before
+    `now` (as branch_population_rolling uses closed sessions only): a bar for a session
+    still open, or just closed, can never be read or stored. Returns the dropped dates."""
+    grace = pd.Timedelta(minutes=float(_config.DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN))
+    t = pd.Timestamp(now)
+    drop = []
+    for s in sorted(pd.to_datetime(bars["date"]).unique()):
+        s = pd.Timestamp(s)
+        c = cal.close_of(s)
+        if c is None or pd.Timestamp(c) + grace > t:
+            drop.append(s)
+    if not drop:
+        return bars, []
+    return bars[~bars["date"].isin(drop)], [d.date().isoformat() for d in drop]
 
 
 def compute_cohort(c: dict, bars: pd.DataFrame, sessions: list[pd.Timestamp], observations: list[dict], *,
@@ -1176,9 +1304,9 @@ def preservation_cap_comparison(out: Path, data_root: Path, *, asof: Any = None,
     horizon = int(spec["horizon_sessions"])
     anchor = pd.Timestamp(_config.ROLLING_COHORT_ANCHOR)
     through = pd.Timestamp(asof).normalize() if asof is not None else pd.Timestamp(now.date())
-    bars = R.load_bars(data_root, start=anchor - pd.Timedelta(days=400), end=through)
-    sessions = R.bench_sessions(bars)
     cal = calendar or R.XnysCalendar()
+    bars, _ = closed_bars(R.load_bars(data_root, start=anchor - pd.Timedelta(days=400), end=through), cal, now)
+    sessions = R.bench_sessions(bars)
     first = max(0, sessions.index(next(s for s in sessions if s >= anchor)) - 1)
     dec = {s: pd.Timestamp(cal.close_of(s)) for s in sessions[first:]}
     rows = []

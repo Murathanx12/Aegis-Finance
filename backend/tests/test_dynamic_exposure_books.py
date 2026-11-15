@@ -755,3 +755,135 @@ def test_status_is_read_only_and_names_what_a_scheduler_needs(synthetic, tmp_pat
     assert st["calendar_observations_on_record"] > 0
     late = now + timedelta(days=5)
     assert D.status(root, out, now=late)["rc"] == 3                                 # the calendar aged out
+
+
+# ─────────────────────────── fix round of PR #158's review ───────────────────────────
+
+@pytest.mark.parametrize("shape", ["reported: NO_DATE + last_reported", "rolled: next estimate, no last_reported"])
+def test_a_vendor_rolling_forward_after_the_report_does_not_cancel_the_event(synthetic, shape):
+    """The two post-report row shapes of the live 2026-11-13 sample: 10 of 11 reporters
+    showed NO_DATE with last_reported_date (+utc); one (CDZI) showed the next estimate
+    with no last_reported_date. Pulled after the event but BEFORE the reaction close, so
+    the old rule (replaced before the reaction close = MOVED) would have cancelled it."""
+    bars, sessions, spec = synthetic
+    d0 = day(EARN_I - 1).date().isoformat()
+    after = pull_at(EARN_I)                                  # 10:30Z on the reaction session
+    pre = obs("AAPL", pull_at(EARN_I - 5), next_date=d0, event_utc=amc(EARN_I - 1))
+    if shape.startswith("reported"):
+        post = obs("AAPL", after, last=d0, last_utc=amc(EARN_I - 1))
+    else:
+        post = obs("AAPL", after, next_date=day(EARN_I + 63).date().isoformat(), timing="UNKNOWN",
+                   event_utc=untimed(EARN_I + 63), known=False, conf="VENDOR_ESTIMATE")
+    rows = [pre, post]
+    facts = {f["earnings_date"]: f for f in D.leader_facts(rows, cal=FakeCal())}
+    assert facts[d0]["observation_kind"] == "ANNOUNCED" and facts[d0]["acts_from_utc"] == pre["observed_utc"]
+    ev = [e for e in D.leader_events(bars, list(facts.values()), sessions) if e["earnings_date"] == d0]
+    assert D.event_status(ev[0], dec_map(sessions)) == "ON_TIME"
+    c = cohort(bars, sessions, spec, ANCHOR_I)
+    paths, _ = compute(c, bars, sessions, rows)
+    assert {r["date"] for r in paths["balanced"] if r["exposure"] < 1} == set(sessions[EARN_I + 1: EARN_I + 6])
+
+
+def test_a_date_withdrawn_before_its_event_but_confirmed_after_acts_from_the_confirmation(synthetic):
+    bars, sessions, spec = synthetic
+    d0 = day(EARN_I - 1).date().isoformat()
+    rows = [obs("AAPL", pull_at(EARN_I - 8), next_date=d0, event_utc=amc(EARN_I - 1)),
+            obs("AAPL", pull_at(EARN_I - 2), last=day(EARN_I - 64).date().isoformat()),   # withdrawn pre-event
+            obs("AAPL", pull_at(EARN_I + 2), last=d0, last_utc=amc(EARN_I - 1))]          # confirmed after
+    f = next(x for x in D.leader_facts(rows, cal=FakeCal()) if x["earnings_date"] == d0)
+    assert f["observation_kind"] == "MOVED" and f["acts_from_utc"] == rows[2]["observed_utc"]
+    c = cohort(bars, sessions, spec, ANCHOR_I)
+    paths, _ = compute(c, bars, sessions, rows)
+    # decided at the closes of EARN_I+2.. (after the 10:30Z confirmation): sessions EARN_I+3..+5
+    assert {r["date"] for r in paths["balanced"] if r["exposure"] < 1} == set(sessions[EARN_I + 3: EARN_I + 6])
+
+
+def _files(out):
+    return sorted((str(p), p.stat().st_size) for p in out.rglob("*")
+                  if p.name != "runs.jsonl" and not p.name.endswith(".lock"))
+
+
+def test_a_missing_leader_bar_is_stale_bars_writes_nothing_and_recovers_when_it_lands(synthetic, tmp_path):
+    bars, sessions, spec = synthetic
+    cpath, out = _contracts(tmp_path), tmp_path / "dxb"
+    root = _bars_root(tmp_path, bars)
+    fc_pull(root, pull_at(EARN_I - 10), {"AAPL": {"next": amc(EARN_I - 1), "last": amc(EARN_I - 64)}})
+    _run_through(tmp_path, bars, EARN_I - 1, out, cpath)
+    files0 = _files(out)
+    fc_pull(root, pull_at(EARN_I + 1), {"AAPL": {"next": amc(EARN_I + 62), "last": amc(EARN_I - 1)}})
+    holed = bars[~((bars["symbol"] == "AAPL") & (bars["date"] == DAYS[EARN_I]))]
+    for i in (EARN_I, EARN_I + 1):
+        r = _run_through(tmp_path, holed, i, out, cpath)
+        assert r["rc"] == 3 and r["action"] == "STALE_BARS" and r["paths_written"] == 0
+        assert r["bar_gaps"][0]["leader"] == "AAPL" and r["bar_gaps"][0]["session"] == DAYS[EARN_I].date().isoformat()
+        assert "no open of the reaction session" in r["calendar_stale"]["AAPL"][-1]
+        assert r["forward_calendar"]["observations_appended"] == 0
+    assert _files(out) == files0                                  # nothing but the journal was written
+    r = _run_through(tmp_path, bars, EARN_I + 8, out, cpath)      # the bar lands: no refusal, correct cut
+    assert r["rc"] == 0 and r["stored_rows_differ"] == 0
+    p = _paths(out)
+    bal = p[(p["personality"] == "balanced") & (p["cohort_id"] == DAYS[ANCHOR_I].date().isoformat())]
+    assert set(bal.loc[bal["exposure"] < 1, "date"]) == {DAYS[EARN_I + j].date().isoformat() for j in range(1, 6)}
+
+
+def test_a_session_not_closed_plus_grace_is_never_read_or_stored(synthetic, tmp_path):
+    bars, sessions, spec = synthetic
+    cpath, out = _contracts(tmp_path), tmp_path / "dxb"
+    root = _data_root(tmp_path, bars[bars["date"] <= DAYS[ANCHOR_I + 6]])
+    for hours in (-3, 0.25):                                      # mid-session, and inside the 20-min grace
+        r = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=DAYS[ANCHOR_I + 6],
+                  now=_close(ANCHOR_I + 6, hours), calendar=FakeCal())
+        assert r["sessions_unclosed_dropped"] == [DAYS[ANCHOR_I + 6].date().isoformat()]
+        assert r["through"] == DAYS[ANCHOR_I + 5].date().isoformat()
+    assert DAYS[ANCHOR_I + 6].date().isoformat() not in set(_paths(out)["date"])
+    r = D.run("backfill", data_root=root, out=out, contracts_path=cpath, asof=DAYS[ANCHOR_I + 6],
+              now=_close(ANCHOR_I + 6, 1), calendar=FakeCal())
+    assert r["sessions_unclosed_dropped"] == [] and r["stored_rows_differ"] == 0
+    assert DAYS[ANCHOR_I + 6].date().isoformat() in set(_paths(out)["date"])
+
+
+def test_a_due_cohort_whose_entry_window_passed_is_missed_never_silent(synthetic, tmp_path):
+    bars, sessions, spec = synthetic
+    cpath, out = _contracts(tmp_path), tmp_path / "dxb"
+    d = sessions[ANCHOR_I + 10]                                   # a scheduled cohort date
+    _data_root(tmp_path, bars[bars["date"] <= d])                 # the calendar
+    # the family is declared before d's close; d's bars are first seen after the next open
+    D.run("step", data_root=_bars_root(tmp_path, bars[bars["date"] <= sessions[ANCHOR_I + 9]]), out=out,
+          contracts_path=cpath, asof=sessions[ANCHOR_I + 9], now=_close(ANCHOR_I + 9, 2), calendar=FakeCal())
+    root = _bars_root(tmp_path, bars[bars["date"] <= d])
+    late = datetime.combine(sessions[ANCHOR_I + 11].date(), time(15, 0), tzinfo=timezone.utc)
+    r = D.run("step", data_root=root, out=out, contracts_path=cpath, asof=d, now=late, calendar=FakeCal())
+    assert r["rc"] == 0 and r["action"] == "MISSED_ENTRY_WINDOW" and r["born"] == []
+    assert [m["cohort_id"] for m in r["missed"]] == [d.date().isoformat()]
+    assert not (out / "cohorts" / f"dxb_cohort_{d.date()}.json").exists()
+    assert all(pd.Timestamp(m["entry_open_utc"]) > pd.Timestamp(_close(ANCHOR_I + 9, 2)) for m in r["missed"])
+
+
+def test_ingest_reads_full_universe_pulls_only(synthetic, tmp_path):
+    root = tmp_path / "optimus"
+    fc_pull(root, pull_at(EARN_I - 8), {"AAPL": {"next": amc(EARN_I - 1)}})
+    FC.pull(["AAPL"], root, fetch=lambda s: {"AAPL": {"symbol": "AAPL", "quoteType": "EQUITY",
+                                                      "earningsTimestampStart": amc(EARN_I + 20).timestamp()}},
+            macro=False, now_fn=lambda: pull_at(EARN_I - 7), sleep_fn=lambda s: None, resume=False,
+            scope=FC.PARTIAL)
+    out = tmp_path / "dxb"
+    out.mkdir()
+    ing = D.ingest_forward_calendar(out, root, now=pull_at(EARN_I - 6), run_id="t")
+    assert ing["appended"] == 1 and len(ing["snapshots_partial_skipped"]) == 1
+    assert {o["scope"] for o in ing["observations"]} == {FC.FULL_UNIVERSE}
+    pend = D.ingest_forward_calendar(out, root, now=pull_at(EARN_I - 6), run_id="t2", write=False)
+    assert pend["appended"] == 0 and pend["pending"] == []        # already on record
+
+
+def test_a_cohort_born_inside_a_cut_window_enters_at_the_cut_exposure(synthetic):
+    bars, sessions, spec = synthetic
+    c = cohort(bars, sessions, spec, EARN_I + 1)                  # entry EARN_I+2, inside EARN_I+1..+5
+    paths, _ = compute(c, bars, sessions, ahead())
+    b = paths["balanced"]
+    assert [r["exposure"] for r in b[:4]] == [0.5] * 4 and b[4]["exposure"] == 1.0
+    assert b[0]["rule_cost"] == pytest.approx(0.5 * _config.DYNAMIC_BOOK_COST_STOCK_BPS / 1e4)
+    doc = json.loads(CONTRACTS.read_bytes())
+    bal = next(x for x in doc["contracts"] if x["personality"] == "balanced")
+    assert "enters at the cut exposure" in bal["rule"]["definition"]
+    assert "BEFORE ITS EVENT TIME" in bal["rule"]["calendar_observation"]
+    assert "No forward row existed" in doc["compile_history"]
