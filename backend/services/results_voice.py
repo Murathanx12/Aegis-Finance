@@ -36,6 +36,7 @@ from __future__ import annotations
 import json
 import re
 import statistics
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -423,7 +424,8 @@ def _pct1(x: Any) -> str:
     return f"{100 * float(x):.1f}%"
 
 
-def label_false_fire(p_dna: Optional[dict] = None, table: Optional[dict] = None) -> dict:
+def label_false_fire(p_dna: Optional[dict] = None, table: Optional[dict] = None,
+                     now: Optional[datetime] = None) -> dict:
     """How often each evidence label fires on a random book nobody selected -- MEASURED
     (roadmap CH-53, `scripts.paper_tables` table 2), read from `config.LABEL_FALSE_FIRE_MEASURED`
     or from `table` (`false_fire_from_table2`). Never recomputed and never tuned here.
@@ -431,7 +433,10 @@ def label_false_fire(p_dna: Optional[dict] = None, table: Optional[dict] = None)
     status OK, or CANNOT DETERMINE with `why`: no measurement, a rate that is not a number in
     0..1, or a label rule that changed since the measurement (`early_min_sessions` of the
     book_dna receipt differs from the one the rates were measured under). A measurement that
-    does not record the rule it was taken under (a raw table-2 receipt) is accepted and says so."""
+    does not record the rule it was taken under (a raw table-2 receipt) is accepted and says so.
+    Fix round (review of PR #164): the measurement EXPIRES. Older than
+    `LABEL_FALSE_FIRE_MAX_AGE_DAYS` against `now` (default: the clock), undated, or dated in the
+    future, every rate is CANNOT DETERMINE ("measurement of <date> expired")."""
     t = table if table is not None else _cfg("LABEL_FALSE_FIRE_MEASURED", None)
     out: dict = {"status": "OK", "why": None, "rates": {}, "source": None, "measured_utc": None,
                  "n_books": None, "what": ("share of random equal-weight books (no selection, production "
@@ -447,6 +452,22 @@ def label_false_fire(p_dna: Optional[dict] = None, table: Optional[dict] = None)
                   "table 2 and record its `all` row)")
     out.update(source=t.get("source"), measured_utc=t.get("measured_utc"), n_books=t.get("n_books"),
                zero_edge_symmetric_early=t.get("zero_edge_symmetric_early"))
+    max_age = float(_cfg("LABEL_FALSE_FIRE_MAX_AGE_DAYS", 90))
+    now = now or datetime.now(timezone.utc)
+    now = now if now.tzinfo else now.replace(tzinfo=timezone.utc)
+    try:
+        m_at = datetime.fromisoformat(str(t.get("measured_utc")).replace("Z", "+00:00"))
+        m_at = m_at if m_at.tzinfo else m_at.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return cd("the measurement carries no date, so its age cannot be checked "
+                  f"(limit {max_age:g} days)")
+    age = (now - m_at).total_seconds() / 86400.0
+    out.update(age_days=round(age, 1), max_age_days=max_age)
+    if age > max_age:
+        return cd(f"measurement of {m_at.date().isoformat()} expired: {age:.0f} days old, limit {max_age:g}; "
+                  "re-run scripts.paper_tables table 2")
+    if age < -1.0:
+        return cd(f"measurement of {m_at.date().isoformat()} is dated in the future")
     for k in _FF_KEYS:
         r = t["rates"].get(k) if isinstance(t["rates"].get(k), dict) else {}
         v = _fnum(r.get("rate"))
@@ -492,7 +513,7 @@ def label_rate(label: Any, ff: Optional[dict]) -> dict:
     rung = str(label or "UNLABELLED").split("(")[0]
     if not isinstance(ff, dict) or ff.get("status") != "OK":
         why = (ff or {}).get("why") or "no false-fire measurement was read"
-        return {"rung": rung, "rate": cd, "why": why, "tag": f"false-fire rate {cd}: {why}"}
+        return {"rung": rung, "rate": cd, "why": why, "tag": f"false-fire rate {cd} ({why})"}
     rates = ff["rates"]
     if rung == "OBSERVED":
         v = rates["EARLY_EVIDENCE"]["rate"]
@@ -598,6 +619,8 @@ def exposure_view(book: Optional[dict], dna_name: str = "the book_dna receipt") 
     sx = me.get("series_beta_adjusted_pp") if isinstance(me.get("series_beta_adjusted_pp"), dict) else {}
     rv = _fnum(sx.get("value"))
     out["residual_window_pp"] = rv
+    out["coverage"] = _fnum((w or {}).get("coverage"))
+    out["coverage_note"] = (w or {}).get("coverage_note")
     out["residual_se_pp"], out["residual_mde_pp"] = _fnum(sx.get("se_pp")), _fnum(sx.get("mde_pp"))
     if rv is None:
         out["residual_pp"] = cd
@@ -850,7 +873,7 @@ def _r(x: Any, nd: int = 3) -> Optional[float]:
 
 def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: str,
           prev: Optional[dict] = None, history: Optional[dict] = None,
-          false_fire: Optional[dict] = None) -> dict:
+          false_fire: Optional[dict] = None, now: Optional[datetime] = None) -> dict:
     """`prev`: `previous_dna(...)` -- the previous run's book_dna receipt, against which a label
     FELL (LABELS LOWERED). `history`: `label_history(...)` -- the earlier DAILY runs a rise must
     hold through before CLAIMS PROMOTED names it. None = no earlier run. `false_fire`: a
@@ -896,7 +919,7 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
 
     dna_name = Path(str(dna_path)).name
     sb = same_bet_as(accounts, books)
-    ff = label_false_fire(p_dna, false_fire)
+    ff = label_false_fire(p_dna, false_fire, now)
 
     def row_view(a: str) -> dict:
         r, b = by_acc[a], books.get(a) or {}

@@ -1,4 +1,4 @@
-"""CLI for `backend.services.family_scorecard` (CH-55): one row per independent family.
+"""CLI for `backend.services.family_scorecard` (CH-55): one row per strategy family.
 
     python -m scripts.family_scorecard --data-root <optimus dir> --out <dir>
     python -m scripts.family_scorecard --data-root <optimus dir> --out <dir> --rebuild-dna
@@ -13,7 +13,8 @@ written before the market-exposure block existed); it reads the prices and the b
 `AEGIS_DATA_DIR` to the parent of the data root to read another one, read-only).
 
 Exit codes: 0 = written and complete. 2 = REFUSED, nothing written, with a named reason
-(EMPTY_INPUT, STALE_INPUT, UNDATED_INPUT, NO_EXPOSURE_BLOCK, OUT_INSIDE_INPUT, REBUILD_FAILED). 3 = written but FAILED: a live book with neither beta and residual nor
+(EMPTY_INPUT, UNREADABLE_INPUT, STALE_INPUT, STALE_MARKS, UNDATED_INPUT, NO_EXPOSURE_BLOCK,
+OUT_INSIDE_INPUT, REBUILD_FAILED). A future-dated stamp or mark is UNDATED_INPUT, never fresh. 3 = written but FAILED: a live book with neither beta and residual nor
 an explicit CANNOT DETERMINE with a reason, or a label without its false-fire rate.
 $0, no LLM, no network, no order.
 """
@@ -88,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
         res = FS.run(pa, out, run_id=rid, now=now, rebuild_dna=a.rebuild_dna, false_fire=ff)
     except RV.ResultsVoiceRefused as exc:
         msg = str(exc)
-        return refused(msg if msg.split(":")[0].isupper() else f"EMPTY_INPUT: {msg}")
+        return refused(msg if msg.split(":")[0].replace("_", "").isupper() else f"EMPTY_INPUT: {msg}")
     n_after = count_files(pa)
     sc = res["scorecard"]
     if a.json:
@@ -101,6 +102,8 @@ def main(argv: list[str] | None = None) -> int:
         print(sc["top_line"] + ".")
         print(sc["second_line"] + ".")
         lead, worst = FS.ends(sc)
+        print("Leaders are chosen after the fact, each over its own short window: an observation, not a "
+              "skill claim.")
         for i, f in enumerate(lead, 1):
             print(f"LEADING {i}: {FS.family_line(f)}")
         for i, f in enumerate(worst, 1):

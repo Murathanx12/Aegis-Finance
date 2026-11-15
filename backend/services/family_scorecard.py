@@ -1,10 +1,10 @@
-"""family_scorecard -- one row per independent strategy FAMILY, not per book (CH-55, 2026-11-16).
+"""family_scorecard -- one row per strategy FAMILY, not per book (CH-55, 2026-11-16).
 
 Licence: PRODUCT_EXPERIMENT diagnostics ($0, no LLM, no network, no order, no broker call).
 
 WHY
 ===
-An audit of the paper fleet found 65 books that were about 3.7 independent bets, 62 of
+An audit of the paper fleet found 65 books that were about 3.7 effective bets, 62 of
 which fell on the same day. "N books ahead of SPY" therefore says little, and "ahead of SPY"
 could not be told apart from "holds more market" because the owner-facing block ranked on raw
 excess. The evidence labels printed beside the books also fire on about a third of random
@@ -43,15 +43,31 @@ A scorecard that builds but in which a live book has neither a number nor an exp
 CANNOT DETERMINE with a reason, or a label has no false-fire rate, is written with
 `status: FAILED` and its `failures` named; the CLI exits non-zero for it too.
 
+FIX ROUND (review of PR #164)
+=============================
+* A family count is NOT a count of independent bets: families distinct under the join rule
+  still move together. `effective_bets` prints the participation ratio of the family
+  correlation matrix (raw and excess returns), the components at a looser join and the share
+  of families whose worst day is the same date -- in the top line.
+* The newest mark older than `FAMILY_SCORECARD_MARK_STALE_DAYS` refuses, as does a stamp or a
+  mark dated in the future; an unparseable receipt is a named refusal, not a traceback.
+* The false-fire measurement expires (`LABEL_FALSE_FIRE_MAX_AGE_DAYS`).
+* |t| >= `FAMILY_SCORECARD_T_NAMED` families are counted and named beside the count expected
+  by chance; the SE treats daily residuals as independent.
+
 Nothing here is a skill claim. Families are ranked after the fact.
 """
 from __future__ import annotations
 
 import json
+import math
 import statistics
-from datetime import datetime, timezone
+from collections import Counter
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
+
+import numpy as np
 
 from backend import config as _config
 from backend.services import book_dna as _dna
@@ -68,6 +84,12 @@ def _cfg(name: str, default: Any) -> Any:
 
 def params() -> dict:
     return {"stale_days": float(_cfg("FAMILY_SCORECARD_STALE_DAYS", 4)),
+            "mark_stale_days": float(_cfg("FAMILY_SCORECARD_MARK_STALE_DAYS", 4)),
+            "future_tolerance_min": float(_cfg("FAMILY_SCORECARD_FUTURE_TOLERANCE_MIN", 5)),
+            "effective_min_dates": int(_cfg("FAMILY_SCORECARD_EFFECTIVE_MIN_DATES", 30)),
+            "effective_min_families": int(_cfg("FAMILY_SCORECARD_EFFECTIVE_MIN_FAMILIES", 3)),
+            "loose_join_corr": float(_cfg("FAMILY_SCORECARD_LOOSE_JOIN_CORR", 0.50)),
+            "t_named": float(_cfg("FAMILY_SCORECARD_T_NAMED", 2.0)),
             "n_ends": int(_cfg("FAMILY_SCORECARD_N_ENDS", 3)),
             "bet_jaccard": RV.params()["bet_jaccard"],
             "same_bet_corr": _dna.params()["flag_same_bet_corr"],
@@ -109,9 +131,32 @@ def receipt_age(roi: dict, run_id: Optional[str], now: datetime, stale_days: flo
         return {"status": "UNKNOWN", "generated_utc": None, "age_days": None, "stale_days": stale_days,
                 "why": "the ROI receipt has no parseable generated_utc and no run-id stamp"}
     age = (now - stamp).total_seconds() / 86400.0
+    if age < -float(_cfg("FAMILY_SCORECARD_FUTURE_TOLERANCE_MIN", 5)) / 1440.0:
+        # fix round: a stamp from the future is not "0 days old"
+        return {"status": "UNKNOWN", "generated_utc": stamp.isoformat(timespec="seconds"), "age_days": round(age, 2),
+                "stale_days": stale_days, "now_utc": now.isoformat(timespec="seconds"),
+                "why": f"the ROI receipt is stamped {stamp.isoformat(timespec='seconds')}, which is in the FUTURE "
+                       f"of {now.isoformat(timespec='seconds')}"}
     return {"status": "STALE" if age > stale_days else "FRESH", "generated_utc": stamp.isoformat(timespec="seconds"),
             "stamp_source": src, "age_days": round(age, 2), "stale_days": stale_days,
             "now_utc": now.isoformat(timespec="seconds")}
+
+
+def marks_age(as_of_mark: Any, now: datetime, stale_days: float) -> dict:
+    """Age in calendar days of the NEWEST last_mark among the strategy books (fix round: a
+    receipt generated today over marks from weeks ago passed as fresh). FRESH / STALE /
+    UNKNOWN; a mark that cannot be read as a date, or lies after `now`, is UNKNOWN."""
+    try:
+        m = date.fromisoformat(str(as_of_mark)[:10])
+    except (TypeError, ValueError):
+        return {"status": "UNKNOWN", "as_of_mark": as_of_mark, "age_days": None, "stale_days": stale_days,
+                "why": f"the newest mark {as_of_mark!r} is not a date"}
+    age = (now.astimezone(timezone.utc).date() - m).days
+    if age < 0:
+        return {"status": "UNKNOWN", "as_of_mark": m.isoformat(), "age_days": age, "stale_days": stale_days,
+                "why": f"the newest mark {m.isoformat()} is in the FUTURE of {now.date().isoformat()}"}
+    return {"status": "STALE" if age > stale_days else "FRESH", "as_of_mark": m.isoformat(), "age_days": age,
+            "stale_days": stale_days}
 
 
 def exposure_audit(roi: dict, dna: dict, dna_name: str) -> dict:
@@ -161,6 +206,102 @@ def families_of(voice: dict) -> list[list[str]]:
     return sorted((sorted(m, key=lambda a: order.get(a, 1 << 30)) for m in fams), key=lambda m: m[0])
 
 
+def _family_series(members: list[str], books: dict) -> dict:
+    """{period-end date: (mean r_book, mean r_book - r_SPY)} over the members that have that date
+    (book_dna `period_returns`)."""
+    acc: dict = {}
+    for a in members:
+        for row in (books.get(a) or {}).get("period_returns") or []:
+            try:
+                d, b, x = str(row[0])[:10], float(row[1]), float(row[2])
+            except (TypeError, ValueError, IndexError):
+                continue
+            acc.setdefault(d, []).append((b, b - x))
+    return {d: (statistics.fmean(q[0] for q in v), statistics.fmean(q[1] for q in v)) for d, v in acc.items()}
+
+
+def _components(corr: np.ndarray, thr: float) -> int:
+    n = corr.shape[0]
+    parent = list(range(n))
+
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for i in range(n):
+        for j in range(i + 1, n):
+            if corr[i, j] == corr[i, j] and corr[i, j] >= thr:
+                parent[find(i)] = find(j)
+    return len({find(i) for i in range(n)})
+
+
+def effective_bets(fams: list[dict], books: dict, P: Optional[dict] = None) -> dict:
+    """How many bets the families really are (fix round, review of PR #164).
+
+    The participation ratio (`book_dna.participation_ratio`: N for N uncorrelated series, 1
+    for N copies) of the correlation matrix of the families' period returns, on RAW returns and
+    on EXCESS returns (r - r_SPY), over the families that share at least `effective_min_dates`
+    period-end dates. Families are dropped fewest-dates-first until the rest share that many;
+    a family whose series never moves on those dates is dropped (no correlation). Beside it:
+    the median pairwise correlation, the number of components when families are joined at
+    `loose_join_corr` (excess, the join rule's own quantity; raw beside it), and the share of
+    families whose worst raw day is the same date. CANNOT DETERMINE with the reason when fewer
+    than `effective_min_families` families remain. Periods are matched on their end date."""
+    P = P or params()
+    md, mf, thr = int(P["effective_min_dates"]), int(P["effective_min_families"]), float(P["loose_join_corr"])
+    base = {"method": ("participation ratio (sum of eigenvalues)^2 / sum of squared eigenvalues of the family "
+                       "correlation matrix; a family's return on a date is the equal-weight mean of its members; "
+                       "periods matched on their end date"),
+            "min_common_dates": md, "min_families": mf, "loose_join_corr": thr, "n_families_total": len(fams)}
+
+    def cd(why: str, **extra: Any) -> dict:
+        return {**base, "status": CD, "why": why, "raw": CD, "excess": CD, **extra}
+
+    if not any(isinstance((books.get(a) or {}).get("period_returns"), list) for f in fams for a in f["members"]):
+        return cd("the book_dna receipt carries no period_returns (it predates the CH-55 fix round); rebuild "
+                  "book_dna on this ROI receipt")
+    ser = {f["family"]: _family_series(f["members"], books) for f in fams}
+    cand = sorted((k for k, v in ser.items() if len(v) >= md), key=lambda k: (-len(ser[k]), k))
+    short = sorted(k for k in ser if k not in cand)
+
+    def common(keys: list) -> list:
+        return sorted(set.intersection(*(set(ser[k]) for k in keys))) if keys else []
+    dropped = []
+    dates = common(cand)
+    while len(dates) < md and len(cand) > mf:
+        dropped.append(cand.pop())                     # fewest dates last
+        dates = common(cand)
+    if len(cand) < mf or len(dates) < md:
+        return cd(f"{len(cand)} families share {len(dates)} period-end dates (needs >= {mf} families on >= {md} "
+                  f"dates); {len(short)} families have fewer than {md} dates",
+                  n_families=len(cand), n_dates=len(dates))
+    raw = np.array([[ser[k][d][0] for k in cand] for d in dates])
+    exc = np.array([[ser[k][d][1] for k in cand] for d in dates])
+    keep = [i for i in range(len(cand)) if np.ptp(raw[:, i]) > 1e-12 and np.ptp(exc[:, i]) > 1e-12]
+    flat = [cand[i] for i in range(len(cand)) if i not in keep]
+    used = [cand[i] for i in keep]
+    if len(used) < mf:
+        return cd(f"{len(used)} families move on the {len(dates)} common dates (needs >= {mf})",
+                  n_families=len(used), n_dates=len(dates))
+    raw, exc = raw[:, keep], exc[:, keep]
+    cr, cx = np.corrcoef(raw, rowvar=False), np.corrcoef(exc, rowvar=False)
+    iu = np.triu_indices(len(used), 1)
+    worst = Counter(dates[int(np.argmin(raw[:, i]))] for i in range(len(used)))
+    wd, wn = sorted(worst.items(), key=lambda kv: (-kv[1], kv[0]))[0]
+    return {**base, "status": "OK", "why": None,
+            "raw": round(_dna.participation_ratio(cr), 2), "excess": round(_dna.participation_ratio(cx), 2),
+            "n_families": len(used), "n_dates": len(dates), "from": dates[0], "to": dates[-1],
+            "median_pairwise_corr_raw": round(float(np.median(cr[iu])), 3),
+            "median_pairwise_corr_excess": round(float(np.median(cx[iu])), 3),
+            "components_at_loose_join_excess": _components(cx, thr),
+            "components_at_loose_join_raw": _components(cr, thr),
+            "worst_day": {"date": wd, "n_families": wn, "share": round(wn / len(used), 3)},
+            "families_used": used,
+            "families_left_out": {"fewer_than_min_dates": short, "dropped_to_reach_common_dates": sorted(dropped),
+                                  "never_moved_on_the_common_dates": flat}}
+
+
 def _name_of(members: list[str], rows: dict) -> str:
     """Named after the member with the LONGEST window (ties: alphabetical) -- never the best."""
     return sorted(members, key=lambda a: (-(rows[a].get("sessions_graded") or 0), a))[0]
@@ -204,6 +345,7 @@ def family_row(members: list[str], rows: dict, books: dict, ff: dict, voice: dic
             "beta_adjusted_excess_mde_pp": x.get("residual_mde_pp"),
             "beta_adjusted_excess_why": x.get("residual_why"),
             "residual_over_the_beta_window_pp": x.get("residual_window_pp"),
+            "coverage_by_periods": x.get("coverage"), "coverage_note": x.get("coverage_note"),
             "return_minus_beta_x_spy_leg_pp": x.get("beta_adjusted_excess_pp"),
             "max_drawdown_pct": _drawdown(b, dna_name),
             "twin_gap_pp": gap, "twin_gap_source": gsrc,
@@ -243,7 +385,11 @@ def family_row(members: list[str], rows: dict, books: dict, ff: dict, voice: dic
                "se_pp_member_median": round(statistics.median(ses), 3) if ses else None,
                "mde_pp_member_median": round(statistics.median(mdes), 3) if mdes else None,
                "se_note": ("one member's SE (the median across members): the members are one bet, so "
-                           "averaging them does not shrink it"),
+                           "averaging them does not shrink it. The SE treats the daily residuals as "
+                           "independent; autocorrelation would widen it"),
+               "min_member_coverage_by_periods": min((m["coverage_by_periods"] for m in det_x
+                                                      if m["coverage_by_periods"] is not None), default=None),
+               "coverage_notes": sorted({str(m["coverage_note"]) for m in det_x if m["coverage_note"]}),
                "why_others": whys("beta_adjusted_excess_why", det_x)}
     else:
         bax = {"value": CD, "why": whys("beta_adjusted_excess_why", det_x), "n_members_determined": 0, "n_members": n}
@@ -294,7 +440,7 @@ def family_row(members: list[str], rows: dict, books: dict, ff: dict, voice: dic
         "flags_set": dict(sorted(flags.items())),
         # a member whose daily excess could not be compared with the others (too few common
         # sessions) is its own family by DEFAULT, not because it was found to be different
-        "independence_tested": untested == 0,
+        "compared_with_the_others": untested == 0,
         "n_members_same_bet_not_comparable": untested,
         "ahead_raw": bool(raw and statistics.fmean(raw) > 0),
         "ahead_beta_adjusted": (bool(bax["value"] > 0) if isinstance(bax["value"], float) else None),
@@ -325,7 +471,14 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
         raise Refused(f"NO_EXPOSURE_BLOCK: {dna_name} predates the market_exposure block (no book carries one); "
                       "rebuild book_dna on this ROI receipt (--rebuild-dna, into the out folder)")
     v = voice if voice is not None else RV.build(roi, dna, roi_path=roi_path, dna_path=dna_path,
-                                                 false_fire=false_fire)
+                                                 false_fire=false_fire, now=now)
+    mk = marks_age(v["headline"].get("as_of_mark"), now, P["mark_stale_days"])
+    if mk["status"] == "UNKNOWN":
+        raise Refused(f"UNDATED_INPUT: {mk['why']}; never treated as fresh")
+    if mk["status"] == "STALE":
+        raise Refused(f"STALE_MARKS: the newest mark among the strategy books is {mk['as_of_mark']}, "
+                      f"{mk['age_days']} days before {now.date().isoformat()} (limit {P['mark_stale_days']:g} days); "
+                      f"the receipt was generated {age['generated_utc']} over old marks")
     ff = v["label_false_fire"]
     rows = {r["account"]: r for r in v["beta_adjusted_ranking"]["rows"]}
     books = {str(b.get("account")): b for b in dna["books"]}
@@ -360,29 +513,59 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
     n_up, n_dn = sum(1 for f in det if beyond(f, 1)), sum(1 for f in det if beyond(f, -1))
     betas = sorted(f["beta"]["value"] for f in fams if isinstance(f["beta"]["value"], float))
     hb = float(_dna.params()["flag_high_beta"])
-    n_untested = sum(1 for f in fams if not f["independence_tested"])
+    n_untested = sum(1 for f in fams if not f["compared_with_the_others"])
+    eb = effective_bets(fams, books, P)
+    tn = float(P["t_named"])
+    with_t = []
+    for f in det:
+        x = f["beta_adjusted_excess_pp"]
+        se = x.get("se_pp_member_median")
+        x["t"] = round(x["value"] / se, 2) if se else None
+        if x["t"] is not None:
+            with_t.append(f)
+    t_up = [f for f in with_t if f["beta_adjusted_excess_pp"]["t"] >= tn]
+    t_dn = [f for f in with_t if f["beta_adjusted_excess_pp"]["t"] <= -tn]
+    p_two = math.erfc(tn / math.sqrt(2.0))                      # P(|z| >= tn)
+    exp_each = 0.5 * p_two * len(with_t)
     sbc = v["headline"].get("same_bet_clustering") or {}
     h = v["headline"]
     summ = dna.get("summary") or {}
-    top = (f"FAMILY SCORECARD as of the {h['as_of_mark']} marks (run {run_id or v.get('run_id')}): {n} independent "
-           f"families from {h['n_strategy_accounts']} live strategy books ({h['n_excluded_controls']} controls/twins "
-           f"excluded); ahead of SPY on raw excess: {n_raw} of {n}; ahead on beta-adjusted excess: {n_bax} of "
-           f"{len(det)} determinable ({n - len(det)} {CD}, not counted as behind)")
-    second = (f"Of the {len(det)} determinable: {n_up} ahead and {n_dn} behind by more than their MDE "
-              f"({_dna.params()['mde_z']:g} x SE); the other {len(det) - n_up - n_dn} cannot be distinguished from "
-              f"zero. Family beta: median {statistics.median(betas):.2f} over {len(betas)} with a beta, "
-              f"{sum(1 for b in betas if b > 1.0)} above 1.0, {sum(1 for b in betas if b > hb)} above {hb:g}. "
-              f"{n_untested} of the {n} families could not be compared with the others (too few common "
-              f"sessions), so {n} is an upper bound on independent bets"
-              if betas else
-              f"No family has a determinable beta. {n_untested} of the {n} families could not be compared with "
-              f"the others, so {n} is an upper bound on independent bets")
+    rule = (f"holdings-Jaccard >= {P['bet_jaccard']:g} / excess-correlation >= {P['same_bet_corr']:g}")
+    if eb["status"] == "OK":
+        wdy = eb["worst_day"]
+        ebs = (f"effective number of bets (participation ratio, {eb['n_families']} families on {eb['n_dates']} common "
+               f"dates): {eb['raw']:.1f} on raw returns, {eb['excess']:.1f} on excess returns; "
+               f"{eb['components_at_loose_join_excess']} components at a {eb['loose_join_corr']:g} join; "
+               f"{wdy['n_families']} of those {eb['n_families']} families ({100 * wdy['share']:.0f}%) had their worst "
+               f"day on {wdy['date']}")
+    else:
+        ebs = f"effective number of bets {CD} ({eb['why']})"
+    top = (f"FAMILY SCORECARD as of the {h['as_of_mark']} marks (run {run_id or v.get('run_id')}): {n} families "
+           f"distinct under the {rule} rule (an upper bound) from {h['n_strategy_accounts']} live strategy books "
+           f"({h['n_excluded_controls']} controls/twins excluded); {ebs}; ahead of SPY on raw excess: {n_raw} of {n}; "
+           f"ahead on beta-adjusted excess: {n_bax} of {len(det)} determinable ({n - len(det)} {CD}, not counted "
+           f"as behind)")
+
+    def named(fs: list) -> str:
+        return (" (" + ", ".join(f"{f['family']} t {f['beta_adjusted_excess_pp']['t']:+.2f}" for f in fs) + ")") if fs else ""
+    second = (f"Of the {len(det)} determinable ({len(with_t)} with an SE), |t| >= {tn:g}: {len(t_up)} ahead"
+              f"{named(t_up)} and {len(t_dn)} behind{named(t_dn)}; about {exp_each:.1f} expected in each direction by "
+              f"chance at that count ({2 * exp_each:.1f} in all). Beyond the MDE ({_dna.params()['mde_z']:g} x SE): "
+              f"{n_up} ahead, {n_dn} behind. The SE treats daily residuals as independent draws; autocorrelation "
+              f"would widen it, and these families are not {len(with_t)} separate tests (see the effective number "
+              f"of bets). "
+              + (f"Family beta: median {statistics.median(betas):.2f} over {len(betas)} with a beta, "
+                 f"{sum(1 for b in betas if b > 1.0)} above 1.0, {sum(1 for b in betas if b > hb)} above {hb:g}. "
+                 if betas else "No family has a determinable beta. ")
+              + f"{n_untested} of the {n} families could not be compared with the others (too few common sessions) "
+                f"and are distinct by default")
     sc = {
         "schema": SCHEMA, "receipt": "family_scorecard", "licence": roi.get("licence") or "PRODUCT_EXPERIMENT",
         "status": "FAILED" if failures else "OK", "failures": failures,
         "run_id": run_id or v.get("run_id"), "receipts": [roi_path, dna_path],
         "input_age": age, "params": P,
         "top_line": top, "second_line": second,
+        "effective_bets": eb, "marks_age": mk,
         "counts": {"n_families": n, "n_strategy_books": h["n_strategy_accounts"],
                    "n_excluded_controls_twins": h["n_excluded_controls"],
                    "n_ahead_raw_excess": n_raw, "n_beta_adjusted_determinable": len(det),
@@ -394,7 +577,15 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
                    "family_beta_median": round(statistics.median(betas), 3) if betas else None,
                    "n_family_beta_above_1": sum(1 for b in betas if b > 1.0),
                    "n_family_beta_above_high_beta_flag": sum(1 for b in betas if b > hb),
-                   "n_families_independence_not_testable": n_untested,
+                   "n_families_not_comparable_with_the_others": n_untested,
+                   "effective_bets_raw": eb["raw"], "effective_bets_excess": eb["excess"],
+                   "effective_bets_n_families": eb.get("n_families"), "effective_bets_n_dates": eb.get("n_dates"),
+                   "components_at_loose_join_excess": eb.get("components_at_loose_join_excess"),
+                   "worst_day_share": (eb.get("worst_day") or {}).get("share"),
+                   "worst_day_date": (eb.get("worst_day") or {}).get("date"),
+                   "n_with_t": len(with_t), "n_t_named_ahead": len(t_up), "n_t_named_behind": len(t_dn),
+                   "t_named": [{"family": f["family"], "t": f["beta_adjusted_excess_pp"]["t"]} for f in t_up + t_dn],
+                   "t_named_expected_by_chance_each_direction": round(exp_each, 2),
                    # the results voice counts a bet ahead when ANY member is ahead; here: the mean
                    "results_voice_n_bets_ahead_any_member": sbc.get("n_bets_ahead"),
                    "book_dna_effective_bets_exante": summ.get("effective_bets_exante")},
@@ -402,8 +593,8 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
             f"one component of results_voice.bets_after_same_bet: strategy accounts joined when their holdings "
             f"Jaccard >= {P['bet_jaccard']:g} (results_voice.cluster_bets) or their daily excess over SPY "
             f"correlates >= {P['same_bet_corr']:g} (book_dna SAME_BET). Books that cannot be compared (too few "
-            f"common sessions, no holdings) stay their own family, so the count is an UPPER bound on "
-            f"independent bets"),
+            f"common sessions, no holdings) stay their own family. The count is an UPPER bound: families "
+            f"distinct under this rule still move together -- read the effective number of bets"),
         "aggregation": ("each family figure is the equal-weight mean of its members, each over its own window; "
                         "the drawdown is the worst member's; the beta-adjusted mean prints the raw excess of the "
                         "same members beside it"),
@@ -438,6 +629,16 @@ def _of(d: dict) -> str:
     return f" ({k} of {n})" if isinstance(d.get("value"), float) and k is not None and n and k < n else ""
 
 
+def _cov(x: dict) -> str:
+    """' (coverage 76% by periods)' when a member was accepted below the period-coverage rule."""
+    c = x.get("min_member_coverage_by_periods")
+    return f" (coverage {100 * c:.0f}% by periods)" if x.get("coverage_notes") and c is not None else ""
+
+
+def _t(x: dict) -> str:
+    return f" (t {x['t']:+.2f})" if isinstance(x.get("t"), float) else ""
+
+
 def family_line(f: dict) -> str:
     """One family in one line: the figures the brief names, CANNOT DETERMINE spelled out."""
     b, x, dd, tw = f["beta"], f["beta_adjusted_excess_pp"], f["max_drawdown_pct"], f["twin_gap_pp"]
@@ -445,7 +646,8 @@ def family_line(f: dict) -> str:
     sess = f"{s['min']}" if s["min"] == s["max"] else f"{s['min']}-{s['max']}"
     return (f"{f['family']} ({f['n_members']} book(s), {f['n_distinct_bets_by_holdings']} by holdings): return "
             f"{_num(f['return_pct'], '%')} vs SPY {_num(f['spy_same_window_pct'], '%')} = {_num(f['raw_excess_pp'], ' pp')} "
-            f"raw; beta {_num(b['value'], signed=False)}{_of(b)}; beta-adjusted {_num(x['value'], ' pp')}{_of(x)}; "
+            f"raw; beta {_num(b['value'], signed=False)}{_of(b)}; beta-adjusted {_num(x['value'], ' pp')}{_of(x)}"
+            f"{_cov(x)}{_t(x)}; "
             f"max drawdown {_num(dd['value'], '%')}; twin gap "
             f"{_num(tw['value'], ' pp') if tw['value'] is not None else 'none seeded'}; "
             f"{sess} sessions; {', '.join(e['text'] + (' x' + str(e['n']) if f['n_members'] > 1 else '') for e in f['labels'])}")
@@ -475,6 +677,26 @@ def render_md(sc: dict) -> str:
             f"- Figures: {sc['aggregation']}.",
             f"- Beta-adjusted excess: {sc['beta_adjusted_definition']}.",
             f"- {sc['read_me_first']}", ""]
+    eb = sc["effective_bets"]
+    out += ["## How many bets these families are", ""]
+    if eb["status"] == "OK":
+        lo = eb["families_left_out"]
+        out += [f"- Effective number of bets (participation ratio): **{eb['raw']:.2f} on raw returns, "
+                f"{eb['excess']:.2f} on excess returns**, over {eb['n_families']} of the {eb['n_families_total']} "
+                f"families on {eb['n_dates']} common period-end dates ({eb['from']}..{eb['to']}).",
+                f"- Median pairwise correlation: {eb['median_pairwise_corr_raw']:+.2f} raw, "
+                f"{eb['median_pairwise_corr_excess']:+.2f} excess.",
+                f"- Components when families are joined at a correlation of {eb['loose_join_corr']:g}: "
+                f"{eb['components_at_loose_join_excess']} on excess returns, {eb['components_at_loose_join_raw']} on "
+                f"raw returns (the scorecard's rule joins at {sc['params']['same_bet_corr']:g}).",
+                f"- Worst day: {eb['worst_day']['n_families']} of {eb['n_families']} families "
+                f"({100 * eb['worst_day']['share']:.0f}%) had their worst raw return on {eb['worst_day']['date']}.",
+                f"- Left out: {len(lo['fewer_than_min_dates'])} with fewer than {eb['min_common_dates']} dates, "
+                f"{len(lo['dropped_to_reach_common_dates'])} dropped to reach the common dates, "
+                f"{len(lo['never_moved_on_the_common_dates'])} that never moved on them.",
+                f"- Method: {eb['method']}.", ""]
+    else:
+        out += [f"- Effective number of bets: {CD} ({eb['why']}).", ""]
     fams = sc["families"]
     lead, worst = ends(sc)
     out += [f"## Leading {len(lead)} and worst {len(worst)} by raw excess (chosen after the fact)", ""]
@@ -494,11 +716,12 @@ def render_md(sc: dict) -> str:
             f"| {f['rank_raw_excess']} | {f['family']} | {f['n_members']} | {f['n_distinct_bets_by_holdings']} | "
             f"{_num(f['return_pct'], '%')} | {_num(f['spy_same_window_pct'], '%')} | {_num(f['raw_excess_pp'], ' pp')} | "
             f"{_num(b['value'], signed=False)}{_of(b)} | {_num(x['value'], ' pp')}"
-            f"{(' ±' + format(se, '.2f')) if se is not None else ''}{_of(x)} | {f.get('rank_beta_adjusted', '—')} | "
+            f"{(' ±' + format(se, '.2f')) if se is not None else ''}{_of(x)}{_cov(x)}{_t(x)} | "
+            f"{f.get('rank_beta_adjusted', '—')} | "
             f"{_num(dd['value'], '%')} | {_num(tw['value'], ' pp') if tw['value'] is not None else 'none seeded'} | "
             f"{sess} | {labels} | "
             f"{', '.join(f'{k} x{n_}' for k, n_ in f['flags_set'].items()) or 'none'}"
-            f"{'' if f['independence_tested'] else '; independence not testable'} |")
+            f"{'' if f['compared_with_the_others'] else '; not comparable with the others'} |")
     cds = []
     for f in fams:
         for key, label in (("beta", "beta"), ("beta_adjusted_excess_pp", "beta-adjusted excess"),
@@ -541,6 +764,18 @@ def write(sc: dict, out_dir: Path, run_id: str) -> tuple[Path, Path]:
     return jp, mp
 
 
+def _load(p: Path) -> dict:
+    """A receipt as a dict, or a named refusal: a truncated or unparseable file is not a traceback."""
+    try:
+        d = json.loads(Path(p).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        raise Refused(f"UNREADABLE_INPUT: {Path(p).name} cannot be read as JSON ({type(e).__name__}: "
+                      f"{str(e)[:120]}); a truncated receipt is not an empty one") from e
+    if not isinstance(d, dict):
+        raise Refused(f"UNREADABLE_INPUT: {Path(p).name} is JSON but not a receipt object ({type(d).__name__})")
+    return d
+
+
 def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optional[datetime] = None,
         rebuild_dna: bool = False, false_fire: Optional[dict] = None, bars: Any = None) -> dict:
     """Read the newest shared roi/book_dna pair in `folder` (or `run_id`), build, and write the
@@ -559,7 +794,7 @@ def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optio
         rp = folder / f"roi_{rid}.json"
         if not RV.RUN_ID_RE.match(str(rid)) or not rp.is_file():
             raise Refused(f"EMPTY_INPUT: no roi_<run>.json for run id {rid!r} in {folder.name}")
-        roi = json.loads(rp.read_text(encoding="utf-8"))
+        roi = _load(rp)
         # dated BEFORE the rebuild: a stale receipt is refused without reading the panel
         age = receipt_age(roi, rid, now, params()["stale_days"])
         if age["status"] != "FRESH":
@@ -567,6 +802,13 @@ def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optio
                           f"{age.get('age_days')} days old (limit {params()['stale_days']:g}) or cannot be dated")
         if not roi.get("rows"):
             raise Refused("EMPTY_INPUT: the ROI receipt has no rows")
+        marks = sorted(str(r.get("last_mark"))[:10] for r in roi["rows"]
+                       if isinstance(r, dict) and r.get("status") == "LIVE" and r.get("last_mark"))
+        mk = marks_age(marks[-1] if marks else None, now, params()["mark_stale_days"])
+        if mk["status"] != "FRESH":            # before the rebuild writes anything
+            raise Refused(f"STALE_MARKS: the newest mark in {rp.name} is {mk.get('as_of_mark')}, {mk.get('age_days')} "
+                          f"days old (limit {mk['stale_days']:g})" if mk["status"] == "STALE"
+                          else f"UNDATED_INPUT: {mk['why']}")
         out_dir.mkdir(parents=True, exist_ok=True)
         try:
             dna, dp = _dna.run(roi, out_dir=out_dir, run_id=rid, fetch_lanes=False, read_only_db=True, bars=bars)
@@ -577,7 +819,10 @@ def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optio
             rid = run_id or RV.newest_shared_run_id(folder)
         except Refused as exc:
             raise Refused(f"EMPTY_INPUT: {exc}") from exc
-        roi, dna, rp, dp = RV.load_pair(rid, folder)
+        rp, dp = folder / f"roi_{rid}.json", folder / f"book_dna_{rid}.json"
+        if not RV.RUN_ID_RE.match(str(rid)) or not rp.is_file() or not dp.is_file():
+            raise Refused(f"EMPTY_INPUT: run id {rid!r} has no roi/book_dna pair in {folder.name}")
+        roi, dna = _load(rp), _load(dp)
     roi_path, dna_path = RV.rel(rp), RV.rel(dp)
     sizes = {rp.name: rp.stat().st_size, dp.name: dp.stat().st_size}
     # the scorecard's own checks run first: a stale or empty input writes nothing at all
@@ -587,7 +832,7 @@ def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optio
         if age["status"] == "FRESH" and any(isinstance(b.get("market_exposure"), dict) for b in dna["books"]):
             v = RV.build(roi, dna, roi_path=roi_path, dna_path=dna_path, prev=RV.previous_dna(folder, rid),
                          history=RV.label_history(folder, rid, RV.params()["promotion_hold_runs"]),
-                         false_fire=false_fire)
+                         false_fire=false_fire, now=now)
             v["run_id"] = rid
             v["headline_lines"] = RV.headline_lines(v)
     sc = build(roi, dna, roi_path=roi_path, dna_path=dna_path, now=now, run_id=rid, false_fire=false_fire, voice=v)
@@ -598,5 +843,5 @@ def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optio
             "results_voice_json": str(vj), "results_voice_md": str(vm), "scorecard": sc}
 
 
-__all__ = ["SCHEMA", "build", "ends", "exposure_audit", "families_of", "family_line", "family_row", "params",
+__all__ = ["SCHEMA", "build", "effective_bets", "ends", "marks_age", "exposure_audit", "families_of", "family_line", "family_row", "params",
            "receipt_age", "render_md", "run", "write"]

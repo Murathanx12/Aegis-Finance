@@ -21,6 +21,17 @@ FIX = Path(__file__).parent / "fixtures" / "results_voice"
 RID = "2026-10-06T235345Z"
 
 
+@pytest.fixture(autouse=True)
+def _false_fire_measurement_dated_now(monkeypatch):
+    """CH-55 fix round: the false-fire measurement expires and config dates it on a calendar
+    day. Re-date it to the moment of the test so no assertion here depends on today's date."""
+    from datetime import datetime, timezone
+
+    from backend import config as C
+    monkeypatch.setattr(C, "LABEL_FALSE_FIRE_MEASURED",
+                        {**C.LABEL_FALSE_FIRE_MEASURED, "measured_utc": datetime.now(timezone.utc).isoformat()})
+
+
 @pytest.fixture
 def folder(tmp_path: Path) -> Path:
     d = tmp_path / "paper_accounts"
@@ -488,3 +499,17 @@ def test_a_changed_label_rule_prints_cannot_determine_beside_the_label(folder, m
     line = next(ln for ln in v["headline_lines"] if ln.startswith("LABEL FALSE-FIRE RATES:"))
     assert "CANNOT DETERMINE (the label rule changed since the measurement" in line
     assert "false-fire rate CANNOT DETERMINE" in v["leaders"][0]["evidence_label_tag"]
+
+
+def test_an_expired_measurement_prints_cannot_determine_beside_every_label(folder, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    from backend import config as C
+    old = datetime.now(timezone.utc) - timedelta(days=float(C.LABEL_FALSE_FIRE_MAX_AGE_DAYS) + 3)
+    monkeypatch.setattr(C, "LABEL_FALSE_FIRE_MEASURED", {**C.LABEL_FALSE_FIRE_MEASURED, "measured_utc": old.isoformat()})
+    v = RV.run(RID, folder)["voice"]
+    assert v["label_false_fire"]["status"] == DNA.CANNOT_DETERMINE
+    want = f"false-fire rate CANNOT DETERMINE (measurement of {old.date().isoformat()} expired"
+    assert want in v["leaders"][0]["evidence_label_tag"]
+    assert want.replace("false-fire rate ", "") in next(
+        ln for ln in v["headline_lines"] if ln.startswith("LABEL FALSE-FIRE RATES:"))
