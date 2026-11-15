@@ -287,10 +287,23 @@ def _leg(w: pd.Series, s: pd.Series) -> float:
     return float((w * s.reindex(w.index).fillna(0)).sum())
 
 
+def draw_twin_pairs(held: list, ctx: dict, rng: np.random.Generator) -> tuple[list, dict]:
+    """`matched_twins.draw_twins`, unchanged, plus a refusal: a twin that is itself a
+    held name, or one twin serving two partners, would make the spread partly long - long."""
+    pairs, counts = MT.draw_twins(held, ctx["cells"], ctx["panel_d"], rng, index=ctx["cell_index"])
+    hs = set(held)
+    tw = [t for _s, t, _lv in pairs if t is not None]
+    if hs & set(tw) or len(set(tw)) != len(tw):
+        raise RuntimeError("twin draw returned a held name or a repeated twin")
+    return pairs, counts
+
+
 def evaluate_month(ctx: dict, sig: pd.DataFrame, rngs: dict, rand_rng: np.random.Generator,
-                   n_random: int, k: int) -> dict:
+                   n_random: int, k: int, state: Optional[dict] = None) -> dict:
     """All rules x constructions for one decision date. `ctx`: per-name Series on the
-    eligible set (fwd_dl, fwd_nd, cost, borrow, beta, vol63_px) + cells + mk."""
+    eligible set (fwd_dl, fwd_nd, cost, borrow, beta, vol63_px) + cells + mk.
+    `state` carries last month's legs per rule, for the POST HOC cost-on-turnover lines."""
+    state = {} if state is None else state
     e = ctx["eligible"]
     fwd = {"dl": ctx["fwd_dl"], "nd": ctx["fwd_nd"]}
     cost, borrow, beta, mk = ctx["cost"], ctx["borrow"], ctx["beta"], ctx["mk"]
@@ -309,13 +322,20 @@ def evaluate_month(ctx: dict, sig: pd.DataFrame, rngs: dict, rand_rng: np.random
             w = _weights(top, ctx["vol63_px"], ivw)
             lc = _leg(w, cost)
             lg = {c: _leg(w, fwd[c]) for c in fwd}
+            prev = state.get(rule) or {}
+            p_long = prev.get("long")
+            new_long = [s for s in top if p_long is None or s not in p_long]
+            lc_turn = _leg(w.reindex(new_long), cost) if new_long else 0.0
             rec["long_only"] = {"gross_dl": lg["dl"], "gross_nd": lg["nd"], "cost": lc}
             # TWIN: the mean of the seeded draws; each twin carries its partner's weight
             tg = {"dl": [], "nd": []}
-            tc, tb, fb = [], [], {}
+            tc, tb, fb, tc_turn = [], [], {}, []
+            new_set = set(new_long)
             for j, rng in enumerate(rngs[rule]):
-                pairs, counts = MT.draw_twins(list(top), ctx["cells"], ctx["panel_d"], rng, index=ctx["cell_index"])
+                pairs, counts = draw_twin_pairs(list(top), ctx, rng)
                 tw = pd.Series({t: float(w[s]) for s, t, _lv in pairs if t is not None})
+                twn = pd.Series({t: float(w[s]) for s, t, _lv in pairs if t is not None and s in new_set})
+                tc_turn.append(_leg(twn, cost) if len(twn) else 0.0)
                 for c in fwd:
                     tg[c].append(_leg(tw, fwd[c]) if len(tw) else 0.0)
                 tc.append(_leg(tw, cost) if len(tw) else 0.0)
@@ -324,15 +344,30 @@ def evaluate_month(ctx: dict, sig: pd.DataFrame, rngs: dict, rand_rng: np.random
                     fb[lv] = fb.get(lv, 0) + int(n)
             rec["TWIN"] = {"gross_dl": lg["dl"] - float(np.mean(tg["dl"])), "gross_nd": lg["nd"] - float(np.mean(tg["nd"])),
                            "cost": lc + float(np.mean(tc)), "borrow": float(np.mean(tb)), "hedge": 1.0,
-                           "draw0_gross_dl": lg["dl"] - tg["dl"][0], "n_short": int(len(top)), "fallbacks": fb}
+                           "cost_long_turn": lc_turn, "cost_short": float(np.mean(tc)),
+                           "cost_short_turn": float(np.mean(tc_turn)),
+                           "draws_net_dl": [lg["dl"] - g - lc - c_ - b_ for g, c_, b_ in zip(tg["dl"], tc, tb)],
+                           "n_short": int(len(top)), "fallbacks": fb}
             bp = float((w * beta.reindex(w.index).fillna(1.0)).sum())
+            p_bp = prev.get("beta")
             rec["BETA"] = {"gross_dl": lg["dl"] - bp * mk, "gross_nd": lg["nd"] - bp * mk,
-                           "cost": lc + abs(bp) * mkt_cost, "borrow": abs(bp) * mkt_borrow, "hedge": bp, "n_short": 1}
+                           "cost": lc + abs(bp) * mkt_cost, "borrow": abs(bp) * mkt_borrow, "hedge": bp, "n_short": 1,
+                           "cost_long_turn": lc_turn, "cost_short": abs(bp) * mkt_cost,
+                           "cost_short_turn": abs(bp - (0.0 if p_bp is None else p_bp)) * mkt_cost}
+            new_state = {"long": frozenset(top), "beta": bp, "bot": None}
             if len(bot) >= CFG.CH58_MIN_NAMES:
                 wb = _weights(bot, ctx["vol63_px"], ivw)
+                p_bot = prev.get("bot")
+                new_bot = [s for s in bot if p_bot is None or s not in p_bot]
+                new_state["bot"] = frozenset(bot)
                 rec["TOP_BOTTOM"] = {"gross_dl": lg["dl"] - _leg(wb, fwd["dl"]), "gross_nd": lg["nd"] - _leg(wb, fwd["nd"]),
                                      "cost": lc + _leg(wb, cost), "borrow": _leg(wb, borrow), "hedge": 1.0,
+                                     "cost_long_turn": lc_turn, "cost_short": _leg(wb, cost),
+                                     "cost_short_turn": _leg(wb.reindex(new_bot), cost) if new_bot else 0.0,
                                      "n_short": int(len(bot))}
+            state[rule] = new_state
+        else:
+            state[rule] = {}
         out["cells"][rule] = rec
     # random control: the same three constructions on random K-name books from the covered eligible set
     cov = np.array(sorted(int(p) for p in sig.index))
@@ -349,8 +384,7 @@ def evaluate_month(ctx: dict, sig: pd.DataFrame, rngs: dict, rand_rng: np.random
             rand["BETA"][r] = rand_g["BETA"][r] - cs[a].mean() - abs(bp) * (mkt_cost + mkt_borrow)
             rand_g["TOP_BOTTOM"][r] = f[a].mean() - f[b].mean()
             rand["TOP_BOTTOM"][r] = rand_g["TOP_BOTTOM"][r] - cs[a].mean() - cs[b].mean() - bo[b].mean()
-            pairs, _ = MT.draw_twins([int(x) for x in cov[a]], ctx["cells"], ctx["panel_d"], rand_rng,
-                                     index=ctx["cell_index"])
+            pairs, _ = draw_twin_pairs([int(x) for x in cov[a]], ctx, rand_rng)
             tw = [t for _s, t, _lv in pairs if t is not None]
             tws = pd.Series(1.0 / k, index=tw)
             rand_g["TWIN"][r] = f[a].mean() - _leg(tws, ctx["fwd_dl"])
@@ -449,7 +483,66 @@ def series_stats(net: pd.Series, mkt: pd.Series, *, split_year: Optional[int] = 
     }
 
 
+def _norm_cdf(z: float) -> float:
+    return 0.5 * math.erfc(-z / math.sqrt(2))
+
+
+def _norm_ppf(q: float) -> float:
+    from statistics import NormalDist
+    return NormalDist().inv_cdf(q)
+
+
+def pass_bar(n_cells: int, dof: int) -> dict:
+    """The t a cell really needs: Holm over `n_cells` asks the smallest one-sided p to be
+    <= p(t = CH58_T_PASS) / n_cells."""
+    p_bar = one_sided(CFG.CH58_T_PASS, _p_two_sided(CFG.CH58_T_PASS, 10_000))
+    p_need = p_bar / max(n_cells, 1)
+    try:
+        from scipy import stats as _st
+        t_need = float(_st.t.isf(p_need, dof))
+    except ImportError:
+        t_need = float(_norm_ppf(1 - p_need))
+    return {"nominal_t": CFG.CH58_T_PASS, "holm_one_sided_p_bar": p_bar, "cells": n_cells,
+            "one_sided_p_needed_by_the_best_cell": p_need, "t_implied_by_holm": t_need,
+            "note": (f"the declared 't >= {CFG.CH58_T_PASS} after Holm' in fact asks the best of {n_cells} cells for "
+                     f"t >= {t_need:.2f}")}
+
+
+def power_at(effect: Optional[float], se: Optional[float], t_bar: float) -> Optional[float]:
+    """P(t >= t_bar) if the true effect per hold equals `effect` (normal approximation)."""
+    if effect is None or se is None or not se > 0:
+        return None
+    return float(1 - _norm_cdf(t_bar - effect / se))
+
+
+def forward_sample(mean: Optional[float], sd: Optional[float]) -> dict:
+    """Monthly holds a forward book would need, from the measured sd and the observed mean."""
+    if mean is None or sd is None or not (mean > 0 and sd > 0):
+        return {"months_for_power": None, "months_for_expected_t": None,
+                "note": "observed effect is not positive: no forward sample size is defined"}
+    z = _norm_ppf(1 - CFG.CH58_FORWARD_ALPHA_TWO_SIDED / 2) + _norm_ppf(CFG.CH58_FORWARD_POWER)
+    n_pow = (z * sd / mean) ** 2
+    n_t = (CFG.CH58_T_PASS * sd / mean) ** 2
+    return {"effect_per_hold": float(mean), "sd_per_hold": float(sd),
+            "months_for_power": float(n_pow), "years_for_power": float(n_pow / 12),
+            "months_for_expected_t": float(n_t), "years_for_expected_t": float(n_t / 12),
+            "power": CFG.CH58_FORWARD_POWER, "alpha_two_sided": CFG.CH58_FORWARD_ALPHA_TWO_SIDED,
+            "expected_t": CFG.CH58_T_PASS}
+
+
 def verdict(primary: dict) -> dict:
+    """The verdict after the review's fix round: the MDE is compared with the MEDIAN prior effect."""
+    med = float(np.median(CFG.CH58_PRIOR_EFFECTS))
+    return _verdict(primary, med, f"the median prior effect {100 * med:.2f}% per hold")
+
+
+def verdict_predeclared(primary: dict) -> dict:
+    """The rule exactly as pre-declared (MDE against the LARGEST prior spread); kept visible."""
+    return _verdict(primary, CFG.CH58_PLAUSIBLE_MAX_EFFECT,
+                    f"the plausible ceiling {100 * CFG.CH58_PLAUSIBLE_MAX_EFFECT:.2f}% per hold")
+
+
+def _verdict(primary: dict, threshold: float, label: str) -> dict:
     """Computed, never written by hand. `primary`: {construction: stats with holm_one_sided}."""
     p_bar = one_sided(CFG.CH58_T_PASS, _p_two_sided(CFG.CH58_T_PASS, 10_000))
     passed, reasons, mdes = [], {}, []
@@ -477,10 +570,10 @@ def verdict(primary: dict) -> dict:
         v, why = "PASS", f"{', '.join(passed)} met every declared condition"
     elif not mdes:
         v, why = "CANNOT_DISTINGUISH", "no primary construction produced a statistic"
-    elif all(m > CFG.CH58_PLAUSIBLE_MAX_EFFECT for m in mdes):
+    elif all(m > threshold for m in mdes):
         v = "CANNOT_DISTINGUISH"
-        why = (f"no construction passed and every MDE ({', '.join(f'{100 * m:.2f}%' for m in mdes)}) exceeds the "
-               f"plausible ceiling {100 * CFG.CH58_PLAUSIBLE_MAX_EFFECT:.2f}% per hold")
+        why = (f"no construction passed and every MDE ({', '.join(f'{100 * m:.2f}%' for m in mdes)}) exceeds "
+               f"{label}")
     else:
         v = "FAILED_VARIANT"
         why = "; ".join(f"{c}: {', '.join(r)}" for c, r in reasons.items() if r)
@@ -488,7 +581,7 @@ def verdict(primary: dict) -> dict:
             "holm_bar_one_sided_p": p_bar,
             "rule": (f"PASS iff a primary construction has net t >= {CFG.CH58_T_PASS}, Holm one-sided p <= the one-sided "
                      f"p of t = {CFG.CH58_T_PASS}, {CFG.CH58_SPLIT_YEAR}+ mean > 0 and worst leave-one-year-out > 0; else "
-                     f"CANNOT_DISTINGUISH iff every primary MDE > {CFG.CH58_PLAUSIBLE_MAX_EFFECT}; else FAILED_VARIANT")}
+                     f"CANNOT_DISTINGUISH iff every primary MDE > {label}; else FAILED_VARIANT")}
 
 
 # ─────────────────────────────────── the run ─────────────────────────────────
@@ -532,6 +625,7 @@ def run(wrds: Path, out_dir: Path, *, y0: int, y1: int, k: int, n_random: int, t
 
     rngs = {r: [np.random.default_rng(MT.seed_for(f"ch58:{r}", j)) for j in range(twin_draws)] for r in RULES}
     rand_rng = np.random.default_rng(CFG.CH58_SEED)
+    state: dict = {}
     H = CFG.CH58_HOLD_SESSIONS
     hold_frac = H / 252.0
     rows: list = []
@@ -581,7 +675,7 @@ def run(wrds: Path, out_dir: Path, *, y0: int, y1: int, k: int, n_random: int, t
                    "borrow": pd.Series([_band_value(v, CFG.CH58_BORROW_ANNUAL_BANDS) for v in mdv_e.to_numpy()],
                                        index=e) * hold_frac,
                    "cells": cells, "panel_d": panel_d, "cell_index": MT.CellIndex(cells)}
-            m = evaluate_month(ctx, signal(actions, link, d), rngs, rand_rng, n_random, k)
+            m = evaluate_month(ctx, signal(actions, link, d), rngs, rand_rng, n_random, k, state)
             # delistings that landed inside this hold, on the eligible set (aggregate count only)
             hit = (ret_dl.iloc[win].reindex(columns=e).to_numpy() != ret.iloc[win].reindex(columns=e).to_numpy()) & \
                   np.isfinite(ret_dl.iloc[win].reindex(columns=e).to_numpy())
@@ -715,9 +809,37 @@ def assemble(rows: list, rand_rows: dict, *, k: int, y0: int, y1: int, n_random:
                 "holds_overlapping_the_next": overlap,
                 "random_control": ctrl,
             }
+            c_long_turn, c_short, c_short_turn = col("cost_long_turn"), col("cost_short"), col("cost_short_turn")
+            block["post_hoc_cost_on_turnover"] = {
+                "marked": ("POST HOC: added after the first result at the reviewer's request; not pre-declared and not a "
+                           "basis for a claim or for the verdict"),
+                "convention": ("a name kept from last month is charged nothing (re-weighting trades inside kept names are "
+                               "ignored); an entering name pays its full round trip; borrow is unchanged. Short leg: "
+                               + {"TWIN": ("the twin of a KEPT long name is assumed kept too (a sticky pairing), although the "
+                                           "returns are those of twins redrawn every month, so 'both legs' is an optimistic bound"),
+                                  "BETA": "the market short pays on the change in beta",
+                                  "TOP_BOTTOM": "the bottom names' own measured turnover"}[con]),
+                "long_leg_only": series_stats(g_dl - c_long_turn - c_short - borrow, mk),
+                "both_legs": series_stats(g_dl - c_long_turn - c_short_turn - borrow, mk),
+                "cost_per_hold_mean_long_leg_only": float((c_long_turn + c_short).mean()),
+                "cost_per_hold_mean_both_legs": float((c_long_turn + c_short_turn).mean())}
+            block["power_at_observed_effect"] = None   # filled once the Holm bar is known
+            block["forward_sample"] = forward_sample(st["mean"], st["sd"])
             if con == "TWIN":
-                d0 = col("draw0_gross_dl") - cost - borrow
-                block["single_draw0_net_with_delisting"] = series_stats(d0, mk)
+                dm = np.array([c["TWIN"]["draws_net_dl"] if c.get("TWIN") else [np.nan] * twin_draws for c in cells],
+                              dtype=float)
+                dm = dm[np.isfinite(dm).all(axis=1)]
+                d_mean = dm.mean(axis=0)
+                d_sd = dm.std(axis=0, ddof=1)
+                d_t = d_mean / (d_sd / math.sqrt(len(dm)))
+                block["single_twin_basket_across_draws"] = {
+                    "draws": int(dm.shape[1]), "holds": int(len(dm)),
+                    "mean_min": float(d_mean.min()), "mean_median": float(np.median(d_mean)), "mean_max": float(d_mean.max()),
+                    "t_min": float(d_t.min()), "t_median": float(np.median(d_t)), "t_max": float(d_t.max()),
+                    "sd_median": float(np.median(d_sd)),
+                    "what": (f"each of the {dm.shape[1]} draws read alone as one tradable {k}-name twin basket, net, "
+                             "delisting returns in")}
+                block["forward_sample_single_twin_basket"] = forward_sample(st["mean"], float(np.median(d_sd)))
                 fb: dict = {}
                 for c in cells:
                     for lv, n in ((c.get("TWIN") or {}).get("fallbacks") or {}).items():
@@ -744,15 +866,34 @@ def assemble(rows: list, rand_rows: dict, *, k: int, y0: int, y1: int, n_random:
     primary = {c: results[PRIMARY_RULE][c]["with_delisting"] for c in CONSTRUCTIONS if PRIMARY_RULE in results
                and c in results[PRIMARY_RULE]}
     v = verdict(primary)
+    v0 = verdict_predeclared(primary)
+    n_holds = max((s["n_holds"] for s in primary.values() if not s.get("refused")), default=0)
+    bar = pass_bar(len(fam3), max(n_holds - 1, 1))
+    for r, c in fam9:
+        st = cellstats(r, c)
+        results[r][c]["power_at_observed_effect"] = {
+            "at_holm_implied_t": power_at(st["mean"], st["se"], bar["t_implied_by_holm"]),
+            "at_nominal_t": power_at(st["mean"], st["se"], CFG.CH58_T_PASS),
+            "what": "chance of clearing the bar if the true effect equals the observed net mean (normal approximation)"}
+    priors = {"effects_per_hold": list(CFG.CH58_PRIOR_EFFECTS), "median": float(np.median(CFG.CH58_PRIOR_EFFECTS)),
+              "largest": float(max(CFG.CH58_PRIOR_EFFECTS)), "source": CFG.CH58_PRIOR_EFFECTS_SOURCE}
     return {
         "question": "does revision flow earn a return as a RELATIVE position (hedged for market and style)?",
         "verdict": v["verdict"], "verdict_reason": v["reason"], "verdict_detail": v,
+        "verdict_as_predeclared": v0["verdict"], "verdict_as_predeclared_reason": v0["reason"],
+        "verdict_as_predeclared_detail": v0,
+        "verdict_change_note": (
+            "Changed after the adversarial review of the first result: the pre-declared rule compared each MDE with the "
+            "LARGEST prior spread, so a twin MDE a hair under it printed FAILED_VARIANT although both halves and every "
+            "leave-one-year-out are positive and the test had little power. The MDE is now compared with the MEDIAN prior "
+            "effect. The pass conditions are unchanged."),
+        "priors": priors, "pass_bar": bar,
         "claims": "none: observations under a PRODUCT_EXPERIMENT licence, leaders and rules chosen after the fact",
         "window": {"years": [y0, y1], "first_decision": str(dec[0].date()), "last_decision": str(dec[-1].date()),
                    "holds": int(len(rows)), "hold_sessions": CFG.CH58_HOLD_SESSIONS,
                    "holds_overlapping_the_next": overlap,
                    "year_key": "the hold's END session (the year the money was held through)"},
-        "primary_rule": PRIMARY_RULE, "rules": RULE_NAMES,
+        "primary_rule": PRIMARY_RULE, "rules": RULE_NAMES, "k": k,
         "cells_computed": {"primary": len(fam3), "all": len(fam9),
                            "note": "3 primary (verdict family) + 6 secondary; Holm printed over both families"},
         "constructions": {
@@ -763,6 +904,7 @@ def assemble(rows: list, rand_rows: dict, *, k: int, y0: int, y1: int, n_random:
             "TOP_BOTTOM": f"long the top {k} by score, short the bottom {k} (most net lowers)"},
         "costs": {"round_trip_bps_by_dollar_volume_band": [list(b) for b in CFG.CH58_COST_BPS_BANDS],
                   "charged": "in full every month on every name of both legs",
+                  "post_hoc": "cost on actual turnover is printed beside it, marked POST HOC, outside the verdict",
                   "market_short_bps": CFG.CH58_MARKET_COST_BPS,
                   "borrow_annual_by_band": [list(b) for b in CFG.CH58_BORROW_ANNUAL_BANDS],
                   "market_borrow_annual": CFG.CH58_MARKET_BORROW_ANNUAL,
@@ -783,11 +925,89 @@ def _num(v, nd=2) -> str:
     return "n/a" if v is None or (isinstance(v, float) and not np.isfinite(v)) else f"{v:+.{nd}f}"
 
 
+def _split_txt(s: dict) -> str:
+    return ", ".join(f"{k} {_pct(v['mean'])} (t {_num(v['t'])})" for k, v in s["split"].items())
+
+
+def _months(v) -> str:
+    return "n/a" if v is None else f"{v:,.0f} months ({v / 12:,.0f} years)"
+
+
+def _pc(v) -> str:
+    return "n/a" if v is None else f"{100 * v:.0f}"
+
+
+def headline(rc: dict) -> list:
+    """The lines a reader sees first: selection (gross) and cost (net) side by side."""
+    res = rc["results"][rc["primary_rule"]]
+    bar, pri = rc["pass_bar"], rc["priors"]
+    L = [f"**VERDICT (computed): {rc['verdict']}** — {rc['verdict_reason']}.",
+         f"verdict_as_predeclared: {rc['verdict_as_predeclared']} — {rc['verdict_as_predeclared_reason']}.",
+         f"Why the rule changed: {rc['verdict_change_note']}",
+         f"Priors (twin-relative, per month): {', '.join(_pct(x, 2) for x in pri['effects_per_hold'])}; median "
+         f"{_pct(pri['median'], 2)}, largest {_pct(pri['largest'], 2)}. Source: {pri['source']}.",
+         f"Real pass bar: {bar['note']} (one-sided p <= {bar['one_sided_p_needed_by_the_best_cell']:.4f}).", ""]
+    for con in CONSTRUCTIONS:
+        b = res.get(con) or {}
+        s = b.get("with_delisting") or {}
+        if not s or s.get("refused"):
+            L.append(f"- {con}: REFUSED ({s.get('refused', 'no data')})")
+            continue
+        g, rcn, pw = b["gross_with_delisting"], b["random_control"], b["power_at_observed_effect"]
+        line = (f"- **{con}** — SELECTION (gross): {_pct(g['mean'])} a month, t {_num(g['t'])}, percentile "
+                f"{_pc(rcn.get('gross_percentile_of_rule'))} of {rcn['n_draws']} random books (random gross median "
+                f"{_pct(rcn.get('gross_median'))}). AFTER COSTS (pre-declared: full cost on both legs every month, plus "
+                f"borrow): {_pct(s['mean'])} a month, t {_num(s['t'])}, MDE {_pct(s['mde'])}; {_split_txt(s)}; worst "
+                f"leave-one-year-out {_pct(s['loo_worst_mean'])} (drop {s['loo_worst_year_dropped']}); power at the "
+                f"observed effect {_pc(pw['at_holm_implied_t'])}% against the real bar; realised beta "
+                f"{_num(s['realised_beta'])} (se {s['realised_beta_se']:.2f}).")
+        if abs(s["realised_beta"]) > 2 * s["realised_beta_se"] and abs(s["realised_beta"]) > 0.2:
+            line += (f" **NOT MARKET-NEUTRAL: this construction carries a market short (beta {_num(s['realised_beta'])}).** "
+                     f"POST HOC, in-sample: with the realised beta removed, {_pct(s['alpha_after_realised_beta'])} a month "
+                     f"(t {_num(s['alpha_t'])}, MDE {_pct(s['alpha_mde'])}); not a basis for a claim.")
+        L.append(line)
+    L += ["", "POST HOC cost on actual turnover (added after the first result; not pre-declared, not a basis for a claim or "
+          "for the verdict). The pre-declared figure is the first row of each construction:", "",
+          "| construction | cost charged | cost bps/month | net/month | t | MDE | early | late | worst LOYO (drop) |",
+          "|---|---|---|---|---|---|---|---|---|"]
+    for con in CONSTRUCTIONS:
+        b = res.get(con) or {}
+        s = b.get("with_delisting") or {}
+        if not s or s.get("refused"):
+            continue
+        ph = b["post_hoc_cost_on_turnover"]
+        for lab, st, cst in (("PRE-DECLARED: full, both legs", s, b["cost_per_hold_mean"]),
+                             ("POST HOC: turnover, long leg only", ph["long_leg_only"], ph["cost_per_hold_mean_long_leg_only"]),
+                             ("POST HOC: turnover, both legs", ph["both_legs"], ph["cost_per_hold_mean_both_legs"])):
+            sp = list(st["split"].values())
+            L.append(f"| {con} | {lab} | {1e4 * cst:.1f} | {_pct(st['mean'])} | {_num(st['t'])} | {_pct(st['mde'])} | "
+                     f"{_pct(sp[0]['mean'])} (t {_num(sp[0]['t'])}) | {_pct(sp[1]['mean'])} (t {_num(sp[1]['t'])}) | "
+                     f"{_pct(st['loo_worst_mean'])} ({st['loo_worst_year_dropped']}) |")
+    tw = res.get("TWIN") or {}
+    if tw.get("post_hoc_cost_on_turnover"):
+        L += ["", f"Turnover convention (TWIN): {tw['post_hoc_cost_on_turnover']['convention']}."]
+    sd_ = tw.get("single_twin_basket_across_draws")
+    if sd_:
+        L += ["", f"A single {rc['k']}-name twin basket, across the {sd_['draws']} draws (net, pre-declared costs): mean min "
+              f"{_pct(sd_['mean_min'])} / median {_pct(sd_['mean_median'])} / max {_pct(sd_['mean_max'])}; t min "
+              f"{_num(sd_['t_min'])} / median {_num(sd_['t_median'])} / max {_num(sd_['t_max'])}; monthly sd median "
+              f"{_pct(sd_['sd_median'], 2)}."]
+    fs, fs1 = tw.get("forward_sample"), tw.get("forward_sample_single_twin_basket") or {}
+    if fs:
+        L += ["", f"FORWARD SAMPLE (twin spread, from the measured monthly sd {_pct(fs.get('sd_per_hold'), 2)} at the observed "
+              f"net effect {_pct(fs.get('effect_per_hold'))}): {_months(fs.get('months_for_power'))} for 80% power at 5% "
+              f"two-sided; {_months(fs.get('months_for_expected_t'))} for an expected t of {CFG.CH58_T_PASS}. A single "
+              f"{rc['k']}-name twin basket (sd {_pct(fs1.get('sd_per_hold'), 2)}): {_months(fs1.get('months_for_power'))} "
+              f"and {_months(fs1.get('months_for_expected_t'))}. Conclusion: a forward paper book of this spread alone "
+              "cannot inform within any horizon we would wait for."]
+    return L
+
+
 def render_md(rc: dict) -> str:
     w = rc["window"]
-    L = [f"# CH-58 revision flow as a relative position: run {rc.get('run_id', '')}", "",
-         f"**VERDICT (computed): {rc['verdict']}** — {rc['verdict_reason']}", "",
-         f"CLAIMS: {rc['claims']}.", "",
+    L = [f"# CH-58 revision flow as a relative position: run {rc.get('run_id', '')}", "", "## Headline", ""]
+    L += headline(rc)
+    L += ["", f"CLAIMS: {rc['claims']}.", "",
          f"Window {w['first_decision']} .. {w['last_decision']}, {w['holds']} holds of {w['hold_sessions']} sessions "
          f"({w['holds_overlapping_the_next']} holds share a session with the next); by-year keyed on {w['year_key']}.",
          f"Eligible names median {rc['universe']['eligible_median']:.0f}, IBES-covered {rc['universe']['covered_eligible_median']:.0f}. "
@@ -836,8 +1056,7 @@ def render_md(rc: dict) -> str:
             if s.get("refused") or not s:
                 continue
             L.append(f"- {con} by year (net %/hold): " + ", ".join(f"{y} {100 * v['mean']:+.2f}" for y, v in s["by_year"].items()))
-            extra = (f"; twin fallbacks {b['twin_fallbacks']}; single draw 0: {_pct(b['single_draw0_net_with_delisting'].get('mean'))} "
-                     f"(t {_num(b['single_draw0_net_with_delisting'].get('t'))})") if con == "TWIN" else ""
+            extra = f"; twin fallbacks {b['twin_fallbacks']}" if con == "TWIN" else ""
             L.append(f"  gross {_pct(b['gross_with_delisting']['mean'])}, cost {1e4 * b['cost_per_hold_mean']:.1f} bps, borrow "
                      f"{1e4 * b['borrow_per_hold_mean']:.1f} bps a hold; hedge ratio mean {b['hedge_ratio_mean']:.2f} "
                      f"({b['hedge_ratio_min']:.2f}..{b['hedge_ratio_max']:.2f}); short names median "

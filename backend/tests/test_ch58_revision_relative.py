@@ -186,15 +186,110 @@ def test_verdict_is_computed_from_the_declared_conditions():
     ok = _stat(2.6, 0.004, 0.003, 0.002, 0.014)
     weak = _stat(0.4, 0.004, 0.001, 0.0005, 0.6)
     assert M.verdict({"TWIN": ok, "BETA": weak, "TOP_BOTTOM": weak})["verdict"] == "PASS"
+    assert M.verdict_predeclared({"TWIN": ok, "BETA": weak, "TOP_BOTTOM": weak})["verdict"] == "PASS"
     # the regime check binds: a negative late window or a year that carries it is not a pass
     for bad in (_stat(2.6, 0.004, -0.001, 0.002, 0.014), _stat(2.6, 0.004, 0.003, -0.0001, 0.014),
                 _stat(2.6, 0.004, 0.003, 0.002, 0.2), _stat(1.4, 0.004, 0.003, 0.002, 0.014)):
-        v = M.verdict({"TWIN": bad, "BETA": weak, "TOP_BOTTOM": weak})
-        assert v["verdict"] == "FAILED_VARIANT" and v["failing_conditions"]["TWIN"]
+        for fn in (M.verdict, M.verdict_predeclared):
+            v = fn({"TWIN": bad, "BETA": weak, "TOP_BOTTOM": weak})
+            assert v["verdict"] == "FAILED_VARIANT" and v["failing_conditions"]["TWIN"]
     wide = _stat(0.4, 0.02, 0.001, 0.0005, 0.6)
-    assert M.verdict({"TWIN": wide, "BETA": wide, "TOP_BOTTOM": wide})["verdict"] == "CANNOT_DISTINGUISH"
-    # one powered cell is enough to make the family a failure rather than "cannot distinguish"
-    assert M.verdict({"TWIN": wide, "BETA": weak, "TOP_BOTTOM": wide})["verdict"] == "FAILED_VARIANT"
+    for fn in (M.verdict, M.verdict_predeclared):
+        assert fn({"TWIN": wide, "BETA": wide, "TOP_BOTTOM": wide})["verdict"] == "CANNOT_DISTINGUISH"
+        # one powered cell is enough to make the family a failure rather than "cannot distinguish"
+        assert fn({"TWIN": wide, "BETA": weak, "TOP_BOTTOM": wide})["verdict"] == "FAILED_VARIANT"
+
+
+def test_the_label_rests_on_the_median_prior_not_the_largest():
+    med, top = float(np.median(M.CFG.CH58_PRIOR_EFFECTS)), M.CFG.CH58_PLAUSIBLE_MAX_EFFECT
+    assert med < top == max(M.CFG.CH58_PRIOR_EFFECTS)
+    # every MDE between the median and the largest prior: unpowered for the typical prior effect
+    between = _stat(1.39, (med + top) / 2, 0.005, 0.002, 0.25)
+    fam = {"TWIN": between, "BETA": between, "TOP_BOTTOM": between}
+    assert M.verdict(fam)["verdict"] == "CANNOT_DISTINGUISH"
+    assert M.verdict_predeclared(fam)["verdict"] == "FAILED_VARIANT"
+    tight = _stat(0.4, med / 2, 0.001, 0.0005, 0.6)
+    assert M.verdict({"TWIN": tight, "BETA": between, "TOP_BOTTOM": between})["verdict"] == "FAILED_VARIANT"
+
+
+def test_pass_bar_power_and_forward_sample_are_computed():
+    bar = M.pass_bar(3, 250)
+    # 't >= 1.5 after Holm over three cells' asks the best cell for about t 2.02
+    assert bar["t_implied_by_holm"] == pytest.approx(2.02, abs=0.02)
+    assert M.pass_bar(1, 100_000)["t_implied_by_holm"] == pytest.approx(1.5, abs=0.01)
+    # true effect = 1.39 se against a bar of 2.02: about one chance in four
+    assert M.power_at(0.00299, 0.00299 / 1.39, bar["t_implied_by_holm"]) == pytest.approx(0.26, abs=0.02)
+    assert M.power_at(0.0, 0.002, 1.645) == pytest.approx(0.05, abs=0.002)
+    fs = M.forward_sample(0.003, 0.034)
+    assert fs["months_for_power"] == pytest.approx(((1.959964 + 0.841621) * 0.034 / 0.003) ** 2, rel=1e-4)
+    assert fs["months_for_expected_t"] == pytest.approx((1.5 * 0.034 / 0.003) ** 2, rel=1e-9)
+    assert M.forward_sample(-0.001, 0.03)["months_for_power"] is None
+
+
+def test_an_announcement_dated_on_the_decision_day_is_excluded():
+    d = pd.Timestamp("2003-03-31")
+    link = pd.DataFrame({"ticker": ["A", "B"], "permno": [1.0, 2.0], "sdate": pd.Timestamp("1990-01-01"),
+                         "edate": pd.Timestamp("2030-01-01"), "score": 1})
+    acts = pd.DataFrame({"ticker": ["A", "A", "B", "B", "B"], "estimid": ["X", "Y", "X", "X", "Y"],
+                         "anndats": [d - pd.Timedelta(days=1), d, d, d + pd.Timedelta(days=1),
+                                     d - pd.Timedelta(days=M.CFG.CH58_SIGNAL_WINDOW_DAYS + 5)],
+                         "act": [1, 1, 1, 1, 1]}).sort_values("anndats").reset_index(drop=True)
+    sig = M.signal(acts, link, d)
+    # A: only the raise of the day before counts; B: same-day, next-day and stale raises all excluded
+    assert sig.loc[1, "net"] == 1 and sig.loc[1, "n_firms"] == 1
+    assert 2 not in sig.index
+    # one day later the decision-day announcements have become usable
+    sig2 = M.signal(acts, link, d + pd.Timedelta(days=1))
+    assert sig2.loc[1, "net"] == 2 and sig2.loc[2, "net"] == 1
+
+
+def test_a_twin_is_never_a_name_held_in_the_long_leg():
+    # one cell of 12 names of which 9 are held: every draw must land on the 3 that are not
+    n = 12
+    panel_d = pd.DataFrame({"symbol": list(range(1, n + 1)), "eligible": True, "median_dollar_vol": 5e7,
+                            "vol_63": 0.02, "mom_252_21": 0.1})
+    cells = M.MT.cell_table(panel_d)
+    ctx = {"cells": cells, "panel_d": panel_d, "cell_index": M.MT.CellIndex(cells)}
+    held = list(range(1, 10))
+    for seed in range(50):
+        pairs, counts = M.draw_twin_pairs(held, ctx, np.random.default_rng(seed))
+        twins = [t for _s, t, _lv in pairs if t is not None]
+        assert not set(twins) & set(held)
+        assert len(set(twins)) == len(twins) == 3          # only three free names exist; the rest go to cash
+        assert counts["none"] == 6
+
+
+def test_twin_guard_refuses_a_held_twin(monkeypatch):
+    monkeypatch.setattr(M.MT, "draw_twins", lambda held, *a, **k: ([(held[0], held[1], "cell")], {"cell": 1}))
+    with pytest.raises(RuntimeError, match="held name"):
+        M.draw_twin_pairs([1, 2], {"cells": None, "panel_d": None, "cell_index": None}, np.random.default_rng(0))
+
+
+def test_post_hoc_turnover_cost_is_marked_and_never_above_the_full_charge(planted):
+    rc = planted["rc"]
+    assert rc["verdict_as_predeclared"] in {"PASS", "FAILED_VARIANT", "CANNOT_DISTINGUISH"}
+    assert "review" in rc["verdict_change_note"]
+    assert rc["priors"]["median"] == pytest.approx(float(np.median(M.CFG.CH58_PRIOR_EFFECTS)))
+    for con in M.CONSTRUCTIONS:
+        b = rc["results"]["R2"][con]
+        ph = b["post_hoc_cost_on_turnover"]
+        assert ph["marked"].startswith("POST HOC")
+        full = b["with_delisting"]["mean"]
+        assert full <= ph["long_leg_only"]["mean"] + 1e-12 <= ph["both_legs"]["mean"] + 2e-12
+        assert ph["cost_per_hold_mean_both_legs"] <= ph["cost_per_hold_mean_long_leg_only"] <= b["cost_per_hold_mean"] + 1e-12
+        for key in ("split", "leave_one_year_out", "loo_worst_mean"):
+            assert key in ph["long_leg_only"] and key in ph["both_legs"]
+        assert b["power_at_observed_effect"]["at_holm_implied_t"] is not None
+        assert "months_for_power" in b["forward_sample"]
+    tw = rc["results"]["R2"]["TWIN"]
+    d = tw["single_twin_basket_across_draws"]
+    assert d["draws"] == 3 and d["mean_min"] <= d["mean_median"] <= d["mean_max"]
+    # the mean of the per-draw means is the reported 3-draw figure
+    assert "single_draw0_net_with_delisting" not in tw
+    md = "\n".join(M.headline(rc))
+    for needle in ("verdict_as_predeclared", "SELECTION (gross)", "AFTER COSTS", "POST HOC", "FORWARD SAMPLE",
+                   "Real pass bar", "Priors"):
+        assert needle in md, needle
 
 
 def test_missing_input_exits_non_zero(tmp_path, planted):

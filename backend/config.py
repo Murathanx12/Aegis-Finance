@@ -5615,6 +5615,18 @@ CH58_MDE_MULT = 2.8
 #: Ceiling of a plausible effect per hold: the largest twin-relative monthly spread
 #: on record (+0.65%, 2017-2024). An MDE above it on every primary cell = CANNOT_DISTINGUISH.
 CH58_PLAUSIBLE_MAX_EFFECT = 0.0065
+#: (fix round after the adversarial review, 2026-11-16) The label no longer rests on
+#: the LARGEST prior spread. Priors = `net_raises` minus its matched twin, % a month,
+#: in design / validation / 2017-2024, from
+#: docs/research_notes/2026-09-29/analyst_insider_on_crsp_2026-09-29.md. The verdict
+#: compares each MDE with their MEDIAN; CH58_PLAUSIBLE_MAX_EFFECT stays for the
+#: `verdict_as_predeclared` field.
+CH58_PRIOR_EFFECTS = (0.0041, 0.0027, 0.0065)
+CH58_PRIOR_EFFECTS_SOURCE = ("docs/research_notes/2026-09-29/analyst_insider_on_crsp_2026-09-29.md: net_raises "
+                             "minus matched twin, design / validation / 2017-2024")
+#: Forward-sample line: power and two-sided size for "months needed".
+CH58_FORWARD_POWER = 0.80
+CH58_FORWARD_ALPHA_TWO_SIDED = 0.05
 CH58_TOP_MONTHS = 5
 CH58_N_RANDOM = 200
 CH58_SEED = 58
