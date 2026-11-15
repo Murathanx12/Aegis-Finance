@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
@@ -297,6 +297,20 @@ def test_the_rewrite_never_matches_a_longer_sibling_name_and_ignores_case(tmp_pa
     assert r"C:\h\aegis-runtime-t2\scripts\runtime_task.py" in out
     assert r"C:\h\aegis-runtime-t1b\x" in out                       # a different clone: untouched
     assert r"C:\h\aegis-runtime-t2/y" in out or r"C:\h\aegis-runtime-t2" in out.split("--x ")[1]
+
+
+def test_a_rooted_path_keeps_exactly_one_root_and_a_longer_path_is_untouched():
+    """Pure strings (both platforms): the 2026-11-15 Linux CI failure was `//tmp/...`, the
+    pattern dropping the empty first part of a rooted path and matching one character late."""
+    out = RR.rewrite_clone_path('-I "/tmp/h/aegis-runtime-t1/scripts/runtime_task.py" --wd /tmp/h/aegis-runtime-t1',
+                                PurePosixPath("/tmp/h/aegis-runtime-t1"), PurePosixPath("/tmp/h/aegis-runtime-t2"))
+    assert out == '-I "/tmp/h/aegis-runtime-t2/scripts/runtime_task.py" --wd /tmp/h/aegis-runtime-t2'
+    # the same path as the TAIL of a longer one is a different path: untouched
+    assert RR.rewrite_clone_path("--out /x/tmp/h/aegis-runtime-t1/y", PurePosixPath("/tmp/h/aegis-runtime-t1"),
+                                 PurePosixPath("/tmp/h/aegis-runtime-t2")) == "--out /x/tmp/h/aegis-runtime-t1/y"
+    # a UNC root (two leading separators) is matched whole and replaced once
+    assert RR.rewrite_clone_path(r"\\srv\h\aegis-runtime-t1\s", r"\\srv\h\aegis-runtime-t1",
+                                 r"\\srv\h\aegis-runtime-t2") == r"\\srv\h\aegis-runtime-t2\s"
 
 
 # ───────────────────────────────────────────────────────── scripts, retire candidates, writing

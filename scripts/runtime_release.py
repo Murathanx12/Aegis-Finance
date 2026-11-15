@@ -892,9 +892,12 @@ def attended_reasons(name: str, arguments: str, segs: Optional[list], rc: Mappin
 
 
 def _path_re(p: Path) -> re.Pattern:
-    """`p` itself (either slash, any case), not a longer sibling name."""
-    parts = [re.escape(x) for x in re.split(r"[\\/]+", str(p).rstrip("\\/")) if x != ""]
-    return re.compile(r"[\\/]".join(parts) + r"(?![A-Za-z0-9._-])", re.I)
+    """`p` itself (either slash, any case), not a longer sibling name, and not the tail of a
+    longer path. A ROOTED path keeps its leading separator(s) in the match: `/tmp/x` and
+    `\\\\server\\share` start with an empty part, and dropping it made the match begin one
+    character late, so a rewrite doubled the root (`//tmp/...`; CI on Linux, PR #156)."""
+    parts = [re.escape(x) for x in re.split(r"[\\/]+", str(p).rstrip("\\/"))]
+    return re.compile(r"(?<![A-Za-z0-9._-])" + r"[\\/]+".join(parts) + r"(?![A-Za-z0-9._-])", re.I)
 
 
 def rewrite_clone_path(text: str, src: Path, dest: Path) -> str:
