@@ -440,6 +440,14 @@ def contrast(d: pd.DataFrame, n_boot: int, rng: np.random.Generator) -> dict:
                 "kinds": sorted(d["kind"].unique().tolist())}
     s = {k: skill_of(sub) for k, sub in d.groupby("kind")}
     est = (s[PROCESS]["bss"] or 0) - (s[PERSONA]["bss"] or 0)
+    # the same, against each kind's OWN base rate per stratum (§64's convention): a
+    # kind that forecast in a different week faced a different base rate, and the
+    # pooled reference charges it for the week, not for the forecasts
+    own = {}
+    for k, sub in d.groupby("kind"):
+        b = sub.groupby("stratum")["y"].transform("mean")
+        ref = float(((b - sub["y"]) ** 2).sum())
+        own[k] = (1 - float(sub["bs"].sum()) / ref) if ref > 0 else None
     blocks = {k: int(sub["block"].nunique()) for k, sub in d.groupby("kind")}
     days = {k: int(sub["made_day"].nunique()) for k, sub in d.groupby("kind")}
     bd = cluster_bootstrap(d, "block", n_boot, rng, by="kind", order=(PROCESS, PERSONA))
@@ -448,7 +456,7 @@ def contrast(d: pd.DataFrame, n_boot: int, rng: np.random.Generator) -> dict:
           if min(blocks.values()) >= MIN_CLUSTERS_FOR_VERDICT else
           f"CANNOT_DETERMINE: date blocks per kind {blocks} (< {MIN_CLUSTERS_FOR_VERDICT} for "
           "a kind) -- a kind with one block has no date-level replication at all")
-    return {"process_minus_persona_bss": est, "skill": s,
+    return {"process_minus_persona_bss": est, "skill": s, "skill_own_base": own,
             "date_blocks_per_kind": blocks, "decision_days_per_kind": days,
             "date_blocks": {"n": bd["n_clusters"], **bd["diff"]},
             "ticker": {"n": bt["n_clusters"], **bt["diff"]},
@@ -777,7 +785,7 @@ def label_rates(sim: pd.DataFrame, by: list[str]) -> list[dict]:
     out = []
     if sim.empty:
         return out
-    for key, sub in sim.groupby(by):
+    for key, sub in sim.groupby(by, observed=True):
         key = key if isinstance(key, tuple) else (key,)
         n = len(sub)
         r = dict(zip(by, [k if not isinstance(k, (np.integer,)) else int(k) for k in key]))
