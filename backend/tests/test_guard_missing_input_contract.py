@@ -2066,6 +2066,17 @@ def _case_news_entity_embed():
             "an embedding tagger run with no news corpus")
 
 
+def _case_news_tag_demotion():
+    # CH-46d: a hub asked to apply demotions with no demotion sidecar must get a named
+    # refusal (rc 2), never an empty map that reads as "nothing to hide".
+    from pathlib import Path as _P
+
+    from backend.services.news_tag_demotion import DemotionRefused, read_sidecar
+    nowhere = _P("does/not/exist/news_tag_demotion_sidecar.jsonl")
+    return (lambda: read_sidecar(nowhere), DemotionRefused,
+            "applying hub demotions with no demotion sidecar")
+
+
 def _case_llm_selector_book():
     # llm-book-ruler (CH-17/CH-11): with no funnel snapshot and no bars panel
     # there is no candidate set to choose from; that must be a refusal (red
@@ -2269,6 +2280,7 @@ CASES = {
     "forward_calendar": _case_forward_calendar,
     "ticker_hub": _case_ticker_hub,
     "news_entity_embed": _case_news_entity_embed,
+    "news_tag_demotion": _case_news_tag_demotion,
 }
 
 

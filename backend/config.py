@@ -7531,6 +7531,22 @@ NEWS_EMBED_LLM_IN_TOKENS_PER_ROW = 650
 NEWS_EMBED_LLM_OUT_TOKENS_PER_ROW = 40
 NEWS_EMBED_SIDECAR_NAME = "news_entity_embed_sidecar.jsonl"
 NEWS_EMBED_THEME_SIDECAR_NAME = "news_theme_embed_sidecar.jsonl"
+#: CH-46d -- the classifier's REJECT as a DEMOTION filter (`backend/services/news_tag_demotion.py`,
+#: `python -m scripts.news_tag_demotion sheet|evaluate --work DIR --ch46 DIR`). Offline and
+#: attended; the hub does not read the demotion sidecar. Only body-match and digest `mentions`
+#: tags can be hidden; an `about`-tier tag never is. Rows above `llm_language.NON_LATIN_BAR`
+#: non-Latin script are routed to `uncertain` before any decision (an English-only encoder).
+NEWS_DEMOTE_SIDECAR_NAME = "news_tag_demotion_sidecar.jsonl"
+#: The ONE declared alternative threshold: the score under which this share of VALIDATION
+#: positives lie (variant 1 is the CH-46 `reject` threshold, NEWS_EMBED_REJECT_POS_SHARE).
+NEWS_DEMOTE_ALT_POS_SHARE = 0.01
+NEWS_DEMOTE_PRECISION_BAR = 0.90
+NEWS_DEMOTE_SAMPLE_REJECT = 120
+NEWS_DEMOTE_SAMPLE_KEPT = 60
+NEWS_DEMOTE_SEED = 116
+NEWS_DEMOTE_BOOTSTRAP = 2000
+#: Hub-effect table: the largest companies by market cap present in the hub universe.
+NEWS_DEMOTE_TOP_N = 30
 
 # ── UNIVERSE GRAPH v1 (ROADMAP §2a, CH-30) ─────────────────────────────────
 #: The universe as a typed, weighted graph (`backend/services/universe_graph.py`).
