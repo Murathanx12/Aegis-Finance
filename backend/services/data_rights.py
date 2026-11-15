@@ -22,6 +22,8 @@ from typing import Any
 
 import yaml
 
+from backend import config as _config
+
 FLAGS = ("personal", "academic", "public_display", "commercial")
 ALLOWED = ("yes", "no", "UNVERIFIED")
 TERMS_READ = ("ok", "failed", "not_attempted")
@@ -36,7 +38,10 @@ class DataRightsError(ValueError):
 
 
 def register_path() -> Path:
-    return Path(__file__).resolve().parent.parent / "data" / "data_rights.yaml"
+    """The committed register, from the IMAGE (`config.BACKEND_DIR`, read at call
+    time), same convention as `news_registry.registry_path`: tracked config that
+    ships with the code, never under the mutable `AEGIS_DATA_DIR`."""
+    return Path(_config.BACKEND_DIR) / "data" / "data_rights.yaml"
 
 
 def _norm(v: Any) -> Any:
