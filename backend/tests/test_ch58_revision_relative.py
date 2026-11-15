@@ -151,6 +151,7 @@ def test_receipt_shape_and_no_per_security_rows(planted):
             assert key in s, (con, key)
         assert s["mde"] == pytest.approx(2.8 * s["se"])
         assert rc["results"]["R2"][con]["random_control"]["n_draws"] == 10
+        assert "gross_percentile_of_rule" in rc["results"]["R2"][con]["random_control"]
     text = json.dumps(rc)
     assert "long_names" not in text
     monthly = pd.read_csv(out / "revision_relative_t_monthly.csv")

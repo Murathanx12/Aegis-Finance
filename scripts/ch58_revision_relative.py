@@ -337,6 +337,7 @@ def evaluate_month(ctx: dict, sig: pd.DataFrame, rngs: dict, rand_rng: np.random
     # random control: the same three constructions on random K-name books from the covered eligible set
     cov = np.array(sorted(int(p) for p in sig.index))
     rand = {c: np.full(n_random, np.nan) for c in CONSTRUCTIONS}
+    rand_g = {c: np.full(n_random, np.nan) for c in CONSTRUCTIONS}
     if n_random and len(cov) >= 2 * k:
         f, cs, bo, be = (ctx["fwd_dl"].reindex(cov).fillna(0).to_numpy(), cost.reindex(cov).to_numpy(),
                          borrow.reindex(cov).to_numpy(), beta.reindex(cov).fillna(1.0).to_numpy())
@@ -344,15 +345,18 @@ def evaluate_month(ctx: dict, sig: pd.DataFrame, rngs: dict, rand_rng: np.random
             ix = rand_rng.choice(len(cov), 2 * k, replace=False)
             a, b = ix[:k], ix[k:]
             bp = float(be[a].mean())
-            rand["BETA"][r] = f[a].mean() - bp * mk - cs[a].mean() - abs(bp) * (mkt_cost + mkt_borrow)
-            rand["TOP_BOTTOM"][r] = f[a].mean() - f[b].mean() - cs[a].mean() - cs[b].mean() - bo[b].mean()
+            rand_g["BETA"][r] = f[a].mean() - bp * mk
+            rand["BETA"][r] = rand_g["BETA"][r] - cs[a].mean() - abs(bp) * (mkt_cost + mkt_borrow)
+            rand_g["TOP_BOTTOM"][r] = f[a].mean() - f[b].mean()
+            rand["TOP_BOTTOM"][r] = rand_g["TOP_BOTTOM"][r] - cs[a].mean() - cs[b].mean() - bo[b].mean()
             pairs, _ = MT.draw_twins([int(x) for x in cov[a]], ctx["cells"], ctx["panel_d"], rand_rng,
                                      index=ctx["cell_index"])
             tw = [t for _s, t, _lv in pairs if t is not None]
             tws = pd.Series(1.0 / k, index=tw)
-            rand["TWIN"][r] = (f[a].mean() - _leg(tws, ctx["fwd_dl"]) - cs[a].mean() - _leg(tws, cost)
-                               - _leg(tws, borrow))
+            rand_g["TWIN"][r] = f[a].mean() - _leg(tws, ctx["fwd_dl"])
+            rand["TWIN"][r] = rand_g["TWIN"][r] - cs[a].mean() - _leg(tws, cost) - _leg(tws, borrow)
     out["random"] = rand
+    out["random_gross"] = rand_g
     return out
 
 
@@ -532,6 +536,7 @@ def run(wrds: Path, out_dir: Path, *, y0: int, y1: int, k: int, n_random: int, t
     hold_frac = H / 252.0
     rows: list = []
     rand_rows: dict = {c: [] for c in CONSTRUCTIONS}
+    rand_rows.update({c + "_gross": [] for c in CONSTRUCTIONS})
     dl_seen: set = set()
     mkt_missing = 0
     for y in range(y0, y1 + 1):
@@ -585,6 +590,7 @@ def run(wrds: Path, out_dir: Path, *, y0: int, y1: int, k: int, n_random: int, t
                          "cells": m["cells"]})
             for c in CONSTRUCTIONS:
                 rand_rows[c].append(m["random"][c])
+                rand_rows[c + "_gross"].append(m["random_gross"][c])
         dl_y = delist[(delist["dlstdt"].dt.year == y) & (delist["dlstcd"] != 100) & delist["permno"].isin(prc.columns)]
         dl_seen.update(int(p) for p in dl_y["permno"])
         say(f"    {y}: {len(rows)} holds so far, delisting returns folded in this window {dinfo['applied']} "
@@ -647,7 +653,7 @@ def assemble(rows: list, rand_rows: dict, *, k: int, y0: int, y1: int, n_random:
                             "n_cov": [r["n_cov"] for r in rows]}, index=idx)
     monthly.index.name = "hold_end"
     results: dict = {}
-    rand_ix = {c: np.vstack(rand_rows[c]) if rand_rows[c] else np.empty((0, 0)) for c in CONSTRUCTIONS}
+    rand_ix = {c: np.vstack(v) if v else np.empty((0, 0)) for c, v in rand_rows.items()}
     for rule in RULES:
         results[rule] = {}
         cells = [r["cells"][rule] for r in rows]
@@ -687,7 +693,14 @@ def assemble(rows: list, rand_rows: dict, *, k: int, y0: int, y1: int, n_random:
                         "p05": float(np.percentile(avg, 5)), "p95": float(np.percentile(avg, 95)),
                         "rule_mean_same_months": float(net[keep][ok].mean()),
                         "percentile_of_rule": float((avg < net[keep][ok].mean()).mean()),
-                        "what": "the same construction on random K-name books from the covered eligible set, net"}
+                        "what": ("the same construction on random K-name books from the covered eligible set. NET the "
+                                 "random books pay more (a random name is smaller and sits in a costlier band than the rule's "
+                                 "names), so the GROSS comparison is the like-for-like one")}
+                rg = rand_ix[con + "_gross"][keep][ok].mean(axis=0)
+                ctrl.update({"gross_median": float(np.median(rg)), "gross_p05": float(np.percentile(rg, 5)),
+                             "gross_p95": float(np.percentile(rg, 95)),
+                             "rule_gross_mean_same_months": float(g_dl[keep][ok].mean()),
+                             "gross_percentile_of_rule": float((rg < g_dl[keep][ok].mean()).mean())})
             block = {
                 "with_delisting": st,
                 "without_delisting": series_stats(g_nd - cost - borrow, mk),
@@ -831,7 +844,12 @@ def render_md(rc: dict) -> str:
                      f"{b['short_names_per_month_median']:.0f}; months dropped {b['months_dropped_below_min_names']}"
                      + (f"; months with a short leg below k {b['months_short_leg_below_k']}" if con == "TOP_BOTTOM" else "")
                      + f"; alpha after realised beta {_pct(s['alpha_after_realised_beta'])} (t {_num(s['alpha_t'])}, "
-                       f"MDE {_pct(s['alpha_mde'])}); random control median {_pct(b['random_control'].get('median'))}{extra}")
+                       f"MDE {_pct(s['alpha_mde'])}); random control net median {_pct(b['random_control'].get('median'))}, GROSS median "
+                       f"{_pct(b['random_control'].get('gross_median'))} (5-95% {_pct(b['random_control'].get('gross_p05'))}.."
+                       f"{_pct(b['random_control'].get('gross_p95'))}), rule's gross percentile "
+                       f"{_num(100 * b['random_control']['gross_percentile_of_rule'], 0) if b['random_control'].get('gross_percentile_of_rule') is not None else 'n/a'}"
+                       f"; Holm over all 9 cells: one-sided {_num(s.get('holm_all9_one_sided'), 3)}, two-sided "
+                       f"{_num(s.get('holm_all9_two_sided'), 3)}{extra}")
         L.append("")
     L += [f"Verdict rule: {rc['verdict_detail']['rule']}.", ""]
     return "\n".join(L)
