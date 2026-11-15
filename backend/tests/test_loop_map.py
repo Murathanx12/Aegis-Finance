@@ -297,6 +297,12 @@ def test_cli_exit_codes(world, tmp_path, capsys):
     rec = json.loads((out / names[0]).read_text(encoding="utf-8"))
     by = {r["id"]: r for r in rec["links"]}
     assert by["funnel->decision_contract"]["status"] == "FLOWING"
+    assert by["funnel->decision_contract"]["near_limit"] is False            # 1 day old of a 10-day limit
+    late = LM.build(root, now=NOW + timedelta(days=8, hours=6))             # 9.25 d: fresh, but only just
+    f = {r["id"]: r for r in late["links"]}["funnel->decision_contract"]
+    assert f["status"] == "FLOWING" and f["near_limit"] is True and "NEAR LIMIT" in f["reason"]
+    gone = LM.build(root, now=NOW + timedelta(days=9, hours=6))             # 10.25 d
+    assert {r["id"]: r for r in gone["links"]}["funnel->decision_contract"]["status"] == "STALE"
     assert by["news_overlay_book->grades"]["status"] == "ABSENT"
     assert rec["top_line"] in printed and "open links:" in printed
     assert rec["counts"]["FLOWING"] == 1 and sum(rec["counts"].values()) == len(LM.LINKS)

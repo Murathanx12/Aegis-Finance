@@ -91,7 +91,7 @@ def main(argv: Optional[list[str]] = None) -> int:
               f"{'YES' if rec['loop_closed'] else 'NO'}"
               + ("" if rec["loop_closed"] else f" (no flowing link on {', '.join(rec['open_pairs'])})"))
         for r in rec["links"]:
-            if r["status"] != "FLOWING":
+            if r["status"] != "FLOWING" or r.get("near_limit"):
                 print(f"  {r['status']:<16} {r['id']}: {r['reason']}")
         print(f"written: {written[0]}")
     return 0

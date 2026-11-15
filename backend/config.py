@@ -8061,6 +8061,8 @@ LOOP_MAP_JSONL_SCAN_ROWS = 4000
 LOOP_MAP_ID_SCAN_FILES = 60
 #: A stamp further in the future than this (seconds) is undateable, never fresh.
 LOOP_MAP_FUTURE_SLACK_S = 300
+#: A FLOWING link with less than this share of its limit left is printed NEAR LIMIT.
+LOOP_MAP_NEAR_LIMIT_SHARE = 0.1
 
 # -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
 #: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's

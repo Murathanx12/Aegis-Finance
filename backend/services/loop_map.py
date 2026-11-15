@@ -641,7 +641,10 @@ def judge_link(link: dict, root: Path, now: datetime, runtimes: dict,
         if F["value"] is not True:
             val = "undefined (the code that reads it is not in that checkout or defaults to off)" \
                 if not F["defined"] else repr(F["value"])
-            return done("OFF", "FLAG_OFF", f"flag {F['name']} = {val} {per}; {age_txt}", F["config"])
+            also = "; ".join(f"{'undefined' if not o['defined'] else o['value']!r} per {o['config']}"
+                             for o in F["others"] if o["readable"] and o["source"] != "FALLBACK_THIS_CHECKOUT")
+            return done("OFF", "FLAG_OFF", f"flag {F['name']} = {val} {per}"
+                        + (f" (also {also})" if also else "") + f"; {age_txt}", F["config"])
 
     stale_note = ""
     if cons.get("proof") == "none" or (cons.get("proof") == "flag" and not cons.get("cite")):
@@ -686,9 +689,12 @@ def judge_link(link: dict, root: Path, now: datetime, runtimes: dict,
         return done("STALE", "CITED_PRODUCER_STALE",
                     f"consumer's newest citation is producer {hit['id']}, {SS.fmt_age(cage)} old "
                     f"(limit {SS.fmt_age(lim_s)}); newest {age_txt}", K["path"])
+    left = lim_s - max(cage, age)
+    res["near_limit"] = bool(left < float(C.LOOP_MAP_NEAR_LIMIT_SHARE) * lim_s)
+    near = f"NEAR LIMIT: stale in {SS.fmt_age(left)}; " if res["near_limit"] else ""
     return done("FLOWING", "CITED_FRESH",
-                f"consumer cites producer {hit['id']} ({SS.fmt_age(cage)} old, limit {SS.fmt_age(lim_s)}) at "
-                f"{fields}; newest {age_txt}", K["path"])
+                f"{near}consumer cites producer {hit['id']} ({SS.fmt_age(cage)} old, limit {SS.fmt_age(lim_s)}) "
+                f"at {fields}; newest {age_txt}", K["path"])
 
 
 # ═══════════════════════════════════════════════════════════════ the record
