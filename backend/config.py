@@ -3655,6 +3655,30 @@ FORECAST_VOID_DELISTED_MIN_SESSIONS = 10
 #: ...or when no local panel has ANY bar for its ticker and its resolution date
 #: is this many calendar days in the past while the panel covers that date.
 FORECAST_VOID_NO_BAR_GRACE_DAYS = 21
+# -- CH-42 forecast and evidence expiry (backend/services/forecast_expiry.py) --
+#: The side ledger the expiry sweep appends to, relative to `--out`. Never under
+#: the data root: the forecast ledger rows are frozen and the sweep only reads them.
+FORECAST_EXPIRY_SUBDIR = "forecast_expiry"
+#: The last committed copy of the campaign ledger (predictions.jsonl) before #108
+#: untracked it on 2026-11-11. A Railway image built from main before #108 carries
+#: this copy as its campaign ledger, which is where the council's 14,658 came from.
+FORECAST_EXPIRY_CAMPAIGN_REF = "7e3fb909^"
+FORECAST_EXPIRY_CAMPAIGN_PATH = "backend/data/optimus/predictions.jsonl"
+#: The overdue count the council quoted on 2026-11-13 (B_portfolio_risk.md §5),
+#: printed beside the count this sweep derives so a difference is explained.
+FORECAST_EXPIRY_CAMPAIGN_QUOTED = 14658
+#: Evidence-label step-down: the trailing window, in SPY sessions ending at a
+#: book's last mark. 63 sessions is one quarter and three times the 21-session
+#: EARLY_EVIDENCE floor, so the floor stays reachable inside the window.
+FORECAST_EXPIRY_LABEL_TRAILING_SESSIONS = 63
+#: The regime a label was earned in: SPY's compounded return over the window
+#: (up when >= 0) and its annualised daily-return volatility (VOLATILE when
+#: above this). Two coarse cuts, printed with their numbers, nothing tuned.
+FORECAST_EXPIRY_REGIME_VOL_CUT = 0.20
+#: A sweep that would move forecasts BACKWARDS exits 3 and prints at most this many
+#: ids; the full list is in the `regress_refused_<stamp>.json` it writes under --out.
+FORECAST_EXPIRY_REGRESS_PRINT_MAX = 50
+# -- end CH-42 --------------------------------------------------------------
 #: The Telegram agent is DEAD when its own heartbeat line is older than this
 #: (it polls every `--interval` s, default 60). Read by `stack_health`-style
 #: probes from `telegram/heartbeat.json`, never from the bot token.

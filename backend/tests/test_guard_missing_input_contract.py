@@ -2140,6 +2140,18 @@ def _case_insider_copy():
             "an insider copy book with no open-market purchases")
 # -- end CH-47 -----------------------------------------------------------------
 
+# -- CH-42 forecast and evidence expiry ----------------------------------------
+def _case_forecast_expiry():
+    import pathlib
+    import tempfile
+
+    from backend.services.forecast_expiry import ForecastExpiryRefused, sweep
+
+    empty = pathlib.Path(tempfile.mkdtemp(prefix="ch42-guard-")) / "optimus"
+    return (lambda: sweep(data_root=empty, out_dir=empty.parent.parent / "ch42-guard-out", write=False),
+            ForecastExpiryRefused, "an expiry sweep over a data root with no forecast ledger")
+# -- end CH-42 -----------------------------------------------------------------
+
 
 CASES = {
     "analyst_report_rows": _case_analyst_report_rows,
@@ -2167,6 +2179,7 @@ CASES = {
     "official_sources": _case_official_sources,
     "bar_defects": _case_bar_defects,
     "bar_defects_empty_book": _case_bar_defects_empty_book,
+    "forecast_expiry": _case_forecast_expiry,
     "calendar_offsets": _case_calendar_offsets,
     "lib_forward_trial": _case_lib_forward_trial,
     "investment_committee": _case_investment_committee,
