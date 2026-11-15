@@ -25,7 +25,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control, control_ask, system_status, owner_inbox
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control, control_ask, system_status, owner_inbox, usage
 
 logging.basicConfig(
     level=logging.INFO,
@@ -602,6 +602,7 @@ app.add_middleware(
 
 # Request timing (must be added after CORS so it wraps the actual handler)
 add_timing_middleware(app)
+app.state.cors_origins = list(_origins)  # usage beacon reuses the CORS allow-list
 
 
 # ── Register routers ──────────────────────────────────────────
@@ -660,6 +661,7 @@ app.include_router(_ticker_hub_router.router)
 # CH-22 (2026-11-14): the owner's "Note to Claude" inbox. Appends a JSONL row the next
 # brain session reads; no LLM, no outbound call, gated like the control plane.
 app.include_router(owner_inbox.router)
+usage.register(app)  # only when AEGIS_USAGE_RECEIPT=1 at startup; otherwise absent (404, not in openapi)
 
 
 def mount_desktop_frontend(application: "FastAPI") -> dict:

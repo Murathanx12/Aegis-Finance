@@ -1107,6 +1107,40 @@ config: dict = {
         "slow_request_threshold_s": 10.0,# Requests slower than this get a warning log
     },
 
+    # ── USAGE RECEIPT (privacy-preserving traffic counter; OFF by default) ───
+    # Enabled only by env AEGIS_USAGE_RECEIPT=1. Summary route needs env
+    # AEGIS_USAGE_TOKEN (refused when unset). Receipt files are written only
+    # when env AEGIS_USAGE_RECEIPT_DIR names a writable directory.
+    # See backend/services/usage_receipt.py.
+    "usage_receipt": {
+        "visitor_cap": 20000,            # distinct-visitor set cap per UTC day
+        "days_kept": 14,                 # finalized days kept in memory
+        "ticker_top_n": 20,              # ticker table rows reported
+        "ticker_max_tracked": 500,       # distinct tickers tracked per day
+        "page_max_tracked": 200,         # distinct page templates tracked per day
+        "route_max_tracked": 400,        # distinct route templates tracked per day
+        "flush_interval_s": 300,         # min seconds between receipt-file writes
+        "beacon_per_visitor_per_min": 30,
+        "beacon_global_per_min": 600,
+        "beacon_max_body_bytes": 256,
+        "ticker_min_visitors": 5,        # ticker table hidden below this many distinct visitors
+        "ticker_min_requests": 5,        # a ticker row needs at least this many requests
+        # Server-side callers (e.g. the frontend host) to count as "excluded", not human.
+        # Substrings of the user agent / prefixes of the client address. Empty by default.
+        "exclude_ua_substrings": [],
+        "exclude_ip_prefixes": [],
+        "ticker_param_names": ["ticker", "symbol"],
+        "page_ticker_prefixes": ["stock", "ticker"],
+        # Excluded from human counts, counted separately (case-insensitive substrings).
+        "monitor_ua_substrings": ["curl/", "python-requests", "python-httpx", "uptimerobot",
+                                  "github-hookshot", "railway", "vercel", "pingdom",
+                                  "statuscake", "go-http-client", "wget/", "healthcheck"],
+        "bot_ua_substrings": ["bot", "spider", "crawl", "slurp", "headless", "facebookexternalhit",
+                              "preview", "scrapy", "httpclient", "okhttp", "axios", "node-fetch"],
+        "health_path_prefixes": ["/api/health", "/docs", "/redoc", "/openapi.json",
+                                 "/favicon.ico", "/static", "/_next"],
+    },
+
     # ── FMP DAILY QUOTA BUDGET ───────────────────────────────────────────
     # FMP free tier is ~250 requests/day shared by ALL callers (provider
     # fallback, ESG, congress collector). The pre-registered congress-IC
@@ -4842,6 +4876,11 @@ OPENCLAW_BROWSER_HOSTS = OPENCLAW_USER_TAB_HOSTS + OPENCLAW_SOCIAL_HOSTS
 OPENCLAW_REPAIRS_PER_HOUR = 3
 OPENCLAW_REPAIR_BACKOFF_S = 60.0
 OPENCLAW_REPAIR_PORT_WAIT_S = 240.0
+#: A dependency repair that ends unhealthy this many times in a row writes a
+#: DOWN row (journal `gateway_down` + reader_status state DOWN). 2026-11-14.
+OPENCLAW_REPAIR_FAILS_BEFORE_DOWN = 2
+#: A failure streak older than this is history, not a streak.
+OPENCLAW_REPAIR_STREAK_MAX_AGE_S = 6 * 3600.0
 #: No gateway (re)start below this much free RAM: the kill test of 2026-09-28
 #: 14:30 restarted it at 0.5-0.8 GB free and it did not bind its port for more
 #: than 15 minutes (handoff 09-28: "would not open its port under 1 GB free").
@@ -6591,6 +6630,8 @@ HEALTH_TASK_CADENCE_H.update({
     "AegisNewsOverlayBook": 24.0, "AegisLLMSelectorBook": 168.0, "AegisSystemStatus": 0.25,
     "AegisOwnerEventWarning": 1.0 / 6.0,
 })
+#: S70: `AegisTickerHub` (`scripts.ticker_hub build`, trigger every 30 min).
+HEALTH_TASK_CADENCE_H["AegisTickerHub"] = 0.5
 #: bytes of `runtime_switch/runtime_task_runs.jsonl` read for wrapper rcs (~140 kB/day
 #: measured 2026-11-14, so this covers about two weeks: a weekly job's last run included)
 TASK_RECEIPT_WRAPPER_TAIL_BYTES = 2_000_000
