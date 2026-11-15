@@ -3601,6 +3601,52 @@ DAILY_PASS_STEP_BOX_S: dict = {
 #: sessions. Read from the parquet's own `date` column, never an mtime. 2 =
 #: one missed daily refresh is tolerated, a second is a finding.
 BARS_MAX_AGE_SESSIONS = 2
+# --- bars feed reliability (2026-11-15, engineer defects D2/D3) -------------
+#: Ordered NAMES (never values) the bar puller resolves its market-data
+#: credential from; the first pair that is present AND authenticates wins.
+#: scope "env" = this process's environment, "terminal_env" = the sibling
+#: repo's .env (read-only), "env+terminal_env" = either. `paper` marks a pair
+#: that belongs to a paper TRADING account: retiring/resetting that account
+#: silently stops the feed, so the receipt flags it. The dedicated data-only
+#: pair goes FIRST; adding it to the environment/.env is the owner's step.
+#: Order below the first entry is the order the code has always used.
+BARS_DATA_CREDENTIAL_ORDER = (
+    {"label": "dedicated_data", "key": "ALPACA_DATA_KEY_ID", "secret": "ALPACA_DATA_SECRET_KEY",
+     "scope": "env+terminal_env", "paper": False, "verify": True},
+    {"label": "process_env", "key": "APCA_API_KEY_ID", "secret": "APCA_API_SECRET_KEY",
+     "scope": "env", "paper": None, "verify": False},   # None = unknown (Alpaca trading-key names)
+    {"label": "HACK1", "key": "AAT_HACK1_KEY_ID", "secret": "AAT_HACK1_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK2", "key": "AAT_HACK2_KEY_ID", "secret": "AAT_HACK2_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK4", "key": "AAT_HACK4_KEY_ID", "secret": "AAT_HACK4_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK5", "key": "AAT_HACK5_KEY_ID", "secret": "AAT_HACK5_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK6", "key": "AAT_HACK6_KEY_ID", "secret": "AAT_HACK6_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+    {"label": "HACK3", "key": "AAT_HACK3_KEY_ID", "secret": "AAT_HACK3_SECRET_KEY",
+     "scope": "terminal_env", "paper": True, "verify": True},
+)
+#: Bounded wait for DNS of the data host before the first call (boot burst of
+#: 2026-11-14 02:44: the task ran before the network was up). tries x interval.
+BARS_NETWORK_WAIT_TRIES = 3
+BARS_NETWORK_WAIT_INTERVAL_S = 45.0
+#: Foreign symbols whose failure DEGRADES (rc 3) rather than REFUSES the bars
+#: refresh: the five frozen non-US constituents, which the US SIP panels cannot
+#: supply. Any other failed symbol, and any US gated panel behind the last
+#: closed session, is REFUSED (rc 2).
+BARS_REFRESH_OPTIONAL_FOREIGN_SYMBOLS = ("EVO.ST", "HAG.DE", "KOG.OL", "RHM.DE", "SAAB-B.ST")
+#: Exit codes of `python -m scripts.pull_bars_refresh`. 0 = OK / unchanged.
+#: The network-down status is spelled `refused_network` so any status reader
+#: that matches the REFUS prefix (task_receipts.map_status) reads it RED; a
+#: `WAIT_` spelling reads IDLE there.
+BARS_REFRESH_RC = {"ok": 0, "unchanged": 0, "dry_run": 0, "refused": 2,
+                   "degraded": 3, "refused_network": 4}
+#: A US gated panel "reached the last close" only if at least this share of the
+#: symbols that had the PREVIOUS closed session's bar also has the last closed
+#: session's bar (a panel's max date alone passes when one name advanced).
+BARS_REFRESH_MIN_COVERAGE = 0.90
 #: `forecast_grader` voids a due forecast as UNRESOLVABLE when its ticker's bars
 #: STOPPED at least this many sessions before the panel's newest bar (the name
 #: delisted: AVB and EA on 2026-09-26, both `inactive` at the venue) and its
