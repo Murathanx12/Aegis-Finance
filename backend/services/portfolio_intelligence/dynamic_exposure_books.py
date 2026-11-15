@@ -899,10 +899,10 @@ def run(mode: str, *, data_root: Path, out: Path, contracts_path: Optional[Path]
     mp = _append(out / "marks", new_m, run_id)
     rc = 3 if (mode == "step" and stale) else 0
     row = {"task": TASK_NAME, "schema": "dynamic_exposure_run/2", "utc": now.isoformat(), "mode": mode,
-           "rc": rc, "action": "STALE_CALENDAR" if rc == 3 else "OK", "calendar_stale": stale,
+           "rc": rc, "action": ("STALE_CALENDAR" if rc == 3 else "BORN" if born else "MARKED" if (new_p or new_m) else "NOTHING_DUE"), "calendar_stale": stale,
            "stored_rows_rechecked": len(stored), "stored_rows_differ": 0, "code_version": code,
            "code_note": code_note, "run_id": run_id, "through": last_bar.date().isoformat(), "born": born, "skipped": skipped,
-           "cohorts_total": len(existing), "paths_written": len(new_p), "marks_written": len(new_m),
+           "cohorts_total": len(existing), "paths_total": len(have_p) + len(new_p), "paths_written": len(new_p), "marks_written": len(new_m),
            "paths_part": None if pp is None else str(pp), "marks_part": None if mp is None else str(mp),
            "leader_events": events, "replay_form_events": replay_form_events(bars, earn, sessions),
            "leader_calendar": cal_status,

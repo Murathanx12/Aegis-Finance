@@ -129,8 +129,17 @@ def main(argv: list[str] | None = None) -> int:
                     date_from=getattr(a, "date_from", None), date_to=getattr(a, "date_to", None),
                     rolling_out=a.rolling_out, accept_code_version=a.accept_code_version)
     except (D.DynamicBookRefused, R.RollingCohortRefused) as exc:
-        print(json.dumps({"task": D.TASK_NAME, "action": "REFUSED", "rc": 2, "reason": str(exc),
-                          "utc": datetime.now(timezone.utc).isoformat()}))
+        refusal = {"task": D.TASK_NAME, "schema": "dynamic_exposure_run/2", "mode": a.cmd, "action": "REFUSED",
+                   "rc": 2, "reason": str(exc), "utc": datetime.now(timezone.utc).isoformat()}
+        print(json.dumps(refusal))
+        if a.cmd in ("backfill", "step"):              # the task receipt reads this journal
+            try:
+                from backend.services import disk_guard
+                o = D.output_dir(a.data_root, a.out)
+                o.mkdir(parents=True, exist_ok=True)
+                disk_guard.locked_append_line(o / "runs.jsonl", json.dumps(refusal, sort_keys=True), fsync=True)
+            except (OSError, D.DynamicBookRefused):
+                pass
         return 2
     table = row.pop("table")
     cohorts = row.pop("cohorts")
