@@ -4674,12 +4674,24 @@ ROLLING_COHORT_MIN_STRICT_BLOCKS = 6
 #: then journals WAIT_LOCK with rc 0.
 ROLLING_COHORT_LOCK_WAIT_S = 60.0
 
+# -- Read-only cohort report (CH-16 follow-up). Keys deliberately do NOT start
+# -- with the rolling-cohort prefix: that prefix is bound into the live declaration.
+#: Fewest common sessions before an effective-bets count is printed.
+COHORT_REPORT_MIN_SESSIONS = 20
+#: Pairwise excess-path correlation above this counts as "the same bet".
+COHORT_REPORT_HIGH_CORR = 0.9
+#: Declared target MDE (net excess, fraction) the report counts cohorts toward,
+#: per matured horizon in sessions. 21 sessions: 2 pp; longer holds scale with sqrt(h/21).
+COHORT_REPORT_TARGET_MDE = {21: 0.02, 63: 0.035, 126: 0.049}
+COHORT_REPORT_TOP_NAMES = 10
+
 # -- Dynamic exposure book family (CH-45, 2026-11-15) --
 #: NOT prefixed ROLLING_COHORT_: `branch_population_rolling.config_snapshot`
 #: binds every ROLLING_COHORT_* key into the live population's declaration, and
 #: a new one would make that population refuse. These values are FROZEN in
-#: docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v1.json; `dynamic_exposure_books`
-#: refuses to run when they differ (a changed rule is a new contract id).
+#: docs/TRIALS/DYNAMIC-EXPOSURE-BOOKS-CONTRACTS-v3.json (v1, v2 superseded before any
+#: forward decision); `dynamic_exposure_books` refuses to run when they differ (a
+#: changed rule is a new contract id).
 #: Rules and parameters are the 11-14 market replay's (replay_findings.txt
 #: section 0/0b, s3_rules.py), not tuned.
 #: Base selection: v2 spec momentum_12_1 / liquid / equal / 40 names / h126, hedge none.
@@ -4691,10 +4703,17 @@ DYNAMIC_BOOK_LEADER_SINCE = {"AVGO": "2019-01-01"}
 DYNAMIC_BOOK_LEADER_GAP = -0.05
 DYNAMIC_BOOK_LEADER_GROSS = 0.5
 DYNAMIC_BOOK_LEADER_SESSIONS = 5
-#: STALE (a step exits non-zero naming the leader) when a leader's newest known
-#: report is older than this many days, or its calendar pull predates the last
-#: session: the cache stores only reports before its pull (review of PR #150).
-DYNAMIC_BOOK_LEADER_CALENDAR_STALE_DAYS = 80
+#: v3: report dates come from the forward catalyst calendar (AegisForwardCalendar).
+#: STALE (a step exits 3 naming it) when the calendar's newest FULL_UNIVERSE receipt
+#: is older than STALE_DAYS (or not OK / damaged) or a leader's own row is stale or
+#: missing; a fresh row with no next date is UNSCHEDULED (named, exit 0; OVERDUE when
+#: the last report is older than OVERDUE_DAYS); a date beyond HORIZON_DAYS is healthy.
+DYNAMIC_BOOK_FORWARD_CALENDAR_STALE_DAYS = 3.0
+DYNAMIC_BOOK_CALENDAR_HORIZON_DAYS = 120
+DYNAMIC_BOOK_UNSCHEDULED_OVERDUE_DAYS = 100
+#: A run reads only sessions whose close plus this grace is at or before the run (a
+#: partial or just-closed bar is never read or stored; review of PR #158).
+DYNAMIC_BOOK_SESSION_CLOSE_GRACE_MIN = 20
 #: Rule (b), preservation: QQQ close < SMA(SMA) -> short QQQ at beta x NAV,
 #: beta of the book on QQQ over BETA_WINDOW sessions, clipped.
 DYNAMIC_BOOK_HEDGE_ETF = "QQQ"
@@ -4702,6 +4721,11 @@ DYNAMIC_BOOK_HEDGE_SMA = 50
 DYNAMIC_BOOK_HEDGE_BETA_WINDOW = 126
 DYNAMIC_BOOK_HEDGE_BETA_MIN_OBS = 126     # the replay's rolling(126): a full window
 DYNAMIC_BOOK_HEDGE_BETA_CLIP = (0.0, 3.0)
+#: v3 (the brain's decision, 2026-11-15): a book named preservation may not exceed
+#: 2.0x gross. The hedge is capped at 1.0x equity (gross <= 0.95 + 1.0 at every
+#: decision); v2 admitted 3.95x through the clip alone.
+DYNAMIC_BOOK_HEDGE_NOTIONAL_CAP = 1.0
+DYNAMIC_BOOK_GROSS_CAP = 2.0
 #: Rule costs (replay: 10 bps per unit of stock exposure changed, 2 bps per unit
 #: of ETF hedge changed) plus the rolling machinery's short borrow (the replay
 #: charged 0; stated). The base book also pays its band round trip.
@@ -4714,7 +4738,7 @@ DYNAMIC_BOOK_HEDGE_BORROW_BPS_YR = 30.0
 DYNAMIC_BOOK_REPORT_EQUITY_USD = 100_000.0
 DYNAMIC_BOOK_WORST_GAP = 0.30
 #: Report only: a one-session QQQ rise against the hedge (longs credited 0), at the
-#: observed hedge and at the largest the beta clip admits (3x: gross 3.95x).
+#: observed hedge and at the largest the contract admits (v3: 1.0x, gross 1.95x).
 DYNAMIC_BOOK_SQUEEZE_QQQ_UP = 0.10
 DYNAMIC_BOOK_BETS_WINDOW = 63
 #: The owner's 11-14 forecast, frozen at the 2026-11-13 close (replay section 4):
@@ -6701,6 +6725,23 @@ PC_SIGMA_FALLBACK_DAILY = 0.049
 #: skipped by the mandate (review C2 F5); override only by env when the owner
 #: rotates the account on purpose.
 PC_PAPER_ACCOUNT_NUMBER = os.getenv("AEGIS_PC_PAPER_ACCOUNT", "PA37CSAUFCQR")
+#: S70 (P4, engineer D7): `python -m scripts.runtime_release --repoint-plan <tag>`. A task that
+#: can reach a broker order path stays ATTENDED: it is listed in the plan and never written
+#: into the generated repoint script. Three ways to be attended, any one suffices: the task's
+#: name; a wrapper argument that is one of these flags (exact, or `flag=value`); a segment
+#: that runs one of these modules ("module" alone, or "module subcommand").
+RUNTIME_REPOINT_ATTENDED_TASKS = ("AegisFleetManagerOpen", "AegisFleetManagerPreclose", "AegisSimOwner",
+                                  "AegisDailyPass", "AegisTelegramAgent")
+RUNTIME_REPOINT_ATTENDED_FLAGS = ("--live", "--execute", "--place-orders", "--submit-orders", "--trade")
+RUNTIME_REPOINT_ATTENDED_MODULES = ("scripts.fleet_manager_run", "scripts.sim_run", "scripts.sim_session",
+                                    "scripts.daily_pass", "scripts.telegram_agent", "scripts.task_keeper sim")
+#: Modules whose running population is bound to the config it was declared under, and the
+#: folder (under the task's `--data-root`, unless the task passes `--out`) holding
+#: `declaration.json`. A target clone whose `config_snapshot()` differs is not planned.
+RUNTIME_REPOINT_DECLARATIONS = {"scripts.rolling_cohorts": "rolling_cohorts"}
+#: seconds: the read-only scheduler enumeration, and the target clone's config snapshot
+RUNTIME_REPOINT_ENUM_TIMEOUT_S = 120
+RUNTIME_REPOINT_SNAPSHOT_TIMEOUT_S = 180
 
 # ── Public-flow SENSORS (chunk C16, 2026-10-07) ───────────────────────────────
 #: Provenance + latency sensors, NEVER a trade signal on their own (roadmap
@@ -7387,6 +7428,49 @@ IBES_LINK_MAX_SCORE = 2
 #: has happened. Absent -> revisions refuse, levels are unaffected.
 IBES_ADJ_FACTORS_PATH = Path(os.getenv(
     "AEGIS_IBES_ADJ_PATH", str(OPTIMUS_LEDGER_DIR / "wrds" / "bulk" / "ibes__adj.parquet")))
+#: CH-46 -- news entity and theme tagging by EMBEDDINGS (`backend/services/news_entity_embed.py`,
+#: `python -m scripts.news_entity_embed build-index|tag|eval --out DIR`). Offline and attended:
+#: nothing calls it on a schedule and the hub does not read its sidecar yet. The model is a small
+#: open-licence sentence encoder read from the local Hugging Face cache (a download only with
+#: `--allow-download`); the revision is pinned so two runs embed with the same weights.
+NEWS_EMBED_MODEL_ID = "BAAI/bge-small-en-v1.5"
+NEWS_EMBED_MODEL_REVISION = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+NEWS_EMBED_MODEL_LICENCE = "MIT (model card)"
+#: bge models are trained with CLS pooling; "mean" is the other accepted value.
+NEWS_EMBED_POOLING = "cls"
+NEWS_EMBED_MAX_LENGTH = 256
+NEWS_EMBED_BATCH = 64
+#: CPU threads for torch and BLAS (the PC is shared with the reader and the simulator).
+NEWS_EMBED_THREADS = 4
+#: Body characters embedded per row (title text removed first, so a title label cannot leak).
+NEWS_EMBED_TEXT_CHARS = 1500
+#: A row whose body, title removed, is shorter than this is not classified (title-only feed).
+NEWS_EMBED_MIN_TEXT_CHARS = 40
+#: Candidates per row: top-k companies by cosine to the company reference vectors, plus the
+#: top-n companies by nearest-neighbour vote, plus every rule mention, provider and digest tag.
+NEWS_EMBED_TOPK_COMPANIES = 5
+NEWS_EMBED_KNN_K = 25
+NEWS_EMBED_KNN_CANDIDATES = 3
+#: Labelled rows split by TIME (train, validation, test), never at random; rows within the
+#: embargo after a boundary are dropped from the later part.
+NEWS_EMBED_SPLIT: tuple = (0.6, 0.2, 0.2)
+NEWS_EMBED_EMBARGO_HOURS = 24
+#: The `about` threshold is the lowest score whose validation precision is at least this; the
+#: `reject` threshold leaves at most this share of validation positives below it.
+NEWS_EMBED_TARGET_PRECISION = 0.90
+NEWS_EMBED_REJECT_POS_SHARE = 0.05
+NEWS_EMBED_MIN_ABOUT_N = 30
+NEWS_EMBED_SEED = 46
+#: Theme labels: nearest centroid over potential-universe sectors holding at least this many
+#: companies; a row is "covered" when its best centroid beats the second by the margin.
+NEWS_EMBED_THEME_MIN_COMPANIES = 5
+NEWS_EMBED_THEME_MARGIN = 0.02
+#: The LLM budget estimate for the uncertain middle (no call is made by this module).
+NEWS_EMBED_LLM_PRICE_MODEL = "deepseek-v4-flash"
+NEWS_EMBED_LLM_IN_TOKENS_PER_ROW = 650
+NEWS_EMBED_LLM_OUT_TOKENS_PER_ROW = 40
+NEWS_EMBED_SIDECAR_NAME = "news_entity_embed_sidecar.jsonl"
+NEWS_EMBED_THEME_SIDECAR_NAME = "news_theme_embed_sidecar.jsonl"
 
 # ── UNIVERSE GRAPH v1 (ROADMAP §2a, CH-30) ─────────────────────────────────
 #: The universe as a typed, weighted graph (`backend/services/universe_graph.py`).

@@ -95,16 +95,17 @@ KEEPER_LOG = KEEPER_DIR / "keeper.jsonl"
 #: launches use continuous supervision to avoid an expiry gap between checks.
 READER_ROLL_H = 23.0
 
-#: Daily jobs the catch-up may start late. NOT the fleet-manager passes (live
+#: Jobs the catch-up may start late. NOT the fleet-manager passes (live
 #: orders at the wrong time are not a catch-up) and not the IIF1 launcher (it
 #: computes its own safe-launch window and refuses outside it).
-CATCHUP_TASKS = ("AegisDailyPass", "AegisFleetDailyCheck", "AegisNNLabNightly",
-                 "AegisAnalystPanelDaily", "AegisHypLabNightly", "AegisContestRehearsal",
-                 "AegisDataCatalog",
-                 # C8 (2026-10-07): the two owners for jobs that had none
-                 "AegisBrainRefresh", "AegisAnalystPull",
-                 # C16 (2026-10-07): the public-flow sensors' daily owner
-                 "AegisPublicFlow")
+#: S70 (P4, engineer D5): DERIVED from the cadence table, no longer hard-coded: every
+#: `task_receipts.TASK_RECEIPT` entry declared `catchup_safe=True` (idempotent, no order
+#: path) with a declared cadence. The ten names this list held until then (DailyPass,
+#: FleetDailyCheck, NNLabNightly, AnalystPanelDaily, HypLabNightly, ContestRehearsal,
+#: DataCatalog, BrainRefresh, AnalystPull, PublicFlow) are pinned as a subset by test.
+from backend.services import task_receipts as _TR  # noqa: E402
+
+CATCHUP_TASKS = _TR.catchup_tasks()
 CATCHUP_MAX_AGE_H = 20.0
 CATCHUP_GRACE_MIN = 15.0
 

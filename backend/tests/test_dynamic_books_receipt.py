@@ -39,6 +39,20 @@ def test_actions(tmp_path, action, rc, expected):
     assert judge(ctx, p, row).state == expected
 
 
+def test_an_unscheduled_leader_on_a_fresh_calendar_stays_ok(tmp_path):
+    # v3: a leader with no announced next date is named on the row, exit 0, not a fault
+    ctx, p, row = setup(tmp_path, contract_version="v3",
+                        calendar_unscheduled={"GOOGL": ["no announced next date (ONLY_PAST_DATES)"]})
+    assert judge(ctx, p, row).state == "ALIVE_PROGRESSING"
+
+
+def test_a_stale_forward_calendar_reads_degraded_and_names_it(tmp_path):
+    ctx, p, row = setup(tmp_path, action="STALE_CALENDAR", rc=3, contract_version="v3",
+                        calendar_stale={"_forward_calendar": ["STALE: fc_x_receipt.json 3.4 d old"]})
+    j = judge(ctx, p, row)
+    assert j.state == "DEGRADED" and "_forward_calendar" in j.detail
+
+
 def test_a_stale_calendar_names_the_leaders(tmp_path):
     ctx, p, row = setup(tmp_path, action="STALE_CALENDAR", rc=3,
                         calendar_stale={"NVDA": ["newest report 2026-08-26 is 81 days old (> 80)"]})
@@ -102,3 +116,28 @@ def test_a_real_step_row_and_a_cli_refusal_are_read(tmp_path, monkeypatch):
     ctx = SH.ProbeCtx(optimus_dir=tmp_path / "optimus", now=datetime.now(timezone.utc), repo=tmp_path,
                       paths={"dynamic_book_runs": out / "runs.jsonl"})
     assert TR.judge(ctx, NAME, task).state == "REFUSED"
+
+
+# ─────────────── review of PR #158: the states a scheduler must not read as OK ───────────────
+
+@pytest.mark.parametrize("kw,needle", [
+    ({"action": "STALE_BARS", "rc": 3, "bar_gaps": [{"leader": "NVDA", "session": "2026-11-18",
+                                                      "missing": "open of the reaction session"}]}, "NVDA 2026-11-18"),
+    ({"action": "MISSED_ENTRY_WINDOW", "missed": [{"cohort_id": "2026-11-19"}]}, "2026-11-19"),
+    ({"calendar_overdue": ["GOOGL"], "calendar_unscheduled": {"GOOGL": ["no date -- OVERDUE"]}}, "OVERDUE"),
+    ({"events_not_acting": [{"leader": "NVDA", "earnings_date": "2026-11-17", "gap": -0.08,
+                             "status": "LEARNED_LATE"}]}, "LEARNED_LATE"),
+    ({"events_not_acting": [{"leader": "NVDA", "earnings_date": "2026-11-17", "gap": -0.08,
+                             "status": "MOVED"}]}, "MOVED"),
+])
+def test_v3_failure_states_read_degraded_and_are_named(tmp_path, kw, needle):
+    ctx, p, row = setup(tmp_path, contract_version="v3", **kw)
+    j = judge(ctx, p, row)
+    assert j.state == "DEGRADED" and needle in j.detail, (j.state, j.detail)
+
+
+def test_unscheduled_alone_is_named_but_not_degraded(tmp_path):
+    ctx, p, row = setup(tmp_path, contract_version="v3", calendar_unscheduled={"AMZN": ["no date"]},
+                        calendar_overdue=[])
+    j = judge(ctx, p, row)
+    assert j.state == "ALIVE_PROGRESSING" and "AMZN" in j.detail
