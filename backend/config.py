@@ -1,6 +1,6 @@
 """
 Aegis Finance — Master Configuration
-===============================
+======================================
 
 Single source of truth for all engine parameters.
 Converted from V7 engine_config.yaml into a pure Python module.
@@ -7562,7 +7562,7 @@ DAY_FILE_EXCLUDED_FAMILIES = ("murat_book",)
 #: A position with no recorded stop is costed at this gap (CLAUDE.md protocol item 4).
 DAY_FILE_GAP_NO_STOP = 0.30
 DAY_FILE_TOP_WORST = 15
-=======
+
 # -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
 #: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's
 #: "Note to Claude" box appends one row to `<OPTIMUS_LEDGER_DIR>/owner_inbox/notes.jsonl`.
