@@ -34,6 +34,7 @@ from backend.schemas.portfolio_intelligence import (
     TrackRecordPoint,
     TrackRecordResponse,
 )
+from backend import config as _config
 from backend.routers.control import require_trigger_token, trigger_authorized
 from backend.services.portfolio_intelligence.real_analyzer import analyze_portfolio
 
@@ -115,22 +116,26 @@ async def get_reference_history(
     if lane_id not in _VALID_LANES:
         raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
 
-    from backend.db import get_connection, get_nav_series
+    from backend.db import get_nav_series
     from backend.services.portfolio_intelligence.reference_engine import (
-        _ensure_lane_initialized,
+        open_lane_readonly,
     )
 
     try:
-        # Make sure parent row exists; otherwise queries return zero events for
-        # a different reason than the user expects.
-        await asyncio.to_thread(_ensure_lane_initialized, lane_id)
+        # READ-ONLY (S70 review, 2026-11-15). This GET used to call
+        # `_ensure_lane_initialized`: `init_db()` on every request and, for a lane
+        # with no row, `initialize_lane` -- an anonymous page view could SEED a
+        # lane at today's prices. A lane with no row is now the empty shape; the
+        # scheduler (hourly MTM, daily check) is what creates lanes.
+        conn = open_lane_readonly(lane_id)   # same thread as its use (sqlite3)
+        if conn is None:
+            return HistoryResponse(portfolio_id=lane_id, period=period.upper())
 
         cutoff_days = _period_to_days(period)
         cutoff_iso: Optional[str] = None
         if cutoff_days is not None:
             cutoff_iso = (datetime.now() - timedelta(days=cutoff_days)).isoformat()
 
-        conn = get_connection()
         try:
             if cutoff_iso:
                 rows = conn.execute(
@@ -360,11 +365,13 @@ class ConvictionDecisionRequest(_BaseModel):
     price: float
     rationale: str                   # >= 50 chars (honest-record discipline)
     conviction: int                  # 1-5
-    thesis_tags: list[str] = _PydField(default_factory=list)
+    thesis_tags: list[str] = _PydField(
+        default_factory=list, max_length=_config.PUBLIC_WRITE_MAX_LIST_ITEMS)
     target_price: Optional[float] = None
     stop_price: Optional[float] = None
     planned_exit_trigger: Optional[str] = None
-    catalyst_dates: list[str] = _PydField(default_factory=list)
+    catalyst_dates: list[str] = _PydField(
+        default_factory=list, max_length=_config.PUBLIC_WRITE_MAX_LIST_ITEMS)
     amends_id: Optional[int] = None  # correction → appends a new row referencing the original
     late_entry: bool = False         # the action already happened; logged after the fact
     portfolio_snapshot: dict = _PydField(default_factory=dict)
@@ -790,23 +797,24 @@ async def get_reference_explain(lane_id: str):
     if lane_id not in _VALID_LANES:
         raise HTTPException(status_code=404, detail=f"Unknown lane: {lane_id}")
 
-    from backend.db import get_connection
     from backend.services.portfolio_intelligence.reference_engine import (
-        _ensure_lane_initialized,
+        open_lane_readonly,
     )
 
     try:
-        await asyncio.to_thread(_ensure_lane_initialized, lane_id)
-
-        conn = get_connection()
-        try:
-            row = conn.execute(
-                "SELECT explanation, trigger_reason, triggered_at FROM rebalance_events "
-                "WHERE portfolio_id = ? ORDER BY id DESC LIMIT 1",
-                (lane_id,),
-            ).fetchone()
-        finally:
-            conn.close()
+        # READ-ONLY (S70 review, 2026-11-15): see `get_reference_history`. A lane
+        # with no row has no events; it is never created by this read.
+        conn = open_lane_readonly(lane_id)   # same thread as its use (sqlite3)
+        row = None
+        if conn is not None:
+            try:
+                row = conn.execute(
+                    "SELECT explanation, trigger_reason, triggered_at FROM rebalance_events "
+                    "WHERE portfolio_id = ? ORDER BY id DESC LIMIT 1",
+                    (lane_id,),
+                ).fetchone()
+            finally:
+                conn.close()
 
         if not row:
             return ExplainResponse(
@@ -1060,7 +1068,8 @@ def _compute_benchmark_metrics(name: str, start_d: date, end_d: date) -> Optiona
     )
 
 
-@router.post("/trigger-check", dependencies=[Depends(require_trigger_token)])
+@router.post("/trigger-check", dependencies=[Depends(require_trigger_token)],
+             include_in_schema=False)
 async def trigger_check(lane_id: Optional[str] = None) -> dict:
     """Manual rebalance check. Requires the trigger token (S70, 2026-11-15):
     it can book a rebalance on every reference lane, and it answered anyone.
@@ -1168,7 +1177,7 @@ async def get_replay_snapshot(lane_id: str):
 
 
 @router.post("/replay/{lane_id}/refresh", response_model=ReplayResult,
-             dependencies=[Depends(require_trigger_token)])
+             dependencies=[Depends(require_trigger_token)], include_in_schema=False)
 async def refresh_replay(
     lane_id: str,
     start_date: str = Query(default="2021-01-01"),

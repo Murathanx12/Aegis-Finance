@@ -493,33 +493,79 @@ def run_reference_check(
         conn.close()
 
 
-def read_reference_state(lane_id: str, db_path=None) -> SnapshotResponse:
-    """The lane's open book as it stands, marked to market. WRITES NOTHING.
+def _open_db_readonly(db_path=None):
+    """A `mode=ro` SQLite connection to the PI database, or None when the file
+    does not exist. SQLite refuses every write on it, so "this read writes
+    nothing" is enforced rather than promised.
 
-    The public `GET /api/pi/reference/{lane_id}/state` serves this to a caller
-    without the trigger token (S70, 2026-11-15). `run_reference_check` is a
-    CHECK: it initialises the lane, appends audit rows and may book a rebalance,
-    which is the scheduler's job and not a page view's.
-
-    The database is opened READ-ONLY (`mode=ro`), so "no write" is enforced by
-    SQLite and not by the absence of an INSERT in this function. A database or
-    table that does not exist yet is an empty book, never a reason to create one.
+    ONE THING IT MAY LEAVE BEHIND: the database is in WAL mode, and a read-only
+    connection with no other connection open creates `<db>-shm` / `<db>-wal`
+    sidecar files next to it (the main file's bytes and mtime do not change).
+    So no DATA is written, but the directory can gain two files, and a data
+    directory mounted read-only turns this read into an error (a 500 upstream).
     """
     import sqlite3
     from pathlib import Path
 
     from backend import db as _db
 
+    path = Path(db_path or _db.DB_PATH)
+    if not path.exists():
+        return None
+    conn = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def open_lane_readonly(lane_id: str, db_path=None):
+    """A read-only connection IF the lane has a row in `paper_portfolios`, else
+    None (no database, no table, or no row). Never creates any of the three: an
+    anonymous GET must not seed a lane. The caller closes the connection.
+    Sidecar files: see `_open_db_readonly`."""
+    import sqlite3
+
+    conn = _open_db_readonly(db_path)
+    if conn is None:
+        return None
+    try:
+        row = conn.execute("SELECT 1 FROM paper_portfolios WHERE id = ?", (lane_id,)).fetchone()
+    except sqlite3.OperationalError as e:
+        conn.close()
+        if "no such table" in str(e).lower():
+            return None
+        raise
+    except Exception:
+        conn.close()
+        raise
+    if row is None:
+        conn.close()
+        return None
+    return conn
+
+
+def read_reference_state(lane_id: str, db_path=None) -> SnapshotResponse:
+    """The lane's open book as it stands, marked to market. WRITES NO DATA.
+
+    The public `GET /api/pi/reference/{lane_id}/state` serves this to a caller
+    without the trigger token (S70, 2026-11-15). `run_reference_check` is a
+    CHECK: it initialises the lane, appends audit rows and may book a rebalance,
+    which is the scheduler's job and not a page view's.
+
+    The database is opened READ-ONLY, so "no write" is enforced by SQLite and
+    not by the absence of an INSERT in this function. A database or table that
+    does not exist yet is an empty book, never a reason to create one. The read
+    may still leave `-shm` / `-wal` sidecar files beside a WAL database, and
+    fails on a read-only data directory: see `_open_db_readonly`.
+    """
+    import sqlite3
+
     today = date.today().isoformat()
     empty = SnapshotResponse(portfolio_id=lane_id, date=today, weights={})
     if _get_lane_config(lane_id) is None:
         return empty
-    path = Path(db_path or _db.DB_PATH)
-    if not path.exists():
+    conn = _open_db_readonly(db_path)
+    if conn is None:
         return empty
-
-    conn = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
-    conn.row_factory = sqlite3.Row
     try:
         try:
             held = [r["ticker"] for r in conn.execute(

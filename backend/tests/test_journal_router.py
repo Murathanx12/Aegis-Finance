@@ -30,6 +30,19 @@ def isolated(tmp_path, monkeypatch):
     return tmp_path
 
 
+@pytest.fixture()
+def owner(monkeypatch):
+    """Headers of a caller holding the trigger token. Since 2026-11-15
+    `/resolve` and `/terminal-state/sync` are not public
+    (`control.require_trigger_token`; the gate itself is tested in
+    `test_trigger_token_gate.py`)."""
+    from backend import config as C
+    token = "t0k-" + "journal-router-synthetic-token-value"
+    monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
+    monkeypatch.setenv(C.TRIGGER_TOKEN_ENV, token)
+    return {C.TRIGGER_TOKEN_HEADER: token}
+
+
 def _body(**over):
     kw = dict(symbol="NVDA", direction="up", expected_move=0.06,
               catalyst="Q3 FY27 print",
@@ -149,17 +162,17 @@ class TestThesisBridge:
         assert b["n"] == 1 and b["rows"][0]["symbol"] == "NVDA"
         assert b["rows"][0]["source"] == "human:murat"
 
-    def test_a_pending_row_is_not_graded_early(self, isolated):
+    def test_a_pending_row_is_not_graded_early(self, isolated, owner):
         client.post("/api/journal/thesis", json=_body())
-        r = client.post("/api/journal/resolve", json={"as_of": "2026-09-08"})
+        r = client.post("/api/journal/resolve", json={"as_of": "2026-09-08"}, headers=owner)
         assert r.status_code == 200
         b = r.json()
         assert b["n_graded"] == 0 and b["n_still_pending"] == 1
         assert b["llm_cost_usd"] == 0.0
 
-    def test_resolving_costs_nothing_when_reflection_is_off(self, isolated):
+    def test_resolving_costs_nothing_when_reflection_is_off(self, isolated, owner):
         client.post("/api/journal/thesis", json=_body())
-        b = client.post("/api/journal/resolve",
+        b = client.post("/api/journal/resolve", headers=owner,
                         json={"as_of": "2026-09-08", "reflect": False}).json()
         assert b["llm_cost_usd"] == 0.0
         assert "FREE backend" in b["llm_note"]
@@ -187,18 +200,28 @@ class TestAsOfGateOverHttp:
 
 class TestWriteAuthority:
     def test_only_three_routes_write(self):
-        # Read the write surface from the OpenAPI schema, not from `app.routes`:
-        # FastAPI >= 0.141 (CI, 2026-09-08) wraps an included router in an
-        # `_IncludedRouter` with no `.path`/`.methods`, so walking `app.routes`
-        # found ZERO journal routes on Linux while the dev venv (0.135) found
-        # three -- a green suite that was reading nothing. The schema is the
-        # version-independent statement of which paths accept which verbs.
-        paths = app.openapi()["paths"]
-        writes = sorted(p for p, ops in paths.items()
-                        if p.startswith("/api/journal")
-                        and set(ops) - {"get", "head", "options"})
+        # Read the write surface from the ROUTE TABLE through FastAPI's own leaf
+        # walk. History: FastAPI >= 0.141 (CI, 2026-09-08) wraps an included
+        # router in an `_IncludedRouter` with no `.path`/`.methods`, so a plain
+        # walk of `app.routes` found ZERO journal routes on Linux -- a green
+        # suite that was reading nothing -- and this test moved to the OpenAPI
+        # schema. Since 2026-11-15 the two token-gated writes are deliberately
+        # OUT of the public schema, so the schema no longer lists them;
+        # `iter_route_contexts` (with the old flat walk as the fallback) does.
+        import fastapi.routing as fr
+        leaves = (list(fr.iter_route_contexts(app.routes))
+                  if hasattr(fr, "iter_route_contexts") else list(app.routes))
+        journal = [r for r in leaves if (getattr(r, "path", "") or "").startswith("/api/journal")]
+        assert len(journal) >= 8, "the walk found no journal routes; it is reading nothing"
+        writes = sorted({r.path for r in journal
+                         if set(r.methods or ()) - {"GET", "HEAD", "OPTIONS"}})
         assert writes == ["/api/journal/resolve", "/api/journal/terminal-state/sync",
                           "/api/journal/thesis"]
+        # and only the one still-open write is advertised
+        public = sorted(p for p, ops in app.openapi()["paths"].items()
+                        if p.startswith("/api/journal")
+                        and set(ops) - {"get", "head", "options"})
+        assert public == ["/api/journal/thesis"]
 
     def test_the_router_imports_no_broker(self):
         import ast

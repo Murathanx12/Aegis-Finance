@@ -2978,6 +2978,15 @@ TRIGGER_TOKEN_HEADER: str = "X-Aegis-Trigger-Token"
 #: rate-limits these routes, so a guessable token is an open route with a delay.
 #: `python -c "import secrets; print(secrets.token_urlsafe(32))"` gives 43 chars.
 TRIGGER_TOKEN_MIN_LENGTH: int = 24
+#: The two journal writes the website's own pages are meant to reach stay open
+#: (`POST /api/pi/conviction/decision`, `POST /api/journal/thesis`; the owner's
+#: decision is pending). An anonymous caller's LIST inputs on them are capped at
+#: this many items (422 above it), so one request cannot write an unbounded row.
+PUBLIC_WRITE_MAX_LIST_ITEMS: int = 25
+#: `POST /api/pm/snapshot` does one enrich fetch and one ledger row PER TICKER.
+#: A caller-supplied list longer than this is refused (422). The blank default
+#: (the whole book + watchlist) is the owner's own list and is not capped.
+PM_SNAPSHOT_MAX_TICKERS: int = 60
 
 #: 2026-09-20: the website backend's warm loop was the Railway bill. Measured
 #: with `railway metrics` on `selfless-courage/Aegis-Finance`: 0.58 vCPU average

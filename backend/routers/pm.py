@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from backend import config as _config
 from backend.cache import cache_get, cache_set
+from backend.routers.control import require_trigger_token
 from backend.services import analyst_ledger, pm_actions, pm_engine, pm_journal
 
 logger = logging.getLogger(__name__)
@@ -150,9 +152,14 @@ def journal(limit: int = Query(50, ge=1, le=500)) -> dict:
             "counts": pm_journal.summary()}
 
 
-@router.post("/journal/record")
+@router.post("/journal/record", dependencies=[Depends(require_trigger_token)],
+             include_in_schema=False)
 def record(note: str = Query("", max_length=500)) -> dict:
     """Freeze today's brief into the decision journal.
+
+    Requires the trigger token (S70 review, 2026-11-15): it recomputes the brief
+    and appends to the owner's PM journal, no page calls it, and it answered
+    anyone. 404 without `X-Aegis-Trigger-Token`; the desktop page is unchanged.
 
     This is what makes the engine accountable: every instruction is written
     down with the state that produced it, so in three months it can be asked
@@ -162,19 +169,29 @@ def record(note: str = Query("", max_length=500)) -> dict:
     return pm_journal.record_brief(brief, note=note)
 
 
-@router.post("/snapshot")
+@router.post("/snapshot", dependencies=[Depends(require_trigger_token)],
+             include_in_schema=False)
 def snapshot(tickers: str = Query("", description="comma-separated; blank = "
                                                  "the whole book + watchlist")
              ) -> dict:
     """Append today's analyst state to the PIT ledger for the given names.
 
+    Requires the trigger token (S70 review, 2026-11-15): one enrich fetch and one
+    ledger row per ticker, no page calls it, and it answered anyone. A supplied
+    list longer than `config.PM_SNAPSHOT_MAX_TICKERS` is refused (422).
+
     This is the only way ΔTarget over 7/30/90 days ever comes to exist: the
     only source we hold returns a current consensus with no history, so the
     history is one we write, one observation at a time, starting now.
     """
+    asked = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+    cap = int(_config.PM_SNAPSHOT_MAX_TICKERS)
+    if len(asked) > cap:
+        raise HTTPException(status_code=422, detail=(
+            f"{len(asked)} tickers supplied; at most {cap} per call "
+            "(config.PM_SNAPSHOT_MAX_TICKERS)"))
     book = pm_engine.load_book(strict=False)
-    want = ([t.strip().upper() for t in tickers.split(",") if t.strip()]
-            or [p.ticker for p in book.positions] + list(book.watchlist))
+    want = asked or [p.ticker for p in book.positions] + list(book.watchlist)
     written, skipped = [], []
     for t in want:
         e = pm_engine.enrich(t)

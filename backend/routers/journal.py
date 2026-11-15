@@ -41,7 +41,11 @@ TWO HONESTY RULES THIS ROUTER ENFORCES IN CODE
 WRITE AUTHORITY
 ===============
 Three endpoints write, and all three write **only** to append-only JSONL under
-`config.HUMAN_LOOP_DIR` or into the mirror directory. Nothing here places an
+`config.HUMAN_LOOP_DIR` or into the mirror directory. Since 2026-11-15 two of
+them (`/resolve`, `/terminal-state/sync`) require the trigger token
+(`control.require_trigger_token`): no page calls them and they answered anyone.
+`/thesis` is still open (owner's decision pending) but an anonymous caller
+cannot choose `stated_at_utc`: without the token it is the server's clock. Nothing here places an
 order, sizes a position, seals a prediction book, or touches the paper-NAV write
 path. `/terminal-state/sync` copies files ONE WAY out of the execution repo and
 `backend/services/terminal_state_reader.py` is proven read-only upstream by
@@ -53,7 +57,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from backend.config import (COUNTERFACTUAL_BENCHMARK_ACCOUNT,
@@ -61,6 +65,7 @@ from backend.config import (COUNTERFACTUAL_BENCHMARK_ACCOUNT,
                             COUNTERFACTUAL_BENCHMARK_SYMBOL,
                             DECISION_LOG_MIN_GRADED_ROWS_FOR_PNL_CLAIM,
                             HUMAN_BOOK_BRAIN, HUMAN_LOOP_VERSION, LOSS_BUDGETS)
+from backend.routers.control import require_trigger_token, trigger_authorized
 from backend.services import counterfactual_prices as cp
 from backend.services import decision_log as dl
 from backend.services import human_thesis as ht
@@ -243,13 +248,23 @@ async def get_terminal_artefact(kind: str, name: str):
 
 # ── write endpoints (append-only; nothing here orders or seals) ─────────────
 @router.post("/thesis")
-async def post_thesis(body: ThesisRequest):
+async def post_thesis(body: ThesisRequest, request: Request):
     """H2: turn a journal decision into a gradeable THESIS + a PENDING row.
 
     422 with the schema's own refusal text when the decision cannot be graded —
     a missing falsifier, a catalyst already past, a zero minimum hold outside an
     event budget. Those are the point of the endpoint, not an inconvenience.
+
+    `stated_at_utc` is honoured only for the desktop's own page or a caller with
+    the trigger token (S70 review, 2026-11-15). Anyone else gets the server's
+    clock: a thesis "stated" on a date its author picked is a backdated record.
     """
+    stated_at_ignored = False
+    stated_at_utc: Optional[str] = None
+    if trigger_authorized(request):
+        stated_at_utc = body.stated_at_utc
+    elif body.stated_at_utc is not None:
+        stated_at_ignored = True
     try:
         t = ht.build(
             symbol=body.symbol, direction=body.direction, catalyst=body.catalyst,
@@ -259,7 +274,7 @@ async def post_thesis(body: ThesisRequest):
             horizon_sessions=body.horizon_sessions,
             min_normal_hold_sessions=body.min_normal_hold_sessions,
             loss_budget_ref=body.loss_budget_ref,
-            stated_at_utc=body.stated_at_utc)
+            stated_at_utc=stated_at_utc)
         sealed = ht.record(t, decision_id=body.decision_id_hint)
         row = dl.from_thesis(
             t, action=body.action, entry_price=body.entry_price,
@@ -277,14 +292,22 @@ async def post_thesis(body: ThesisRequest):
         raise HTTPException(status_code=500, detail=str(e))
     return _envelope(
         thesis=sealed, decision_row=written,
+        stated_at_source=("server clock; the supplied stated_at_utc was ignored"
+                          if stated_at_ignored else
+                          "caller" if stated_at_utc is not None else "server clock"),
         book_entry=ht.export_for_seal(t),
         note=("the prediction-book row is BUILT here and SEALED by a human in "
               "the execution repo. An agent session does not seal."))
 
 
-@router.post("/resolve")
+@router.post("/resolve", dependencies=[Depends(require_trigger_token)],
+             include_in_schema=False)
 async def post_resolve(body: ResolveRequest):
     """Resolve every PENDING row whose OWN horizon has arrived, and grade it.
+
+    Requires the trigger token (S70 review, 2026-11-15): `as_of` is the caller's,
+    grades are append-only and `reflect` runs a model on up to 500 rows; no page
+    calls it and it answered anyone. 404 without `X-Aegis-Trigger-Token`.
 
     Idempotent in effect: a grade is append-only and `load_grades` keeps the
     newest per `decision_id`, so re-running replaces rather than duplicates.
@@ -325,7 +348,8 @@ async def post_resolve(body: ResolveRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/terminal-state/sync")
+@router.post("/terminal-state/sync", dependencies=[Depends(require_trigger_token)],
+             include_in_schema=False)
 async def post_terminal_sync():
     """H5: refresh the mirror. Copies ONE WAY; writes only inside the mirror."""
     try:

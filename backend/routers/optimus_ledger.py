@@ -123,7 +123,8 @@ async def get_digest(day: str | None = None):
     return body
 
 
-@router.post("/run_job/{job_id}", dependencies=[Depends(require_trigger_token)])
+@router.post("/run_job/{job_id}", dependencies=[Depends(require_trigger_token)],
+             include_in_schema=False)
 async def run_job_now(job_id: str) -> dict:
     """Run one scheduled job INLINE, now, and return when it finishes.
 

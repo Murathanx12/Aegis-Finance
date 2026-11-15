@@ -293,6 +293,10 @@ async def lifespan(app: FastAPI):
     import asyncio
 
     logger.info("Aegis Finance API starting")
+    try:  # one line: is the trigger token usable (names the variable, never the value)
+        control.log_trigger_token_status()
+    except Exception as e:
+        logger.warning("trigger-token status line failed (non-fatal): %s", e)
     # RSS high-water sampler first, so the very first prewarm spike is on the
     # record with the name of what was running.
     try:
