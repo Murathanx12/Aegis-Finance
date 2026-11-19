@@ -42,6 +42,7 @@ counted, never guessed.
 
 from __future__ import annotations
 
+import html
 import json
 import logging
 import re
@@ -139,14 +140,27 @@ def outlook_excerpt(text: str, max_chars: int) -> tuple[Optional[str], Optional[
     m = _OUTLOOK.search(text, head)
     if not m:
         return None, None
-    return text[m.start(): m.start() + int(max_chars)], m.start()
+    return readable(text[m.start(): m.start() + int(max_chars)]), m.start()
+
+
+def readable(s: str) -> str:
+    """The collector's cleaner leaves HTML entities (`&#8211;`, `&#59;`) in the
+    text. The STORED text keeps them (the prefix check against the collector's
+    body depends on it); what the model reads is unescaped. Offsets and
+    `text_chars` refer to the stored text."""
+    return html.unescape(s)
 
 
 def read_filings_text(ticker: str, days: Optional[int] = None, *,
                       as_of_utc: Optional[datetime] = None,
                       root: Optional[Path] = None,
+                      store: Optional[Path] = None,
                       max_rows: Optional[int] = None) -> Optional[dict]:
     """Stored 8-K EX-99 rows for `ticker`, newest first, point in time.
+
+    `root` is the data root (collector store + CIK map); `store` overrides the
+    full-exhibit folder (default `<root>/sec_exhibit_full`). Both are caller
+    arguments, never model-visible.
 
     Returns None when nothing in the window matches (the tool layer reports
     that as `empty`); raises when the store itself is missing, which the tool
@@ -160,7 +174,9 @@ def read_filings_text(ticker: str, days: Optional[int] = None, *,
     if as_of is None:
         raise ValueError("as_of_utc must carry a timezone")
     paths = SX.default_paths(Path(root) if root else data_root())
-    SX.check_inputs(paths)                       # missing store -> refusal -> unavailable
+    if store is not None:
+        paths["store"] = Path(store)
+    SX.check_inputs(paths)                     # missing store -> refusal -> unavailable
     cik_map = SX.load_cik_map(paths["cik_map"])
     floor = as_of - timedelta(days=days)
     # Rows filed AFTER the as-of time are counted in `_audit`, which the model
@@ -227,7 +243,7 @@ def read_filings_text(ticker: str, days: Optional[int] = None, *,
             # full text only: does it start with what the collector stored? False
             # is shown, never repaired (a different document, or a cleaner change).
             "prefix_matches_stored": f.get("prefix_matches_stored") if source == "full_exhibit" else None,
-            "text_excerpt": text[:head],
+            "text_excerpt": readable(text[:head]),
             "outlook_excerpt": None, "outlook_offset": None,
         }
         if source == "full_exhibit":
@@ -273,7 +289,8 @@ def as_model_text(res: IT.ToolResult) -> str:
 def run_filing_text_tool(args: dict, budget: Optional[IT.ToolBudget] = None, *,
                          configuration: str,
                          as_of_utc: Optional[datetime] = None,
-                         root: Optional[Path] = None) -> IT.ToolResult:
+                         root: Optional[Path] = None,
+                         store: Optional[Path] = None) -> IT.ToolResult:
     """Execute the text tool with the frozen layer's result contract: `ok`,
     `empty` and `unavailable` stay distinct, every path is timed and logged to
     the budget, and a configuration that is not offered the tool is refused in
@@ -300,7 +317,7 @@ def run_filing_text_tool(args: dict, budget: Optional[IT.ToolBudget] = None, *,
         return finish(IT.ToolResult(TOOL_NAME, IT.STATUS_UNAVAILABLE,
                                     reason=f"bad arguments: unexpected {sorted(extra)}"))
     try:
-        payload = read_filings_text(as_of_utc=as_of_utc, root=root, **(args or {}))
+        payload = read_filings_text(as_of_utc=as_of_utc, root=root, store=store, **(args or {}))
     except TypeError as exc:
         return finish(IT.ToolResult(TOOL_NAME, IT.STATUS_UNAVAILABLE,
                                     reason=f"bad arguments: {exc}"))

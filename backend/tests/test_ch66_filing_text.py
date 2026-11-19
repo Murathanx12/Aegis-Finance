@@ -249,6 +249,23 @@ def test_fetch_writes_rows_then_read_prefers_full_text(root, tmp_path):
     assert "warning" not in out
 
 
+def test_store_override_and_entities_unescaped_for_the_model_only(root, tmp_path):
+    corpus = root / C.SEC_EXHIBIT_BODY_DIRNAME
+    body = "XPEL Reports Revenue&#59; growth of 9.9% &#8211; record. " * 80
+    with next(corpus.glob("*.jsonl")).open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(_row("0004-26-000001", cik=444, tickers=["EEE"], body=body[:CUT])) + "\n")
+    other = tmp_path / "elsewhere"
+    receipt, _ = _run(root, tmp_path, tickers=["EEE"], out_dir=other)
+    assert receipt["fetched"] == 1 and not (root / C.SEC_EXHIBIT_FULL_DIRNAME).exists()
+    before = FT.read_filings_text("EEE", as_of_utc=NOW, root=root)["rows"][0]
+    after = FT.read_filings_text("EEE", as_of_utc=NOW, root=root, store=other)["rows"][0]
+    assert before["text_source"] == "collector_body" and before["truncated_at_source"] is True
+    # the fake fetch returns a DIFFERENT document: the mismatch is shown, not repaired
+    assert after["text_source"] == "full_exhibit" and after["prefix_matches_stored"] is False
+    assert "&#59;" not in before["text_excerpt"] and "Revenue; growth" in before["text_excerpt"]
+    assert "–" in before["text_excerpt"] and before["text_chars"] == CUT   # stored length, raw
+
+
 def test_capped_full_exhibit_reports_its_real_length_and_stays_flagged(root, tmp_path, monkeypatch):
     monkeypatch.setattr(C, "SEC_EXHIBIT_FULL_MAX_CHARS", CUT + 10)
     receipt, _ = _run(root, tmp_path, tickers=["AAA"])
