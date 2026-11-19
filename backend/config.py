@@ -8226,7 +8226,7 @@ INVESTIGATOR_NEWS_MAX_NEIGHBOUR_ROWS = 3
 # -- CH-66: filing text for the investigator (2026-11-19) -----------------------
 #: The raw SEC collector (`scripts/news_pull.py`, `MAX_BODY`) stores each 8-K EX-99
 #: body cut at this many characters. A stored body of EXACTLY this length is
-#: reported `truncated_at_source: true`. `test_sec_exhibit_full` fails if the
+#: reported `truncated_at_source: true`. `test_ch66_filing_text` fails if the
 #: collector's constant ever stops matching this one.
 SEC_EXHIBIT_COLLECTOR_CUT_CHARS = 4000
 #: Folder names under the data root (`backend/data/optimus`).

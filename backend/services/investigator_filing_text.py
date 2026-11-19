@@ -193,22 +193,27 @@ def read_filings_text(ticker: str, days: Optional[int] = None, *,
             return {"ticker": sym, "as_of_utc": SX._iso(as_of), "window_days": days,
                     "rows": [], "counts": counts, "_audit": audit}
         return None
-    full = SX.read_full_store(paths["store"]) if Path(paths["store"]).is_dir() else {}
     ordered = sorted(picked.items(), key=lambda kv: (kv[1][0], kv[0]), reverse=True)
     counts["not_shown_over_max_rows"] = max(0, len(ordered) - max_rows)
+    shown = ordered[:max_rows]
+    # The store is month files keyed by the filing's month: read only those.
+    months = {filed.strftime("%Y-%m") for _rid, (filed, _r) in shown}
+    full = SX.read_full_store(paths["store"], months=months)
     head = int(C.INVESTIGATOR_FILING_TEXT_EXCERPT_CHARS)
     rows = []
-    for rid, (filed, r) in ordered[:max_rows]:
+    for rid, (filed, r) in shown:
         stored = r.get("body") or ""
         f = full.get(rid)
-        # The full text is the exhibit as filed; it is used only for a filing
-        # already admitted by its acceptance time above.
-        if f and f.get("text") and not f.get("capped"):
-            text, source, cut = f["text"], "full_exhibit", False
-        elif f and f.get("text"):
-            text, source, cut = f["text"], "full_exhibit", True
+        # The full text is the exhibit as filed (EDGAR archive documents do not
+        # change after acceptance); it is used only for a filing already
+        # admitted by its acceptance time above, whenever it was fetched.
+        if f and f.get("text"):
+            text, source = f["text"], "full_exhibit"
+            cut = bool(f.get("capped"))
+            n_chars = int(f.get("n_chars") or len(text))
         else:
             text, source, cut = stored, "collector_body", SX.is_truncated(stored)
+            n_chars = len(text)
         items = SX.item_codes(r)
         row = {
             "form": "8-K", "filed": filed.date().isoformat(), "items": items,
@@ -216,8 +221,12 @@ def read_filings_text(ticker: str, days: Optional[int] = None, *,
             "exhibit": SX.tag_value(r, "exhibit:"),
             "accession": SX.tag_value(r, "accession:"),
             "source_url": r.get("url") or "", "filed_utc": SX._iso(filed),
-            "text_source": source, "text_chars": len(text),
+            "text_source": source, "text_chars": n_chars,
             "truncated_at_source": bool(cut),
+            "collector_body_chars": len(stored),
+            # full text only: does it start with what the collector stored? False
+            # is shown, never repaired (a different document, or a cleaner change).
+            "prefix_matches_stored": f.get("prefix_matches_stored") if source == "full_exhibit" else None,
             "text_excerpt": text[:head],
             "outlook_excerpt": None, "outlook_offset": None,
         }

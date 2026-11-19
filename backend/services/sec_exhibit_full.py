@@ -21,7 +21,7 @@ THE STORE
 `<store>/<yyyy-mm>.jsonl`, the month being the filing's acceptance month, one
 row per exhibit, append-only:
 
-    raw_id, accession, cik, ticker, exhibit, exhibit_url, filed_utc,
+    raw_id, accession, cik, ticker, tickers, exhibit, items, url, filed_utc,
     fetched_utc, sha256 (of the bytes received), n_chars, text,
     capped, prefix_matches_stored, stored_chars, run_id
 
@@ -49,6 +49,7 @@ import hashlib
 import json
 import os
 import re
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Iterator, Optional
@@ -208,13 +209,17 @@ def read_body_rows(corpus: Path, *, since: Optional[datetime] = None) -> list[di
     return rows
 
 
-def read_full_store(store: Path, *, with_text: bool = True) -> dict[str, dict]:
-    """raw_id -> the LAST row written for it."""
+def read_full_store(store: Path, *, with_text: bool = True,
+                    months: Optional[set] = None) -> dict[str, dict]:
+    """raw_id -> the LAST row written for it. `months` ({"yyyy-mm", ...})
+    limits the read to those month files (the month is the filing's)."""
     out: dict[str, dict] = {}
     d = Path(store)
     if not d.is_dir():
         return out
     for f in sorted(d.glob("*.jsonl")):
+        if months is not None and f.stem not in months:
+            continue
         for row in iter_jsonl(f):
             rid = str(row.get("raw_id") or "")
             if not rid:
@@ -353,7 +358,10 @@ def http_status_of(exc: BaseException) -> Optional[int]:
 
 
 def new_run_id(now: datetime) -> str:
-    return f"sxf_{now.astimezone(timezone.utc):%Y%m%dT%H%M%SZ}_{os.getpid()}"
+    """Seconds + pid alone collide when one process runs twice in a second (a
+    receipt named by it would be overwritten), so a random suffix is added."""
+    return (f"sxf_{now.astimezone(timezone.utc):%Y%m%dT%H%M%SZ}_{os.getpid()}_"
+            f"{uuid.uuid4().hex[:8]}")
 
 
 def exit_code(receipt: dict) -> int:
@@ -471,7 +479,7 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
             "tickers": o["tickers"],
             "exhibit": tag_value(o["row"], "exhibit:"),
             "items": item_codes(o["row"]),
-            "exhibit_url": o["url"], "filed_utc": _iso(o["filed"]),
+            "url": o["url"], "filed_utc": _iso(o["filed"]),
             "fetched_utc": _iso(fetched_at),
             "sha256": hashlib.sha256(bytes(raw)).hexdigest(),
             "n_chars": len(text), "capped": len(text) > cap, "text": text[:cap],

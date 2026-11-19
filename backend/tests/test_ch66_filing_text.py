@@ -98,9 +98,22 @@ def _run(root, tmp_path, **kw):
 # ------------------------------------------------------------ frozen surface
 
 def test_frozen_tool_module_bytes_tools_and_arm_lists_are_unchanged():
-    raw = Path(IT.__file__).read_bytes().replace(b"\r\n", b"\n")
-    assert hashlib.sha256(raw).hexdigest()[:16] == "d0d8acab2a4e7b0c", (
+    from backend.services import night_launcher as NL
+    raw = Path(IT.__file__).read_bytes()
+    lf = raw.replace(b"\r\n", b"\n")
+    # d0d8... is the git blob (LF, what CI checks out); 61781b... is the CRLF
+    # working copy, which is what `night_launcher._sha256_file` put in every
+    # IIF-1 launch manifest on this PC. Both are pinned.
+    assert hashlib.sha256(lf).hexdigest()[:16] == "d0d8acab2a4e7b0c", (
         "investigator_tools.py changed: its bytes are pinned by the IIF-1 launch manifest")
+    if b"\r\n" in raw:
+        assert NL._sha256_file(Path(IT.__file__)) == "61781b971f2e3c0a"
+    assert "backend.services.investigator_tools" in NL.NIGHT_MODULES
+    assert not any(m.endswith(("investigator_filing_text", "sec_exhibit_full"))
+                   for m in NL.NIGHT_MODULES)
+    for name in NL.NIGHT_MODULES:     # no frozen module reaches the new code
+        src = Path(__import__(name, fromlist=["x"]).__file__).read_text("utf-8")
+        assert "investigator_filing_text" not in src and "sec_exhibit_full" not in src
     assert list(IT.TOOLS) == ["search_news", "read_filings", "query_revisions",
                               "query_options", "query_earnings", "query_prices"]
     assert FT.TOOL_NAME not in IT.TOOLS
@@ -220,6 +233,8 @@ def test_fetch_writes_rows_then_read_prefers_full_text(root, tmp_path):
     stored = SX.read_full_store(SX.default_paths(root)["store"])
     row = stored["0001-26-000001:ex99-1.htm"]
     assert row["ticker"] == "AAA" and row["n_chars"] > CUT and row["prefix_matches_stored"] is True
+    assert {"accession", "cik", "url", "filed_utc", "fetched_utc", "sha256", "n_chars",
+            "text"} <= set(row) and row["url"].startswith(BASE)
     assert row["sha256"] == hashlib.sha256(_full_text("0001-26-000001").encode()).hexdigest()
     assert stored["0003-26-000001:ex99-1.htm"]["ticker"] is None
     month_files = sorted(p.name for p in SX.default_paths(root)["store"].glob("*.jsonl"))
@@ -229,8 +244,20 @@ def test_fetch_writes_rows_then_read_prefers_full_text(root, tmp_path):
     full = [r for r in out["rows"] if r["accession"] == "0001-26-000001"][0]
     assert full["text_source"] == "full_exhibit" and full["truncated_at_source"] is False
     assert full["text_chars"] > CUT and full["outlook_offset"] >= CUT
+    assert full["prefix_matches_stored"] is True and full["collector_body_chars"] == CUT
     assert "$100 million to $110 million" in full["outlook_excerpt"]
     assert "warning" not in out
+
+
+def test_capped_full_exhibit_reports_its_real_length_and_stays_flagged(root, tmp_path, monkeypatch):
+    monkeypatch.setattr(C, "SEC_EXHIBIT_FULL_MAX_CHARS", CUT + 10)
+    receipt, _ = _run(root, tmp_path, tickers=["AAA"])
+    assert all(r["capped"] for r in receipt["rows"])
+    out = FT.read_filings_text("AAA", as_of_utc=NOW, root=root)
+    row = [r for r in out["rows"] if r["accession"] == "0001-26-000001"][0]
+    assert row["text_source"] == "full_exhibit" and row["truncated_at_source"] is True
+    assert row["text_chars"] == len(_full_text("0001-26-000001").strip()) > CUT + 10
+    assert "warning" in out
 
 
 def test_resumable_and_nothing_owed_is_zero(root, tmp_path):
@@ -242,8 +269,9 @@ def test_resumable_and_nothing_owed_is_zero(root, tmp_path):
     assert not set(calls) & set(calls2)
     third, calls3 = _run(root, tmp_path)
     assert third["status"] == SX.NOTHING_OWED and third["exit_code"] == 0 and calls3 == []
-    assert len({first["run_id"], second["run_id"], third["run_id"]}) >= 1
-    assert len(list((SX.default_paths(root)["store"] / "receipts").glob("*.json"))) >= 1
+    # three runs inside one second from one process: three ids, three receipts
+    assert len({first["run_id"], second["run_id"], third["run_id"]}) == 3
+    assert len(list((SX.default_paths(root)["store"] / "receipts").glob("*.json"))) == 3
 
 
 @pytest.mark.parametrize("status", [403, 429])
