@@ -39,6 +39,14 @@ verdicts, `docs/HANDOFF_2026-08-16_BRAIN_TO_BUILDER.md` §2).
 
 ## STATE AT 2026-11-09 (S63) — READ THIS BLOCK FIRST
 
+- **2026-11-19 (S72) amendments to this block.** (1) **Railway is off by the owner's decision** (about 11-16):
+  the hosted backend and `seal-authority` answer 404. The website lanes lived only there and are frozen at their
+  **2026-11-13** marks (OD-20). "Prod" is the PC; `verify-prod-after-deploy` now verifies a release on the PC.
+  (2) **The PC is the only runtime and it sleeps**: most skipped nights since 11-12 are power, not code (OD-23).
+  (3) **Featherless is in production** for `world_digest_extract` (`AEGIS_LLM_PURPOSE_PROVIDER`); see the provider
+  section. (4) Read the loop before proposing work: `python -m scripts.loop_map` (6 of 27 links flowing on 11-19;
+  the news-to-decision links are OFF by flag).
+
 - **There is ONE roadmap: `docs/ROADMAP.md`** (modules M0–M6 around the universe hub; amend it in
   place, never create a dated roadmap/sprint/plan file; `test_single_roadmap.py` fails if you do). Evidence:
   `docs/ASKED_VS_DELIVERED_2026-11-09.md` (every owner message Sep 4 → Nov 8, statuses
@@ -388,6 +396,11 @@ failure shows it is necessary.
 
 > **2026-11-11 amendment:** no longer the only one. Featherless (prepaid credit, per token) is a declared secondary for named bulk purposes, behind its own envelope (25 USD/month, 75 USD lifetime by default) and OFF until `AEGIS_LLM_PURPOSE_PROVIDER` names a purpose (#107). Everything below still holds for DeepSeek as the primary.
 
+> **2026-11-19 amendment:** the heading below is no longer literally true. Since CH-04b (#107) the world
+> digest's extraction routes to **Featherless** (`AEGIS_LLM_PURPOSE_PROVIDER=world_digest_extract=featherless`;
+> 4,329 calls and $1.57 in the seven days to 11-19, 99.9% valid). DeepSeek remains the default for every other
+> purpose and is the only provider under the OD-2 monthly envelope. Guards belong on BOTH paths.
+>
 > **2026-11-09 amendment:** `.env` also carries OpenAI-style names (`GTP_TOKEN`, `AAT_OPENAI`),
 > NVIDIA NIM and Featherless keys. None is wired into a production path (NVIDIA timed out 11-06;
 > Featherless spent $0.0033). DeepSeek is still the only provider the code calls, and it has
