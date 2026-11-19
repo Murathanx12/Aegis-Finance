@@ -8024,6 +8024,36 @@ UNIVERSE_GRAPH_EVENT_SEED = 20261111
 #: (5 bp + 1 bp slippage one-way = 12 bp round trip) and a wider sensitivity.
 UNIVERSE_GRAPH_EVENT_COST_RT_BPS: tuple = (12.0, 35.0)
 
+# ── CH-59: one daily refresh of the funnel candidate set and the universe graph ──
+#: `python -m scripts.universe_refresh` (`backend/services/universe_refresh.py`). Receipts:
+#: `<optimus>/universe_refresh/refresh_<utc>_<pid>.json`, never overwritten.
+UNIVERSE_REFRESH_DIRNAME = "universe_refresh"
+#: A live answer younger than this is SKIPPED_FRESH (no rebuild). Below 24 h on purpose:
+#: a daily trigger that fires a few minutes early must still rebuild yesterday's answer.
+UNIVERSE_REFRESH_FUNNEL_MAX_AGE_HOURS = 20.0
+UNIVERSE_REFRESH_GRAPH_MAX_AGE_HOURS = 20.0
+#: A stamp further in the future than this is UNKNOWN (rebuilt), never fresh.
+UNIVERSE_REFRESH_FUTURE_STAMP_TOLERANCE_S = 300
+#: Shrink guard: a new answer below this fraction of the previous size (funnel: candidates;
+#: graph: nodes and edges, each) is REFUSED and the previous answer stays in force.
+UNIVERSE_REFRESH_FUNNEL_MIN_FRACTION = 0.5
+UNIVERSE_REFRESH_GRAPH_MIN_FRACTION = 0.5
+#: Per child. The funnel took 554 s on 2026-11-16 (5,319 symbols); the graph build 4.8 s.
+UNIVERSE_REFRESH_FUNNEL_TIMEOUT_S = 2400
+UNIVERSE_REFRESH_GRAPH_TIMEOUT_S = 900
+#: The funnel's market-data hosts. Before it starts, DNS for each must resolve within the
+#: wait (the PC runs tasks seconds after boot); otherwise REFUSED(NO_NETWORK).
+UNIVERSE_REFRESH_NETWORK_HOSTS: tuple = ("finnhub.io", "query1.finance.yahoo.com")
+UNIVERSE_REFRESH_NETWORK_WAIT_S = 180
+UNIVERSE_REFRESH_NETWORK_POLL_S = 10
+#: `universe_graph build` exit codes that mean "a graph was written": 0, and 3 = written
+#: with a degraded input (today always: no event-check weights exist). 2 = refused.
+UNIVERSE_REFRESH_GRAPH_WRITTEN_RCS: tuple = (0, 3)
+#: The CLI's own exit codes. 2 is the refusal code `task_receipts.WRAPPER_REFUSED_RCS` reads.
+UNIVERSE_REFRESH_RC_REFUSED = 2
+UNIVERSE_REFRESH_RC_FAILED = 1
+HEALTH_TASK_CADENCE_H["AegisUniverseRefresh"] = 24.0
+
 # ── Licensed third-party data (Bloomberg exports, broker research) — CH-00 / CH-32 ──
 #: Converted Bloomberg / broker-research tables live OUTSIDE the public repo (licence:
 #: Bloomberg L.P., UBS). `backend.services.licensed_data` reads them from here and
