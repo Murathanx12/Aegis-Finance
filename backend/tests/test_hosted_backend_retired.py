@@ -235,13 +235,24 @@ def test_no_local_receipt_holds_the_lanes_is_source_retired(retired, tmp_path):
     assert "SOURCE_RETIRED" in rc["aggregate"]["frozen_line"]
 
 
-def test_the_lookback_limit_is_said_not_silent(retired, tmp_path):
-    _write(tmp_path, _d(9), _live_receipt())
+def test_the_lookback_limit_cannot_lose_the_figure(retired, tmp_path):
+    """Review B2 (PR #170): while no memory file holds the lanes, every receipt is read (the
+    limit used to drop them to SOURCE_RETIRED once ~20 runs had passed); once the memory holds
+    them the limit applies and the standing comes from the memory, said in `why`."""
+    origin = _write(tmp_path, _d(9), _live_receipt())
     for k in (3, 2, 1):
         _write(tmp_path, _d(k), _dead_receipt())
     tr, frozen = PA.frozen_track_record(tmp_path, retired, max_files=2)
-    assert tr is None and frozen["status"] == PA.SOURCE_RETIRED
-    assert "newest 2 local ROI receipt(s)" in frozen["why"]
+    assert frozen["status"] == PA.FROZEN and frozen["origin_receipt"] == origin.name
+    assert frozen["n_receipts_opened"] == 4
+    mem = {"schema": PA.FROZEN_SOURCES_SCHEMA, "accounts": {"down": {
+        "account": "down", "family": "website_lane", "state": PA.FROZEN, "last_mark": LAST_REAL,
+        "inception": _d(90), "nav_end": 64000.0, "roi_pct": -36.0, "vs_spy_pp": -41.0,
+        "spy_same_window_pct": 5.0, "source_receipt": origin.name, "source_sha256": "x"}}}
+    tr2, frozen2 = PA.frozen_track_record(tmp_path, retired, max_files=2, memory=mem)
+    assert tr2 is None and frozen2["status"] == PA.FROZEN and frozen2["standing_only"] is True
+    assert frozen2["n_receipts_opened"] == 2 and "newest 2 local ROI receipt(s)" in frozen2["why"]
+    assert frozen2["standing"]["down"]["vs_spy_pp"] == -41.0 and frozen2["origin_receipt"] == origin.name
 
 
 def test_book_dna_is_not_sent_to_the_retired_host(retired, tmp_path):

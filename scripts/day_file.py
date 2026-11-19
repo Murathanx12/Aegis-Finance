@@ -71,6 +71,8 @@ from backend import config as C  # noqa: E402
 
 SCHEMA = "day-file/1"
 OK, RED, CD, INFO = "OK", "RED", "CANNOT_DETERMINE", "INFO"
+#: CH-65: a status-page row the owner switched off on purpose (scripts.system_status.RETIRED_STATUS)
+RETIRED_BY_OWNER = "RETIRED_BY_OWNER"
 _SEV = {OK: 0, INFO: 0, RED: 1, CD: 2}
 SECTIONS = (
     ("red", "1. Systems headline and red rows (stale, empty, refused or missing sources)"),
@@ -269,9 +271,18 @@ def red_section(rec: Optional[dict], err: str, now: datetime, *, replay: bool) -
         lines.append(line(CD, "`schtasks /query /fo CSV /v` could not be read: which tasks ran, and their "
                               "last result, CANNOT be determined", "schtasks /query /fo CSV /v"))
     n_red = 0
+    retired: list[dict] = []
     for key, sec in (rec.get("sections") or {}).items():
         for r in sec.get("rows") or []:
             st = r.get("status")
+            if st == RETIRED_BY_OWNER:
+                # review S2 (PR #170): switched off by the owner on purpose -- its own state, not
+                # OK and not red; one line with the date and the consequence, counted in nothing
+                retired.append(line(INFO, f"[RETIRED_BY_OWNER, not counted] {key}/{r.get('name')}: "
+                                          f"{str(r.get('detail') or '')[:420]}",
+                                    str(r.get("evidence_path") or "") or "(no evidence path)",
+                                    utc(r.get("evidence_utc")), now, retired=True))
+                continue
             if st == "OK" or r.get("one_shot") or str(r.get("name", "")).startswith("rule "):
                 continue
             if replay and r.get("name") in _LIVE_ONLY_ROWS:
@@ -305,11 +316,14 @@ def red_section(rec: Optional[dict], err: str, now: datetime, *, replay: bool) -
     lines.insert(0, line(RED if down else OK, (f"DOWN rows ({len(down)}): " + ", ".join(down)) if down
                          else "no row is DOWN", STATUS_REL,
                          gen, now))
+    lines = lines + retired
     lines.insert(0, line(INFO, f"system_status: {counts.get('OK', 0)} OK, {counts.get('DEGRADED', 0)} degraded, "
                                f"{counts.get('DOWN', 0)} down, {counts.get('UNKNOWN', 0)} unknown; "
-                               f"{n_red} non-OK rows listed below",
+                               f"{n_red} non-OK rows listed below"
+                               + (f"; {len(retired)} retired by the owner (not counted, listed)" if retired else ""),
                          STATUS_REL, gen, now))
     return section("red", lines, data={"counts": counts, "down": down, "non_ok_rows": all_rows,
+                                       "retired_by_owner": [ln["text"] for ln in retired],
                                        "undetermined": rec.get("undetermined")})
 
 
@@ -794,10 +808,30 @@ def books_section(data_root: Path, now: datetime, rid: Optional[str], roi: Optio
                "inception": r.get("inception"), "last_mark": r.get("last_mark"), "mark_age_days": r.get("mark_age_days"),
                "sessions_graded": b.get("sessions_graded"), "evidence_label": ev, "beta": bt,
                "beta_adjusted_excess_pp": xt, "equity": _num(r.get("equity"))}
+        if r.get("status") == "FROZEN":          # CH-65 review S1: last known figures, labelled
+            fs = r.get("frozen_standing") if isinstance(r.get("frozen_standing"), dict) else {}
+            row["frozen"] = {"since": r.get("frozen_since") or r.get("last_mark"), "roi_pct": _num(fs.get("roi_pct")),
+                             "spy_same_window_pct": _num(fs.get("spy_same_window_pct")),
+                             "vs_spy_pp": _num(fs.get("vs_spy_pp")), "window": fs.get("window"),
+                             "reason": r.get("frozen_reason"), "origin_receipt": r.get("frozen_origin_receipt")}
         (rows_main if is_main(a, fam) else rows_other).append(row)
     rows_main.sort(key=lambda x: (x["family"] or "", x["account"]))
     rows_other.sort(key=lambda x: (x["family"] or "", -(x["vs_spy_pp"] if x["vs_spy_pp"] is not None else -1e9), x["account"]))
     for row in rows_main:
+        fz = row.get("frozen")
+        if fz:
+            # review S1 (PR #170): a lane frozen by the owner's decision is not a red that can
+            # ever clear; its last known figure is printed, labelled, and it is in no count
+            vs, roi_p = fz.get("vs_spy_pp"), fz.get("roi_pct")
+            win = fz.get("window") or []
+            fig = (f"{vs:+.2f} pp vs SPY, return {roi_p:+.2f}%" if vs is not None and roi_p is not None
+                   else f"return {roi_p:+.2f}%, vs SPY CANNOT BE DETERMINED (no SPY leg)" if roi_p is not None
+                   else "standing CANNOT BE DETERMINED (no figure in the receipt)")
+            lines.append(line(INFO, f"MAIN {row['account']} ({row['family']}): FROZEN at {fz.get('since')}: {fig}"
+                                    + (f" over {win[0]} to {win[1]}" if len(win) == 2 and win[0] else "")
+                                    + f"; last known, in no count ({str(fz.get('reason') or 'source retired')[:160]})",
+                              rr, gen, now, main=True, frozen=True))
+            continue
         if row["status"] != "LIVE" or row["roi_pct"] is None:
             lines.append(line(RED, f"MAIN {row['account']} ({row['family']}): status {row['status']}, return CANNOT "
                                    f"DETERMINE", rr, gen, now, main=True))

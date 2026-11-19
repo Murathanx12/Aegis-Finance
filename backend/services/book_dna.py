@@ -286,7 +286,7 @@ def _session_date_of_stamp(t: str) -> Optional[str]:
 
 
 def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
-                fetch_lanes: bool = True, read_only_db: bool = False) -> dict:
+                fetch_lanes: Optional[bool] = None, read_only_db: bool = False) -> dict:
     """Read every holdings / series source this module uses. Each source that
     fails is recorded in `inputs["gaps"]`, never raised. `read_only_db=True` (an
     out-of-band rebuild against the live data root) opens the paper-books database
@@ -412,7 +412,35 @@ def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
         gaps["paper_books.nav_series"] = f"{type(e).__name__}: {e}"[:200]
     # website lane positions (read-only GET of the live deploy's positions route)
     lanes = [r["account"] for r in receipt.get("rows") or [] if r.get("family") == "website_lane"]
+    inp["lane_positions"] = lane_positions(lanes, gaps, http_get=http_get, fetch_lanes=fetch_lanes)
+    inp["lane_caps"] = declared_lane_caps(lanes)
+    inp["sector_map"], inp["sector_source"] = load_sector_map()
+    return inp
+
+
+def _host_retired() -> Optional[dict]:
+    """CH-65: `config.hosted_backend_retired()` when the retired hosts include PROD's host."""
+    fn = getattr(_config, "hosted_backend_retired", None)
+    ret = fn() if callable(fn) else None
+    if ret and PROD.split("//", 1)[-1].split("/", 1)[0] in set(ret.get("hosts") or ()):
+        return ret
+    return None
+
+
+def lane_positions(lanes: list, gaps: dict, *, http_get: Optional[Callable] = None,
+                   fetch_lanes: Optional[bool] = None) -> dict:
+    """The website lanes' positions, one read-only GET per lane. Review S5 (PR #170):
+    `fetch_lanes=None` (every default caller) reads the retirement declaration HERE, so no
+    caller can send ten 20-second GETs to a retired host by forgetting a flag. True forces the
+    read only while the host is not retired; False never reads."""
     lp: dict = {}
+    ret = _host_retired()
+    if ret and lanes and fetch_lanes is not False:
+        gaps["lane_positions"] = (f"not fetched: the hosted backend is retired by the {ret.get('by') or 'owner'} "
+                                  f"since {ret.get('since_utc')} (no request made)")
+        return lp
+    if fetch_lanes is None:
+        fetch_lanes = True
     if fetch_lanes and lanes:
         get = http_get
         if get is None:
@@ -437,10 +465,7 @@ def load_inputs(receipt: dict, *, http_get: Optional[Callable] = None,
                 gaps[f"lane_positions/{lane}"] = f"{type(e).__name__}"[:120]
     elif lanes:
         gaps["lane_positions"] = "not fetched (fetch_lanes=False)"
-    inp["lane_positions"] = lp
-    inp["lane_caps"] = declared_lane_caps(lanes)
-    inp["sector_map"], inp["sector_source"] = load_sector_map()
-    return inp
+    return lp
 
 
 #: The registered lane configs config.py loads (one YAML each).
@@ -2325,7 +2350,7 @@ def write(dna: dict, out_dir: Path, run_id: str) -> Path:
 
 def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd.DataFrame] = None,
         inputs: Optional[dict] = None, http_get: Optional[Callable] = None,
-        fetch_lanes: bool = True, today: Optional[date] = None,
+        fetch_lanes: Optional[bool] = None, today: Optional[date] = None,
         read_only_db: bool = False) -> tuple[dict, Path]:
     """Load, build, write. Raises on failure: the caller turns that into a REFUSED
     summary on the ROI receipt (never a silent absence)."""

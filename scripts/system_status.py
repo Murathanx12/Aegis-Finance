@@ -336,10 +336,19 @@ def retired_rows(probe: str, name: str, sec: str, r: dict, ret: dict, now: datet
                    action="Fix: add a local critical-series check (backend.services.fred_health after a local "
                           "data_fetcher pass) that writes a dated receipt, and point this row at it.",
                    extra={**extra, "reads_through_retired_host": True})
+    hist = ""
+    if probe == "railway_fleet":
+        # review S4 (PR #170): the fleet loops stopped LONG before the backend went -- keep that fact
+        reason = str(getattr(C, "RAILWAY_FLEET_STOPPED_REASON", "") or "")
+        stopped = parse_ts(getattr(C, "RAILWAY_FLEET_STOPPED_SINCE", None))
+        hist = (f"STOPPED since {iso(stopped)[:10] if stopped else 'an undated stop'}"
+                + (f" ({reason})" if reason else "") + "; then the hosted backend was ") if (reason or stopped) else ""
+        extra = {**extra, "stopped_since": iso(stopped)[:10] if stopped else None, "stopped_reason": reason or None}
     return row(sec, name, RETIRED_STATUS,
-               f"{who}: {retired_consequence(ret)}. Not probed, no request made; set "
+               f"{hist}{who}: {retired_consequence(ret)}. Not probed, no request made; set "
                f"{getattr(C, 'HOSTED_BACKEND_ACTIVE_ENV', 'AEGIS_HOSTED_BACKEND_ACTIVE')}=1 when hosting returns",
-               evidence=evidence, stamp=since, now=now, required=False,
+               evidence=evidence + (" + RAILWAY_FLEET_STOPPED_REASON" if hist else ""), stamp=since, now=now,
+               required=False,
                extra={**extra, "retired": True, "retired_by": ret.get("by"), "retired_since": iso(since)[:10]})
 
 

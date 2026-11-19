@@ -7359,6 +7359,20 @@ HOSTED_BACKEND_ACTIVE_ENV = "AEGIS_HOSTED_BACKEND_ACTIVE"
 HOSTED_BACKEND_FROZEN_LOOKBACK_RECEIPTS = 40
 #: At most this many families are spelled out in the results voice's NOT IN THE COUNTS line.
 RESULTS_VOICE_COVERAGE_MAX_FAMILIES = 6
+#: Review of PR #170: the line also stops at this many characters (whole groups only, then
+#: "and N more group(s) (M account(s))"). Telegram rejects a message over 4096 characters and
+#: the results block carries nine other lines; 1500 keeps the line readable in one message.
+RESULTS_VOICE_COVERAGE_MAX_CHARS = 1500
+#: Review B2: the ONE derived memory file (beside the ROI receipts) that keeps a frozen or
+#: vanished account named on every later run, with its last real standing and the receipt
+#: (name + sha256) that priced it. Written by scripts.paper_accounts_roi only.
+PAPER_ACCOUNTS_FROZEN_SOURCES = "frozen_sources.json"
+#: account -> reason. An account listed here leaves the frozen / missing memory (and so the
+#: NOT IN THE COUNTS line) on the next ROI run: the explicit retirement. Empty by default.
+PAPER_ACCOUNTS_RETIRED_EXPLICITLY: dict = {}
+#: Review S4: the date the six aat-loop Railway services were stopped (RAILWAY_FLEET_STOPPED_REASON),
+#: kept beside the later backend retirement so the fleet row does not lose its own history.
+RAILWAY_FLEET_STOPPED_SINCE = "2026-09-29"
 
 
 def hosted_backend_retired() -> "dict | None":

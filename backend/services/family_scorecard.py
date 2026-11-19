@@ -849,7 +849,8 @@ def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optio
         if age["status"] == "FRESH" and any(isinstance(b.get("market_exposure"), dict) for b in dna["books"]):
             v = RV.build(roi, dna, roi_path=roi_path, dna_path=dna_path, prev=RV.previous_dna(folder, rid),
                          history=RV.label_history(folder, rid, RV.params()["promotion_hold_runs"]),
-                         false_fire=false_fire, now=now, prev_roi=RV.previous_roi(folder, rid))
+                         false_fire=false_fire, now=now, prev_roi=RV.previous_roi(folder, rid),
+                         memory=RV.frozen_memory(folder))
             v["run_id"] = rid
             v["headline_lines"] = RV.headline_lines(v)
     sc = build(roi, dna, roi_path=roi_path, dna_path=dna_path, now=now, run_id=rid, false_fire=false_fire, voice=v)

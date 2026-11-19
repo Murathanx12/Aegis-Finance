@@ -92,11 +92,20 @@ def status_text(root: Optional[Path] = None, *, now: Optional[datetime] = None, 
     c = rec.get("counts") or {}
     head = (f"Status: {c.get('OK', '?')} OK, {c.get('DEGRADED', '?')} degraded, "
             f"{c.get('DOWN', '?')} down, {c.get('UNKNOWN', '?')} unknown")
-    rows = [r for s in (rec.get("sections") or {}).values() if isinstance(s, dict)
-            for r in (s.get("rows") or []) if isinstance(r, dict)
-            and r.get("status") != "OK" and not r.get("one_shot")]
+    every = [r for s in (rec.get("sections") or {}).values() if isinstance(s, dict)
+             for r in (s.get("rows") or []) if isinstance(r, dict)]
+    # CH-65 review S2: a surface the owner retired on purpose is its own state -- not OK, not
+    # "not OK" -- named once with its date and consequence, counted in nothing
+    retired = [r for r in every if r.get("status") == "RETIRED_BY_OWNER"]
+    rows = [r for r in every if r.get("status") not in ("OK", "RETIRED_BY_OWNER") and not r.get("one_shot")]
     rows.sort(key=lambda r: (_SEV.get(str(r.get("status")), 2), str(r.get("section")), str(r.get("name"))))
     out = [head]
+    if retired:
+        rb = rec.get("retired_by_owner") if isinstance(rec.get("retired_by_owner"), dict) else {}
+        names = ", ".join(f"{r.get('section')}/{r.get('name')}" for r in retired)
+        out.append(f"RETIRED_BY_OWNER (not counted): {names}"
+                   + (f" since {rb.get('since_utc')}: {rb.get('consequence')}" if rb.get("consequence")
+                      else f": {str(retired[0].get('detail') or '')[:110]}"))
     for r in rows[:limit]:
         out.append(f"{r.get('status')} {r.get('section')}/{r.get('name')}: {str(r.get('detail') or '')[:110]}")
     if len(rows) > limit:
