@@ -55,6 +55,13 @@ FIX ROUND (review of PR #164)
 * |t| >= `FAMILY_SCORECARD_T_NAMED` families are counted and named beside the count expected
   by chance; the SE treats daily residuals as independent.
 
+CH-65 (2026-11-19)
+==================
+The header carries `results_voice.coverage_changes`' line (NOT IN THE COUNTS): the accounts and
+source families that exist and are in none of the counts -- frozen because their source was
+retired, unreadable at the broker, or absent since the previous run's ROI receipt. It is the
+results voice's function and sentence, not a second copy; nothing is printed when nothing is missing.
+
 Nothing here is a skill claim. Families are ranked after the fact.
 """
 from __future__ import annotations
@@ -570,6 +577,8 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
         "run_id": run_id or v.get("run_id"), "receipts": [roi_path, dna_path],
         "input_age": age, "params": P,
         "top_line": top, "second_line": second,
+        # CH-65: who is in none of the counts above (results_voice.coverage_changes, reused)
+        "coverage_line": (v.get("coverage") or {}).get("line"), "coverage": v.get("coverage"),
         "effective_bets": eb, "marks_age": mk,
         "counts": {"n_families": n, "n_strategy_books": h["n_strategy_accounts"],
                    "n_excluded_controls_twins": h["n_excluded_controls"],
@@ -675,7 +684,10 @@ def render_md(sc: dict) -> str:
            f"(limit {P['stale_days']:g}). Status **{sc['status']}**.", ""]
     if sc["failures"]:
         out += [f"FAILED: {x}" for x in sc["failures"]] + [""]
-    out += [sc["top_line"] + ".", "", sc["second_line"] + ".", "",
+    out += [sc["top_line"] + ".", ""]
+    if sc.get("coverage_line"):
+        out += [sc["coverage_line"] + ".", ""]
+    out += [sc["second_line"] + ".", "",
             f"Families holding more than one book: {c['n_families_with_more_than_one_book']}; the largest holds "
             f"{c['largest_family_books']}. {sc['label_false_fire'].get('line')}.", "",
             f"- A family: {sc['family_definition']}.",
@@ -837,7 +849,7 @@ def run(folder: Path, out_dir: Path, *, run_id: Optional[str] = None, now: Optio
         if age["status"] == "FRESH" and any(isinstance(b.get("market_exposure"), dict) for b in dna["books"]):
             v = RV.build(roi, dna, roi_path=roi_path, dna_path=dna_path, prev=RV.previous_dna(folder, rid),
                          history=RV.label_history(folder, rid, RV.params()["promotion_hold_runs"]),
-                         false_fire=false_fire, now=now)
+                         false_fire=false_fire, now=now, prev_roi=RV.previous_roi(folder, rid))
             v["run_id"] = rid
             v["headline_lines"] = RV.headline_lines(v)
     sc = build(roi, dna, roi_path=roi_path, dna_path=dna_path, now=now, run_id=rid, false_fire=false_fire, voice=v)

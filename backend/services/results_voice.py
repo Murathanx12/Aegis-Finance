@@ -862,6 +862,191 @@ def _bax_short(x: dict) -> str:
     return _fmt_exp(x.get("market_exposure") or {}, "beta_adjusted_excess_pp", " pp", short=True)
 
 
+# ───────────────────────────────────────────────────────────── coverage (CH-65)
+
+COVERAGE_PREFIX = "NOT IN THE COUNTS:"
+_COV_KIND_TEXT = {"FROZEN": "FROZEN", "SOURCE_RETIRED": "SOURCE_RETIRED, not priced", "BROKER_ERROR": "unreadable",
+                  "ABSENT": "absent from this receipt", "LEFT_THE_COUNTS": "no longer counted"}
+
+
+def previous_roi(folder: Path, run_id: str) -> Optional[dict]:
+    """The ROI receipt of the run before `run_id` (largest run id < `run_id` in the file NAMES,
+    never mtime). None when there is no earlier receipt; {"error": ...} when it cannot be read
+    or holds no rows -- the caller then says CANNOT DETERMINE, never nothing."""
+    ids = sorted(r for r in run_ids(folder, "roi") if r < str(run_id))
+    if not ids:
+        return None
+    rid = ids[-1]
+    p = Path(folder) / f"roi_{rid}.json"
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return {"run_id": rid, "path": rel(p), "error": type(e).__name__}
+    if not isinstance(d, dict) or not isinstance(d.get("rows"), list) or not d["rows"]:
+        return {"run_id": rid, "path": rel(p), "error": "no rows"}
+    return {"run_id": rid, "path": rel(p), "roi": d}
+
+
+_UPPER_SNAKE_RE = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9*]+)+")
+
+
+def _plain_reason(why: Any) -> str:
+    """A reason as one plain sentence: whitespace collapsed and UPPER_SNAKE codes spelled in lower
+    case words (HTTP_401 -> http 401). The public sanitiser replaces any UPPER_SNAKE token with a
+    credential-like part, so a raw code would read differently on the public page than here."""
+    text = " ".join(str(why).split())
+    return _UPPER_SNAKE_RE.sub(lambda m: m.group(0).replace("_", " ").replace("*", "").lower(), text)[:260]
+
+
+def _counted_row(r: dict) -> bool:
+    """The headline's own admission rule (before the control/twin exclusion)."""
+    return r.get("status") == "LIVE" and r.get("vs_spy_pp") is not None
+
+
+def coverage_changes(roi: dict, prev: Optional[dict], *, worst_counted_pp: Optional[float] = None) -> dict:
+    """CH-65: which accounts are NOT in this run's counts although they exist -- derived, never
+    a list of names. Two readings, joined:
+
+    * from THIS receipt alone: a row that is FROZEN or SOURCE_RETIRED (its source was retired on
+      purpose) or carries a broker error / CREDENTIAL_INVALID;
+    * against the PREVIOUS run's ROI receipt (`previous_roi`): an account that had a row there
+      and has none here (ABSENT), or was counted there and is not counted here
+      (LEFT_THE_COUNTS, with the status that removed it).
+
+    Each account carries its reason and its last known standing vs SPY (its frozen standing, or
+    the previous receipt's figure). `line` is the headline sentence, or None when nothing is
+    missing; when the previous receipt cannot be read the line says CANNOT DETERMINE."""
+    rows = [r for r in roi.get("rows") or [] if isinstance(r, dict)]
+    now = {str(r.get("account")): r for r in rows}
+    items: dict[str, dict] = {}
+    fam_retired: dict[str, str] = {}
+
+    def add(a: str, family: Any, kind: str, why: str, mark: Any, excess: Any) -> None:
+        items[a] = {"account": a, "family": str(family), "kind": kind, "why": _plain_reason(why),
+                    "last_mark": str(mark)[:10] if mark else None, "last_known_vs_spy_pp": _fnum(excess)}
+
+    for a, r in now.items():
+        st = r.get("status")
+        if st == "FROZEN" or r.get("frozen"):
+            fs = r.get("frozen_standing") if isinstance(r.get("frozen_standing"), dict) else {}
+            add(a, r.get("family"), "FROZEN", f"source retired: {r.get('frozen_reason') or r.get('note')}",
+                r.get("frozen_since") or r.get("last_mark"), fs.get("vs_spy_pp"))
+        elif st == "SOURCE_RETIRED":
+            fam_retired[str(r.get("family"))] = f"source retired: {r.get('retired_reason') or r.get('note')}"
+        elif r.get("broker_error") or st == "CREDENTIAL_INVALID":
+            add(a, r.get("family"), "BROKER_ERROR", f"broker error: {r.get('broker_error') or r.get('note') or st}",
+                r.get("last_mark"), None)
+    out: dict = {"status": "OK", "why": None, "compared_with": None}
+    if prev is None:
+        out.update(status="NO_EARLIER_RUN", why="no earlier run to compare")
+    elif prev.get("error"):
+        out.update(status=_dna.CANNOT_DETERMINE,
+                   why=f"the earlier receipt {prev.get('path')} is unreadable ({prev['error']})",
+                   compared_with={"run_id": prev.get("run_id"), "path": prev.get("path")})
+    else:
+        out["compared_with"] = {"run_id": prev["run_id"], "path": prev["path"],
+                                "generated_utc": prev["roi"].get("generated_utc")}
+        unpriced_note: dict[str, str] = {}
+        for r in rows:                              # why a whole family has no row of its own
+            if r.get("status") == "UNPRICED" and r.get("note"):
+                unpriced_note.setdefault(str(r.get("family")), str(r["note"]))
+        broker_read = roi.get("broker_read") if isinstance(roi.get("broker_read"), dict) else {}
+        for pr in prev["roi"]["rows"]:
+            if not isinstance(pr, dict) or pr.get("status") == "SOURCE_RETIRED":
+                continue                            # a family placeholder is not an account
+            a, fam = str(pr.get("account")), str(pr.get("family"))
+            pfs = pr.get("frozen_standing") if isinstance(pr.get("frozen_standing"), dict) else {}
+            was = pr.get("vs_spy_pp") if pr.get("vs_spy_pp") is not None else pfs.get("vs_spy_pp")
+            if a in items:
+                if items[a]["last_known_vs_spy_pp"] is None:
+                    items[a]["last_known_vs_spy_pp"] = _fnum(was)
+                    items[a]["last_mark"] = items[a]["last_mark"] or (str(pr.get("last_mark"))[:10]
+                                                                    if pr.get("last_mark") else None)
+                continue
+            r = now.get(a)
+            if r is None:
+                if fam in fam_retired:
+                    why = fam_retired[fam]
+                elif fam in unpriced_note and not any(str(x.get("family")) == fam and _counted_row(x) for x in rows):
+                    why = f"source unreadable: {unpriced_note[fam]}"
+                elif broker_read.get("performed") is False and (pr.get("broker_now") or pr.get("broker_error")):
+                    why = "other: the broker legs were not read in this run"
+                else:
+                    why = "other: no row in this receipt"
+                add(a, fam, "ABSENT", why, pr.get("last_mark"), was)
+            elif _counted_row(pr) and not _counted_row(r):
+                add(a, fam, "LEFT_THE_COUNTS",
+                    f"other: status {r.get('status')}" + (f" ({str(r.get('note'))[:120]})" if r.get("note") else ""),
+                    pr.get("last_mark"), was)
+    groups: dict[tuple, list[dict]] = {}
+    for it in items.values():
+        groups.setdefault((it["family"], it["kind"], it["why"]), []).append(it)
+    by_family = []
+    for (fam, kind, why), its in sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0])):
+        known = sorted((x for x in its if x["last_known_vs_spy_pp"] is not None),
+                       key=lambda x: (x["last_known_vs_spy_pp"], x["account"]))
+        marks = sorted({x["last_mark"] for x in its if x["last_mark"]})
+        g = {"family": fam, "kind": kind, "why": why, "n": len(its),
+             "accounts": sorted(x["account"] for x in its), "last_marks": marks,
+             "n_with_a_last_known_standing": len(known),
+             "n_ahead_at_last_known": sum(1 for x in known if x["last_known_vs_spy_pp"] > 0),
+             "worst": ({"account": known[0]["account"], "vs_spy_pp": known[0]["last_known_vs_spy_pp"]}
+                       if known else None)}
+        g["worse_than_the_worst_counted"] = bool(known and worst_counted_pp is not None
+                                                 and known[0]["last_known_vs_spy_pp"] < float(worst_counted_pp))
+        by_family.append(g)
+    for fam, why in sorted(fam_retired.items()):
+        if not any(g["family"] == fam for g in by_family):
+            by_family.append({"family": fam, "kind": "SOURCE_RETIRED", "why": why, "n": 0, "accounts": [],
+                              "last_marks": [], "n_with_a_last_known_standing": 0, "n_ahead_at_last_known": 0,
+                              "worst": None, "worse_than_the_worst_counted": False})
+    out.update(items=sorted(items.values(), key=lambda x: (x["family"], x["account"])), by_family=by_family,
+               n_accounts=len(items), n_families=len({g["family"] for g in by_family}))
+    out["line"] = _coverage_line(out)
+    return out
+
+
+def _coverage_group_text(g: dict) -> str:
+    names = g["accounts"]
+    who = (f"{g['n']} {g['family']} account(s)" if g["n"] > 3 else
+           f"{', '.join(short_name(a, 40) for a in names)} ({g['family']})" if names else f"the {g['family']} family")
+    at = f" at the {g['last_marks'][-1]} marks" if g["kind"] == "FROZEN" and g["last_marks"] else ""
+    t = f"{who} {_COV_KIND_TEXT.get(g['kind'], g['kind'])}{at} ({g['why']})"
+    w = g.get("worst")
+    if w:
+        mark = f" at the {g['last_marks'][-1]} marks" if g["last_marks"] and g["kind"] != "FROZEN" else ""
+        worse = ", worse than the worst book counted above" if g["worse_than_the_worst_counted"] else ""
+        if g["n_with_a_last_known_standing"] > 1:
+            t += (f"; {short_name(w['account'], 40)} {_signed(w['vs_spy_pp'])} pp vs SPY was the worst of them{worse}, "
+                  f"{g['n_ahead_at_last_known']} of {g['n_with_a_last_known_standing']} were ahead of SPY{mark}")
+        else:
+            t += f"; last known {_signed(w['vs_spy_pp'])} pp vs SPY{mark}{worse}"
+    return t
+
+
+def _coverage_line(cov: dict) -> Optional[str]:
+    """The headline sentence. None only when the comparison ran (or there was no earlier run)
+    AND nothing is frozen, retired, unreadable, absent or dropped."""
+    gs = cov.get("by_family") or []
+    cd = cov.get("status") == _dna.CANNOT_DETERMINE
+    if not gs and not cd:
+        return None
+    k = max(1, int(_cfg("RESULTS_VOICE_COVERAGE_MAX_FAMILIES", 6)))
+    body = " | ".join(_coverage_group_text(g) for g in gs[:k])
+    if len(gs) > k:
+        body += f" | and {len(gs) - k} more group(s) in the `coverage` block"
+    cw = cov.get("compared_with") or {}
+    if cd:
+        head = (f"{COVERAGE_PREFIX} {_dna.CANNOT_DETERMINE} which accounts left the counts since the previous run "
+                f"({cov.get('why')})")
+        return head + (f"; from this receipt alone: {body}" if body else
+                       "; this receipt alone shows nothing frozen, retired or unreadable")
+    tail = (f"compared with run {cw['run_id']}" if cw.get("run_id")
+            else f"{cov.get('why')}, so only this receipt was read")
+    return (f"{COVERAGE_PREFIX} {cov['n_accounts']} account(s) in {cov['n_families']} family(ies) exist and are in "
+            f"none of the counts above: {body}; {tail}")
+
+
 # ───────────────────────────────────────────────────────────── build
 
 def _r(x: Any, nd: int = 3) -> Optional[float]:
@@ -873,8 +1058,10 @@ def _r(x: Any, nd: int = 3) -> Optional[float]:
 
 def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: str,
           prev: Optional[dict] = None, history: Optional[dict] = None,
-          false_fire: Optional[dict] = None, now: Optional[datetime] = None) -> dict:
-    """`prev`: `previous_dna(...)` -- the previous run's book_dna receipt, against which a label
+          false_fire: Optional[dict] = None, now: Optional[datetime] = None,
+          prev_roi: Optional[dict] = None) -> dict:
+    """`prev_roi`: `previous_roi(...)` -- the previous run's ROI receipt, against which accounts that
+    left the counts are named (CH-65, the NOT IN THE COUNTS line). `prev`: `previous_dna(...)` -- the previous run's book_dna receipt, against which a label
     FELL (LABELS LOWERED). `history`: `label_history(...)` -- the earlier DAILY runs a rise must
     hold through before CLAIMS PROMOTED names it. None = no earlier run. `false_fire`: a
     measurement in the shape of `config.LABEL_FALSE_FIRE_MEASURED` (default: that block)."""
@@ -1051,6 +1238,10 @@ def build(roi: Optional[dict], dna: Optional[dict], *, roi_path: str, dna_path: 
                                     f"validator on data the idea never saw"),
                    "receipts": receipts},
         "excluded_controls": excluded,
+        # CH-65: accounts that exist and are in none of the counts (frozen, source retired, broker
+        # error, absent since the previous run) -- derived from the receipts, never a name list
+        "coverage": coverage_changes(roi, prev_roi,
+                                     worst_counted_pp=losers[0]["vs_spy_pp"] if losers else None),
     }
     voice["headline_lines"] = headline_lines(voice)
     return voice
@@ -1119,6 +1310,10 @@ def headline_lines(v: dict) -> list[str]:
                      f"{w['sessions_graded']} s; {w['exposure_line']}).{_flags_tail(w)}")
     else:
         lines.append(f"BEHIND: {h['n_behind']} of {h['n_strategy_accounts']}.")
+    # CH-65: who is NOT in the counts above, straight after the BEHIND line it qualifies
+    cvl = (v.get("coverage") or {}).get("line")
+    if cvl:
+        lines.append(cvl + ".")
     # CH-55 (2026-11-16): the beta-adjusted count and the labels' false-fire rates, before the
     # distinct-bets line and the claim boundary (which stay the last two lines)
     bal = (v.get("beta_adjusted_ranking") or {}).get("line")
@@ -1249,6 +1444,7 @@ def render_md(v: dict) -> str:
     out += _exp_whys(v["losers"])
     out += render_ranking_md(v, rc)
     out += render_flags_md(v, rc)
+    out += render_coverage_md(v, rc)
     c = v["clusters"]
     out += ["", f"## Clusters: accounts that are one bet — receipts: {rc}", "",
             f"- exact same ticker set: {c['exact_same_names'] or 'none'}",
@@ -1275,6 +1471,25 @@ def render_md(v: dict) -> str:
             f"{(v.get('label_false_fire') or {}).get('rule_check')}).",
             f"- {cl['ceiling_note']}.", ""]
     return "\n".join(out)
+
+
+def render_coverage_md(v: dict, rc: str) -> list[str]:
+    """CH-65: the accounts that exist and are in none of the counts, one row each."""
+    cov = v.get("coverage") or {}
+    if not cov.get("items") and cov.get("status") != _dna.CANNOT_DETERMINE:
+        return []
+    cw = cov.get("compared_with") or {}
+    src = f"run {cw.get('run_id')}, `{cw.get('path')}`" if cw else str(cov.get("why"))
+    out = ["", f"## Not in the counts — receipts: {rc}", "",
+           f"Derived from this receipt and from the previous run's ROI receipt ({src}). Comparison status: "
+           f"{cov.get('status')}{(' (' + str(cov.get('why')) + ')') if cov.get('why') else ''}. "
+           "The last known standing is each account's own figure at its last mark; it is not a current number.", "",
+           "| account | family | state | reason | last mark | last known vs SPY |", "|---|---|---|---|---|---:|"]
+    for x in cov.get("items") or []:
+        ex = x.get("last_known_vs_spy_pp")
+        out.append(f"| {x['account']} | {x['family']} | {x['kind']} | {x['why']} | {x.get('last_mark') or 'n/a'} | "
+                   f"{(_signed(ex) + ' pp') if ex is not None else 'n/a'} |")
+    return out
 
 
 def render_flags_md(v: dict, rc: str) -> list[str]:
@@ -1336,7 +1551,8 @@ def run(run_id: Optional[str] = None, folder: Path = PA_DIR, *, write_files: boo
         rid = run_id or newest_shared_run_id(folder)
         roi, dna, rp, dp = load_pair(rid, folder)
     v = build(roi, dna, roi_path=rel(rp), dna_path=rel(dp), prev=previous_dna(folder, rid),
-              history=label_history(folder, rid, params()["promotion_hold_runs"]), false_fire=false_fire)
+              history=label_history(folder, rid, params()["promotion_hold_runs"]), false_fire=false_fire,
+              prev_roi=previous_roi(folder, rid))
     v["run_id"] = rid
     v["headline_lines"] = headline_lines(v)
     if write_files:
@@ -1429,7 +1645,7 @@ def newest_voice_path(folder: Path = PA_DIR, suffix: str = ".md") -> Optional[Pa
     return (Path(folder) / f"results_voice_{max(ids)}{suffix}") if ids else None
 
 
-HEADLINE_PREFIXES = ("RESULTS ", "LEADER", "NEXT:", "WHAT RAISES IT:", "BEHIND:", "BETA-ADJUSTED:",
+HEADLINE_PREFIXES = ("RESULTS ", "LEADER", "NEXT:", "WHAT RAISES IT:", "BEHIND:", COVERAGE_PREFIX, "BETA-ADJUSTED:",
                      "LABEL FALSE-FIRE RATES:", "Distinct bets ahead of SPY:",
                      "LABELS LOWERED:", "LABELS RISING, NOT YET HELD", "CLAIMS PROMOTED:")
 
@@ -1450,6 +1666,7 @@ def headline_block(folder: Path = PA_DIR, n: Optional[int] = None) -> tuple[Opti
 
 
 __all__ = ["SCHEMA", "ResultsVoiceRefused", "build", "cluster_bets", "control_reason", "headline_block",
+           "COVERAGE_PREFIX", "coverage_changes", "previous_roi",
            "label_false_fire", "label_rate", "label_tag", "false_fire_from_table2", "beta_adjusted_line",
            "headline_lines", "load_pair", "mechanism", "newest_shared_run_id", "newest_voice_path", "params", "public_view",
            "raise_path", "render_md", "run", "safe_run", "write"]

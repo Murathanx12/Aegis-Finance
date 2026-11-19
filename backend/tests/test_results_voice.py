@@ -160,11 +160,14 @@ def test_claims_line_is_last_and_says_none(voice):
     assert voice["claims"]["line"] == "CLAIMS PROMOTED: none (no earlier run to compare)"
     lines = voice["headline_lines"]
     # CH-55 (2026-11-16): the six of 2026-10-07 + BETA-ADJUSTED + LABEL FALSE-FIRE RATES + Distinct bets
-    assert len(lines) == 9
+    # CH-65 (2026-11-19): + NOT IN THE COUNTS straight after BEHIND -- the fixture's hack3 is
+    # CREDENTIAL_INVALID, an account that exists and is in no count
+    assert len(lines) == 10
     assert lines[0].startswith("RESULTS ") and lines[1].startswith("LEADER revision_flow_v0")
     assert lines[3].startswith("WHAT RAISES IT:") and lines[-1].startswith("CLAIMS PROMOTED: none")
-    assert lines[4].startswith("BEHIND:") and lines[5].startswith("BETA-ADJUSTED:")
-    assert lines[6].startswith("LABEL FALSE-FIRE RATES:")
+    assert lines[4].startswith("BEHIND:") and lines[6].startswith("BETA-ADJUSTED:")
+    assert lines[5].startswith("NOT IN THE COUNTS: 1 account(s) in 1 family(ies)") and "hack3" in lines[5]
+    assert lines[7].startswith("LABEL FALSE-FIRE RATES:")
     assert lines[-2].startswith("Distinct bets ahead of SPY: ")
     assert not any("proof" in ln.lower() for ln in lines)
 
@@ -201,9 +204,10 @@ def test_headline_block_reads_the_md(folder):
     RV.run(RID, folder)
     p, lines = RV.headline_block(folder)
     assert p.name == f"results_voice_{RID}.md"
-    assert len(lines) == 9 and lines[-1].startswith("CLAIMS PROMOTED:")
+    assert len(lines) == 10 and lines[-1].startswith("CLAIMS PROMOTED:")
     assert lines[-2].startswith("Distinct bets ahead of SPY:")
-    assert lines[5].startswith("BETA-ADJUSTED:") and lines[6].startswith("LABEL FALSE-FIRE RATES:")
+    assert lines[5].startswith(RV.COVERAGE_PREFIX)          # CH-65: read back from the .md like the rest
+    assert lines[6].startswith("BETA-ADJUSTED:") and lines[7].startswith("LABEL FALSE-FIRE RATES:")
 
 
 def test_no_equity_dollars_in_the_voice(voice):
@@ -262,10 +266,10 @@ def test_a_receipt_older_than_the_fields_says_cannot_determine_with_why(voice):
         assert x["exposure_line"].startswith("beta CANNOT DETERMINE, up-capture CANNOT DETERMINE, "
                                              "down-capture CANNOT DETERMINE, beta-adjusted excess CANNOT DETERMINE")
     lines = voice["headline_lines"]
-    assert len(lines) == 9
+    assert len(lines) == 10
     assert "beta-adjusted excess CANNOT DETERMINE" in lines[1] and "beta-adjusted excess" in lines[4]
     # CH-55: the beta-adjusted line says CANNOT DETERMINE for all of them -- never "0 ahead"
-    assert lines[5].startswith("BETA-ADJUSTED: CANNOT DETERMINE for all 13 strategy accounts")
+    assert lines[6].startswith("BETA-ADJUSTED: CANNOT DETERMINE for all 13 strategy accounts")
     rk = voice["beta_adjusted_ranking"]
     assert rk["n_determined"] == 0 and rk["n_cannot_determine"] == voice["headline"]["n_strategy_accounts"]
 
