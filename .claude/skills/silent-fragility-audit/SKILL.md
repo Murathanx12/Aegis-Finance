@@ -26,10 +26,16 @@ Run these against the changed code (grep + read, then live where possible):
    read back as `not_collected`/error — never as a real 0 (the false-zero
    lesson: failed insider runs wrote zeros AND advanced the throttle).
 3. **Status row + canary.** Any subsystem that can go dark needs a persisted
-   status row and a `/api/health/full` canary (the crash-overlay fix
+   status row and a canary on the health surface (the crash-overlay fix
    template: "persist a status + health canary," not just fix the call).
-   If your new subsystem died tonight, would anything on the health surface
-   say so?
+   The health surface that is read today is the PC's status page:
+   `backend/services/system_health.py` probes collected by
+   `python -m scripts.system_status` into `system_status/status.json`, with an
+   age limit per row in `config.SYSTEM_STATUS_LIMITS_H` and a cadence per task
+   in `config.HEALTH_TASK_CADENCE_H`. `/api/health/full` still exists in the
+   code but nobody reads it while the hosted backend is off (since 2026-11).
+   If your new subsystem died tonight, would a row on that page go red? A row
+   that prints a date must compare it to a limit.
 4. **Rate limits + volume.** Every SEC/EDGAR call goes through the ONE shared
    rate limiter (`_sec_get` / `edgar_events._RATE_LIMITER`) with the declared
    UA. Estimate prod request volume — dev's handful of calls never trips what

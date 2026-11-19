@@ -53,8 +53,9 @@ only adoptions is lying to itself; rejected trials are published
    python scripts/lint_prereg.py TRIALS/PREREG_<NAME>.md
    ```
 
-   It scores the draft against all 295 recorded experiments — 148 graveyard
-   rows, 89 registry trials, ~60 preregs — and returns one of four verdicts.
+   It scores the draft against every recorded experiment in that repo (295 when
+   this was written: 148 graveyard rows, 89 registry trials, ~60 preregs) and
+   returns one of four verdicts.
    Exit code 1 on BLOCKED.
 
    | verdict | what it means | what to do |
@@ -87,9 +88,21 @@ only adoptions is lying to itself; rejected trials are published
 1. Write the canonical doc: `docs/TRIALS/TRIAL-<NAME>-<slug>.md` following
    TRIAL-001's structure (including the "What this rule may NOT do" section).
 2. Register the row: the trial enters `rule_experiments` with the decision
-   rule embedded in `notes` (pattern: `ensure_lppls_trial` — idempotent,
-   registers on first run). Verify `GET /api/pi/registry` shows it and
-   `cumulative_trials` incremented.
+   rule embedded in `notes` (patterns: `fragility.ensure_lppls_trial`,
+   `trial_registry.ensure_trial_registered` — idempotent, registers on first
+   run). The `ensure_*` hooks are called from the backend's startup
+   (`backend/main.py`).
+   **Verifying the row (2026-11-19).** The hosted backend is off by owner
+   decision, so `GET /api/pi/registry` answers 404 and `cumulative_trials`
+   cannot be read there. The PC has its own registry table in the live
+   database (`backend/data/aegis_pi.db` under the runtime checkout); read it
+   read-only (`sqlite3.connect("file:<path>?mode=ro", uri=True)`: count and
+   newest `created_at` of `rule_experiments`, before and after). NOT
+   established, so do not assume either: that a backend process on the PC
+   runs the hook for a new trial (the newest local row is dated 2026-10-16),
+   and how the PC table and the hosted table will be reconciled when hosting
+   returns. Say in the trial doc which database holds the row, or that none
+   does yet. The git commit of the doc is the tamper evidence either way.
 3. Commit doc + code BEFORE the first forward observation. If data already
    accrued, the inception moves forward to now — prior data is excluded, never
    grandfathered.
