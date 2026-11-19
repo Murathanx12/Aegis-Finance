@@ -335,6 +335,18 @@ def test_write_new_json_takes_a_new_name_when_the_stem_exists(tmp_path):
     assert json.loads(b.read_text(encoding="utf-8")) == {"n": 2} and not list(tmp_path.glob("*.tmp"))
 
 
+def test_a_second_archive_of_the_same_day_keeps_the_first(stale):
+    a = stale.run(only=("funnel",))["stages"]["funnel"]
+    first = Path(a["archive"]).read_bytes()
+    later = _iso(UR.parse_stamp(a["stamp_after"]) + timedelta(seconds=2))
+    hist = Path(a["archive"]).parent
+    second = UR.archive_path(hist, later)
+    assert second != Path(a["archive"]) and second.name.startswith(Path(a["archive"]).stem + "_")
+    assert sorted([second.name, Path(a["archive"]).name])[-1] == second.name      # readers sort by name
+    assert UR.archive_path(hist, "2001-01-01T00:00:00+00:00").name == "funnel_2001-01-01.json"
+    assert Path(a["archive"]).read_bytes() == first
+
+
 @pytest.mark.parametrize("kinds,rc", [
     (("REFRESHED", "REFRESHED"), 0), (("SKIPPED_FRESH", "REFRESHED"), 0), (("SKIPPED_FRESH", "SKIPPED_FRESH"), 0),
     (("REFUSED", "REFRESHED"), 2), (("REFRESHED", "UNMOVED"), 1), (("FAILED", "SKIPPED_FRESH"), 1),

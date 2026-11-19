@@ -338,6 +338,18 @@ def _child_failure(res: ChildResult, ok_rcs: Sequence[int], log_path: Path, time
     return _status(FAILED, f"CHILD_RC_{res.rc}", _log_tail(log_path, "Error"))
 
 
+def archive_path(history_dir: Path, stamp: str) -> Path:
+    """`funnel_<date>.json`, the builder's own archive name; when that day already holds an
+    archive, `funnel_<date>_<HHMMSS>Z.json`, so an earlier snapshot of the same day is kept
+    (decision contracts cite a snapshot by its `generated_at`; readers glob `funnel_*.json`
+    and sort by name, and the suffixed name sorts after the plain one)."""
+    day = Path(history_dir) / f"funnel_{stamp[:10]}.json"
+    t = parse_stamp(stamp)
+    if not day.exists() or t is None:
+        return day
+    return Path(history_dir) / f"funnel_{stamp[:10]}_{t.strftime('%H%M%S')}Z.json"
+
+
 # ───────────────────────────────── the two stages ────────────────────────────
 
 Runner = Callable[[Sequence[str], Path, float], ChildResult]
@@ -395,7 +407,7 @@ def refresh_funnel(*, live_path: Path, work_dir: Path, log_path: Path, now: date
     blob = staged.read_bytes()
     try:
         replace_verified(blob, live_path, verify, run_id)
-        archive = live_path.parent / "funnel_history" / f"funnel_{str(new['stamp'])[:10]}.json"
+        archive = archive_path(live_path.parent / "funnel_history", str(new["stamp"]))
         replace_verified(blob, archive, verify, run_id)
         st["archive"] = str(archive)
     except (OSError, ValueError) as exc:
