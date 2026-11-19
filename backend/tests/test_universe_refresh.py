@@ -43,19 +43,64 @@ if mode == "noop":
 if mode == "sleep":
     time.sleep(60)
 if kind == "funnel":
+    # the shape `opportunity_funnel.run` writes (a healthy build carries only stage1_truncated)
+    d = {"generated_at": stamp, "universe": {"screened": 5319},
+         "stages": {"stage1_eligible": 1500, "stage2_shortlist": 250, "stage3_enriched": 40,
+                    "stage4_candidates": n},
+         "failures": {"stage1_truncated": "2793 names passed eligibility; kept 1500"},
+         "candidates": [{"ticker": f"T{i}", "price": 10.0 + i, "score": 0.5, "quality": 0.3, "stage": 4}
+                        for i in range(n)]}
+    if mode == "degraded":      # 26 of 27 price batches failed; 25 names still come out
+        d["stages"]["stage1_eligible"] = 31
+        d["failures"].update(stage1_batches="26 batch(es) failed",
+                             stage3="38 of 40 enrichment call(s) failed (http 429 x38)")
+    elif mode == "nulls":
+        d["candidates"] = [None] * n
+    elif mode == "nullfields":
+        for c in d["candidates"]:
+            c["price"] = None
+    elif mode == "smalluniverse":
+        d["universe"]["screened"] = 900
+    elif mode == "mildloss":
+        d["failures"]["stage3"] = "3 of 42 enrichment call(s) failed (finnhub had no profitability fields x3)"
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps({"generated_at": stamp, "stages": {"stage4_candidates": n}, "failures": {},
-                               "candidates": [{"ticker": f"T{i}"} for i in range(n)]}), encoding="utf-8")
+    out.write_text(json.dumps(d), encoding="utf-8")
     sys.exit(0)
 build = f"ug_{time.time_ns()}"
+if mode == "brokenlive":        # latest.json flipped to a build folder that holds nothing
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "latest.json").write_text(json.dumps({"build_id": build, "built_utc": stamp}), encoding="utf-8")
+    sys.exit(3)
+edges = {"co_coverage": n * 2, "co_mention": 3, "customer": 1, "return_response": max(0, n * 7 - 7),
+         "sector_member": n, "supplier": 1, "theme_member": 2}           # sums to 10 n
+inputs = [{"input": k, "status": "OK"} for k in ("sector_map", "theme_lists", "co_coverage", "co_mention")]
+inputs.append({"input": "event_response weights", "status": "MISSING"})
+rc = 3
+if mode == "lostinputs":        # the co-coverage input went missing; total edges barely move
+    inputs[2]["status"] = "MISSING"
+    edges["return_response"] += edges.pop("co_coverage")
+elif mode == "kindlost":        # no input reports degraded, but one edge kind is gone
+    edges["return_response"] += edges.pop("co_coverage")
+elif mode == "noinputs":
+    inputs = None
+elif mode == "rc3clean":        # exit 3 although nothing is degraded
+    inputs[-1]["status"] = "OK"
+degraded = [r["input"] for r in inputs or [] if r["status"] not in ("OK", "NOT_USED")]
+if mode == "noinputs":
+    degraded = ["event_response weights"]
 (out / build).mkdir(parents=True)
-(out / build / "receipt.json").write_text(json.dumps(
-    {"build_id": build, "built_utc": stamp, "as_of": stamp[:10], "status": "DEGRADED",
-     "degraded_inputs": ["event_response weights"], "panel_last_session": stamp[:10],
-     "counts": {"n_nodes": n, "n_edges": n * 10}}), encoding="utf-8")
+for f in ("nodes.parquet", "edges.parquet"):
+    (out / build / f).write_bytes(b"PAR1")
+rec = {"build_id": build, "built_utc": stamp, "as_of": stamp[:10],
+       "status": "DEGRADED" if degraded else "OK", "degraded_inputs": degraded,
+       "panel_last_session": stamp[:10],
+       "counts": {"n_nodes": n, "n_edges": sum(edges.values()), "edges": edges}}
+if inputs is not None:
+    rec["inputs"] = inputs
+(out / build / "receipt.json").write_text(json.dumps(rec), encoding="utf-8")
 (out / "latest.json").write_text(json.dumps({"build_id": build, "as_of": stamp[:10], "built_utc": stamp}),
                                  encoding="utf-8")
-sys.exit(3)
+sys.exit(rc)
 '''
 
 
@@ -65,6 +110,23 @@ def _iso(t: datetime) -> str:
 
 def _ago(hours: float) -> str:
     return _iso(datetime.now(timezone.utc) - timedelta(hours=hours))
+
+
+def live_funnel_payload(stamp, n: int = 25, **over) -> dict:
+    """A live funnel in the shape the builder writes (the 2026-11-16 file's fields)."""
+    d = {"generated_at": stamp, "universe": {"screened": 5319},
+         "stages": {"stage1_eligible": 1500, "stage2_shortlist": 250, "stage3_enriched": 40,
+                    "stage4_candidates": n},
+         "failures": {"stage1_truncated": "2793 names passed eligibility; kept 1500"},
+         "candidates": [{"ticker": f"O{i}", "price": 20.0 + i, "score": 0.4, "quality": 0.2, "stage": 4}
+                        for i in range(n)]}
+    d.update(over)
+    return d
+
+
+def graph_edges(n: int) -> dict:
+    return {"co_coverage": n * 2, "co_mention": 3, "customer": 1, "return_response": max(0, n * 7 - 7),
+            "sector_member": n, "supplier": 1, "theme_member": 2}
 
 
 class World:
@@ -80,24 +142,35 @@ class World:
         self.fake.parent.mkdir(parents=True)
         self.fake.write_text(FAKE, encoding="utf-8")
         self.root.mkdir(parents=True)
-        self.funnel.write_text(json.dumps({"generated_at": funnel_stamp,
-                                           "candidates": [{"ticker": f"O{i}"} for i in range(n_cands)]}),
-                               encoding="utf-8")
-        build = self.graph / "ug_old"
+        self.funnel.write_text(json.dumps(live_funnel_payload(funnel_stamp, n_cands)), encoding="utf-8")
+        self.write_graph("ug_old", graph_stamp, n_nodes)
+
+    def write_graph(self, build_id: str, stamp, n_nodes: int = 500, receipt: bool = True) -> None:
+        build = self.graph / build_id
         build.mkdir(parents=True)
-        (build / "receipt.json").write_text(json.dumps(
-            {"build_id": "ug_old", "built_utc": graph_stamp, "counts": {"n_nodes": n_nodes, "n_edges": n_nodes * 10}}),
-            encoding="utf-8")
-        (self.graph / "latest.json").write_text(json.dumps({"build_id": "ug_old", "built_utc": graph_stamp}),
+        for f in ("nodes.parquet", "edges.parquet"):
+            (build / f).write_bytes(b"PAR1")
+        if receipt:
+            (build / "receipt.json").write_text(json.dumps(
+                {"build_id": build_id, "built_utc": stamp, "status": "DEGRADED",
+                 "degraded_inputs": ["event_response weights"],
+                 "inputs": [{"input": "sector_map", "status": "OK"},
+                            {"input": "event_response weights", "status": "MISSING"}],
+                 "counts": {"n_nodes": n_nodes, "n_edges": n_nodes * 10, "edges": graph_edges(n_nodes)}}),
+                encoding="utf-8")
+        (self.graph / "latest.json").write_text(json.dumps({"build_id": build_id, "built_utc": stamp}),
                                                 encoding="utf-8")
 
     def funnel_cmd(self, mode: str = "ok", n: int = 25, stamp: str | None = None):
         return lambda out: [sys.executable, str(self.fake), "funnel", mode, str(out), str(n)] + ([stamp] if stamp else [])
 
-    def graph_cmd(self, mode: str = "ok", n: int = 500, n_live: int | None = None, stamp: str | None = None):
+    def graph_cmd(self, mode: str = "ok", n: int = 500, n_live: int | None = None, stamp: str | None = None,
+                  mode_live: str | None = None):
         def cmd(data_root: Path, out: Path) -> list[str]:
-            size = n if (n_live is None or "graph_rehearsal" in str(out)) else n_live
-            return [sys.executable, str(self.fake), "graph", mode, str(out), str(size)] + ([stamp] if stamp else [])
+            rehearsal = "graph_rehearsal" in str(out)
+            size = n if (n_live is None or rehearsal) else n_live
+            m = mode if (mode_live is None or rehearsal) else mode_live
+            return [sys.executable, str(self.fake), "graph", m, str(out), str(size)] + ([stamp] if stamp else [])
         return cmd
 
     def started(self) -> list[str]:
@@ -166,12 +239,21 @@ def test_an_undateable_stamp_is_unknown_and_rebuilt_never_fresh(tmp_path, stamp)
         assert s["freshness"]["verdict"] == "UNKNOWN" and s["status"] == "REFRESHED"
 
 
-def test_a_future_stamp_is_unknown_not_fresh(tmp_path):
+def test_a_future_stamp_is_unknown_not_fresh_and_does_not_block_a_good_build(tmp_path):
+    # N1: the bogus future stamp was judged UNKNOWN, so the new build is not required to be
+    # later than it; before the fix both stages were UNMOVED until the clock passed the stamp
     w = World(tmp_path, funnel_stamp=_ago(-48), graph_stamp=_ago(-48))
-    r = w.run(only=("funnel",))
-    f = r["stages"]["funnel"]
-    # rebuilt; the new stamp is OLDER than the bogus future one, so the run cannot claim it moved
-    assert f["freshness"]["verdict"] == "UNKNOWN" and f["status"] == "UNMOVED" and r["overall_rc"] != 0
+    r = w.run()
+    for s in r["stages"].values():
+        assert s["freshness"]["verdict"] == "UNKNOWN" and s["status"] == "REFRESHED"
+    assert r["overall_rc"] == 0
+
+
+def test_a_new_stamp_equal_to_an_untrusted_old_one_is_still_unmoved(tmp_path):
+    future = _ago(-48)
+    w = World(tmp_path, funnel_stamp=future, graph_stamp=_ago(200))
+    r = w.run(funnel=w.funnel_cmd("ok", stamp=future), only=("funnel",))
+    assert r["stages"]["funnel"]["status"] == "UNMOVED"
 
 
 # ───────────────────────────── UNMOVED: rc 0 is not a refresh
@@ -268,9 +350,226 @@ def test_a_live_graph_build_that_shrank_after_a_good_rehearsal_is_rolled_back(st
 def test_a_first_graph_build_has_nothing_to_shrink_from(stale):
     import shutil
     shutil.rmtree(stale.graph)
-    r = stale.run(graph=stale.graph_cmd("ok", n=7), only=("graph",))
+    r = stale.run(graph=stale.graph_cmd("ok", n=7), only=("graph",), allow_create=True)
     g = r["stages"]["graph"]
     assert g["status"] == "REFRESHED" and (g["count_before"], g["count_after"]) == (None, 7)
+
+
+# ───────────────────────────── B1: a degraded funnel build never replaces a good one
+
+def test_a_degraded_funnel_build_with_the_usual_count_is_refused(stale):
+    raw = stale.funnel.read_bytes()
+    r = stale.run(funnel=stale.funnel_cmd("degraded"), only=("funnel",))
+    f = r["stages"]["funnel"]
+    assert f["status_kind"] == "REFUSED" and f["reason"] == "DEGRADED_BUILD"
+    assert f["status"].startswith("REFUSED(DEGRADED_BUILD: ") and r["overall_rc"] == C.UNIVERSE_REFRESH_RC_REFUSED
+    assert "stage1_batches" in f["detail"] and "stage3" in f["detail"] and "stage1_eligible" in f["detail"]
+    assert stale.funnel.read_bytes() == raw and not (stale.funnel.parent / "funnel_history").exists()
+    # the builder's failure TEXT is kept in the receipt, not only its keys
+    assert "26 batch(es) failed" in f["staged"]["failures"]["stage1_batches"]
+    assert Path(f["staged_path"]).exists()
+
+
+@pytest.mark.parametrize("mode,needle", [("nulls", "not a dict"), ("nullfields", "price"),
+                                         ("smalluniverse", "screened")])
+def test_a_funnel_build_with_bad_candidates_or_a_shrunken_universe_is_refused(stale, mode, needle):
+    raw = stale.funnel.read_bytes()
+    r = stale.run(funnel=stale.funnel_cmd(mode), only=("funnel",))
+    f = r["stages"]["funnel"]
+    assert f["reason"] == "DEGRADED_BUILD" and needle in f["detail"] and r["overall_rc"] != 0
+    assert stale.funnel.read_bytes() == raw
+
+
+def test_the_benign_failure_key_and_a_small_enrichment_loss_are_accepted(stale):
+    r = stale.run(funnel=stale.funnel_cmd("mildloss"), only=("funnel",))
+    assert r["stages"]["funnel"]["status"] == "REFRESHED" and r["overall_rc"] == 0
+
+
+# ───────────────────────────── S1: exit 3 is accepted only for the missing event weights
+
+@pytest.mark.parametrize("mode,needle", [("lostinputs", "co_coverage"), ("noinputs", "inputs"),
+                                         ("rc3clean", "exit 3"), ("kindlost", "co_coverage")])
+def test_a_graph_build_with_a_new_degradation_is_refused_at_the_rehearsal(stale, mode, needle):
+    raw = (stale.graph / "latest.json").read_bytes()
+    r = stale.run(graph=stale.graph_cmd(mode), only=("graph",))
+    g = r["stages"]["graph"]
+    assert g["status_kind"] == "REFUSED" and g["reason"] == "DEGRADED_BUILD" and needle in g["detail"]
+    assert g["child_rc"] is None and len(stale.started()) == 1            # the live build never started
+    assert (stale.graph / "latest.json").read_bytes() == raw and r["overall_rc"] == C.UNIVERSE_REFRESH_RC_REFUSED
+
+
+def test_a_live_graph_build_that_lost_an_input_after_a_good_rehearsal_is_rolled_back(stale):
+    raw = (stale.graph / "latest.json").read_bytes()
+    r = stale.run(graph=stale.graph_cmd("ok", mode_live="lostinputs"), only=("graph",))
+    g = r["stages"]["graph"]
+    assert g["reason"] == "DEGRADED_BUILD_AFTER_WRITE" and r["overall_rc"] == C.UNIVERSE_REFRESH_RC_REFUSED
+    assert (stale.graph / "latest.json").read_bytes() == raw and g["build_id_after"] == "ug_old"
+
+
+def test_n3_a_live_graph_left_unreadable_is_rolled_back(stale):
+    raw = (stale.graph / "latest.json").read_bytes()
+    r = stale.run(graph=stale.graph_cmd("ok", mode_live="brokenlive"), only=("graph",))
+    g = r["stages"]["graph"]
+    assert g["status_kind"] in ("UNMOVED", "REFUSED", "FAILED") and r["overall_rc"] != 0
+    assert (stale.graph / "latest.json").read_bytes() == raw and g["rolled_back_from"].startswith("ug_")
+    assert UR.read_graph(stale.graph)["error"] is None
+
+
+# ───────────────────────────── S2: a fresh stamp over a bad answer is rebuilt, not skipped
+
+def test_a_fresh_but_empty_funnel_is_rebuilt(tmp_path):
+    w = World(tmp_path, funnel_stamp=_ago(1), graph_stamp=_ago(1), n_cands=0)
+    r = w.run(only=("funnel",))
+    f = r["stages"]["funnel"]
+    assert f["status"] == "REFRESHED" and f["count_after"] == 25 and "content" in f["freshness"]["why"]
+
+
+def test_a_fresh_but_degraded_funnel_is_rebuilt(tmp_path):
+    w = World(tmp_path, funnel_stamp=_ago(1), graph_stamp=_ago(1))
+    d = json.loads(w.funnel.read_text(encoding="utf-8"))
+    d["failures"]["stage1_batches"] = "20 batch(es) failed"
+    w.funnel.write_text(json.dumps(d), encoding="utf-8")
+    assert w.run(only=("funnel",))["stages"]["funnel"]["status"] == "REFRESHED"
+
+
+@pytest.mark.parametrize("damage", ["no_receipt", "no_nodes"])
+def test_a_fresh_graph_whose_build_is_incomplete_is_rebuilt(tmp_path, damage):
+    w = World(tmp_path, funnel_stamp=_ago(1), graph_stamp=_ago(1))
+    if damage == "no_receipt":
+        (w.graph / "ug_old" / "receipt.json").unlink()
+    else:
+        (w.graph / "ug_old" / "nodes.parquet").unlink()
+    r = w.run(only=("graph",))
+    assert r["stages"]["graph"]["status"] == "REFRESHED"
+
+
+def test_s6_a_second_run_after_a_success_is_a_cheap_skip(stale):
+    assert stale.run()["overall_rc"] == 0
+    n = len(stale.started())
+    r = stale.run(network=lambda: pytest.fail("the network gate ran for a fresh answer"))
+    assert [s["status"] for s in r["stages"].values()] == ["SKIPPED_FRESH", "SKIPPED_FRESH"]
+    assert r["overall_rc"] == 0 and len(stale.started()) == n
+
+
+# ───────────────────────────── S3: a missing live answer is never silently created
+
+def test_a_missing_live_funnel_is_refused_and_never_created(stale):
+    stale.funnel.unlink()
+    r = stale.run(only=("funnel",))
+    f = r["stages"]["funnel"]
+    assert f["status"] == "REFUSED(LIVE_FILE_ABSENT)" and r["overall_rc"] == C.UNIVERSE_REFRESH_RC_REFUSED
+    assert not stale.funnel.exists() and stale.started() == []
+
+
+def test_a_missing_live_funnel_folder_is_refused(tmp_path):
+    w = World(tmp_path, funnel_stamp=_ago(80), graph_stamp=_ago(200))
+    typo = tmp_path / "dta" / "funnel_night10.json"
+    r = UR.refresh(data_root=w.root, out=w.out, funnel_path=typo, graph_dir=w.graph, only=("funnel",),
+                   commands={"funnel": w.funnel_cmd()}, network=lambda: (True, {"unresolved": {}}))
+    assert r["stages"]["funnel"]["reason"] == "LIVE_FILE_ABSENT" and not typo.parent.exists()
+
+
+def test_allow_create_builds_the_first_funnel(stale):
+    stale.funnel.unlink()
+    r = stale.run(only=("funnel",), allow_create=True)
+    assert r["stages"]["funnel"]["status"] == "REFRESHED" and stale.funnel.exists()
+
+
+def test_a_missing_live_graph_is_refused_unless_allowed(stale):
+    import shutil
+    shutil.rmtree(stale.graph)
+    r = stale.run(only=("graph",))
+    assert r["stages"]["graph"]["status"] == "REFUSED(LIVE_FILE_ABSENT)" and stale.started() == []
+    assert not stale.graph.exists()
+
+
+# ───────────────────────────── S4: bounded run time, a receipt that survives a kill
+
+def test_the_worst_case_run_time_is_under_fifty_minutes():
+    worst = (C.UNIVERSE_REFRESH_NETWORK_WAIT_S + C.UNIVERSE_REFRESH_FUNNEL_TIMEOUT_S
+             + 2 * C.UNIVERSE_REFRESH_GRAPH_TIMEOUT_S
+             + C.UNIVERSE_REFRESH_REPLACE_RETRIES * C.UNIVERSE_REFRESH_REPLACE_RETRY_S * 4)
+    assert worst < C.UNIVERSE_REFRESH_MAX_RUN_S <= 50 * 60
+    assert C.UNIVERSE_REFRESH_LOCK_MAX_AGE_S >= C.UNIVERSE_REFRESH_MAX_RUN_S
+
+
+def test_a_killed_run_leaves_a_receipt_naming_the_stage_it_was_in(stale):
+    def killed(cmd, log_path, timeout_s):
+        raise KeyboardInterrupt("Task Scheduler stopped the task")
+    with pytest.raises(KeyboardInterrupt):
+        stale.run(runner=killed)
+    (p,) = list(stale.out.glob("refresh_*.json"))
+    d = json.loads(p.read_text(encoding="utf-8"))
+    assert d["overall_status"] == "RUNNING" and d["overall_rc"] is None and d["in_progress"] == "funnel"
+    assert d["stages"]["funnel"]["status_kind"] == "RUNNING" and d["updated_utc"]
+    assert not (stale.out / C.UNIVERSE_REFRESH_LOCK_NAME).exists()        # released on the way out
+
+
+# ───────────────────────────── S5: one instance at a time
+
+def _lock(w: World, pid: int, started: datetime) -> Path:
+    w.out.mkdir(parents=True, exist_ok=True)
+    p = w.out / C.UNIVERSE_REFRESH_LOCK_NAME
+    p.write_text(json.dumps({"pid": pid, "started_utc": _iso(started), "run_id": "other"}), encoding="utf-8")
+    return p
+
+
+def test_a_second_instance_is_refused_locked_and_starts_nothing(stale):
+    import os
+    lock = _lock(stale, os.getpid(), datetime.now(timezone.utc))
+    raw = lock.read_bytes()
+    r = stale.run()
+    assert [s["status"] for s in r["stages"].values()] == ["REFUSED(LOCKED)", "REFUSED(LOCKED)"]
+    assert r["overall_rc"] == C.UNIVERSE_REFRESH_RC_REFUSED and stale.started() == []
+    assert lock.read_bytes() == raw and r["lock"]["held_by"]["pid"] == os.getpid()
+
+
+def test_a_lock_of_a_dead_process_is_taken_over_and_recorded(stale):
+    import subprocess
+    p = subprocess.run([sys.executable, "-c", "import os; print(os.getpid())"], capture_output=True, text=True)
+    dead = int(p.stdout.strip())
+    assert not UR.pid_alive(dead)
+    _lock(stale, dead, datetime.now(timezone.utc))
+    r = stale.run()
+    assert r["overall_rc"] == 0 and r["lock"]["taken_over"]["pid"] == dead and "not alive" in r["lock"]["why"]
+    assert not (stale.out / C.UNIVERSE_REFRESH_LOCK_NAME).exists()
+
+
+def test_a_lock_older_than_the_longest_run_is_taken_over(stale):
+    import os
+    _lock(stale, os.getpid(), datetime.now(timezone.utc) - timedelta(seconds=C.UNIVERSE_REFRESH_LOCK_MAX_AGE_S + 60))
+    r = stale.run()
+    assert r["overall_rc"] == 0 and r["lock"]["taken_over"]["run_id"] == "other" and "older" in r["lock"]["why"]
+
+
+# ───────────────────────────── N2: a reader holding the live file for a moment
+
+def test_n2_a_busy_live_file_is_retried_then_promoted(stale, monkeypatch):
+    monkeypatch.setattr(C, "UNIVERSE_REFRESH_REPLACE_RETRY_S", 0.01)
+    real, calls = UR._os_replace, {"n": 0}
+
+    def flaky(src, dst):
+        calls["n"] += 1
+        if calls["n"] <= 2:
+            raise PermissionError(13, "the file is open in another process")
+        real(src, dst)
+    monkeypatch.setattr(UR, "_os_replace", flaky)
+    r = stale.run(only=("funnel",))
+    assert r["stages"]["funnel"]["status"] == "REFRESHED" and calls["n"] >= 3
+
+
+def test_n2_a_live_file_busy_throughout_is_refused_and_nothing_is_partial(stale, monkeypatch):
+    monkeypatch.setattr(C, "UNIVERSE_REFRESH_REPLACE_RETRY_S", 0.01)
+
+    def busy(src, dst):
+        raise PermissionError(13, "the file is open in another process")
+    monkeypatch.setattr(UR, "_os_replace", busy)
+    raw = stale.funnel.read_bytes()
+    r = stale.run(only=("funnel",))
+    f = r["stages"]["funnel"]
+    assert f["status"] == "REFUSED(LIVE_FILE_BUSY)" and "PermissionError" in f["detail"]
+    assert stale.funnel.read_bytes() == raw and not (stale.funnel.parent / "funnel_history").exists()
+    assert not list(stale.funnel.parent.glob("*.tmp")) and r["overall_rc"] == C.UNIVERSE_REFRESH_RC_REFUSED
 
 
 # ───────────────────────────── the network gate
@@ -453,6 +752,37 @@ def test_a_red_receipt_is_never_read_as_alive(stale, funnel_mode, state):
     _run_into_default_out(stale, funnel=stale.funnel_cmd(funnel_mode))
     j = TR.judge(_ctx(stale), "AegisUniverseRefresh", _task())
     assert j.state == state and "funnel" in j.detail
+
+
+def _running_receipt(w: World, age_s: float) -> None:
+    t = datetime.now(timezone.utc) - timedelta(seconds=age_s)
+    folder = w.root / C.UNIVERSE_REFRESH_DIRNAME
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"refresh_{t.strftime('%Y%m%dT%H%M%SZ')}_1.json").write_text(json.dumps(
+        {"schema": UR.SCHEMA, "started_utc": _iso(t), "updated_utc": _iso(t), "finished_utc": None,
+         "overall_status": "RUNNING", "overall_rc": None, "in_progress": "funnel",
+         "stages": {"funnel": {"status": "RUNNING", "status_kind": "RUNNING"}}}), encoding="utf-8")
+
+
+def test_a_receipt_of_a_run_in_progress_is_not_red_and_one_that_never_finished_is(stale):
+    _running_receipt(stale, 60)
+    j = TR.judge(_ctx(stale), "AegisUniverseRefresh", _task())
+    assert j.state not in ("DEGRADED", "REFUSED", "STALE", "DEAD") and "running" in j.detail
+    _running_receipt(stale, C.UNIVERSE_REFRESH_MAX_RUN_S + 600)
+    for p in sorted((stale.root / C.UNIVERSE_REFRESH_DIRNAME).glob("refresh_*.json"))[1:]:
+        p.unlink()                                                       # keep only the old one
+    j = TR.judge(_ctx(stale), "AegisUniverseRefresh", _task())
+    assert j.state == "DEGRADED" and "funnel" in j.detail
+
+
+def test_cli_allow_create_reaches_the_run(stale, monkeypatch, capsys):
+    monkeypatch.setattr(UR, "funnel_command", stale.funnel_cmd("ok"))
+    monkeypatch.setattr(C, "UNIVERSE_REFRESH_NETWORK_HOSTS", ())
+    stale.funnel.unlink()
+    assert CLI.main([*_cli_args(stale), "--only", "funnel"]) == C.UNIVERSE_REFRESH_RC_REFUSED
+    assert "LIVE_FILE_ABSENT" in capsys.readouterr().out and not stale.funnel.exists()
+    assert CLI.main([*_cli_args(stale), "--only", "funnel", "--allow-create"]) == 0
+    assert stale.funnel.exists()
 
 
 def test_a_run_that_skipped_everything_is_idle_and_no_receipt_is_stale(tmp_path):

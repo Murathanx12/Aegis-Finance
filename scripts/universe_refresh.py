@@ -9,8 +9,12 @@ either moved or was already fresh. Logic and the full contract:
                                                        nothing, write nothing
     python -m scripts.universe_refresh --only graph    one stage
 
+    python -m scripts.universe_refresh --allow-create  build a live answer that does not exist
+
 Exit codes: 0 every stage REFRESHED or SKIPPED_FRESH; 2 a stage REFUSED (no network, the
-builder refused, the new answer was smaller or empty); 1 a stage FAILED or UNMOVED.
+builder refused, the new answer was smaller, empty or degraded, the live file is absent or
+busy, another run holds the lock); 1 a stage FAILED or UNMOVED. Safe to run repeatedly:
+inside the age limit a run is a cheap SKIPPED_FRESH that starts no child.
 """
 
 from __future__ import annotations
@@ -34,6 +38,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument("--graph-dir", help="the graph folder to refresh (default: <data-root>/universe_graph)")
     ap.add_argument("--only", choices=UR.STAGES, action="append", help="run one stage (repeatable)")
     ap.add_argument("--force", action="store_true", help="rebuild even when the answer is fresh")
+    ap.add_argument("--allow-create", action="store_true",
+                    help="build a live answer that does not exist yet (otherwise REFUSED(LIVE_FILE_ABSENT))")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the plan and the exact child commands; start nothing, write nothing")
     a = ap.parse_args(argv)
@@ -41,7 +47,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
               out=Path(a.out) if a.out else None,
               funnel_path=Path(a.funnel_path) if a.funnel_path else None,
               graph_dir=Path(a.graph_dir) if a.graph_dir else None,
-              force=a.force, only=tuple(a.only or UR.STAGES))
+              force=a.force, only=tuple(a.only or UR.STAGES), allow_create=a.allow_create)
     if a.dry_run:
         print(json.dumps(UR.plan(**kw), indent=1, default=str))
         return 0

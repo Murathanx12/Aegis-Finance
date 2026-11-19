@@ -1875,6 +1875,27 @@ def r_universe_refresh(ctx, task) -> Reading:
         return _after_wrapper(ctx, _none(where), mod)
     if not isinstance(d, dict):
         return Reading(unknown_reason=f"{folder.name}/{p.name} cannot be read as a JSON object", proof=where)
+    if d.get("overall_status") == "RUNNING":
+        # the receipt is rewritten as each stage starts and ends; one that never reached its
+        # final write within the longest possible run was killed or hung in `in_progress`
+        stamp = parse_stamp(d.get("updated_utc"))
+        begun = parse_stamp(d.get("started_utc")) or stamp
+        stage = d.get("in_progress")
+        limit = float(getattr(_config, "UNIVERSE_REFRESH_MAX_RUN_S", 3000))
+        if stamp is None or begun is None or stamp > ctx.now + timedelta(seconds=30):
+            return Reading(status="DEGRADED", reason="running refresh receipt has no valid stamp",
+                           proof=f"{folder.name}/{p.name}", detail="universe refresh receipt carries no usable stamp")
+        age = (ctx.now - begun).total_seconds()
+        if age <= limit:
+            rd = Reading(stamp=stamp, status="OK", idle_reason=f"a refresh is running (stage {stage})",
+                         proof=f"{folder.name}/{p.name} overall_status RUNNING + started_utc",
+                         detail=f"universe refresh running: stage {stage}, {age:.0f} s of at most {limit:.0f} s")
+        else:
+            rd = Reading(stamp=stamp, status="DEGRADED",
+                         reason=f"the run started {d.get('started_utc')} never finished; it stopped in stage {stage}",
+                         proof=f"{folder.name}/{p.name} overall_status RUNNING + started_utc",
+                         detail=f"universe refresh never finished: stage {stage} (killed or hung)")
+        return _after_wrapper(ctx, rd, mod)
     stamp = parse_stamp(d.get("finished_utc"))
     if stamp is None or stamp > ctx.now + timedelta(seconds=30):
         return Reading(status="DEGRADED", reason="refresh receipt has no valid finished_utc",

@@ -8038,17 +8038,52 @@ UNIVERSE_REFRESH_FUTURE_STAMP_TOLERANCE_S = 300
 #: graph: nodes and edges, each) is REFUSED and the previous answer stays in force.
 UNIVERSE_REFRESH_FUNNEL_MIN_FRACTION = 0.5
 UNIVERSE_REFRESH_GRAPH_MIN_FRACTION = 0.5
-#: Per child. The funnel took 554 s on 2026-11-16 (5,319 symbols); the graph build 4.8 s.
-UNIVERSE_REFRESH_FUNNEL_TIMEOUT_S = 2400
-UNIVERSE_REFRESH_GRAPH_TIMEOUT_S = 900
+#: Per child. The funnel took 554 s on 2026-11-16 and 646 s on 2026-11-19 (about 5,300
+#: symbols); the graph build 4.8-8.5 s. The worst case of one run is the DNS wait + the
+#: funnel + two graph builds (rehearsal and live) + the promote retries, and it must stay
+#: below UNIVERSE_REFRESH_MAX_RUN_S (pinned by test): 120 + 1800 + 2 x 300 = 2,520 s.
+UNIVERSE_REFRESH_FUNNEL_TIMEOUT_S = 1800
+UNIVERSE_REFRESH_GRAPH_TIMEOUT_S = 300
+UNIVERSE_REFRESH_MAX_RUN_S = 3000
 #: The funnel's market-data hosts. Before it starts, DNS for each must resolve within the
 #: wait (the PC runs tasks seconds after boot); otherwise REFUSED(NO_NETWORK).
 UNIVERSE_REFRESH_NETWORK_HOSTS: tuple = ("finnhub.io", "query1.finance.yahoo.com")
-UNIVERSE_REFRESH_NETWORK_WAIT_S = 180
+UNIVERSE_REFRESH_NETWORK_WAIT_S = 120
 UNIVERSE_REFRESH_NETWORK_POLL_S = 10
+#: One instance at a time: `<out>/universe_refresh.lock` holds the owner's pid and start.
+#: A lock whose pid is not alive, or older than this, is stale and taken over (recorded).
+UNIVERSE_REFRESH_LOCK_NAME = "universe_refresh.lock"
+UNIVERSE_REFRESH_LOCK_MAX_AGE_S = UNIVERSE_REFRESH_MAX_RUN_S
+#: A reader holding the live file open makes `os.replace` fail on Windows: retry this many
+#: times this many seconds apart, then REFUSED(LIVE_FILE_BUSY) with the live file intact.
+UNIVERSE_REFRESH_REPLACE_RETRIES = 5
+UNIVERSE_REFRESH_REPLACE_RETRY_S = 1.0
+#: Content check of a funnel build (B1), applied to a new build before it may replace the
+#: live one AND to the live one before a fresh stamp may skip it. Every healthy build on
+#: disk (09-24 .. 11-19) carries `failures == {stage1_truncated}` and no null field.
+#:   failure keys allowed as benign; any other key is DEGRADED unless measured below:
+UNIVERSE_REFRESH_FUNNEL_BENIGN_FAILURES: tuple = ("stage1_truncated",)
+#:   `stage1_batches` "<n> batch(es) failed" (200 symbols a batch): at most this many
+UNIVERSE_REFRESH_FUNNEL_MAX_FAILED_BATCHES = 2
+#:   `stage3` "<f> of <c> enrichment call(s) failed": at most this share
+UNIVERSE_REFRESH_FUNNEL_MAX_STAGE3_FAILED_SHARE = 0.25
+#:   every candidate is a dict carrying these non-null; at most this share may not
+UNIVERSE_REFRESH_FUNNEL_REQUIRED_FIELDS: tuple = ("ticker", "price", "score", "quality")
+UNIVERSE_REFRESH_FUNNEL_MAX_INVALID_SHARE = 0.0
+#:   stage health: absolute floors, and the shrink fraction against the previous build
+UNIVERSE_REFRESH_FUNNEL_MIN_SCREENED = 1000
+UNIVERSE_REFRESH_FUNNEL_MIN_STAGE1_ELIGIBLE = 100
 #: `universe_graph build` exit codes that mean "a graph was written": 0, and 3 = written
-#: with a degraded input (today always: no event-check weights exist). 2 = refused.
+#: with a degraded input. 3 is accepted ONLY when the build's own receipt names exactly the
+#: degradations below, each with one of the listed input statuses (today: the event-check
+#: weights are MISSING because `universe_graph/event_response/` does not exist). 2 = refused.
 UNIVERSE_REFRESH_GRAPH_WRITTEN_RCS: tuple = (0, 3)
+UNIVERSE_REFRESH_GRAPH_BENIGN_DEGRADED: dict = {"event_response weights": ("MISSING",)}
+#: Per edge kind present in the previous graph: the new one keeps at least this fraction
+#: (the total can pass the size guard while a whole structural kind is gone).
+UNIVERSE_REFRESH_GRAPH_MIN_KIND_FRACTION = 0.5
+#: Files a graph build folder must hold to count as a graph.
+UNIVERSE_REFRESH_GRAPH_BUILD_FILES: tuple = ("receipt.json", "nodes.parquet", "edges.parquet")
 #: The CLI's own exit codes. 2 is the refusal code `task_receipts.WRAPPER_REFUSED_RCS` reads.
 UNIVERSE_REFRESH_RC_REFUSED = 2
 UNIVERSE_REFRESH_RC_FAILED = 1
