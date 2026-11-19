@@ -301,3 +301,16 @@ def test_urls_outside_edgar_archives_are_never_fetched(root, tmp_path):
         fh.write(json.dumps(bad) + "\n")
     receipt, calls = _run(root, tmp_path)
     assert receipt["counts"]["no_url"] == 1 and all(u.startswith(BASE) for u in calls)
+
+
+def test_funnel_names_are_fetched_before_event_node_names(root, tmp_path):
+    (tmp_path / "funnel.json").write_text(json.dumps({
+        "generated_at": NOW.isoformat(), "candidates": [{"ticker": "BBB"}]}), encoding="utf-8")
+    nodes = root / C.EVENT_NODES_DIRNAME
+    nodes.mkdir()
+    (nodes / "event_nodes.jsonl").write_text(json.dumps(
+        {"row_kind": "node", "event_id": "e1", "primary_ticker": "AAA",
+         "last_seen_utc": (NOW - timedelta(hours=1)).isoformat()}) + chr(10), encoding="utf-8")
+    receipt, calls = _run(root, tmp_path, all_tickers=False)
+    assert "/222/" in calls[0] and receipt["counts"]["owed_priority"] == 1   # BBB is OLDER than AAA's
+    assert receipt["fetched"] == 3

@@ -56,12 +56,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--pace-s", type=float, default=float(C.SEC_EXHIBIT_FULL_PACE_S))
     ap.add_argument("--all-tickers", action="store_true")
     ap.add_argument("--tickers", default="", help="comma-separated; overrides the default scope")
+    ap.add_argument("--funnel", default=None, help="funnel snapshot (default: beside the data root)")
     ap.add_argument("--dry-run", action="store_true",
                     help="print what is owed and exit; no request, no write")
     a = ap.parse_args(argv)
 
     now = datetime.now(timezone.utc)
     paths = SX.default_paths(Path(a.data_root))
+    if a.funnel:
+        paths["funnel"] = Path(a.funnel)
     tickers = [t for t in a.tickers.split(",") if t.strip()] or None
     if a.dry_run:
         try:
@@ -70,16 +73,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED({e.code}): {e.detail}")
             return 2
         if tickers:
-            scope, src = {t.upper().strip() for t in tickers}, {"mode": "explicit"}
+            scope, src, prio = {t.upper().strip() for t in tickers}, {"mode": "explicit"}, set()
         elif a.all_tickers:
-            scope, src = None, {"mode": "all"}
+            scope, src, prio = None, {"mode": "all"}, set()
         else:
             s = SX.scope_tickers(paths, now)
-            scope, src = s["tickers"], s["sources"]
+            scope, src, prio = s["tickers"], s["sources"], s["priority"]
         store = Path(a.out) if a.out else paths["store"]
         todo, counts = SX.owed(SX.read_body_rows(paths["corpus"]),
                                SX.read_full_store(store, with_text=False).keys(),
-                               SX.load_cik_map(paths["cik_map"]), scope)
+                               SX.load_cik_map(paths["cik_map"]), scope, prio)
         print(json.dumps({"dry_run": True, "scope": src,
                           "scope_n": None if scope is None else len(scope),
                           "counts": counts,

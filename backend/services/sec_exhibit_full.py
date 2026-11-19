@@ -85,11 +85,15 @@ class SecExhibitFullRefused(RuntimeError):
 
 def default_paths(data_root: Path) -> dict:
     dr = Path(data_root)
+    # The funnel snapshot sits beside the data root (`backend/data/`), and a
+    # release clone's own copy is not the live one: prefer the file next to the
+    # data root that was named, else the configured path.
+    beside = dr.parent / Path(C.IC_FUNNEL_PATH).name
     return {
         "corpus": dr / C.SEC_EXHIBIT_BODY_DIRNAME,
         "store": dr / C.SEC_EXHIBIT_FULL_DIRNAME,
         "cik_map": dr / C.SEC_EXHIBIT_CIK_MAP_RELPATH,
-        "funnel": Path(C.IC_FUNNEL_PATH),
+        "funnel": beside if beside.is_file() else Path(C.IC_FUNNEL_PATH),
         "event_nodes": dr / C.EVENT_NODES_DIRNAME / "event_nodes.jsonl",
     }
 
@@ -232,7 +236,7 @@ def scope_tickers(paths: dict, now: datetime) -> dict:
 
     Returns the set AND the age/size of each source, because a candidate set is
     printed with its age before anything is ranked or fetched for it."""
-    out: dict = {"tickers": set(), "sources": {}}
+    out: dict = {"tickers": set(), "priority": set(), "sources": {}}
     funnel = Path(paths["funnel"])
     if funnel.is_file():
         try:
@@ -241,10 +245,14 @@ def scope_tickers(paths: dict, now: datetime) -> dict:
                     if isinstance(c, dict)}
             syms.discard("")
             gen = parse_utc(d.get("generated_at"))
+            age = round((now - gen).total_seconds() / 86400.0, 2) if gen else None
             out["sources"]["funnel"] = {
-                "n": len(syms), "generated_at": d.get("generated_at"),
-                "age_days": round((now - gen).total_seconds() / 86400.0, 2) if gen else None}
+                "path": str(funnel), "n": len(syms), "generated_at": d.get("generated_at"),
+                "age_days": age, "stale_after_days": _funnel_stale_days(),
+                # an undateable snapshot is UNKNOWN, never fresh
+                "stale": None if age is None else age > _funnel_stale_days()}
             out["tickers"] |= syms
+            out["priority"] |= syms
         except (OSError, ValueError) as e:
             out["sources"]["funnel"] = {"n": 0, "error": f"{type(e).__name__}: {e}"}
     else:
@@ -282,10 +290,20 @@ def scope_tickers(paths: dict, now: datetime) -> dict:
     return out
 
 
+def _funnel_stale_days() -> float:
+    try:
+        from backend.services.investment_committee import FUNNEL_STALE_DAYS
+        return float(FUNNEL_STALE_DAYS)
+    except Exception:  # noqa: BLE001 - the age is still printed; only the bar is unknown
+        return float("nan")
+
+
 def owed(rows: Iterable[dict], done: Iterable[str], cik_map: dict[int, list[str]],
-         tickers: Optional[set]) -> tuple[list[dict], dict]:
+         tickers: Optional[set], priority: Optional[set] = None) -> tuple[list[dict], dict]:
     """Stored bodies that are cut, carry a fetchable URL and are not yet in the
-    full store; newest filing first. `tickers=None` means no restriction."""
+    full store. `tickers=None` means no restriction. Order: names in `priority`
+    (the funnel candidates: 25 names against ~1,250 open event nodes, counted
+    2026-11-19) first, then newest filing first within each group."""
     done = set(done)
     counts = {"rows": 0, "truncated": 0, "already_fetched": 0, "no_url": 0,
               "no_timestamp": 0, "out_of_scope": 0, "owed": 0}
@@ -316,8 +334,11 @@ def owed(rows: Iterable[dict], done: Iterable[str], cik_map: dict[int, list[str]
             continue
         seen.add(rid)
         out.append({"row": r, "raw_id": rid, "url": url, "filed": filed, "tickers": syms})
-    out.sort(key=lambda o: (o["filed"], o["raw_id"]), reverse=True)
+    prio = priority or set()
+    out.sort(key=lambda o: (bool(set(o["tickers"]) & prio), o["filed"], o["raw_id"]),
+             reverse=True)
     counts["owed"] = len(out)
+    counts["owed_priority"] = sum(1 for o in out if set(o["tickers"]) & prio)
     return out, counts
 
 
@@ -390,6 +411,7 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
         return finish(REFUSED, e.code, e.detail)
 
     scope: Optional[set]
+    priority: set = set()
     if tickers is not None:
         scope = {str(t).upper() for t in tickers if str(t).strip()}
         receipt["scope"] = {"mode": "explicit", "n": len(scope)}
@@ -398,7 +420,7 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
         receipt["scope"] = {"mode": "all"}
     else:
         s = scope_tickers(paths, now)
-        scope = s["tickers"]
+        scope, priority = s["tickers"], s["priority"]
         receipt["scope"] = {"mode": "funnel+open_event_nodes", "n": len(scope),
                             "sources": s["sources"]}
         if not scope:
@@ -410,7 +432,7 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
     receipt["cik_map_entries"] = len(cik_map)
     rows = read_body_rows(Path(paths["corpus"]))
     done = read_full_store(store, with_text=False)
-    todo, counts = owed(rows, done.keys(), cik_map, scope)
+    todo, counts = owed(rows, done.keys(), cik_map, scope, priority)
     receipt["counts"] = counts
     if not todo:
         return finish(NOTHING_OWED)
