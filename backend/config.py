@@ -7949,7 +7949,7 @@ SYSTEM_STATUS_LIMITS_H = {
     "iif1_night": 72,
     "hyp_lab": 7 * 24,
     "universe_graph": 48,
-    "funnel": 10 * 24,            # == investment_committee.FUNNEL_STALE_DAYS
+    "funnel": 10 * 24,            # NOT read since CH-64: the funnel row uses investment_committee.FUNNEL_STALE_DAYS itself
     "bars:prices_2025_26": 4 * 24,  # a Friday close read on Monday
     "bars:prices_deep": 45 * 24,    # a monthly panel
     "pc_plan": 3 * 24,
@@ -7958,11 +7958,14 @@ SYSTEM_STATUS_LIMITS_H = {
     "night_factory": 3 * 24,
     "lessons": 7 * 24,
     "status_receipt": 1,          # the dashboard's own receipt
+    "runtime_journal": 2,         # CH-64: newest row of runtime_switch/runtime_task_runs.jsonl (a wrapped task runs every 15 min)
 }
 SYSTEM_STATUS_DOWN_FACTOR = 3
 #: A row is only a failure to DETERMINE (exit 3) when it is required. Optional rows
 #: are rows whose producer does not exist yet; flip one here when its chunk lands.
-SYSTEM_STATUS_OPTIONAL_ROWS = ("universe_graph",)
+#: CH-64 (2026-11-16): `universe_graph` left this list. CH-30 landed and the live data root
+#: holds `universe_graph/latest.json`, so a graph that cannot be read is now undetermined.
+SYSTEM_STATUS_OPTIONAL_ROWS = ()
 #: Scheduled tasks that are known one-shots (listed apart, not counted in the header).
 SYSTEM_STATUS_ONE_SHOT_TASK_PATTERNS = (r"^AegisReader(Clean|Recovery|PaperHandoff)-", r"^AegisPaperHandoff-", r"^Aegis\w*\d{8}$")
 #: Free RAM below this (GB) is DEGRADED, below the second is DOWN.
@@ -7972,6 +7975,10 @@ SYSTEM_STATUS_RAM_DOWN_GB = 1.0
 SYSTEM_STATUS_UPTIME_DEGRADED_DAYS = 30
 #: Seconds the dashboard's one Railway GET may take. Offline is UNKNOWN, not a failure.
 SYSTEM_STATUS_RAILWAY_TIMEOUT_S = 8
+#: CH-64: the "refused in the last hour" row. Any `event: refused` row of the wrapper journal
+#: inside the first window (hours) makes the row DOWN; the second window is the count beside it.
+SYSTEM_STATUS_REFUSED_WINDOW_H = 1
+SYSTEM_STATUS_REFUSED_LONG_WINDOW_H = 24
 # ── DAY_FILE: one generated page per day from receipts (ROADMAP CH-44 part 1, 2026-11-13) ──
 #: `scripts/day_file.py`. Reads receipts only; every line names its receipt and age.
 DAY_FILE_DIRNAME = "day_file"

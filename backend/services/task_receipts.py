@@ -1694,6 +1694,43 @@ def r_system_status(ctx, task) -> Reading:
 
 
 _PS1_FILE = re.compile(r"""-File\s+(?:"([^"]+\.ps1)"|(\S+\.ps1))""", re.IGNORECASE)
+#: `-File "<path` with no closing quote and no `.ps1`: `schtasks /query /fo CSV /v` cut the
+#: action (measured 2026-11-16: 261 characters; the `conhost.exe --headless` prefix added on
+#: 11-15 pushed AegisRawSecCollection's script path past the cut). The CSV reader also
+#: leaves a stray closing quote after the cut text, so one is tolerated.
+_PS1_CUT = re.compile(r"""-File\s+"?([^"]+)"?\s*$""", re.IGNORECASE)
+
+
+def _cut_harness_dir(prefix: str, script: str, n_chars: int) -> tuple[Optional[Path], Optional[str]]:
+    """(harness folder, None) or (None, why) for an action schtasks CUT inside the script path.
+
+    The cut text is a PREFIX of the real path, so the folder is derived only when exactly one
+    folder on this machine both extends that prefix and holds `script`; zero or several is
+    UNKNOWN with the reason (a guard derives its input or refuses, it does not pick)."""
+    said = f"schtasks cut the task's action at {n_chars} characters, inside the -File path ({prefix[-80:]})"
+    p = Path(prefix)
+    found: list[Path] = []
+    if prefix.endswith(("\\", "/")):
+        cands = [p]                                     # the cut fell right after the folder
+    else:
+        try:
+            sibs = [d for d in p.parent.iterdir() if d.is_dir()
+                    and d.name.lower().startswith(p.name.lower())]
+        except OSError:
+            sibs = []
+        cands = sibs + ([p.parent] if script.lower().startswith(p.name.lower()) else [])
+    for d in cands:
+        try:
+            if (d / script).is_file() and d not in found:
+                found.append(d)
+        except OSError:
+            continue
+    if len(found) == 1:
+        return found[0], None
+    if not found:
+        return None, f"{said}; no folder extending that prefix holds {script}, so its receipt cannot be derived"
+    return None, (f"{said}; {len(found)} folders extend that prefix and hold {script} "
+                  f"({', '.join(d.name for d in found[:4])}), so its receipt cannot be derived")
 
 
 def harness_path(ctx, task: Optional[dict], key: str, script: str, rel: tuple[str, ...]
@@ -1710,6 +1747,10 @@ def harness_path(ctx, task: Optional[dict], key: str, script: str, rel: tuple[st
     action = str((task or {}).get("Task To Run") or "")
     m = _PS1_FILE.search(action)
     if not m:
+        cut = _PS1_CUT.search(action)
+        if cut:
+            folder, why = _cut_harness_dir(cut.group(1), script, len(action))
+            return (folder.joinpath(*rel), None) if folder is not None else (None, why)
         return None, (f"the receipt is written beside {script}, and the task's action does not name a "
                       f"-File .ps1 ({action[:120] or 'no action read'})")
     ps1 = Path(m.group(1) or m.group(2))
@@ -1760,7 +1801,7 @@ def r_raw_sec(ctx, task) -> Reading:
             st, why = "DEGRADED", f"SKIPPED {reason} after {d.get('consecutive_failures')} consecutive failure(s)"
         else:
             st, why = map_status(status) if status != "REFUSED" else "REFUSED", f"{status} {reason}"
-        return Reading(stamp=t, status=st, reason=why, proof=f"{folder.name}/{p.name} written_utc",
+        return Reading(stamp=t, status=st, reason=why, proof=f"{p} written_utc",
                        detail=f"raw SEC collection {status} {reason}: {d.get('rows_new')} new rows{note}")
     t = yields[-1][0] if yields else None
     return Reading(stamp=t, status="IDLE", idle_reason=f"every one of the newest {len(yields)} receipts yielded",
