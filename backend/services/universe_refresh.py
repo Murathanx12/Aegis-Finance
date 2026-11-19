@@ -293,12 +293,21 @@ def run_child(cmd: Sequence[str], log_path: Path, timeout_s: float, *,
     return ChildResult(rc, round(time.monotonic() - t0, 1))
 
 
+def child_python() -> str:
+    """This interpreter; under `pythonw.exe` (a windowless task) its `python.exe` sibling,
+    so the child's prints reach the log. `run_child` starts it with no console window."""
+    exe = Path(sys.executable)
+    if exe.name.lower() == "pythonw.exe" and exe.with_name("python.exe").exists():
+        return str(exe.with_name("python.exe"))
+    return str(exe)
+
+
 def funnel_command(out_file: Path) -> list[str]:
-    return [sys.executable, "-m", FUNNEL_MODULE, "--out", str(out_file)]
+    return [child_python(), "-m", FUNNEL_MODULE, "--out", str(out_file)]
 
 
 def graph_command(data_root: Path, out_dir: Path) -> list[str]:
-    return [sys.executable, "-m", GRAPH_MODULE, "build", "--data-root", str(data_root),
+    return [child_python(), "-m", GRAPH_MODULE, "build", "--data-root", str(data_root),
             "--out", str(out_dir)]
 
 

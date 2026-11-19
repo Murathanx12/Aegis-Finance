@@ -364,11 +364,19 @@ def test_the_live_funnel_is_the_sibling_of_the_resolved_data_root(tmp_path):
 def test_the_real_child_commands_run_the_builders_out_of_process(tmp_path):
     f = UR.funnel_command(tmp_path / "f.json")
     g = UR.graph_command(tmp_path / "root", tmp_path / "g")
-    assert f[:3] == [sys.executable, "-m", "backend.services.opportunity_funnel"] and f[3] == "--out"
-    assert g[:4] == [sys.executable, "-m", "backend.services.universe_graph", "build"]
+    assert f[:3] == [UR.child_python(), "-m", "backend.services.opportunity_funnel"] and f[3] == "--out"
+    assert g[:4] == [UR.child_python(), "-m", "backend.services.universe_graph", "build"]
     assert "--data-root" in g and "--out" in g
     assert not {"backend.services.opportunity_funnel", "backend.services.universe_graph"} & {
         v.__name__ for v in vars(UR).values() if hasattr(v, "__spec__") and hasattr(v, "__name__")}
+
+
+def test_a_windowless_parent_starts_its_children_under_python_exe(tmp_path, monkeypatch):
+    (tmp_path / "python.exe").write_bytes(b"")
+    monkeypatch.setattr(sys, "executable", str(tmp_path / "pythonw.exe"))
+    assert UR.child_python() == str(tmp_path / "python.exe")
+    monkeypatch.setattr(sys, "executable", str(tmp_path / "elsewhere" / "pythonw.exe"))
+    assert UR.child_python() == str(tmp_path / "elsewhere" / "pythonw.exe")      # no sibling: unchanged
 
 
 def _cli_args(w: World) -> list[str]:
