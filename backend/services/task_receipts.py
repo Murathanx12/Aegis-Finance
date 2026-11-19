@@ -1863,6 +1863,67 @@ def r_owner_warning(ctx, task) -> Reading:
                    detail=f"owner warning run: {', '.join(sorted({str(r.get('status')) for r in run}))}")
 
 
+def r_universe_refresh(ctx, task) -> Reading:
+    """CH-59 `scripts.universe_refresh` (daily): the newest `universe_refresh/refresh_<utc>_<pid>.json`,
+    dated by its own `finished_utc`. Every run writes one, refusals included. A stage that is
+    FAILED or UNMOVED is DEGRADED, a REFUSED stage is REFUSED; both stages SKIPPED_FRESH is idle."""
+    folder = ctx.optimus_dir / str(getattr(_config, "UNIVERSE_REFRESH_DIRNAME", "universe_refresh"))
+    where = f"{folder.name}/refresh_<utc>_<pid>.json"
+    mod = "scripts.universe_refresh"
+    p, d = _newest(folder, "refresh_*.json")
+    if p is None:
+        return _after_wrapper(ctx, _none(where), mod)
+    if not isinstance(d, dict):
+        return Reading(unknown_reason=f"{folder.name}/{p.name} cannot be read as a JSON object", proof=where)
+    if d.get("overall_status") == "RUNNING":
+        # the receipt is rewritten as each stage starts and ends; one that never reached its
+        # final write within the longest possible run was killed or hung in `in_progress`
+        stamp = parse_stamp(d.get("updated_utc"))
+        begun = parse_stamp(d.get("started_utc")) or stamp
+        stage = d.get("in_progress")
+        limit = float(getattr(_config, "UNIVERSE_REFRESH_MAX_RUN_S", 3000))
+        if stamp is None or begun is None or stamp > ctx.now + timedelta(seconds=30):
+            return Reading(status="DEGRADED", reason="running refresh receipt has no valid stamp",
+                           proof=f"{folder.name}/{p.name}", detail="universe refresh receipt carries no usable stamp")
+        age = (ctx.now - begun).total_seconds()
+        if age <= limit:
+            rd = Reading(stamp=stamp, status="OK", idle_reason=f"a refresh is running (stage {stage})",
+                         proof=f"{folder.name}/{p.name} overall_status RUNNING + started_utc",
+                         detail=f"universe refresh running: stage {stage}, {age:.0f} s of at most {limit:.0f} s")
+        else:
+            rd = Reading(stamp=stamp, status="DEGRADED",
+                         reason=f"the run started {d.get('started_utc')} never finished; it stopped in stage {stage}",
+                         proof=f"{folder.name}/{p.name} overall_status RUNNING + started_utc",
+                         detail=f"universe refresh never finished: stage {stage} (killed or hung)")
+        return _after_wrapper(ctx, rd, mod)
+    stamp = parse_stamp(d.get("finished_utc"))
+    if stamp is None or stamp > ctx.now + timedelta(seconds=30):
+        return Reading(status="DEGRADED", reason="refresh receipt has no valid finished_utc",
+                       proof=f"{folder.name}/{p.name}", detail="universe refresh receipt carries no usable stamp")
+    stages = d.get("stages") if isinstance(d.get("stages"), dict) else {}
+    kinds = {n: str((s or {}).get("status_kind")) for n, s in stages.items() if isinstance(s, dict)}
+    bad = [f"{n} {stages[n].get('status')}: {str(stages[n].get('detail') or '')[:120]}"
+           for n, k in kinds.items() if k not in ("REFRESHED", "SKIPPED_FRESH")]
+    if not kinds:
+        status, bad = "DEGRADED", ["the receipt names no stage"]
+    elif any(k not in ("REFRESHED", "SKIPPED_FRESH", "REFUSED") for k in kinds.values()):
+        status = "DEGRADED"
+    elif "REFUSED" in kinds.values():
+        status = "REFUSED"
+    elif d.get("overall_rc") != 0:
+        status, bad = "DEGRADED", [f"overall_rc={d.get('overall_rc')!r} over green stages"]
+    else:
+        status = "OK"
+    idle = ("every stage SKIPPED_FRESH (the answers were inside their age limits)"
+            if status == "OK" and set(kinds.values()) == {"SKIPPED_FRESH"} else None)
+    rd = Reading(stamp=stamp, status=status, reason="; ".join(bad), idle_reason=idle,
+                 proof=f"{folder.name}/{p.name} finished_utc + stage statuses",
+                 detail="universe refresh: " + ", ".join(
+                     f"{n} {stages[n].get('status_kind')} {stages[n].get('count_before')}->"
+                     f"{stages[n].get('count_after')} (stamp {stages[n].get('stamp_after')})" for n in kinds))
+    return _after_wrapper(ctx, rd, mod)
+
+
 def r_no_receipt(why: str):
     def reader(ctx, task) -> Reading:
         return Reading(unknown_reason=why)
@@ -1986,6 +2047,13 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
     "AegisSystemStatus": TaskSpec(
         r_system_status, "system_status/status.json generated_utc + exit_code",
         hash_off="the page's counts legitimately repeat; its stamp and exit code are the check"),
+    "AegisUniverseRefresh": TaskSpec(
+        r_universe_refresh, "universe_refresh/refresh_<utc>_<pid>.json finished_utc + stage statuses "
+                            "(+ runtime_task_runs.jsonl rc)",
+        hash_off="daily; each stage re-reads its own stamp from the live file, which is the check",
+        unregistered_ok="CH-59: registering the daily task is the brain session's attended step"),
+    # not caught up yet: the catch-up list is pinned by test_task_keeper_catchup_derived; the job is
+    # age-gated and reaches no order path, so adding it there is a one-line decision for the brain
     "AegisOwnerEventWarning": TaskSpec(
         r_owner_warning, "<dir of the task's owner_warning_once.ps1>/owner_warning_journal/"
                          "owner_warning_runs.jsonl",
