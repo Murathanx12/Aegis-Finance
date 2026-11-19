@@ -289,6 +289,12 @@ CLASSIFIED: dict[str, str] = {
         "OK — offline rule-evolution research; deliberately not wired to a "
         "live decision path, since a rule that rewrites itself in production "
         "is exactly what the immutable-policy rule forbids."),
+    # CH-66: the investigator's filing-TEXT tool. Deliberately unwired: the frozen
+    # IIF-1 tool layer (`investigator_tools.py`, byte-pinned by the launch manifest)
+    # must not import it, and `config.INVESTIGATOR_FILING_TEXT_ENABLED` is OFF until
+    # the brain names the non-frozen investigator configuration that calls it.
+    "backend.services.investigator_filing_text":
+        "OK -- CH-66 filing-text tool; flag OFF, awaiting a non-frozen investigator caller",
 }
 
 

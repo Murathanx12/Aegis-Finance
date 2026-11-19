@@ -8335,6 +8335,59 @@ INVESTIGATOR_NEWS_MAX_NEIGHBOUR_ROWS = 3
 #: "NOT READ (no reason registered)"; E[r] reads `investigator:` only, so the plan
 #: cannot read this arm. Registering the reason belongs with the next attended epoch.
 
+# -- CH-66: filing text for the investigator (2026-11-19) -----------------------
+#: The raw SEC collector (`scripts/news_pull.py`, `MAX_BODY`) stores each 8-K EX-99
+#: body cut at this many characters. A stored body of EXACTLY this length is
+#: reported `truncated_at_source: true`. `test_ch66_filing_text` fails if the
+#: collector's constant ever stops matching this one.
+SEC_EXHIBIT_COLLECTOR_CUT_CHARS = 4000
+#: Folder names under the data root (`backend/data/optimus`).
+SEC_EXHIBIT_BODY_DIRNAME = "news_corpus/sec_edgar_8k_ex99_body"
+SEC_EXHIBIT_FULL_DIRNAME = "sec_exhibit_full"
+SEC_EXHIBIT_CIK_MAP_RELPATH = "edgar_8k/company_tickers.json"
+#: Only URLs under this prefix are ever fetched by the full-exhibit job.
+SEC_EXHIBIT_FULL_URL_PREFIX = "https://www.sec.gov/Archives/edgar/data/"
+#: Documents fetched per run (override: --max-docs) and seconds between requests.
+SEC_EXHIBIT_FULL_MAX_DOCS = 40
+SEC_EXHIBIT_FULL_PACE_S = 2.0
+#: A full exhibit longer than this is stored cut here and flagged `capped`.
+SEC_EXHIBIT_FULL_MAX_CHARS = 400_000
+#: HTTP statuses that mean "the source is refusing us". The run stops at the
+#: FIRST one (REFUSED / SOURCE_BLOCKED, rc 2) and never retries with another identity.
+SEC_EXHIBIT_FULL_BLOCK_STATUSES: tuple = (403, 429)
+#: An event node counts as open for this many days after it was last seen.
+SEC_EXHIBIT_FULL_OPEN_NODE_DAYS = 7
+#: Free disk (GB) required before a run appends anything.
+SEC_EXHIBIT_FULL_MIN_FREE_GB = 2.0
+#: Master switch for the investigator's filing-TEXT tool. OFF: no configuration is
+#: offered the tool. The IIF-1 arms are never offered it whatever this says.
+INVESTIGATOR_FILING_TEXT_ENABLED = False
+#: The separately named configurations that get the tool when the switch is ON.
+INVESTIGATOR_FILING_TEXT_CONFIGURATIONS: tuple = ("investigator:filing_text_v1",)
+#: Bounds on what one tool call hands the model.
+INVESTIGATOR_FILING_TEXT_DAYS = 14
+INVESTIGATOR_FILING_TEXT_MAX_ROWS = 3
+INVESTIGATOR_FILING_TEXT_EXCERPT_CHARS = 1500
+#: When the full text is on disk, a second excerpt starts at the first
+#: outlook/guidance heading (the part the 4,000-character cut removes).
+INVESTIGATOR_FILING_TEXT_OUTLOOK_CHARS = 1800
+INVESTIGATOR_FILING_TEXT_MODEL_CHARS = 12_000
+#: An outlook heading inside this many characters after a "forward-looking"
+#: mention is the safe-harbour boilerplate, not guidance: no outlook excerpt.
+INVESTIGATOR_FILING_TEXT_OUTLOOK_FLS_WINDOW_CHARS = 400
+#: Fix round (review of PR #172, S1/S2). A 200 answer is stored as the exhibit
+#: only with a text content type (when the door reports one), at least
+#: MIN_CHARS characters, and the first PREFIX_CHECK_CHARS characters of the
+#: collector's stored body inside it (entities and whitespace normalised).
+#: MISMATCH_WAVE such failures in one run stop it as REFUSED(SOURCE_SUSPECT).
+SEC_EXHIBIT_FULL_CONTENT_TYPES: tuple = ("text/html", "application/xhtml+xml", "text/plain")
+SEC_EXHIBIT_FULL_MIN_CHARS = 1000
+SEC_EXHIBIT_FULL_PREFIX_CHECK_CHARS = 2000
+SEC_EXHIBIT_FULL_MISMATCH_WAVE = 3
+#: Floor on --pace-s; raised to the collector source's own `min_interval_s`
+#: (`news_sources.yaml`, 1.0 s) when that is higher, never below 1.0.
+SEC_EXHIBIT_FULL_MIN_PACE_S = 1.0
+
 # -- Public health trim (S70, 2026-11-15) --------------------------------------
 #: `/api/health/full`, `/api/providers` and `/health/scheduler` are PUBLIC on the
 #: hosted site and used to print LLM spend, recent WARNING log lines, provider
