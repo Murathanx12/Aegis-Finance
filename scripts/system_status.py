@@ -38,6 +38,10 @@ RULES IT KEEPS
   DOWN row. A refusal is therefore never a silent rc 0 by default for the part
   that matters (undeterminable); the system's own reds are the page's job.
 * Status words: OK / DEGRADED / DOWN / UNKNOWN. Everything else is mapped.
+* CH-65: one more word, RETIRED_BY_OWNER, for a surface the owner switched off on purpose
+  (`config.hosted_backend_retired()`). It is not a health claim: such a row is counted in
+  neither the header's four numbers nor the exit code, it is listed by name, and it prints
+  the date of the decision and its consequence. No request is sent to a retired host.
 """
 
 from __future__ import annotations
@@ -62,7 +66,13 @@ from backend.services import task_receipts as TR  # noqa: E402
 
 SCHEMA = "system_status/1"
 STATUSES = ("OK", "DEGRADED", "DOWN", "UNKNOWN")
-_SEV = {"OK": 0, "UNKNOWN": 1, "DEGRADED": 2, "DOWN": 3}
+#: CH-65: a surface retired by the owner. A display word, deliberately NOT in STATUSES: it is
+#: never counted as health and never drives the exit code.
+RETIRED_STATUS = "RETIRED_BY_OWNER"
+_SEV = {RETIRED_STATUS: -1, "OK": 0, "UNKNOWN": 1, "DEGRADED": 2, "DOWN": 3}
+#: Probes of the hosted backend itself, and probes that only READ THROUGH it.
+HOSTED_PROBES = ("railway_backend", "railway_fleet")
+HOSTED_DEPENDENT_PROBES = ("fred_macro_inputs",)
 SECTIONS = (
     ("tasks", "Scheduled tasks"),
     ("learning", "Learning"),
@@ -211,7 +221,8 @@ def row(section: str, name: str, status: str, detail: str, *, evidence: str = ""
         lim: Optional[float] = None, action: str = "", required: bool = True,
         one_shot: bool = False, extra: Optional[dict] = None) -> dict:
     age = None if (stamp is None or now is None) else (now - stamp).total_seconds()
-    return {"section": section, "name": name, "status": status if status in STATUSES else "UNKNOWN",
+    return {"section": section, "name": name,
+            "status": status if status in STATUSES or status == RETIRED_STATUS else "UNKNOWN",
             "detail": detail, "evidence_path": evidence, "evidence_utc": iso(stamp),
             "age_s": age, "limit_s": lim, "action": action, "required": required,
             "one_shot": one_shot, **({"extra": extra} if extra else {})}
@@ -283,12 +294,73 @@ PROBE_ACTION = {
 }
 
 
-def map_probe_row(r: dict) -> Optional[dict]:
+def hosted_retired() -> Optional[dict]:
+    """`config.hosted_backend_retired()`: the owner's retirement declaration, or None."""
+    fn = getattr(C, "hosted_backend_retired", None)
+    return fn() if callable(fn) else None
+
+
+def retired_consequence(ret: dict) -> str:
+    """'website lanes frozen at their <last mark> marks; hosted API off' -- from the declaration."""
+    lm = ret.get("last_lane_mark")
+    return (f"website lanes frozen at their {lm} marks; hosted API off" if lm
+            else str(ret.get("consequence") or "hosted API off"))
+
+
+def retired_rows(probe: str, name: str, sec: str, r: dict, ret: dict, now: datetime) -> dict:
+    """The dashboard row of a probe that belongs to, or reads through, the retired host.
+
+    * the host's own probes: RETIRED_BY_OWNER with the decision's date, its age and its
+      consequence; counted out (`extra.retired`), not required, no action demanded;
+    * a probe that only reads THROUGH the host (FRED health): UNKNOWN with CANNOT DETERMINE and
+      the fix -- never green, and not a claim that FRED is down;
+    * a declaration whose date cannot be read, or lies in the future, is UNKNOWN and required:
+      a retirement that cannot be dated is not accepted as one."""
+    since = parse_ts(ret.get("since_utc"))
+    evidence = "backend/config.py HOSTED_BACKEND_RETIRED"
+    extra = {"probe_verdict": str(r.get("verdict") or "UNKNOWN"), "where": r.get("where")}
+    if since is None or (since - now).total_seconds() > FUTURE_SLACK_S:
+        return row(sec, name, "UNKNOWN",
+                   f"CANNOT DETERMINE: config.HOSTED_BACKEND_RETIRED carries no readable past date "
+                   f"(since_utc={ret.get('since_utc')!r})", evidence=evidence, now=now,
+                   action="Fix the declaration's since_utc, or set its override when hosting is back.",
+                   extra=extra)
+    days = (now - since).total_seconds() / 86400.0
+    who = f"RETIRED_BY_OWNER since {iso(since)[:10]} ({days:.0f} days ago; {ret.get('reason')})"
+    if probe in HOSTED_DEPENDENT_PROBES:
+        return row(sec, name, "UNKNOWN",
+                   f"CANNOT DETERMINE: this row reads FRED health through the hosted backend "
+                   f"(/api/health/full), which is {who}. No request was made. A FRED key is local, but no "
+                   f"local reader of config.CRITICAL_FRED_SERIES health writes a receipt this page can read",
+                   evidence=evidence, stamp=since, now=now, required=False,
+                   action="Fix: add a local critical-series check (backend.services.fred_health after a local "
+                          "data_fetcher pass) that writes a dated receipt, and point this row at it.",
+                   extra={**extra, "reads_through_retired_host": True})
+    hist = ""
+    if probe == "railway_fleet":
+        # review S4 (PR #170): the fleet loops stopped LONG before the backend went -- keep that fact
+        reason = str(getattr(C, "RAILWAY_FLEET_STOPPED_REASON", "") or "")
+        stopped = parse_ts(getattr(C, "RAILWAY_FLEET_STOPPED_SINCE", None))
+        hist = (f"STOPPED since {iso(stopped)[:10] if stopped else 'an undated stop'}"
+                + (f" ({reason})" if reason else "") + "; then the hosted backend was ") if (reason or stopped) else ""
+        extra = {**extra, "stopped_since": iso(stopped)[:10] if stopped else None, "stopped_reason": reason or None}
+    return row(sec, name, RETIRED_STATUS,
+               f"{hist}{who}: {retired_consequence(ret)}. Not probed, no request made; set "
+               f"{getattr(C, 'HOSTED_BACKEND_ACTIVE_ENV', 'AEGIS_HOSTED_BACKEND_ACTIVE')}=1 when hosting returns",
+               evidence=evidence + (" + RAILWAY_FLEET_STOPPED_REASON" if hist else ""), stamp=since, now=now,
+               required=False,
+               extra={**extra, "retired": True, "retired_by": ret.get("by"), "retired_since": iso(since)[:10]})
+
+
+def map_probe_row(r: dict, now: Optional[datetime] = None) -> Optional[dict]:
     """One `system_health` row -> one dashboard row, or None when a richer row replaces it."""
     probe = str(r.get("probe") or r.get("name") or "")
     sec = PROBE_SECTION.get(probe, "infrastructure")
     if sec is None:
         return None
+    ret = hosted_retired()
+    if ret and probe in HOSTED_PROBES + HOSTED_DEPENDENT_PROBES:       # CH-65
+        return retired_rows(probe, str(r.get("name") or probe), sec, r, ret, now or utcnow())
     verdict = str(r.get("verdict") or "UNKNOWN")
     status = PROBE_STATUS.get(verdict, "UNKNOWN")
     if r.get("state") == "DEGRADED":
@@ -313,7 +385,11 @@ def map_probe_row(r: dict) -> Optional[dict]:
 def _short_http_json(url: str, timeout: float) -> tuple:
     """GET -> (json|None, elapsed_s, err). One request, a short timeout, no retry."""
     import time as _t
+    import urllib.parse
     import urllib.request
+    ret = hosted_retired()
+    if ret and (urllib.parse.urlparse(url).hostname or "") in set(ret.get("hosts") or ()):
+        return None, 0.0, "HOSTED_BACKEND_RETIRED (no request made)"      # CH-65: never call a retired host
     t0 = _t.time()
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "aegis-system-status/1"})
@@ -334,7 +410,12 @@ def raw_probe_rows(ctx: Any) -> list[dict]:
     """
     from backend.services import system_health as SH
     rows: list[dict] = []
+    ret = hosted_retired()
     for p in SH.PROBES:
+        if ret and p.name in HOSTED_PROBES + HOSTED_DEPENDENT_PROBES:
+            # CH-65: neither the GET nor the `railway status` shell-out runs against a retired host
+            rows.append(SH._row(p, p.name, SH._unknown("not run: the hosted backend is retired by the owner")))
+            continue
         if p.needs_proc and not ctx.allow_proc:
             rows.append(SH._row(p, p.name, SH._unknown("not run: --no-proc")))
             continue
@@ -1215,7 +1296,7 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
     guard("infrastructure", lambda: machine_rows(now, run=run))
     guard("infrastructure", lambda: [refusal_row(optimus_dir, now, limits)])
     guard("lessons", lambda: lesson_rows(optimus_dir, now, limits))
-    mapped_probes = [m for m in (map_probe_row(p_) for p_ in probes if p_.get("probe") != "task") if m]
+    mapped_probes = [m for m in (map_probe_row(p_, now) for p_ in probes if p_.get("probe") != "task") if m]
     for m in group_loops(mapped_probes):
         sections[m["section"]]["rows"].append(m)
     # worst first inside each section
@@ -1229,6 +1310,12 @@ def collect(*, optimus_dir: Path, repo: Path, now: Optional[datetime] = None, al
            "allow_proc": allow_proc, "counts": counts, "sections": sections,
            "read_me_first": "Read-only. Every dated row compares its evidence date to a limit in config.SYSTEM_STATUS_LIMITS_H; "
                             "UNKNOWN means the evidence is missing, never fine. No broker was called."}
+    # CH-65: surfaces the owner retired -- named, dated, counted in nothing above
+    ret = hosted_retired()
+    names = sorted(f"{k}/{r['name']}" for k, s in sections.items() for r in s["rows"] if r["status"] == RETIRED_STATUS)
+    rec["retired_by_owner"] = ({"rows": names, "since_utc": ret.get("since_utc"), "by": ret.get("by"),
+                                "reason": ret.get("reason"), "consequence": retired_consequence(ret)}
+                               if ret and names else None)
     rec["exit_code"] = exit_code(rec)
     rec["undetermined"] = undetermined(rec)
     return rec
@@ -1258,11 +1345,13 @@ def exit_code(rec: dict, *, strict: bool = False) -> int:
 
 def header_line(rec: dict) -> str:
     c = rec["counts"]
-    return f"{c['OK']} OK · {c['DEGRADED']} degraded · {c['DOWN']} down · {c['UNKNOWN']} unknown"
+    n = len((rec.get("retired_by_owner") or {}).get("rows") or [])
+    return (f"{c['OK']} OK · {c['DEGRADED']} degraded · {c['DOWN']} down · {c['UNKNOWN']} unknown"
+            + (f" · {n} retired by owner (not counted)" if n else ""))
 
 
 def reds(rec: dict) -> list[dict]:
-    rows = [r for s in rec["sections"].values() for r in s["rows"] if _st(r) != "OK"
+    rows = [r for s in rec["sections"].values() for r in s["rows"] if _st(r) not in ("OK", RETIRED_STATUS)
             and not r.get("one_shot")]
     return sorted(rows, key=lambda r: (-_SEV[_st(r)], str(r.get("section")), str(r.get("name"))))
 
@@ -1271,13 +1360,17 @@ def _st(r: dict) -> str:
     """A row's status, normalised: anything outside STATUSES is UNKNOWN (a stale
     or foreign status.json can carry anything)."""
     s = r.get("status")
-    return s if s in STATUSES else "UNKNOWN"
+    return s if s in STATUSES or s == RETIRED_STATUS else "UNKNOWN"
 
 
 # ═══════════════════════════════════════════════════════════════ rendering
 
 def render_text(rec: dict) -> str:
     L = [f"AEGIS SYSTEMS STATUS  {rec['generated_utc']}", header_line(rec), ""]
+    rb = rec.get("retired_by_owner")
+    if rb:
+        L += [f"RETIRED BY OWNER since {rb.get('since_utc')} ({', '.join(rb['rows'])}): {rb.get('consequence')}. "
+              f"{rb.get('reason')}.", ""]
     red = reds(rec)
     if red:
         L.append("NEEDS ATTENTION")
@@ -1308,7 +1401,7 @@ main{padding:12px 16px;max-width:1200px;margin:0 auto}h2{font-size:12px;text-tra
 .card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .r{display:grid;grid-template-columns:78px 220px 1fr;gap:10px;padding:6px 12px;border-top:1px solid var(--line);align-items:baseline}.r:first-child{border-top:0}
 .b{font-size:11px;font-weight:700;text-align:center;border-radius:4px;padding:1px 0;color:#fff}
-.OK{background:var(--ok)}.DEGRADED{background:var(--deg)}.DOWN{background:var(--down)}.UNKNOWN{background:var(--unk)}
+.OK{background:var(--ok)}.DEGRADED{background:var(--deg)}.DOWN{background:var(--down)}.UNKNOWN{background:var(--unk)}.RETIRED_BY_OWNER{background:var(--unk)}
 .n{font-weight:600;overflow-wrap:anywhere}.d{overflow-wrap:anywhere}.a{color:var(--mut);display:block;font-size:12px}.ev{color:var(--mut);font-size:11px}
 .act{display:block;color:var(--fg);font-size:12px}.act::before{content:"to do: ";color:var(--mut)}
 button{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer;font:inherit}
@@ -1393,6 +1486,10 @@ def render_html(rec: dict, *, now: Optional[datetime] = None) -> str:
              "<button id=theme type=button>theme</button></header><main>"]
     gl, gl_stale = generated_line(rec, now=now)
     parts.append(f"<p class='gen{' stale' if gl_stale else ''}' id=generated>{e(gl)}</p>")
+    rb = rec.get("retired_by_owner")
+    if rb:
+        parts.append(f"<p class=gen id=retired>Retired by the owner since {e(str(rb.get('since_utc')))} "
+                     f"({e(', '.join(rb['rows']))}): {e(str(rb.get('consequence')))}. {e(str(rb.get('reason')))}.</p>")
     if rec.get("undetermined"):
         parts.append("<h2>Could not determine</h2><div class=card>" + "".join(
             f"<div class=r><span class='b UNKNOWN'>UNKNOWN</span><span class=n></span><span class=d>{e(u)}</span></div>"

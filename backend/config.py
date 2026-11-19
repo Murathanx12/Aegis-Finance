@@ -7335,6 +7335,53 @@ PUBLIC_ASSETS_REFRESH_HHMM = "1030"
 #: permanent UNKNOWN; empty it when the loops are restarted.
 RAILWAY_FLEET_STOPPED_REASON = ("Railway fleet loops stopped on purpose 2026-09-29 (S60: bill held at "
                                 "$20; the PC runs the fleet manager instead)")
+# ── CH-65 (2026-11-19): the hosted backend was RETIRED BY THE OWNER ─────────────
+#: The owner stopped paying for Railway on purpose. The website backend and the
+#: seal-authority service answer 404 "Application not found" (first seen between
+#: 2026-11-16T00:32Z and 2026-11-17T00:11Z). This is a decision, not an outage. It is the
+#: ONE declaration every reader uses (`hosted_backend_retired()`): the ROI reader does not
+#: call the dead URL and carries the website lanes forward as FROZEN, the results voice and
+#: the family scorecard say which family left the counts, the status page prints
+#: RETIRED_BY_OWNER. No other file repeats these dates.
+HOSTED_BACKEND_RETIRED = {
+    "since_utc": "2026-11-16",
+    "by": "owner",
+    "reason": "the owner stopped paying for hosting (Railway); a decision, not an outage",
+    "last_lane_mark": "2026-11-13",
+    "hosts": ("aegis-finance-production.up.railway.app", "seal-authority-production.up.railway.app"),
+    "consequence": "website lanes frozen at their last marks; hosted API off",
+}
+#: Set this environment variable to 1 when hosting returns: every reader then behaves as
+#: before the retirement (the URL is called again) without a code change.
+HOSTED_BACKEND_ACTIVE_ENV = "AEGIS_HOSTED_BACKEND_ACTIVE"
+#: How many of the newest local ROI receipts the frozen carry-forward may open while it
+#: looks for one that still holds the lanes' NAV series. Past it the family is SOURCE_RETIRED.
+HOSTED_BACKEND_FROZEN_LOOKBACK_RECEIPTS = 40
+#: At most this many families are spelled out in the results voice's NOT IN THE COUNTS line.
+RESULTS_VOICE_COVERAGE_MAX_FAMILIES = 6
+#: Review of PR #170: the line also stops at this many characters (whole groups only, then
+#: "and N more group(s) (M account(s))"). Telegram rejects a message over 4096 characters and
+#: the results block carries nine other lines; 1500 keeps the line readable in one message.
+RESULTS_VOICE_COVERAGE_MAX_CHARS = 1500
+#: Review B2: the ONE derived memory file (beside the ROI receipts) that keeps a frozen or
+#: vanished account named on every later run, with its last real standing and the receipt
+#: (name + sha256) that priced it. Written by scripts.paper_accounts_roi only.
+PAPER_ACCOUNTS_FROZEN_SOURCES = "frozen_sources.json"
+#: account -> reason. An account listed here leaves the frozen / missing memory (and so the
+#: NOT IN THE COUNTS line) on the next ROI run: the explicit retirement. Empty by default.
+PAPER_ACCOUNTS_RETIRED_EXPLICITLY: dict = {}
+#: Review S4: the date the six aat-loop Railway services were stopped (RAILWAY_FLEET_STOPPED_REASON),
+#: kept beside the later backend retirement so the fleet row does not lose its own history.
+RAILWAY_FLEET_STOPPED_SINCE = "2026-09-29"
+
+
+def hosted_backend_retired() -> "dict | None":
+    """The retirement declaration, or None when the hosted backend is in use (the
+    declaration emptied, or `HOSTED_BACKEND_ACTIVE_ENV` set to a true value). Read at call
+    time, so the override needs no restart of a long-running reader."""
+    if os.getenv(HOSTED_BACKEND_ACTIVE_ENV, "").strip().lower() in ("1", "true", "yes", "on"):
+        return None
+    return dict(HOSTED_BACKEND_RETIRED) if HOSTED_BACKEND_RETIRED else None
 
 # ── C20 (2026-10-07): six-role fleet v3 PREPARED + the PC-PAPER benchmark core ──
 #: D14, OWNER DECISION, default OFF. When True, `sim_run.u_plan` adds ONE target:

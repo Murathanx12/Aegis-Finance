@@ -162,7 +162,10 @@ def _probe(probe, verdict, **kw):
             "evidence_utc": None, "proof": "p", "cadence_s": 3600, **kw}
 
 
-def test_probe_verdict_mapping():
+def test_probe_verdict_mapping(monkeypatch):
+    # CH-65: the railway_backend line below is the behaviour WITH a hosted backend in use; while
+    # config.HOSTED_BACKEND_RETIRED stands the row reads RETIRED_BY_OWNER (test_hosted_backend_retired)
+    monkeypatch.setenv(S.C.HOSTED_BACKEND_ACTIVE_ENV, "1")
     assert S.map_probe_row(_probe("u_funnel", "ALIVE"))["status"] == "OK"
     assert S.map_probe_row(_probe("u_funnel", "STALE"))["status"] == "DEGRADED"
     assert S.map_probe_row(_probe("u_funnel", "DEAD"))["status"] == "DOWN"

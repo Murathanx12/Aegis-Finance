@@ -94,12 +94,15 @@ def main(argv: list[str] | None = None) -> int:
     sc = res["scorecard"]
     if a.json:
         print(json.dumps({"status": sc["status"], "run_id": res["run_id"], "json": res["json"], "md": res["md"],
-                          "top_line": sc["top_line"], "failures": sc["failures"],
+                          "top_line": sc["top_line"], "coverage_line": sc.get("coverage_line"),
+                          "failures": sc["failures"],
                           "live_folder_files": [n_before, n_after]}))
     else:
         age = sc["input_age"]
         print(f"input age: {age['age_days']} days (generated {age['generated_utc']}, limit {age['stale_days']:g})")
         print(sc["top_line"] + ".")
+        if sc.get("coverage_line"):                      # CH-65: who is in none of the counts
+            print(sc["coverage_line"] + ".")
         print(sc["second_line"] + ".")
         lead, worst = FS.ends(sc)
         print("Leaders are chosen after the fact, each over its own short window: an observation, not a "

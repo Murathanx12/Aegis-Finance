@@ -13,7 +13,11 @@ accounts so I want to see all." Before this there were six places to look and
 no single number. This script READS each of them and invents nothing:
 
   website_lane      the ten $100k lanes, from the LIVE deploy's /api/pi/track-record
-                    (fallback: the local NAV store, marked `fresh: false`)
+                    (fallback: the local NAV store, marked `fresh: false`). While
+                    `config.hosted_backend_retired()` declares the host retired
+                    (CH-65) the URL is NOT called: the lanes are carried forward
+                    as FROZEN from the newest local receipt that still holds
+                    their NAV series, or the family is SOURCE_RETIRED
   alpaca_fleet      hack1-hack6, GET /v2/account + /v2/positions per role; a 401 is
                     CREDENTIAL_INVALID, never $0
   pc_paper          PC-PAPER via backend.services.pc_broker.snapshot()
@@ -31,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from datetime import date, datetime, timezone
@@ -67,7 +72,12 @@ MURAT_BOOK = Path(_config.DATA_DIR) / "murat_book.yaml"
 
 SCHEMA = "paper_accounts_roi/1"
 STATUSES = ("LIVE", "PENDING", "RETIRED", "UNPRICED", "CREDENTIAL_INVALID", "UNGRADED",
-            "VOIDED")
+            "VOIDED", "FROZEN", "SOURCE_RETIRED")
+#: CH-65: a FROZEN row is the last known state of an account whose source was retired on
+#: purpose. Its `roi_pct` / `vs_spy_pp` are None (it is in no ahead/behind count of any
+#: reader); the last known figures, over the window that ENDS at its last real mark, are
+#: in `frozen_standing`. SOURCE_RETIRED is the family when no local receipt holds it.
+FROZEN, SOURCE_RETIRED = "FROZEN", "SOURCE_RETIRED"
 #: `llm_portfolio.VOID_SCHEMA`, repeated so this reader never imports the service.
 VOID_SCHEMA = "llm_portfolio/void"
 
@@ -227,8 +237,232 @@ def local_track_record() -> Optional[dict]:
     return {"lanes": lanes, "benchmarks": {}, "all_fresh": False} if lanes else None
 
 
-def collect_lanes(tr: Optional[dict], *, fresh: bool, source: str) -> list[dict]:
+def hosted_retired() -> Optional[dict]:
+    """`config.hosted_backend_retired()`: the owner's retirement declaration, or None."""
+    fn = getattr(_config, "hosted_backend_retired", None)
+    return fn() if callable(fn) else None
+
+
+def retired_text(ret: dict) -> str:
+    return (f"hosted backend retired by the {ret.get('by') or 'owner'} since {ret.get('since_utc')}: "
+            f"{ret.get('reason') or 'no reason recorded'}")
+
+
+_ROI_NAME_RE = re.compile(r"^roi_(\d{4}-\d{2}-\d{2})(?:T(\d{6})Z)?(?:\.nobroker)?(?:_\d+)?\.json$")
+
+
+def _roi_receipts_newest_first(folder: Path) -> list[Path]:
+    """Local ROI receipts ordered by the stamp in their FILE NAME (never mtime, which is
+    checkout time). Review S3 (PR #170): the date-named `roi_<day>.json` is a mutable
+    convenience copy -- a later run of the same day replaces it, and a narrower run may not --
+    so it is SKIPPED whenever a run-stamped receipt of that day exists; it is read only for a
+    day that has no stamped receipt at all (receipts older than run stamps)."""
+    stamped, dated = [], []
+    for p in Path(folder).glob("roi_*.json") if Path(folder).is_dir() else []:
+        m = _ROI_NAME_RE.match(p.name)
+        if m:
+            (stamped if m.group(2) else dated).append(((m.group(1), m.group(2) or "", p.name), p))
+    days = {k[0] for k, _ in stamped}
+    out = stamped + [(k, p) for k, p in dated if k[0] not in days]
+    return [p for _, p in sorted(out, reverse=True)]
+
+
+def _sha256(p: Path) -> Optional[str]:
+    import hashlib
+    try:
+        return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+# ── the frozen / missing memory (review B2, PR #170) ──────────────────────────
+#: ONE small derived file beside the receipts, maintained by this step only. It holds each
+#: FROZEN account's last real standing and, for an account that stopped being priced for any
+#: other reason (a broker 401, a vanished row), the run it went missing and its last known
+#: standing -- so the results voice and the scorecard keep naming it on every later run, and
+#: no receipt search can lose the figure.
+FROZEN_SOURCES_SCHEMA = "frozen_sources/1"
+
+
+def frozen_sources_path(folder: Path) -> Path:
+    return Path(folder) / str(getattr(_config, "PAPER_ACCOUNTS_FROZEN_SOURCES", "frozen_sources.json"))
+
+
+def read_frozen_sources(folder: Path) -> tuple[Optional[dict], Optional[str]]:
+    """(memory, error). (None, None) when the file does not exist yet; (None, why) when it
+    exists and cannot be read -- the caller then REFUSES to overwrite it."""
+    p = frozen_sources_path(folder)
+    if not p.exists():
+        return None, None
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return None, f"{p.name} unreadable ({type(e).__name__})"
+    if not isinstance(d, dict) or d.get("schema") != FROZEN_SOURCES_SCHEMA or not isinstance(d.get("accounts"), dict):
+        return None, f"{p.name} is not a {FROZEN_SOURCES_SCHEMA} file"
+    return d, None
+
+
+def _memory_lanes(memory: Optional[dict]) -> dict:
+    return {a: e for a, e in ((memory or {}).get("accounts") or {}).items()
+            if isinstance(e, dict) and e.get("state") == FROZEN and e.get("family") == "website_lane"
+            and e.get("last_mark")}
+
+
+def frozen_track_record(folder: Path, retired: dict, *, max_files: Optional[int] = None,
+                        memory: Optional[dict] = None) -> tuple[Optional[dict], dict]:
+    """CH-65: the website lanes, carried forward AS FROZEN from the newest local ROI receipt
+    that still holds their NAV series. No network call is made.
+
+    Returns `(tr, info)`. `tr` has the shape of `/api/pi/track-record` (or is None), and never
+    holds a point dated after `retired["last_lane_mark"]`: a mark later than the last real one
+    cannot be produced here. `info["status"]` is FROZEN, or SOURCE_RETIRED with `why` when
+    neither a receipt nor the memory file holds the lanes. `origin_receipt` is the last
+    run-stamped receipt written while the source answered; it is kept through every later carry.
+
+    Review B2: `memory` is `read_frozen_sources(folder)[0]`. While it holds the lanes, the
+    receipt search stops after `max_files` receipts and, when none holds the NAV series, the
+    lanes come FROZEN from the memory's standing (`standing_only`, `tr` None). While it does
+    NOT hold them, the search reads every receipt: a lookback must never lose the figure."""
+    why = retired_text(retired)
+    cap = str(retired.get("last_lane_mark") or "")[:10] or None
+    mem_lanes = _memory_lanes(memory)
+    limit = (int(max_files if max_files is not None
+                 else getattr(_config, "HOSTED_BACKEND_FROZEN_LOOKBACK_RECEIPTS", 40)) if mem_lanes else None)
+    info: dict = {"status": SOURCE_RETIRED, "why": why, "retired": retired, "carried_from": None,
+                  "origin_receipt": None, "last_real_mark": None, "n_receipts_opened": 0,
+                  "n_points_after_last_real_mark_dropped": 0, "standing": {},
+                  "source": f"none ({why}; no local receipt holds the lanes)"}
+    unreadable = []
+    receipts = _roi_receipts_newest_first(folder)
+    for p in receipts if limit is None else receipts[:limit]:
+        info["n_receipts_opened"] += 1
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            unreadable.append(f"{p.name} ({type(e).__name__})")
+            continue
+        ls = d.get("lane_nav_series") if isinstance(d, dict) else None
+        lanes_in = (ls or {}).get("lanes") if isinstance(ls, dict) else None
+        if not isinstance(lanes_in, dict) or not any(lanes_in.values()):
+            continue
+        lanes, dropped = {}, 0
+        for lane, pts in lanes_in.items():
+            keep = [{"date": str(q[0])[:10], "value": float(q[1])} for q in pts or []
+                    if cap is None or str(q[0])[:10] <= cap]
+            dropped += len(pts or []) - len(keep)
+            if keep:
+                lanes[lane] = keep
+        if not lanes:
+            continue
+        spy = [{"date": str(q[0])[:10], "value": float(q[1])}
+               for q in ls.get("spy_rebased_100k_at_2026_06_08") or [] if cap is None or str(q[0])[:10] <= cap]
+        prev = ls.get("frozen") if isinstance(ls.get("frozen"), dict) else {}
+        origin = str(prev.get("origin_receipt") or p.name)
+        standing = {}
+        for r in d.get("rows") or []:
+            if isinstance(r, dict) and r.get("family") == "website_lane" and r.get("account") in lanes:
+                st = r.get("frozen_standing") if isinstance(r.get("frozen_standing"), dict) else r
+                standing[r["account"]] = {"roi_pct": st.get("roi_pct"), "vs_spy_pp": st.get("vs_spy_pp"),
+                                          "spy_same_window_pct": st.get("spy_same_window_pct"),
+                                          "last_mark": r.get("last_mark")}
+        for a, e in mem_lanes.items():          # the memory fills a figure the receipt lacks
+            s = standing.get(a)
+            if a in lanes and s is not None and s.get("vs_spy_pp") is None and e.get("last_mark") == s.get("last_mark"):
+                standing[a] = {**s, **{k: e.get(k) for k in ("roi_pct", "vs_spy_pp", "spy_same_window_pct")}}
+        last_real = max(v[-1]["date"] for v in lanes.values())
+        info.update(status=FROZEN, carried_from=p.name, origin_receipt=origin, last_real_mark=last_real,
+                    n_points_after_last_real_mark_dropped=dropped, standing=standing,
+                    source=f"last local receipt {origin} ({why}; no network call)")
+        if unreadable:
+            info["unreadable_receipts"] = unreadable
+        return ({"lanes": lanes, "benchmarks": {"SPY": spy}, "all_fresh": False,
+                 "expected_nav_date": None}, info)
+    searched = (f"none of the newest {info['n_receipts_opened']} local ROI receipt(s) in {Path(folder).name} "
+                f"holds the lanes' NAV series")
+    if unreadable:
+        info["unreadable_receipts"] = unreadable
+    if mem_lanes:                               # review B2: the memory keeps the figure
+        lanes_ok = {a: e for a, e in mem_lanes.items() if cap is None or str(e["last_mark"])[:10] <= cap}
+        if lanes_ok:
+            origins = sorted({str(e.get("source_receipt")) for e in lanes_ok.values() if e.get("source_receipt")})
+            mp = frozen_sources_path(folder).name
+            info.update(status=FROZEN, standing_only=True, carried_from=mp,
+                        origin_receipt=origins[-1] if origins else None,
+                        last_real_mark=max(str(e["last_mark"])[:10] for e in lanes_ok.values()),
+                        standing={a: {k: e.get(k) for k in ("roi_pct", "vs_spy_pp", "spy_same_window_pct",
+                                                             "last_mark", "inception", "nav_end",
+                                                             "source_receipt", "source_sha256")}
+                                  for a, e in lanes_ok.items()},
+                        why=f"{why}; {searched}; standing from {mp}",
+                        source=(f"{mp}: last real standing from {', '.join(origins) or 'an unnamed receipt'} "
+                                f"({why}; no network call)"))
+            return None, info
+    info["why"] = (f"{why}; {searched}"
+                   + (f"; unreadable: {', '.join(unreadable[:5])}" if unreadable else ""))
+    return None, info
+
+
+def freeze_rows(rows: list[dict], frozen: Optional[dict]) -> None:
+    """Turn the carried lane rows into FROZEN rows, AFTER the SPY leg was attached over each
+    row's own window (inception -> its last real mark). The last known figures move into
+    `frozen_standing`; `roi_pct` / `vs_spy_pp` become None so no reader counts a frozen
+    account as ahead or behind. When the SPY ruler was unavailable the figures of the origin
+    receipt are used, and only if that receipt marked the lane on the same date."""
+    if not frozen or frozen.get("status") != FROZEN:
+        return
+    for r in rows:
+        if not r.get("frozen"):
+            continue
+        st = {"roi_pct": r.get("roi_pct"), "spy_same_window_pct": r.get("spy_same_window_pct"),
+              "vs_spy_pp": r.get("vs_spy_pp"), "window": [r.get("inception"), r.get("last_mark")],
+              "source": "recomputed over the frozen window"}
+        was = (frozen.get("standing") or {}).get(r["account"]) or {}
+        if st["vs_spy_pp"] is None and was.get("vs_spy_pp") is not None and was.get("last_mark") == r.get("last_mark"):
+            st.update(roi_pct=was.get("roi_pct") if st["roi_pct"] is None else st["roi_pct"],
+                      spy_same_window_pct=was.get("spy_same_window_pct"), vs_spy_pp=was.get("vs_spy_pp"),
+                      source=f"as recorded in {frozen.get('carried_from')} (same last mark)")
+        r["frozen_standing"] = st
+        r["status"] = FROZEN
+        r["roi_pct"] = r["spy_same_window_pct"] = r["vs_spy_pp"] = None
+
+
+def collect_lanes(tr: Optional[dict], *, fresh: bool, source: str,
+                  frozen: Optional[dict] = None) -> list[dict]:
     rows = []
+    if frozen and frozen.get("status") == FROZEN and frozen.get("standing_only"):
+        # review B2: no receipt holds the NAV series any more; the memory file holds each
+        # lane's last real standing (inception, NAV at the last mark, the figures, the receipt)
+        why = retired_text(frozen.get("retired") or {})
+        for lane, st in sorted((frozen.get("standing") or {}).items()):
+            last = str(st.get("last_mark"))[:10]
+            rows.append(_row(lane, "website_lane", source=source, inception=st.get("inception"),
+                             start_capital=LANE_START_USD, equity=st.get("nav_end"), n_positions=None,
+                             last_mark=last, fresh=False, frozen=True, frozen_since=last, frozen_reason=why,
+                             frozen_origin_receipt=st.get("source_receipt"),
+                             frozen_origin_sha256=st.get("source_sha256"),
+                             note=(f"FROZEN at its {last} mark ({why}); last known values from "
+                                   f"{frozen.get('carried_from')}, in no ahead/behind count")))
+        return rows
+    if frozen and (frozen.get("status") != FROZEN or not tr or not tr.get("lanes")):
+        return [_row("website lanes", "website_lane", source=source, status=SOURCE_RETIRED,
+                     start_capital=None, note=f"SOURCE RETIRED, not priced: {frozen.get('why')}",
+                     fresh=False, source_retired=True,
+                     retired_reason=retired_text(frozen.get("retired") or {}))]
+    if frozen:
+        why = retired_text(frozen.get("retired") or {})
+        for lane, pts in tr["lanes"].items():
+            if not pts:
+                continue
+            last = pts[-1]
+            rows.append(_row(lane, "website_lane", source=source, inception=pts[0]["date"],
+                             start_capital=LANE_START_USD, equity=last["value"], n_positions=None,
+                             last_mark=last["date"], fresh=False, frozen=True,
+                             frozen_since=last["date"], frozen_reason=why,
+                             frozen_origin_receipt=frozen.get("origin_receipt"),
+                             note=(f"FROZEN at its {last['date']} mark ({why}); last known values, "
+                                   f"in no ahead/behind count")))
+        return rows
     if not tr or not tr.get("lanes"):
         return [_row("website lanes (all ten)", "website_lane", source=source,
                      status="UNPRICED", start_capital=None,
@@ -700,6 +934,15 @@ def aggregate(rows: list[dict]) -> dict:
             p = [r for r in rs if r in priced]
             by_family[fam] = {"n": len(rs), "n_priced": len(p),
                               **({k: v for k, v in agg(p).items() if k != "n"} if p else {})}
+            fz = [r for r in rs if r["status"] == FROZEN]
+            sr = [r for r in rs if r["status"] == SOURCE_RETIRED]
+            if fz:                                   # CH-65: never a silent n_priced 0
+                by_family[fam].update(status=FROZEN, n_frozen=len(fz),
+                                      frozen_since=max(str(r.get("frozen_since")) for r in fz),
+                                      reason=fz[0].get("frozen_reason"))
+            elif sr:
+                by_family[fam].update(status=SOURCE_RETIRED, reason=sr[0].get("note"))
+    frozen_line = frozen_line_of(rows)
     ne = [r for r in compared if not r["family"].endswith("twin")]
     sentence = (f"Of {len(compared)} priced accounts with an own-window SPY leg, "
                 f"{len(ahead)} are ahead of SPY and {len(behind)} behind "
@@ -707,12 +950,34 @@ def aggregate(rows: list[dict]) -> dict:
                 f"{sum(1 for r in ne if r['vs_spy_pp'] <= 0)} behind); "
                 f"{counts['PENDING']} are PENDING (not yet entered), "
                 f"{counts['UNGRADED']} UNGRADED, {counts['CREDENTIAL_INVALID']} CREDENTIAL_INVALID, "
-                f"{counts['UNPRICED']} UNPRICED, {counts['VOIDED']} VOIDED before entry (never graded).")
-    return {"all_priced": agg(priced) if priced else None,
+                f"{counts['UNPRICED']} UNPRICED, {counts['VOIDED']} VOIDED before entry (never graded)."
+                + (f" {frozen_line}." if frozen_line else ""))
+    return {"frozen_line": frozen_line,
+            "all_priced": agg(priced) if priced else None,
             "priced_excluding_control_twins": agg(non_ctrl) if non_ctrl else None,
             "n_ahead_of_spy": len(ahead), "n_behind_spy": len(behind),
             "n_pending": counts["PENDING"], "status_counts": counts,
             "by_family": by_family, "honest_sentence": sentence}
+
+
+def frozen_line_of(rows: list[dict]) -> Optional[str]:
+    """One sentence for every surface that prints counts: which accounts are FROZEN or
+    SOURCE_RETIRED, since which mark, why, and that they are in no count. None when none are."""
+    fz = [r for r in rows if r.get("status") == FROZEN]
+    sr = [r for r in rows if r.get("status") == SOURCE_RETIRED]
+    parts = []
+    if fz:
+        st = [(r["account"], (r.get("frozen_standing") or {}).get("vs_spy_pp")) for r in fz]
+        known = sorted((x for x in st if x[1] is not None), key=lambda x: x[1])
+        worst = (f"; {known[0][0]} {known[0][1]:+.2f} pp vs SPY was the worst of them, "
+                 f"{sum(1 for x in known if x[1] > 0)} of {len(known)} were ahead of SPY at those marks"
+                 if known else "; their standing vs SPY CANNOT BE DETERMINED (no SPY leg)")
+        parts.append(f"{len(fz)} account(s) FROZEN at their {max(str(r.get('frozen_since')) for r in fz)} marks "
+                     f"({fz[0].get('frozen_reason')}){worst}; they are in none of the counts here")
+    if sr:
+        parts.append(f"{', '.join(sorted({str(r['family']) for r in sr}))} SOURCE_RETIRED, not priced "
+                     f"({sr[0].get('retired_reason') or sr[0].get('note')}); in none of the counts here")
+    return "; ".join(parts) if parts else None
 
 
 def lane_series(tr: Optional[dict]) -> dict:
@@ -730,9 +995,11 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
           llm_leaderboard: Optional[dict] = None, decisions_dir: Path = DECISIONS_DIR,
           murat_bars: Optional[pd.DataFrame] = None, bm=None, bm_error: Optional[str] = None,
           include_fleet: bool = True, include_pc: bool = True,
-          llm_today: Optional[date] = None) -> dict:
+          llm_today: Optional[date] = None, tr_frozen: Optional[dict] = None) -> dict:
+    """`tr_frozen`: the `info` of `frozen_track_record` when the hosted backend is retired
+    (CH-65) -- the lane rows are then FROZEN (or the family SOURCE_RETIRED), never LIVE."""
     rows: list[dict] = []
-    rows += collect_lanes(tr, fresh=tr_fresh, source=tr_source)
+    rows += collect_lanes(tr, fresh=tr_fresh, source=tr_source, frozen=tr_frozen)
     if include_fleet:
         rows += collect_fleet(fleet_env, http_get=http_get)
     if include_pc:
@@ -748,6 +1015,7 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
     rows.sort(key=lambda r: (order.get(r["family"], 99),
                              -(r["roi_pct"] if r["roi_pct"] is not None else -1e9)))
     attach_spy(rows, bm)
+    freeze_rows(rows, tr_frozen)
     attach_mark_status(rows)
     receipt = {
         "schema": SCHEMA,
@@ -759,7 +1027,14 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
                               "fresh": bool(tr_fresh and (tr or {}).get("all_fresh")),
                               "reachable": tr_fresh,
                               "expected_nav_date": (tr or {}).get("expected_nav_date"),
-                              "all_fresh": (tr or {}).get("all_fresh")},
+                              "all_fresh": (tr or {}).get("all_fresh"),
+                              **({"retired": tr_frozen.get("retired"), "status": tr_frozen.get("status"),
+                                  "frozen": tr_frozen.get("status") == FROZEN,
+                                  "last_real_mark": tr_frozen.get("last_real_mark"),
+                                  "origin_receipt": tr_frozen.get("origin_receipt"),
+                                  "carried_from": tr_frozen.get("carried_from"),
+                                  "network_call": False, "why": tr_frozen.get("why")}
+                                 if tr_frozen else {})},
             "spy_leg": ("learner.benchmark.spy_total_return (yfinance adj close, total return)"
                         if bm is not None else f"UNAVAILABLE: {bm_error}"),
         },
@@ -770,7 +1045,11 @@ def build(*, tr: Optional[dict], tr_source: str, tr_fresh: bool, fleet_env: dict
                                for m in MARK_STATUSES},
         "rows": rows,
         "aggregate": aggregate(rows),
-        "lane_nav_series": lane_series(tr),
+        "lane_nav_series": {**lane_series(tr),
+                            **({"frozen": {k: tr_frozen.get(k) for k in
+                                           ("status", "origin_receipt", "carried_from", "last_real_mark",
+                                            "n_points_after_last_real_mark_dropped", "why")}}
+                               if tr_frozen and tr_frozen.get("status") == FROZEN else {})},
         "read_me_first": ("ROI is equity / start capital - 1 over each account's OWN window; "
                           "SPY is compounded over that same window. Nothing here is a claim: "
                           "every book runs under PRODUCT_EXPERIMENT. A window of weeks cannot "
@@ -806,6 +1085,8 @@ def render_markdown(rc: dict, png_name: Optional[str]) -> str:
          "> **Nothing here is a claim.** Every account runs under `PRODUCT_EXPERIMENT`; "
          "windows of weeks cannot separate skill from noise. `mirror`'s loss is its book's "
          "real performance, left on the record on purpose.", ""]
+    if ag.get("frozen_line"):
+        L += [f"> **NOT CURRENT:** {ag['frozen_line']}.", ""]
     if png_name:
         L += [f"![ROI per paper account vs SPY over the same window](assets/{png_name})", ""]
     a = ag.get("all_priced")
@@ -843,8 +1124,14 @@ def render_markdown(rc: dict, png_name: Optional[str]) -> str:
         note = r["note"] or ""
         src = r["source"].split(" (")[0]
         vs = "—" if r["vs_spy_pp"] is None else f"{r['vs_spy_pp']:+.2f} pp"
+        roi_c, spy_c = _f(r["roi_pct"], pct=True), _f(r["spy_same_window_pct"], pct=True)
+        fs = r.get("frozen_standing") if r["status"] == FROZEN else None
+        if fs:                                    # last known figures, labelled; never a live number
+            roi_c = f"{_f(fs.get('roi_pct'), pct=True)} (frozen)"
+            spy_c = f"{_f(fs.get('spy_same_window_pct'), pct=True)} (frozen)"
+            vs = ("—" if fs.get("vs_spy_pp") is None else f"{fs['vs_spy_pp']:+.2f} pp") + " (frozen)"
         L.append(f"| {r['account']} | {r['family']} | {_f(r['inception'])} | {_f(r['start_capital'], money=True)} | "
-                 f"{_f(r['equity'], money=True)} | {_f(r['roi_pct'], pct=True)} | {_f(r['spy_same_window_pct'], pct=True)} | "
+                 f"{_f(r['equity'], money=True)} | {roi_c} | {spy_c} | "
                  f"{vs} | "
                  f"{_f(r['n_positions'])} | {_f(r['last_mark'])} | **{r['status']}** | {src}{'; ' + note if note else ''} |")
     L += ["", "## `llm_portfolio` books and their twins", "",
@@ -956,8 +1243,11 @@ def render_chart(rc: dict, path: Path) -> Optional[Path]:
             if i == 0:
                 a2.set_ylabel("NAV, $k", fontsize=8, color=INK2)
                 a2.legend(fontsize=7, frameon=False, loc="lower left")
+        fzn = (rc.get("lane_nav_series") or {}).get("frozen") or {}
         sf_bot.text(0.01, 0.0, "Lower panels: the ten website lanes' NAV since inception (blue) vs SPY rebased "
-                 "to each lane's first mark (gray). Source: the live /api/pi/track-record.",
+                 "to each lane's first mark (gray). Source: "
+                 + (f"FROZEN at the {fzn.get('last_real_mark')} marks, from {fzn.get('origin_receipt')} "
+                    "(hosted backend retired)." if fzn else "the live /api/pi/track-record."),
                  fontsize=8, color=INK2)
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=110, bbox_inches="tight", facecolor=SURF)
@@ -1066,7 +1356,7 @@ def run_id_of(generated_utc: str) -> str:
 
 
 def attach_book_dna(rc: dict, *, out_dir: Optional[Path] = None,
-                    runner: Optional[Callable] = None) -> dict:
+                    runner: Optional[Callable] = None, fetch_lanes: Optional[bool] = None) -> dict:
     """Chunk C3 (2026-10-06): "148 ahead of SPY" was 105 control twins plus a few
     shared baskets. `book_dna` writes `book_dna_<run_id>.json` beside this receipt
     and its summary goes INTO `aggregate`; `honest_sentence` ends with the
@@ -1078,8 +1368,10 @@ def attach_book_dna(rc: dict, *, out_dir: Optional[Path] = None,
     run_id = run_id_of(rc["generated_utc"])
     try:
         if runner is None:
+            # CH-65 / review S5: `fetch_lanes=None` lets book_dna read the retirement
+            # declaration itself (its lane-positions read goes to the same host)
             dna, path = _dna.run(rc, out_dir=Path(out_dir) if out_dir is not None else OUT_DIR,
-                                 run_id=run_id)
+                                 run_id=run_id, fetch_lanes=fetch_lanes)
         else:
             dna, path = runner(rc, run_id)
         summ = dict(dna["summary"])
@@ -1192,6 +1484,219 @@ def write_outputs(rc: dict, *, chart: bool = True, out_dir: Optional[Path] = Non
             "date_copy_refused": rc.get("date_copy_refused"), "doc_refused": doc_refused}
 
 
+def _priced(r: Optional[dict]) -> bool:
+    """A row whose account has a current figure (LIVE with a return). Not `vs_spy_pp`: a day
+    without the SPY ruler must not read as every account vanishing at once."""
+    return bool(r) and r.get("status") == "LIVE" and r.get("roi_pct") is not None
+
+
+def _broker_unreadable(r: Optional[dict]) -> bool:
+    return bool(r) and (bool(r.get("broker_error")) or r.get("status") == "CREDENTIAL_INVALID")
+
+
+def _stamp_key(name: str) -> Optional[tuple]:
+    m = _ROI_NAME_RE.match(name)
+    return (m.group(1), m.group(2)) if m and m.group(2) else None
+
+
+def _missing_kind(r: Optional[dict]) -> tuple[str, str]:
+    """(kind, why) of an account that is not priced in this receipt."""
+    if r is None:
+        return "ABSENT", "no row in this receipt"
+    if _broker_unreadable(r):
+        return "BROKER_ERROR", f"broker error: {r.get('broker_error') or r.get('note') or r.get('status')}"
+    return "LEFT_THE_COUNTS", f"status {r.get('status')}" + (f" ({str(r.get('note'))[:120]})" if r.get("note") else "")
+
+
+def update_frozen_sources(folder: Path, rc: dict, receipt_name: str) -> dict:
+    """Review B2 (PR #170): maintain `frozen_sources.json` after this run's stamped receipt
+    `receipt_name` was written into `folder`. Temp -> verify -> replace; an unreadable file is
+    REFUSED (kept as it is), never overwritten.
+
+    * a FROZEN row: its last real standing (last mark, NAV at that mark, return, SPY over the
+      same window ending at that mark, the run-stamped receipt that priced it + its sha256);
+    * an account priced in the previous stamped receipt and not priced here: MISSING since this
+      run, with the previous receipt's standing (+ name and sha256);
+    * an account unreadable at its broker with no entry yet: MISSING since the run after the
+      newest local receipt that priced it (every receipt is read for this one-time seed; when
+      none did, `missing_since` is None and the note says how far back was read);
+    * an entry whose account is priced again, is RETIRED in this receipt, or is listed in
+      `config.PAPER_ACCOUNTS_RETIRED_EXPLICITLY` is removed -- only then.
+    Broker-family accounts are left untouched by a run that did not read the brokers."""
+    folder = Path(folder)
+    mem, err = read_frozen_sources(folder)
+    if err:
+        return {"status": "REFUSED", "why": f"{err}; it was NOT overwritten (fix or move it, then rerun)"}
+    accounts: dict = dict((mem or {}).get("accounts") or {})
+    run_id = str(rc.get("run_id") or run_id_of(rc["generated_utc"]))
+    day = str(rc.get("generated_utc"))[:10]
+    rows = {str(r.get("account")): r for r in rc.get("rows") or [] if isinstance(r, dict)}
+    broker_read = bool((rc.get("broker_read") or {}).get("performed", True))
+    explicit = dict(getattr(_config, "PAPER_ACCOUNTS_RETIRED_EXPLICITLY", {}) or {})
+    out = {"status": "ok", "added": [], "kept": [], "removed": {}, "seeded": []}
+
+    def skip_scope(a: str, r: Optional[dict], fam: Any) -> bool:
+        return not broker_read and str(fam) in BROKER_FAMILIES and (r is None or not r.get("broker_now"))
+
+    # 1. FROZEN rows: the last real standing, refreshed from the row (never a known figure lost)
+    for a, r in rows.items():
+        if r.get("status") != FROZEN:
+            continue
+        fs = r.get("frozen_standing") if isinstance(r.get("frozen_standing"), dict) else {}
+        old = accounts.get(a) if isinstance(accounts.get(a), dict) else {}
+        same = old.get("last_mark") == r.get("last_mark")
+        origin = str(r.get("frozen_origin_receipt") or (rc.get("sources") or {}).get("website_lanes", {})
+                     .get("origin_receipt") or old.get("source_receipt") or "") or None
+        if origin and _stamp_key(origin) is None and same and old.get("source_receipt"):
+            origin = old["source_receipt"]              # never trade a stamped name for a date copy
+        e = {"account": a, "family": r.get("family"), "state": FROZEN, "kind": FROZEN,
+             "since": r.get("frozen_since") or r.get("last_mark"), "why": r.get("frozen_reason") or r.get("note"),
+             "last_mark": r.get("last_mark"), "nav_series_end": r.get("last_mark"), "inception": r.get("inception"),
+             "nav_end": r.get("equity"), "window": fs.get("window") or [r.get("inception"), r.get("last_mark")]}
+        for k in ("roi_pct", "spy_same_window_pct", "vs_spy_pp"):
+            e[k] = fs.get(k) if fs.get(k) is not None else (old.get(k) if same else None)
+        e["source_receipt"] = origin
+        e["source_sha256"] = (r.get("frozen_origin_sha256") or
+                              (old.get("source_sha256") if old.get("source_receipt") == origin else None)
+                              or (_sha256(folder / origin) if origin else None))
+        e["first_seen_run"] = old.get("first_seen_run") or run_id
+        e["updated_run"] = run_id
+        (out["kept"] if old else out["added"]).append(a)
+        accounts[a] = e
+
+    # 2. existing entries: removed only on reappearance or explicit retirement
+    for a in list(accounts):
+        e, r = accounts[a], rows.get(a)
+        if not isinstance(e, dict):
+            del accounts[a]
+            continue
+        if r is not None and r.get("status") == FROZEN:
+            continue
+        if a in explicit or (r is not None and r.get("status") == "RETIRED"):
+            out["removed"][a] = f"explicitly retired ({explicit.get(a) or 'status RETIRED in this receipt'})"
+            del accounts[a]
+        elif _priced(r):
+            out["removed"][a] = f"priced again in {receipt_name}"
+            del accounts[a]
+        elif not skip_scope(a, r, e.get("family")):
+            e["kind"], e["why"] = (FROZEN, e.get("why")) if e.get("state") == FROZEN else _missing_kind(r)
+            e["updated_run"] = run_id
+            if a not in out["kept"]:
+                out["kept"].append(a)
+
+    # 3. priced in the previous stamped receipt, not priced here: MISSING since this run
+    me = _stamp_key(receipt_name)
+    prev_p = next((p for p in _roi_receipts_newest_first(folder)
+                   if _stamp_key(p.name) and me and _stamp_key(p.name) < me), None)
+    prev = None
+    if prev_p is not None:
+        try:
+            prev = json.loads(prev_p.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            out["previous_unreadable"] = f"{prev_p.name} ({type(e).__name__})"
+    if isinstance(prev, dict):
+        out["compared_with"] = prev_p.name
+        sha = None
+        for pr in prev.get("rows") or []:
+            if not isinstance(pr, dict) or not _priced(pr):
+                continue
+            a = str(pr.get("account"))
+            r = rows.get(a)
+            if a in accounts or _priced(r) or (r is not None and r.get("status") in (FROZEN, "RETIRED")) \
+                    or a in explicit or skip_scope(a, r, pr.get("family")):
+                continue
+            sha = sha or _sha256(prev_p)
+            kind, why = _missing_kind(r)
+            accounts[a] = {"account": a, "family": pr.get("family"), "state": "MISSING", "kind": kind, "why": why,
+                           "since": day, "first_missing_run": run_id, "last_seen_run": prev_p.name,
+                           "last_mark": pr.get("last_mark"), "inception": pr.get("inception"),
+                           "roi_pct": pr.get("roi_pct"), "spy_same_window_pct": pr.get("spy_same_window_pct"),
+                           "vs_spy_pp": pr.get("vs_spy_pp"), "source_receipt": prev_p.name, "source_sha256": sha,
+                           "updated_run": run_id}
+            out["added"].append(a)
+
+    # 4. unreadable at the broker with no entry yet: a one-time seed over every local receipt
+    need = [a for a, r in rows.items() if _broker_unreadable(r) and a not in accounts and a not in explicit
+            and not skip_scope(a, r, r.get("family"))]
+    if need:
+        found: dict = {}
+        after: dict = {a: day for a in need}           # the run after the last one that priced it
+        older = [p for p in _roi_receipts_newest_first(folder) if _stamp_key(p.name) and me and _stamp_key(p.name) < me]
+        for p in older:
+            if len(found) == len(need):
+                break
+            try:
+                d = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            prow = {str(x.get("account")): x for x in d.get("rows") or [] if isinstance(x, dict)}
+            for a in need:
+                if a in found:
+                    continue
+                if _priced(prow.get(a)):
+                    found[a] = (p, prow[a])
+                else:
+                    after[a] = str(d.get("generated_utc") or p.name[4:14])[:10]
+        for a in need:
+            r = rows[a]
+            kind, why = _missing_kind(r)
+            e = {"account": a, "family": r.get("family"), "state": "MISSING", "kind": kind, "why": why,
+                 "first_missing_run": None, "updated_run": run_id, "seeded_run": run_id}
+            if a in found:
+                p, pr = found[a]
+                e.update(since=after[a], last_seen_run=p.name, last_mark=pr.get("last_mark"),
+                         inception=pr.get("inception"), roi_pct=pr.get("roi_pct"),
+                         spy_same_window_pct=pr.get("spy_same_window_pct"), vs_spy_pp=pr.get("vs_spy_pp"),
+                         source_receipt=p.name, source_sha256=_sha256(p))
+            else:
+                e.update(since=None, since_at_or_before=after[a], last_mark=None, roi_pct=None,
+                         spy_same_window_pct=None, vs_spy_pp=None, source_receipt=None, source_sha256=None,
+                         since_note=(f"not priced in any of the {len(older)} earlier local ROI receipt(s)"
+                                     + (f" (oldest {older[-1].name})" if older else "")))
+            accounts[a] = e
+            out["seeded"].append(a)
+
+    doc = {"schema": FROZEN_SOURCES_SCHEMA, "updated_utc": rc.get("generated_utc"), "updated_by_run": run_id,
+           "updated_by_receipt": receipt_name,
+           "read_me_first": ("Derived by scripts.paper_accounts_roi after each run; one writer. FROZEN = an "
+                             "account whose source was retired on purpose, with its last real standing. "
+                             "MISSING = an account that stopped being priced, since `since`, with its last "
+                             "known standing. An entry leaves only when the account is priced again or is "
+                             "explicitly retired. Figures are each account's own window; none is current."),
+           "accounts": dict(sorted(accounts.items()))}
+    p = frozen_sources_path(folder)
+    tmp = p.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(doc, indent=1, default=str), encoding="utf-8")
+    try:
+        back = json.loads(tmp.read_text(encoding="utf-8"))
+        ok = back.get("schema") == FROZEN_SOURCES_SCHEMA and len(back.get("accounts") or {}) == len(accounts)
+    except (OSError, ValueError):
+        ok = False
+    if not ok:
+        return {"status": "REFUSED", "why": f"{tmp.name} did not read back; {p.name} left as it was"}
+    tmp.replace(p)
+    out.update(path=p.name, n_frozen=sum(1 for e in accounts.values() if e.get("state") == FROZEN),
+               n_missing=sum(1 for e in accounts.values() if e.get("state") == "MISSING"))
+    return out
+
+
+def resolve_lanes(*, folder: Optional[Path] = None, http_get: Optional[Callable] = None) -> tuple:
+    """(tr, tr_source, fresh, frozen_info). While the hosted backend is declared retired
+    (CH-65) the dead URL is NOT called -- no timeout, no 404 -- and the lanes come FROZEN from
+    the newest local receipt in `folder` that still holds them, or from the memory file's
+    standing (review B2). Otherwise: the live deploy, then the local NAV store, as before."""
+    ret = hosted_retired()
+    if ret:
+        fold = Path(folder) if folder is not None else OUT_DIR
+        mem, _ = read_frozen_sources(fold)
+        tr, frozen = frozen_track_record(fold, ret, memory=mem)
+        return tr, frozen["source"], False, frozen
+    tr, why = fetch_track_record(http_get)
+    if tr is None:
+        return local_track_record(), f"local NAV store (prod unreachable: {why})", False, None
+    return tr, TRACK_RECORD_URL, True, None
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--no-chart", action="store_true")
@@ -1204,19 +1709,23 @@ def main(argv: Optional[list[str]] = None) -> int:
     ap.add_argument("--json", action="store_true",
                     help="end with one `<<<{summary}>>>` line (the daily pass reads it)")
     a = ap.parse_args(argv)
-    tr, why = fetch_track_record()
-    tr_source, fresh = TRACK_RECORD_URL, True
-    if tr is None:
-        tr, tr_source, fresh = local_track_record(), f"local NAV store (prod unreachable: {why})", False
+    tr, tr_source, fresh, frozen = resolve_lanes()
     bm, bm_err = load_spy("2026-05-15")
     rc = build(tr=tr, tr_source=tr_source, tr_fresh=fresh,
                fleet_env={} if a.no_broker else read_env_file(TERMINAL_ENV),
-               bm=bm, bm_error=bm_err, include_fleet=not a.no_broker, include_pc=not a.no_broker)
+               bm=bm, bm_error=bm_err, include_fleet=not a.no_broker, include_pc=not a.no_broker,
+               tr_frozen=frozen)
+    # review S5 (PR #170): book_dna reads the retirement declaration itself; no flag is passed
     attach_book_dna(rc)
     dd = Path(a.docs_dir) if a.docs_dir else None
     out = write_outputs(rc, chart=not a.no_chart,
                         doc_path=(dd / "PAPER_ACCOUNTS.md") if dd else None,
                         assets=(dd / "assets") if dd else None, allow_drop=a.allow_drop)
+    # review B2: the frozen / missing memory, after the stamped receipt exists
+    mem_out = update_frozen_sources(Path(out["receipt_run"]).parent, rc, Path(out["receipt_run"]).name)
+    out["frozen_sources"] = mem_out
+    if mem_out.get("status") == "REFUSED":
+        print(f"REFUSED frozen_sources: {mem_out['why']}", flush=True)
     for r in rc["rows"]:
         if r["family"].startswith("llm_portfolio"):
             continue
@@ -1250,8 +1759,12 @@ def main(argv: Optional[list[str]] = None) -> int:
                                   "collapse_line": rc["aggregate"].get("collapse_line"),
                                   "book_dna_receipt": rc["aggregate"].get("book_dna_receipt"),
                                   "website_lanes": rc["sources"]["website_lanes"]["source"],
+                                  "website_lanes_status": rc["sources"]["website_lanes"].get("status"),
+                                  "frozen_line": rc["aggregate"].get("frozen_line"),
+                                  "frozen_sources": mem_out,
                                   "spy_leg": rc["sources"]["spy_leg"]}, default=str) + ">>>")
-    return 0
+    # a refused memory write is red: the next voice could forget an account
+    return 2 if mem_out.get("status") == "REFUSED" else 0
 
 
 if __name__ == "__main__":
