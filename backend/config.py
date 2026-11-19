@@ -5734,6 +5734,10 @@ BOOK_DNA_STAMP_MONTH_GAP_SE = 1.0
 #: and the beta window's own figure is printed, labelled with its window.
 BOOK_DNA_EXPOSURE_MIN_COVER = 0.80
 BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP = 2.0
+#: CH-55 fix round (2026-11-16): period coverage below MIN_COVER is accepted when the series
+#: still reproduces the receipt return within this tighter tolerance -- its periods then span
+#: the window (multi-session periods), they do not start late.
+BOOK_DNA_EXPOSURE_LOW_COVER_MAX_RETURN_GAP_PP = 0.5
 #: M2: an up/down capture whose standard error (delta method) is above this is CANNOT DETERMINE.
 BOOK_DNA_MAX_CAPTURE_SE = 0.25
 #: house rule "the MDE beside every alpha": MDE = this x SE (80% power, 5% two-sided).
@@ -5813,6 +5817,64 @@ RESULTS_VOICE_MECHANISMS: dict = {
     "b109c886": ("SPY by default, deviates into names whose 12-1 momentum z clears a frozen "
                  "threshold, monthly"),
     "hack2": "Alpaca paper broker mirroring the frozen revision_flow_v0 book (v2)",
+}
+# ── CH-55 family scorecard + the labels' false-fire rates (2026-11-16) ────────
+#: `backend/services/family_scorecard.py` / `python -m scripts.family_scorecard`: one row per
+#: family (the SAME_BET components `results_voice` already computes; an upper bound), each with
+#: beta, beta-adjusted excess, drawdown, the twin gap and its labels. The ROI receipt's own
+#: `generated_utc` older than this many days REFUSES (non-zero exit); an undateable stamp is
+#: UNKNOWN and refuses too. Four days = a Friday receipt read on the following Monday night
+#: (the PAPER_ACCOUNT_MARK_STALE_DAYS reasoning).
+FAMILY_SCORECARD_STALE_DAYS = 4
+#: Fix round (review of PR #164): the newest `last_mark` among the strategy books older than
+#: this many calendar days REFUSES too (a receipt generated today over marks from weeks ago
+#: passed as fresh). A stamp or a mark in the FUTURE (beyond the tolerance, for clock skew)
+#: is UNKNOWN and refuses: never fresh.
+FAMILY_SCORECARD_MARK_STALE_DAYS = 4
+FAMILY_SCORECARD_FUTURE_TOLERANCE_MIN = 5
+#: Effective number of bets = participation ratio (`book_dna.participation_ratio`) of the
+#: family correlation matrix, on raw and on excess returns, over the families that share at
+#: least MIN_DATES period-end dates (families with the fewest dates are dropped until the rest
+#: share that many); fewer than MIN_FAMILIES left = CANNOT DETERMINE. LOOSE_JOIN_CORR: the
+#: number of components when families are joined at this excess-return correlation instead
+#: of BOOK_DNA_FLAG_SAME_BET_CORR, printed beside the count to show how much the count owes
+#: to the strict threshold.
+FAMILY_SCORECARD_EFFECTIVE_MIN_DATES = 30
+FAMILY_SCORECARD_EFFECTIVE_MIN_FAMILIES = 3
+FAMILY_SCORECARD_LOOSE_JOIN_CORR = 0.50
+#: |t| at or above this is named in the scorecard (t = residual / its SE, daily residuals
+#: treated as independent); the count expected by chance is printed beside it.
+FAMILY_SCORECARD_T_NAMED = 2.0
+#: How many families the scorecard's markdown names at each end (leading / worst).
+FAMILY_SCORECARD_N_ENDS = 3
+#: How often `book_dna.evidence_label` awards each label to a book NOBODY selected: MEASURED by
+#: `scripts/paper_tables.py` table 2 (roadmap row CH-53), never tuned. 39,460 random
+#: equal-weight books 2016-2026, the production label function and entry cost. `ci95` resamples
+#: start quarters; `single_window` is the min..max rate inside one window (every live book
+#: shares one window, so the fleet's rate on a given day is ONE draw from that spread).
+#: REPLICATED is the share of random books WITH a random twin that reach it;
+#: `upper_bound_with_sibling` adds an independent same-rule sibling. `results_voice` prints the
+#: rate beside every label and the scorecard refuses to print a label without one. The
+#: measurement holds only for the rule it was taken under: when `BOOK_DNA_EARLY_MIN_SESSIONS`
+#: differs from `early_min_sessions` below, every rate reads CANNOT DETERMINE until table 2 is
+#: re-run (pass the new receipt with `--false-fire-receipt`, then update this block).
+#: A measurement carries an expiry (fix round, review of PR #164): older than
+#: LABEL_FALSE_FIRE_MAX_AGE_DAYS, or undated, every rate reads CANNOT DETERMINE (measurement of
+#: <date> expired) and the scorecard exits non-zero. 90 days: the panel gains a quarter of new
+#: windows in that time, and the quarter is the unit the interval resamples.
+LABEL_FALSE_FIRE_MAX_AGE_DAYS = 90
+LABEL_FALSE_FIRE_MEASURED: dict = {
+    "source": "scripts.paper_tables table 2 (CH-53), receipt table2_20261115T073305Z.json "
+              "(sha256 ff17caee00ef0aac...), code commit 93f362bf",
+    "measured_utc": "2026-11-15T07:33:05+00:00",
+    "n_books": 39460,
+    "early_min_sessions": 21,
+    "rates": {
+        "EARLY_EVIDENCE": {"rate": 0.358, "ci95": (0.305, 0.412), "single_window": (0.009, 0.982)},
+        "REPLICATED": {"rate": 0.256, "ci95": (0.225, 0.284), "single_window": (0.009, 0.545),
+                       "upper_bound_with_sibling": 0.321},
+    },
+    "zero_edge_symmetric_early": 0.422,
 }
 # ── CH-11 matched-twin re-evaluation (2026-11-12) ─────────────────────────────
 #: `scripts/matched_twin_reeval.py` re-reads the leaders and the worst books

@@ -22,6 +22,8 @@ it before writing) plus each book's holdings and return series, and writes
   from this module), the TAIL check (top-1 / top-2 holdings' share of the excess),
   top sector weight and HHI, beta vs SPY where a long enough series exists, cash
   fraction, `one_name_dependence`;
+* per book (CH-55, 2026-11-16): `max_drawdown` -- the largest peak-to-trough fall of the same
+  series, or CANNOT DETERMINE with a reason;
 * per book (CH-11 note, 2026-11-13): `market_exposure` -- up-capture, down-capture,
   the beta-adjusted excess (return - beta x SPY leg) and the residual by month, from
   the same series as the beta; CANNOT DETERMINE with a reason when it is not answerable;
@@ -113,6 +115,7 @@ def params() -> dict:
         "stamp_month_gap_se": float(_cfg("BOOK_DNA_STAMP_MONTH_GAP_SE", 1.0)),
         "exposure_min_cover": float(_cfg("BOOK_DNA_EXPOSURE_MIN_COVER", 0.80)),
         "exposure_max_return_gap_pp": float(_cfg("BOOK_DNA_EXPOSURE_MAX_RETURN_GAP_PP", 2.0)),
+        "exposure_low_cover_max_return_gap_pp": float(_cfg("BOOK_DNA_EXPOSURE_LOW_COVER_MAX_RETURN_GAP_PP", 0.5)),
         "max_capture_se": float(_cfg("BOOK_DNA_MAX_CAPTURE_SE", 0.25)),
         "mde_z": float(_cfg("BOOK_DNA_MDE_Z", 2.8)),
         "rf_annual_assumed": float(_cfg("BOOK_DNA_RF_ANNUAL_ASSUMED", 0.04)),
@@ -727,9 +730,14 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
     yv = np.array([x for _, x, _, _ in rows])
     xv = np.array([y for _, _, y, _ in rows])
     n = len(rows)
-    if n == 0 or np.std(yv) == 0:
+    if n == 0 or not np.any(yv != 0):
         return all_cd("flat NAV over the whole series (all cash, never held a position, or a NAV that did "
                       "not update): exposure is undefined, not 0")
+    if float(np.ptp(yv)) < 1e-12:
+        # fix round (review of PR #164): a book that returns the same non-zero amount every
+        # period is not flat -- it moved; it only has no variation to regress on SPY
+        return all_cd(f"constant period return ({100 * float(yv[0]):+.4f}% in each of {n} periods; the NAV moved, "
+                      "it is not flat): no variation to regress on SPY, exposure is undefined")
     sxx = float(np.sum((xv - xv.mean()) ** 2))
     resid = yv - (yv.mean() - b * xv.mean()) - b * xv
     se_b = math.sqrt(float(np.sum(resid ** 2)) / max(n - 2, 1) / sxx) if sxx > 0 else float("inf")
@@ -743,10 +751,30 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
     cs = float(np.prod(1 + xv) - 1)
     reasons = []
     cover = (n / sessions) if sessions else None
-    if cover is not None and cover < float(q["exposure_min_cover"]):
-        reasons.append(f"it covers {n} of {sessions} receipt sessions ({cover:.0%} < "
-                       f"{float(q['exposure_min_cover']):.0%})")
     gap = (100 * cb - rp) if rp is not None else None
+    # CH-55 fix round (review of PR #164): `cover` counts PERIODS against sessions, so a series
+    # of multi-session periods that spans the whole receipt window read as "76% covered" and
+    # was refused although it reproduced the receipt return. Low PERIOD coverage is accepted
+    # when (a) the sessions the periods SPAN cover >= `exposure_min_cover` of the receipt
+    # window and (b) the series reproduces the receipt return within the tighter
+    # `exposure_low_cover_max_return_gap_pp`. A NAV series that starts weeks after inception
+    # spans too few sessions and stays not comparable, whatever its return happens to be; with
+    # no session calendar the spans are unknown and the period count stands (M1 of PR #140).
+    low_tol = float(q.get("exposure_low_cover_max_return_gap_pp", 0.5))
+    cover_note = None
+    known = [s_ for _, _, _, s_ in rows[1:]]
+    span_cover = ((1 + sum(known)) / sessions if sessions and rows and all(isinstance(s_, int) for s_ in known)
+                  and session_dates else None)
+    if cover is not None and cover < float(q["exposure_min_cover"]):
+        spans_ok = span_cover is not None and span_cover >= float(q["exposure_min_cover"])
+        if spans_ok and gap is not None and abs(gap) <= low_tol:
+            cover_note = (f"{n} periods for {sessions} receipt sessions ({cover:.0%} by periods), accepted: the "
+                          f"periods span {span_cover:.0%} of the window and the series reproduces the receipt "
+                          f"return within {abs(gap):.2f} pp (<= {low_tol:g} pp)")
+        else:
+            reasons.append(f"it covers {n} of {sessions} receipt sessions ({cover:.0%} < "
+                           f"{float(q['exposure_min_cover']):.0%})"
+                           + (f"; its periods span {span_cover:.0%} of the window" if span_cover is not None else ""))
     if gap is not None and abs(gap) > float(q["exposure_max_return_gap_pp"]):
         reasons.append(f"its book return {100 * cb:+.2f}% is {gap:+.2f} pp from the receipt return {rp:+.2f}% "
                        f"(> {float(q['exposure_max_return_gap_pp']):.1f} pp)")
@@ -756,6 +784,8 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
         "receipt_sessions": sessions, "coverage": None if cover is None else round(cover, 3),
         "series_book_pct": round(100 * cb, 3), "series_spy_pct": round(100 * cs, 3),
         "return_gap_pp": None if gap is None else round(gap, 3), "comparable": not reasons,
+        "coverage_note": cover_note,
+        "span_coverage": None if span_cover is None else round(span_cover, 3),
         "why": "; ".join(reasons) or None}
     ve = float(np.var(yv - b * xv, ddof=1)) if n > 1 else float("inf")
 
@@ -804,6 +834,31 @@ def market_exposure(series: Optional[list], beta: dict, *, return_pct: Any, spy_
                    "beta_adjusted_pp": round(100 * cr, 3)})
     out["by_month"] = bm
     return out
+
+
+def drawdown_of(series: Optional[list], sessions: Optional[int] = None) -> dict:
+    """CH-55 (2026-11-16): the largest peak-to-trough fall of the book's compounded
+    period-return series (the one `beta_of` used), in percent (<= 0), with the dates of
+    the peak and the trough. Starts from 1.0 before the first period. CANNOT DETERMINE
+    with a reason when there is no series -- never 0 for "unknown". A series shorter than
+    the receipt window still gives a number; `n_periods` beside `receipt_sessions` says
+    how much of the window it saw (an unseen stretch can only make the true figure worse)."""
+    pts = [(str(d), float(b)) for d, b, _ in series or [] if _num(b) is not None]
+    if not pts:
+        return {**_cd("no period-return series: the fall from a peak cannot be read off one "
+                      "window return"), "n_periods": 0}
+    nav, peak, peak_d = 1.0, 1.0, None
+    worst, w_peak, w_trough = 0.0, None, None
+    for d, r in pts:
+        nav *= 1.0 + r
+        if nav > peak:
+            peak, peak_d = nav, d
+        dd = nav / peak - 1.0
+        if dd < worst:
+            worst, w_peak, w_trough = dd, peak_d, d
+    return {"value": round(100 * worst, 3), "peak": w_peak, "trough": w_trough,
+            "n_periods": len(pts), "receipt_sessions": sessions, "from": pts[0][0], "to": pts[-1][0],
+            "basis": "compounded period returns, start = 1.0 before the first period"}
 
 
 def subwindows(series: Optional[list], sessions: Optional[int], min_cover: float = 0.8) -> dict:
@@ -1681,8 +1736,13 @@ def book_rows(receipt: dict, inputs: dict, px: Prices, p: dict, today: date) -> 
                                                spy_leg_pct=spy_leg, min_capture_obs=p["min_capture_obs"],
                                                sessions=sessions, window=(r.get("inception"), r.get("last_mark")),
                                                spy_close=spy_close, p=p)
+        e["max_drawdown"] = drawdown_of(series, sessions)
         e["cash_fraction"] = cash
         e["n_series_periods"] = len(series)
+        # CH-55 fix round: the series itself, so a reader of the receipt (the family scorecard's
+        # effective-bets count) need not rebuild it. [period end date, r_book, r_SPY].
+        e["period_returns"] = [[str(d)[:10], round(float(b), 8), round(float(x), 8)] for d, b, x in series
+                               if _num(b) is not None and _num(x) is not None]
         sub = subwindows(series, sessions)
         e["subwindows"] = sub
         e["fair_twin"] = fair_twin
@@ -2287,7 +2347,7 @@ def run(receipt: dict, *, out_dir: Path = PA_DIR, run_id: str, bars: Optional[pd
 
 
 __all__ = ["SCHEMA", "LABEL_LADDER", "LABEL_CEILING", "ERROR_TYPES", "NOT_COMPUTABLE", "CANNOT_DETERMINE",
-           "market_exposure",
+           "market_exposure", "drawdown_of",
            "Prices", "build", "classify_loser", "cluster", "collapse_line", "evidence_label",
            "exante_bets", "participation_ratio", "top_line",
            "jaccard", "lanes_block", "load_inputs", "params", "refused_summary", "run",

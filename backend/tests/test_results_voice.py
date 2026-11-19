@@ -21,6 +21,17 @@ FIX = Path(__file__).parent / "fixtures" / "results_voice"
 RID = "2026-10-06T235345Z"
 
 
+@pytest.fixture(autouse=True)
+def _false_fire_measurement_dated_now(monkeypatch):
+    """CH-55 fix round: the false-fire measurement expires and config dates it on a calendar
+    day. Re-date it to the moment of the test so no assertion here depends on today's date."""
+    from datetime import datetime, timezone
+
+    from backend import config as C
+    monkeypatch.setattr(C, "LABEL_FALSE_FIRE_MEASURED",
+                        {**C.LABEL_FALSE_FIRE_MEASURED, "measured_utc": datetime.now(timezone.utc).isoformat()})
+
+
 @pytest.fixture
 def folder(tmp_path: Path) -> Path:
     d = tmp_path / "paper_accounts"
@@ -148,9 +159,12 @@ def test_claims_line_is_last_and_says_none(voice):
     # owner 2026-11-14: "none" until a label RISES; the fixture folder holds no earlier receipt
     assert voice["claims"]["line"] == "CLAIMS PROMOTED: none (no earlier run to compare)"
     lines = voice["headline_lines"]
-    assert len(lines) == 7
+    # CH-55 (2026-11-16): the six of 2026-10-07 + BETA-ADJUSTED + LABEL FALSE-FIRE RATES + Distinct bets
+    assert len(lines) == 9
     assert lines[0].startswith("RESULTS ") and lines[1].startswith("LEADER revision_flow_v0")
     assert lines[3].startswith("WHAT RAISES IT:") and lines[-1].startswith("CLAIMS PROMOTED: none")
+    assert lines[4].startswith("BEHIND:") and lines[5].startswith("BETA-ADJUSTED:")
+    assert lines[6].startswith("LABEL FALSE-FIRE RATES:")
     assert lines[-2].startswith("Distinct bets ahead of SPY: ")
     assert not any("proof" in ln.lower() for ln in lines)
 
@@ -187,8 +201,9 @@ def test_headline_block_reads_the_md(folder):
     RV.run(RID, folder)
     p, lines = RV.headline_block(folder)
     assert p.name == f"results_voice_{RID}.md"
-    assert len(lines) == 7 and lines[-1].startswith("CLAIMS PROMOTED:")
+    assert len(lines) == 9 and lines[-1].startswith("CLAIMS PROMOTED:")
     assert lines[-2].startswith("Distinct bets ahead of SPY:")
+    assert lines[5].startswith("BETA-ADJUSTED:") and lines[6].startswith("LABEL FALSE-FIRE RATES:")
 
 
 def test_no_equity_dollars_in_the_voice(voice):
@@ -247,8 +262,10 @@ def test_a_receipt_older_than_the_fields_says_cannot_determine_with_why(voice):
         assert x["exposure_line"].startswith("beta CANNOT DETERMINE, up-capture CANNOT DETERMINE, "
                                              "down-capture CANNOT DETERMINE, beta-adjusted excess CANNOT DETERMINE")
     lines = voice["headline_lines"]
-    assert len(lines) == 7
+    assert len(lines) == 9
     assert "beta-adjusted excess CANNOT DETERMINE" in lines[1] and "beta-adjusted excess" in lines[4]
+    # CH-55: the beta-adjusted line says CANNOT DETERMINE for all of them -- never "0 ahead"
+    assert lines[5].startswith("BETA-ADJUSTED: CANNOT DETERMINE for all 13 strategy accounts")
     rk = voice["beta_adjusted_ranking"]
     assert rk["n_determined"] == 0 and rk["n_cannot_determine"] == voice["headline"]["n_strategy_accounts"]
 
@@ -410,3 +427,89 @@ def test_fix_m1_minor_never_prints_minus_zero_and_prints_the_stamp_note(folder):
     assert "-0.00" not in md
     if any(nz in ln for ln in md.splitlines() if ln.startswith("|")):
         assert f"- {nz} — beta window: date stamp lag in 1 month(s)" in md
+
+
+# ── CH-55 (2026-11-16): the beta-adjusted line and the false-fire rate beside every label ──
+
+def _with_residual(folder: Path) -> dict:
+    """Every strategy book gets a comparable beta window and a residual; the account with the
+    best raw excess gets a NEGATIVE residual (all of its excess was beta), and hack4 gets a
+    beta window that does not cover its receipt window."""
+    p = folder / f"book_dna_{RID}.json"
+    d = json.loads(p.read_text(encoding="utf-8"))
+    want = {}
+    for i, b in enumerate(d["books"]):
+        res = -1.5 if b["account"] == "revision_flow_v0" else round(0.4 * (i % 3) - 0.3, 3)
+        comparable = b["account"] != "hack4"
+        b["market_exposure"] = {
+            "beta": {"value": 1.2, "se": 0.1}, "up_capture": {"value": 1.2}, "down_capture": {"value": 1.1},
+            "beta_adjusted_excess_pp": {"value": res + 0.6, "se_pp": 1.0, "mde_pp": 2.8},
+            "series_beta_adjusted_pp": {"value": res, "se_pp": 1.0, "mde_pp": 2.8},
+            "estimation_window": {"from": "A", "to": "B", "n_periods": 30, "receipt_sessions": 30,
+                                  "comparable": comparable, "why": None if comparable else "it covers 9 of 30"},
+            "n_obs": 30}
+        want[b["account"]] = res if comparable else None
+    p.write_text(json.dumps(d), encoding="utf-8")
+    return want
+
+
+def test_beta_adjusted_line_counts_the_residual_and_names_what_it_cannot_determine(folder):
+    want = _with_residual(folder)
+    v = RV.run(RID, folder)["voice"]
+    rows = v["beta_adjusted_ranking"]["rows"]
+    det = [r for r in rows if want[r["account"]] is not None]
+    ahead = sum(1 for r in det if want[r["account"]] > 0)
+    raw = sum(1 for r in det if r["vs_spy_pp"] > 0)
+    line = next(ln for ln in v["headline_lines"] if ln.startswith("BETA-ADJUSTED:"))
+    assert line.startswith(f"BETA-ADJUSTED: {ahead} of the {len(det)} strategy accounts with a determinable beta "
+                           f"are ahead of SPY after removing beta x SPY session by session (raw excess: {raw} of "
+                           f"the same {len(det)};")
+    assert f"{len(rows) - len(det)} of {len(rows)} CANNOT DETERMINE and not counted as behind" in line
+    assert 0 < ahead < len(det)                          # neither "all ahead" nor "none"
+    lead = next(r for r in rows if r["account"] == "revision_flow_v0")["market_exposure"]
+    assert lead["residual_pp"] == -1.5 and lead["beta_adjusted_excess_pp"] == pytest.approx(-0.9)
+    assert next(r for r in rows if r["account"] == "revision_flow_v0")["vs_spy_pp"] > 0   # ahead raw, behind after beta
+    h4 = next(r for r in rows if r["account"] == "hack4")["market_exposure"]
+    assert h4["residual_pp"] == DNA.CANNOT_DETERMINE and h4["residual_why"].startswith("not comparable: it covers 9")
+    assert h4["residual_window_pp"] is not None            # its own-window figure is kept, labelled
+
+
+def test_every_label_in_the_voice_carries_its_false_fire_rate(folder):
+    v = RV.run(RID, folder)["voice"]
+    ff = v["label_false_fire"]
+    assert ff["status"] == "OK" and ff["rates"]["EARLY_EVIDENCE"]["rate"] == pytest.approx(0.358)
+    assert "35.8%" in ff["line"] and "25.6%" in ff["line"] and "39,460 books" in ff["line"]
+    for x in v["leaders"] + v["losers"] + v["beta_adjusted_ranking"]["rows"] + v["flags_rows"]:
+        assert x["evidence_label_tag"].startswith(f"{x['evidence_label']} [") and "35.8%" in x["evidence_label_tag"]
+    lead = v["headline_lines"][1]
+    assert f"{v['leaders'][0]['evidence_label']} [floor label, no evidence claimed; 35.8% of random books rise" in lead
+    assert "-> EARLY_EVIDENCE [false-fire 35.8% of random books]:" in v["headline_lines"][3]
+    md = (folder / f"results_voice_{RID}.md").read_text(encoding="utf-8")
+    import re
+    # no table cell and no headline line prints a ladder label without a bracket straight after it
+    bare = [m.group(0) for m in re.finditer(r"\| (OBSERVED\(\d+\)|EARLY_EVIDENCE|REPLICATED) \|", md)]
+    assert bare == []
+
+
+def test_a_changed_label_rule_prints_cannot_determine_beside_the_label(folder, monkeypatch):
+    from backend import config as C
+    monkeypatch.setattr(C, "LABEL_FALSE_FIRE_MEASURED", {**C.LABEL_FALSE_FIRE_MEASURED, "early_min_sessions": 5})
+    v = RV.run(RID, folder)["voice"]
+    assert v["label_false_fire"]["status"] == DNA.CANNOT_DETERMINE
+    line = next(ln for ln in v["headline_lines"] if ln.startswith("LABEL FALSE-FIRE RATES:"))
+    assert "CANNOT DETERMINE (the label rule changed since the measurement" in line
+    assert "false-fire rate CANNOT DETERMINE" in v["leaders"][0]["evidence_label_tag"]
+
+
+def test_an_expired_measurement_prints_cannot_determine_beside_every_label(folder, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+
+    from backend import config as C
+    old = datetime.now(timezone.utc) - timedelta(days=float(C.LABEL_FALSE_FIRE_MAX_AGE_DAYS) + 3)
+    monkeypatch.setattr(C, "LABEL_FALSE_FIRE_MEASURED", {**C.LABEL_FALSE_FIRE_MEASURED, "measured_utc": old.isoformat()})
+    v = RV.run(RID, folder)["voice"]
+    assert v["label_false_fire"]["status"] == DNA.CANNOT_DETERMINE
+    want = f"false-fire rate CANNOT DETERMINE (measurement of {old.date().isoformat()} expired"
+    assert want in v["leaders"][0]["evidence_label_tag"]
+    assert want.replace("false-fire rate ", "") in next(
+        ln for ln in v["headline_lines"] if ln.startswith("LABEL FALSE-FIRE RATES:"))
