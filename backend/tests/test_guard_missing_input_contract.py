@@ -2066,6 +2066,18 @@ def _case_news_entity_embed():
             "an embedding tagger run with no news corpus")
 
 
+def _case_sec_exhibit_full():
+    # CH-66: with no collector day files there is nothing to fetch the full text of;
+    # that must be a named refusal (rc 2), never a NOTHING_OWED that reads green.
+    from pathlib import Path as _P
+
+    from backend.services.sec_exhibit_full import (
+        SecExhibitFullRefused, check_inputs, default_paths)
+    nowhere = _P("does/not/exist/sec_exhibit_full")
+    return (lambda: check_inputs(default_paths(nowhere)), SecExhibitFullRefused,
+            "a full-exhibit fetch with no stored 8-K exhibit bodies")
+
+
 def _case_news_tag_demotion():
     # CH-46d: a hub asked to apply demotions with no demotion sidecar must get a named
     # refusal (rc 2), never an empty map that reads as "nothing to hide".
@@ -2306,6 +2318,7 @@ CASES = {
     "news_entity_embed": _case_news_entity_embed,
     "news_tag_demotion": _case_news_tag_demotion,
     "insider_copy": _case_insider_copy,
+    "sec_exhibit_full": _case_sec_exhibit_full,
 }
 
 
