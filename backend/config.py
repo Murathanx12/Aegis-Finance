@@ -8025,6 +8025,44 @@ DAY_FILE_COHORT_REPORT_STALE_HOURS = 192.0
 DAY_FILE_COHORT_STALE_HOURS = 8.0
 #: The dynamic-books journal's newest row is red when older than this.
 DAY_FILE_DYNAMIC_STALE_HOURS = 30.0
+# ── LOOP_MAP: the loop as it runs today, from receipts and flags (ROADMAP CH-56, 2026-11-16) ──
+#: `scripts/loop_map.py` + `backend/services/loop_map.py` (the declared LINKS table lives
+#: there). Output folder under `<data root>/optimus/` unless `--out` is given.
+LOOP_MAP_DIRNAME = "loop_map"
+#: Freshness limit (hours) of each producer, by the `limit` key a link declares. A producer
+#: older than its limit by its OWN stamp is STALE; a link with no limit is CANNOT_DETERMINE.
+LOOP_MAP_LIMITS_H = {
+    "reader": 6,                      # the reader pool rewrites its receipt while it runs
+    "world_digest": SYSTEM_STATUS_LIMITS_H["world_digest"],
+    "news_tilt": SYSTEM_STATUS_LIMITS_H["world_digest"],
+    "typed_events": 36,
+    "event_nodes": 36,                # == EVENT_NODES_DAILY_WINDOW_HOURS
+    "forward_calendar": 36,
+    "prediction_markets": 48,
+    "funnel": SYSTEM_STATUS_LIMITS_H["funnel"],   # == investment_committee.FUNNEL_STALE_DAYS
+    "universe_graph": SYSTEM_STATUS_LIMITS_H["universe_graph"],
+    "daily_pass": 36,
+    "dynamic_books": DAY_FILE_DYNAMIC_STALE_HOURS,
+    "rolling_cohorts": 96,            # a Friday mark read on Monday
+    "news_overlay_book": 8 * 24,      # weekly task
+    "llm_selector": 8 * 24,           # weekly task
+    "fleet_manager": 96,              # a Friday pass read on Monday
+    "learner": SYSTEM_STATUS_LIMITS_H["learner"],
+    "source_scorecard": 6,
+    "autopsy": 96,                    # session days only
+    "iif1_night": SYSTEM_STATUS_LIMITS_H["iif1_night"],
+}
+#: The systems receipt the layer diagram lists tasks from is marked stale past this.
+LOOP_MAP_STATUS_STALE_HOURS = DAY_FILE_STATUS_STALE_HOURS
+#: How far back a JSONL journal is searched for a cited producer id (bytes from the end, rows).
+LOOP_MAP_JSONL_TAIL_BYTES = 4_000_000
+LOOP_MAP_JSONL_SCAN_ROWS = 4000
+#: How many receipt files (newest first by name) are searched for a cited producer id.
+LOOP_MAP_ID_SCAN_FILES = 60
+#: A stamp further in the future than this (seconds) is undateable, never fresh.
+LOOP_MAP_FUTURE_SLACK_S = 300
+#: A FLOWING link with less than this share of its limit left is printed NEAR LIMIT.
+LOOP_MAP_NEAR_LIMIT_SHARE = 0.1
 
 # -- CH-22 (2026-11-14): the owner's inbox to the Claude session -------------------
 #: `scripts/owner_inbox.py` + `backend/routers/owner_inbox.py`: the desktop app's
