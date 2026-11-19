@@ -2030,8 +2030,9 @@ TASK_RECEIPT: dict[str, TaskSpec] = {
         r_universe_refresh, "universe_refresh/refresh_<utc>_<pid>.json finished_utc + stage statuses "
                             "(+ runtime_task_runs.jsonl rc)",
         hash_off="daily; each stage re-reads its own stamp from the live file, which is the check",
-        unregistered_ok="CH-59: registering the daily task is the brain session's attended step",
-        catchup_safe=True),
+        unregistered_ok="CH-59: registering the daily task is the brain session's attended step"),
+    # not caught up yet: the catch-up list is pinned by test_task_keeper_catchup_derived; the job is
+    # age-gated and reaches no order path, so adding it there is a one-line decision for the brain
     "AegisOwnerEventWarning": TaskSpec(
         r_owner_warning, "<dir of the task's owner_warning_once.ps1>/owner_warning_journal/"
                          "owner_warning_runs.jsonl",
