@@ -16,7 +16,7 @@ export const meta = {
 //   mainSha:    origin/main at launch (the brain fetched it),
 //   wave:       the owner's limits for this wave in plain words (spend, hard stop, what is read-only),
 //   maxParallel: builders alive at once (default 3; 5 is the ceiling on this PC),
-//   builderModel / reviewerModel: optional model overrides (default builder 'opus', reviewer inherits),
+//   builderModel / reviewerModel: optional model overrides (default: both inherit the session model),
 //   dryRun:     true = validate and return the plan, start no agent,
 //   chunks: [{ id, row, worktree, branch, brief, state }]
 //     id       short name, used for the report file          e.g. "ch13-autopsy"
@@ -47,14 +47,14 @@ if (problems.length) throw new Error('REFUSED: ' + problems.join('; '))
 
 const maxParallel = Math.max(1, Math.min(5, Number(a.maxParallel) || 3))
 if (Number(a.maxParallel) > 5) log('maxParallel capped at 5 (RAM on this PC)')
-const builderModel = a.builderModel || 'opus'
+const builderModel = a.builderModel || undefined
 const reviewerModel = a.reviewerModel || undefined
 
 if (a.dryRun) {
   return {
     dryRun: true,
     maxParallel,
-    builderModel,
+    builderModel: builderModel || 'inherits the session model',
     reviewerModel: reviewerModel || 'inherits the session model',
     batches: Array.from({ length: Math.ceil(chunks.length / maxParallel) }, (_, b) =>
       chunks.slice(b * maxParallel, (b + 1) * maxParallel).map(c => `${c.row} ${c.id} -> ${c.branch}`)),
