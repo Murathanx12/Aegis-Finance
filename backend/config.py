@@ -8260,10 +8260,21 @@ INVESTIGATOR_FILING_TEXT_EXCERPT_CHARS = 1500
 #: outlook/guidance heading (the part the 4,000-character cut removes).
 INVESTIGATOR_FILING_TEXT_OUTLOOK_CHARS = 1800
 INVESTIGATOR_FILING_TEXT_MODEL_CHARS = 12_000
-#: Typed guidance landing zone (deterministic parser). OFF until its precision on
-#: hand-checked real releases is measured at or above the bar below.
-SEC_GUIDANCE_LANDING_ENABLED = False
-SEC_GUIDANCE_LANDING_MIN_PRECISION = 0.9
+#: An outlook heading inside this many characters after a "forward-looking"
+#: mention is the safe-harbour boilerplate, not guidance: no outlook excerpt.
+INVESTIGATOR_FILING_TEXT_OUTLOOK_FLS_WINDOW_CHARS = 400
+#: Fix round (review of PR #172, S1/S2). A 200 answer is stored as the exhibit
+#: only with a text content type (when the door reports one), at least
+#: MIN_CHARS characters, and the first PREFIX_CHECK_CHARS characters of the
+#: collector's stored body inside it (entities and whitespace normalised).
+#: MISMATCH_WAVE such failures in one run stop it as REFUSED(SOURCE_SUSPECT).
+SEC_EXHIBIT_FULL_CONTENT_TYPES: tuple = ("text/html", "application/xhtml+xml", "text/plain")
+SEC_EXHIBIT_FULL_MIN_CHARS = 1000
+SEC_EXHIBIT_FULL_PREFIX_CHECK_CHARS = 2000
+SEC_EXHIBIT_FULL_MISMATCH_WAVE = 3
+#: Floor on --pace-s; raised to the collector source's own `min_interval_s`
+#: (`news_sources.yaml`, 1.0 s) when that is higher, never below 1.0.
+SEC_EXHIBIT_FULL_MIN_PACE_S = 1.0
 
 # -- Public health trim (S70, 2026-11-15) --------------------------------------
 #: `/api/health/full`, `/api/providers` and `/health/scheduler` are PUBLIC on the

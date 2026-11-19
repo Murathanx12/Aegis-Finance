@@ -25,9 +25,21 @@ row per exhibit, append-only:
     fetched_utc, sha256 (of the bytes received), n_chars, text,
     capped, prefix_matches_stored, stored_chars, run_id
 
-`prefix_matches_stored` says whether the collector's stored body is the start
-of the text fetched now, i.e. whether the document is the one the collector
-saw. False is recorded, never repaired.
+`prefix_matches_stored` says whether the collector's stored body is, byte for
+byte, the start of the text fetched now. `content_check` ("ok") says the answer
+passed `content_mismatch()` below, which is what decides whether it is stored.
+
+WHAT COUNTS AS THE EXHIBIT (fix round, review S1)
+=================================================
+A 200 answer is stored only when it passes `content_mismatch()`: a text content
+type (when the door reports one), a final URL still under the EDGAR archive
+prefix, at least `SEC_EXHIBIT_FULL_MIN_CHARS` characters, and the first
+`SEC_EXHIBIT_FULL_PREFIX_CHECK_CHARS` characters of the stored collector body
+found in it after entity and whitespace normalisation. Anything else (a
+throttle page, a landing page, a different document) is a failure with code
+CONTENT_MISMATCH: nothing is stored, the exhibit stays owed, and
+`SEC_EXHIBIT_FULL_MISMATCH_WAVE` of them in one run stop it as
+REFUSED(SOURCE_SUSPECT).
 
 HONEST EXITS
 ============
@@ -38,15 +50,23 @@ HONEST EXITS
     PARTIAL         some rows fetched, some requests failed
     FAILED          requests were made and none produced a row
     REFUSED         a named refusal (`code`), e.g. SOURCE_BLOCKED on the first
-                    403/429: the run stops there and never retries
+                    403/429 or SOURCE_SUSPECT on a mismatch wave: the run stops
+                    there and never retries
 
 and `exit_code()` maps only the first two to 0.
+
+The HTML cleaner is the collector's (`news_pull._strip_html`), so the stored
+text and the prefix check agree with the collector's body. It keeps the text of
+`<script>`/`<style>` and of hidden elements (review N3); none of the real
+exhibits read so far held any.
 """
 
 from __future__ import annotations
 
 import hashlib
+import html
 import json
+import math
 import os
 import re
 import uuid
@@ -68,7 +88,12 @@ REFUSED = "REFUSED"
 CORPUS_MISSING = "CORPUS_MISSING"
 SCOPE_MISSING = "SCOPE_MISSING"
 SOURCE_BLOCKED = "SOURCE_BLOCKED"
+SOURCE_SUSPECT = "SOURCE_SUSPECT"
 BAD_ARGUMENT = "BAD_ARGUMENT"
+CONTENT_MISMATCH = "CONTENT_MISMATCH"
+
+#: the collector's own source row, whose `min_interval_s` floors our pace
+COLLECTOR_SOURCE_ID = "sec_edgar_8k_ex99_body"
 
 _HTTP_STATUS = re.compile(r"\bHTTP (?:Error )?(\d{3})\b")
 
@@ -180,7 +205,9 @@ def row_tickers(row: dict, cik_map: dict[int, list[str]]) -> list[str]:
 
 # ------------------------------------------------------------------ readers
 
-def iter_jsonl(path: Path) -> Iterator[dict]:
+def iter_jsonl(path: Path, stats: Optional[dict] = None) -> Iterator[dict]:
+    """Rows of a JSONL file. An unparsable line (e.g. one a crash cut short) is
+    skipped and, when `stats` is given, counted in `stats["corrupt_lines"]`."""
     try:
         with Path(path).open(encoding="utf-8") as fh:
             for line in fh:
@@ -190,9 +217,11 @@ def iter_jsonl(path: Path) -> Iterator[dict]:
                 try:
                     row = json.loads(line)
                 except ValueError:
-                    continue
+                    row = None
                 if isinstance(row, dict):
                     yield row
+                elif stats is not None:
+                    stats["corrupt_lines"] = stats.get("corrupt_lines", 0) + 1
     except OSError:
         return
 
@@ -210,17 +239,21 @@ def read_body_rows(corpus: Path, *, since: Optional[datetime] = None) -> list[di
 
 
 def read_full_store(store: Path, *, with_text: bool = True,
-                    months: Optional[set] = None) -> dict[str, dict]:
+                    months: Optional[set] = None,
+                    stats: Optional[dict] = None) -> dict[str, dict]:
     """raw_id -> the LAST row written for it. `months` ({"yyyy-mm", ...})
-    limits the read to those month files (the month is the filing's)."""
+    limits the read to those month files (the month is the filing's).
+    Unparsable lines are skipped and counted in `stats["corrupt_lines"]`."""
     out: dict[str, dict] = {}
+    if stats is not None:
+        stats.setdefault("corrupt_lines", 0)
     d = Path(store)
     if not d.is_dir():
         return out
     for f in sorted(d.glob("*.jsonl")):
         if months is not None and f.stem not in months:
             continue
-        for row in iter_jsonl(f):
+        for row in iter_jsonl(f, stats):
             rid = str(row.get("raw_id") or "")
             if not rid:
                 continue
@@ -364,6 +397,90 @@ def new_run_id(now: datetime) -> str:
             f"{uuid.uuid4().hex[:8]}")
 
 
+def min_pace_s() -> float:
+    """The floor on seconds between requests: the config minimum, raised to the
+    collector source's own `min_interval_s` when the registry can be read. Never
+    below 1.0, whatever either says."""
+    floor = max(1.0, float(C.SEC_EXHIBIT_FULL_MIN_PACE_S))
+    try:
+        from backend.services import news_registry
+        floor = max(floor, float(news_registry.get(COLLECTOR_SOURCE_ID).min_interval_s))
+    except Exception:  # noqa: BLE001 - the config floor still holds
+        pass
+    return floor
+
+
+def pace_problem(pace: Any) -> str:
+    """'' when `pace` is an acceptable pace in seconds, else the reason."""
+    try:
+        p = float(pace)
+    except (TypeError, ValueError):
+        return f"pace_s must be a number, got {pace!r}"
+    floor = min_pace_s()
+    if not math.isfinite(p) or p < floor:
+        return f"pace_s must be at least {floor:g} s (the collector's own pacing), got {pace!r}"
+    return ""
+
+
+def _norm(s: str) -> str:
+    return " ".join(html.unescape(s or "").split())
+
+
+def content_mismatch(raw: Any, text: str, stored: str) -> str:
+    """'' when a 200 answer is the exhibit the collector stored, else why not.
+
+    Checks, in order: the content type the door reports (`http_proof`, set by
+    `news_pull._http_get`; absent from a door that does not report it), the
+    final URL after redirects, a minimum length, and the stored body's first
+    characters found in the text after entity and whitespace normalisation."""
+    proof = getattr(raw, "http_proof", None) or {}
+    ctype = str(proof.get("content_type") or "").split(";")[0].strip().lower()
+    if ctype and ctype not in tuple(C.SEC_EXHIBIT_FULL_CONTENT_TYPES):
+        return f"content type {ctype!r} is not a text document"
+    final = str(proof.get("url") or "")
+    if final and not final.startswith(C.SEC_EXHIBIT_FULL_URL_PREFIX):
+        return f"final url {final[:120]!r} is outside the EDGAR archive"
+    need = int(C.SEC_EXHIBIT_FULL_MIN_CHARS)
+    if len(text) < need:
+        return f"{len(text)} chars, fewer than the {need} an exhibit needs"
+    ns = _norm(stored)
+    # the collector cut its body at a character count, possibly inside an entity:
+    # leave its last few characters out of the comparison
+    probe = ns[:min(int(C.SEC_EXHIBIT_FULL_PREFIX_CHECK_CHARS), max(0, len(ns) - 16))]
+    if not probe:
+        return "no stored collector body to compare with"
+    if probe not in _norm(text):
+        return (f"the first {len(probe)} chars of the stored body (normalised) are not "
+                "in the fetched text: prefix mismatch, a different document")
+    return ""
+
+
+def append_row(path: Path, line: str) -> int:
+    """Append one JSONL line so it can never fuse with a crash-cut last line:
+    under the file's lock, a file that does not end in a newline gets one first.
+    Returns 1 when such a partial last line was terminated, else 0.
+    (`disk_guard.locked_append_line` is byte-pinned by the collector, so the
+    check lives here; `file_lock` is re-entrant, so the append reuses the lock.)"""
+    from backend.services import disk_guard
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    terminated = 0
+    with disk_guard.file_lock(path.with_name(path.name + ".lock")):
+        if path.is_file() and path.stat().st_size:
+            with path.open("rb") as fh:
+                fh.seek(-1, os.SEEK_END)
+                last = fh.read(1)
+            if last != b"\n":
+                with path.open("ab") as fh:
+                    fh.write(b"\n")
+                    fh.flush()
+                    os.fsync(fh.fileno())
+                terminated = 1
+        disk_guard.locked_append_line(path, line, fsync=True)
+    return terminated
+
+
 def exit_code(receipt: dict) -> int:
     status = receipt.get("status")
     if status in (OK, NOTHING_OWED):
@@ -401,10 +518,15 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
         "max_docs": max_docs, "pace_s": pace, "user_agent_source": user_agent_source,
         "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
         "fetched": 0, "requests": 0, "failures": [], "rows": [],
+        "content_mismatches": 0, "corrupt_lines": 0, "partial_lines_terminated": 0,
     }
 
     def finish(status: str, code: str = "", detail: str = "") -> dict:
         receipt.update({"status": status, "code": code, "detail": detail})
+        if "counts" in receipt:
+            # still owed = owed minus what was STORED (a failed request stays owed)
+            receipt["remaining_owed"] = max(
+                0, int(receipt["counts"].get("owed", 0)) - receipt["fetched"])
         receipt["exit_code"] = exit_code(receipt)
         rdir = store / "receipts"
         disk_guard.atomic_write_json(rdir / f"sec_exhibit_full_{run_id}.json", receipt)
@@ -413,6 +535,9 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
 
     if max_docs < 1:
         return finish(REFUSED, BAD_ARGUMENT, "max_docs must be at least 1")
+    bad_pace = pace_problem(pace_s if pace_s is not None else pace)
+    if bad_pace:
+        return finish(REFUSED, BAD_ARGUMENT, bad_pace)
     try:
         check_inputs(paths)
     except SecExhibitFullRefused as e:
@@ -439,7 +564,9 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
     cik_map = load_cik_map(paths["cik_map"])
     receipt["cik_map_entries"] = len(cik_map)
     rows = read_body_rows(Path(paths["corpus"]))
-    done = read_full_store(store, with_text=False)
+    store_stats: dict = {}
+    done = read_full_store(store, with_text=False, stats=store_stats)
+    receipt["corrupt_lines"] = store_stats["corrupt_lines"]
     todo, counts = owed(rows, done.keys(), cik_map, scope, priority)
     receipt["counts"] = counts
     if not todo:
@@ -470,6 +597,20 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
                                         "http_status": None, "error": "empty exhibit text"})
             continue
         stored = (o["row"].get("body") or "")
+        why = content_mismatch(raw, text, stored)
+        if why:
+            # not the exhibit: store nothing, leave it owed, count it
+            receipt["content_mismatches"] += 1
+            receipt["failures"].append({"raw_id": o["raw_id"], "url": o["url"],
+                                        "http_status": None, "code": CONTENT_MISMATCH,
+                                        "error": f"{CONTENT_MISMATCH}: {why}"})
+            wave = int(C.SEC_EXHIBIT_FULL_MISMATCH_WAVE)
+            if receipt["content_mismatches"] >= wave:
+                return finish(REFUSED, SOURCE_SUSPECT,
+                              f"{receipt['content_mismatches']} answer(s) were not the "
+                              f"exhibit (wave bar {wave}); stopped, {receipt['fetched']} "
+                              "row(s) kept")
+            continue
         fetched_at = clock()
         row = {
             "schema": SCHEMA, "raw_id": o["raw_id"],
@@ -485,16 +626,16 @@ def run(paths: dict, *, http_get: Callable[[str], bytes],
             "n_chars": len(text), "capped": len(text) > cap, "text": text[:cap],
             "stored_chars": len(stored),
             "prefix_matches_stored": text.startswith(stored) if stored else None,
+            "content_check": "ok",
             "run_id": run_id,
         }
         month = o["filed"].strftime("%Y-%m")
-        disk_guard.locked_append_line(store / f"{month}.jsonl",
-                                      json.dumps(row, ensure_ascii=False), fsync=True)
+        receipt["partial_lines_terminated"] += append_row(
+            store / f"{month}.jsonl", json.dumps(row, ensure_ascii=False))
         receipt["fetched"] += 1
         receipt["rows"].append({k: row[k] for k in (
             "raw_id", "ticker", "exhibit", "filed_utc", "n_chars", "capped",
             "prefix_matches_stored", "sha256")})
-    receipt["remaining_owed"] = max(0, len(todo) - receipt["requests"])
     if receipt["failures"]:
         return finish(PARTIAL if receipt["fetched"] else FAILED, "",
                       f"{len(receipt['failures'])} request(s) failed")

@@ -8,9 +8,12 @@ Scope by default: tickers in the funnel candidate set plus the primary tickers
 of open event nodes, newest filing first. Resumable: an exhibit already in the
 store is never fetched again. One receipt per run, run id in its name.
 
-Exit codes: 0 rows fetched, or nothing owed · 2 REFUSED (missing input, empty
-scope, or the source answered 403/429: the run stops at the FIRST such answer
-and does not retry) · 3 requests were made and some or all failed.
+Exit codes: 0 rows fetched, or nothing owed · 2 REFUSED (a bad argument such
+as --pace-s below the floor, refused before any request; missing input; empty
+scope; the source answered 403/429, where the run stops at the FIRST such
+answer and does not retry; or a wave of 200 answers that were not the exhibit,
+SOURCE_SUSPECT) · 3 requests were made and some or all failed (a
+CONTENT_MISMATCH answer is a failure: nothing stored, still owed).
 
 Identification: the request goes through `scripts.news_pull._http_get`, the
 same door and the same User-Agent configuration the scheduled raw collector
@@ -48,12 +51,22 @@ def _collector_door():
     return news_pull._http_get, to_text, source
 
 
+def _pace(value: str) -> float:
+    """--pace-s, refused at parse (exit 2, before any request) when it is not a
+    finite number at or above `SX.min_pace_s()`."""
+    why = SX.pace_problem(value)
+    if why:
+        raise argparse.ArgumentTypeError(why)
+    return float(value)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--data-root", default=str(C.OPTIMUS_LEDGER_DIR))
     ap.add_argument("--out", default=None, help="store folder (default <data-root>/sec_exhibit_full)")
     ap.add_argument("--max-docs", type=int, default=int(C.SEC_EXHIBIT_FULL_MAX_DOCS))
-    ap.add_argument("--pace-s", type=float, default=float(C.SEC_EXHIBIT_FULL_PACE_S))
+    ap.add_argument("--pace-s", type=_pace, default=float(C.SEC_EXHIBIT_FULL_PACE_S),
+                    help=f"seconds between requests, at least {SX.min_pace_s():g}")
     ap.add_argument("--all-tickers", action="store_true")
     ap.add_argument("--tickers", default="", help="comma-separated; overrides the default scope")
     ap.add_argument("--funnel", default=None, help="funnel snapshot (default: beside the data root)")
