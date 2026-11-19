@@ -910,7 +910,7 @@ def coverage_changes(roi: dict, prev: Optional[dict], *, worst_counted_pp: Optio
     * from THIS receipt alone: a row that is FROZEN or SOURCE_RETIRED (its source was retired on
       purpose) or carries a broker error / CREDENTIAL_INVALID;
     * against the PREVIOUS run's ROI receipt (`previous_roi`): an account that had a row there
-      and has none here (ABSENT), or was counted there and is not counted here
+      (with a standing vs SPY) and has none here (ABSENT), or was counted there and is not counted here
       (LEFT_THE_COUNTS, with the status that removed it).
 
     Each account carries its reason and its last known standing vs SPY (its frozen standing, or
@@ -964,6 +964,8 @@ def coverage_changes(roi: dict, prev: Optional[dict], *, worst_counted_pp: Optio
                                                                     if pr.get("last_mark") else None)
                 continue
             r = now.get(a)
+            if r is None and was is None and not _counted_row(pr):
+                continue                            # never had a standing (a placeholder, a pending book)
             if r is None:
                 if fam in fam_retired:
                     why = fam_retired[fam]

@@ -135,6 +135,12 @@ def test_frozen_lanes_are_named_with_their_last_known_standing(tmp_path):
     # the same line the day after: the frozen rows are present in BOTH receipts and still named
     v2 = _voice(_folder(tmp_path / "next", cur, cur))
     assert "4 website_lane account(s) FROZEN" in _cov_line(v2)
+    # a placeholder row of the previous run that never had a standing is not an account that left
+    prev2 = json.loads(json.dumps(cur))
+    prev2["rows"].append({"account": "website lanes (all ten)", "family": "website_lane", "status": "UNPRICED",
+                          "roi_pct": None, "vs_spy_pp": None, "note": "unreachable"})
+    v3 = _voice(_folder(tmp_path / "after", cur, prev2))
+    assert "all ten" not in _cov_line(v3) and v3["coverage"]["n_accounts"] == 4
 
 
 def test_a_source_retired_family_with_no_local_copy_is_named(tmp_path):
