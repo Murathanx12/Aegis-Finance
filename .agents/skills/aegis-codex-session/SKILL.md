@@ -17,6 +17,7 @@ or memory database when a current pointer answers the question.
 3. Resolve the user's current objective against the latest receipt. A newer
    user instruction outranks an older workflow note. Do not re-implement work
    already merged merely because an older handoff says it is next.
+   For a return from another assistant, identify the source branch, the current PC release, and the live data location separately. Check existing worktrees, their owners, and their disk footprint before creating one. For a size limit on a review, scope the diff to the proposed change. Record the consumer's dated output when reporting a fix.
 4. Make a small queue with named outputs and checks. Use deterministic probes
    for status and small-context workers for inventory/history. Give behavioral
    changes a builder and independent reviewer. Strategies require their existing

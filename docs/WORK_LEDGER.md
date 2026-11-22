@@ -15,6 +15,7 @@ removed when that chunk merges.
 
 | Chunk | Agent / session | Worktree | Files claimed | Opened | Status | Receipt / PR |
 |---|---|---|---|---|---|---|
+| Codex skill alignment (S72 skills refresh) | Codex | remote branch `codex/project-skill-alignment` | `.agents/skills/{lane-integrity-check,pre-register-trial,seed-a-lane,silent-fragility-audit,verify-prod-after-deploy,run-a-chunk,analyst-report-extract,read-a-filing-as-investigator,aegis-codex-session}/SKILL.md` | 2026-11-22 | in review | Shared instructions under `.claude/skills/` |
 | CH-59 universe refresh task | builder, S72 | `aegis-wt/ch59-universe-refresh` | `scripts/universe_refresh.py`, `backend/services/universe_refresh.py`, `backend/services/task_receipts.py`, tests, one block in `backend/config.py` | 2026-11-19 | PR open, in review | #169 |
 | CH-65 hosted backend retired | builder, S72 | `aegis-wt/ch65-hosted-retired` | `scripts/paper_accounts_roi.py`, `backend/services/results_voice.py`, `backend/services/family_scorecard.py`, `scripts/system_status.py`, tests, one block in `backend/config.py` | 2026-11-19 | building | report in `aegis-recovery-evidence\s72-20261119\ch65` |
 | CH-66 investigator reads filing text | builder, S72 | `aegis-wt/ch66-filing-text` | `backend/services/investigator_tools.py`, new `sec_exhibit_full` modules, `scripts/analyst_snapshot.py`, `backend/services/news_entities.py`, tests, one block in `backend/config.py` | 2026-11-19 | building | report in `aegis-recovery-evidence\s72-20261119\ch66` |
