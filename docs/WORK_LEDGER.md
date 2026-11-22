@@ -15,7 +15,6 @@ removed when that chunk merges.
 
 | Chunk | Agent / session | Worktree | Files claimed | Opened | Status | Receipt / PR |
 |---|---|---|---|---|---|---|
-| Codex skill alignment (S72 skills refresh) | Codex | remote branch `codex/project-skill-alignment` | `.agents/skills/{lane-integrity-check,pre-register-trial,seed-a-lane,silent-fragility-audit,verify-prod-after-deploy,run-a-chunk,analyst-report-extract,read-a-filing-as-investigator,aegis-codex-session}/SKILL.md` | 2026-11-22 | in review | Shared instructions under `.claude/skills/` |
 | CH-59 universe refresh task | builder, S72 | `aegis-wt/ch59-universe-refresh` | `scripts/universe_refresh.py`, `backend/services/universe_refresh.py`, `backend/services/task_receipts.py`, tests, one block in `backend/config.py` | 2026-11-19 | PR open, in review | #169 |
 | CH-65 hosted backend retired | builder, S72 | `aegis-wt/ch65-hosted-retired` | `scripts/paper_accounts_roi.py`, `backend/services/results_voice.py`, `backend/services/family_scorecard.py`, `scripts/system_status.py`, tests, one block in `backend/config.py` | 2026-11-19 | building | report in `aegis-recovery-evidence\s72-20261119\ch65` |
 | CH-66 investigator reads filing text | builder, S72 | `aegis-wt/ch66-filing-text` | `backend/services/investigator_tools.py`, new `sec_exhibit_full` modules, `scripts/analyst_snapshot.py`, `backend/services/news_entities.py`, tests, one block in `backend/config.py` | 2026-11-19 | building | report in `aegis-recovery-evidence\s72-20261119\ch66` |
@@ -27,6 +26,7 @@ removed when that chunk merges.
 
 | Chunk | Agent | Closed | Outcome |
 |---|---|---|---|
+| Codex skill alignment | Codex | On merge of #173 | Eight Codex entries resolve to the maintained project sources. Frontmatter, relative paths and Optimus retrieval checked. Setup only. |
 | S71 rows: CH-55 scorecard (#164), CH-56 loop map (#166), CH-57 isolation guards (#163), CH-58 study (#165), CH-64 status page (#167), S71 roadmap (#162); S72 skills refresh (#168) | Claude S72 | 2026-11-19 | all merged to main; none released (the PC runs `20261115b`); worktrees `ch55-scorecard`, `ch56-loop-map`, `ch57-isolation`, `ch58-revision-relative`, `ch64-status-truth`, `s71-docs`, `s72-skills` to remove after a pin search |
 | Seven rows left open from S65–S68 (CH-38 dip study, CH-20a replay, CH-11 beta print, CH-35 wiring, CH-13, CH-11 twins, CH-12) | Claude S71 | 2026-11-16 | closed as stale: #119, #120, #123, #136, #142 merged; #139 superseded by #161; the beta print was never merged and is rebuilt as CH-55 |
 | S70 afternoon: single-task builders and reviewers on CH-42, CH-44, CH-47, CH-48, CH-20a, CH-46 demotion, paper tables (CH-53), public health trim + receipt projection, trigger-token gate (CH-54), grader row; one integration branch `s70/integration`, one push | Claude S70 + builders | 2026-11-15 | integration PR; open: release after merge, `AegisDynamicBooks` hourly before the 11-19 cohort, repoint `AegisDataCatalog` (publisher) to that release before its next publish, attended restart of `AegisTelegramAgent`, owner's Railway steps (deploys, `AEGIS_TRIGGER_TOKEN`, LLM envelope), pre-registration of the two insider questions |
